@@ -69,21 +69,12 @@ class XlsxRoundTripVerifierTest {
                             null,
                             null,
                             null,
-                            new ExcelCellFill(
-                                null,
-                                null,
-                                null,
-                                new ExcelGradientFill(
-                                    "LINEAR",
+                            ExcelCellFill.gradient(
+                                ExcelGradientFill.linear(
                                     42.5d,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
                                     List.of(
-                                        new ExcelGradientStop(0.0d, new ExcelColor("#736C00")),
-                                        new ExcelGradientStop(
-                                            1.0d, new ExcelColor(null, 3, null, null))))),
+                                        new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
+                                        new ExcelGradientStop(1.0d, ExcelColor.theme(3))))),
                             null,
                             new ExcelCellProtection(true, true))))));
   }
@@ -110,7 +101,7 @@ class XlsxRoundTripVerifierTest {
                                             null,
                                             null,
                                             null,
-                                            new ExcelColor("#C0504D"),
+                                            ExcelColor.rgb("#C0504D"),
                                             null,
                                             null)))))),
                     new WorkbookCommand.ApplyStyle(
@@ -120,7 +111,10 @@ class XlsxRoundTripVerifierTest {
                             null,
                             null,
                             null,
-                            new ExcelCellFill(ExcelFillPattern.BRICKS, "#102030", "#405060"),
+                            ExcelCellFill.patternColors(
+                                ExcelFillPattern.BRICKS,
+                                ExcelColor.rgb("#102030"),
+                                ExcelColor.rgb("#405060")),
                             null,
                             new ExcelCellProtection(false, true))),
                     new WorkbookCommand.SetHyperlink(

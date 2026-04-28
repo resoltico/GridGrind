@@ -1,6 +1,6 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "../../../../Volumes/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-705838fdd68442e7b6b4ee24b69f1d59cc296097",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/copy_sheet_picture_relation_retarget_roundtrip_success.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/copy_sheet_picture_relation_retarget_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
@@ -11,8 +11,8 @@
       "commandCount" : 9,
       "commandKinds" : {
         "SET_PICTURE" : 2,
-        "CREATE_SHEET" : 6,
-        "COPY_SHEET" : 1
+        "COPY_SHEET" : 1,
+        "CREATE_SHEET" : 6
       },
       "styleKinds" : { }
     }

@@ -34,7 +34,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -54,7 +54,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -74,7 +74,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -94,7 +94,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -112,7 +112,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals("--unknown", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--unknown"), parseArgumentsContext(failure).argumentName());
     assertEquals("Unknown argument: --unknown", failure.problem().message());
   }
 
@@ -131,7 +131,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
     assertEquals("Missing value for --request", failure.problem().message());
   }
 
@@ -245,8 +245,8 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals(GridGrindProblemCategory.INTERNAL, failure.problem().category());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-    assertEquals("NEW", failure.problem().context().sourceType());
-    assertEquals("NONE", failure.problem().context().persistenceType());
+    assertEquals(java.util.Optional.of("NEW"), executeRequestContext(failure).sourceType());
+    assertEquals(java.util.Optional.of("NONE"), executeRequestContext(failure).persistenceType());
     assertEquals("boom", failure.problem().message());
   }
 
@@ -280,8 +280,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-    assertEquals("EXISTING", failure.problem().context().sourceType());
-    assertEquals("OVERWRITE", failure.problem().context().persistenceType());
+    assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
+    assertEquals(
+        java.util.Optional.of("OVERWRITE"), executeRequestContext(failure).persistenceType());
   }
 
   @Test
@@ -314,8 +315,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
-    assertEquals("EXISTING", failure.problem().context().sourceType());
-    assertEquals("SAVE_AS", failure.problem().context().persistenceType());
+    assertEquals(java.util.Optional.of("EXISTING"), executeRequestContext(failure).sourceType());
+    assertEquals(
+        java.util.Optional.of("SAVE_AS"), executeRequestContext(failure).persistenceType());
   }
 
   @Test
@@ -372,9 +374,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_JSON, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals(1, failure.problem().context().jsonLine());
-    assertEquals(2, failure.problem().context().jsonColumn());
-    assertNull(failure.problem().context().jsonPath());
+    assertEquals(java.util.Optional.of(1), readRequestContext(failure).jsonLine());
+    assertEquals(java.util.Optional.of(2), readRequestContext(failure).jsonColumn());
+    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonPath());
   }
 
   @Test
@@ -404,7 +406,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("steps[0]", failure.problem().context().jsonPath());
+    assertEquals(java.util.Optional.of("steps[0]"), readRequestContext(failure).jsonPath());
     assertEquals(1, failure.problem().causes().size());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().causes().getFirst().code());
@@ -449,9 +451,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("steps[0].target", failure.problem().context().jsonPath());
-    assertEquals(14, failure.problem().context().jsonLine());
-    assertNotNull(failure.problem().context().jsonColumn());
+    assertEquals(java.util.Optional.of("steps[0].target"), readRequestContext(failure).jsonPath());
+    assertEquals(java.util.Optional.of(14), readRequestContext(failure).jsonLine());
+    assertTrue(readRequestContext(failure).jsonColumn().isPresent());
   }
 
   @Test
@@ -544,7 +546,8 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("WRITE_RESPONSE", failure.problem().context().stage());
     assertEquals(
-        responseDirectory.toAbsolutePath().toString(), failure.problem().context().responsePath());
+        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
+        writeResponseContext(failure).responsePath());
   }
 
   @Test
@@ -614,8 +617,8 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("A1", failure.problem().context().address());
-    assertEquals("SUM(", failure.problem().context().formula());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
+    assertEquals(java.util.Optional.of("SUM("), executeStepContext(failure).formula());
   }
 
   @Test

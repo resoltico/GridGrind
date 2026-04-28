@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -52,35 +51,38 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         ExecutionResponseSupport.problemCodeFor(
             new WorkbookNotFoundException(Path.of("/tmp/missing.xlsx"))));
 
-    GridGrindResponse.ProblemContext.ExecuteStep context =
-        new GridGrindResponse.ProblemContext.ExecuteStep(
-            "NEW", "NONE", 0, "step-01-set-cell", "SET_CELL", null, null, null, null, null, null);
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep context =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
+            new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                0, "step-01-set-cell", "MUTATION", "SET_CELL"),
+            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown());
 
     InvalidFormulaException invalidFormula =
         new InvalidFormulaException("Budget", "B4", "SUM(", "invalid", null);
-    GridGrindResponse.ProblemContext.ExecuteStep enrichedFormula =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedFormula =
         assertInstanceOf(
-            GridGrindResponse.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(context, invalidFormula));
-    assertEquals("Budget", enrichedFormula.sheetName());
-    assertEquals("B4", enrichedFormula.address());
-    assertEquals("SUM(", enrichedFormula.formula());
+    assertEquals(java.util.Optional.of("Budget"), enrichedFormula.sheetName());
+    assertEquals(java.util.Optional.of("B4"), enrichedFormula.address());
+    assertEquals(java.util.Optional.of("SUM("), enrichedFormula.formula());
 
-    GridGrindResponse.ProblemContext.ExecuteStep enrichedRange =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedRange =
         assertInstanceOf(
-            GridGrindResponse.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(
                 context, new InvalidRangeAddressException("A1:B2", null)));
-    assertEquals("A1:B2", enrichedRange.range());
+    assertEquals(java.util.Optional.of("A1:B2"), enrichedRange.range());
 
-    GridGrindResponse.ProblemContext.ExecuteStep enrichedNamedRange =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enrichedNamedRange =
         assertInstanceOf(
-            GridGrindResponse.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
             ExecutionResponseSupport.enrichContext(
                 context,
                 new NamedRangeNotFoundException(
                     "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
-    assertEquals("BudgetTotal", enrichedNamedRange.namedRangeName());
+    assertEquals(java.util.Optional.of("BudgetTotal"), enrichedNamedRange.namedRangeName());
   }
 
   @Test
@@ -109,23 +111,34 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
             new InspectionQuery.GetNamedRanges());
 
-    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(setCell));
-    assertEquals("B4", ExecutionDiagnosticFields.addressFor(setCell));
-    assertEquals("SUM(B2:B3)", ExecutionDiagnosticFields.formulaFor(setCell));
-    assertNull(ExecutionDiagnosticFields.rangeFor(setCell));
+    assertEquals(java.util.Optional.of("Budget"), ExecutionDiagnosticFields.sheetNameFor(setCell));
+    assertEquals(java.util.Optional.of("B4"), ExecutionDiagnosticFields.addressFor(setCell));
+    assertEquals(
+        java.util.Optional.of("SUM(B2:B3)"), ExecutionDiagnosticFields.formulaFor(setCell));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.rangeFor(setCell));
 
-    assertEquals("BudgetTotal", ExecutionDiagnosticFields.namedRangeNameFor(setNamedRange));
-    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(getCells));
-    assertNull(ExecutionDiagnosticFields.addressFor(getCells));
-    assertEquals("BudgetTotal", ExecutionDiagnosticFields.namedRangeNameFor(getNamedRanges));
+    assertEquals(
+        java.util.Optional.of("BudgetTotal"),
+        ExecutionDiagnosticFields.namedRangeNameFor(setNamedRange));
+    assertEquals(java.util.Optional.of("Budget"), ExecutionDiagnosticFields.sheetNameFor(getCells));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.addressFor(getCells));
+    assertEquals(
+        java.util.Optional.of("BudgetTotal"),
+        ExecutionDiagnosticFields.namedRangeNameFor(getNamedRanges));
 
     InvalidFormulaException invalidFormula =
         new InvalidFormulaException("Budget", "C7", "SUM(", "invalid", null);
-    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(getNamedRanges, invalidFormula));
-    assertEquals("C7", ExecutionDiagnosticFields.addressFor(getNamedRanges, invalidFormula));
-    assertEquals("SUM(", ExecutionDiagnosticFields.formulaFor(getNamedRanges, invalidFormula));
     assertEquals(
-        "A1:B9",
+        java.util.Optional.of("Budget"),
+        ExecutionDiagnosticFields.sheetNameFor(getNamedRanges, invalidFormula));
+    assertEquals(
+        java.util.Optional.of("C7"),
+        ExecutionDiagnosticFields.addressFor(getNamedRanges, invalidFormula));
+    assertEquals(
+        java.util.Optional.of("SUM("),
+        ExecutionDiagnosticFields.formulaFor(getNamedRanges, invalidFormula));
+    assertEquals(
+        java.util.Optional.of("A1:B9"),
         ExecutionDiagnosticFields.rangeFor(
             new InspectionStep(
                 "step-05-get-window",
@@ -214,7 +227,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             null,
             false,
             false),
-        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
+        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),

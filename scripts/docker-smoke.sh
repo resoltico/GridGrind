@@ -40,6 +40,10 @@ readonly image_tag="gridgrind-docker-smoke:$$"
 readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX")"
 readonly docker_run_user="$(id -u):$(id -g)"
 readonly cli_jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
+readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
+readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
+readonly pid_file="${lock_dir}/pid"
+readonly gradle_user_home="${GRIDGRIND_GRADLE_USER_HOME:-${repo_root}/tmp/gradle-user-home}"
 anonymous_docker_config=''
 docker_endpoint=''
 project_cache_dir=''
@@ -54,6 +58,10 @@ prepare_project_cache_dir() {
 }
 
 project_cache_dir="$(prepare_project_cache_dir "${GRIDGRIND_PROJECT_CACHE_DIR:-}")"
+[[ -f "${repo_lock_support}" ]] || die "missing repo verification lock helper at ${repo_lock_support}"
+
+# shellcheck source=/dev/null
+source "${repo_lock_support}"
 
 resolve_docker_buildx_plugin() {
     local docker_binary=''
@@ -110,6 +118,7 @@ cleanup() {
         docker_with_repo_config image rm -f "${image_tag}" >/dev/null 2>&1 || true
         rm -rf "${anonymous_docker_config}" || true
     fi
+    cleanup_lock
     exit "${exit_code}"
 }
 
@@ -120,8 +129,13 @@ docker buildx version >/dev/null 2>&1 || die "docker buildx is required for the 
 [[ -f "${repo_root}/Dockerfile" ]] || die "missing Dockerfile at ${repo_root}/Dockerfile"
 [[ -x "${repo_root}/gradlew" ]] || die "missing Gradle wrapper at ${repo_root}/gradlew"
 
+mkdir -p "${gradle_user_home}"
+acquire_lock
+
 printf 'Docker smoke: rebuilding CLI fat JAR\n'
 gradle_command=(
+    env
+    "GRADLE_USER_HOME=${gradle_user_home}"
     "${repo_root}/gradlew"
     --console=plain
     --no-daemon

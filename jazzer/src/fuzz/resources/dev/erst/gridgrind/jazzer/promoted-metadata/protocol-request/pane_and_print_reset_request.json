@@ -13,10 +13,10 @@
       "persistenceKind" : "NONE",
       "operationCount" : 6,
       "operationKinds" : {
-        "SET_PRINT_LAYOUT" : 1,
-        "CLEAR_PRINT_LAYOUT" : 1,
+        "SET_SHEET_PANE" : 2,
         "ENSURE_SHEET" : 2,
-        "SET_SHEET_PANE" : 2
+        "CLEAR_PRINT_LAYOUT" : 1,
+        "SET_PRINT_LAYOUT" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,

@@ -408,7 +408,11 @@ class SemanticSelectorResolverTest {
                     target,
                     new MutationAction.SetComment(
                         new CommentInput(
-                            TextSourceInput.inline("Note"), "Ada", false, null, null))))
+                            TextSourceInput.inline("Note"),
+                            "Ada",
+                            false,
+                            java.util.Optional.empty(),
+                            java.util.Optional.empty()))))
             .address());
     assertEquals(
         expectedAddress,

@@ -22,4 +22,11 @@ final class ProtocolRgbColorSupport {
     }
     return Optional.of(color.toUpperCase(Locale.ROOT));
   }
+
+  /** Normalizes one required {@code #RRGGBB} literal for protocol storage and comparison. */
+  static String requireRgbHex(String color, String fieldName) {
+    return normalizeRgbHex(
+            Objects.requireNonNull(color, fieldName + " must not be null"), fieldName)
+        .orElseThrow();
+  }
 }

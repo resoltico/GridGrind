@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,39 +33,6 @@ public sealed interface GridGrindResponse {
    */
   CalculationReport calculation();
 
-  /**
-   * Creates a successful response with a synthetic success journal and a not-requested calculation
-   * report.
-   */
-  static Success success(
-      GridGrindProtocolVersion protocolVersion,
-      PersistenceOutcome persistence,
-      List<RequestWarning> warnings,
-      List<AssertionResult> assertions,
-      List<InspectionResult> inspections) {
-    return new Success(
-        protocolVersionOrCurrent(protocolVersion),
-        syntheticJournal(ExecutionJournal.Status.SUCCEEDED),
-        CalculationReport.notRequested(),
-        persistence == null ? new PersistenceOutcome.NotSaved() : persistence,
-        warnings == null ? List.of() : warnings,
-        assertions == null ? List.of() : assertions,
-        inspections == null ? List.of() : inspections);
-  }
-
-  /**
-   * Creates a failure response with a synthetic failure journal and a not-requested calculation
-   * report.
-   */
-  static Failure failure(GridGrindProtocolVersion protocolVersion, Problem problem) {
-    Objects.requireNonNull(problem, "problem must not be null");
-    return new Failure(
-        protocolVersionOrCurrent(protocolVersion),
-        syntheticJournal(ExecutionJournal.Status.FAILED, problem.code()),
-        CalculationReport.notRequested(),
-        problem);
-  }
-
   /** Successful workbook execution result. */
   record Success(
       GridGrindProtocolVersion protocolVersion,
@@ -82,11 +49,12 @@ public sealed interface GridGrindResponse {
       Objects.requireNonNull(calculation, "calculation must not be null");
       Objects.requireNonNull(persistence, "persistence must not be null");
       warnings =
-          copyValues(Objects.requireNonNull(warnings, "warnings must not be null"), "warnings");
+          GridGrindResponseSupport.copyValues(
+              Objects.requireNonNull(warnings, "warnings must not be null"), "warnings");
       assertions =
-          copyValues(
+          GridGrindResponseSupport.copyValues(
               Objects.requireNonNull(assertions, "assertions must not be null"), "assertions");
-      inspections = copyValues(inspections, "inspections");
+      inspections = GridGrindResponseSupport.copyValues(inspections, "inspections");
     }
   }
 
@@ -187,7 +155,9 @@ public sealed interface GridGrindResponse {
         boolean forceFormulaRecalculationOnOpen)
         implements WorkbookSummary {
       public Empty {
-        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        sheetNames =
+            GridGrindResponseSupport.validateCommonWorkbookSummaryFields(
+                sheetCount, sheetNames, namedRangeCount);
         if (sheetCount != 0) {
           throw new IllegalArgumentException("sheetCount must be 0 for an empty workbook");
         }
@@ -204,12 +174,15 @@ public sealed interface GridGrindResponse {
         boolean forceFormulaRecalculationOnOpen)
         implements WorkbookSummary {
       public WithSheets {
-        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        sheetNames =
+            GridGrindResponseSupport.validateCommonWorkbookSummaryFields(
+                sheetCount, sheetNames, namedRangeCount);
         Objects.requireNonNull(activeSheetName, "activeSheetName must not be null");
         if (activeSheetName.isBlank()) {
           throw new IllegalArgumentException("activeSheetName must not be blank");
         }
-        selectedSheetNames = copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
+        selectedSheetNames =
+            GridGrindResponseSupport.copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
         if (sheetCount == 0) {
           throw new IllegalArgumentException("sheetCount must be greater than 0");
         }
@@ -244,16 +217,6 @@ public sealed interface GridGrindResponse {
 
     /** Exact formula text stored in the workbook for this defined name. */
     String refersToFormula();
-
-    /**
-     * Resolved typed target; populated only by RangeReport, null for FormulaReport.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default NamedRangeTarget target() {
-      return null;
-    }
 
     /** Named range that resolves cleanly to a sheet-qualified cell or rectangular range target. */
     record RangeReport(
@@ -317,16 +280,6 @@ public sealed interface GridGrindResponse {
   sealed interface SheetProtectionReport
       permits SheetProtectionReport.Unprotected, SheetProtectionReport.Protected {
 
-    /**
-     * Supported lock flags; populated only by Protected, null for Unprotected.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default SheetProtectionSettings settings() {
-      return null;
-    }
-
     /** Sheet protection is disabled. */
     record Unprotected() implements SheetProtectionReport {}
 
@@ -338,305 +291,27 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Structured view of one requested or previewed cell. */
-  @JsonTypeInfo(
-      use = JsonTypeInfo.Id.NAME,
-      include = JsonTypeInfo.As.EXISTING_PROPERTY,
-      property = "effectiveType")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = CellReport.BlankReport.class, name = "BLANK"),
-    @JsonSubTypes.Type(value = CellReport.TextReport.class, name = "STRING"),
-    @JsonSubTypes.Type(value = CellReport.NumberReport.class, name = "NUMBER"),
-    @JsonSubTypes.Type(value = CellReport.BooleanReport.class, name = "BOOLEAN"),
-    @JsonSubTypes.Type(value = CellReport.ErrorReport.class, name = "ERROR"),
-    @JsonSubTypes.Type(value = CellReport.FormulaReport.class, name = "FORMULA")
-  })
-  sealed interface CellReport {
-    /** Cell address in A1 notation. */
-    String address();
-
-    /** POI cell type as declared before evaluation. */
-    String declaredType();
-
-    /** Effective cell type after formula evaluation. */
-    String effectiveType();
-
-    /** Formatted display string as shown in Excel. */
-    String displayValue();
-
-    /** Style snapshot captured for this cell. */
-    CellStyleReport style();
-
-    /**
-     * Hyperlink metadata; populated when the workbook stores a hyperlink for this cell and null for
-     * all other cases.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default HyperlinkTarget hyperlink() {
-      return switch (this) {
-        case BlankReport blank -> blank.hyperlinkTarget();
-        case TextReport text -> text.hyperlinkTarget();
-        case NumberReport number -> number.hyperlinkTarget();
-        case BooleanReport booleanReport -> booleanReport.hyperlinkTarget();
-        case ErrorReport error -> error.hyperlinkTarget();
-        case FormulaReport formula -> formula.hyperlinkTarget();
-      };
-    }
-
-    /**
-     * Comment metadata; populated when the workbook stores a cell comment and null for all other
-     * cases.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default CommentReport comment() {
-      return switch (this) {
-        case BlankReport blank -> blank.commentReport();
-        case TextReport text -> text.commentReport();
-        case NumberReport number -> number.commentReport();
-        case BooleanReport booleanReport -> booleanReport.commentReport();
-        case ErrorReport error -> error.commentReport();
-        case FormulaReport formula -> formula.commentReport();
-      };
-    }
-
-    /**
-     * Formula text; populated only by FormulaReport, null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String formula() {
-      return null;
-    }
-
-    /**
-     * String value; populated only by TextReport, null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String stringValue() {
-      return null;
-    }
-
-    /**
-     * Structured rich-text runs; populated only by TextReport when the workbook stores run-level
-     * formatting, null for all other subtypes and scalar plain-string cells.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-    default List<RichTextRunReport> richText() {
-      return null;
-    }
-
-    /**
-     * Numeric value; populated only by NumberReport, null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default Double numberValue() {
-      return null;
-    }
-
-    /**
-     * Boolean value; populated only by BooleanReport, null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default Boolean booleanValue() {
-      return null;
-    }
-
-    /**
-     * Error code string; populated only by ErrorReport, null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String errorValue() {
-      return null;
-    }
-
-    /** CellReport for a cell with no value or formula. */
-    record BlankReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport)
-        implements CellReport {
-      public BlankReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "BLANK";
-      }
-    }
-
-    /** CellReport for a cell containing a plain string value. */
-    record TextReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport,
-        String stringValue,
-        List<RichTextRunReport> richText)
-        implements CellReport {
-      public TextReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-        Objects.requireNonNull(stringValue, "stringValue must not be null");
-        richText = copyRichTextRuns(richText, "richText").orElse(null);
-        if (richText != null && !stringValue.equals(concatenateRichTextRuns(richText))) {
-          throw new IllegalArgumentException(
-              "richText run text must concatenate to the stringValue");
-        }
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "STRING";
-      }
-    }
-
-    /** CellReport for a cell containing a numeric value. */
-    record NumberReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport,
-        Double numberValue)
-        implements CellReport {
-      public NumberReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "NUMBER";
-      }
-    }
-
-    /** CellReport for a cell containing a boolean value. */
-    record BooleanReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport,
-        Boolean booleanValue)
-        implements CellReport {
-      public BooleanReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "BOOLEAN";
-      }
-    }
-
-    /** CellReport for a cell in an error state (e.g., #DIV/0!, #REF!). */
-    record ErrorReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport,
-        String errorValue)
-        implements CellReport {
-      public ErrorReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "ERROR";
-      }
-    }
-
-    /** CellReport for a cell containing a formula, with its evaluated result nested inside. */
-    record FormulaReport(
-        String address,
-        String declaredType,
-        String displayValue,
-        CellStyleReport style,
-        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
-        @JsonProperty("comment") CommentReport commentReport,
-        String formula,
-        CellReport evaluation)
-        implements CellReport {
-      public FormulaReport {
-        Objects.requireNonNull(address, "address must not be null");
-        Objects.requireNonNull(declaredType, "declaredType must not be null");
-        Objects.requireNonNull(displayValue, "displayValue must not be null");
-        Objects.requireNonNull(style, "style must not be null");
-        Objects.requireNonNull(formula, "formula must not be null");
-      }
-
-      @Override
-      @JsonProperty
-      public String effectiveType() {
-        return "FORMULA";
-      }
-    }
-  }
-
   /** Factual comment metadata returned for analyzed cells that carry a comment. */
   record CommentReport(
       String text,
       String author,
       boolean visible,
-      java.util.List<RichTextRunReport> runs,
-      CommentAnchorReport anchor) {
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<java.util.List<RichTextRunReport>> runs,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentAnchorReport> anchor) {
     /** Creates a plain comment report without rich runs or anchor metadata. */
     public CommentReport(String text, String author, boolean visible) {
-      this(text, author, visible, null, null);
+      this(text, author, visible, Optional.empty(), Optional.empty());
     }
 
     public CommentReport {
       Objects.requireNonNull(text, "text must not be null");
       Objects.requireNonNull(author, "author must not be null");
-      if (runs != null) {
-        runs = copyValues(runs, "runs");
+      runs = GridGrindResponseSupport.copyOptionalValues(runs, "runs");
+      anchor = Objects.requireNonNullElseGet(anchor, Optional::empty);
+      if (runs.isPresent()) {
+        java.util.List<RichTextRunReport> copiedRuns = runs.orElseThrow();
         if (!text.equals(
-            runs.stream()
+            copiedRuns.stream()
                 .map(RichTextRunReport::text)
                 .collect(java.util.stream.Collectors.joining()))) {
           throw new IllegalArgumentException("comment runs must concatenate to the plain text");
@@ -685,14 +360,14 @@ public sealed interface GridGrindResponse {
       if (columnCount <= 0) {
         throw new IllegalArgumentException("columnCount must be greater than 0");
       }
-      rows = copyValues(rows, "rows");
+      rows = GridGrindResponseSupport.copyValues(rows, "rows");
     }
   }
 
   /** One row inside a rectangular window of cell snapshots. */
   record WindowRowReport(int rowIndex, List<CellReport> cells) {
     public WindowRowReport {
-      cells = copyValues(cells, "cells");
+      cells = GridGrindResponseSupport.copyValues(cells, "cells");
     }
   }
 
@@ -745,8 +420,8 @@ public sealed interface GridGrindResponse {
       }
       dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.requireZoomPercent(
           zoomPercent, "zoomPercent");
-      columns = copyValues(columns, "columns");
-      rows = copyValues(rows, "rows");
+      columns = GridGrindResponseSupport.copyValues(columns, "columns");
+      rows = GridGrindResponseSupport.copyValues(rows, "rows");
     }
   }
 
@@ -789,7 +464,7 @@ public sealed interface GridGrindResponse {
   /** Grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceReport(int totalFormulaCellCount, List<SheetFormulaSurfaceReport> sheets) {
     public FormulaSurfaceReport {
-      sheets = copyValues(sheets, "sheets");
+      sheets = GridGrindResponseSupport.copyValues(sheets, "sheets");
       if (totalFormulaCellCount < 0) {
         throw new IllegalArgumentException("totalFormulaCellCount must not be negative");
       }
@@ -813,7 +488,7 @@ public sealed interface GridGrindResponse {
       if (distinctFormulaCount < 0) {
         throw new IllegalArgumentException("distinctFormulaCount must not be negative");
       }
-      formulas = copyValues(formulas, "formulas");
+      formulas = GridGrindResponseSupport.copyValues(formulas, "formulas");
     }
   }
 
@@ -827,7 +502,7 @@ public sealed interface GridGrindResponse {
       if (occurrenceCount <= 0) {
         throw new IllegalArgumentException("occurrenceCount must be greater than 0");
       }
-      addresses = copyStrings(addresses, "addresses");
+      addresses = GridGrindResponseSupport.copyStrings(addresses, "addresses");
     }
   }
 
@@ -857,7 +532,7 @@ public sealed interface GridGrindResponse {
       if (dataRowCount < 0) {
         throw new IllegalArgumentException("dataRowCount must not be negative");
       }
-      columns = copyValues(columns, "columns");
+      columns = GridGrindResponseSupport.copyValues(columns, "columns");
     }
   }
 
@@ -885,7 +560,7 @@ public sealed interface GridGrindResponse {
       if (blankCellCount < 0) {
         throw new IllegalArgumentException("blankCellCount must not be negative");
       }
-      observedTypes = copyValues(observedTypes, "observedTypes");
+      observedTypes = GridGrindResponseSupport.copyValues(observedTypes, "observedTypes");
     }
   }
 
@@ -922,7 +597,7 @@ public sealed interface GridGrindResponse {
       if (formulaBackedCount < 0) {
         throw new IllegalArgumentException("formulaBackedCount must not be negative");
       }
-      namedRanges = copyValues(namedRanges, "namedRanges");
+      namedRanges = GridGrindResponseSupport.copyValues(namedRanges, "namedRanges");
     }
   }
 
@@ -1057,7 +732,7 @@ public sealed interface GridGrindResponse {
       if (message.isBlank()) {
         throw new IllegalArgumentException("message must not be blank");
       }
-      evidence = copyStrings(evidence, "evidence");
+      evidence = GridGrindResponseSupport.copyStrings(evidence, "evidence");
     }
   }
 
@@ -1071,7 +746,7 @@ public sealed interface GridGrindResponse {
         throw new IllegalArgumentException("checkedFormulaCellCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
-      findings = copyValues(findings, "findings");
+      findings = GridGrindResponseSupport.copyValues(findings, "findings");
     }
   }
 
@@ -1085,7 +760,7 @@ public sealed interface GridGrindResponse {
         throw new IllegalArgumentException("checkedHyperlinkCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
-      findings = copyValues(findings, "findings");
+      findings = GridGrindResponseSupport.copyValues(findings, "findings");
     }
   }
 
@@ -1099,7 +774,7 @@ public sealed interface GridGrindResponse {
         throw new IllegalArgumentException("checkedNamedRangeCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
-      findings = copyValues(findings, "findings");
+      findings = GridGrindResponseSupport.copyValues(findings, "findings");
     }
   }
 
@@ -1108,7 +783,7 @@ public sealed interface GridGrindResponse {
       AnalysisSummaryReport summary, List<AnalysisFindingReport> findings) {
     public WorkbookFindingsReport {
       Objects.requireNonNull(summary, "summary must not be null");
-      findings = copyValues(findings, "findings");
+      findings = GridGrindResponseSupport.copyValues(findings, "findings");
     }
   }
 
@@ -1121,8 +796,9 @@ public sealed interface GridGrindResponse {
       String message,
       String resolution,
       ProblemContext context,
-      @JsonInclude(JsonInclude.Include.NON_NULL) AssertionFailure assertionFailure,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<AssertionFailure> assertionFailure,
       List<ProblemCause> causes) {
+    /** Validates one deterministic problem payload and normalizes optional nested fields. */
     public Problem {
       Objects.requireNonNull(code, "code must not be null");
       Objects.requireNonNull(category, "category must not be null");
@@ -1131,7 +807,8 @@ public sealed interface GridGrindResponse {
       Objects.requireNonNull(message, "message must not be null");
       Objects.requireNonNull(resolution, "resolution must not be null");
       Objects.requireNonNull(context, "context must not be null");
-      causes = copyProblemCauses(causes);
+      assertionFailure = Objects.requireNonNullElseGet(assertionFailure, Optional::empty);
+      causes = GridGrindResponseSupport.copyProblemCauses(causes);
     }
 
     /**
@@ -1147,434 +824,8 @@ public sealed interface GridGrindResponse {
           message,
           code.resolution(),
           context,
-          null,
+          Optional.empty(),
           List.of());
-    }
-  }
-
-  /** Structured execution metadata that pinpoints where and why a failure happened. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "stage")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = ProblemContext.ParseArguments.class, name = "PARSE_ARGUMENTS"),
-    @JsonSubTypes.Type(value = ProblemContext.ReadRequest.class, name = "READ_REQUEST"),
-    @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
-    @JsonSubTypes.Type(value = ProblemContext.ResolveInputs.class, name = "RESOLVE_INPUTS"),
-    @JsonSubTypes.Type(value = ProblemContext.OpenWorkbook.class, name = "OPEN_WORKBOOK"),
-    @JsonSubTypes.Type(
-        value = ProblemContext.ExecuteCalculation.Preflight.class,
-        name = "CALCULATION_PREFLIGHT"),
-    @JsonSubTypes.Type(
-        value = ProblemContext.ExecuteCalculation.Execution.class,
-        name = "CALCULATION_EXECUTION"),
-    @JsonSubTypes.Type(value = ProblemContext.ExecuteStep.class, name = "EXECUTE_STEP"),
-    @JsonSubTypes.Type(value = ProblemContext.PersistWorkbook.class, name = "PERSIST_WORKBOOK"),
-    @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
-    @JsonSubTypes.Type(value = ProblemContext.WriteResponse.class, name = "WRITE_RESPONSE")
-  })
-  sealed interface ProblemContext {
-    /** Pipeline stage in which the failure occurred. */
-    String stage();
-
-    /**
-     * Source type string; populated by ValidateRequest, ResolveInputs, OpenWorkbook,
-     * CALCULATION_PREFLIGHT, CALCULATION_EXECUTION, ExecuteStep, PersistWorkbook, and
-     * ExecuteRequest. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String sourceType() {
-      return null;
-    }
-
-    /**
-     * Persistence type string; populated by ValidateRequest, ResolveInputs, OpenWorkbook,
-     * CALCULATION_PREFLIGHT, CALCULATION_EXECUTION, ExecuteStep, PersistWorkbook, and
-     * ExecuteRequest. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String persistenceType() {
-      return null;
-    }
-
-    /**
-     * Path to the JSON request file; populated by ReadRequest. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String requestPath() {
-      return null;
-    }
-
-    /**
-     * JSON pointer path to the failing element; populated by ReadRequest. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String jsonPath() {
-      return null;
-    }
-
-    /**
-     * Line number within the JSON payload where the error was detected; populated by ReadRequest.
-     * Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default Integer jsonLine() {
-      return null;
-    }
-
-    /**
-     * Column number within the JSON payload where the error was detected; populated by ReadRequest.
-     * Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default Integer jsonColumn() {
-      return null;
-    }
-
-    /**
-     * Path to the JSON response file; populated by WriteResponse. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String responsePath() {
-      return null;
-    }
-
-    /**
-     * Path to the source workbook file; populated by OpenWorkbook and PersistWorkbook. Null for all
-     * other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String sourceWorkbookPath() {
-      return null;
-    }
-
-    /**
-     * Path to the persistence destination; populated by PersistWorkbook. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String persistencePath() {
-      return null;
-    }
-
-    /**
-     * Zero-based index of the step that failed; populated by ExecuteStep. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default Integer stepIndex() {
-      return null;
-    }
-
-    /**
-     * Stable step identifier of the failing step; populated by ExecuteStep. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String stepId() {
-      return null;
-    }
-
-    /**
-     * High-level step kind of the failing step; populated by ExecuteStep. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String stepKind() {
-      return null;
-    }
-
-    /**
-     * SCREAMING_SNAKE_CASE action/query discriminator of the failing step; populated by
-     * ExecuteStep. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String stepType() {
-      return null;
-    }
-
-    /**
-     * Name of the sheet involved in the failure; populated by ExecuteStep and ExecuteCalculation.
-     * Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String sheetName() {
-      return null;
-    }
-
-    /**
-     * Cell address in A1 notation where the failure occurred; populated by ExecuteStep and
-     * ExecuteCalculation. Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String address() {
-      return null;
-    }
-
-    /**
-     * Range address where the failure occurred; populated by ExecuteStep. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String range() {
-      return null;
-    }
-
-    /**
-     * Formula text associated with the failure; populated by ExecuteStep and ExecuteCalculation.
-     * Null for all other subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String formula() {
-      return null;
-    }
-
-    /**
-     * Named-range identifier involved in the failure; populated by ExecuteStep. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String namedRangeName() {
-      return null;
-    }
-
-    /**
-     * CLI argument that triggered the failure; populated by ParseArguments. Null for all other
-     * subtypes.
-     *
-     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
-     * interface used for wire serialization; internal code must use a switch expression instead.
-     */
-    default String argument() {
-      return null;
-    }
-
-    /** Context for failures that occur while parsing CLI arguments. */
-    record ParseArguments(String argument) implements ProblemContext {
-      @Override
-      public String stage() {
-        return "PARSE_ARGUMENTS";
-      }
-    }
-
-    /** Context for failures that occur while reading and parsing the JSON request. */
-    record ReadRequest(String requestPath, String jsonPath, Integer jsonLine, Integer jsonColumn)
-        implements ProblemContext {
-      @Override
-      public String stage() {
-        return "READ_REQUEST";
-      }
-
-      /**
-       * Returns a new ReadRequest with JSON location details merged in, keeping any existing
-       * non-null values.
-       */
-      public ReadRequest withJson(String jsonPath, Integer jsonLine, Integer jsonColumn) {
-        return new ReadRequest(
-            requestPath,
-            this.jsonPath != null ? this.jsonPath : jsonPath,
-            this.jsonLine != null ? this.jsonLine : jsonLine,
-            this.jsonColumn != null ? this.jsonColumn : jsonColumn);
-      }
-    }
-
-    /** Context for failures that occur while validating request fields before execution. */
-    record ValidateRequest(String sourceType, String persistenceType) implements ProblemContext {
-      @Override
-      public String stage() {
-        return "VALIDATE_REQUEST";
-      }
-    }
-
-    /** Context for failures that occur while opening the source workbook. */
-    record OpenWorkbook(String sourceType, String persistenceType, String sourceWorkbookPath)
-        implements ProblemContext {
-      @Override
-      public String stage() {
-        return "OPEN_WORKBOOK";
-      }
-    }
-
-    /** Context for failures that occur while resolving source-backed authored inputs. */
-    record ResolveInputs(
-        String sourceType, String persistenceType, String inputKind, String inputPath)
-        implements ProblemContext {
-      @Override
-      public String stage() {
-        return "RESOLVE_INPUTS";
-      }
-    }
-
-    /** Common calculation-failure context for the two top-level calculation stages. */
-    sealed interface ExecuteCalculation extends ProblemContext
-        permits ExecuteCalculation.Preflight, ExecuteCalculation.Execution {
-      @Override
-      String sourceType();
-
-      @Override
-      String persistenceType();
-
-      @Override
-      String sheetName();
-
-      @Override
-      String address();
-
-      @Override
-      String formula();
-
-      /** Returns one copy enriched with exception-derived sheet, address, and formula facts. */
-      default ExecuteCalculation withExceptionData(
-          String sheetName, String address, String formula) {
-        return switch (this) {
-          case Preflight context ->
-              new Preflight(
-                  context.sourceType(),
-                  context.persistenceType(),
-                  keepExisting(context.sheetName(), sheetName),
-                  keepExisting(context.address(), address),
-                  keepExisting(context.formula(), formula));
-          case Execution context ->
-              new Execution(
-                  context.sourceType(),
-                  context.persistenceType(),
-                  keepExisting(context.sheetName(), sheetName),
-                  keepExisting(context.address(), address),
-                  keepExisting(context.formula(), formula));
-        };
-      }
-
-      /** Context for failures that occur during calculation preflight analysis. */
-      record Preflight(
-          String sourceType,
-          String persistenceType,
-          String sheetName,
-          String address,
-          String formula)
-          implements ExecuteCalculation {
-        @Override
-        public String stage() {
-          return "CALCULATION_PREFLIGHT";
-        }
-      }
-
-      /** Context for failures that occur during immediate calculation execution. */
-      record Execution(
-          String sourceType,
-          String persistenceType,
-          String sheetName,
-          String address,
-          String formula)
-          implements ExecuteCalculation {
-        @Override
-        public String stage() {
-          return "CALCULATION_EXECUTION";
-        }
-      }
-    }
-
-    /** Context for failures that occur while executing one ordered workbook step. */
-    record ExecuteStep(
-        String sourceType,
-        String persistenceType,
-        Integer stepIndex,
-        String stepId,
-        String stepKind,
-        String stepType,
-        String sheetName,
-        String address,
-        String range,
-        String formula,
-        String namedRangeName)
-        implements ProblemContext {
-      @Override
-      public String stage() {
-        return "EXECUTE_STEP";
-      }
-
-      /**
-       * Returns a new ExecuteStep with exception-derived location details merged in, keeping any
-       * existing non-null values.
-       */
-      public ExecuteStep withExceptionData(
-          String sheetName, String address, String range, String formula, String namedRangeName) {
-        return new ExecuteStep(
-            sourceType,
-            persistenceType,
-            stepIndex,
-            stepId,
-            stepKind,
-            stepType,
-            this.sheetName != null ? this.sheetName : sheetName,
-            this.address != null ? this.address : address,
-            this.range != null ? this.range : range,
-            this.formula != null ? this.formula : formula,
-            this.namedRangeName != null ? this.namedRangeName : namedRangeName);
-      }
-    }
-
-    /** Context for failures that occur while persisting the workbook to its destination path. */
-    record PersistWorkbook(
-        String sourceType,
-        String persistenceType,
-        String sourceWorkbookPath,
-        String persistencePath)
-        implements ProblemContext {
-      @Override
-      public String stage() {
-        return "PERSIST_WORKBOOK";
-      }
-    }
-
-    /** Context for top-level execution failures not attributed to a specific pipeline stage. */
-    record ExecuteRequest(String sourceType, String persistenceType) implements ProblemContext {
-      @Override
-      public String stage() {
-        return "EXECUTE_REQUEST";
-      }
-    }
-
-    /** Context for failures that occur while writing the JSON response to its destination. */
-    record WriteResponse(String responsePath) implements ProblemContext {
-      @Override
-      public String stage() {
-        return "WRITE_RESPONSE";
-      }
     }
   }
 
@@ -1595,121 +846,19 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  private static List<String> copyStrings(List<String> values, String fieldName) {
-    Objects.requireNonNull(values, fieldName + " must not be null");
-    List<String> copy = new ArrayList<>(values.size());
-    for (String value : values) {
-      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
-    }
-    return List.copyOf(copy);
+  /** Creates a synthetic success journal for non-step-oriented responses. */
+  static ExecutionJournal syntheticSuccessJournal() {
+    return GridGrindResponseSupport.syntheticSuccessJournal();
   }
 
-  /** Creates a synthetic journal for non-step-oriented responses without a failure code. */
-  static ExecutionJournal syntheticJournal(ExecutionJournal.Status status) {
-    return syntheticJournal(status, null);
+  /** Creates a synthetic failed journal for non-step-oriented responses. */
+  static ExecutionJournal syntheticFailureJournal(GridGrindProblemCode failureCode) {
+    return GridGrindResponseSupport.syntheticFailureJournal(failureCode);
   }
 
-  /** Creates a synthetic journal for non-step-oriented responses with an optional failure code. */
+  /** Creates a synthetic journal for non-step-oriented responses with explicit failure state. */
   static ExecutionJournal syntheticJournal(
-      ExecutionJournal.Status status, GridGrindProblemCode failureCode) {
-    if (status == ExecutionJournal.Status.FAILED && failureCode == null) {
-      throw new IllegalArgumentException("failureCode must be present when status is FAILED");
-    }
-    if (status != ExecutionJournal.Status.FAILED && failureCode != null) {
-      throw new IllegalArgumentException("failureCode is only permitted when status is FAILED");
-    }
-    return new ExecutionJournal(
-        null,
-        ExecutionJournalLevel.NORMAL,
-        new ExecutionJournal.SourceSummary(null, null),
-        new ExecutionJournal.PersistenceSummary(null, null),
-        ExecutionJournal.Phase.notStarted(),
-        ExecutionJournal.Phase.notStarted(),
-        ExecutionJournal.Phase.notStarted(),
-        new ExecutionJournal.Calculation(
-            ExecutionJournal.Phase.notStarted(), ExecutionJournal.Phase.notStarted()),
-        ExecutionJournal.Phase.notStarted(),
-        ExecutionJournal.Phase.notStarted(),
-        List.of(),
-        List.of(),
-        new ExecutionJournal.Outcome(status, 0, 0, 0, null, null, failureCode),
-        List.of());
-  }
-
-  private static GridGrindProtocolVersion protocolVersionOrCurrent(
-      GridGrindProtocolVersion protocolVersion) {
-    return protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-  }
-
-  private static List<String> copyDistinctStrings(List<String> values, String fieldName) {
-    List<String> copy = copyStrings(values, fieldName);
-    if (copy.size() != new java.util.LinkedHashSet<>(copy).size()) {
-      throw new IllegalArgumentException(fieldName + " must not contain duplicates");
-    }
-    return copy;
-  }
-
-  private static List<String> validateCommonWorkbookSummaryFields(
-      int sheetCount, List<String> sheetNames, int namedRangeCount) {
-    if (sheetCount < 0) {
-      throw new IllegalArgumentException("sheetCount must not be negative");
-    }
-    if (namedRangeCount < 0) {
-      throw new IllegalArgumentException("namedRangeCount must not be negative");
-    }
-    List<String> copy = copyDistinctStrings(sheetNames, "sheetNames");
-    if (sheetCount != copy.size()) {
-      throw new IllegalArgumentException("sheetCount must match sheetNames size");
-    }
-    for (String sheetName : copy) {
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetNames must not contain blank values");
-      }
-    }
-    return copy;
-  }
-
-  private static <T> List<T> copyValues(List<T> values, String fieldName) {
-    Objects.requireNonNull(values, fieldName + " must not be null");
-    List<T> copy = new ArrayList<>(values.size());
-    for (T value : values) {
-      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
-    }
-    return List.copyOf(copy);
-  }
-
-  private static Optional<List<RichTextRunReport>> copyRichTextRuns(
-      List<RichTextRunReport> values, String fieldName) {
-    if (values == null) {
-      return Optional.empty();
-    }
-    List<RichTextRunReport> copy = copyValues(values, fieldName);
-    if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
-    }
-    return Optional.of(copy);
-  }
-
-  private static String concatenateRichTextRuns(List<RichTextRunReport> runs) {
-    StringBuilder builder = new StringBuilder();
-    for (RichTextRunReport run : runs) {
-      builder.append(run.text());
-    }
-    return builder.toString();
-  }
-
-  private static List<ProblemCause> copyProblemCauses(List<ProblemCause> causes) {
-    if (causes == null) {
-      return List.of();
-    }
-    List<ProblemCause> copy = new ArrayList<>(causes.size());
-    for (ProblemCause cause : causes) {
-      copy.add(Objects.requireNonNull(cause, "causes must not contain nulls"));
-    }
-    return List.copyOf(copy);
-  }
-
-  private static String keepExisting(String current, String discovered) {
-    return current != null ? current : discovered;
+      ExecutionJournal.Status status, Optional<GridGrindProblemCode> failureCode) {
+    return GridGrindResponseSupport.syntheticJournal(status, failureCode);
   }
 }

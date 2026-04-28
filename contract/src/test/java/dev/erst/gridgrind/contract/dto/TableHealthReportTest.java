@@ -2,6 +2,8 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

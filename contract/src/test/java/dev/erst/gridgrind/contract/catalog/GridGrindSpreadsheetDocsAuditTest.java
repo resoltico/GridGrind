@@ -110,9 +110,19 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "limitations doc must not claim blanket non-enforcement for Excel ceilings"),
         () ->
             assertTrue(
-                limitations.contains(
-                    "Some, such as addressed row/column bounds, are already enforced"),
+                normalizedLimitations.contains(
+                    "Some are already enforced on relevant public request paths"),
                 "limitations doc must explain that some Excel ceilings are preflighted"),
+        () ->
+            assertTrue(
+                normalizedLimitations.contains(
+                    "Product-enforced limits are expected to stay traceable into validation code"),
+                "limitations doc must distinguish product-enforced traceability from doc-only ceilings"),
+        () ->
+            assertFalse(
+                normalizedLimitations.contains(
+                    "IDs are referenced in the validation code that enforces the limit, in catalog summaries, and in help text"),
+                "limitations doc must not claim blanket code/help/catalog propagation for every LIM id"),
         () ->
             assertFalse(
                 limitations.contains(

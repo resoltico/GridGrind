@@ -26,6 +26,14 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * Keeps POI's private workbook picture catalog aligned with the actual OOXML package media parts.
  */
 final class ExcelWorkbookImageCatalogSupport {
+  static final PoiPrivateContract PICTURES_FIELD_CONTRACT =
+      PoiPrivateContract.field(
+          XSSFWorkbook.class, "pictures", "workbook picture-catalog synchronization");
+  static final PoiPrivateContract PICTURE_CONSTRUCTOR_CONTRACT =
+      PoiPrivateContract.constructor(
+          XSSFPictureData.class,
+          MethodType.methodType(void.class, PackagePart.class),
+          "workbook picture-catalog synchronization");
   private static final VarHandle PICTURES_FIELD = requirePicturesField(MethodHandles.lookup());
   private static final Function<PackagePart, XSSFPictureData> PICTURE_CONSTRUCTOR =
       requirePictureConstructor(MethodHandles.lookup());
@@ -179,12 +187,7 @@ final class ExcelWorkbookImageCatalogSupport {
   }
 
   static VarHandle requirePicturesField(MethodHandles.Lookup lookup) {
-    return PoiPrivateAccessSupport.requireVarHandle(
-        lookup,
-        XSSFWorkbook.class,
-        "pictures",
-        List.class,
-        "Failed to access POI workbook picture catalog");
+    return PoiPrivateAccessSupport.requireVarHandle(lookup, PICTURES_FIELD_CONTRACT, List.class);
   }
 
   static Function<PackagePart, XSSFPictureData> requirePictureConstructor(
@@ -192,9 +195,8 @@ final class ExcelWorkbookImageCatalogSupport {
     MethodHandle constructor =
         PoiPrivateAccessSupport.requireConstructor(
                 lookup,
-                XSSFPictureData.class,
-                MethodType.methodType(void.class, PackagePart.class),
-                "Failed to access POI picture-data constructor")
+                PICTURE_CONSTRUCTOR_CONTRACT,
+                MethodType.methodType(void.class, PackagePart.class))
             .asType(MethodType.methodType(XSSFPictureData.class, PackagePart.class));
     return pictureConstructor(constructor);
   }

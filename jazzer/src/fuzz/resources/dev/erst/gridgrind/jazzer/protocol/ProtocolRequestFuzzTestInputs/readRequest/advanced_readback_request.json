@@ -435,8 +435,11 @@
             {
               "font": {
                 "bold": true,
-                "fontColorTheme": 4,
-                "fontColorTint": -0.2
+                "fontColor": {
+                  "kind": "THEME",
+                  "theme": 4,
+                  "tint": -0.2
+                }
               },
               "source": {
                 "type": "INLINE",
@@ -452,7 +455,10 @@
             {
               "font": {
                 "italic": true,
-                "fontColorIndexed": 17
+                "fontColor": {
+                  "kind": "INDEXED",
+                  "indexed": 17
+                }
               },
               "source": {
                 "type": "INLINE",
@@ -563,18 +569,28 @@
         "style": {
           "font": {
             "italic": true,
-            "fontColorTheme": 6,
-            "fontColorTint": -0.35
+            "fontColor": {
+              "kind": "THEME",
+              "theme": 6,
+              "tint": -0.35
+            }
           },
           "fill": {
+            "kind": "PATTERN_FOREGROUND",
             "pattern": "SOLID",
-            "foregroundColorTheme": 3,
-            "foregroundColorTint": 0.3
+            "foregroundColor": {
+              "kind": "THEME",
+              "theme": 3,
+              "tint": 0.3
+            }
           },
           "border": {
             "bottom": {
               "style": "THIN",
-              "colorIndexed": 8
+              "color": {
+                "kind": "INDEXED",
+                "indexed": 8
+              }
             }
           }
         }

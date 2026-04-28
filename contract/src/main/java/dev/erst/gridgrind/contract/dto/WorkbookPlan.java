@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -18,24 +19,50 @@ import java.util.Set;
  */
 public record WorkbookPlan(
     GridGrindProtocolVersion protocolVersion,
-    @JsonInclude(JsonInclude.Include.NON_NULL) String planId,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
-    @JsonInclude(JsonInclude.Include.NON_NULL) ExecutionPolicyInput execution,
-    @JsonInclude(JsonInclude.Include.NON_NULL) FormulaEnvironmentInput formulaEnvironment,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = ExecutionPolicyInput.DefaultFilter.class)
+        ExecutionPolicyInput execution,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
+        FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookStep> steps) {
   public WorkbookPlan {
     protocolVersion =
         protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-    if (planId != null) {
-      requireNonBlank(planId, "planId");
+    planId = Objects.requireNonNullElseGet(planId, Optional::empty);
+    if (planId.isPresent()) {
+      planId = Optional.of(requireNonBlank(planId.orElseThrow(), "planId"));
     }
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
-    execution = execution == null || execution.isDefault() ? null : execution;
+    execution = Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults);
     formulaEnvironment =
-        formulaEnvironment == null || formulaEnvironment.isEmpty() ? null : formulaEnvironment;
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty);
     steps = copySteps(steps);
+  }
+
+  /** Creates a plan with one concrete plan id string when external callers already have it. */
+  public WorkbookPlan(
+      GridGrindProtocolVersion protocolVersion,
+      String planId,
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      ExecutionPolicyInput execution,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookStep> steps) {
+    this(
+        protocolVersion,
+        Optional.of(requireNonBlank(planId, "planId")),
+        source,
+        persistence,
+        execution,
+        formulaEnvironment,
+        steps);
   }
 
   /** Creates a plan with the current protocol version and an explicit execution policy. */
@@ -46,7 +73,14 @@ public record WorkbookPlan(
       ExecutionPolicyInput execution,
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookStep> steps) {
-    this(protocolVersion, null, source, persistence, execution, formulaEnvironment, steps);
+    this(
+        protocolVersion,
+        Optional.empty(),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        Objects.requireNonNull(execution, "execution must not be null"),
+        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
+        steps);
   }
 
   /** Creates a plan with the current protocol version and the given parameters. */
@@ -56,7 +90,14 @@ public record WorkbookPlan(
       WorkbookPersistence persistence,
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookStep> steps) {
-    this(protocolVersion, null, source, persistence, null, formulaEnvironment, steps);
+    this(
+        protocolVersion,
+        Optional.empty(),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        ExecutionPolicyInput.defaults(),
+        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
+        steps);
   }
 
   /** Creates a plan with the current protocol version and the given parameters. */
@@ -69,11 +110,12 @@ public record WorkbookPlan(
       List<WorkbookStep> steps) {
     this(
         protocolVersion,
-        null,
-        source,
-        persistence,
-        executionMode == null ? null : new ExecutionPolicyInput(executionMode),
-        formulaEnvironment,
+        Optional.empty(),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        new ExecutionPolicyInput(
+            Objects.requireNonNull(executionMode, "executionMode must not be null")),
+        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
         steps);
   }
 
@@ -99,23 +141,34 @@ public record WorkbookPlan(
       WorkbookPersistence persistence,
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookStep> steps) {
-    this(source, persistence, null, formulaEnvironment, steps);
+    this(
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        ExecutionModeInput.defaults(),
+        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
+        steps);
   }
 
   /** Creates a plan with the current protocol version and no explicit formula environment. */
   public WorkbookPlan(
       WorkbookSource source, WorkbookPersistence persistence, List<WorkbookStep> steps) {
-    this(GridGrindProtocolVersion.current(), source, persistence, null, steps);
+    this(
+        GridGrindProtocolVersion.current(),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps);
   }
 
   /** Returns the effective execution policy after default normalization. */
   public ExecutionPolicyInput effectiveExecution() {
-    return execution == null ? new ExecutionPolicyInput(null, null) : execution;
+    return execution;
   }
 
-  /** Returns the explicitly configured execution mode family, or null when omitted. */
+  /** Returns the normalized execution mode family after request-default expansion. */
   public ExecutionModeInput executionMode() {
-    return execution == null ? null : execution.mode();
+    return execution.mode();
   }
 
   /** Returns the effective execution mode family after default normalization. */
@@ -169,18 +222,24 @@ public record WorkbookPlan(
 
     /** Opens an existing workbook file from disk. */
     record ExistingFile(
-        String path, @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlOpenSecurityInput security)
+        String path,
+        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<OoxmlOpenSecurityInput> security)
         implements WorkbookSource {
       public ExistingFile {
         requireXlsxWorkbookPath(path);
-        security = security == null || security.isEmpty() ? null : security;
+        security = normalizeOpenSecurity(security);
       }
 
       /**
        * Opens the existing workbook at the supplied path with no explicit package-open settings.
        */
       public ExistingFile(String path) {
-        this(path, null);
+        this(path, Optional.empty());
+      }
+
+      /** Opens the existing workbook at the supplied path with explicit package-open settings. */
+      public ExistingFile(String path, OoxmlOpenSecurityInput security) {
+        this(path, Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
   }
@@ -198,31 +257,43 @@ public record WorkbookPlan(
 
     /** Saves the workbook back to the exact path it was opened from. */
     record OverwriteSource(
-        @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlPersistenceSecurityInput security)
+        @JsonInclude(JsonInclude.Include.NON_ABSENT)
+            Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
       public OverwriteSource {
-        security = security == null ? null : security;
+        security = normalizePersistenceSecurity(security);
       }
 
       /** Overwrites the source workbook with no explicit package-security persistence settings. */
       public OverwriteSource() {
-        this(null);
+        this(Optional.empty());
+      }
+
+      /** Overwrites the source workbook with explicit package-security persistence settings. */
+      public OverwriteSource(OoxmlPersistenceSecurityInput security) {
+        this(Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
 
     /** Saves the workbook to a new `.xlsx` path. */
     record SaveAs(
         String path,
-        @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlPersistenceSecurityInput security)
+        @JsonInclude(JsonInclude.Include.NON_ABSENT)
+            Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);
-        security = security == null ? null : security;
+        security = normalizePersistenceSecurity(security);
       }
 
       /** Saves the workbook to the supplied path with no explicit package-security settings. */
       public SaveAs(String path) {
-        this(path, null);
+        this(path, Optional.empty());
+      }
+
+      /** Saves the workbook to the supplied path with explicit package-security settings. */
+      public SaveAs(String path, OoxmlPersistenceSecurityInput security) {
+        this(path, Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
   }
@@ -245,11 +316,12 @@ public record WorkbookPlan(
     return List.copyOf(copy);
   }
 
-  static void requireNonBlank(String value, String fieldName) {
+  static String requireNonBlank(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
+    return value;
   }
 
   static void requireXlsxWorkbookPath(String path) { // LIM-002
@@ -258,5 +330,17 @@ public record WorkbookPlan(
       throw new IllegalArgumentException(
           "path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: " + path);
     }
+  }
+
+  private static Optional<OoxmlOpenSecurityInput> normalizeOpenSecurity(
+      Optional<OoxmlOpenSecurityInput> security) {
+    Optional<OoxmlOpenSecurityInput> normalized =
+        Objects.requireNonNullElseGet(security, Optional::empty);
+    return normalized.filter(value -> !value.isEmpty());
+  }
+
+  private static Optional<OoxmlPersistenceSecurityInput> normalizePersistenceSecurity(
+      Optional<OoxmlPersistenceSecurityInput> security) {
+    return Objects.requireNonNullElseGet(security, Optional::empty);
   }
 }

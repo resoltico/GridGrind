@@ -123,9 +123,7 @@
           "text" : "Forecast uses the revenue and margin rows above."
         },
         "author" : "GridGrind",
-        "visible" : true,
-        "runs" : null,
-        "anchor" : null
+        "visible" : true
       }
     }
   }, {
@@ -142,8 +140,7 @@
       },
       "target" : {
         "sheetName" : "Dashboard",
-        "range" : "B4",
-        "formula" : null
+        "range" : "B4"
       }
     }
   }, {

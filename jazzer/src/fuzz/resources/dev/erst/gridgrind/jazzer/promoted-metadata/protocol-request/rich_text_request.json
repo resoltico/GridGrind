@@ -2,38 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/rich_text_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/rich_text_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
       "inputBytes" : 2910,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 4,
-      "operationKinds" : {
-        "APPLY_STYLE" : 1,
-        "SET_CELL" : 2,
-        "ENSURE_SHEET" : 1
-      },
-      "styleKinds" : {
-        "alignment" : 1,
-        "font_color" : 1,
-        "wrap_text" : 1,
-        "font" : 1,
-        "font_name" : 1,
-        "font_height_points" : 1,
-        "vertical_alignment" : 1,
-        "font_height" : 1
-      },
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 2,
-      "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_WINDOW" : 1
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-04-07T13:57:42.456939Z",

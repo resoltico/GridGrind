@@ -80,29 +80,14 @@
     "action" : {
       "type" : "APPLY_STYLE",
       "style" : {
-        "numberFormat" : null,
         "alignment" : {
           "wrapText" : true,
           "horizontalAlignment" : "CENTER",
-          "verticalAlignment" : "CENTER",
-          "textRotation" : null,
-          "indentation" : null
+          "verticalAlignment" : "CENTER"
         },
         "font" : {
-          "bold" : true,
-          "italic" : null,
-          "fontName" : null,
-          "fontHeight" : null,
-          "fontColor" : null,
-          "fontColorTheme" : null,
-          "fontColorIndexed" : null,
-          "fontColorTint" : null,
-          "underline" : null,
-          "strikeout" : null
-        },
-        "fill" : null,
-        "border" : null,
-        "protection" : null
+          "bold" : true
+        }
       }
     }
   }, {
@@ -117,16 +102,8 @@
       "style" : {
         "numberFormat" : "#,##0.00",
         "alignment" : {
-          "wrapText" : null,
-          "horizontalAlignment" : "RIGHT",
-          "verticalAlignment" : null,
-          "textRotation" : null,
-          "indentation" : null
-        },
-        "font" : null,
-        "fill" : null,
-        "border" : null,
-        "protection" : null
+          "horizontalAlignment" : "RIGHT"
+        }
       }
     }
   }, {

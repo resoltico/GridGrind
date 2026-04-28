@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
@@ -52,49 +53,48 @@ final class ExcelSheetCloneChartPreparationSupport {
 
   private static void maybeRewriteDefinedNameFormula(
       XSSFSheet contextSheet, Node formulaNode, List<FormulaRewrite> rewrites) {
-    String originalFormula = formulaText(formulaNode);
-    if (originalFormula == null || originalFormula.isBlank()) {
+    Optional<String> originalFormula = formulaText(formulaNode);
+    if (originalFormula.isEmpty() || originalFormula.orElseThrow().isBlank()) {
       return;
     }
-    String normalizedFormula = ExcelChartSourceSupport.normalizeFormula(originalFormula);
+    String normalizedFormula =
+        ExcelChartSourceSupport.normalizeFormula(originalFormula.orElseThrow());
     if (ExcelChartSourceSupport.resolveDefinedNameReference(contextSheet, normalizedFormula)
         == null) {
       return;
     }
 
     String rewrittenFormula = explicitAreaFormula(contextSheet, normalizedFormula);
-    if (originalFormula.startsWith("=")) {
+    if (originalFormula.orElseThrow().startsWith("=")) {
       rewrittenFormula = "=" + rewrittenFormula;
     }
 
     setFormulaText(formulaNode, rewrittenFormula);
-    rewrites.add(new FormulaRewrite(formulaNode, originalFormula));
+    rewrites.add(new FormulaRewrite(formulaNode, originalFormula.orElseThrow()));
   }
 
   private static boolean isFormulaNode(Node node) {
     return node.getNodeType() == Node.ELEMENT_NODE && "f".equals(node.getLocalName());
   }
 
-  private static String formulaText(Node formulaNode) {
-    Node valueNode = formulaValueNode(formulaNode);
-    return valueNode == null ? null : valueNode.getNodeValue();
+  private static Optional<String> formulaText(Node formulaNode) {
+    return formulaValueNode(formulaNode).map(Node::getNodeValue);
   }
 
   private static void setFormulaText(Node formulaNode, String formula) {
-    Node valueNode = formulaValueNode(formulaNode);
-    if (valueNode == null) {
-      throw new IllegalStateException("Chart formula node is missing its text payload");
-    }
-    valueNode.setNodeValue(formula);
+    formulaValueNode(formulaNode)
+        .orElseThrow(
+            () -> new IllegalStateException("Chart formula node is missing its text payload"))
+        .setNodeValue(formula);
   }
 
-  static Node formulaValueNode(Node formulaNode) {
+  static Optional<Node> formulaValueNode(Node formulaNode) {
     for (Node child = formulaNode.getFirstChild(); child != null; child = child.getNextSibling()) {
       if (child.getNodeType() == Node.TEXT_NODE || child.getNodeType() == Node.CDATA_SECTION_NODE) {
-        return child;
+        return Optional.of(child);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   static String explicitAreaFormula(XSSFSheet contextSheet, String formula) {

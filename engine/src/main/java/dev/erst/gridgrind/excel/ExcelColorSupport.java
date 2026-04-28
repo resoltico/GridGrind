@@ -14,18 +14,39 @@ final class ExcelColorSupport {
     Objects.requireNonNull(color, "color must not be null");
 
     XSSFColor xssfColor =
-        color.rgb() == null
-            ? new XSSFColor(workbook.getStylesSource().getIndexedColors())
-            : ExcelRgbColorSupport.toXssfColor(workbook, color.rgb());
-    if (color.theme() != null) {
-      xssfColor.setTheme(color.theme());
-    }
-    if (color.indexed() != null) {
-      xssfColor.setIndexed(color.indexed());
-    }
-    if (color.tint() != null) {
-      xssfColor.setTint(color.tint());
+        switch (color) {
+          case ExcelColor.Rgb rgb -> ExcelRgbColorSupport.toXssfColor(workbook, rgb.rgb());
+          case ExcelColor.Theme _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
+          case ExcelColor.Indexed _ -> new XSSFColor(workbook.getStylesSource().getIndexedColors());
+        };
+    switch (color) {
+      case ExcelColor.Rgb rgb -> applyTint(xssfColor, rgb.tint());
+      case ExcelColor.Theme theme -> {
+        xssfColor.setTheme(theme.theme());
+        applyTint(xssfColor, theme.tint());
+      }
+      case ExcelColor.Indexed indexed -> {
+        xssfColor.setIndexed(indexed.indexed());
+        applyTint(xssfColor, indexed.tint());
+      }
     }
     return xssfColor;
+  }
+
+  static ExcelColor copyOf(ExcelColorSnapshot color) {
+    return color == null
+        ? null
+        : switch (color) {
+          case ExcelColorSnapshot.Rgb rgb -> ExcelColor.rgb(rgb.rgb(), rgb.tint());
+          case ExcelColorSnapshot.Theme theme -> ExcelColor.theme(theme.theme(), theme.tint());
+          case ExcelColorSnapshot.Indexed indexed ->
+              ExcelColor.indexed(indexed.indexed(), indexed.tint());
+        };
+  }
+
+  private static void applyTint(XSSFColor color, Double tint) {
+    if (tint != null) {
+      color.setTint(tint);
+    }
   }
 }

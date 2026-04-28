@@ -1,17 +1,18 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER_DOCKER
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
-  keywords: [gridgrind, docker, docker desktop, docker smoke, check.sh, anonymous docker config, docker context, container]
-  questions: ["how should i set up docker for gridgrind", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]
+  keywords: [gridgrind, docker, docker desktop, devcontainer, contributor container, docker smoke, check.sh, anonymous docker config, docker context, container]
+  questions: ["how should i set up docker for gridgrind", "what is the difference between the gridgrind devcontainer and runtime container", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]
 ---
 
 # Docker Workstation Setup
 
 **Purpose**: Codify the supported Docker setup for GridGrind contributors on macOS.
-**Prerequisites**: Java 26 and wrapper-based Gradle setup already in place through
+**Prerequisites**: either the preferred contributor path in
+[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) or the host-native Java path in
 [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md).
 
 Supported workstation shape:
@@ -20,10 +21,14 @@ Supported workstation shape:
 - the `docker buildx` plugin is available in the current shell
 - the active Docker context targets the local Docker Desktop engine
 - the repository checkout lives on the Mac's local filesystem
+- Visual Studio Code plus the Dev Containers extension are available if you use the preferred
+  contributor workflow
 
 ## Canonical Stance
 
 For GridGrind's local container work, the documented standard is:
+- the preferred contributor workflow is the committed devcontainer, not a host-native Java stack
+  with ad hoc local editor tooling
 - Docker comes from Docker Desktop, not from a separate Homebrew-only container-runtime story
 - `docker` and the Docker daemon must already work in the current shell before `./check.sh`
 - `docker buildx` is required; the smoke gate uses `docker buildx build --load`, not Docker's
@@ -36,6 +41,17 @@ For GridGrind's local container work, the documented standard is:
 
 The repository now enforces these Docker-runtime rules in `scripts/docker-smoke.sh` and
 `scripts/verify-container-publication.sh`.
+
+Two separate container surfaces matter in this repository:
+
+- contributor container: `.devcontainer/Dockerfile` plus `.devcontainer/devcontainer.json`,
+  glibc-based, full Zulu 26 JDK, editor tooling, and official Docker-outside-of-Docker wiring so
+  the contributor shell talks to the host Docker Desktop engine
+- published runtime container: `Dockerfile`, Alpine-based, minimal JRE surface for executing the
+  shipped `gridgrind.jar`
+
+Do not collapse those two roles into one image. Contributor ergonomics and extension compatibility
+have different needs than the published runtime artifact.
 
 Release-build reproducibility is part of that contract too:
 - `Dockerfile` pins the Azul Java 26 base image to a manifest-list digest instead of a floating
@@ -83,9 +99,16 @@ Expected local shape on Docker Desktop:
 Then the supported local gates are:
 
 ```bash
+./scripts/validate-devcontainer.sh
 ./scripts/docker-smoke.sh
 ./check.sh
 ```
+
+`./scripts/validate-devcontainer.sh` builds the contributor devcontainer image, checks that it
+still exposes Azul Zulu Java 26 on a glibc base, and verifies the committed VS Code container
+routing contract. Run it when you change `.devcontainer/` or contributor-container docs. It shares
+the same repo-wide verification lock as `./check.sh`, `./scripts/docker-smoke.sh`, and
+`jazzer/bin/*`, so these top-level verification entrypoints are intentionally serialized.
 
 `./check.sh` Stage 5 invokes `scripts/docker-smoke.sh`, which:
 - builds the local image from the repository root through `docker buildx build --load`
@@ -104,6 +127,7 @@ If Docker verification fails on a fresh machine:
 - confirm Docker Desktop is actually running, not only installed
 - rerun `docker buildx version`, `docker info`, and `docker context show` from the same shell that
   will run `./check.sh`
+- if the failure is in the devcontainer path, rebuild the container after `.devcontainer/` edits
 - prefer fixing the local Docker runtime over weakening `./check.sh`
 - if a public pull still hangs, inspect whether personal Docker config customizations were
   reintroduced into the verification path

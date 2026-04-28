@@ -31,7 +31,11 @@ class PoiRelationRemovalTest {
         assertThrows(
             IllegalStateException.class,
             () -> PoiRelationRemoval.removePoiRelationInvoker(MethodHandles.publicLookup()));
-    assertTrue(failure.getMessage().contains("Failed to resolve POI removeRelation handle"));
+    assertTrue(failure.getMessage().contains("Apache POI private contract unavailable"));
+    assertTrue(
+        failure
+            .getMessage()
+            .contains(PoiRelationRemoval.REMOVE_RELATION_CONTRACT.affectedSurface()));
   }
 
   @Test

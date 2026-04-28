@@ -3,9 +3,9 @@ package dev.erst.gridgrind.contract.assertion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

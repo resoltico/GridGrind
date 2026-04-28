@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -87,7 +88,7 @@ class GridGrindCliInvocationTest {
   private static GridGrindCli nonInteractiveCli() {
     return new GridGrindCli(
         (ignoredRequest, ignoredBindings, ignoredSink) ->
-            GridGrindResponse.success(null, null, List.of(), List.of(), List.of()),
+            GridGrindResponses.success(List.of(), List.of(), List.of()),
         new CliRequestReader(),
         new CliResponseWriter(),
         new CliJournalWriter(),

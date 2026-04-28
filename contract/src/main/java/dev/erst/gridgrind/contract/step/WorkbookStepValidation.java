@@ -16,7 +16,6 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -349,26 +348,7 @@ final class WorkbookStepValidation {
   }
 
   static Class<? extends Selector>[] allowedTargetTypes(Assertion assertion) {
-    Objects.requireNonNull(assertion, "assertion must not be null");
-    if (assertion instanceof Assertion.AnalysisMaxSeverity analysisMaxSeverity) {
-      return allowedTargetTypes(analysisMaxSeverity.query());
-    }
-    if (assertion instanceof Assertion.AnalysisFindingPresent analysisFindingPresent) {
-      return allowedTargetTypes(analysisFindingPresent.query());
-    }
-    if (assertion instanceof Assertion.AnalysisFindingAbsent analysisFindingAbsent) {
-      return allowedTargetTypes(analysisFindingAbsent.query());
-    }
-    if (assertion instanceof Assertion.AllOf allOf) {
-      return commonTargetTypes(allOf.assertions(), assertion.assertionType());
-    }
-    if (assertion instanceof Assertion.AnyOf anyOf) {
-      return commonTargetTypes(anyOf.assertions(), assertion.assertionType());
-    }
-    if (assertion instanceof Assertion.Not not) {
-      return allowedTargetTypes(not.assertion());
-    }
-    return staticAllowedTargetTypesForAssertionType(assertion.getClass());
+    return AssertionTargetingSupport.allowedTargetTypes(assertion, ASSERTION_TARGET_TYPES);
   }
 
   static Class<? extends Selector>[] allowedTargetTypesForMutationActionType(
@@ -385,48 +365,18 @@ final class WorkbookStepValidation {
 
   static Class<? extends Selector>[] staticAllowedTargetTypesForAssertionType(
       Class<? extends Assertion> assertionType) {
-    Objects.requireNonNull(assertionType, "assertionType must not be null");
-    String dynamicRule = dynamicTargetSelectorRuleForAssertionType(assertionType);
-    if (dynamicRule != null) {
-      throw new IllegalArgumentException(
-          "Assertion type "
-              + assertionType.getName()
-              + " derives target selectors dynamically: "
-              + dynamicRule);
-    }
-    return configuredTargetTypes(assertionType, ASSERTION_TARGET_TYPES, "assertion");
+    return AssertionTargetingSupport.staticAllowedTargetTypesForAssertionType(
+        assertionType, ASSERTION_TARGET_TYPES);
   }
 
-  static String dynamicTargetSelectorRuleForAssertionType(
+  static Optional<String> dynamicTargetSelectorRuleForAssertionType(
       Class<? extends Assertion> assertionType) {
-    return optionalDynamicTargetSelectorRuleForAssertionType(assertionType).orElse(null);
+    return AssertionTargetingSupport.dynamicTargetSelectorRuleForAssertionType(assertionType);
   }
 
-  private static Optional<String> optionalDynamicTargetSelectorRuleForAssertionType(
+  static Optional<String> targetSelectorRuleForAssertionType(
       Class<? extends Assertion> assertionType) {
-    Objects.requireNonNull(assertionType, "assertionType must not be null");
-    if (assertionType.equals(Assertion.AnalysisMaxSeverity.class)
-        || assertionType.equals(Assertion.AnalysisFindingPresent.class)
-        || assertionType.equals(Assertion.AnalysisFindingAbsent.class)) {
-      return Optional.of("Matches the nested analysis query's target selectors.");
-    }
-    if (assertionType.equals(Assertion.AllOf.class)
-        || assertionType.equals(Assertion.AnyOf.class)) {
-      return Optional.of("Matches the intersection of every nested assertion's target selectors.");
-    }
-    if (assertionType.equals(Assertion.Not.class)) {
-      return Optional.of("Matches the nested assertion's target selectors.");
-    }
-    return Optional.empty();
-  }
-
-  static String targetSelectorRuleForAssertionType(Class<? extends Assertion> assertionType) {
-    Objects.requireNonNull(assertionType, "assertionType must not be null");
-    Optional<String> dynamicRule = optionalDynamicTargetSelectorRuleForAssertionType(assertionType);
-    if (dynamicRule.isPresent()) {
-      return dynamicRule.orElseThrow();
-    }
-    return null;
+    return AssertionTargetingSupport.targetSelectorRuleForAssertionType(assertionType);
   }
 
   private static <T> Class<? extends Selector>[] configuredTargetTypes(
@@ -436,40 +386,6 @@ final class WorkbookStepValidation {
     return Objects.requireNonNull(
         mappings.get(stepClass),
         "No target-type mapping configured for " + mappingLabel + " class " + stepClass.getName());
-  }
-
-  static Class<? extends Selector>[] commonTargetTypes(
-      Iterable<Assertion> assertions, String compositeType) {
-    var iterator = assertions.iterator();
-    if (!iterator.hasNext()) {
-      throw new IllegalArgumentException(
-          compositeType + " requires nested assertions with compatible target families");
-    }
-    Class<? extends Selector>[] intersection = allowedTargetTypes(iterator.next()).clone();
-    while (iterator.hasNext()) {
-      intersection = intersect(intersection, allowedTargetTypes(iterator.next()));
-    }
-    if (intersection.length == 0) {
-      throw new IllegalArgumentException(
-          compositeType + " requires nested assertions with compatible target families");
-    }
-    return intersection;
-  }
-
-  private static Class<? extends Selector>[] intersect(
-      Class<? extends Selector>[] left, Class<? extends Selector>[] right) {
-    List<Class<? extends Selector>> intersection = new java.util.ArrayList<>();
-    for (Class<? extends Selector> leftType : left) {
-      for (Class<? extends Selector> rightType : right) {
-        if (leftType.equals(rightType)) {
-          intersection.add(leftType);
-          break;
-        }
-      }
-    }
-    @SuppressWarnings("unchecked")
-    Class<? extends Selector>[] merged = intersection.toArray(new Class[0]);
-    return merged;
   }
 
   @SafeVarargs

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -17,36 +18,41 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor;
 class AdvancedReadEngineTypesTest {
   @Test
   void colorGradientAndFillSnapshotsValidateRichReadShapes() {
-    assertEquals(new ExcelColorSnapshot("#ABCDEF"), new ExcelColorSnapshot("#abcdef"));
-    assertEquals(4, new ExcelColorSnapshot(null, 4, null, 0.45d).theme());
+    assertEquals(ExcelColorSnapshot.rgb("#ABCDEF"), ExcelColorSnapshot.rgb("#abcdef"));
+    assertEquals(4, ExcelColorSnapshot.theme(4, 0.45d).theme());
+    assertThrows(NullPointerException.class, () -> ExcelColorSnapshot.rgb(null));
+    assertThrows(IllegalArgumentException.class, () -> ExcelColorSnapshot.rgb(" "));
+    assertThrows(IllegalArgumentException.class, () -> ExcelColorSnapshot.rgb("#12345G"));
+    assertThrows(IllegalArgumentException.class, () -> ExcelColorSnapshot.theme(-1));
+    assertThrows(IllegalArgumentException.class, () -> ExcelColorSnapshot.indexed(-1));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot(null, null, null, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot(" ", null, null, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot("#12345G", null, null, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot(null, -1, null, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot(null, null, -1, null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelColorSnapshot(null, null, null, Double.NaN));
+        IllegalArgumentException.class, () -> ExcelColorSnapshot.rgb("#112233", Double.NaN));
 
     ExcelGradientStopSnapshot firstStop = new ExcelGradientStopSnapshot(0.0d, rgb("#112233"));
     ExcelGradientStopSnapshot secondStop =
-        new ExcelGradientStopSnapshot(1.0d, new ExcelColorSnapshot(null, 4, null, 0.45d));
+        new ExcelGradientStopSnapshot(1.0d, ExcelColorSnapshot.theme(4, 0.45d));
     ExcelGradientFillSnapshot gradient =
-        new ExcelGradientFillSnapshot(
-            "LINEAR", 45.0d, 0.1d, 0.2d, 0.3d, 0.4d, List.of(firstStop, secondStop));
+        ExcelGradientFillSnapshot.path(0.1d, 0.2d, 0.3d, 0.4d, List.of(firstStop, secondStop));
 
     assertEquals(2, gradient.stops().size());
-    assertEquals(0.2d, gradient.right());
+    assertEquals(0.2d, gradientRight(gradient));
     assertEquals(
-        new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), null),
-        new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), null));
+        ExcelCellFillSnapshot.patternForeground(ExcelFillPattern.SOLID, rgb("#112233")),
+        ExcelCellFillSnapshot.patternForeground(ExcelFillPattern.SOLID, rgb("#112233")));
     assertEquals(
-        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
-        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null));
+        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
+        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE));
+    ExcelCellFillSnapshot.PatternBackground backgroundOnlyFill =
+        assertInstanceOf(
+            ExcelCellFillSnapshot.PatternBackground.class,
+            ExcelCellFillSnapshot.patternBackground(ExcelFillPattern.BRICKS, rgb("#445566")));
+    assertEquals(ExcelFillPattern.BRICKS, backgroundOnlyFill.pattern());
+    assertEquals(rgb("#445566"), backgroundOnlyFill.backgroundColor());
+    ExcelGradientFillSnapshot.Linear implicitLinearGradient =
+        assertInstanceOf(
+            ExcelGradientFillSnapshot.Linear.class,
+            ExcelGradientFillSnapshot.linear(null, List.of(firstStop, secondStop)));
+    assertNull(implicitLinearGradient.degree());
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelGradientStopSnapshot(1.5d, rgb("#112233")));
     assertThrows(
@@ -57,37 +63,30 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelGradientFillSnapshot(
-                " ", 45.0d, null, null, null, null, List.of(firstStop, secondStop)));
+            ExcelGradientFillSnapshot.path(
+                Double.NaN, null, null, null, List.of(firstStop, secondStop)));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelGradientFillSnapshot(
-                "LINEAR", Double.POSITIVE_INFINITY, null, null, null, null, List.of(firstStop)));
+        () -> ExcelGradientFillSnapshot.linear(Double.POSITIVE_INFINITY, List.of(firstStop)));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelGradientFillSnapshot("LINEAR", 45.0d, null, null, null, null, List.of()));
+        IllegalArgumentException.class, () -> ExcelGradientFillSnapshot.linear(45.0d, List.of()));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelGradientFillSnapshot(
-                "LINEAR", 45.0d, null, null, null, null, Arrays.asList(firstStop, null)));
+        () -> ExcelGradientFillSnapshot.linear(45.0d, Arrays.asList(firstStop, null)));
 
-    assertEquals(
-        gradient,
-        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null, gradient).gradient());
+    assertEquals(gradient, ExcelCellFillSnapshot.gradient(gradient).gradient());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, rgb("#112233"), null));
+        () -> ExcelCellFillSnapshot.patternForeground(ExcelFillPattern.NONE, rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
+        () ->
+            ExcelCellFillSnapshot.patternColors(
+                ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
+    assertThrows(NullPointerException.class, () -> ExcelCellFillSnapshot.gradient(null));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), null, gradient));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, rgb("#445566"), gradient));
+        NullPointerException.class,
+        () -> ExcelCellFillSnapshot.patternBackground(ExcelFillPattern.BRICKS, null));
   }
 
   @Test
@@ -112,26 +111,27 @@ class AdvancedReadEngineTypesTest {
 
       assertNull(ExcelColorSnapshotSupport.snapshot((XSSFColor) null));
       assertNull(ExcelColorSnapshotSupport.snapshot(new XSSFColor()));
-      assertEquals(new ExcelColorSnapshot("#112233"), ExcelColorSnapshotSupport.snapshot(rgbColor));
+      assertEquals(ExcelColorSnapshot.rgb("#112233"), ExcelColorSnapshotSupport.snapshot(rgbColor));
       assertEquals(
-          new ExcelColorSnapshot(null, null, (int) IndexedColors.DARK_RED.getIndex(), null),
+          ExcelColorSnapshot.indexed((int) IndexedColors.DARK_RED.getIndex()),
           ExcelColorSnapshotSupport.snapshot(indexedColor));
       assertEquals(
-          new ExcelColorSnapshot(null, 3, null, 0.25d),
-          ExcelColorSnapshotSupport.snapshot(tintedTheme));
+          ExcelColorSnapshot.theme(3, 0.25d), ExcelColorSnapshotSupport.snapshot(tintedTheme));
       assertEquals(Optional.of("#112233"), ExcelRgbColorSupport.toRgbHex(rgbColor));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(null));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(tintedTheme));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(malformedRgb));
       assertNull(ExcelColorSnapshotSupport.snapshot(workbook, null));
       assertEquals(
-          new ExcelColorSnapshot(null, 2, null, null),
-          ExcelColorSnapshotSupport.snapshot(workbook, themed));
+          ExcelColorSnapshot.theme(2), ExcelColorSnapshotSupport.snapshot(workbook, themed));
       assertEquals(
-          new ExcelColorSnapshot(null, null, 7, null),
-          ExcelColorSnapshotSupport.snapshot(workbook, indexed));
+          ExcelColorSnapshot.indexed(7), ExcelColorSnapshotSupport.snapshot(workbook, indexed));
       assertEquals(
-          new ExcelColorSnapshot("#445566"), ExcelColorSnapshotSupport.snapshot(workbook, argb));
+          ExcelColorSnapshot.rgb("#445566"), ExcelColorSnapshotSupport.snapshot(workbook, argb));
+      assertNull(ExcelColorSupport.copyOf(null));
+      assertEquals(
+          ExcelColor.theme(3, 0.25d), ExcelColorSupport.copyOf(ExcelColorSnapshot.theme(3, 0.25d)));
+      assertEquals(ExcelColor.indexed(7), ExcelColorSupport.copyOf(ExcelColorSnapshot.indexed(7)));
       assertNull(ExcelColorSnapshotSupport.snapshot(workbook, CTColor.Factory.newInstance()));
     }
   }
@@ -144,8 +144,7 @@ class AdvancedReadEngineTypesTest {
         new ExcelRichTextSnapshot(
             List.of(
                 new ExcelRichTextRunSnapshot("Hi ", baseFont),
-                new ExcelRichTextRunSnapshot(
-                    "there", font(new ExcelColorSnapshot(null, 5, null, 0.2d)))));
+                new ExcelRichTextRunSnapshot("there", font(ExcelColorSnapshot.theme(5, 0.2d)))));
     ExcelCommentSnapshot comment = new ExcelCommentSnapshot("Hi there", "Ada", true, runs, anchor);
 
     assertEquals(anchor, comment.anchor());
@@ -329,8 +328,7 @@ class AdvancedReadEngineTypesTest {
     ExcelAutofilterFilterCriterionSnapshot.Top10 top10 =
         new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 10.0d, 8.0d);
     ExcelAutofilterFilterCriterionSnapshot.Color color =
-        new ExcelAutofilterFilterCriterionSnapshot.Color(
-            false, new ExcelColorSnapshot(null, 4, null, 0.45d));
+        new ExcelAutofilterFilterCriterionSnapshot.Color(false, ExcelColorSnapshot.theme(4, 0.45d));
     ExcelAutofilterFilterCriterionSnapshot.Icon icon =
         new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2);
     ExcelAutofilterSortConditionSnapshot sortCondition =
@@ -491,7 +489,7 @@ class AdvancedReadEngineTypesTest {
   }
 
   private static ExcelColorSnapshot rgb(String rgb) {
-    return new ExcelColorSnapshot(rgb);
+    return ExcelColorSnapshot.rgb(rgb);
   }
 
   private static ExcelCellFontSnapshot font(ExcelColorSnapshot color) {

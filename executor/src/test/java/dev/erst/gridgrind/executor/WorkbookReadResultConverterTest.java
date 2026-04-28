@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.executor;
 
+import static dev.erst.gridgrind.executor.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
@@ -17,7 +20,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
@@ -144,7 +146,7 @@ class InspectionResultConverterTest {
 
     assertEquals("Review", plainComment.text());
     assertEquals("GridGrind", plainComment.author());
-    assertNull(plainComment.runs());
+    assertEquals(java.util.Optional.empty(), plainComment.runs());
     assertTrue(protection.structureLocked());
     assertTrue(protection.revisionsLocked());
   }
@@ -179,16 +181,22 @@ class InspectionResultConverterTest {
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult(
                     "cells", "Budget", List.of(advancedCell()))));
-    GridGrindResponse.CellReport.TextReport cell =
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
-    assertEquals(new CellColorReport(null, 2, null, 0.25d), cell.style().font().fontColor());
-    assertEquals(new CellColorReport(null, null, 12, null), cell.style().border().bottom().color());
-    assertNotNull(cell.style().fill().gradient());
-    assertEquals(2, cell.style().fill().gradient().stops().size());
-    assertEquals("https://example.com/tasks/42", ((HyperlinkTarget.Url) cell.hyperlink()).target());
-    assertNotNull(cell.comment());
-    assertEquals(2, cell.comment().runs().size());
-    assertEquals(1, cell.comment().anchor().firstColumn());
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
+    assertEquals(CellColorReport.theme(2, 0.25d), cell.style().font().fontColor());
+    assertEquals(CellColorReport.indexed(12), cell.style().border().bottom().color());
+    assertEquals(
+        2,
+        assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(cell.style().fill()))
+            .stops()
+            .size());
+    assertEquals(
+        "https://example.com/tasks/42",
+        ((HyperlinkTarget.Url) cell.hyperlink().orElseThrow()).target());
+    assertNotNull(cell.comment().orElseThrow());
+    assertEquals(2, cell.comment().orElseThrow().runs().orElseThrow().size());
+    assertEquals(1, cell.comment().orElseThrow().anchor().orElseThrow().firstColumn());
   }
 
   private static void assertCommentsResult() {
@@ -202,8 +210,8 @@ class InspectionResultConverterTest {
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookReadResult.CellComment(
                             "C3", richComment())))));
-    assertEquals(2, comments.comments().getFirst().comment().runs().size());
-    assertEquals(6, comments.comments().getFirst().comment().anchor().lastRow());
+    assertEquals(2, comments.comments().getFirst().comment().runs().orElseThrow().size());
+    assertEquals(6, comments.comments().getFirst().comment().anchor().orElseThrow().lastRow());
   }
 
   private static void assertSheetAndPrintLayoutResults() {
@@ -220,7 +228,10 @@ class InspectionResultConverterTest {
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
                     "sheet-layout", advancedSheetLayout())));
     assertFalse(sheetLayout.layout().presentation().display().displayGridlines());
-    assertEquals("#112233", sheetLayout.layout().presentation().tabColor().rgb());
+    assertEquals(
+        "#112233",
+        assertInstanceOf(CellColorReport.Rgb.class, sheetLayout.layout().presentation().tabColor())
+            .rgb());
     assertEquals(12, sheetLayout.layout().presentation().sheetDefaults().defaultColumnWidth());
     assertEquals("B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range());
     assertEquals(
@@ -454,8 +465,8 @@ class InspectionResultConverterTest {
                         new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
                         List.of(
                             new WorkbookAnalysis.AnalysisFinding(
-                                WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
-                                WorkbookAnalysis.AnalysisSeverity.WARNING,
+                                AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+                                AnalysisSeverity.WARNING,
                                 "Pivot table name is missing",
                                 "GridGrind assigned a synthetic identifier for readback.",
                                 new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
@@ -854,26 +865,16 @@ class InspectionResultConverterTest {
         new ExcelCellAlignmentSnapshot(
             false, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER, 0, 0),
         advancedFont(),
-        new ExcelCellFillSnapshot(
-            ExcelFillPattern.NONE,
-            null,
-            null,
-            new ExcelGradientFillSnapshot(
-                "LINEAR",
+        ExcelCellFillSnapshot.gradient(
+            ExcelGradientFillSnapshot.linear(
                 45.0d,
-                null,
-                null,
-                null,
-                null,
                 List.of(
-                    new ExcelGradientStopSnapshot(0.0d, new ExcelColorSnapshot("#112233")),
-                    new ExcelGradientStopSnapshot(
-                        1.0d, new ExcelColorSnapshot(null, 4, null, 0.45d))))),
+                    new ExcelGradientStopSnapshot(0.0d, ExcelColorSnapshot.rgb("#112233")),
+                    new ExcelGradientStopSnapshot(1.0d, ExcelColorSnapshot.theme(4, 0.45d))))),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(
-                ExcelBorderStyle.THICK, new ExcelColorSnapshot(null, null, 12, null)),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.THICK, ExcelColorSnapshot.indexed(12)),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
         new ExcelCellProtectionSnapshot(true, false));
   }
@@ -884,7 +885,7 @@ class InspectionResultConverterTest {
         false,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        new ExcelColorSnapshot(null, 2, null, 0.25d),
+        ExcelColorSnapshot.theme(2, 0.25d),
         false,
         false);
   }
@@ -895,7 +896,7 @@ class InspectionResultConverterTest {
         false,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        new ExcelColorSnapshot("#AABBCC"),
+        ExcelColorSnapshot.rgb("#AABBCC"),
         false,
         false);
   }
@@ -932,7 +933,7 @@ class InspectionResultConverterTest {
         125,
         new ExcelSheetPresentationSnapshot(
             new ExcelSheetDisplay(false, false, true, true, true),
-            new ExcelColorSnapshot("#112233"),
+            ExcelColorSnapshot.rgb("#112233"),
             new ExcelSheetOutlineSummary(false, false),
             new ExcelSheetDefaults(12, 18.5d),
             List.of(
@@ -957,7 +958,7 @@ class InspectionResultConverterTest {
             "",
             List.of(
                 new ExcelAutofilterSortConditionSnapshot(
-                    "A2:A5", true, "", new ExcelColorSnapshot("#AABBCC"), 1)));
+                    "A2:A5", true, "", ExcelColorSnapshot.rgb("#AABBCC"), 1)));
     List<ExcelAutofilterFilterColumnSnapshot> filterColumns =
         List.of(
             new ExcelAutofilterFilterColumnSnapshot(
@@ -982,7 +983,7 @@ class InspectionResultConverterTest {
                 4L,
                 true,
                 new ExcelAutofilterFilterCriterionSnapshot.Color(
-                    false, new ExcelColorSnapshot(null, 4, null, 0.45d))),
+                    false, ExcelColorSnapshot.theme(4, 0.45d))),
             new ExcelAutofilterFilterColumnSnapshot(
                 5L, true, new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2)));
     return List.of(

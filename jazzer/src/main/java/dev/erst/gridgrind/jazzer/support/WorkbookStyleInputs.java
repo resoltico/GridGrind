@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -74,21 +75,23 @@ public final class WorkbookStyleInputs {
         data.consumeBoolean() ? Boolean.FALSE : null,
         includeName ? (data.consumeBoolean() ? "Aptos" : "Aptos Display") : null,
         data.consumeBoolean() ? nextFontHeightInput(data) : null,
-        data.consumeBoolean() ? nextRgbHex(data) : null,
+        data.consumeBoolean() ? nextColorInput(data) : null,
         data.consumeBoolean() ? Boolean.TRUE : null,
         data.consumeBoolean() ? Boolean.FALSE : null);
   }
 
   private static CellFillInput nextFillInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 3)) {
-      case 0 -> new CellFillInput(ExcelFillPattern.SOLID, nextRgbHex(data), null);
+      case 0 -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, nextColorInput(data));
       case 1 ->
-          new CellFillInput(
-              nextPatternFill(data),
-              nextRgbHex(data),
-              data.consumeBoolean() ? nextRgbHex(data) : null);
-      case 2 -> new CellFillInput(null, nextRgbHex(data), null);
-      default -> new CellFillInput(nextPatternFill(data), null, null);
+          data.consumeBoolean()
+              ? CellFillInput.patternColors(
+                  nextPatternFill(data), nextColorInput(data), nextColorInput(data))
+              : CellFillInput.patternForeground(nextPatternFill(data), nextColorInput(data));
+      case 2 -> CellFillInput.patternBackground(nextPatternFill(data), nextColorInput(data));
+      default ->
+          CellFillInput.pattern(
+              data.consumeBoolean() ? ExcelFillPattern.NONE : nextPatternFill(data));
     };
   }
 
@@ -121,6 +124,16 @@ public final class WorkbookStyleInputs {
         .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
+  private static ColorInput nextColorInput(GridGrindFuzzData data) {
+    return switch (data.consumeInt(0, 2)) {
+      case 0 -> ColorInput.rgb(nextRgbHex(data), data.consumeBoolean() ? nextTint(data) : null);
+      case 1 ->
+          ColorInput.theme(data.consumeInt(0, 9), data.consumeBoolean() ? nextTint(data) : null);
+      default ->
+          ColorInput.indexed(data.consumeInt(0, 64), data.consumeBoolean() ? nextTint(data) : null);
+    };
+  }
+
   private static CellBorderInput nextProtocolBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
       case 0 -> new CellBorderInput(nextBorderSide(data), null, null, null, null);
@@ -141,7 +154,8 @@ public final class WorkbookStyleInputs {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
     return new CellBorderSideInput(
-        style, style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextRgbHex(data));
+        style,
+        style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextColorInput(data));
   }
 
   private static CellProtectionInput nextProtectionInput(GridGrindFuzzData data) {
@@ -158,5 +172,9 @@ public final class WorkbookStyleInputs {
   private static ExcelVerticalAlignment nextVerticalAlignment(GridGrindFuzzData data) {
     ExcelVerticalAlignment[] values = ExcelVerticalAlignment.values();
     return values[data.consumeInt(0, values.length - 1)];
+  }
+
+  private static double nextTint(GridGrindFuzzData data) {
+    return data.consumeRegularDouble(-1.0d, 1.0d);
   }
 }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the transport-neutral GridGrind request executor port. */
@@ -11,12 +12,13 @@ class GridGrindRequestExecutorTest {
   void requireNonNullReturnsExecutorAndRejectsNull() {
     GridGrindRequestExecutor executor =
         (request, bindings, sink) ->
-            GridGrindResponse.failure(
+            GridGrindResponses.failure(
                 GridGrindProtocolVersion.current(),
                 GridGrindProblems.problem(
                     GridGrindProblemCode.INVALID_REQUEST,
                     "boom",
-                    new GridGrindResponse.ProblemContext.ValidateRequest(null, null),
+                    new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown()),
                     (Throwable) null));
 
     assertSame(executor, GridGrindRequestExecutor.requireNonNull(executor));

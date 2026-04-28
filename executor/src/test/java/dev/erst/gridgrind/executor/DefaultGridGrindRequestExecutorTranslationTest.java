@@ -172,7 +172,7 @@ class DefaultGridGrindRequestExecutorTranslationTest
             new MutationAction.SetSheetPresentation(
                 new SheetPresentationInput(
                     new SheetDisplayInput(false, false, false, true, true),
-                    new ColorInput("#112233"),
+                    ColorInput.rgb("#112233"),
                     new SheetOutlineSummaryInput(false, false),
                     new SheetDefaultsInput(11, 18.5d),
                     List.of(
@@ -467,7 +467,7 @@ class DefaultGridGrindRequestExecutorTranslationTest
                 new MutationAction.SetSheetPresentation(
                     new SheetPresentationInput(
                         new SheetDisplayInput(false, false, false, true, true),
-                        new ColorInput("#112233"),
+                        ColorInput.rgb("#112233"),
                         new SheetOutlineSummaryInput(false, false),
                         new SheetDefaultsInput(11, 18.5d),
                         List.of(
@@ -1081,9 +1081,9 @@ class DefaultGridGrindRequestExecutorTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .FORMULA_VOLATILE_FUNCTION,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.INFO,
                             "Volatile formula",
                             "Formula uses NOW().",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Cell(
@@ -1203,9 +1203,9 @@ class DefaultGridGrindRequestExecutorTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 1, 0, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
                             "Priority collision",
                             "Conditional-formatting priorities collide.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
@@ -1220,18 +1220,18 @@ class DefaultGridGrindRequestExecutorTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(2, 1, 1, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .HYPERLINK_MALFORMED_TARGET,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
                             "Malformed hyperlink target",
                             "Hyperlink target is malformed.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
                                 .Workbook(),
                             List.of("mailto:")),
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .HYPERLINK_MISSING_DOCUMENT_SHEET,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
                             "Missing target sheet",
                             "Sheet is missing.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
@@ -1246,9 +1246,9 @@ class DefaultGridGrindRequestExecutorTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .NAMED_RANGE_BROKEN_REFERENCE,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
                             "Broken named range",
                             "Named range contains #REF!.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Range(
@@ -1262,9 +1262,9 @@ class DefaultGridGrindRequestExecutorTranslationTest
                     new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                            dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
                                 .NAMED_RANGE_SCOPE_SHADOWING,
-                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                            dev.erst.gridgrind.excel.foundation.AnalysisSeverity.INFO,
                             "Scope shadowing",
                             "Name exists in more than one scope.",
                             new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation

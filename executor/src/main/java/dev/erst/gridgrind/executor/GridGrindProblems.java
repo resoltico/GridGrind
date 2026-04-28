@@ -8,7 +8,6 @@ import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.contract.json.PayloadException;
 import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.FormulaException;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
@@ -38,7 +37,7 @@ public final class GridGrindProblems {
 
   /** Builds a fully populated problem from a classified exception. */
   public static GridGrindResponse.Problem fromException(
-      Throwable exception, GridGrindResponse.ProblemContext context) {
+      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
     return problem(
@@ -53,7 +52,7 @@ public final class GridGrindProblems {
   public static GridGrindResponse.Problem problem(
       GridGrindProblemCode code,
       String message,
-      GridGrindResponse.ProblemContext context,
+      dev.erst.gridgrind.contract.dto.ProblemContext context,
       Throwable cause) {
     Objects.requireNonNull(context, "context must not be null");
     return problem(
@@ -66,7 +65,7 @@ public final class GridGrindProblems {
   public static GridGrindResponse.Problem problem(
       GridGrindProblemCode code,
       String message,
-      GridGrindResponse.ProblemContext context,
+      dev.erst.gridgrind.contract.dto.ProblemContext context,
       List<GridGrindResponse.ProblemCause> causes) {
     return problem(code, message, context, null, causes);
   }
@@ -74,7 +73,7 @@ public final class GridGrindProblems {
   private static GridGrindResponse.Problem problem(
       GridGrindProblemCode code,
       String message,
-      GridGrindResponse.ProblemContext context,
+      dev.erst.gridgrind.contract.dto.ProblemContext context,
       AssertionFailure assertionFailure,
       List<GridGrindResponse.ProblemCause> causes) {
     Objects.requireNonNull(code, "code must not be null");
@@ -87,7 +86,7 @@ public final class GridGrindProblems {
         Objects.requireNonNull(message, "message must not be null"),
         code.resolution(),
         context,
-        assertionFailure,
+        Optional.ofNullable(assertionFailure),
         causes == null ? List.of() : List.copyOf(causes));
   }
 
@@ -199,81 +198,38 @@ public final class GridGrindProblems {
    * type are paired for protocol parsing failures (e.g., PayloadException in a ReadRequest
    * context).
    */
-  static GridGrindResponse.ProblemContext enrichContext(
-      GridGrindResponse.ProblemContext context, Throwable exception) {
+  static dev.erst.gridgrind.contract.dto.ProblemContext enrichContext(
+      dev.erst.gridgrind.contract.dto.ProblemContext context, Throwable exception) {
     return switch (context) {
-      case GridGrindResponse.ProblemContext.ReadRequest rc -> {
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
-          yield rc.withJson(pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
+          dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation jsonLocation =
+              pe.jsonLine() == null || pe.jsonColumn() == null
+                  ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()
+                  : pe.jsonPath() == null
+                      ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.lineColumn(
+                          pe.jsonLine(), pe.jsonColumn())
+                      : dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located(
+                          pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
+          yield rc.withJson(jsonLocation);
         }
         yield context;
       }
-      case GridGrindResponse.ProblemContext.ExecuteCalculation executeCalculation ->
-          executeCalculation.withExceptionData(
-              sheetNameFor(exception).orElse(null),
-              addressFor(exception).orElse(null),
-              formulaFor(exception).orElse(null));
-      case GridGrindResponse.ProblemContext.ExecuteStep executeStep ->
-          executeStep.withExceptionData(
-              sheetNameFor(exception).orElse(null),
-              addressFor(exception).orElse(null),
-              rangeFor(exception).orElse(null),
-              formulaFor(exception).orElse(null),
-              namedRangeNameFor(exception).orElse(null));
-      case GridGrindResponse.ProblemContext.ParseArguments _ -> context;
-      case GridGrindResponse.ProblemContext.ValidateRequest _ -> context;
-      case GridGrindResponse.ProblemContext.ResolveInputs _ -> context;
-      case GridGrindResponse.ProblemContext.OpenWorkbook _ -> context;
-      case GridGrindResponse.ProblemContext.PersistWorkbook _ -> context;
-      case GridGrindResponse.ProblemContext.ExecuteRequest _ -> context;
-      case GridGrindResponse.ProblemContext.WriteResponse _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation executeCalculation ->
+          exception instanceof Exception resolved
+              ? executeCalculation.withLocation(ExecutionDiagnosticFields.locationFor(resolved))
+              : context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStep ->
+          exception instanceof Exception resolved
+              ? executeStep.withLocation(ExecutionDiagnosticFields.locationFor(resolved))
+              : context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest _ -> context;
+      case dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse _ -> context;
     };
-  }
-
-  private static Optional<String> sheetNameFor(Throwable exception) {
-    return switch (exception) {
-      case FormulaException formulaException -> Optional.of(formulaException.sheetName());
-      case SheetNotFoundException sheetNotFoundException ->
-          Optional.of(sheetNotFoundException.sheetName());
-      case NamedRangeNotFoundException namedRangeNotFoundException ->
-          switch (namedRangeNotFoundException.scope()) {
-            case dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope _ -> Optional.empty();
-            case dev.erst.gridgrind.excel.ExcelNamedRangeScope.SheetScope sheetScope ->
-                Optional.of(sheetScope.sheetName());
-          };
-      default -> Optional.empty();
-    };
-  }
-
-  private static Optional<String> addressFor(Throwable exception) {
-    return switch (exception) {
-      case FormulaException formulaException -> Optional.of(formulaException.address());
-      case CellNotFoundException cellNotFoundException ->
-          Optional.of(cellNotFoundException.address());
-      case InvalidCellAddressException invalidCellAddressException ->
-          Optional.of(invalidCellAddressException.address());
-      default -> Optional.empty();
-    };
-  }
-
-  private static Optional<String> rangeFor(Throwable exception) {
-    if (exception instanceof InvalidRangeAddressException invalidRangeAddressException) {
-      return Optional.of(invalidRangeAddressException.range());
-    }
-    return Optional.empty();
-  }
-
-  private static Optional<String> formulaFor(Throwable exception) {
-    if (exception instanceof FormulaException formulaException) {
-      return Optional.of(formulaException.formula());
-    }
-    return Optional.empty();
-  }
-
-  private static Optional<String> namedRangeNameFor(Throwable exception) {
-    if (exception instanceof NamedRangeNotFoundException namedRangeNotFoundException) {
-      return Optional.of(namedRangeNotFoundException.name());
-    }
-    return Optional.empty();
   }
 }

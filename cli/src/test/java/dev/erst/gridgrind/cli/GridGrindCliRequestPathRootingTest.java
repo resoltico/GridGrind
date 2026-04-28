@@ -102,7 +102,9 @@ class GridGrindCliRequestPathRootingTest {
     assertEquals(0, exitCode);
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                cells.cells().getFirst())
             .stringValue());
   }
 
@@ -161,7 +163,9 @@ class GridGrindCliRequestPathRootingTest {
     assertEquals(0, exitCode);
     assertEquals(
         "Quarterly Budget",
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                cells.cells().getFirst())
             .stringValue());
   }
 
@@ -207,14 +211,16 @@ class GridGrindCliRequestPathRootingTest {
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
     InspectionResult.CellsResult cells =
         assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
-            GridGrindResponse.CellReport.FormulaReport.class, cells.cells().getFirst());
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            cells.cells().getFirst());
 
     assertEquals(0, exitCode);
     assertEquals(
         7.5d,
-        assertInstanceOf(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
             .numberValue());
   }
 

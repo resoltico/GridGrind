@@ -10,6 +10,6 @@ Operation Count: 4
 Assertion Count: 0
 Read Count: 2
 Assertion Kinds: (none)
-Read Kinds: GET_CELLS=1, GET_FORMULA_SURFACE=1
+Read Kinds: GET_FORMULA_SURFACE=1, GET_CELLS=1
 Style Kinds: (none)
 Operation Kinds: SET_CELL=2, SET_RANGE=1, ENSURE_SHEET=1

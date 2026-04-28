@@ -29,6 +29,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
@@ -88,7 +89,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         inspection(success, "cells", InspectionResult.CellsResult.class);
     assertEquals(
         "Owner",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+            .stringValue());
   }
 
   @Test
@@ -116,13 +118,14 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertNotNull(failure.problem().assertionFailure());
-    assertEquals("assert-owner", failure.problem().assertionFailure().stepId());
-    assertEquals("EXPECT_CELL_VALUE", failure.problem().assertionFailure().assertionType());
-    assertEquals(1, failure.problem().assertionFailure().observations().size());
+    assertNotNull(failure.problem().assertionFailure().orElseThrow());
+    assertEquals("assert-owner", failure.problem().assertionFailure().orElseThrow().stepId());
+    assertEquals(
+        "EXPECT_CELL_VALUE", failure.problem().assertionFailure().orElseThrow().assertionType());
+    assertEquals(1, failure.problem().assertionFailure().orElseThrow().observations().size());
     assertInstanceOf(
         InspectionResult.CellsResult.class,
-        failure.problem().assertionFailure().observations().getFirst());
+        failure.problem().assertionFailure().orElseThrow().observations().getFirst());
   }
 
   @Test
@@ -150,7 +153,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                     new WorkbookSelector.Current(),
                                     new InspectionQuery.GetWorkbookSummary()))))));
 
-    assertEquals("ledger-audit", success.journal().planId());
+    assertEquals("ledger-audit", success.journal().planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, success.journal().level());
     assertEquals(2, success.journal().steps().size());
     assertEquals("ENSURE_SHEET", success.journal().steps().getFirst().stepType());
@@ -184,11 +187,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
-    assertEquals(0, failure.journal().outcome().failedStepIndex());
-    assertEquals("missing-sheet", failure.journal().outcome().failedStepId());
+    assertEquals(0, failure.journal().outcome().failedStepIndex().orElseThrow());
+    assertEquals("missing-sheet", failure.journal().outcome().failedStepId().orElseThrow());
     assertEquals(
         GridGrindProblemCode.SHEET_NOT_FOUND,
-        failure.journal().steps().getFirst().failure().code());
+        failure.journal().steps().getFirst().failure().orElseThrow().code());
     assertEquals(
         ExecutionJournal.StepOutcome.FAILED, failure.journal().steps().getFirst().outcome());
   }
@@ -270,16 +273,19 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals("Budget", cells.sheetName());
     assertEquals(
         "Item",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0)).stringValue());
-    GridGrindResponse.CellReport.FormulaReport formulaCell =
-        cast(GridGrindResponse.CellReport.FormulaReport.class, cells.cells().get(1));
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+            .stringValue());
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(1));
     assertEquals("SUM(B2:B3)", formulaCell.formula());
     assertEquals(
         61.0,
-        cast(GridGrindResponse.CellReport.NumberReport.class, formulaCell.evaluation())
+        cast(
+                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+                formulaCell.evaluation())
             .numberValue());
     assertTrue(
-        cast(GridGrindResponse.CellReport.BooleanReport.class, cells.cells().get(2))
+        cast(dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class, cells.cells().get(2))
             .booleanValue());
 
     assertEquals("Budget", window.sheetName());
@@ -401,7 +407,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                         Boolean.TRUE,
                                         "Aptos",
                                         new FontHeightInput.Twips(260),
-                                        "#112233",
+                                        ColorInput.rgb("#112233"),
                                         null,
                                         null),
                                     null,
@@ -420,7 +426,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                                 null,
                                                 null,
                                                 null,
-                                                "#FF0000",
+                                                ColorInput.rgb("#FF0000"),
                                                 null,
                                                 null))))))),
                     inspect(
@@ -430,22 +436,22 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     GridGrindResponse.Success success = success(response);
     InspectionResult.CellsResult cells = read(success, "cells", InspectionResult.CellsResult.class);
-    GridGrindResponse.CellReport.TextReport cell =
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
 
     assertEquals("Budget FY26", cell.stringValue());
-    assertNotNull(cell.richText());
-    assertEquals(2, cell.richText().size());
-    assertEquals("Budget", cell.richText().get(0).text());
-    assertEquals("Aptos", cell.richText().get(0).font().fontName());
-    assertEquals(rgb("#112233"), cell.richText().get(0).font().fontColor());
-    assertTrue(cell.richText().get(0).font().italic());
-    assertFalse(cell.richText().get(0).font().bold());
-    assertEquals(" FY26", cell.richText().get(1).text());
-    assertEquals("Aptos", cell.richText().get(1).font().fontName());
-    assertEquals(rgb("#FF0000"), cell.richText().get(1).font().fontColor());
-    assertTrue(cell.richText().get(1).font().bold());
-    assertTrue(cell.richText().get(1).font().italic());
+    assertTrue(cell.richText().isPresent());
+    assertEquals(2, cell.richText().orElseThrow().size());
+    assertEquals("Budget", cell.richText().orElseThrow().get(0).text());
+    assertEquals("Aptos", cell.richText().orElseThrow().get(0).font().fontName());
+    assertEquals(rgb("#112233"), cell.richText().orElseThrow().get(0).font().fontColor());
+    assertTrue(cell.richText().orElseThrow().get(0).font().italic());
+    assertFalse(cell.richText().orElseThrow().get(0).font().bold());
+    assertEquals(" FY26", cell.richText().orElseThrow().get(1).text());
+    assertEquals("Aptos", cell.richText().orElseThrow().get(1).font().fontName());
+    assertEquals(rgb("#FF0000"), cell.richText().orElseThrow().get(1).font().fontColor());
+    assertTrue(cell.richText().orElseThrow().get(1).font().bold());
+    assertTrue(cell.richText().orElseThrow().get(1).font().italic());
   }
 
   @Test
@@ -515,10 +521,12 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "After",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+            .stringValue());
     assertEquals(
         12.0,
-        cast(GridGrindResponse.CellReport.NumberReport.class, cells.cells().get(1)).numberValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(1))
+            .numberValue());
   }
 
   @Test
@@ -557,7 +565,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             new MutationAction.SetSheetPresentation(
                                 new SheetPresentationInput(
                                     new SheetDisplayInput(false, false, false, true, true),
-                                    new ColorInput("#112233"),
+                                    ColorInput.rgb("#112233"),
                                     new SheetOutlineSummaryInput(false, false),
                                     new SheetDefaultsInput(11, 18.5d),
                                     List.of(
@@ -614,7 +622,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "Quarterly",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst())
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst())
             .stringValue());
     assertEquals(
         List.of("A1:B1"),
@@ -650,7 +658,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         new ExcelSheetDisplay(false, false, false, true, true),
         reopenedLayout.presentation().display());
-    assertEquals(new ExcelColorSnapshot("#112233"), reopenedLayout.presentation().tabColor());
+    assertEquals(ExcelColorSnapshot.rgb("#112233"), reopenedLayout.presentation().tabColor());
     assertEquals(
         new ExcelSheetOutlineSummary(false, false), reopenedLayout.presentation().outlineSummary());
     assertEquals(new ExcelSheetDefaults(11, 18.5d), reopenedLayout.presentation().sheetDefaults());
@@ -879,19 +887,24 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
         "Spacer",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
+            .stringValue());
     assertEquals(
         "Pad",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(1)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(1))
+            .stringValue());
     assertEquals(
         "Hosting",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(2)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(2))
+            .stringValue());
     assertEquals(
         42.0,
-        cast(GridGrindResponse.CellReport.NumberReport.class, cells.cells().get(3)).numberValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(3))
+            .numberValue());
     assertEquals(
         "Beta",
-        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(4)).stringValue());
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(4))
+            .stringValue());
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       assertEquals("Spacer", workbook.sheet("Moves").text("A2"));
@@ -1023,9 +1036,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new InspectionQuery.GetNamedRanges())));
 
     GridGrindResponse.Success success = success(response);
-    GridGrindResponse.CellReport.TextReport linkedCell =
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
         cast(
-            GridGrindResponse.CellReport.TextReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
             read(success, "cells", InspectionResult.CellsResult.class).cells().getFirst());
     InspectionResult.HyperlinksResult hyperlinks =
         read(success, "hyperlinks", InspectionResult.HyperlinksResult.class);
@@ -1034,8 +1047,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     InspectionResult.NamedRangesResult ranges =
         read(success, "ranges", InspectionResult.NamedRangesResult.class);
 
-    assertEquals(new HyperlinkTarget.Url("https://example.com/report"), linkedCell.hyperlink());
-    assertEquals("Review", linkedCell.comment().text());
+    assertEquals(
+        java.util.Optional.of(new HyperlinkTarget.Url("https://example.com/report")),
+        linkedCell.hyperlink());
+    assertEquals("Review", linkedCell.comment().orElseThrow().text());
     assertEquals("A1", hyperlinks.hyperlinks().getFirst().address());
     assertEquals(
         new HyperlinkTarget.Url("https://example.com/report"),

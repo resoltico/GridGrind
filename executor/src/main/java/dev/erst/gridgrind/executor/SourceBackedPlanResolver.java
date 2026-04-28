@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.executor;
 
+import static dev.erst.gridgrind.executor.SourceBackedResolutionIdentitySupport.sameOptionalReference;
+import static dev.erst.gridgrind.executor.SourceBackedResolutionIdentitySupport.sameReference;
+
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
@@ -35,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Resolves source-backed authored text and binary fields into inline canonical contract values.
@@ -206,15 +210,6 @@ public final class SourceBackedPlanResolver {
     };
   }
 
-  /**
-   * Preserves authored step and selector object identity when source-backed resolution makes no
-   * semantic change, which avoids rebuilding canonical records unnecessarily.
-   */
-  @SuppressWarnings("PMD.CompareObjectsWithEquals")
-  private static boolean sameReference(Object left, Object right) {
-    return left == right;
-  }
-
   private static CellInput resolveCellInput(CellInput value, ExecutionInputBindings bindings)
       throws IOException {
     return switch (value) {
@@ -256,10 +251,12 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     TextSourceInput resolvedText =
         resolveTextSource(comment.text(), bindings, true, "comment text");
-    List<RichTextRunInput> resolvedRuns =
-        comment.runs() == null ? null : resolveRuns(comment.runs(), bindings);
+    Optional<List<RichTextRunInput>> resolvedRuns =
+        comment.runs().isEmpty()
+            ? Optional.empty()
+            : Optional.of(resolveRuns(comment.runs().orElseThrow(), bindings));
     return sameReference(resolvedText, comment.text())
-            && sameReference(resolvedRuns, comment.runs())
+            && sameOptionalReference(resolvedRuns, comment.runs())
         ? comment
         : new CommentInput(
             resolvedText, comment.author(), comment.visible(), resolvedRuns, comment.anchor());
@@ -288,12 +285,13 @@ public final class SourceBackedPlanResolver {
 
   private static SignatureLineInput resolveSignatureLine(
       SignatureLineInput signatureLine, ExecutionInputBindings bindings) throws IOException {
-    if (signatureLine.plainSignature() == null) {
+    if (signatureLine.plainSignature().isEmpty()) {
       return signatureLine;
     }
     PictureDataInput resolvedPlainSignature =
-        resolvePictureData(signatureLine.plainSignature(), bindings);
-    return sameReference(resolvedPlainSignature, signatureLine.plainSignature())
+        resolvePictureData(signatureLine.plainSignature().orElseThrow(), bindings);
+    return sameOptionalReference(
+            Optional.of(resolvedPlainSignature), signatureLine.plainSignature())
         ? signatureLine
         : new SignatureLineInput(
             signatureLine.name(),
@@ -305,7 +303,7 @@ public final class SourceBackedPlanResolver {
             signatureLine.suggestedSignerEmail(),
             signatureLine.caption(),
             signatureLine.invalidStamp(),
-            resolvedPlainSignature);
+            Optional.of(resolvedPlainSignature));
   }
 
   private static PictureDataInput resolvePictureData(
@@ -749,11 +747,13 @@ public final class SourceBackedPlanResolver {
 
   private static byte[] standardInputBytes(ExecutionInputBindings bindings, String inputKind)
       throws InputSourceUnavailableException {
-    if (!bindings.hasStandardInput()) {
-      throw new InputSourceUnavailableException(
-          inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound", inputKind);
-    }
-    return bindings.standardInputBytes();
+    return bindings
+        .standardInputBytes()
+        .orElseThrow(
+            () ->
+                new InputSourceUnavailableException(
+                    inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound",
+                    inputKind));
   }
 
   private static List<List<CellInput>> resolveRows(

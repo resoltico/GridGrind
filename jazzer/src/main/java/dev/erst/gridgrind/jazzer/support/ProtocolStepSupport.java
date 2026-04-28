@@ -94,7 +94,7 @@ final class ProtocolStepSupport {
   }
 
   static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(null, null, calculation);
+    return ExecutionPolicyInput.calculation(calculation);
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -153,11 +153,11 @@ final class ProtocolStepSupport {
       List<InspectionStep> inspections) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
-        null,
+        java.util.Optional.empty(),
         source,
         persistence,
-        execution,
-        formulaEnvironment,
+        execution == null ? ExecutionPolicyInput.defaults() : execution,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
         steps(mutations, assertions, inspections));
   }
 

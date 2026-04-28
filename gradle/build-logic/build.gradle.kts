@@ -4,16 +4,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    `kotlin-dsl`
+    alias(libs.plugins.kotlin.jvm)
     `java-gradle-plugin`
 }
 
 repositories {
-    gradlePluginPortal()
     mavenCentral()
+    gradlePluginPortal()
 }
 
 dependencies {
+    implementation(gradleApi())
+    implementation(gradleKotlinDsl())
     implementation("com.diffplug.spotless:spotless-plugin-gradle:${libs.versions.spotless.get()}")
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
@@ -37,23 +39,21 @@ gradlePlugin {
     }
 }
 
-// GridGrind's runtime and product-module baseline is Java 26. Kotlin 2.3.0 does not yet emit
-// JVM 26 bytecode directly, so shared build logic compiles with the Java 26 toolchain while
-// still targeting JVM 25 bytecode.
+// GridGrind's runtime, product modules, and shared build logic all target Java 26.
 kotlin {
     jvmToolchain(26)
 }
 
 tasks.withType<KotlinCompile>().configureEach {
     incremental = false
-    compilerOptions.jvmTarget.set(JvmTarget.JVM_25)
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
     doFirst {
         cleanDirectoryContents(destinationDirectory.get().asFile)
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
-    options.release = 25
+    options.release = 26
     doFirst {
         cleanDirectoryContents(destinationDirectory.get().asFile)
     }

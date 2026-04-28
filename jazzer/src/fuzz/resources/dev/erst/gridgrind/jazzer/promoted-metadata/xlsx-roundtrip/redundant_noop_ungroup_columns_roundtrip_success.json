@@ -10,9 +10,9 @@
       "inputBytes" : 154,
       "commandCount" : 7,
       "commandKinds" : {
+        "SET_SHEET_PANE" : 1,
         "MERGE_CELLS" : 1,
-        "GROUP_COLUMNS" : 5,
-        "SET_SHEET_PANE" : 1
+        "GROUP_COLUMNS" : 5
       },
       "styleKinds" : { }
     }

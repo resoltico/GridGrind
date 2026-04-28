@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -25,7 +26,7 @@ class ExampleExecutionFixturesTest {
     Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace, (byte[]) null);
+    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
     for (GridGrindShippedExamples.ShippedExample example :
         GridGrindShippedExamples.selfContainedExamples()) {
       WorkbookPlan request = example.plan();
@@ -38,6 +39,7 @@ class ExampleExecutionFixturesTest {
           request.planId(),
           success.journal().planId(),
           () -> "success journal must retain the example plan id: " + example.id());
+      assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
   }
@@ -49,7 +51,7 @@ class ExampleExecutionFixturesTest {
     Files.createDirectories(workspace.resolve("cli/build/generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace, (byte[]) null);
+    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
     for (GridGrindShippedExamples.ShippedExample example : GridGrindShippedExamples.examples()) {
       WorkbookPlan request = example.plan();
       GridGrindResponse.Success success =
@@ -61,6 +63,7 @@ class ExampleExecutionFixturesTest {
           request.planId(),
           success.journal().planId(),
           () -> "success journal must retain the example plan id: " + example.id());
+      assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, workspace);
     }
   }
@@ -70,7 +73,7 @@ class ExampleExecutionFixturesTest {
     Path workspace = Files.createDirectories(tempDir.resolve("artifact-workspace-missing-assets"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace, (byte[]) null);
+    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
     for (GridGrindShippedExamples.ShippedExample example :
         GridGrindShippedExamples.repositoryAssetBackedExamples()) {
       GridGrindResponse.Failure failure =
@@ -95,8 +98,7 @@ class ExampleExecutionFixturesTest {
     Files.createDirectories(workspace.resolve("cli/build/generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings exampleBindings =
-        new ExecutionInputBindings(examplesDirectory, (byte[]) null);
+    ExecutionInputBindings exampleBindings = new ExecutionInputBindings(examplesDirectory);
     for (GridGrindShippedExamples.ShippedExample example :
         GridGrindShippedExamples.repositoryExamples()) {
       Path requestPath = examplesDirectory.resolve(example.fileName());
@@ -110,8 +112,17 @@ class ExampleExecutionFixturesTest {
           request.planId(),
           success.journal().planId(),
           () -> "success journal must retain the repository example plan id: " + example.id());
+      assertNullFreeResponse(success, example.id());
       assertPersistedWorkbookExists(request, requestPath.getParent());
     }
+  }
+
+  private static void assertNullFreeResponse(GridGrindResponse response, String exampleId)
+      throws IOException {
+    assertTrue(
+        !new String(GridGrindJson.writeResponseBytes(response), StandardCharsets.UTF_8)
+            .contains(": null"),
+        () -> "serialized response must omit explicit null properties: " + exampleId);
   }
 
   private static GridGrindProblemCode expectedBlankWorkspaceFailureCode(String exampleId) {

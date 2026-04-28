@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,8 +31,8 @@ final class ExcelTableAnalysisSupport {
     if (parsedRange == null) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
+              AnalysisSeverity.ERROR,
               "Table range is invalid",
               "Table range could not be parsed from workbook metadata.",
               location,
@@ -42,8 +44,8 @@ final class ExcelTableAnalysisSupport {
     if (table.headerRowCount() < 1 || parsedRange.rowCount() < minimumRows) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
+              AnalysisSeverity.ERROR,
               "Table range does not match table row counts",
               "Table metadata requires at least "
                   + minimumRows
@@ -70,8 +72,8 @@ final class ExcelTableAnalysisSupport {
     if (!blankHeaders.isEmpty()) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.TABLE_BLANK_HEADER,
+              AnalysisSeverity.ERROR,
               "Table contains blank header cells",
               "Table column headers must be nonblank.",
               location,
@@ -80,8 +82,8 @@ final class ExcelTableAnalysisSupport {
     if (!duplicateHeaders.isEmpty()) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.TABLE_DUPLICATE_HEADER,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.TABLE_DUPLICATE_HEADER,
+              AnalysisSeverity.ERROR,
               "Table contains duplicate header cells",
               "Table column headers must be unique (case-insensitive).",
               location,
@@ -95,8 +97,8 @@ final class ExcelTableAnalysisSupport {
             || workbook.xssfWorkbook().getStylesSource().getTableStyle(named.name()) == null) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.TABLE_STYLE_MISMATCH,
-                  WorkbookAnalysis.AnalysisSeverity.WARNING,
+                  AnalysisFindingCode.TABLE_STYLE_MISMATCH,
+                  AnalysisSeverity.WARNING,
                   "Table style does not resolve",
                   "Table style metadata refers to a style name that the workbook does not define.",
                   location,
@@ -135,8 +137,8 @@ final class ExcelTableAnalysisSupport {
     evidence.addAll(overlaps);
     return List.of(
         new WorkbookAnalysis.AnalysisFinding(
-            WorkbookAnalysis.AnalysisFindingCode.TABLE_OVERLAPPING_RANGE,
-            WorkbookAnalysis.AnalysisSeverity.ERROR,
+            AnalysisFindingCode.TABLE_OVERLAPPING_RANGE,
+            AnalysisSeverity.ERROR,
             "Table range overlaps another table",
             "Table metadata overlaps one or more other tables on the same sheet.",
             new WorkbookAnalysis.AnalysisLocation.Range(table.sheetName(), table.range()),
@@ -163,8 +165,8 @@ final class ExcelTableAnalysisSupport {
     if (parsedFilterRange == null) {
       return List.of(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
+              AnalysisSeverity.ERROR,
               "Table autofilter range is invalid",
               "Table-owned autofilter range could not be parsed from workbook metadata.",
               new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName()),
@@ -175,8 +177,8 @@ final class ExcelTableAnalysisSupport {
     if (ExcelSheetStructureSupport.headerRowMissing(sheet, parsedFilterRange)) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
+              AnalysisSeverity.WARNING,
               "Table autofilter header row is blank",
               "Table-owned autofilter range does not contain a nonblank header row.",
               location,
@@ -186,8 +188,8 @@ final class ExcelTableAnalysisSupport {
     if (!ExcelSheetStructureSupport.formatRange(parsedFilterRange).equals(expectedRange)) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+              AnalysisSeverity.WARNING,
               "Table autofilter does not match table range",
               "Table-owned autofilter range must match the table range excluding any totals row.",
               location,

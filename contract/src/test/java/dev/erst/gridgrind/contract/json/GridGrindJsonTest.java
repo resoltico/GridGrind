@@ -14,8 +14,10 @@ import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -67,7 +69,7 @@ class GridGrindJsonTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionModeInput(
                 ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
-            null,
+            FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
                     "set-owner",
@@ -82,7 +84,7 @@ class GridGrindJsonTest {
                     new WorkbookSelector.Current(),
                     new InspectionQuery.GetWorkbookSummary())));
     GridGrindResponse response =
-        GridGrindResponse.success(
+        GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
@@ -104,7 +106,7 @@ class GridGrindJsonTest {
   @Test
   void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
     GridGrindResponse resolveInputsFailure =
-        GridGrindResponse.failure(
+        GridGrindResponses.failure(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
@@ -116,12 +118,15 @@ class GridGrindJsonTest {
                 "missing payload",
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .resolution(),
-                new GridGrindResponse.ProblemContext.ResolveInputs(
-                    "NEW", "NONE", "cell text", "missing.txt"),
-                null,
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                        "NEW", "NONE"),
+                    dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
+                        "cell text", "missing.txt")),
+                java.util.Optional.empty(),
                 List.of()));
     GridGrindResponse calculationFailure =
-        GridGrindResponse.failure(
+        GridGrindResponses.failure(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
@@ -130,9 +135,12 @@ class GridGrindJsonTest {
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.title(),
                 "bad formula",
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.resolution(),
-                new GridGrindResponse.ProblemContext.ExecuteCalculation.Preflight(
-                    "EXISTING", "SAVE_AS", "Ops", "B1", "SUM("),
-                null,
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation.Preflight(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                        "EXISTING", "SAVE_AS"),
+                    dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
+                        "Ops", "B1", "SUM(")),
+                java.util.Optional.empty(),
                 List.of()));
 
     assertEquals(

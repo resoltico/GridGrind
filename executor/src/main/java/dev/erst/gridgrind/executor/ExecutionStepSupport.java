@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -62,33 +61,26 @@ final class ExecutionStepSupport {
     writer.apply(command);
   }
 
-  GridGrindResponse.ProblemContext.ExecuteStep executeStepContext(
+  dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStepContext(
       WorkbookPlan request, int stepIndex, WorkbookStep step, Exception exception) {
-    return new GridGrindResponse.ProblemContext.ExecuteStep(
-        ExecutionRequestPaths.reqSourceType(request),
-        ExecutionRequestPaths.reqPersistenceType(request),
-        stepIndex,
-        step.stepId(),
-        step.stepKind(),
-        ExecutionStepKinds.stepType(step),
-        ExecutionDiagnosticFields.sheetNameFor(step, exception),
-        ExecutionDiagnosticFields.addressFor(step, exception),
-        ExecutionDiagnosticFields.rangeFor(step, exception),
-        ExecutionDiagnosticFields.formulaFor(step, exception),
-        ExecutionDiagnosticFields.namedRangeNameFor(step, exception));
+    return new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+        ExecutionRequestPaths.requestShape(request),
+        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+            stepIndex, step.stepId(), step.stepKind(), ExecutionStepKinds.stepType(step)),
+        ExecutionDiagnosticFields.locationFor(step, exception));
   }
 
-  GridGrindResponse.ProblemContext.ResolveInputs resolveInputsContext(
+  dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs resolveInputsContext(
       WorkbookPlan request, Exception exception) {
-    return new GridGrindResponse.ProblemContext.ResolveInputs(
-        ExecutionRequestPaths.reqSourceType(request),
-        ExecutionRequestPaths.reqPersistenceType(request),
+    return new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
+        ExecutionRequestPaths.requestShape(request),
         exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputKind()
-            : null,
-        exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputPath()
-            : null);
+            ? inputSourceException.inputPath() != null
+                ? dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
+                    inputSourceException.inputKind(), inputSourceException.inputPath())
+                : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.kind(
+                    inputSourceException.inputKind())
+            : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.unknown());
   }
 
   InspectionResult executeInspectionStep(

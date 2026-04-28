@@ -15,9 +15,8 @@ final class ExecutionValidationSupport {
           GridGrindProblems.problem(
               GridGrindProblemCode.INVALID_REQUEST,
               calculationPolicyFailure.get(),
-              new GridGrindResponse.ProblemContext.ValidateRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                  ExecutionRequestPaths.requestShape(request)),
               (Throwable) null));
     }
 
@@ -29,9 +28,8 @@ final class ExecutionValidationSupport {
           GridGrindProblems.problem(
               GridGrindProblemCode.INVALID_REQUEST,
               executionModeFailure.get(),
-              new GridGrindResponse.ProblemContext.ValidateRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                  ExecutionRequestPaths.requestShape(request)),
               (Throwable) null));
     }
 
@@ -44,9 +42,8 @@ final class ExecutionValidationSupport {
                         GridGrindProblemCode.INVALID_REQUEST,
                         "OVERWRITE persistence requires an EXISTING source; "
                             + "a NEW workbook has no source file to overwrite",
-                        new GridGrindResponse.ProblemContext.ValidateRequest(
-                            ExecutionRequestPaths.reqSourceType(request),
-                            ExecutionRequestPaths.reqPersistenceType(request)),
+                        new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                            ExecutionRequestPaths.requestShape(request)),
                         (Throwable) null));
             case WorkbookPlan.WorkbookSource.ExistingFile _ -> Optional.empty();
           };

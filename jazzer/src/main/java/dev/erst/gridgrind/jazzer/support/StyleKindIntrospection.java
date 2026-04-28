@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -81,12 +82,13 @@ public final class StyleKindIntrospection {
     if (fill == null) {
       return;
     }
-    increment(kinds, "fill_pattern", fill.pattern() != null);
-    increment(kinds, "fill_pattern_solid", fill.pattern() == ExcelFillPattern.SOLID);
-    increment(kinds, "fill_patterned", isPatterned(fill.pattern()));
-    increment(kinds, "fill_foreground_color", fill.foregroundColor() != null);
-    increment(kinds, "fill_background_color", fill.backgroundColor() != null);
-    increment(kinds, "fill_color", fill.foregroundColor() != null);
+    ExcelFillPattern pattern = protocolFillPattern(fill);
+    increment(kinds, "fill_pattern", pattern != null);
+    increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
+    increment(kinds, "fill_patterned", isPatterned(pattern));
+    increment(kinds, "fill_foreground_color", protocolForegroundColor(fill) != null);
+    increment(kinds, "fill_background_color", protocolBackgroundColor(fill) != null);
+    increment(kinds, "fill_color", protocolForegroundColor(fill) != null);
   }
 
   private static void appendProtocolBorderKinds(Map<String, Long> kinds, CellBorderInput border) {
@@ -174,12 +176,13 @@ public final class StyleKindIntrospection {
     if (style.fill() == null) {
       return;
     }
-    increment(kinds, "fill_pattern", style.fill().pattern() != null);
-    increment(kinds, "fill_pattern_solid", style.fill().pattern() == ExcelFillPattern.SOLID);
-    increment(kinds, "fill_patterned", isPatterned(style.fill().pattern()));
-    increment(kinds, "fill_foreground_color", style.fill().foregroundColor() != null);
-    increment(kinds, "fill_background_color", style.fill().backgroundColor() != null);
-    increment(kinds, "fill_color", style.fill().foregroundColor() != null);
+    ExcelFillPattern pattern = engineFillPattern(style.fill());
+    increment(kinds, "fill_pattern", pattern != null);
+    increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
+    increment(kinds, "fill_patterned", isPatterned(pattern));
+    increment(kinds, "fill_foreground_color", engineForegroundColor(style.fill()) != null);
+    increment(kinds, "fill_background_color", engineBackgroundColor(style.fill()) != null);
+    increment(kinds, "fill_color", engineForegroundColor(style.fill()) != null);
   }
 
   private static void appendEngineProtectionKinds(Map<String, Long> kinds, ExcelCellStyle style) {
@@ -206,6 +209,58 @@ public final class StyleKindIntrospection {
 
   private static boolean hasColor(ExcelBorderSide side) {
     return side != null && side.color() != null;
+  }
+
+  private static ExcelFillPattern protocolFillPattern(CellFillInput fill) {
+    return switch (fill) {
+      case CellFillInput.PatternOnly pattern -> pattern.pattern();
+      case CellFillInput.PatternForeground pattern -> pattern.pattern();
+      case CellFillInput.PatternBackground pattern -> pattern.pattern();
+      case CellFillInput.PatternForegroundBackground pattern -> pattern.pattern();
+      case CellFillInput.Gradient ignored -> null;
+    };
+  }
+
+  private static Object protocolForegroundColor(CellFillInput fill) {
+    return switch (fill) {
+      case CellFillInput.PatternForeground pattern -> pattern.foregroundColor();
+      case CellFillInput.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      default -> null;
+    };
+  }
+
+  private static Object protocolBackgroundColor(CellFillInput fill) {
+    return switch (fill) {
+      case CellFillInput.PatternBackground pattern -> pattern.backgroundColor();
+      case CellFillInput.PatternForegroundBackground pattern -> pattern.backgroundColor();
+      default -> null;
+    };
+  }
+
+  private static ExcelFillPattern engineFillPattern(ExcelCellFill fill) {
+    return switch (fill) {
+      case ExcelCellFill.PatternOnly pattern -> pattern.pattern();
+      case ExcelCellFill.PatternForeground pattern -> pattern.pattern();
+      case ExcelCellFill.PatternBackground pattern -> pattern.pattern();
+      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.pattern();
+      case ExcelCellFill.Gradient ignored -> null;
+    };
+  }
+
+  private static Object engineForegroundColor(ExcelCellFill fill) {
+    return switch (fill) {
+      case ExcelCellFill.PatternForeground pattern -> pattern.foregroundColor();
+      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      default -> null;
+    };
+  }
+
+  private static Object engineBackgroundColor(ExcelCellFill fill) {
+    return switch (fill) {
+      case ExcelCellFill.PatternBackground pattern -> pattern.backgroundColor();
+      case ExcelCellFill.PatternForegroundBackground pattern -> pattern.backgroundColor();
+      default -> null;
+    };
   }
 
   private static boolean isPatterned(ExcelFillPattern pattern) {

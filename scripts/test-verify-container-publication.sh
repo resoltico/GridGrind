@@ -173,6 +173,7 @@ run_verify_expect_failure() {
 
 expected_header="$(printf 'GridGrind 9.9.9\n%s' "${expected_description}")"
 source "${repo_root}/scripts/lib/test-cli-contract-fixtures.sh"
+load_test_cli_contract_fixtures
 
 : > "${fake_log}"
 run_verify_expect_success \
@@ -221,7 +222,7 @@ run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
-    "${success_help/markRecalculateOnOpen=true/FORCE_FORMULA_RECALC_ON_OPEN}" \
+    "$(append_fixture_line "${success_help}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
     "${success_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
@@ -235,7 +236,10 @@ run_verify_expect_failure \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "${success_goal_plan}" \
-    "${success_doctor_report/\"valid\": true/\"valid\": false}"
+    "$(replace_fixture_token \
+        "${success_doctor_report}" \
+        '"valid" : true' \
+        '"valid" : false')"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
@@ -243,7 +247,13 @@ run_verify_expect_failure \
     "${success_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan/\"id\": \"DASHBOARD\"/\"id\": \"TABULAR_REPORT\"}" \
-    "${success_doctor_report/\"valid\": true/\"valid\": false}"
+    "$(replace_fixture_token \
+        "${success_goal_plan}" \
+        '"id" : "DASHBOARD"' \
+        '"id" : "TABULAR_REPORT"')" \
+    "$(replace_fixture_token \
+        "${success_doctor_report}" \
+        '"valid" : true' \
+        '"valid" : false')"
 
 printf 'verify-container-publication regression: success\n'

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -198,8 +200,8 @@ final class WorkbookAnalyzer {
       if (upperFormula.contains("#REF!")) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
-                WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-                WorkbookAnalysis.AnalysisSeverity.ERROR,
+                AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+                AnalysisSeverity.ERROR,
                 "Named range contains a broken reference",
                 "Named range formula contains #REF! and is broken.",
                 location,
@@ -212,8 +214,8 @@ final class WorkbookAnalyzer {
           && !workbookSheetNames.contains(referencedSheet.orElseThrow())) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
-                WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-                WorkbookAnalysis.AnalysisSeverity.ERROR,
+                AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+                AnalysisSeverity.ERROR,
                 "Named range targets a missing sheet",
                 "Named range refers to a sheet that does not exist: "
                     + referencedSheet.orElseThrow(),
@@ -226,8 +228,8 @@ final class WorkbookAnalyzer {
           && looksLikeSheetRangeReference(refersToFormula)) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
-                WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET,
-                WorkbookAnalysis.AnalysisSeverity.WARNING,
+                AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET,
+                AnalysisSeverity.WARNING,
                 "Named range target could not be normalized",
                 "Named range looks like a sheet-qualified reference but did not normalize cleanly.",
                 location,
@@ -257,8 +259,8 @@ final class WorkbookAnalyzer {
       if (workbookScopedNames.contains(normalized) && sheetScopedNames.contains(normalized)) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
-                WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_SCOPE_SHADOWING,
-                WorkbookAnalysis.AnalysisSeverity.INFO,
+                AnalysisFindingCode.NAMED_RANGE_SCOPE_SHADOWING,
+                AnalysisSeverity.INFO,
                 "Named range scope shadowing",
                 "This named range name exists in both workbook and sheet scope.",
                 namedRangeLocation(namedRange),

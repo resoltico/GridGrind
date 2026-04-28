@@ -16,9 +16,11 @@ final class CliExecutionBindingsFactory {
       throws IOException {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
-    return new ExecutionInputBindings(
-        executionWorkingDirectory(requestPath),
-        SourceBackedPlanResolver.requiresStandardInput(request) ? stdin.readAllBytes() : null);
+    Path workingDirectory = executionWorkingDirectory(requestPath);
+    if (!SourceBackedPlanResolver.requiresStandardInput(request)) {
+      return new ExecutionInputBindings(workingDirectory);
+    }
+    return new ExecutionInputBindings(workingDirectory, stdin.readAllBytes());
   }
 
   static Path executionWorkingDirectory(Path requestPath) {

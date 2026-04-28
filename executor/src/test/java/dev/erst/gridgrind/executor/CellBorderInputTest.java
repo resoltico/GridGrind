@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
 import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
+import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import org.junit.jupiter.api.Test;
 
@@ -40,9 +41,9 @@ class CellBorderInputTest {
     assertThrows(IllegalArgumentException.class, () -> new CellBorderSideInput(null));
     assertThrows(
         IllegalArgumentException.class, () -> new CellBorderInput(null, null, null, null, null));
-    CellBorderSideInput colorOnly = new CellBorderSideInput(null, "#a1b2c3");
+    CellBorderSideInput colorOnly = new CellBorderSideInput(null, ColorInput.rgb("#a1b2c3"));
     assertNull(colorOnly.style());
-    assertEquals("#A1B2C3", colorOnly.color());
+    assertEquals(ColorInput.rgb("#A1B2C3"), colorOnly.color());
     assertEquals(
         ExcelBorderStyle.THIN,
         WorkbookCommandConverter.toExcelBorder(

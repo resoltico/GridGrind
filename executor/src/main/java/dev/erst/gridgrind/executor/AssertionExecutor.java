@@ -4,7 +4,6 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -22,6 +21,8 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.excel.WorkbookReadResult;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -192,7 +193,7 @@ final class AssertionExecutor {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !matchesCellValue(cell, expectedValue))
-            .map(GridGrindResponse.CellReport::address)
+            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? Evaluation.pass(List.of(cellsResult))
@@ -218,7 +219,7 @@ final class AssertionExecutor {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.displayValue().equals(expectedDisplayValue))
-            .map(GridGrindResponse.CellReport::address)
+            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? Evaluation.pass(List.of(cellsResult))
@@ -245,9 +246,11 @@ final class AssertionExecutor {
         cellsResult.cells().stream()
             .filter(
                 cell ->
-                    !(cell instanceof GridGrindResponse.CellReport.FormulaReport formulaReport)
+                    !(cell
+                            instanceof
+                            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport)
                         || !formulaReport.formula().equals(expectedFormula))
-            .map(GridGrindResponse.CellReport::address)
+            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? Evaluation.pass(List.of(cellsResult))
@@ -273,7 +276,7 @@ final class AssertionExecutor {
     List<String> mismatches =
         cellsResult.cells().stream()
             .filter(cell -> !cell.style().equals(expectedStyle))
-            .map(GridGrindResponse.CellReport::address)
+            .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
         ? Evaluation.pass(List.of(cellsResult))
@@ -403,7 +406,7 @@ final class AssertionExecutor {
       String stepId,
       Selector target,
       InspectionQuery query,
-      dev.erst.gridgrind.contract.dto.AnalysisFindingCode code,
+      AnalysisFindingCode code,
       AnalysisSeverity severity,
       String messageContains,
       boolean shouldExist,
@@ -574,23 +577,24 @@ final class AssertionExecutor {
   }
 
   static boolean matchesCellValue(
-      GridGrindResponse.CellReport cell, ExpectedCellValue expectedValue) {
-    if (cell instanceof GridGrindResponse.CellReport.FormulaReport formulaReport) {
+      dev.erst.gridgrind.contract.dto.CellReport cell, ExpectedCellValue expectedValue) {
+    if (cell instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport) {
       return matchesCellValue(formulaReport.evaluation(), expectedValue);
     }
     return switch (expectedValue) {
-      case ExpectedCellValue.Blank _ -> cell instanceof GridGrindResponse.CellReport.BlankReport;
+      case ExpectedCellValue.Blank _ ->
+          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
       case ExpectedCellValue.Text expectedText ->
-          cell instanceof GridGrindResponse.CellReport.TextReport textReport
+          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
               && textReport.stringValue().equals(expectedText.text());
       case ExpectedCellValue.NumericValue expectedNumber ->
-          cell instanceof GridGrindResponse.CellReport.NumberReport numberReport
+          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
               && Double.compare(numberReport.numberValue(), expectedNumber.number()) == 0;
       case ExpectedCellValue.BooleanValue expectedBoolean ->
-          cell instanceof GridGrindResponse.CellReport.BooleanReport booleanReport
+          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
               && booleanReport.booleanValue().equals(expectedBoolean.value());
       case ExpectedCellValue.ErrorValue expectedError ->
-          cell instanceof GridGrindResponse.CellReport.ErrorReport errorReport
+          cell instanceof dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorReport
               && errorReport.errorValue().equals(expectedError.error());
     };
   }
@@ -671,7 +675,7 @@ final class AssertionExecutor {
 
   static boolean matchesFinding(
       GridGrindResponse.AnalysisFindingReport finding,
-      dev.erst.gridgrind.contract.dto.AnalysisFindingCode code,
+      AnalysisFindingCode code,
       AnalysisSeverity severity,
       String messageContains) {
     if (finding.code() != code) {

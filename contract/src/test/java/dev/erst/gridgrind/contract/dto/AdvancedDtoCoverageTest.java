@@ -2,8 +2,11 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -379,85 +382,71 @@ class AdvancedDtoCoverageTest {
             .getMessage());
     assertEquals(0, new PaneInput.Split(1, 0, 0, 0, ExcelPaneRegion.UPPER_RIGHT).topRow());
 
-    CellColorReport rgb = new CellColorReport("#a1b2c3");
+    CellColorReport.Rgb rgb = CellColorReport.rgb("#a1b2c3");
     assertEquals("#A1B2C3", rgb.rgb());
-    assertEquals(
-        "color report must expose rgb, theme, or indexed semantics",
-        assertThrows(
-                IllegalArgumentException.class, () -> new CellColorReport(null, null, null, null))
-            .getMessage());
     assertEquals(
         "tint must be finite",
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new CellColorReport("#ABCDEF", null, null, Double.NaN))
+                IllegalArgumentException.class, () -> CellColorReport.rgb("#ABCDEF", Double.NaN))
             .getMessage());
 
     CellGradientFillReport gradient =
-        new CellGradientFillReport(
-            "linear",
+        CellGradientFillReport.linear(
             45.0d,
-            null,
-            null,
-            null,
-            null,
             List.of(
                 new CellGradientStopReport(0.0d, rgb),
-                new CellGradientStopReport(1.0d, new CellColorReport(null, 1, null, null))));
+                new CellGradientStopReport(1.0d, CellColorReport.theme(1))));
     assertEquals(2, gradient.stops().size());
     assertEquals(
         "stops must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CellGradientFillReport("linear", null, null, null, null, null, List.of()))
+                () -> CellGradientFillReport.linear(null, List.of()))
             .getMessage());
     assertEquals(
         "position must be finite and between 0.0 and 1.0",
         assertThrows(IllegalArgumentException.class, () -> new CellGradientStopReport(2.0d, rgb))
             .getMessage());
     assertEquals(
-        "gradient fills must not also expose foregroundColor or backgroundColor",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new CellFillReport(ExcelFillPattern.SOLID, null, rgb, gradient))
-            .getMessage());
+        "gradient must not be null",
+        assertThrows(NullPointerException.class, () -> CellFillReport.gradient(null)).getMessage());
     assertEquals(
-        "gradient fills must not also expose foregroundColor or backgroundColor",
+        "foregroundColor must not be null",
         assertThrows(
-                IllegalArgumentException.class,
-                () -> new CellFillReport(ExcelFillPattern.SOLID, rgb, null, gradient))
+                NullPointerException.class,
+                () -> CellFillReport.patternForeground(ExcelFillPattern.SOLID, null))
             .getMessage());
     assertEquals(
         "fill pattern NONE does not accept colors",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CellFillReport(ExcelFillPattern.NONE, rgb, null))
+                () -> CellFillReport.patternForeground(ExcelFillPattern.NONE, rgb))
             .getMessage());
     assertEquals(
         "fill backgroundColor is not supported for SOLID fills",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CellFillReport(ExcelFillPattern.SOLID, rgb, rgb))
+                () -> CellFillReport.patternColors(ExcelFillPattern.SOLID, rgb, rgb))
             .getMessage());
     assertEquals(
         "fill pattern NONE does not accept colors",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new CellFillReport(ExcelFillPattern.NONE, null, rgb))
+                () -> CellFillReport.patternBackground(ExcelFillPattern.NONE, rgb))
             .getMessage());
+    CellFillReport.PatternBackground backgroundOnly =
+        assertInstanceOf(
+            CellFillReport.PatternBackground.class,
+            CellFillReport.patternBackground(ExcelFillPattern.BRICKS, CellColorReport.indexed(64)));
+    assertEquals(ExcelFillPattern.BRICKS, backgroundOnly.pattern());
+    assertEquals(CellColorReport.indexed(64), backgroundOnly.backgroundColor());
     assertEquals(
-        "type must not be blank",
+        "degree must be finite when provided",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CellGradientFillReport(
-                        " ",
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        List.of(new CellGradientStopReport(0.0d, rgb))))
+                    CellGradientFillReport.linear(
+                        Double.POSITIVE_INFINITY, List.of(new CellGradientStopReport(0.0d, rgb))))
             .getMessage());
     assertEquals(
         "position must be finite and between 0.0 and 1.0",

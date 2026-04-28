@@ -80,7 +80,7 @@ final class ParityPlanSupport {
   }
 
   static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(null, null, calculation);
+    return ExecutionPolicyInput.calculation(calculation);
   }
 
   static ExecutionPolicyInput executionPolicy(
@@ -124,7 +124,11 @@ final class ParityPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(source, persistence, formulaEnvironment, steps(mutations, inspections));
+    return new WorkbookPlan(
+        source,
+        persistence,
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -136,11 +140,10 @@ final class ParityPlanSupport {
       List<InspectionStep> inspections) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
-        null,
         source,
         persistence,
-        execution,
-        formulaEnvironment,
+        Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
 

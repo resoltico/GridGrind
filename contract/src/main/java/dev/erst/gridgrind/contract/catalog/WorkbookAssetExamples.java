@@ -28,6 +28,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
+import java.util.Optional;
 
 /** Generated examples that focus on charts, pivots, packages, and binary payload handling. */
 final class WorkbookAssetExamples {
@@ -172,15 +173,16 @@ final class WorkbookAssetExamples {
                         "BudgetSignature",
                         ExamplePlanSupport.anchor(1, 1, 4, 6),
                         false,
-                        "Review the budget before signing.",
-                        "Ada Lovelace",
-                        "Finance",
-                        "ada@example.com",
-                        null,
-                        "invalid",
-                        new PictureDataInput(
-                            ExcelPictureFormat.PNG,
-                            BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64))))),
+                        Optional.of("Review the budget before signing."),
+                        Optional.of("Ada Lovelace"),
+                        Optional.of("Finance"),
+                        Optional.of("ada@example.com"),
+                        Optional.empty(),
+                        Optional.of("invalid"),
+                        Optional.of(
+                            new PictureDataInput(
+                                ExcelPictureFormat.PNG,
+                                BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64)))))),
             ExamplePlanSupport.read(
                 "step-03-read-drawing-objects",
                 new DrawingObjectSelector.AllOnSheet("Approvals"),

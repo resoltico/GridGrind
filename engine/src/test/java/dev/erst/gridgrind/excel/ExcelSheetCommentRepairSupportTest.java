@@ -165,7 +165,7 @@ class ExcelSheetCommentRepairSupportTest {
                           false,
                           "Aptos",
                           new ExcelFontHeight(220),
-                          new ExcelColorSnapshot(null, null, 8, null),
+                          ExcelColorSnapshot.indexed(8),
                           false,
                           false))));
       ExcelCommentAnchorSnapshot explicitAnchor = new ExcelCommentAnchorSnapshot(2, 2, 6, 7);

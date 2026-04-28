@@ -12,6 +12,13 @@ final class PoiPrivateAccessSupport {
   private PoiPrivateAccessSupport() {}
 
   static VarHandle requireVarHandle(
+      MethodHandles.Lookup lookup, PoiPrivateContract contract, Class<?> fieldType) {
+    Objects.requireNonNull(contract, "contract must not be null");
+    return requireVarHandle(
+        lookup, contract.owner(), contract.lookupName(), fieldType, contract.failureMessage());
+  }
+
+  static VarHandle requireVarHandle(
       MethodHandles.Lookup lookup,
       Class<?> owner,
       String fieldName,
@@ -31,6 +38,12 @@ final class PoiPrivateAccessSupport {
   }
 
   static MethodHandle requireConstructor(
+      MethodHandles.Lookup lookup, PoiPrivateContract contract, MethodType constructorType) {
+    Objects.requireNonNull(contract, "contract must not be null");
+    return requireConstructor(lookup, contract.owner(), constructorType, contract.failureMessage());
+  }
+
+  static MethodHandle requireConstructor(
       MethodHandles.Lookup lookup,
       Class<?> owner,
       MethodType constructorType,
@@ -44,6 +57,13 @@ final class PoiPrivateAccessSupport {
     } catch (ReflectiveOperationException exception) {
       throw new IllegalStateException(failureMessage, exception);
     }
+  }
+
+  static MethodHandle requireVirtual(
+      MethodHandles.Lookup lookup, PoiPrivateContract contract, MethodType methodType) {
+    Objects.requireNonNull(contract, "contract must not be null");
+    return requireVirtual(
+        lookup, contract.owner(), contract.lookupName(), methodType, contract.failureMessage());
   }
 
   static MethodHandle requireVirtual(

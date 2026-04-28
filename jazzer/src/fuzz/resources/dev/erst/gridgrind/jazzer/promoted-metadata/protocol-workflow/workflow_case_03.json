@@ -12,8 +12,8 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "AUTO_SIZE_COLUMNS" : 2,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "AUTO_SIZE_COLUMNS" : 2
       },
       "styleKinds" : { },
       "assertionCount" : 0,

@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -49,24 +51,24 @@ class WorkbookAnalysisTest {
   void copiesFindingCollectionsAndRejectsInvalidAnalysisCounts() {
     WorkbookAnalysis.AnalysisFinding finding =
         new WorkbookAnalysis.AnalysisFinding(
-            WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-            WorkbookAnalysis.AnalysisSeverity.INFO,
+            AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+            AnalysisSeverity.INFO,
             "Volatile formula function",
             "Formula uses a volatile function.",
             new WorkbookAnalysis.AnalysisLocation.Workbook(),
             List.of("NOW()"));
     WorkbookAnalysis.AnalysisFinding warningFinding =
         new WorkbookAnalysis.AnalysisFinding(
-            WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
-            WorkbookAnalysis.AnalysisSeverity.WARNING,
+            AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+            AnalysisSeverity.WARNING,
             "Malformed hyperlink target",
             "Hyperlink target is malformed.",
             new WorkbookAnalysis.AnalysisLocation.Sheet("Links"),
             List.of("mailto:"));
     WorkbookAnalysis.AnalysisFinding errorFinding =
         new WorkbookAnalysis.AnalysisFinding(
-            WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-            WorkbookAnalysis.AnalysisSeverity.ERROR,
+            AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+            AnalysisSeverity.ERROR,
             "Broken named range",
             "Named range contains #REF!.",
             new WorkbookAnalysis.AnalysisLocation.Range("Budget", "A1:B2"),

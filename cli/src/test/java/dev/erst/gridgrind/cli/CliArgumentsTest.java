@@ -2,7 +2,6 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -11,34 +10,32 @@ import org.junit.jupiter.api.Test;
 class CliArgumentsTest {
   @Test
   void printProtocolCatalogSearchParsesIntoDedicatedCommand() {
-    CliCommand.PrintProtocolCatalog command =
+    CliCommand.PrintProtocolCatalogSearch command =
         assertInstanceOf(
-            CliCommand.PrintProtocolCatalog.class,
+            CliCommand.PrintProtocolCatalogSearch.class,
             CliArguments.parse(new String[] {"--print-protocol-catalog", "--search", "sheet"}));
 
-    assertNull(command.operationFilter());
     assertEquals("sheet", command.searchQuery());
-    assertNull(command.responsePath());
+    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
   }
 
   @Test
   void printProtocolCatalogOperationParsesIntoDedicatedCommand() {
-    CliCommand.PrintProtocolCatalog command =
+    CliCommand.PrintProtocolCatalogLookup command =
         assertInstanceOf(
-            CliCommand.PrintProtocolCatalog.class,
+            CliCommand.PrintProtocolCatalogLookup.class,
             CliArguments.parse(
                 new String[] {"--print-protocol-catalog", "--operation", "SET_CELL"}));
 
     assertEquals("SET_CELL", command.operationFilter());
-    assertNull(command.searchQuery());
-    assertNull(command.responsePath());
+    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
   }
 
   @Test
   void printProtocolCatalogParsesResponsePath() {
-    CliCommand.PrintProtocolCatalog command =
+    CliCommand.PrintProtocolCatalogSearch command =
         assertInstanceOf(
-            CliCommand.PrintProtocolCatalog.class,
+            CliCommand.PrintProtocolCatalogSearch.class,
             CliArguments.parse(
                 new String[] {
                   "--print-protocol-catalog", "--search", "sheet", "--response", "catalog.json"
@@ -139,7 +136,7 @@ class CliArgumentsTest {
     CliCommand.Help command =
         assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
 
-    assertNull(command.responsePath());
+    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
   }
 
   @Test
@@ -171,7 +168,7 @@ class CliArgumentsTest {
             CliArguments.parse(
                 new String[] {"--doctor-request", "--response", "doctor-report.json"}));
 
-    assertNull(command.requestPath());
+    org.junit.jupiter.api.Assertions.assertNull(command.requestPath());
     assertEquals("doctor-report.json", command.responsePath().toString());
   }
 

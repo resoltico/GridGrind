@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class CommentInputTest {
   @Test
   void defaultsVisibilityAndConvertsToEngineComment() {
-    CommentInput comment = new CommentInput(text("Review"), "GridGrind", null);
+    CommentInput comment = new CommentInput(text("Review"), "GridGrind");
 
     assertFalse(comment.visible());
     assertEquals(

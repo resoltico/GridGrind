@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -511,34 +512,26 @@ class DtoEdgeCoverageTest {
             .getMessage());
     assertEquals(
         "theme must not be negative",
-        assertThrows(
-                IllegalArgumentException.class, () -> new CellColorReport(null, -1, null, null))
-            .getMessage());
+        assertThrows(IllegalArgumentException.class, () -> CellColorReport.theme(-1)).getMessage());
     assertEquals(
         "indexed must not be negative",
-        assertThrows(
-                IllegalArgumentException.class, () -> new CellColorReport(null, null, -1, null))
+        assertThrows(IllegalArgumentException.class, () -> CellColorReport.indexed(-1))
             .getMessage());
     assertEquals(
         "rgb must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new CellColorReport(" ")).getMessage());
+        assertThrows(IllegalArgumentException.class, () -> CellColorReport.rgb(" ")).getMessage());
     assertEquals(
         "rgb must match #RRGGBB",
-        assertThrows(IllegalArgumentException.class, () -> new CellColorReport("#GGGGGG"))
+        assertThrows(IllegalArgumentException.class, () -> CellColorReport.rgb("#GGGGGG"))
             .getMessage());
     assertEquals(
         "degree must be finite when provided",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CellGradientFillReport(
-                        "linear",
+                    CellGradientFillReport.linear(
                         Double.POSITIVE_INFINITY,
-                        null,
-                        null,
-                        null,
-                        null,
-                        List.of(new CellGradientStopReport(0.0d, new CellColorReport("#AABBCC")))))
+                        List.of(new CellGradientStopReport(0.0d, CellColorReport.rgb("#AABBCC")))))
             .getMessage());
   }
 
@@ -811,10 +804,10 @@ class DtoEdgeCoverageTest {
                     new PivotTableHealthReport(
                         -1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))
             .getMessage());
-    assertNull(
+    assertInstanceOf(
+        GridGrindResponse.NamedRangeReport.FormulaReport.class,
         new GridGrindResponse.NamedRangeReport.FormulaReport(
-                "Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)")
-            .target());
+            "Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
     assertEquals(
         "color must not be null",
         assertThrows(NullPointerException.class, () -> new CellGradientStopReport(0.0d, null))

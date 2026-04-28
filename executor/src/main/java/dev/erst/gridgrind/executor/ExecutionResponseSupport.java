@@ -40,9 +40,8 @@ final class ExecutionResponseSupport {
       GridGrindResponse.Problem closeProblem =
           problemFor(
               closeFailure,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
       closePhase.fail("failed (" + closeProblem.code() + ")");
       return appendCloseFailure(
           response,
@@ -76,9 +75,8 @@ final class ExecutionResponseSupport {
       GridGrindResponse.Problem closeProblem =
           problemFor(
               closeFailure,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
       closePhase.fail("failed (" + closeProblem.code() + ")");
       return appendCloseFailure(
           response,
@@ -102,9 +100,8 @@ final class ExecutionResponseSupport {
       GridGrindResponse.Problem problem =
           problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
       return failureResponse(
           protocolVersion,
           journal,
@@ -128,9 +125,8 @@ final class ExecutionResponseSupport {
       GridGrindResponse.Problem problem =
           problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
       return closeWorkbook(
           workbook,
           failureResponse(
@@ -153,13 +149,13 @@ final class ExecutionResponseSupport {
     return GridGrindProblems.codeFor(exception);
   }
 
-  static GridGrindResponse.ProblemContext enrichContext(
-      GridGrindResponse.ProblemContext context, Throwable exception) {
+  static dev.erst.gridgrind.contract.dto.ProblemContext enrichContext(
+      dev.erst.gridgrind.contract.dto.ProblemContext context, Throwable exception) {
     return GridGrindProblems.enrichContext(context, exception);
   }
 
   static GridGrindResponse.Problem problemFor(
-      Throwable exception, GridGrindResponse.ProblemContext context) {
+      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     return GridGrindProblems.fromException(exception, context);
   }
 

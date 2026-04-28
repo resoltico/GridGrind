@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 import java.util.Optional;
@@ -351,12 +353,11 @@ class ExcelPivotTableCoverageTest {
       XSSFPivotTable secondPivot = workbook.xssfWorkbook().getPivotTables().get(1);
       secondPivot.getCTPivotTableDefinition().setName("Alpha Pivot");
 
-      List<WorkbookAnalysis.AnalysisFindingCode> duplicateCodes =
+      List<AnalysisFindingCode> duplicateCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      assertTrue(
-          duplicateCodes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
+      assertTrue(duplicateCodes.contains(AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME));
 
       firstPivot.getCTPivotTableDefinition().setName(null);
       ExcelPivotTableSnapshot syntheticNameSnapshot =
@@ -373,8 +374,8 @@ class ExcelPivotTableCoverageTest {
               controller,
               "finding",
               WorkbookAnalysis.AnalysisFinding.class,
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
+              AnalysisSeverity.ERROR,
               firstHandle,
               "Broken Pivot",
               "Location missing",
@@ -396,12 +397,11 @@ class ExcelPivotTableCoverageTest {
               .orElseThrow();
 
       assertTrue(PoiRelationRemoval.defaultRemover().test(cacheDefinition, cacheRecords));
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      assertTrue(
-          codes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS));
     }
 
     try (ExcelWorkbook workbook = pivotWorkbook()) {
@@ -414,12 +414,11 @@ class ExcelPivotTableCoverageTest {
           pivot.getCTPivotTableDefinition().getCacheId(),
           workbook.xssfWorkbook().getRelationId(cacheDefinition));
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      assertTrue(
-          codes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE));
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE));
     }
 
     try (ExcelWorkbook workbook = pivotWorkbook()) {
@@ -446,7 +445,7 @@ class ExcelPivotTableCoverageTest {
       assertTrue(failure.getMessage().contains("missing its cache definition relation"));
 
       @SuppressWarnings("unchecked")
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           ((List<WorkbookAnalysis.AnalysisFinding>)
                   invoke(
                       controller,
@@ -455,9 +454,7 @@ class ExcelPivotTableCoverageTest {
                       workbook.xssfWorkbook(),
                       handle))
               .stream().map(WorkbookAnalysis.AnalysisFinding::code).toList();
-      assertTrue(
-          codes.contains(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION));
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION));
     }
 
     try (ExcelWorkbook workbook = pivotWorkbook()) {
@@ -480,12 +477,11 @@ class ExcelPivotTableCoverageTest {
               ExcelPivotTableSnapshot.Unsupported.class,
               controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst());
       assertTrue(snapshot.detail().contains("location range"));
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      assertTrue(
-          codes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
     }
 
     try (ExcelWorkbook workbook = pivotWorkbook()) {
@@ -508,11 +504,11 @@ class ExcelPivotTableCoverageTest {
                       pivot));
       assertTrue(failure.getMessage().contains("worksheetSource"));
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
+      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
     }
   }
 
@@ -1745,8 +1741,8 @@ class ExcelPivotTableCoverageTest {
         }
         case "finding" ->
             controller.finding(
-                (WorkbookAnalysis.AnalysisFindingCode) args[0],
-                (WorkbookAnalysis.AnalysisSeverity) args[1],
+                (AnalysisFindingCode) args[0],
+                (AnalysisSeverity) args[1],
                 (PivotHandle) args[2],
                 (String) args[3],
                 (String) args[4],

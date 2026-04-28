@@ -15,13 +15,14 @@ final class ExecutionExceptionDiagnosticFields {
 
   static Optional<String> sheetNameFor(Exception exception) {
     return switch (exception) {
-      case FormulaException formulaException -> Optional.of(formulaException.sheetName());
+      case FormulaException formulaException -> Optional.ofNullable(formulaException.sheetName());
       case SheetNotFoundException sheetNotFoundException ->
-          Optional.of(sheetNotFoundException.sheetName());
+          Optional.ofNullable(sheetNotFoundException.sheetName());
       case NamedRangeNotFoundException namedRangeNotFoundException ->
           switch (namedRangeNotFoundException.scope()) {
             case ExcelNamedRangeScope.WorkbookScope _ -> Optional.empty();
-            case ExcelNamedRangeScope.SheetScope sheetScope -> Optional.of(sheetScope.sheetName());
+            case ExcelNamedRangeScope.SheetScope sheetScope ->
+                Optional.ofNullable(sheetScope.sheetName());
           };
       default -> Optional.empty();
     };
@@ -29,32 +30,32 @@ final class ExecutionExceptionDiagnosticFields {
 
   static Optional<String> addressFor(Exception exception) {
     return switch (exception) {
-      case FormulaException formulaException -> Optional.of(formulaException.address());
+      case FormulaException formulaException -> Optional.ofNullable(formulaException.address());
       case CellNotFoundException cellNotFoundException ->
-          Optional.of(cellNotFoundException.address());
+          Optional.ofNullable(cellNotFoundException.address());
       case InvalidCellAddressException invalidCellAddressException ->
-          Optional.of(invalidCellAddressException.address());
+          Optional.ofNullable(invalidCellAddressException.address());
       default -> Optional.empty();
     };
   }
 
   static Optional<String> rangeFor(Exception exception) {
     if (exception instanceof InvalidRangeAddressException invalidRangeAddressException) {
-      return Optional.of(invalidRangeAddressException.range());
+      return Optional.ofNullable(invalidRangeAddressException.range());
     }
     return Optional.empty();
   }
 
   static Optional<String> formulaFor(Exception exception) {
     if (exception instanceof FormulaException formulaException) {
-      return Optional.of(formulaException.formula());
+      return Optional.ofNullable(formulaException.formula());
     }
     return Optional.empty();
   }
 
   static Optional<String> namedRangeNameFor(Exception exception) {
     if (exception instanceof NamedRangeNotFoundException namedRangeNotFoundException) {
-      return Optional.of(namedRangeNotFoundException.name());
+      return Optional.ofNullable(namedRangeNotFoundException.name());
     }
     return Optional.empty();
   }

@@ -13,6 +13,11 @@ import java.util.Objects;
 public record CalculationPolicyInput(
     @JsonInclude(JsonInclude.Include.NON_NULL) CalculationStrategyInput strategy,
     @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean markRecalculateOnOpen) {
+  /** Returns the default do-not-calculate policy with no open-time recalculation request. */
+  public static CalculationPolicyInput defaults() {
+    return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
+  }
+
   public CalculationPolicyInput {
     strategy =
         Objects.requireNonNullElseGet(strategy, CalculationStrategyInput.DoNotCalculate::new);

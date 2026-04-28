@@ -227,31 +227,43 @@ class ExecutorPhase3CoverageTest {
                 "Budget", "B4", "FOO(A1)", "FOO", "missing udf", null)));
     assertEquals(List.of(), GridGrindProblems.causesFor(null));
 
-    GridGrindResponse.ProblemContext.ExecuteStep enriched =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enriched =
         assertInstanceOf(
-            GridGrindResponse.ProblemContext.ExecuteStep.class,
+            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
             GridGrindProblems.enrichContext(
-                new GridGrindResponse.ProblemContext.ExecuteStep(
-                    "NEW", "NONE", 0, "step", "INSPECTION", null, null, null, null, null, null),
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                        "NEW", "NONE"),
+                    new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                        0, "step", "INSPECTION", "GET_NAMED_RANGES"),
+                    dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
                 new NamedRangeNotFoundException(
                     "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
-    assertEquals("Budget", enriched.sheetName());
+    assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
     assertEquals(
-        "A1",
+        java.util.Optional.of("A1"),
         assertInstanceOf(
-                GridGrindResponse.ProblemContext.ExecuteStep.class,
+                dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
-                    new GridGrindResponse.ProblemContext.ExecuteStep(
-                        "CELL", "NONE", 1, "cell", "MUTATION", null, null, null, null, null, null),
+                    new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                            "NEW", "NONE"),
+                        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                            1, "cell", "MUTATION", "SET_CELL"),
+                        dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
                     new CellNotFoundException("A1")))
             .address());
     assertEquals(
-        "BAD!",
+        java.util.Optional.of("BAD!"),
         assertInstanceOf(
-                GridGrindResponse.ProblemContext.ExecuteStep.class,
+                dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
-                    new GridGrindResponse.ProblemContext.ExecuteStep(
-                        "CELL", "NONE", 2, "cell", "MUTATION", null, null, null, null, null, null),
+                    new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                            "NEW", "NONE"),
+                        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                            2, "cell", "MUTATION", "SET_CELL"),
+                        dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
                     new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))))
             .address());
 
@@ -310,7 +322,9 @@ class ExecutorPhase3CoverageTest {
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("Missing", failure.problem().context().sheetName());
+    assertEquals(
+        java.util.Optional.of("Missing"),
+        DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -686,29 +700,45 @@ class ExecutorPhase3CoverageTest {
     MutationAction.SetConditionalFormatting multiRangeFormatting =
         conditionalFormattingAction(List.of("B2:B5", "D2:D5"));
 
-    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(pivotFromRange));
-    assertEquals("C5", ExecutionDiagnosticFields.addressFor(pivotFromRange));
-    assertEquals("A1:B5", ExecutionDiagnosticFields.rangeFor(pivotFromRange));
-    assertNull(ExecutionDiagnosticFields.rangeFor(pivotFromNamedRange));
-    assertNull(ExecutionDiagnosticFields.rangeFor(pivotFromTable));
-    assertEquals("BudgetSource", ExecutionDiagnosticFields.namedRangeNameFor(pivotFromNamedRange));
-    assertNull(ExecutionDiagnosticFields.namedRangeNameFor(pivotFromRange));
-    assertNull(ExecutionDiagnosticFields.namedRangeNameFor(pivotFromTable));
-    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(sheetScopedNamedRange));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(workbookScopedNamedRange));
-    assertEquals("SUM(Budget!B2:B4)", ExecutionDiagnosticFields.formulaFor(sheetScopedNamedRange));
-    assertNull(ExecutionDiagnosticFields.formulaFor(pivotFromRange));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(setText));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setBlank));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setText));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setRichText));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setNumeric));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setBoolean));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setDate));
-    assertNull(ExecutionDiagnosticFields.formulaFor(setDateTime));
-    assertEquals("SUM(A1:A2)", ExecutionDiagnosticFields.formulaFor(setFormula));
-    assertEquals("B2:B5", ExecutionDiagnosticFields.rangeFor(singleRangeFormatting));
-    assertNull(ExecutionDiagnosticFields.rangeFor(multiRangeFormatting));
+    assertEquals(
+        java.util.Optional.of("Budget"), ExecutionDiagnosticFields.sheetNameFor(pivotFromRange));
+    assertEquals(java.util.Optional.of("C5"), ExecutionDiagnosticFields.addressFor(pivotFromRange));
+    assertEquals(
+        java.util.Optional.of("A1:B5"), ExecutionDiagnosticFields.rangeFor(pivotFromRange));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.rangeFor(pivotFromNamedRange));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.rangeFor(pivotFromTable));
+    assertEquals(
+        java.util.Optional.of("BudgetSource"),
+        ExecutionDiagnosticFields.namedRangeNameFor(pivotFromNamedRange));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.namedRangeNameFor(pivotFromRange));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.namedRangeNameFor(pivotFromTable));
+    assertEquals(
+        java.util.Optional.of("Budget"),
+        ExecutionDiagnosticFields.sheetNameFor(sheetScopedNamedRange));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(workbookScopedNamedRange));
+    assertEquals(
+        java.util.Optional.of("SUM(Budget!B2:B4)"),
+        ExecutionDiagnosticFields.formulaFor(sheetScopedNamedRange));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(pivotFromRange));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.sheetNameFor(setText));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setBlank));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setText));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setRichText));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setNumeric));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setBoolean));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setDate));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(setDateTime));
+    assertEquals(
+        java.util.Optional.of("SUM(A1:A2)"), ExecutionDiagnosticFields.formulaFor(setFormula));
+    assertEquals(
+        java.util.Optional.of("B2:B5"), ExecutionDiagnosticFields.rangeFor(singleRangeFormatting));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.rangeFor(multiRangeFormatting));
   }
 
   private static void assertSelectorSheetAndAddressDiagnostics() {
@@ -716,59 +746,75 @@ class ExecutorPhase3CoverageTest {
         () -> dev.erst.gridgrind.contract.selector.SelectorCardinality.ZERO_OR_ONE;
 
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(new DrawingObjectSelector.AllOnSheet("Budget")));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(new DrawingObjectSelector.ByName("Budget", "Logo")));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(new ChartSelector.ByName("Budget", "Revenue")));
     assertEquals(
-        "Budget", ExecutionDiagnosticFields.sheetNameFor(new ChartSelector.AllOnSheet("Budget")));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new TableSelector.All()));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new TableSelector.ByName("BudgetTable")));
-    assertNull(
+        java.util.Optional.of("Budget"),
+        ExecutionDiagnosticFields.sheetNameFor(new ChartSelector.AllOnSheet("Budget")));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new TableSelector.All()));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new TableSelector.ByName("BudgetTable")));
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new TableSelector.ByNames(List.of("BudgetTable", "ForecastTable"))));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new TableSelector.ByNameOnSheet("BudgetTable", "Budget")));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.All()));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.ByName("SalesPivot")));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.All()));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.ByName("SalesPivot")));
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new PivotTableSelector.ByNames(List.of("SalesPivot", "ForecastPivot"))));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new PivotTableSelector.ByNameOnSheet("SalesPivot", "Budget")));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new NamedRangeSelector.All()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new NamedRangeSelector.All()));
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(new NamedRangeSelector.ByName("BudgetTotal")));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new TableRowSelector.AllRows(
                 new TableSelector.ByNameOnSheet("BudgetTable", "Budget"))));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new TableRowSelector.ByIndex(
                 new TableSelector.ByNameOnSheet("BudgetTable", "Budget"), 0)));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
@@ -777,134 +823,152 @@ class ExecutorPhase3CoverageTest {
                     textCell("Hosting")),
                 "Amount")));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(new SheetSelector.ByNames(List.of("Budget"))));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new SheetSelector.ByNames(List.of("Budget", "Forecast"))));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(customSelector));
-    assertNull(ExecutionDiagnosticFields.addressFor(new SheetSelector.ByName("Budget")));
-    assertNull(ExecutionDiagnosticFields.addressFor(customSelector));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.sheetNameFor(customSelector));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.addressFor(new SheetSelector.ByName("Budget")));
+    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.addressFor(customSelector));
 
     assertEquals(
-        "A1",
+        java.util.Optional.of("A1"),
         ExecutionDiagnosticFields.addressFor(
             new CellSelector.ByQualifiedAddresses(
                 List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(
             new CellSelector.ByQualifiedAddresses(
                 List.of(
                     new CellSelector.QualifiedAddress("Budget", "A1"),
                     new CellSelector.QualifiedAddress("Forecast", "A1")))));
     assertEquals(
-        "B2",
+        java.util.Optional.of("B2"),
         ExecutionDiagnosticFields.addressFor(
             new RangeSelector.RectangularWindow("Budget", "B2", 2, 2)));
     assertEquals(
-        "A1:B2",
+        java.util.Optional.of("A1:B2"),
         ExecutionDiagnosticFields.rangeFor(new RangeSelector.ByRanges("Budget", List.of("A1:B2"))));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.rangeFor(
             new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2"))));
     assertEquals(
-        "B2:C3",
+        java.util.Optional.of("B2:C3"),
         ExecutionDiagnosticFields.rangeFor(
             new RangeSelector.RectangularWindow("Budget", "B2", 2, 2)));
   }
 
   private static void assertNamedRangeSelectorDiagnostics() {
     assertEquals(
-        "Budget",
+        Optional.of("Budget"),
         ExecutionDiagnosticFields.singleSheetName(
             new CellSelector.ByQualifiedAddresses(
                 List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             new CellSelector.ByQualifiedAddresses(
                 List.of(
                     new CellSelector.QualifiedAddress("Budget", "A1"),
                     new CellSelector.QualifiedAddress("Forecast", "A1")))));
     assertEquals(
-        "Budget",
+        Optional.of("Budget"),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.SheetScope("LocalTotal", "Budget")));
     assertEquals(
-        "Budget",
+        Optional.of("Budget"),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector)
                 new NamedRangeSelector.AnyOf(
                     List.of(new NamedRangeSelector.SheetScope("LocalTotal", "Budget")))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.SheetScope("LocalTotal", "Budget"),
                     new NamedRangeSelector.SheetScope("ForecastTotal", "Forecast")))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.All()));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
-        "Budget",
+        Optional.of("Budget"),
         ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
 
-    assertNull(ExecutionDiagnosticFields.singleNamedRangeName(new NamedRangeSelector.All()));
     assertEquals(
-        "BudgetTotal",
+        Optional.empty(),
+        ExecutionDiagnosticFields.singleNamedRangeName(new NamedRangeSelector.All()));
+    assertEquals(
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
                 List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.WorkbookScope("BudgetTotal"),
                     new NamedRangeSelector.WorkbookScope("ForecastTotal")))));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
-        "BudgetTotal",
+        Optional.of("BudgetTotal"),
         ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
   }
@@ -922,25 +986,34 @@ class ExecutorPhase3CoverageTest {
         new MutationStep("cell-step", new CellSelector.ByAddress("Budget", "D4"), setText);
 
     assertEquals(
-        "Budget", ExecutionDiagnosticFields.sheetNameFor(new SheetNotFoundException("Budget")));
-    assertNull(ExecutionDiagnosticFields.sheetNameFor(new RuntimeException("x")));
-    assertNull(
+        java.util.Optional.of("Budget"),
+        ExecutionDiagnosticFields.sheetNameFor(new SheetNotFoundException("Budget")));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(new RuntimeException("x")));
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
     assertEquals(
-        "Budget",
+        java.util.Optional.of("Budget"),
         ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeNotFoundException(
                 "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
-    assertEquals("A1", ExecutionDiagnosticFields.addressFor(new CellNotFoundException("A1")));
     assertEquals(
-        "BAD!",
+        java.util.Optional.of("A1"),
+        ExecutionDiagnosticFields.addressFor(new CellNotFoundException("A1")));
+    assertEquals(
+        java.util.Optional.of("BAD!"),
         ExecutionDiagnosticFields.addressFor(
             new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
-    assertNull(ExecutionDiagnosticFields.addressFor(new RuntimeException("x")));
-    assertEquals("C5", ExecutionDiagnosticFields.addressFor(pivotStep));
-    assertEquals("D4", ExecutionDiagnosticFields.addressFor(addressedCellStep));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.addressFor(new RuntimeException("x")));
+    assertEquals(java.util.Optional.of("C5"), ExecutionDiagnosticFields.addressFor(pivotStep));
+    assertEquals(
+        java.util.Optional.of("D4"), ExecutionDiagnosticFields.addressFor(addressedCellStep));
   }
 
   private static MutationAction.SetPivotTable pivotTableAction(PivotTableInput.Source source) {

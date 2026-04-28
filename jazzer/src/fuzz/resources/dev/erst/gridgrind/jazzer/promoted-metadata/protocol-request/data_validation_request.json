@@ -13,19 +13,19 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
-        "SET_DATA_VALIDATION" : 3,
-        "SET_RANGE" : 1,
+        "ENSURE_SHEET" : 1,
         "CLEAR_DATA_VALIDATIONS" : 1,
-        "ENSURE_SHEET" : 1
+        "SET_RANGE" : 1,
+        "SET_DATA_VALIDATION" : 3
       },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
       "readCount" : 3,
       "readKinds" : {
-        "GET_CELLS" : 1,
+        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
         "GET_DATA_VALIDATIONS" : 1,
-        "ANALYZE_DATA_VALIDATION_HEALTH" : 1
+        "GET_CELLS" : 1
       }
     }
   },

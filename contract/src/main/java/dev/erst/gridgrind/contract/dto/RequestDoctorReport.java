@@ -1,30 +1,34 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Machine-readable lint report for one authored request before workbook execution begins. */
 public record RequestDoctorReport(
     GridGrindProtocolVersion protocolVersion,
     AnalysisSeverity severity,
     boolean valid,
-    @JsonInclude(JsonInclude.Include.NON_NULL) Summary summary,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Summary> summary,
     List<RequestWarning> warnings,
-    @JsonInclude(JsonInclude.Include.NON_NULL) GridGrindResponse.Problem problem) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindResponse.Problem> problem) {
   public RequestDoctorReport {
     protocolVersion =
         protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
     Objects.requireNonNull(severity, "severity must not be null");
+    summary = Objects.requireNonNullElseGet(summary, Optional::empty);
     warnings = copyWarnings(warnings);
-    if (valid && summary == null) {
+    problem = Objects.requireNonNullElseGet(problem, Optional::empty);
+    if (valid && summary.isEmpty()) {
       throw new IllegalArgumentException("summary must not be null for a valid doctor report");
     }
-    if (valid && problem != null) {
+    if (valid && problem.isPresent()) {
       throw new IllegalArgumentException("problem must be null for a valid doctor report");
     }
-    if (!valid && problem == null) {
+    if (!valid && problem.isEmpty()) {
       throw new IllegalArgumentException("problem must not be null for an invalid doctor report");
     }
     if (valid && !warnings.isEmpty() && severity != AnalysisSeverity.WARNING) {
@@ -43,7 +47,12 @@ public record RequestDoctorReport(
   /** Returns one clean doctor report with no warnings or blocking problem. */
   public static RequestDoctorReport clean(Summary summary) {
     return new RequestDoctorReport(
-        GridGrindProtocolVersion.current(), AnalysisSeverity.INFO, true, summary, List.of(), null);
+        GridGrindProtocolVersion.current(),
+        AnalysisSeverity.INFO,
+        true,
+        Optional.of(summary),
+        List.of(),
+        Optional.empty());
   }
 
   /** Returns one valid doctor report that still surfaces non-fatal warnings. */
@@ -52,21 +61,27 @@ public record RequestDoctorReport(
         GridGrindProtocolVersion.current(),
         AnalysisSeverity.WARNING,
         true,
-        summary,
+        Optional.of(summary),
         warnings,
-        null);
+        Optional.empty());
   }
 
   /** Returns one invalid doctor report with a blocking problem and any derived warnings. */
   public static RequestDoctorReport invalid(
       Summary summary, List<RequestWarning> warnings, GridGrindResponse.Problem problem) {
+    return invalid(Optional.ofNullable(summary), warnings, problem);
+  }
+
+  /** Returns one invalid doctor report with an optional summary and one blocking problem. */
+  public static RequestDoctorReport invalid(
+      Optional<Summary> summary, List<RequestWarning> warnings, GridGrindResponse.Problem problem) {
     return new RequestDoctorReport(
         GridGrindProtocolVersion.current(),
         AnalysisSeverity.ERROR,
         false,
         summary,
         warnings,
-        problem);
+        Optional.of(problem));
   }
 
   /** One derived summary of the authored request shape and execution posture. */

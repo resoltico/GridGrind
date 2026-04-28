@@ -32,18 +32,18 @@ class GridGrindResponseTest {
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
     GridGrindResponse.Success success =
-        GridGrindResponse.success(null, null, warnings, List.of(), inspections);
+        GridGrindResponses.success(warnings, List.of(), inspections);
     GridGrindResponse.Success successWithoutInspections =
-        GridGrindResponse.success(null, null, warnings, List.of(), null);
+        GridGrindResponses.success(warnings, List.of(), List.of());
 
     warnings.clear();
     inspections.clear();
 
     assertEquals(GridGrindProtocolVersion.current(), success.protocolVersion());
     assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
-    assertNull(success.journal().planId());
-    assertNull(success.journal().source().type());
-    assertNull(success.journal().persistence().type());
+    assertEquals(java.util.Optional.empty(), success.journal().planId());
+    assertEquals(java.util.Optional.empty(), success.journal().source().type());
+    assertEquals(java.util.Optional.empty(), success.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
     assertEquals(1, success.warnings().size());
     assertEquals(1, success.inspections().size());
@@ -53,18 +53,21 @@ class GridGrindResponseTest {
   @Test
   void failureBackfillConstructorCreatesFailedSyntheticJournal() {
     GridGrindResponse.Failure failure =
-        GridGrindResponse.failure(
+        GridGrindResponses.failure(
             null,
             GridGrindResponse.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "boom",
-                new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown())));
 
-    assertNull(failure.journal().planId());
-    assertNull(failure.journal().source().type());
-    assertNull(failure.journal().persistence().type());
+    assertEquals(java.util.Optional.empty(), failure.journal().planId());
+    assertEquals(java.util.Optional.empty(), failure.journal().source().type());
+    assertEquals(java.util.Optional.empty(), failure.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.journal().outcome().failureCode());
+    assertEquals(
+        GridGrindProblemCode.INVALID_ARGUMENTS,
+        failure.journal().outcome().failureCode().orElseThrow());
   }
 
   @Test
@@ -72,7 +75,9 @@ class GridGrindResponseTest {
     IllegalArgumentException missingFailureCode =
         assertThrows(
             IllegalArgumentException.class,
-            () -> GridGrindResponse.syntheticJournal(ExecutionJournal.Status.FAILED, null));
+            () ->
+                GridGrindResponse.syntheticJournal(
+                    ExecutionJournal.Status.FAILED, java.util.Optional.empty()));
     assertEquals(
         "failureCode must be present when status is FAILED", missingFailureCode.getMessage());
 
@@ -81,7 +86,8 @@ class GridGrindResponseTest {
             IllegalArgumentException.class,
             () ->
                 GridGrindResponse.syntheticJournal(
-                    ExecutionJournal.Status.SUCCEEDED, GridGrindProblemCode.INVALID_ARGUMENTS));
+                    ExecutionJournal.Status.SUCCEEDED,
+                    java.util.Optional.of(GridGrindProblemCode.INVALID_ARGUMENTS)));
     assertEquals(
         "failureCode is only permitted when status is FAILED", unexpectedFailureCode.getMessage());
   }
@@ -97,118 +103,112 @@ class GridGrindResponseTest {
   }
 
   @Test
-  void executeStepContextMergesExceptionDataWithoutOverwritingExistingValues() {
-    GridGrindResponse.ProblemContext.ExecuteStep base =
-        new GridGrindResponse.ProblemContext.ExecuteStep(
-            "EXISTING",
-            "SAVE_AS",
-            2,
-            "formula-health",
-            "INSPECTION",
-            "ANALYZE_FORMULA_HEALTH",
-            "Summary",
-            null,
-            null,
-            null,
-            null);
+  void executeStepContextMergesTypedLocationsWithoutReintroducingNullPadding() {
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep base =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                "EXISTING", "SAVE_AS"),
+            new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                2, "formula-health", "INSPECTION", "ANALYZE_FORMULA_HEALTH"),
+            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.sheet("Summary"));
 
-    GridGrindResponse.ProblemContext.ExecuteStep enriched =
-        base.withExceptionData("Ignored", "B4", "B4:B9", "SUM(B2:B3)", "BudgetTotal");
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enriched =
+        base.withLocation(
+            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
+                "Ignored", "B4", "SUM(B2:B3)"));
 
-    assertEquals("Summary", enriched.sheetName());
-    assertEquals("B4", enriched.address());
-    assertEquals("B4:B9", enriched.range());
-    assertEquals("SUM(B2:B3)", enriched.formula());
-    assertEquals("BudgetTotal", enriched.namedRangeName());
+    assertEquals(java.util.Optional.of("Summary"), enriched.sheetName());
+    assertEquals(java.util.Optional.of("B4"), enriched.address());
+    assertEquals(java.util.Optional.empty(), enriched.range());
+    assertEquals(java.util.Optional.of("SUM(B2:B3)"), enriched.formula());
+    assertEquals(java.util.Optional.empty(), enriched.namedRangeName());
   }
 
   @Test
   void parseArgumentsAndProblemsExposeStepCentricContext() {
-    GridGrindResponse.ProblemContext.ParseArguments parseArguments =
-        new GridGrindResponse.ProblemContext.ParseArguments("--request");
+    dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments parseArguments =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+            dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named("--request"));
     GridGrindResponse.Problem problem =
         GridGrindResponse.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST_SHAPE,
             "Unknown field 'reads'",
-            new GridGrindResponse.ProblemContext.ExecuteStep(
-                "NEW",
-                "NONE",
-                1,
-                "cells",
-                "INSPECTION",
-                "GET_CELLS",
-                "Budget",
-                "A1",
-                null,
-                null,
-                null));
+            new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                    1, "cells", "INSPECTION", "GET_CELLS"),
+                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.cell(
+                    "Budget", "A1")));
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStep =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class, problem.context());
 
     assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
-    assertEquals("--request", parseArguments.argument());
-    assertEquals("EXECUTE_STEP", problem.context().stage());
-    assertEquals(1, problem.context().stepIndex());
-    assertEquals("cells", problem.context().stepId());
-    assertEquals("GET_CELLS", problem.context().stepType());
-    assertEquals("Budget", problem.context().sheetName());
-    assertEquals("A1", problem.context().address());
-    assertNull(problem.context().range());
+    assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
+    assertEquals("EXECUTE_STEP", executeStep.stage());
+    assertEquals(1, executeStep.stepIndex());
+    assertEquals("cells", executeStep.stepId());
+    assertEquals("GET_CELLS", executeStep.stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStep.sheetName());
+    assertEquals(java.util.Optional.of("A1"), executeStep.address());
+    assertEquals(java.util.Optional.empty(), executeStep.range());
     assertTrue(problem.title().contains("request"));
   }
 
   @Test
-  void defaultInterfaceAccessorsReturnNullAndContextMergersPreserveExistingValues() {
-    GridGrindResponse.NamedRangeReport formulaOnly =
+  void typedVariantsReplaceNullPaddingAndContextMergersPreserveExistingValues() {
+    GridGrindResponse.NamedRangeReport.FormulaReport formulaOnly =
         new GridGrindResponse.NamedRangeReport.FormulaReport(
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!A1:A3)");
-    GridGrindResponse.SheetProtectionReport unprotected =
+    GridGrindResponse.SheetProtectionReport.Unprotected unprotected =
         new GridGrindResponse.SheetProtectionReport.Unprotected();
-    GridGrindResponse.CellReport blankCell =
-        new GridGrindResponse.CellReport.BlankReport("A1", "BLANK", "", minimalStyle(), null, null);
-    GridGrindResponse.ProblemContext.ReadRequest readRequest =
-        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", "steps[0]", 4, 12);
+    dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
+            "A1",
+            "BLANK",
+            "",
+            minimalStyle(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
+    dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest readRequest =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+            dev.erst.gridgrind.contract.dto.ProblemContext.RequestInput.requestFile(
+                "/tmp/request.json"),
+            dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located("steps[0]", 4, 12));
 
-    assertNull(formulaOnly.target());
-    assertNull(unprotected.settings());
-    assertNull(blankCell.formula());
-    assertNull(blankCell.stringValue());
-    assertNull(blankCell.richText());
-    assertNull(blankCell.numberValue());
-    assertNull(blankCell.booleanValue());
-    assertNull(blankCell.errorValue());
-    assertNull(blankCell.hyperlink());
-    assertNull(blankCell.comment());
+    assertEquals("BudgetExpr", formulaOnly.name());
+    assertEquals("SUM(Budget!A1:A3)", formulaOnly.refersToFormula());
+    assertInstanceOf(GridGrindResponse.SheetProtectionReport.Unprotected.class, unprotected);
+    assertEquals("BLANK", blankCell.effectiveType());
+    assertEquals(java.util.Optional.empty(), blankCell.hyperlink());
+    assertEquals(java.util.Optional.empty(), blankCell.comment());
     assertNull(new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
-    assertNull(readRequest.sourceType());
-    assertNull(readRequest.persistenceType());
-    assertNull(readRequest.responsePath());
-    assertNull(readRequest.sourceWorkbookPath());
-    assertNull(readRequest.persistencePath());
-    assertNull(readRequest.stepIndex());
-    assertNull(readRequest.stepId());
-    assertNull(readRequest.stepKind());
-    assertNull(readRequest.stepType());
-    assertNull(readRequest.sheetName());
-    assertNull(readRequest.address());
-    assertNull(readRequest.range());
-    assertNull(readRequest.formula());
-    assertNull(readRequest.namedRangeName());
-    assertNull(readRequest.argument());
+    assertEquals(java.util.Optional.of("/tmp/request.json"), readRequest.requestPath());
+    assertEquals(java.util.Optional.of("steps[0]"), readRequest.jsonPath());
+    assertEquals(java.util.Optional.of(4), readRequest.jsonLine());
+    assertEquals(java.util.Optional.of(12), readRequest.jsonColumn());
 
-    GridGrindResponse.ProblemContext.ReadRequest mergedRead =
-        readRequest.withJson("ignored", 9, 22);
-    assertEquals("steps[0]", mergedRead.jsonPath());
-    assertEquals(4, mergedRead.jsonLine());
-    assertEquals(12, mergedRead.jsonColumn());
+    dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest mergedRead =
+        readRequest.withJson(
+            dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located("ignored", 9, 22));
+    assertEquals(java.util.Optional.of("steps[0]"), mergedRead.jsonPath());
+    assertEquals(java.util.Optional.of(4), mergedRead.jsonLine());
+    assertEquals(java.util.Optional.of(12), mergedRead.jsonColumn());
 
-    GridGrindResponse.ProblemContext.ExecuteStep mergedExecute =
-        new GridGrindResponse.ProblemContext.ExecuteStep(
-                "NEW", "NONE", 1, "cells", "INSPECTION", "GET_CELLS", null, null, null, null, null)
-            .withExceptionData("Budget", "A1", "A1:B2", "SUM(A1)", "BudgetTotal");
-    assertEquals("Budget", mergedExecute.sheetName());
-    assertEquals("A1", mergedExecute.address());
-    assertEquals("A1:B2", mergedExecute.range());
-    assertEquals("SUM(A1)", mergedExecute.formula());
-    assertEquals("BudgetTotal", mergedExecute.namedRangeName());
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep mergedExecute =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                    1, "cells", "INSPECTION", "GET_CELLS"),
+                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown())
+            .withLocation(
+                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
+                    "Budget", "A1", "SUM(A1)"));
+    assertEquals(java.util.Optional.of("Budget"), mergedExecute.sheetName());
+    assertEquals(java.util.Optional.of("A1"), mergedExecute.address());
+    assertEquals(java.util.Optional.empty(), mergedExecute.range());
+    assertEquals(java.util.Optional.of("SUM(A1)"), mergedExecute.formula());
+    assertEquals(java.util.Optional.empty(), mergedExecute.namedRangeName());
   }
 
   @Test
@@ -216,40 +216,71 @@ class GridGrindResponseTest {
     HyperlinkTarget hyperlink = new HyperlinkTarget.Url("https://example.com/budget");
     GridGrindResponse.CommentReport comment =
         new GridGrindResponse.CommentReport("Reviewed", "Alice", true);
-    GridGrindResponse.CellReport textCell =
-        new GridGrindResponse.CellReport.TextReport(
-            "A1", "STRING", "Reviewed", minimalStyle(), hyperlink, comment, "Reviewed", null);
-    GridGrindResponse.CellReport numberCell =
-        new GridGrindResponse.CellReport.NumberReport(
-            "A2", "NUMERIC", "42", minimalStyle(), hyperlink, comment, 42.0d);
-    GridGrindResponse.CellReport booleanCell =
-        new GridGrindResponse.CellReport.BooleanReport(
-            "A3", "BOOLEAN", "TRUE", minimalStyle(), hyperlink, comment, true);
-    GridGrindResponse.CellReport errorCell =
-        new GridGrindResponse.CellReport.ErrorReport(
-            "A4", "ERROR", "#REF!", minimalStyle(), hyperlink, comment, "#REF!");
-    GridGrindResponse.CellReport formulaCell =
-        new GridGrindResponse.CellReport.FormulaReport(
+    dev.erst.gridgrind.contract.dto.CellReport textCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+            "A1",
+            "STRING",
+            "Reviewed",
+            minimalStyle(),
+            java.util.Optional.of(hyperlink),
+            java.util.Optional.of(comment),
+            "Reviewed",
+            java.util.Optional.empty());
+    dev.erst.gridgrind.contract.dto.CellReport numberCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
+            "A2",
+            "NUMERIC",
+            "42",
+            minimalStyle(),
+            java.util.Optional.of(hyperlink),
+            java.util.Optional.of(comment),
+            42.0d);
+    dev.erst.gridgrind.contract.dto.CellReport booleanCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
+            "A3",
+            "BOOLEAN",
+            "TRUE",
+            minimalStyle(),
+            java.util.Optional.of(hyperlink),
+            java.util.Optional.of(comment),
+            true);
+    dev.erst.gridgrind.contract.dto.CellReport errorCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
+            "A4",
+            "ERROR",
+            "#REF!",
+            minimalStyle(),
+            java.util.Optional.of(hyperlink),
+            java.util.Optional.of(comment),
+            "#REF!");
+    dev.erst.gridgrind.contract.dto.CellReport formulaCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
             "A5",
             "FORMULA",
             "42",
             minimalStyle(),
-            hyperlink,
-            comment,
+            java.util.Optional.of(hyperlink),
+            java.util.Optional.of(comment),
             "SUM(A2:A4)",
-            new GridGrindResponse.CellReport.NumberReport(
-                "A5", "NUMERIC", "42", minimalStyle(), null, null, 42.0d));
+            new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
+                "A5",
+                "NUMERIC",
+                "42",
+                minimalStyle(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                42.0d));
 
-    assertEquals(hyperlink, textCell.hyperlink());
-    assertEquals(comment, textCell.comment());
-    assertEquals(hyperlink, numberCell.hyperlink());
-    assertEquals(comment, numberCell.comment());
-    assertEquals(hyperlink, booleanCell.hyperlink());
-    assertEquals(comment, booleanCell.comment());
-    assertEquals(hyperlink, errorCell.hyperlink());
-    assertEquals(comment, errorCell.comment());
-    assertEquals(hyperlink, formulaCell.hyperlink());
-    assertEquals(comment, formulaCell.comment());
+    assertEquals(java.util.Optional.of(hyperlink), textCell.hyperlink());
+    assertEquals(java.util.Optional.of(comment), textCell.comment());
+    assertEquals(java.util.Optional.of(hyperlink), numberCell.hyperlink());
+    assertEquals(java.util.Optional.of(comment), numberCell.comment());
+    assertEquals(java.util.Optional.of(hyperlink), booleanCell.hyperlink());
+    assertEquals(java.util.Optional.of(comment), booleanCell.comment());
+    assertEquals(java.util.Optional.of(hyperlink), errorCell.hyperlink());
+    assertEquals(java.util.Optional.of(comment), errorCell.comment());
+    assertEquals(java.util.Optional.of(hyperlink), formulaCell.hyperlink());
+    assertEquals(java.util.Optional.of(comment), formulaCell.comment());
   }
 
   @Test
@@ -315,8 +346,10 @@ class GridGrindResponseTest {
                 GridGrindProblemCode.INVALID_REQUEST.title(),
                 "bad request",
                 GridGrindProblemCode.INVALID_REQUEST.resolution(),
-                new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
-                null,
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                        "NEW", "NONE")),
+                java.util.Optional.empty(),
                 null)
             .causes());
   }
@@ -327,9 +360,7 @@ class GridGrindResponseTest {
     assertions.add(new AssertionResult("assert-total", "EXPECT_CELL_VALUE"));
 
     GridGrindResponse.Success success =
-        GridGrindResponse.success(
-            null,
-            null,
+        GridGrindResponses.success(
             List.of(),
             assertions,
             List.of(
@@ -358,34 +389,33 @@ class GridGrindResponseTest {
             GridGrindProblemCode.ASSERTION_FAILED.title(),
             "assertion failed",
             GridGrindProblemCode.ASSERTION_FAILED.resolution(),
-            new GridGrindResponse.ProblemContext.ExecuteStep(
-                "NEW",
-                "NONE",
-                0,
-                "assert-total",
-                "ASSERTION",
-                "EXPECT_CELL_VALUE",
-                "Budget",
-                "B4",
-                null,
-                null,
-                null),
-            failure,
+            new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
+                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                    0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
+                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.cell(
+                    "Budget", "B4")),
+            java.util.Optional.of(failure),
             List.of());
-    assertEquals(failure, problem.assertionFailure());
+    assertEquals(failure, problem.assertionFailure().orElseThrow());
   }
 
   @Test
   void executionJournalValidatesPhasesAndFailureClassification() {
     ExecutionJournal.Phase successPhase =
         new ExecutionJournal.Phase(
-            ExecutionJournal.Status.SUCCEEDED, "2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", 1);
+            ExecutionJournal.Status.SUCCEEDED,
+            java.util.Optional.of("2026-04-18T10:00:00Z"),
+            java.util.Optional.of("2026-04-18T10:00:01Z"),
+            1);
     ExecutionJournal journal =
         new ExecutionJournal(
-            "budget-audit",
+            java.util.Optional.of("budget-audit"),
             ExecutionJournalLevel.VERBOSE,
-            new ExecutionJournal.SourceSummary("NEW", null),
-            new ExecutionJournal.PersistenceSummary("SAVE_AS", "/tmp/report.xlsx"),
+            new ExecutionJournal.SourceSummary(
+                java.util.Optional.of("NEW"), java.util.Optional.empty()),
+            new ExecutionJournal.PersistenceSummary(
+                java.util.Optional.of("SAVE_AS"), java.util.Optional.of("/tmp/report.xlsx")),
             successPhase,
             successPhase,
             successPhase,
@@ -401,25 +431,30 @@ class GridGrindResponseTest {
                     List.of(new ExecutionJournal.Target("CELL", "Cell Budget!B4")),
                     successPhase,
                     ExecutionJournal.StepOutcome.FAILED,
-                    new ExecutionJournal.FailureClassification(
-                        GridGrindProblemCode.ASSERTION_FAILED,
-                        GridGrindProblemCategory.REQUEST,
-                        "EXECUTE_STEP",
-                        "observed value mismatch"))),
+                    java.util.Optional.of(
+                        new ExecutionJournal.FailureClassification(
+                            GridGrindProblemCode.ASSERTION_FAILED,
+                            GridGrindProblemCategory.REQUEST,
+                            "EXECUTE_STEP",
+                            "observed value mismatch")))),
             List.of(),
             new ExecutionJournal.Outcome(
                 ExecutionJournal.Status.FAILED,
                 1,
                 0,
                 22,
-                0,
-                "assert-total",
-                GridGrindProblemCode.ASSERTION_FAILED),
+                java.util.Optional.of(0),
+                java.util.Optional.of("assert-total"),
+                java.util.Optional.of(GridGrindProblemCode.ASSERTION_FAILED)),
             List.of(
                 new ExecutionJournal.Event(
-                    "2026-04-18T10:00:00Z", "STEP", "started", 0, "assert-total")));
+                    "2026-04-18T10:00:00Z",
+                    "STEP",
+                    "started",
+                    java.util.Optional.of(0),
+                    java.util.Optional.of("assert-total"))));
 
-    assertEquals("budget-audit", journal.planId());
+    assertEquals("budget-audit", journal.planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, journal.level());
     assertEquals("Cell Budget!B4", journal.steps().getFirst().resolvedTargets().getFirst().label());
     assertEquals(
@@ -428,7 +463,10 @@ class GridGrindResponseTest {
                 IllegalArgumentException.class,
                 () ->
                     new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED, "2026-04-18T10:00:00Z", null, 0))
+                        ExecutionJournal.Status.NOT_STARTED,
+                        java.util.Optional.of("2026-04-18T10:00:00Z"),
+                        java.util.Optional.empty(),
+                        0))
             .getMessage());
   }
 
@@ -446,7 +484,7 @@ class GridGrindResponseTest {
             null,
             false,
             false),
-        new CellFillReport(ExcelFillPattern.NONE, null, null),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }

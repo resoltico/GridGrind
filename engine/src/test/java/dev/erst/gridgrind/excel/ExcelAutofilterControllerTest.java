@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -75,7 +76,7 @@ class ExcelAutofilterControllerTest {
               new ExcelAutofilterFilterColumn(
                   4L,
                   true,
-                  new ExcelAutofilterFilterCriterion.Color(false, new ExcelColor("#AABBCC"))),
+                  new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.rgb("#AABBCC"))),
               new ExcelAutofilterFilterColumn(
                   5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2))),
           new ExcelAutofilterSortState(
@@ -88,7 +89,7 @@ class ExcelAutofilterControllerTest {
                       "A2:A3",
                       true,
                       STSortBy.CELL_COLOR.toString(),
-                      new ExcelColor("#102030"),
+                      ExcelColor.rgb("#102030"),
                       null),
                   new ExcelAutofilterSortCondition(
                       "B2:B3", false, STSortBy.ICON.toString(), null, 4))));
@@ -117,7 +118,7 @@ class ExcelAutofilterControllerTest {
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(
-              false, new ExcelColorSnapshot("#AABBCC")),
+              false, ExcelColorSnapshot.rgb("#AABBCC")),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
@@ -127,7 +128,7 @@ class ExcelAutofilterControllerTest {
               "A2:A3",
               true,
               STSortBy.CELL_COLOR.toString(),
-              new ExcelColorSnapshot("#102030"),
+              ExcelColorSnapshot.rgb("#102030"),
               null),
           snapshot.sortState().orElseThrow().conditions().get(0));
       assertEquals(
@@ -362,7 +363,7 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, 8.0d),
           snapshot.filterColumns().get(3).criterion());
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(true, new ExcelColorSnapshot("#AABBCC")),
+          new ExcelAutofilterFilterCriterionSnapshot.Color(true, ExcelColorSnapshot.rgb("#AABBCC")),
           snapshot.filterColumns().get(4).criterion());
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
@@ -388,19 +389,19 @@ class ExcelAutofilterControllerTest {
       assertEquals(4, sortSnapshot.conditions().size());
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
-              "A2:A5", true, STSortBy.CELL_COLOR.toString(), new ExcelColorSnapshot("#AABBCC"), 1),
+              "A2:A5", true, STSortBy.CELL_COLOR.toString(), ExcelColorSnapshot.rgb("#AABBCC"), 1),
           sortSnapshot.conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
               "B2:B5",
               false,
               STSortBy.FONT_COLOR.toString(),
-              new ExcelColorSnapshot("#102030"),
+              ExcelColorSnapshot.rgb("#102030"),
               null),
           sortSnapshot.conditions().get(1));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
-              "C2:C5", false, "", new ExcelColorSnapshot("#AABBCC"), null),
+              "C2:C5", false, "", ExcelColorSnapshot.rgb("#AABBCC"), null),
           sortSnapshot.conditions().get(2));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
@@ -466,16 +467,16 @@ class ExcelAutofilterControllerTest {
           ExcelAutofilterController.iconCriterion(icon));
 
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#AABBCC")),
+          Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
           ExcelAutofilterController.dxfColor(workbook, fillDxfId, true));
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#102030")),
+          Optional.of(ExcelColorSnapshot.rgb("#102030")),
           ExcelAutofilterController.dxfColor(workbook, fontDxfId, false));
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#AABBCC")),
+          Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
           ExcelAutofilterController.dxfColor(workbook, fillDxfId, false));
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#102030")),
+          Optional.of(ExcelColorSnapshot.rgb("#102030")),
           ExcelAutofilterController.dxfColor(workbook, fontDxfId, true));
       assertEquals(
           Optional.empty(), ExcelAutofilterController.dxfColor(workbook, emptyDxfId, true));
@@ -538,7 +539,7 @@ class ExcelAutofilterControllerTest {
       fillColorFilter.setCellColor(true);
       fillColorFilter.setDxfId(fillDxfId);
       assertEquals(
-          new ExcelAutofilterFilterCriterionSnapshot.Color(true, new ExcelColorSnapshot("#AABBCC")),
+          new ExcelAutofilterFilterCriterionSnapshot.Color(true, ExcelColorSnapshot.rgb("#AABBCC")),
           ExcelAutofilterController.colorCriterion(workbook, fillColorFilter));
 
       var fontColorFilter =
@@ -546,14 +547,14 @@ class ExcelAutofilterControllerTest {
       fontColorFilter.setDxfId(fontDxfId);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(
-              false, new ExcelColorSnapshot("#102030")),
+              false, ExcelColorSnapshot.rgb("#102030")),
           ExcelAutofilterController.colorCriterion(workbook, fontColorFilter));
 
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#214365")),
+          Optional.of(ExcelColorSnapshot.rgb("#214365")),
           ExcelAutofilterController.dxfColor(workbook, mixedDxfId, true));
       assertEquals(
-          Optional.of(new ExcelColorSnapshot("#FEDCBA")),
+          Optional.of(ExcelColorSnapshot.rgb("#FEDCBA")),
           ExcelAutofilterController.dxfColor(workbook, mixedDxfId, false));
 
       var autoFilter =
@@ -601,7 +602,7 @@ class ExcelAutofilterControllerTest {
               "B2:B5",
               true,
               STSortBy.CELL_COLOR.toString(),
-              new ExcelColorSnapshot("#AABBCC"),
+              ExcelColorSnapshot.rgb("#AABBCC"),
               null),
           snapshot.conditions().get(1));
       assertEquals(
@@ -609,12 +610,12 @@ class ExcelAutofilterControllerTest {
               "C2:C5",
               false,
               STSortBy.FONT_COLOR.toString(),
-              new ExcelColorSnapshot("#102030"),
+              ExcelColorSnapshot.rgb("#102030"),
               null),
           snapshot.conditions().get(2));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
-              "D2:D5", false, "", new ExcelColorSnapshot("#AABBCC"), null),
+              "D2:D5", false, "", ExcelColorSnapshot.rgb("#AABBCC"), null),
           snapshot.conditions().get(3));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
@@ -787,8 +788,7 @@ class ExcelAutofilterControllerTest {
 
       assertEquals(1, invalidRangeFindings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
-          invalidRangeFindings.getFirst().code());
+          AnalysisFindingCode.AUTOFILTER_INVALID_RANGE, invalidRangeFindings.getFirst().code());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -813,8 +813,7 @@ class ExcelAutofilterControllerTest {
 
       assertEquals(1, overlapFindings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
-          overlapFindings.getFirst().code());
+          AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH, overlapFindings.getFirst().code());
     }
   }
 
@@ -830,9 +829,7 @@ class ExcelAutofilterControllerTest {
           controller.sheetAutofilterHealthFindings("Ops", sheet, List.of());
 
       assertEquals(1, findings.size());
-      assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
-          findings.getFirst().code());
+      assertEquals(AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW, findings.getFirst().code());
     }
   }
 

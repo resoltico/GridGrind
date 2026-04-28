@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.io.IOException;
@@ -1134,7 +1135,7 @@ class ExcelDataValidationControllerTest {
 
       assertEquals(4, controller.dataValidationCount(sheet));
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
+          List.of(AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
           findings.stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
     }
   }
@@ -1169,8 +1170,8 @@ class ExcelDataValidationControllerTest {
       assertInstanceOf(ExcelDataValidationRule.TextLength.class, textLength.validation().rule());
       assertEquals(
           List.of(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE),
+              AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
+              AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE),
           controller.dataValidationHealthFindings("Budget", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
@@ -1185,7 +1186,7 @@ class ExcelDataValidationControllerTest {
       addRawValidation(sheet, "A1", STDataValidationType.LIST, null);
       addRawValidation(sheet, "B1", STDataValidationType.NONE);
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.dataValidationHealthFindings("Budget", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
@@ -1193,8 +1194,8 @@ class ExcelDataValidationControllerTest {
 
       assertEquals(
           List.of(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
+              AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
+              AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
           codes);
     }
   }
@@ -1227,7 +1228,7 @@ class ExcelDataValidationControllerTest {
           "\"\"",
           sheet.getCTWorksheet().getDataValidations().getDataValidationArray(0).getFormula1());
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST),
+          List.of(AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST),
           controller.dataValidationHealthFindings("Budget", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
@@ -1544,10 +1545,10 @@ class ExcelDataValidationControllerTest {
   }
 
   private boolean isBrokenFormulaFinding(WorkbookAnalysis.AnalysisFinding finding) {
-    return finding.code() == WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA;
+    return finding.code() == AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA;
   }
 
   private boolean isOverlapFinding(WorkbookAnalysis.AnalysisFinding finding) {
-    return finding.code() == WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES;
+    return finding.code() == AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES;
   }
 }

@@ -1,10 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import java.util.LinkedHashSet;
+import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
 
 /** Workbook-scoped formula-evaluation environment with external workbook bindings and UDFs. */
 public record ExcelFormulaEnvironment(
@@ -12,13 +9,27 @@ public record ExcelFormulaEnvironment(
     ExcelFormulaMissingWorkbookPolicy missingWorkbookPolicy,
     List<ExcelFormulaUdfToolpack> udfToolpacks) {
   public ExcelFormulaEnvironment {
-    externalWorkbooks = copyExternalWorkbooks(externalWorkbooks);
+    externalWorkbooks =
+        FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
+            externalWorkbooks,
+            "externalWorkbooks",
+            "externalWorkbooks must not contain duplicate workbookName values: ",
+            ExcelFormulaExternalWorkbookBinding::workbookName);
     missingWorkbookPolicy =
         missingWorkbookPolicy == null
             ? ExcelFormulaMissingWorkbookPolicy.ERROR
             : missingWorkbookPolicy;
-    udfToolpacks = copyUdfToolpacks(udfToolpacks);
-    requireDistinctUdfFunctions(udfToolpacks);
+    udfToolpacks =
+        FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
+            udfToolpacks,
+            "udfToolpacks",
+            "udfToolpacks must not contain duplicate names: ",
+            ExcelFormulaUdfToolpack::name);
+    FormulaEnvironmentSupport.requireDistinctNestedNames(
+        udfToolpacks,
+        ExcelFormulaUdfToolpack::functions,
+        ExcelFormulaUdfFunction::name,
+        "udfToolpacks must not define duplicate function names across toolpacks: ");
   }
 
   /**
@@ -47,56 +58,5 @@ public record ExcelFormulaEnvironment(
             .flatMap(toolpack -> toolpack.functions().stream())
             .map(ExcelFormulaUdfFunction::name)
             .collect(java.util.stream.Collectors.toUnmodifiableSet()));
-  }
-
-  private static List<ExcelFormulaExternalWorkbookBinding> copyExternalWorkbooks(
-      List<ExcelFormulaExternalWorkbookBinding> externalWorkbooks) {
-    if (externalWorkbooks == null) {
-      return List.of();
-    }
-    List<ExcelFormulaExternalWorkbookBinding> copy = List.copyOf(externalWorkbooks);
-    Set<String> seen = new LinkedHashSet<>();
-    for (ExcelFormulaExternalWorkbookBinding externalWorkbook : copy) {
-      Objects.requireNonNull(externalWorkbook, "externalWorkbooks must not contain nulls");
-      String normalized = externalWorkbook.workbookName().toUpperCase(Locale.ROOT);
-      if (!seen.add(normalized)) {
-        throw new IllegalArgumentException(
-            "externalWorkbooks must not contain duplicate workbookName values: "
-                + externalWorkbook.workbookName());
-      }
-    }
-    return copy;
-  }
-
-  private static List<ExcelFormulaUdfToolpack> copyUdfToolpacks(
-      List<ExcelFormulaUdfToolpack> udfToolpacks) {
-    if (udfToolpacks == null) {
-      return List.of();
-    }
-    List<ExcelFormulaUdfToolpack> copy = List.copyOf(udfToolpacks);
-    Set<String> seen = new LinkedHashSet<>();
-    for (ExcelFormulaUdfToolpack toolpack : copy) {
-      Objects.requireNonNull(toolpack, "udfToolpacks must not contain nulls");
-      String normalized = toolpack.name().toUpperCase(Locale.ROOT);
-      if (!seen.add(normalized)) {
-        throw new IllegalArgumentException(
-            "udfToolpacks must not contain duplicate names: " + toolpack.name());
-      }
-    }
-    return copy;
-  }
-
-  private static void requireDistinctUdfFunctions(List<ExcelFormulaUdfToolpack> udfToolpacks) {
-    Set<String> seen = new LinkedHashSet<>();
-    for (ExcelFormulaUdfToolpack toolpack : udfToolpacks) {
-      for (ExcelFormulaUdfFunction function : toolpack.functions()) {
-        String normalized = function.name().toUpperCase(Locale.ROOT);
-        if (!seen.add(normalized)) {
-          throw new IllegalArgumentException(
-              "udfToolpacks must not define duplicate function names across toolpacks: "
-                  + function.name());
-        }
-      }
-    }
   }
 }

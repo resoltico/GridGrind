@@ -3,8 +3,6 @@ package dev.erst.gridgrind.contract.query;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
@@ -14,6 +12,8 @@ import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
@@ -27,10 +27,15 @@ import org.junit.jupiter.api.Test;
 class InspectionResultTest {
   @Test
   void introspectionResultsUseStepIdsAndCopyCollections() {
-    List<GridGrindResponse.CellReport> cells = new ArrayList<>();
+    List<dev.erst.gridgrind.contract.dto.CellReport> cells = new ArrayList<>();
     cells.add(
-        new GridGrindResponse.CellReport.BlankReport(
-            "A1", "BLANK", "", minimalStyle(), null, null));
+        new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
+            "A1",
+            "BLANK",
+            "",
+            minimalStyle(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty()));
     InspectionResult.CellsResult result =
         new InspectionResult.CellsResult("cells", "Budget", cells);
 
@@ -85,7 +90,7 @@ class InspectionResultTest {
             null,
             false,
             false),
-        new CellFillReport(ExcelFillPattern.NONE, null, null),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }

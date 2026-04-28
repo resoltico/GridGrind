@@ -229,7 +229,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns exact cell snapshots for one sheet. */
-  record CellsResult(String stepId, String sheetName, List<GridGrindResponse.CellReport> cells)
+  record CellsResult(
+      String stepId, String sheetName, List<dev.erst.gridgrind.contract.dto.CellReport> cells)
       implements Introspection {
     public CellsResult {
       stepId = requireNonBlank(stepId, "stepId");

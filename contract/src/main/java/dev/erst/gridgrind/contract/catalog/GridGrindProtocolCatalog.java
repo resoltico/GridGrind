@@ -32,7 +32,7 @@ public final class GridGrindProtocolCatalog {
   private static final WorkbookPlan REQUEST_TEMPLATE =
       new WorkbookPlan(
           GridGrindProtocolVersion.current(),
-          null,
+          Optional.empty(),
           new WorkbookPlan.WorkbookSource.New(),
           new WorkbookPlan.WorkbookPersistence.None(),
           null,
@@ -206,48 +206,14 @@ public final class GridGrindProtocolCatalog {
 
   private static TypeEntry typeEntry(
       Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
-    WorkbookStepTargeting.TargetSurface targetSurface = targetSurfaceFor(recordType);
+    Optional<WorkbookStepTargeting.TargetSurface> targetSurface =
+        TypeEntryTargetingSupport.optionalTargetSurfaceFor(recordType);
     return new TypeEntry(
         canonicalTypeId(recordType, id),
         summary,
         fieldEntries(recordType, optionalFields),
-        targetSelectorEntries(targetSurface),
-        targetSurface == null ? null : targetSurface.rule());
-  }
-
-  private static List<TargetSelectorEntry> targetSelectorEntries(
-      WorkbookStepTargeting.TargetSurface targetSurface) {
-    if (targetSurface == null) {
-      return List.of();
-    }
-    return targetSurface.selectorFamilies().stream()
-        .map(familyInfo -> new TargetSelectorEntry(familyInfo.family(), familyInfo.typeIds()))
-        .toList();
-  }
-
-  @SuppressWarnings("unchecked")
-  private static WorkbookStepTargeting.TargetSurface targetSurfaceFor(
-      Class<? extends Record> recordType) {
-    return optionalTargetSurfaceFor(recordType).orElse(null);
-  }
-
-  private static Optional<WorkbookStepTargeting.TargetSurface> optionalTargetSurfaceFor(
-      Class<? extends Record> recordType) {
-    if (MutationAction.class.isAssignableFrom(recordType)) {
-      return Optional.of(
-          WorkbookStepTargeting.forMutationActionType(
-              (Class<? extends MutationAction>) recordType));
-    }
-    if (Assertion.class.isAssignableFrom(recordType)) {
-      return Optional.of(
-          WorkbookStepTargeting.forAssertionType((Class<? extends Assertion>) recordType));
-    }
-    if (InspectionQuery.class.isAssignableFrom(recordType)) {
-      return Optional.of(
-          WorkbookStepTargeting.forInspectionQueryType(
-              (Class<? extends InspectionQuery>) recordType));
-    }
-    return Optional.empty();
+        TypeEntryTargetingSupport.targetSelectorEntries(targetSurface),
+        targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule).orElse(null));
   }
 
   @SuppressWarnings("unchecked")

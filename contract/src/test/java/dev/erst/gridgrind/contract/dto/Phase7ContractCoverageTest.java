@@ -40,21 +40,34 @@ class Phase7ContractCoverageTest {
                 IllegalArgumentException.class, () -> BinarySourceInput.inlineBase64("not-base64"))
             .getMessage());
 
-    GridGrindResponse.ProblemContext.ResolveInputs context =
-        new GridGrindResponse.ProblemContext.ResolveInputs("NEW", "NONE", "cell text", null);
+    ProblemContext.ResolveInputs context =
+        new ProblemContext.ResolveInputs(
+            ProblemContext.RequestShape.known("NEW", "NONE"),
+            ProblemContext.InputReference.path("cell text", "missing.txt"));
     assertEquals("RESOLVE_INPUTS", context.stage());
-    assertEquals("cell text", context.inputKind());
+    assertEquals(java.util.Optional.of("cell text"), context.inputKind());
+    assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
   }
 
   @Test
   void sourceBackedDtosPreserveDeferredValuesAndDefaultOptionalFlags() {
+    CommentInput defaultVisibleComment =
+        new CommentInput(
+            TextSourceInput.inline("Owner note"),
+            "Ada",
+            null,
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
+    assertEquals(false, defaultVisibleComment.visible());
+
     CommentInput fileBackedComment =
         new CommentInput(
             TextSourceInput.utf8File("comment.txt"),
             "Ada",
-            null,
-            java.util.List.of(new RichTextRunInput(TextSourceInput.utf8File("run.txt"), null)),
-            null);
+            false,
+            java.util.Optional.of(
+                java.util.List.of(new RichTextRunInput(TextSourceInput.utf8File("run.txt"), null))),
+            java.util.Optional.empty());
     assertNotNull(fileBackedComment.runs());
 
     CommentInput mixedSourceComment =
@@ -62,11 +75,12 @@ class Phase7ContractCoverageTest {
             TextSourceInput.inline("Ada Lovelace"),
             "Ada",
             false,
-            java.util.List.of(
-                new RichTextRunInput(TextSourceInput.inline("Ada"), null),
-                new RichTextRunInput(TextSourceInput.utf8File("run-2.txt"), null)),
-            null);
-    assertEquals(2, mixedSourceComment.runs().size());
+            java.util.Optional.of(
+                java.util.List.of(
+                    new RichTextRunInput(TextSourceInput.inline("Ada"), null),
+                    new RichTextRunInput(TextSourceInput.utf8File("run-2.txt"), null))),
+            java.util.Optional.empty());
+    assertEquals(2, mixedSourceComment.runs().orElseThrow().size());
 
     HeaderFooterTextInput defaults = new HeaderFooterTextInput(null, null, null);
     assertEquals("", ((TextSourceInput.Inline) defaults.left()).text());

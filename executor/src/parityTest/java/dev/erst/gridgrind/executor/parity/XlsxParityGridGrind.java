@@ -103,7 +103,9 @@ final class XlsxParityGridGrind {
     return executeReadWorkbook(
         workbookPath,
         sourceSecurity,
-        executionMode == null ? null : new ExecutionPolicyInput(executionMode),
+        executionMode == null
+            ? ExecutionPolicyInput.defaults()
+            : new ExecutionPolicyInput(executionMode),
         formulaEnvironment,
         inspections);
   }
@@ -117,17 +119,30 @@ final class XlsxParityGridGrind {
     return execute(
         new WorkbookPlan(
             GridGrindProtocolVersion.current(),
-            null,
-            new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString(), sourceSecurity),
+            existingWorkbookSource(workbookPath, sourceSecurity),
             new WorkbookPlan.WorkbookPersistence.None(),
             execution,
-            formulaEnvironment,
+            formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
             List.of(inspections)));
   }
 
   private static GridGrindResponse execute(WorkbookPlan request) {
     return new DefaultGridGrindRequestExecutor()
         .execute(request, ExecutionInputBindings.processDefault(), ExecutionJournalSink.NOOP);
+  }
+
+  private static WorkbookPlan.WorkbookSource.ExistingFile existingWorkbookSource(
+      Path workbookPath, OoxmlOpenSecurityInput sourceSecurity) {
+    return sourceSecurity == null
+        ? new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString())
+        : new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString(), sourceSecurity);
+  }
+
+  private static WorkbookPlan.WorkbookPersistence.SaveAs saveAsPersistence(
+      Path saveAsPath, OoxmlPersistenceSecurityInput persistenceSecurity) {
+    return persistenceSecurity == null
+        ? new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString())
+        : new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString(), persistenceSecurity);
   }
 
   static GridGrindResponse.Success readWorkbook(Path workbookPath, InspectionStep... inspections) {
@@ -173,8 +188,8 @@ final class XlsxParityGridGrind {
       InspectionStep... inspections) {
     return execute(
         ParityPlanSupport.request(
-            new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString(), sourceSecurity),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString(), persistenceSecurity),
+            existingWorkbookSource(workbookPath, sourceSecurity),
+            saveAsPersistence(saveAsPath, persistenceSecurity),
             execution,
             formulaEnvironment,
             mutations,
@@ -300,7 +315,9 @@ final class XlsxParityGridGrind {
     return writeNewWorkbook(
         saveAsPath,
         persistenceSecurity,
-        executionMode == null ? null : new ExecutionPolicyInput(executionMode),
+        executionMode == null
+            ? ExecutionPolicyInput.defaults()
+            : new ExecutionPolicyInput(executionMode),
         mutations,
         inspections);
   }
@@ -315,12 +332,10 @@ final class XlsxParityGridGrind {
         execute(
             new WorkbookPlan(
                 GridGrindProtocolVersion.current(),
-                null,
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(
-                    saveAsPath.toString(), persistenceSecurity),
+                saveAsPersistence(saveAsPath, persistenceSecurity),
                 execution,
-                null,
+                FormulaEnvironmentInput.empty(),
                 ParityPlanSupport.steps(mutations, List.of(inspections)))));
   }
 
@@ -388,8 +403,7 @@ final class XlsxParityGridGrind {
     GridGrindResponse response =
         execute(
             ParityPlanSupport.request(
-                new WorkbookPlan.WorkbookSource.ExistingFile(
-                    workbookPath.toString(), sourceSecurity),
+                existingWorkbookSource(workbookPath, sourceSecurity),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 execution,
                 formulaEnvironment,

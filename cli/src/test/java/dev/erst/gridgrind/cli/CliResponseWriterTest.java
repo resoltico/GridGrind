@@ -17,7 +17,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Focused tests for response-file fallback behavior in {@link CliResponseWriter}. */
-class CliResponseWriterTest {
+class CliResponseWriterTest extends GridGrindCliTestSupport {
   private final CliResponseWriter responseWriter = new CliResponseWriter();
 
   @Test
@@ -38,7 +38,8 @@ class CliResponseWriterTest {
     assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
     assertEquals("WRITE_RESPONSE", fallback.problem().context().stage());
     assertEquals(
-        responseDirectory.toAbsolutePath().toString(), fallback.problem().context().responsePath());
+        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
+        writeResponseContext(fallback).responsePath());
   }
 
   @Test
@@ -79,13 +80,14 @@ class CliResponseWriterTest {
 
     assertEquals(1, exitCode);
     assertFalse(fallback.valid());
-    assertEquals(summary, fallback.summary());
+    assertEquals(java.util.Optional.of(summary), fallback.summary());
     assertEquals(List.of(warning), fallback.warnings());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
-    assertEquals("WRITE_RESPONSE", fallback.problem().context().stage());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().orElseThrow().code());
+    assertEquals("WRITE_RESPONSE", fallback.problem().orElseThrow().context().stage());
     assertEquals(
-        responseDirectory.toAbsolutePath().toString(), fallback.problem().context().responsePath());
-    assertEquals(1, fallback.problem().causes().size());
+        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
+        writeResponseContext(fallback).responsePath());
+    assertEquals(1, fallback.problem().orElseThrow().causes().size());
   }
 
   @Test
@@ -98,7 +100,8 @@ class CliResponseWriterTest {
         GridGrindProblems.problem(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
+            new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE")),
             new IOException("bad request"));
 
     int exitCode =
@@ -111,10 +114,10 @@ class CliResponseWriterTest {
 
     assertEquals(1, exitCode);
     assertFalse(fallback.valid());
-    assertEquals(summary, fallback.summary());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
+    assertEquals(java.util.Optional.of(summary), fallback.summary());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().orElseThrow().code());
     assertTrue(
-        fallback.problem().causes().stream()
+        fallback.problem().orElseThrow().causes().stream()
             .anyMatch(
                 cause ->
                     cause.code() == GridGrindProblemCode.INVALID_REQUEST

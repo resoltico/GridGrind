@@ -9,7 +9,9 @@ import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
+import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -32,12 +34,19 @@ class CellStyleInputTest {
                 false,
                 "Aptos",
                 new FontHeightInput.Points(new BigDecimal("11.5")),
-                "#00aa55",
+                ColorInput.rgb("#00aa55"),
                 true,
                 false),
-            new CellFillInput(ExcelFillPattern.THIN_HORIZONTAL_BANDS, "#FFF2CC", "#DDEBF7"),
+            CellFillInput.patternColors(
+                ExcelFillPattern.THIN_HORIZONTAL_BANDS,
+                ColorInput.rgb("#FFF2CC"),
+                ColorInput.rgb("#DDEBF7")),
             new CellBorderInput(
-                null, new CellBorderSideInput(ExcelBorderStyle.THICK, "#112233"), null, null, null),
+                null,
+                new CellBorderSideInput(ExcelBorderStyle.THICK, ColorInput.rgb("#112233")),
+                null,
+                null,
+                null),
             new CellProtectionInput(false, true));
 
     var engineStyle = WorkbookCommandConverter.toExcelCellStyle(style);
@@ -52,14 +61,16 @@ class CellStyleInputTest {
     assertEquals("Aptos", engineStyle.font().fontName());
     assertEquals(230, engineStyle.font().fontHeight().twips());
     assertEquals(new BigDecimal("11.5"), engineStyle.font().fontHeight().points());
-    assertEquals(new ExcelColor("#00AA55"), engineStyle.font().fontColor());
+    assertEquals(ExcelColor.rgb("#00AA55"), engineStyle.font().fontColor());
     assertTrue(engineStyle.font().underline());
     assertFalse(engineStyle.font().strikeout());
-    assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, engineStyle.fill().pattern());
-    assertEquals(new ExcelColor("#FFF2CC"), engineStyle.fill().foregroundColor());
-    assertEquals(new ExcelColor("#DDEBF7"), engineStyle.fill().backgroundColor());
+    ExcelCellFill.PatternForegroundBackground fill =
+        assertInstanceOf(ExcelCellFill.PatternForegroundBackground.class, engineStyle.fill());
+    assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, fill.pattern());
+    assertEquals(ExcelColor.rgb("#FFF2CC"), fill.foregroundColor());
+    assertEquals(ExcelColor.rgb("#DDEBF7"), fill.backgroundColor());
     assertEquals(ExcelBorderStyle.THICK, engineStyle.border().top().style());
-    assertEquals(new ExcelColor("#112233"), engineStyle.border().top().color());
+    assertEquals(ExcelColor.rgb("#112233"), engineStyle.border().top().color());
     assertFalse(engineStyle.protection().locked());
     assertTrue(engineStyle.protection().hiddenFormula());
   }
@@ -102,13 +113,14 @@ class CellStyleInputTest {
         () -> new CellFontInput(null, null, null, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellFontInput(null, null, null, null, "#12", null, null));
+        () -> new CellFontInput(null, null, null, null, ColorInput.rgb("#12"), null, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellFontInput(null, null, null, null, " ", null, null));
-    assertThrows(IllegalArgumentException.class, () -> new CellFillInput(null, null, null));
+        () -> new CellFontInput(null, null, null, null, ColorInput.rgb(" "), null, null));
+    assertThrows(NullPointerException.class, () -> CellFillInput.pattern(null));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellFillInput(ExcelFillPattern.SOLID, " ", null));
+        IllegalArgumentException.class,
+        () -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb(" ")));
     assertThrows(
         IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, -1, null));
     assertThrows(
@@ -117,19 +129,23 @@ class CellStyleInputTest {
         IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, null, -1));
     assertThrows(
         IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, null, 251));
-    assertThrows(IllegalArgumentException.class, () -> new CellFillInput(null, null, "#AABBCC"));
+    assertThrows(
+        NullPointerException.class,
+        () -> CellFillInput.patternBackground(null, ColorInput.rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellFillInput(ExcelFillPattern.NONE, "#AABBCC", null));
+        () -> CellFillInput.patternForeground(ExcelFillPattern.NONE, ColorInput.rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellFillInput(ExcelFillPattern.NONE, null, "#AABBCC"));
+        () -> CellFillInput.patternBackground(ExcelFillPattern.NONE, ColorInput.rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellFillInput(ExcelFillPattern.SOLID, "#AABBCC", "#112233"));
+        () ->
+            CellFillInput.patternColors(
+                ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC"), ColorInput.rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, "#AABBCC"));
+        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, ColorInput.rgb("#AABBCC")));
     assertThrows(IllegalArgumentException.class, () -> new CellProtectionInput(null, null));
   }
 
@@ -166,7 +182,7 @@ class CellStyleInputTest {
         new CellStyleInput(
             null,
             null,
-            new CellFontInput(null, null, null, null, "#AABBCC", null, null),
+            new CellFontInput(null, null, null, null, ColorInput.rgb("#AABBCC"), null, null),
             null,
             null,
             null));
@@ -191,7 +207,7 @@ class CellStyleInputTest {
             null,
             null,
             null,
-            new CellFillInput(ExcelFillPattern.SOLID, "#AABBCC", null),
+            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC")),
             null,
             null));
     assertNotNull(
@@ -215,13 +231,22 @@ class CellStyleInputTest {
         new CellAlignmentInput(null, null, ExcelVerticalAlignment.BOTTOM, 180, 250);
     assertEquals(180, boundedAlignment.textRotation());
     assertEquals(250, boundedAlignment.indentation());
-    CellFillInput implicitSolidFill = new CellFillInput(null, "#AABBCC", null);
-    assertEquals("#AABBCC", implicitSolidFill.foregroundColor());
-    assertNotNull(new CellFillInput(ExcelFillPattern.NONE, null, null));
-    assertNotNull(new CellFillInput(ExcelFillPattern.THIN_FORWARD_DIAGONAL, "#AABBCC", "#112233"));
-    CellFillInput backgroundOnlyPattern =
-        new CellFillInput(ExcelFillPattern.BRICKS, null, "#112233");
-    assertEquals("#112233", backgroundOnlyPattern.backgroundColor());
+    CellFillInput.PatternForeground solidFill =
+        assertInstanceOf(
+            CellFillInput.PatternForeground.class,
+            CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb("#AABBCC")));
+    assertEquals(ColorInput.rgb("#AABBCC"), solidFill.foregroundColor());
+    assertNotNull(CellFillInput.pattern(ExcelFillPattern.NONE));
+    assertNotNull(
+        CellFillInput.patternColors(
+            ExcelFillPattern.THIN_FORWARD_DIAGONAL,
+            ColorInput.rgb("#AABBCC"),
+            ColorInput.rgb("#112233")));
+    CellFillInput.PatternBackground backgroundOnlyPattern =
+        assertInstanceOf(
+            CellFillInput.PatternBackground.class,
+            CellFillInput.patternBackground(ExcelFillPattern.BRICKS, ColorInput.rgb("#112233")));
+    assertEquals(ColorInput.rgb("#112233"), backgroundOnlyPattern.backgroundColor());
     assertNotNull(new CellProtectionInput(false, null));
     CellProtectionInput hiddenOnlyProtection = new CellProtectionInput(null, true);
     assertTrue(hiddenOnlyProtection.hiddenFormula());

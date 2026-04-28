@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: WORKBOOK_CELL_INSPECTIONS
 updated: "2026-04-25"
 route:
@@ -346,11 +346,11 @@ than raw `#RRGGBB` strings. `style.font.fontColor`, `style.fill.foregroundColor`
 `rgb` plus optional `theme`, `indexed`, and `tint` facts when Excel stores them. Gradient fills
 come back under `style.fill.gradient` with `type`, optional geometry (`degree`, `left`, `right`,
 `top`, `bottom`), and ordered `stops` carrying `position` plus structured colors. The write-side
-style contract uses asymmetric field names rather than the read-back object shape:
-`fontColor`/`fontColorTheme`/`fontColorIndexed`/`fontColorTint`, corresponding
-foreground/background/border color fields, and `fill.gradient`. Agents that read a
-`CellColorReport` and want to write it back must translate the structured report into those
-write-side fields rather than echo the read-back object verbatim.
+style contract now uses the same structured color families via `ColorInput` plus explicit fill
+variants under `style.fill.kind`. Agents that read a `CellColorReport` and want to write it back
+can preserve the same color semantics, but they must still translate read-side report objects into
+the matching write-side request types and choose the correct `style.fill.kind` variant instead of
+echoing the entire read-back cell style verbatim.
 
 ### GET_ARRAY_FORMULAS
 

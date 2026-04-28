@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
 import java.util.Objects;
 

@@ -12,4 +12,4 @@ Read Count: 0
 Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_EMBEDDED_OBJECT=1, SET_CELL=1, ENSURE_SHEET=1
+Operation Kinds: SET_CELL=1, SET_EMBEDDED_OBJECT=1, ENSURE_SHEET=1

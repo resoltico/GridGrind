@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /** Captures one structured execution journal while optionally streaming verbose events. */
@@ -57,24 +58,28 @@ final class ExecutionJournalRecorder {
     String planId =
         request == null
             ? null
-            : request.planId() != null
-                ? request.planId()
-                : "plan-" + UUID.randomUUID().toString().toLowerCase(java.util.Locale.ROOT);
+            : request
+                .planId()
+                .orElseGet(
+                    () ->
+                        "plan-" + UUID.randomUUID().toString().toLowerCase(java.util.Locale.ROOT));
     ExecutionJournalLevel level =
         request == null ? ExecutionJournalLevel.NORMAL : request.journalLevel();
     ExecutionJournal.SourceSummary source =
         request == null
-            ? new ExecutionJournal.SourceSummary(null, null)
+            ? new ExecutionJournal.SourceSummary(Optional.empty(), Optional.empty())
             : new ExecutionJournal.SourceSummary(
-                ExecutionRequestPaths.reqSourceType(request),
-                ExecutionRequestPaths.reqSourcePath(request, workingDirectory));
+                Optional.of(ExecutionRequestPaths.reqSourceType(request)),
+                Optional.ofNullable(
+                    ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
     ExecutionJournal.PersistenceSummary persistence =
         request == null
-            ? new ExecutionJournal.PersistenceSummary(null, null)
+            ? new ExecutionJournal.PersistenceSummary(Optional.empty(), Optional.empty())
             : new ExecutionJournal.PersistenceSummary(
-                ExecutionRequestPaths.reqPersistenceType(request),
-                ExecutionRequestPaths.persistencePath(
-                    request.source(), request.persistence(), workingDirectory));
+                Optional.of(ExecutionRequestPaths.reqPersistenceType(request)),
+                Optional.ofNullable(
+                    ExecutionRequestPaths.persistencePath(
+                        request.source(), request.persistence(), workingDirectory)));
     return new ExecutionJournalRecorder(planId, level, source, persistence, liveSink);
   }
 
@@ -125,7 +130,7 @@ final class ExecutionJournalRecorder {
   ExecutionJournal buildSuccess(int plannedStepCount) {
     emit("PLAN", "succeeded", null, null);
     return new ExecutionJournal(
-        planId,
+        Optional.ofNullable(planId),
         level,
         source,
         persistence,
@@ -142,9 +147,9 @@ final class ExecutionJournalRecorder {
             plannedStepCount,
             completedStepCount(),
             elapsedMillis(planStartNanos),
-            null,
-            null,
-            null),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty()),
         level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
   }
 
@@ -155,7 +160,7 @@ final class ExecutionJournalRecorder {
       String failedStepId) {
     emit("PLAN", "failed (" + failureCode + ")", failedStepIndex, failedStepId);
     return new ExecutionJournal(
-        planId,
+        Optional.ofNullable(planId),
         level,
         source,
         persistence,
@@ -172,9 +177,9 @@ final class ExecutionJournalRecorder {
             plannedStepCount,
             completedStepCount(),
             elapsedMillis(planStartNanos),
-            failedStepIndex,
-            failedStepId,
-            failureCode),
+            Optional.ofNullable(failedStepIndex),
+            Optional.ofNullable(failedStepId),
+            Optional.ofNullable(failureCode)),
         level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
   }
 
@@ -190,7 +195,12 @@ final class ExecutionJournalRecorder {
       return;
     }
     ExecutionJournal.Event event =
-        new ExecutionJournal.Event(Instant.now().toString(), category, detail, stepIndex, stepId);
+        new ExecutionJournal.Event(
+            Instant.now().toString(),
+            category,
+            detail,
+            Optional.ofNullable(stepIndex),
+            Optional.ofNullable(stepId));
     events.add(event);
     sink.emit(event);
   }
@@ -238,7 +248,10 @@ final class ExecutionJournalRecorder {
       finished = true;
       ExecutionJournal.Phase phase =
           new ExecutionJournal.Phase(
-              status, startedAt, Instant.now().toString(), elapsedMillis(startedAtNanos));
+              status,
+              Optional.of(startedAt),
+              Optional.of(Instant.now().toString()),
+              elapsedMillis(startedAtNanos));
       consumer.accept(phase);
       emit(category, detail, stepIndex, stepId);
       return phase;
@@ -268,7 +281,7 @@ final class ExecutionJournalRecorder {
               ExecutionJournalTargetResolver.resolve(step, level),
               phase,
               ExecutionJournal.StepOutcome.SUCCEEDED,
-              null));
+              Optional.empty()));
     }
 
     void fail(
@@ -286,7 +299,8 @@ final class ExecutionJournalRecorder {
               ExecutionJournalTargetResolver.resolve(step, level),
               phase,
               ExecutionJournal.StepOutcome.FAILED,
-              new ExecutionJournal.FailureClassification(code, category, stage, message)));
+              Optional.of(
+                  new ExecutionJournal.FailureClassification(code, category, stage, message))));
     }
   }
 }

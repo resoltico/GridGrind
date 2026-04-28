@@ -236,7 +236,7 @@ class StructuralLayoutProtocolTypesTest {
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             new SheetDisplayInput(false, false, false, true, true),
-            new ColorInput("#112233"),
+            ColorInput.rgb("#112233"),
             new SheetOutlineSummaryInput(false, false),
             new SheetDefaultsInput(11, 18.5d),
             java.util.List.of(
@@ -252,7 +252,7 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(java.util.List.of(), defaultPresentation.ignoredErrors());
     assertEquals(
         new SheetDisplayInput(false, false, false, true, true), explicitPresentation.display());
-    assertEquals(new ColorInput("#112233"), explicitPresentation.tabColor());
+    assertEquals(ColorInput.rgb("#112233"), explicitPresentation.tabColor());
     assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
     assertEquals(new SheetDefaultsInput(11, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(
@@ -270,14 +270,14 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, false, true, true),
-            new CellColorReport("#112233"),
+            CellColorReport.rgb("#112233"),
             new SheetOutlineSummaryReport(false, false),
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(
                 new IgnoredErrorReport("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))),
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, false, true, true),
-            new CellColorReport("#112233"),
+            CellColorReport.rgb("#112233"),
             new SheetOutlineSummaryReport(false, false),
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(

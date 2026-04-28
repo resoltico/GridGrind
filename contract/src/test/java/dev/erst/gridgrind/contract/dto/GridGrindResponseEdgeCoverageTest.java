@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
@@ -12,6 +13,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Additional branch coverage for edge-case GridGrind response DTO validation. */
@@ -19,22 +21,21 @@ class GridGrindResponseEdgeCoverageTest {
   @Test
   void successFailureWorkbookSummaryAndNamedRangeBranchesAreExplicit() {
     GridGrindResponse.Success success =
-        GridGrindResponse.success(
-            null,
-            null,
-            null,
-            null,
+        GridGrindResponses.success(
+            List.of(),
+            List.of(),
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
                     new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
     GridGrindResponse.Failure failure =
-        GridGrindResponse.failure(
-            null,
+        GridGrindResponses.failure(
             GridGrindResponse.Problem.of(
                 GridGrindProblemCode.INVALID_REQUEST,
                 "bad request",
-                new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE")));
+                new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+                        "NEW", "NONE"))));
 
     assertTrue(success.warnings().isEmpty());
     assertEquals(GridGrindProtocolVersion.current(), failure.protocolVersion());
@@ -177,23 +178,30 @@ class GridGrindResponseEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponse.CellReport.TextReport(
-                        "A1", "STRING", "Owner", style(), null, null, "Owner", List.of()))
+                    new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+                        "A1",
+                        "STRING",
+                        "Owner",
+                        style(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        "Owner",
+                        Optional.of(List.of())))
             .getMessage());
     assertEquals(
         "richText run text must concatenate to the stringValue",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponse.CellReport.TextReport(
+                    new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                         "A1",
                         "STRING",
                         "Owner",
                         style(),
-                        null,
-                        null,
+                        Optional.empty(),
+                        Optional.empty(),
                         "Owner",
-                        List.of(new RichTextRunReport("Mismatch", style().font()))))
+                        Optional.of(List.of(new RichTextRunReport("Mismatch", style().font())))))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
@@ -554,19 +562,30 @@ class GridGrindResponseEdgeCoverageTest {
 
   @Test
   void problemContextDefaultsAndCellSubtypeTypeNamesRemainTruthful() {
-    GridGrindResponse.ProblemContext.ParseArguments parseArguments =
-        new GridGrindResponse.ProblemContext.ParseArguments("--request");
-    GridGrindResponse.CellReport.BooleanReport booleanCell =
-        new GridGrindResponse.CellReport.BooleanReport(
-            "A2", "BOOLEAN", "TRUE", style(), null, null, true);
-    GridGrindResponse.CellReport.ErrorReport errorCell =
-        new GridGrindResponse.CellReport.ErrorReport(
-            "A3", "ERROR", "#DIV/0!", style(), null, null, "#DIV/0!");
+    dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments parseArguments =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+            dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named("--request"));
+    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
+            "A2",
+            "BOOLEAN",
+            "TRUE",
+            style(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            true);
+    dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
+            "A3",
+            "ERROR",
+            "#DIV/0!",
+            style(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            "#DIV/0!");
 
-    assertNull(parseArguments.requestPath());
-    assertNull(parseArguments.jsonPath());
-    assertNull(parseArguments.jsonLine());
-    assertNull(parseArguments.jsonColumn());
+    assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
+    assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
     assertEquals("BOOLEAN", booleanCell.effectiveType());
     assertEquals("ERROR", errorCell.effectiveType());
   }
@@ -585,7 +604,7 @@ class GridGrindResponseEdgeCoverageTest {
             null,
             false,
             false),
-        new CellFillReport(ExcelFillPattern.NONE, null, null),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }

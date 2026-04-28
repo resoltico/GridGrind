@@ -71,6 +71,7 @@ EOF
 chmod +x "${fake_cli}"
 
 source "${repo_root}/scripts/lib/test-cli-contract-fixtures.sh"
+load_test_cli_contract_fixtures
 run_verify_expect_success() {
     FAKE_GRIDGRIND_HELP="${success_help}" \
         FAKE_GRIDGRIND_CATALOG="${success_catalog}" \
@@ -116,23 +117,26 @@ run_verify_expect_success
 run_verify_expect_success_without_tmpdir
 
 run_verify_expect_failure \
-    "${success_help/markRecalculateOnOpen=true/FORCE_FORMULA_RECALC_ON_OPEN}" \
+    "$(append_fixture_line "${success_help}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
     "${success_catalog}"
 
 run_verify_expect_failure \
-    "${success_help/WORKBOOK_HEALTH/WORKBOOK_HEALTH_BROKEN}" \
+    "$(replace_fixture_token "${success_help}" 'WORKBOOK_HEALTH' 'WORKBOOK_HEALTH_BROKEN')" \
     "${success_catalog}"
 
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
-    "${success_task_catalog/SET_TABLE/NO_SUCH_MUTATION}"
+    "$(replace_fixture_token "${success_task_catalog}" 'SET_TABLE' 'NO_SUCH_MUTATION')"
 
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
     "${success_task_catalog}" \
-    "${success_task_plan/todo-dashboard-output.xlsx/todo-dashboard-output.xls}"
+    "$(replace_fixture_token \
+        "${success_task_plan}" \
+        'dashboard-output.xlsx' \
+        'dashboard-output.xls')"
 
 run_verify_expect_failure \
     "${success_help}" \
@@ -140,7 +144,10 @@ run_verify_expect_failure \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "${success_goal_plan}" \
-    "${success_doctor_report/\"sourceType\": \"NEW\"/\"sourceType\": \"UTF8_FILE\"}" \
+    "$(replace_fixture_token \
+        "${success_doctor_report}" \
+        '"sourceType" : "NEW"' \
+        '"sourceType" : "UTF8_FILE"')" \
     "${success_help}"
 
 run_verify_expect_failure \
@@ -148,7 +155,10 @@ run_verify_expect_failure \
     "${success_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan/\"id\": \"DASHBOARD\"/\"id\": \"TABULAR_REPORT\"}" \
+    "$(replace_fixture_token \
+        "${success_goal_plan}" \
+        '"id" : "DASHBOARD"' \
+        '"id" : "TABULAR_REPORT"')" \
     "${success_doctor_report}"
 
 run_verify_expect_failure \
@@ -158,6 +168,6 @@ run_verify_expect_failure \
     "${success_task_plan}" \
     "${success_goal_plan}" \
     "${success_doctor_report}" \
-    "${success_help/GridGrind 9.9.9/Implicit Help Drifted}"
+    "$(append_fixture_line "${success_help}" 'Implicit Help Drifted')"
 
 printf 'verify-cli-contract regression: success\n'

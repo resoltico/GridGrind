@@ -36,6 +36,7 @@ readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
+readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
 test_root=''
@@ -132,8 +133,8 @@ grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:${expected
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:latest"' \
     "${container_verify_script}" || die "public container verification no longer checks the latest tag contract"
-grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${repo_root}/check.sh" || die \
-    "root check no longer exercises the release primary-checkout regression"
+grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_script}" || die \
+    "Stage 4 contract no longer exercises the release primary-checkout regression"
 grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
 

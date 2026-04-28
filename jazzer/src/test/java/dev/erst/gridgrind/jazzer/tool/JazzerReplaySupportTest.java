@@ -242,48 +242,24 @@ class JazzerReplaySupportTest {
 
     ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolWorkflow(), input);
 
-    assertInstanceOf(ReplayOutcome.Success.class, outcome);
-    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
+    ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
+    assertEquals("IllegalArgumentException", expectedInvalid.invalidKind());
+    assertEquals("protection must set at least one attribute", expectedInvalid.message());
     assertEquals(
         new ProtocolWorkflowDetails(
             314,
-            "EXISTING",
-            "SAVE_AS",
-            5,
-            Map.of("APPLY_STYLE", 2L, "AUTO_SIZE_COLUMNS", 3L),
-            Map.ofEntries(
-                Map.entry("font", 2L),
-                Map.entry("text_rotation", 2L),
-                Map.entry("fill_patterned", 2L),
-                Map.entry("border_top_color", 2L),
-                Map.entry("border_bottom_color", 2L),
-                Map.entry("horizontal_alignment", 2L),
-                Map.entry("font_color", 2L),
-                Map.entry("locked", 2L),
-                Map.entry("protection", 2L),
-                Map.entry("border_bottom", 2L),
-                Map.entry("font_name", 2L),
-                Map.entry("border_top", 2L),
-                Map.entry("underline", 2L),
-                Map.entry("strikeout", 2L),
-                Map.entry("vertical_alignment", 2L),
-                Map.entry("fill_pattern", 2L),
-                Map.entry("indentation", 2L),
-                Map.entry("alignment", 2L),
-                Map.entry("italic", 1L),
-                Map.entry("hidden_formula", 2L),
-                Map.entry("fill", 2L),
-                Map.entry("border", 2L),
-                Map.entry("bold", 1L),
-                Map.entry("wrap_text", 2L),
-                Map.entry("font_height", 2L),
-                Map.entry("font_height_twips", 2L)),
-            3,
-            Map.of("EXPECT_PIVOT_TABLE_PRESENT", 3L),
-            6,
-            Map.of("ANALYZE_WORKBOOK_FINDINGS", 6L),
-            "FAILURE"),
-        success.details());
+            "NOT_GENERATED",
+            "NOT_GENERATED",
+            0,
+            Map.of(),
+            Map.of(),
+            0,
+            Map.of(),
+            0,
+            Map.of(),
+            "NOT_EXECUTED"),
+        expectedInvalid.details());
   }
 
   private static byte[] artifactBytes(String resourceName) {

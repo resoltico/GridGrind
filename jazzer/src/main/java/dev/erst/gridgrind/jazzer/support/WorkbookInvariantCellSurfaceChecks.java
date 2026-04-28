@@ -36,7 +36,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 final class WorkbookInvariantCellSurfaceChecks {
   private WorkbookInvariantCellSurfaceChecks() {}
 
-  static void requireCellReportShape(GridGrindResponse.CellReport cellReport) {
+  static void requireCellReportShape(dev.erst.gridgrind.contract.dto.CellReport cellReport) {
     WorkbookInvariantChecks.require(cellReport.address() != null, "cell address must not be null");
     WorkbookInvariantChecks.require(
         !cellReport.address().isBlank(), "cell address must not be blank");
@@ -49,13 +49,14 @@ final class WorkbookInvariantCellSurfaceChecks {
     requireCellStyleShape(cellReport.style());
 
     switch (cellReport) {
-      case GridGrindResponse.CellReport.BlankReport _ -> {}
-      case GridGrindResponse.CellReport.TextReport text -> {
+      case dev.erst.gridgrind.contract.dto.CellReport.BlankReport _ -> {}
+      case dev.erst.gridgrind.contract.dto.CellReport.TextReport text -> {
         WorkbookInvariantChecks.require(text.stringValue() != null, "stringValue must not be null");
-        if (text.richText() != null) {
-          WorkbookInvariantChecks.require(!text.richText().isEmpty(), "richText must not be empty");
+        if (text.richText().isPresent()) {
+          WorkbookInvariantChecks.require(
+              !text.richText().orElseThrow().isEmpty(), "richText must not be empty");
           StringBuilder builder = new StringBuilder();
-          for (var run : text.richText()) {
+          for (var run : text.richText().orElseThrow()) {
             WorkbookInvariantChecks.require(
                 run.text() != null, "richText run text must not be null");
             WorkbookInvariantChecks.require(
@@ -68,25 +69,25 @@ final class WorkbookInvariantCellSurfaceChecks {
               "richText run text must concatenate to stringValue");
         }
       }
-      case GridGrindResponse.CellReport.NumberReport number ->
+      case dev.erst.gridgrind.contract.dto.CellReport.NumberReport number ->
           WorkbookInvariantChecks.require(
               number.numberValue() != null, "numberValue must not be null");
-      case GridGrindResponse.CellReport.BooleanReport bool ->
+      case dev.erst.gridgrind.contract.dto.CellReport.BooleanReport bool ->
           WorkbookInvariantChecks.require(
               bool.booleanValue() != null, "booleanValue must not be null");
-      case GridGrindResponse.CellReport.ErrorReport error ->
+      case dev.erst.gridgrind.contract.dto.CellReport.ErrorReport error ->
           WorkbookInvariantChecks.require(
               error.errorValue() != null, "errorValue must not be null");
-      case GridGrindResponse.CellReport.FormulaReport formula -> {
+      case dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula -> {
         WorkbookInvariantChecks.require(formula.formula() != null, "formula must not be null");
         requireCellReportShape(formula.evaluation());
       }
     }
-    if (cellReport.hyperlink() != null) {
-      requireHyperlinkShape(cellReport.hyperlink());
+    if (cellReport.hyperlink().isPresent()) {
+      requireHyperlinkShape(cellReport.hyperlink().orElseThrow());
     }
-    if (cellReport.comment() != null) {
-      requireCommentReportShape(cellReport.comment());
+    if (cellReport.comment().isPresent()) {
+      requireCommentReportShape(cellReport.comment().orElseThrow());
     }
   }
 
@@ -96,10 +97,11 @@ final class WorkbookInvariantCellSurfaceChecks {
     WorkbookInvariantChecks.require(!comment.text().isBlank(), "comment text must not be blank");
     WorkbookInvariantChecks.require(
         !comment.author().isBlank(), "comment author must not be blank");
-    if (comment.runs() != null) {
-      WorkbookInvariantChecks.require(!comment.runs().isEmpty(), "comment runs must not be empty");
+    if (comment.runs().isPresent()) {
+      WorkbookInvariantChecks.require(
+          !comment.runs().orElseThrow().isEmpty(), "comment runs must not be empty");
       StringBuilder builder = new StringBuilder();
-      for (RichTextRunReport run : comment.runs()) {
+      for (RichTextRunReport run : comment.runs().orElseThrow()) {
         WorkbookInvariantChecks.require(run != null, "comment runs must not contain null values");
         WorkbookInvariantChecks.require(run.text() != null, "comment run text must not be null");
         WorkbookInvariantChecks.require(
@@ -110,8 +112,8 @@ final class WorkbookInvariantCellSurfaceChecks {
       WorkbookInvariantChecks.require(
           builder.toString().equals(comment.text()), "comment runs must concatenate to text");
     }
-    if (comment.anchor() != null) {
-      requireCommentAnchorShape(comment.anchor());
+    if (comment.anchor().isPresent()) {
+      requireCommentAnchorShape(comment.anchor().orElseThrow());
     }
   }
 
@@ -215,27 +217,30 @@ final class WorkbookInvariantCellSurfaceChecks {
 
   static void requireCellFillShape(CellFillReport fill) {
     WorkbookInvariantChecks.require(fill != null, "fill must not be null");
-    WorkbookInvariantChecks.require(fill.pattern() != null, "fill pattern must not be null");
-    if (fill.foregroundColor() != null) {
-      requireCellColorShape(fill.foregroundColor(), "fill foregroundColor");
-    }
-    if (fill.backgroundColor() != null) {
-      requireCellColorShape(fill.backgroundColor(), "fill backgroundColor");
-    }
-    if (fill.gradient() != null) {
-      requireCellGradientFillShape(fill.gradient());
-      WorkbookInvariantChecks.require(
-          fill.foregroundColor() == null && fill.backgroundColor() == null,
-          "gradient fills must not carry flat colors");
-    }
-    if (fill.pattern() == ExcelFillPattern.NONE && fill.gradient() == null) {
-      WorkbookInvariantChecks.require(
-          fill.foregroundColor() == null && fill.backgroundColor() == null,
-          "fill pattern NONE must not carry colors");
-    }
-    if (fill.pattern() == ExcelFillPattern.SOLID && fill.gradient() == null) {
-      WorkbookInvariantChecks.require(
-          fill.backgroundColor() == null, "SOLID fills must not carry backgroundColor");
+    switch (fill) {
+      case CellFillReport.PatternOnly pattern -> {
+        WorkbookInvariantChecks.require(pattern.pattern() != null, "fill pattern must not be null");
+      }
+      case CellFillReport.PatternForeground pattern -> {
+        WorkbookInvariantChecks.require(pattern.pattern() != null, "fill pattern must not be null");
+        requireCellColorShape(pattern.foregroundColor(), "fill foregroundColor");
+      }
+      case CellFillReport.PatternBackground pattern -> {
+        WorkbookInvariantChecks.require(pattern.pattern() != null, "fill pattern must not be null");
+        WorkbookInvariantChecks.require(
+            pattern.pattern() != ExcelFillPattern.SOLID,
+            "SOLID fills must not carry backgroundColor");
+        requireCellColorShape(pattern.backgroundColor(), "fill backgroundColor");
+      }
+      case CellFillReport.PatternForegroundBackground pattern -> {
+        WorkbookInvariantChecks.require(pattern.pattern() != null, "fill pattern must not be null");
+        WorkbookInvariantChecks.require(
+            pattern.pattern() != ExcelFillPattern.SOLID,
+            "SOLID fills must not carry backgroundColor");
+        requireCellColorShape(pattern.foregroundColor(), "fill foregroundColor");
+        requireCellColorShape(pattern.backgroundColor(), "fill backgroundColor");
+      }
+      case CellFillReport.Gradient gradient -> requireCellGradientFillShape(gradient.gradient());
     }
   }
 
@@ -534,11 +539,24 @@ final class WorkbookInvariantCellSurfaceChecks {
 
   static void requireCellGradientFillShape(CellGradientFillReport gradient) {
     WorkbookInvariantChecks.require(gradient != null, "gradient fill must not be null");
-    WorkbookInvariantChecks.requireNonBlank(gradient.type(), "gradient fill type");
     WorkbookInvariantChecks.require(
         gradient.stops() != null, "gradient fill stops must not be null");
     WorkbookInvariantChecks.require(
         !gradient.stops().isEmpty(), "gradient fill stops must not be empty");
+    switch (gradient) {
+      case CellGradientFillReport.Linear linear -> {
+        if (linear.degree() != null) {
+          WorkbookInvariantChecks.require(
+              Double.isFinite(linear.degree()), "linear gradient degree must be finite");
+        }
+      }
+      case CellGradientFillReport.Path path -> {
+        requireFiniteOrNull(path.left(), "path gradient left");
+        requireFiniteOrNull(path.right(), "path gradient right");
+        requireFiniteOrNull(path.top(), "path gradient top");
+        requireFiniteOrNull(path.bottom(), "path gradient bottom");
+      }
+    }
     for (CellGradientStopReport stop : gradient.stops()) {
       WorkbookInvariantChecks.require(stop != null, "gradient fill stop must not be null");
       WorkbookInvariantChecks.require(
@@ -550,22 +568,22 @@ final class WorkbookInvariantCellSurfaceChecks {
 
   static void requireCellColorShape(CellColorReport color, String label) {
     WorkbookInvariantChecks.require(color != null, label + " must not be null");
-    WorkbookInvariantChecks.require(
-        color.rgb() != null || color.theme() != null || color.indexed() != null,
-        label + " must expose rgb, theme, or indexed semantics");
-    if (color.rgb() != null) {
-      WorkbookInvariantChecks.requireNonBlank(color.rgb(), label + " rgb");
+    switch (color) {
+      case CellColorReport.Rgb rgb ->
+          WorkbookInvariantChecks.requireNonBlank(rgb.rgb(), label + " rgb");
+      case CellColorReport.Theme theme ->
+          WorkbookInvariantChecks.require(
+              theme.theme() >= 0, label + " theme must not be negative");
+      case CellColorReport.Indexed indexed ->
+          WorkbookInvariantChecks.require(
+              indexed.indexed() >= 0, label + " indexed must not be negative");
     }
-    if (color.theme() != null) {
-      WorkbookInvariantChecks.require(color.theme() >= 0, label + " theme must not be negative");
-    }
-    if (color.indexed() != null) {
-      WorkbookInvariantChecks.require(
-          color.indexed() >= 0, label + " indexed must not be negative");
-    }
-    if (color.tint() != null) {
-      WorkbookInvariantChecks.require(
-          Double.isFinite(color.tint()), label + " tint must be finite");
+    requireFiniteOrNull(color.tint(), label + " tint");
+  }
+
+  private static void requireFiniteOrNull(Double value, String label) {
+    if (value != null) {
+      WorkbookInvariantChecks.require(Double.isFinite(value), label + " must be finite");
     }
   }
 

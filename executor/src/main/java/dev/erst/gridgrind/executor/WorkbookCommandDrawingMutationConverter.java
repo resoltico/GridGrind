@@ -4,57 +4,48 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import java.util.Optional;
 
 /** Converts drawing-backed mutation families into engine commands. */
 final class WorkbookCommandDrawingMutationConverter {
   private WorkbookCommandDrawingMutationConverter() {}
 
-  static Optional<WorkbookCommand> toCommand(Selector target, MutationAction action) {
+  static WorkbookCommand toCommand(Selector target, MutationAction.DrawingMutationAction action) {
     return switch (action) {
       case MutationAction.SetPicture setPicture ->
-          Optional.of(
-              new WorkbookCommand.SetPicture(
-                  WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-                  WorkbookCommandConverter.toExcelPictureDefinition(setPicture.picture())));
+          new WorkbookCommand.SetPicture(
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandConverter.toExcelPictureDefinition(setPicture.picture()));
       case MutationAction.SetSignatureLine setSignatureLine ->
-          Optional.of(
-              new WorkbookCommand.SetSignatureLine(
-                  WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-                  WorkbookCommandConverter.toExcelSignatureLineDefinition(
-                      setSignatureLine.signatureLine())));
+          new WorkbookCommand.SetSignatureLine(
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandConverter.toExcelSignatureLineDefinition(
+                  setSignatureLine.signatureLine()));
       case MutationAction.SetChart setChart ->
-          Optional.of(
-              new WorkbookCommand.SetChart(
-                  WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-                  WorkbookCommandConverter.toExcelChartDefinition(setChart.chart())));
+          new WorkbookCommand.SetChart(
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandConverter.toExcelChartDefinition(setChart.chart()));
       case MutationAction.SetShape setShape ->
-          Optional.of(
-              new WorkbookCommand.SetShape(
-                  WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-                  WorkbookCommandConverter.toExcelShapeDefinition(setShape.shape())));
+          new WorkbookCommand.SetShape(
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandConverter.toExcelShapeDefinition(setShape.shape()));
       case MutationAction.SetEmbeddedObject setEmbeddedObject ->
-          Optional.of(
-              new WorkbookCommand.SetEmbeddedObject(
-                  WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-                  WorkbookCommandConverter.toExcelEmbeddedObjectDefinition(
-                      setEmbeddedObject.embeddedObject())));
+          new WorkbookCommand.SetEmbeddedObject(
+              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
+              WorkbookCommandConverter.toExcelEmbeddedObjectDefinition(
+                  setEmbeddedObject.embeddedObject()));
       case MutationAction.SetDrawingObjectAnchor setDrawingObjectAnchor -> {
         DrawingObjectSelector.ByName selector =
             WorkbookCommandSelectorSupport.drawingObjectByName(target, action);
-        yield Optional.of(
-            new WorkbookCommand.SetDrawingObjectAnchor(
-                selector.sheetName(),
-                selector.objectName(),
-                WorkbookCommandConverter.toExcelDrawingAnchor(setDrawingObjectAnchor.anchor())));
+        yield new WorkbookCommand.SetDrawingObjectAnchor(
+            selector.sheetName(),
+            selector.objectName(),
+            WorkbookCommandConverter.toExcelDrawingAnchor(setDrawingObjectAnchor.anchor()));
       }
       case MutationAction.DeleteDrawingObject _ -> {
         DrawingObjectSelector.ByName selector =
             WorkbookCommandSelectorSupport.drawingObjectByName(target, action);
-        yield Optional.of(
-            new WorkbookCommand.DeleteDrawingObject(selector.sheetName(), selector.objectName()));
+        yield new WorkbookCommand.DeleteDrawingObject(selector.sheetName(), selector.objectName());
       }
-      default -> Optional.empty();
     };
   }
 }

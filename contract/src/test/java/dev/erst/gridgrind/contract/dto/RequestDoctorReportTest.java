@@ -3,7 +3,9 @@ package dev.erst.gridgrind.contract.dto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for machine-readable request doctor reports. */
@@ -19,7 +21,7 @@ class RequestDoctorReportTest {
         GridGrindResponse.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"));
+            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
 
     RequestDoctorReport clean = RequestDoctorReport.clean(summary);
     RequestDoctorReport warnings = RequestDoctorReport.warnings(summary, mutableWarnings);
@@ -43,7 +45,7 @@ class RequestDoctorReportTest {
         GridGrindResponse.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"));
+            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
 
     assertEquals(
         "summary must not be null for a valid doctor report",
@@ -51,7 +53,12 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null, AnalysisSeverity.INFO, true, null, List.of(), null))
+                        null,
+                        AnalysisSeverity.INFO,
+                        true,
+                        Optional.empty(),
+                        List.of(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "problem must be null for a valid doctor report",
@@ -59,7 +66,12 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null, AnalysisSeverity.INFO, true, summary, List.of(), problem))
+                        null,
+                        AnalysisSeverity.INFO,
+                        true,
+                        Optional.of(summary),
+                        List.of(),
+                        Optional.of(problem)))
             .getMessage());
     assertEquals(
         "problem must not be null for an invalid doctor report",
@@ -67,7 +79,12 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null, AnalysisSeverity.ERROR, false, summary, List.of(), null))
+                        null,
+                        AnalysisSeverity.ERROR,
+                        false,
+                        Optional.of(summary),
+                        List.of(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "severity must be INFO when a valid doctor report contains no warnings",
@@ -75,7 +92,12 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null, AnalysisSeverity.WARNING, true, summary, List.of(), null))
+                        null,
+                        AnalysisSeverity.WARNING,
+                        true,
+                        Optional.of(summary),
+                        List.of(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "severity must be ERROR when a doctor report is invalid",
@@ -83,7 +105,12 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null, AnalysisSeverity.WARNING, false, summary, List.of(), problem))
+                        null,
+                        AnalysisSeverity.WARNING,
+                        false,
+                        Optional.of(summary),
+                        List.of(),
+                        Optional.of(problem)))
             .getMessage());
     assertEquals(
         "severity must be WARNING when a valid doctor report contains warnings",
@@ -94,9 +121,9 @@ class RequestDoctorReportTest {
                         null,
                         AnalysisSeverity.INFO,
                         true,
-                        summary,
+                        Optional.of(summary),
                         List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")),
-                        null))
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "mutationStepCount + assertionStepCount + inspectionStepCount must equal stepCount",
@@ -178,13 +205,18 @@ class RequestDoctorReportTest {
         GridGrindResponse.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"));
+            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
     List<RequestWarning> warningsWithNull = new java.util.ArrayList<>();
     warningsWithNull.add(null);
 
     RequestDoctorReport invalid =
         new RequestDoctorReport(
-            GridGrindProtocolVersion.V1, AnalysisSeverity.ERROR, false, null, null, problem);
+            GridGrindProtocolVersion.V1,
+            AnalysisSeverity.ERROR,
+            false,
+            Optional.empty(),
+            null,
+            Optional.of(problem));
 
     assertEquals(GridGrindProtocolVersion.V1, invalid.protocolVersion());
     assertEquals(List.of(), invalid.warnings());
@@ -197,20 +229,21 @@ class RequestDoctorReportTest {
                         null,
                         AnalysisSeverity.WARNING,
                         true,
-                        new RequestDoctorReport.Summary(
-                            "NEW",
-                            "NONE",
-                            "FULL_XSSF",
-                            "FULL_XSSF",
-                            "DO_NOT_CALCULATE",
-                            false,
-                            false,
-                            0,
-                            0,
-                            0,
-                            0),
+                        Optional.of(
+                            new RequestDoctorReport.Summary(
+                                "NEW",
+                                "NONE",
+                                "FULL_XSSF",
+                                "FULL_XSSF",
+                                "DO_NOT_CALCULATE",
+                                false,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0)),
                         warningsWithNull,
-                        null))
+                        Optional.empty()))
             .getMessage());
   }
 }

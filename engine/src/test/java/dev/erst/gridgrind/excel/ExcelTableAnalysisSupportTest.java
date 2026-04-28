@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
@@ -12,7 +13,7 @@ class ExcelTableAnalysisSupportTest {
   @Test
   void tableFindingsCoverBrokenHealthyAndStyleMismatchStates() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      List<WorkbookAnalysis.AnalysisFindingCode> brokenCodes =
+      List<AnalysisFindingCode> brokenCodes =
           ExcelTableAnalysisSupport.tableFindings(
                   workbook,
                   new ExcelTableSnapshot(
@@ -28,10 +29,10 @@ class ExcelTableAnalysisSupportTest {
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
 
-      assertTrue(brokenCodes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
-      assertTrue(brokenCodes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
-      assertTrue(brokenCodes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_DUPLICATE_HEADER));
-      assertTrue(brokenCodes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_STYLE_MISMATCH));
+      assertTrue(brokenCodes.contains(AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
+      assertTrue(brokenCodes.contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
+      assertTrue(brokenCodes.contains(AnalysisFindingCode.TABLE_DUPLICATE_HEADER));
+      assertTrue(brokenCodes.contains(AnalysisFindingCode.TABLE_STYLE_MISMATCH));
 
       assertEquals(
           List.of(),
@@ -105,8 +106,7 @@ class ExcelTableAnalysisSupportTest {
                     false)));
 
     assertEquals(1, findings.size());
-    assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.TABLE_OVERLAPPING_RANGE, findings.getFirst().code());
+    assertEquals(AnalysisFindingCode.TABLE_OVERLAPPING_RANGE, findings.getFirst().code());
   }
 
   @Test
@@ -137,14 +137,14 @@ class ExcelTableAnalysisSupportTest {
 
       healthyTable.getCTTable().getAutoFilter().setRef("A0:B3");
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
+          AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot)
               .getFirst()
               .code());
 
       healthyTable.getCTTable().getAutoFilter().setRef("A1:B4");
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+          AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot)
               .getFirst()
               .code());
@@ -153,7 +153,7 @@ class ExcelTableAnalysisSupportTest {
       poiSheet.getRow(0).getCell(0).setBlank();
       poiSheet.getRow(0).getCell(1).setBlank();
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
+          AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
           ExcelTableAnalysisSupport.tableAutofilterFindings(poiSheet, healthySnapshot)
               .getFirst()
               .code());

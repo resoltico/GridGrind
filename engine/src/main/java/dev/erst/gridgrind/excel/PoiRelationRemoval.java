@@ -9,6 +9,13 @@ import org.apache.poi.ooxml.POIXMLDocumentPart;
 
 /** Package-owned seam for POI relation removal, including reflective lookup hardening. */
 final class PoiRelationRemoval {
+  static final PoiPrivateContract REMOVE_RELATION_CONTRACT =
+      PoiPrivateContract.virtualMethod(
+          POIXMLDocumentPart.class,
+          "removeRelation",
+          MethodType.methodType(boolean.class, POIXMLDocumentPart.class, boolean.class),
+          "drawing, chart, and pivot relation cleanup");
+
   private PoiRelationRemoval() {}
 
   static BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> defaultRemover() {
@@ -22,10 +29,8 @@ final class PoiRelationRemoval {
     MethodHandle methodHandle =
         PoiPrivateAccessSupport.requireVirtual(
             lookup,
-            POIXMLDocumentPart.class,
-            "removeRelation",
-            MethodType.methodType(boolean.class, POIXMLDocumentPart.class, boolean.class),
-            "Failed to resolve POI removeRelation handle");
+            REMOVE_RELATION_CONTRACT,
+            MethodType.methodType(boolean.class, POIXMLDocumentPart.class, boolean.class));
     MethodHandle typedInvoker =
         MethodHandles.insertArguments(methodHandle, 2, true)
             .asType(

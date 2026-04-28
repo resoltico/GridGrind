@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.json;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,6 +64,9 @@ final class ExampleRequestFixturesTest {
           expectedFixtureText(expectedBytes),
           fixtureText(actualBytes),
           () -> "Example fixture drifted from generated plan bytes: " + exampleFile);
+      assertFalse(
+          fixtureText(actualBytes).contains(": null"),
+          () -> "Example fixture must omit explicit null properties: " + exampleFile);
     }
   }
 

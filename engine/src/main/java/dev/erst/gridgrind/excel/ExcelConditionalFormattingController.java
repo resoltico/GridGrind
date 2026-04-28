@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -143,8 +145,8 @@ final class ExcelConditionalFormattingController {
       if (block.ranges().isEmpty() || hasInvalidRanges(block.ranges())) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
-                WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
-                WorkbookAnalysis.AnalysisSeverity.WARNING,
+                AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
+                AnalysisSeverity.WARNING,
                 "Conditional-formatting block targets an empty or invalid range",
                 "Conditional-formatting block has no valid target ranges.",
                 blockLocation(sheetName, block.ranges()),
@@ -158,8 +160,8 @@ final class ExcelConditionalFormattingController {
             if (isBrokenFormula(evaluationWorkbook, sheetIndex, formulaRule.formula())) {
               findings.add(
                   new WorkbookAnalysis.AnalysisFinding(
-                      WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+                      AnalysisSeverity.ERROR,
                       "Conditional-formatting formula is invalid",
                       "Formula rule could not be parsed for conditional-formatting evaluation.",
                       blockLocation(sheetName, block.ranges()),
@@ -172,8 +174,8 @@ final class ExcelConditionalFormattingController {
                     && isBrokenFormula(evaluationWorkbook, sheetIndex, cellValueRule.formula2()))) {
               findings.add(
                   new WorkbookAnalysis.AnalysisFinding(
-                      WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+                      AnalysisSeverity.ERROR,
                       "Conditional-formatting operand formula is invalid",
                       "Cell-value rule operands could not be parsed for conditional-formatting evaluation.",
                       blockLocation(sheetName, block.ranges()),
@@ -183,8 +185,8 @@ final class ExcelConditionalFormattingController {
           case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
               findings.add(
                   new WorkbookAnalysis.AnalysisFinding(
-                      WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
-                      WorkbookAnalysis.AnalysisSeverity.WARNING,
+                      AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
+                      AnalysisSeverity.WARNING,
                       "Unsupported conditional-formatting rule",
                       unsupportedRule.detail(),
                       blockLocation(sheetName, block.ranges()),
@@ -482,8 +484,8 @@ final class ExcelConditionalFormattingController {
             .map(context -> context.label() + "@" + locationEvidence(context.location()))
             .toList();
     return new WorkbookAnalysis.AnalysisFinding(
-        WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
-        WorkbookAnalysis.AnalysisSeverity.WARNING,
+        AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
+        AnalysisSeverity.WARNING,
         "Conditional-formatting priorities collide",
         "Conditional-formatting priorities must be positive and unique within a sheet.",
         contexts.getFirst().context().location(),

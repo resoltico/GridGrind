@@ -440,7 +440,9 @@ class ExecutionModeRequestExecutorTest {
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("Missing", failure.problem().context().sheetName());
+    assertEquals(
+        java.util.Optional.of("Missing"),
+        DefaultGridGrindRequestExecutorTestSupport.executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -467,7 +469,9 @@ class ExecutionModeRequestExecutorTest {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     assertEquals(
-        workbookPath.toAbsolutePath().toString(), failure.problem().context().persistencePath());
+        java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
+        DefaultGridGrindRequestExecutorTestSupport.persistWorkbookContext(failure)
+            .persistencePath());
   }
 
   @Test

@@ -2,7 +2,6 @@ package dev.erst.gridgrind.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -11,11 +10,13 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -43,9 +44,13 @@ import org.junit.jupiter.api.Test;
 class ExecutionJournalCoverageTest {
   @Test
   void defaultExecutorMethodForwardsAndRejectsNullSink() {
-    WorkbookPlan request = new WorkbookPlan(new WorkbookPlan.WorkbookSource.New(), null, List.of());
+    WorkbookPlan request =
+        new WorkbookPlan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            List.of());
     GridGrindResponse.Success expected =
-        GridGrindResponse.success(
+        GridGrindResponses.success(
             null,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             List.of(),
@@ -324,7 +329,7 @@ class ExecutionJournalCoverageTest {
     assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());
     assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
     assertEquals(ExecutionJournal.Status.FAILED, journal.outcome().status());
-    assertEquals(GridGrindProblemCode.IO_ERROR, journal.outcome().failureCode());
+    assertEquals(GridGrindProblemCode.IO_ERROR, journal.outcome().failureCode().orElseThrow());
   }
 
   @Test
@@ -332,9 +337,9 @@ class ExecutionJournalCoverageTest {
     ExecutionJournalRecorder recorder =
         ExecutionJournalRecorder.start(null, ExecutionJournalSink.NOOP);
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
-    assertNull(unknownJournal.planId());
-    assertNull(unknownJournal.source().type());
-    assertNull(unknownJournal.persistence().type());
+    assertEquals(java.util.Optional.empty(), unknownJournal.planId());
+    assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
+    assertEquals(java.util.Optional.empty(), unknownJournal.persistence().type());
 
     WorkbookPlan request = verbosePlan();
     ExecutionJournalRecorder verboseRecorder =
@@ -365,7 +370,9 @@ class ExecutionJournalCoverageTest {
         "phase-5-plan",
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        new ExecutionPolicyInput(null, new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+        new ExecutionPolicyInput(
+            ExecutionModeInput.defaults(),
+            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
         null,
         List.of());
   }

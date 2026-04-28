@@ -1,6 +1,6 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "../../../../Volumes/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-b562862ed82ab454eb54d614380dc4ec7baa7d69",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/comment_collision_after_delete_columns_roundtrip_success.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/comment_collision_after_delete_columns_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
@@ -10,10 +10,10 @@
       "inputBytes" : 109,
       "commandCount" : 8,
       "commandKinds" : {
-        "DELETE_COLUMNS" : 2,
-        "SET_COMMENT" : 2,
         "CREATE_SHEET" : 2,
-        "AUTO_SIZE_COLUMNS" : 2
+        "AUTO_SIZE_COLUMNS" : 2,
+        "DELETE_COLUMNS" : 2,
+        "SET_COMMENT" : 2
       },
       "styleKinds" : { }
     }

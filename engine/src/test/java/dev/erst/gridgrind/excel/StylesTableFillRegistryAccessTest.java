@@ -77,6 +77,11 @@ class StylesTableFillRegistryAccessTest {
             IllegalStateException.class,
             () -> StylesTableFillRegistryAccess.requireFillsField(MethodHandles.publicLookup()));
 
+    assertTrue(failure.getMessage().contains("Apache POI private contract unavailable"));
+    assertTrue(
+        failure
+            .getMessage()
+            .contains(StylesTableFillRegistryAccess.FILLS_FIELD_CONTRACT.affectedSurface()));
     assertInstanceOf(IllegalAccessException.class, failure.getCause());
   }
 }

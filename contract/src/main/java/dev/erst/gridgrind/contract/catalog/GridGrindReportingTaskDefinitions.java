@@ -374,7 +374,7 @@ final class GridGrindReportingTaskDefinitions {
             "data-entry-starter",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs("data-entry-output.xlsx"),
-            new ExecutionPolicyInput(null, null, null),
+            ExecutionPolicyInput.defaults(),
             ExamplePlanSupport.step(
                 "ensure-intake",
                 ExamplePlanSupport.sheet("Intake"),

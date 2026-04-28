@@ -397,7 +397,7 @@ class ExcelResidualHelperCoverageTest {
 
       ExcelSheetPresentationController.clearTabColor(workbook.createSheet("NoSheetPr"));
       XSSFSheet colorSheet = workbook.createSheet("Color");
-      colorSheet.setTabColor(ExcelColorSupport.toXssfColor(workbook, new ExcelColor("#FF0000")));
+      colorSheet.setTabColor(ExcelColorSupport.toXssfColor(workbook, ExcelColor.rgb("#FF0000")));
       ExcelSheetPresentationController.clearTabColor(colorSheet);
       assertNull(colorSheet.getTabColor());
 

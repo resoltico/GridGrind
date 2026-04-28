@@ -21,14 +21,11 @@ public final class GridGrindRequestDoctor {
 
   /** Creates the production doctor backed by the same request validator used for execution. */
   public GridGrindRequestDoctor() {
-    this.validationSupport = new ExecutionValidationSupport();
-    this.workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
+    this(new ExecutionValidationSupport(), new ExecutionWorkbookSupport(Files::createTempFile));
   }
 
   GridGrindRequestDoctor(ExecutionValidationSupport validationSupport) {
-    this.validationSupport =
-        Objects.requireNonNull(validationSupport, "validationSupport must not be null");
-    this.workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
+    this(validationSupport, new ExecutionWorkbookSupport(Files::createTempFile));
   }
 
   GridGrindRequestDoctor(
@@ -41,7 +38,7 @@ public final class GridGrindRequestDoctor {
 
   /** Returns one machine-readable lint report for the supplied request. */
   public RequestDoctorReport diagnose(WorkbookPlan request) {
-    return diagnose(request, null);
+    return diagnose(request, Optional.empty());
   }
 
   /**
@@ -49,14 +46,21 @@ public final class GridGrindRequestDoctor {
    * input bindings when input resolution should be validated as part of linting.
    */
   public RequestDoctorReport diagnose(WorkbookPlan request, ExecutionInputBindings bindings) {
+    return diagnose(
+        request, Optional.of(Objects.requireNonNull(bindings, "bindings must not be null")));
+  }
+
+  private RequestDoctorReport diagnose(
+      WorkbookPlan request, Optional<ExecutionInputBindings> bindings) {
     if (request == null) {
       return RequestDoctorReport.invalid(
-          null,
+          Optional.empty(),
           List.of(),
           GridGrindProblems.problem(
               GridGrindProblemCode.INVALID_REQUEST,
               "request must not be null",
-              new GridGrindResponse.ProblemContext.ValidateRequest(null, null),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown()),
               (Throwable) null));
     }
 
@@ -67,10 +71,11 @@ public final class GridGrindRequestDoctor {
     if (validationProblem.isPresent()) {
       return RequestDoctorReport.invalid(summary, warnings, validationProblem.get());
     }
-    if (bindings != null) {
+    if (bindings.isPresent()) {
+      ExecutionInputBindings boundInputs = bindings.orElseThrow();
       WorkbookPlan resolvedRequest;
       try {
-        resolvedRequest = SourceBackedPlanResolver.resolve(request, bindings);
+        resolvedRequest = SourceBackedPlanResolver.resolve(request, boundInputs);
       } catch (Exception exception) {
         return RequestDoctorReport.invalid(
             summary,
@@ -78,7 +83,7 @@ public final class GridGrindRequestDoctor {
             GridGrindProblems.fromException(exception, resolveInputsContext(request, exception)));
       }
       Optional<GridGrindResponse.Problem> openProblem =
-          preflightWorkbookSource(resolvedRequest, bindings);
+          preflightWorkbookSource(resolvedRequest, boundInputs);
       if (openProblem.isPresent()) {
         return RequestDoctorReport.invalid(summary, warnings, openProblem.get());
       }
@@ -112,17 +117,17 @@ public final class GridGrindRequestDoctor {
         inspectionStepCount);
   }
 
-  private static GridGrindResponse.ProblemContext.ResolveInputs resolveInputsContext(
+  private static dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs resolveInputsContext(
       WorkbookPlan request, Exception exception) {
-    return new GridGrindResponse.ProblemContext.ResolveInputs(
-        ExecutionRequestPaths.reqSourceType(request),
-        ExecutionRequestPaths.reqPersistenceType(request),
+    return new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
+        ExecutionRequestPaths.requestShape(request),
         exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputKind()
-            : null,
-        exception instanceof InputSourceException inputSourceException
-            ? inputSourceException.inputPath()
-            : null);
+            ? inputSourceException.inputPath() != null
+                ? dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
+                    inputSourceException.inputKind(), inputSourceException.inputPath())
+                : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.kind(
+                    inputSourceException.inputKind())
+            : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.unknown());
   }
 
   private Optional<GridGrindResponse.Problem> preflightWorkbookSource(
@@ -130,7 +135,8 @@ public final class GridGrindRequestDoctor {
     if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
       return Optional.empty();
     }
-    GridGrindResponse.ProblemContext.OpenWorkbook context = openWorkbookContext(request, bindings);
+    dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook context =
+        openWorkbookContext(request, bindings);
     try (ExcelWorkbook workbook =
         workbookSupport.openWorkbook(
             request.source(), request.formulaEnvironment(), bindings.workingDirectory())) {
@@ -141,11 +147,10 @@ public final class GridGrindRequestDoctor {
     }
   }
 
-  private static GridGrindResponse.ProblemContext.OpenWorkbook openWorkbookContext(
+  private static dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook openWorkbookContext(
       WorkbookPlan request, ExecutionInputBindings bindings) {
-    return new GridGrindResponse.ProblemContext.OpenWorkbook(
-        ExecutionRequestPaths.reqSourceType(request),
-        ExecutionRequestPaths.reqPersistenceType(request),
-        ExecutionRequestPaths.reqSourcePath(request, bindings.workingDirectory()));
+    return new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+        ExecutionRequestPaths.requestShape(request),
+        ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()));
   }
 }

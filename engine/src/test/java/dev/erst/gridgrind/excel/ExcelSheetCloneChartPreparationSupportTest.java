@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -88,11 +89,11 @@ class ExcelSheetCloneChartPreparationSupportTest {
             .parse(new InputSource(new StringReader("<f><![CDATA[ChartCategories]]></f>")))
             .getDocumentElement();
 
-    Node valueNode = ExcelSheetCloneChartPreparationSupport.formulaValueNode(formulaNode);
+    Optional<Node> valueNode = ExcelSheetCloneChartPreparationSupport.formulaValueNode(formulaNode);
 
-    assertNotNull(valueNode);
-    assertEquals(Node.CDATA_SECTION_NODE, valueNode.getNodeType());
-    assertEquals("ChartCategories", valueNode.getNodeValue());
+    assertTrue(valueNode.isPresent());
+    assertEquals(Node.CDATA_SECTION_NODE, valueNode.orElseThrow().getNodeType());
+    assertEquals("ChartCategories", valueNode.orElseThrow().getNodeValue());
   }
 
   private static XSSFSheet namedRangeChartSheet(ExcelWorkbook workbook) {
@@ -149,11 +150,9 @@ class ExcelSheetCloneChartPreparationSupportTest {
   }
 
   private static void replaceFormulaText(Node formulaNode, String formula) {
-    Node valueNode = formulaValueNode(formulaNode);
-    if (valueNode == null) {
-      throw new AssertionError("formula node is missing its text payload");
-    }
-    valueNode.setNodeValue(formula);
+    formulaValueNode(formulaNode)
+        .orElseThrow(() -> new AssertionError("formula node is missing its text payload"))
+        .setNodeValue(formula);
   }
 
   private static void replaceChildren(Node node, Node replacementChild) {
@@ -165,7 +164,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
     }
   }
 
-  private static Node formulaValueNode(Node formulaNode) {
+  private static Optional<Node> formulaValueNode(Node formulaNode) {
     return ExcelSheetCloneChartPreparationSupport.formulaValueNode(formulaNode);
   }
 }

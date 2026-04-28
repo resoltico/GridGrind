@@ -3,7 +3,6 @@ package dev.erst.gridgrind.contract.catalog;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -88,6 +87,7 @@ class GridGrindProtocolCatalogTest {
         GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA")
             .orElseThrow()
             .field("source")
+            .orElseThrow()
             .name());
     NestedTypeGroup cellInputs =
         (NestedTypeGroup)
@@ -276,10 +276,10 @@ class GridGrindProtocolCatalogTest {
                     new FieldShape.Scalar(ScalarType.STRING),
                     List.of())));
 
-    assertEquals("target", typeEntry.field("target").name());
-    assertNull(typeEntry.field("missing"));
+    assertEquals("target", typeEntry.field("target").orElseThrow().name());
+    assertTrue(typeEntry.field("missing").isEmpty());
     assertTrue(typeEntry.targetSelectors().isEmpty());
-    assertNull(typeEntry.targetSelectorRule());
+    assertEquals(null, typeEntry.targetSelectorRule());
     assertEquals(
         "name must not be null",
         assertThrows(NullPointerException.class, () -> typeEntry.field(null)).getMessage());

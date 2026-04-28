@@ -2,7 +2,6 @@ package dev.erst.gridgrind.contract.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -76,7 +75,7 @@ class CatalogEdgeCoverageTest {
             List.of());
 
     assertEquals(GridGrindProtocolVersion.current(), catalog.protocolVersion());
-    assertNull(requestType.field("missing"));
+    assertTrue(requestType.field("missing").isEmpty());
     assertEquals(
         "name must not be null",
         assertThrows(NullPointerException.class, () -> requestType.field(null)).getMessage());

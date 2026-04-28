@@ -3,10 +3,11 @@ package dev.erst.gridgrind.executor;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.mutate;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.mutations;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.request;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -16,6 +17,7 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -42,7 +44,7 @@ class Phase7ExecutorCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             java.util.List.of());
     GridGrindResponse.Success expected =
-        GridGrindResponse.success(
+        GridGrindResponses.success(
             null,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             java.util.List.of(),
@@ -59,6 +61,10 @@ class Phase7ExecutorCoverageTest {
 
     ExecutionInputBindings explicitBindings =
         new ExecutionInputBindings(Path.of("/tmp"), "stdin".getBytes(StandardCharsets.UTF_8));
+    assertTrue(explicitBindings.hasStandardInput());
+    assertArrayEquals(
+        "stdin".getBytes(StandardCharsets.UTF_8),
+        explicitBindings.standardInputBytes().orElseThrow());
     assertSame(expected, executor.execute(request, explicitBindings));
     assertSame(explicitBindings, seenBindings.get());
     assertSame(ExecutionJournalSink.NOOP, seenSink.get());
@@ -80,9 +86,14 @@ class Phase7ExecutorCoverageTest {
 
   @Test
   void executionInputBindingsAndInputSourceExceptionsCoverNullAndValidationBranches() {
-    ExecutionInputBindings withoutStandardInput =
-        new ExecutionInputBindings(Path.of("/tmp"), (byte[]) null);
-    assertNull(withoutStandardInput.standardInputBytes());
+    ExecutionInputBindings withoutStandardInput = new ExecutionInputBindings(Path.of("/tmp"));
+    assertFalse(withoutStandardInput.hasStandardInput());
+    assertTrue(withoutStandardInput.standardInputBytes().isEmpty());
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ExecutionInputBindings(
+                Path.of("/tmp"), (ExecutionInputBindings.StandardInputBinding) null));
 
     InputSourceReadException exception =
         new InputSourceReadException("bad file", "cell text", "/tmp/cell.txt", null);
@@ -127,6 +138,16 @@ class Phase7ExecutorCoverageTest {
   @Test
   void defaultExecutorSurfacesResolveInputContextForSourceFailures() throws Exception {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            executor.execute(
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations()),
+                null,
+                ExecutionJournalSink.NOOP));
     WorkbookPlan standardInputRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -138,18 +159,15 @@ class Phase7ExecutorCoverageTest {
                         new CellInput.Text(TextSourceInput.standardInput())))));
 
     GridGrindResponse.Failure unavailableFailure =
+        assertInstanceOf(GridGrindResponse.Failure.class, executor.execute(standardInputRequest));
+    dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs unavailableContext =
         assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            executor.execute(
-                standardInputRequest, (ExecutionInputBindings) null, ExecutionJournalSink.NOOP));
-    GridGrindResponse.ProblemContext.ResolveInputs unavailableContext =
-        assertInstanceOf(
-            GridGrindResponse.ProblemContext.ResolveInputs.class,
+            dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
             unavailableFailure.problem().context());
     assertEquals(
         GridGrindProblemCode.INPUT_SOURCE_UNAVAILABLE, unavailableFailure.problem().code());
-    assertEquals("cell text", unavailableContext.inputKind());
-    assertNull(unavailableContext.inputPath());
+    assertEquals(java.util.Optional.of("cell text"), unavailableContext.inputKind());
+    assertEquals(java.util.Optional.empty(), unavailableContext.inputPath());
 
     Path workingDirectory = Files.createTempDirectory("gridgrind-phase7-default-executor-");
     Files.writeString(workingDirectory.resolve("blank.txt"), "   ", StandardCharsets.UTF_8);
@@ -167,14 +185,15 @@ class Phase7ExecutorCoverageTest {
             GridGrindResponse.Failure.class,
             executor.execute(
                 blankFileRequest,
-                new ExecutionInputBindings(workingDirectory, (byte[]) null),
+                new ExecutionInputBindings(workingDirectory),
                 ExecutionJournalSink.NOOP));
-    GridGrindResponse.ProblemContext.ResolveInputs blankContext =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs blankContext =
         assertInstanceOf(
-            GridGrindResponse.ProblemContext.ResolveInputs.class, blankFailure.problem().context());
+            dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
+            blankFailure.problem().context());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, blankFailure.problem().code());
-    assertNull(blankContext.inputKind());
-    assertNull(blankContext.inputPath());
+    assertEquals(java.util.Optional.empty(), blankContext.inputKind());
+    assertEquals(java.util.Optional.empty(), blankContext.inputPath());
   }
 
   @Test
@@ -184,8 +203,10 @@ class Phase7ExecutorCoverageTest {
     MutationAction.SetCell inlineFormula =
         new MutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
 
-    assertNull(ExecutionDiagnosticFields.formulaFor(fileBackedFormula));
-    assertEquals("SUM(A1:A2)", ExecutionDiagnosticFields.formulaFor(inlineFormula));
+    assertEquals(
+        java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(fileBackedFormula));
+    assertEquals(
+        java.util.Optional.of("SUM(A1:A2)"), ExecutionDiagnosticFields.formulaFor(inlineFormula));
   }
 
   @Test
@@ -280,7 +301,7 @@ class Phase7ExecutorCoverageTest {
             new MutationAction.ClearHyperlink(),
             new MutationAction.SetComment(
                 new dev.erst.gridgrind.contract.dto.CommentInput(
-                    TextSourceInput.inline("Reviewed"), "GridGrind", Boolean.TRUE)),
+                    TextSourceInput.inline("Reviewed"), "GridGrind", true)),
             new MutationAction.ClearComment(),
             new MutationAction.SetPicture(
                 new PictureInput(
@@ -368,7 +389,7 @@ class Phase7ExecutorCoverageTest {
     assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.namedRangeNameFor(setTable));
 
     assertEquals(
-        "Budget",
+        Optional.of("Budget"),
         ExecutionDiagnosticFields.singleSheetName(
             (dev.erst.gridgrind.contract.selector.RangeSelector)
                 new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B2")));
@@ -389,9 +410,11 @@ class Phase7ExecutorCoverageTest {
         GridGrindProblems.codeFor(
             new InputSourceReadException("io failed", "cell text", "/tmp/cell.txt", null)));
 
-    GridGrindResponse.ProblemContext.ResolveInputs context =
-        new GridGrindResponse.ProblemContext.ResolveInputs(
-            "NEW", "NONE", "cell text", "/tmp/cell.txt");
+    dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
+            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
+            dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
+                "cell text", "/tmp/cell.txt"));
     GridGrindResponse.Problem problem =
         GridGrindProblems.fromException(
             new InputSourceReadException("io failed", "cell text", "/tmp/cell.txt", null), context);

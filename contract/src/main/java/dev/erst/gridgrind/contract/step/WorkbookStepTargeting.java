@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared target-selector surface metadata for step operations and discovery tooling. */
 public final class WorkbookStepTargeting {
@@ -21,7 +22,7 @@ public final class WorkbookStepTargeting {
             Arrays.asList(
                 WorkbookStepValidation.allowedTargetTypesForMutationActionType(
                     mutationActionType))),
-        null);
+        Optional.empty());
   }
 
   /** Returns the static selector families accepted by one inspection query type. */
@@ -33,15 +34,15 @@ public final class WorkbookStepTargeting {
             Arrays.asList(
                 WorkbookStepValidation.allowedTargetTypesForInspectionQueryType(
                     inspectionQueryType))),
-        null);
+        Optional.empty());
   }
 
   /** Returns the selector-family surface accepted by one assertion type. */
   public static TargetSurface forAssertionType(Class<? extends Assertion> assertionType) {
     Objects.requireNonNull(assertionType, "assertionType must not be null");
-    String dynamicRule =
+    Optional<String> dynamicRule =
         WorkbookStepValidation.dynamicTargetSelectorRuleForAssertionType(assertionType);
-    if (dynamicRule != null) {
+    if (dynamicRule.isPresent()) {
       return new TargetSurface(List.of(), dynamicRule);
     }
     return new TargetSurface(
@@ -52,14 +53,16 @@ public final class WorkbookStepTargeting {
   }
 
   /** One target-selector surface with selector families plus any derived or disambiguation rule. */
-  public record TargetSurface(List<SelectorJsonSupport.FamilyInfo> selectorFamilies, String rule) {
+  public record TargetSurface(
+      List<SelectorJsonSupport.FamilyInfo> selectorFamilies, Optional<String> rule) {
     public TargetSurface {
       Objects.requireNonNull(selectorFamilies, "selectorFamilies must not be null");
       selectorFamilies = List.copyOf(selectorFamilies);
-      if (rule != null && rule.isBlank()) {
+      Objects.requireNonNull(rule, "rule must not be null");
+      if (rule.isPresent() && rule.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("rule must not be blank");
       }
-      if (selectorFamilies.isEmpty() && rule == null) {
+      if (selectorFamilies.isEmpty() && rule.isEmpty()) {
         throw new IllegalArgumentException(
             "target surface must declare selectorFamilies or a non-blank rule");
       }

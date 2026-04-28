@@ -19,10 +19,13 @@ final class ExcelColorSnapshotSupport {
     Integer theme = color.isThemed() ? color.getTheme() : null;
     Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
     Double tint = color.hasTint() ? color.getTint() : null;
-    if (rgb == null && theme == null && indexed == null) {
-      return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
-    }
-    return new ExcelColorSnapshot(rgb, theme, indexed, tint);
+    return rgb != null
+        ? ExcelColorSnapshot.rgb(rgb, tint)
+        : theme != null
+            ? ExcelColorSnapshot.theme(theme, tint)
+            : indexed != null
+                ? ExcelColorSnapshot.indexed(indexed, tint)
+                : java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
   }
 
   /** Returns one factual snapshot for the supplied raw workbook color XML, or null when absent. */

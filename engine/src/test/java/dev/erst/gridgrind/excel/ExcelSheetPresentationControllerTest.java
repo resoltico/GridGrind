@@ -23,7 +23,7 @@ class ExcelSheetPresentationControllerTest {
       ExcelSheetPresentation authored =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              new ExcelColor("#112233"),
+              ExcelColor.rgb("#112233"),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(11, 18.5d),
               List.of(
@@ -38,7 +38,7 @@ class ExcelSheetPresentationControllerTest {
 
       ExcelSheetPresentationSnapshot snapshot = controller.presentation(sheet);
       assertEquals(authored.display(), snapshot.display());
-      assertEquals(new ExcelColorSnapshot("#112233"), snapshot.tabColor());
+      assertEquals(ExcelColorSnapshot.rgb("#112233"), snapshot.tabColor());
       assertEquals(authored.outlineSummary(), snapshot.outlineSummary());
       assertEquals(authored.sheetDefaults(), snapshot.sheetDefaults());
       assertEquals(

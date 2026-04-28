@@ -416,7 +416,7 @@ class ExcelSheetCopyControllerTest {
                           4L,
                           true,
                           new ExcelAutofilterFilterCriterionSnapshot.Color(
-                              false, new ExcelColorSnapshot("#AABBCC"))),
+                              false, ExcelColorSnapshot.rgb("#AABBCC"))),
                       new ExcelAutofilterFilterColumnSnapshot(
                           5L,
                           true,
@@ -432,7 +432,7 @@ class ExcelSheetCopyControllerTest {
                                   "A2:A3",
                                   true,
                                   "cellColor",
-                                  new ExcelColorSnapshot("#102030"),
+                                  ExcelColorSnapshot.rgb("#102030"),
                                   null),
                               new ExcelAutofilterSortConditionSnapshot(
                                   "B2:B3", false, "icon", null, 4)))))),
@@ -584,10 +584,10 @@ class ExcelSheetCopyControllerTest {
                               ExcelConditionalFormattingThresholdType.MIN, null, null),
                           new ExcelConditionalFormattingThreshold(
                               ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                      List.of(new ExcelColor("#112233"), new ExcelColor("#445566")),
+                      List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566")),
                       false),
                   new ExcelConditionalFormattingRule.DataBarRule(
-                      new ExcelColor("#223344"),
+                      ExcelColor.rgb("#223344"),
                       false,
                       0,
                       100,
@@ -1070,7 +1070,7 @@ class ExcelSheetCopyControllerTest {
                     new ExcelRichTextRun(
                         " Review",
                         new ExcelCellFont(
-                            true, false, "Aptos", null, new ExcelColor("#112233"), null, null)))),
+                            true, false, "Aptos", null, ExcelColor.rgb("#112233"), null, null)))),
             new ExcelCommentAnchor(1, 1, 4, 5)));
     source.setAutofilter("A1:F3", advancedAutofilterCriteria(), advancedAutofilterSortState());
     source.setDataValidation(
@@ -1155,7 +1155,7 @@ class ExcelSheetCopyControllerTest {
         new ExcelAutofilterFilterColumn(
             3L, true, new ExcelAutofilterFilterCriterion.Top10(10, false, true)),
         new ExcelAutofilterFilterColumn(
-            4L, true, new ExcelAutofilterFilterCriterion.Color(false, new ExcelColor("#AABBCC"))),
+            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.rgb("#AABBCC"))),
         new ExcelAutofilterFilterColumn(
             5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
   }
@@ -1168,7 +1168,7 @@ class ExcelSheetCopyControllerTest {
         "stroke",
         List.of(
             new ExcelAutofilterSortCondition(
-                "A2:A3", true, "cellColor", new ExcelColor("#102030"), null),
+                "A2:A3", true, "cellColor", ExcelColor.rgb("#102030"), null),
             new ExcelAutofilterSortCondition("B2:B3", false, "icon", null, 4)));
   }
 

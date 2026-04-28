@@ -21,24 +21,14 @@ public sealed interface AutofilterEntryReport
   /** Persisted filter-column criteria carried by the autofilter. */
   java.util.List<AutofilterFilterColumnReport> filterColumns();
 
-  /**
-   * Persisted sort-state metadata carried by the autofilter, when present.
-   *
-   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
-   * used for wire serialization; internal code must use a switch expression instead.
-   */
-  default AutofilterSortStateReport sortState() {
-    return switch (this) {
-      case SheetOwned sheetOwned -> sheetOwned.persistedSortState();
-      case TableOwned tableOwned -> tableOwned.persistedSortState();
-    };
-  }
+  /** Persisted sort-state metadata carried by the autofilter, when present. */
+  AutofilterSortStateReport sortState();
 
   /** One sheet-owned autofilter stored directly on the worksheet. */
   record SheetOwned(
       String range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") AutofilterSortStateReport persistedSortState)
+      @JsonProperty("sortState") AutofilterSortStateReport sortState)
       implements AutofilterEntryReport {
     /** Creates a sheet-owned autofilter report with no persisted criteria or sort state. */
     public SheetOwned(String range) {
@@ -56,7 +46,7 @@ public sealed interface AutofilterEntryReport
       String range,
       String tableName,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") AutofilterSortStateReport persistedSortState)
+      @JsonProperty("sortState") AutofilterSortStateReport sortState)
       implements AutofilterEntryReport {
     /** Creates a table-owned autofilter report with no persisted criteria or sort state. */
     public TableOwned(String range, String tableName) {

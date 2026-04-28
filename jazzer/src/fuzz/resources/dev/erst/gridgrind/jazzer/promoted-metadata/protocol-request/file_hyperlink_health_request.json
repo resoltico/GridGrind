@@ -13,8 +13,8 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_HYPERLINK" : 3,
         "SET_RANGE" : 1,
+        "SET_HYPERLINK" : 3,
         "ENSURE_SHEET" : 1
       },
       "styleKinds" : { },
@@ -22,8 +22,8 @@
       "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "ANALYZE_HYPERLINK_HEALTH" : 1,
-        "GET_HYPERLINKS" : 1
+        "GET_HYPERLINKS" : 1,
+        "ANALYZE_HYPERLINK_HEALTH" : 1
       }
     }
   },

@@ -188,8 +188,7 @@ public sealed interface ConditionalFormattingRuleReport
     Objects.requireNonNull(colors, "colors must not be null");
     List<String> copy = new java.util.ArrayList<>(List.copyOf(colors));
     for (int index = 0; index < copy.size(); index++) {
-      copy.set(
-          index, ProtocolRgbColorSupport.normalizeRgbHex(copy.get(index), "colors").orElseThrow());
+      copy.set(index, ProtocolRgbColorSupport.requireRgbHex(copy.get(index), "colors"));
     }
     return List.copyOf(copy);
   }

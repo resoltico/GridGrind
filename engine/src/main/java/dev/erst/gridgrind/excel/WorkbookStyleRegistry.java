@@ -7,7 +7,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -203,60 +202,70 @@ final class WorkbookStyleRegistry {
     if (fillPatch == null) {
       return;
     }
-    if (fillPatch.gradient() != null) {
-      applyGradientFillPatch(cellStyle, fillPatch.gradient());
-      return;
-    }
-
-    ExcelFillPattern effectivePattern = effectiveFillPattern(cellStyle, fillPatch);
-    if (effectivePattern != null) {
-      cellStyle.setFillPattern(toPoi(effectivePattern));
-      if (effectivePattern == ExcelFillPattern.NONE) {
-        clearFillColors(cellStyle);
+    switch (fillPatch) {
+      case ExcelCellFill.Gradient gradient -> {
+        applyGradientFillPatch(cellStyle, gradient.gradient());
         return;
       }
-      if (effectivePattern == ExcelFillPattern.SOLID) {
-        cellStyle.setFillBackgroundColor((XSSFColor) null);
+      case ExcelCellFill.PatternOnly pattern -> {
+        cellStyle.setFillPattern(toPoi(pattern.pattern()));
+        if (pattern.pattern() == ExcelFillPattern.NONE) {
+          clearFillColors(cellStyle);
+          return;
+        }
+        if (pattern.pattern() == ExcelFillPattern.SOLID) {
+          cellStyle.setFillBackgroundColor((XSSFColor) null);
+        }
       }
-    }
-    if (fillPatch.foregroundColor() != null) {
-      cellStyle.setFillForegroundColor(
-          ExcelColorSupport.toXssfColor(workbook, fillPatch.foregroundColor()));
-    }
-    if (fillPatch.backgroundColor() != null) {
-      cellStyle.setFillBackgroundColor(
-          ExcelColorSupport.toXssfColor(workbook, fillPatch.backgroundColor()));
+      case ExcelCellFill.PatternForeground pattern -> {
+        cellStyle.setFillPattern(toPoi(pattern.pattern()));
+        if (pattern.pattern() == ExcelFillPattern.SOLID) {
+          cellStyle.setFillBackgroundColor((XSSFColor) null);
+        }
+        cellStyle.setFillForegroundColor(
+            ExcelColorSupport.toXssfColor(workbook, pattern.foregroundColor()));
+      }
+      case ExcelCellFill.PatternBackground pattern -> {
+        cellStyle.setFillPattern(toPoi(pattern.pattern()));
+        cellStyle.setFillBackgroundColor(
+            ExcelColorSupport.toXssfColor(workbook, pattern.backgroundColor()));
+      }
+      case ExcelCellFill.PatternForegroundBackground pattern -> {
+        cellStyle.setFillPattern(toPoi(pattern.pattern()));
+        cellStyle.setFillForegroundColor(
+            ExcelColorSupport.toXssfColor(workbook, pattern.foregroundColor()));
+        cellStyle.setFillBackgroundColor(
+            ExcelColorSupport.toXssfColor(workbook, pattern.backgroundColor()));
+      }
     }
   }
 
   private void applyGradientFillPatch(XSSFCellStyle cellStyle, ExcelGradientFill gradientPatch) {
-    ExcelGradientFillGeometry.requireCompatibleGeometry(
-        gradientPatch.type(),
-        gradientPatch.degree(),
-        gradientPatch.left(),
-        gradientPatch.right(),
-        gradientPatch.top(),
-        gradientPatch.bottom());
     CTFill gradientFill = CTFill.Factory.newInstance();
     CTGradientFill gradient = gradientFill.addNewGradientFill();
-    if ("PATH".equals(gradientPatch.type())) {
-      gradient.setType(
-          org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
-              gradientPatch.type().toLowerCase(Locale.ROOT)));
-      if (gradientPatch.left() != null) {
-        gradient.setLeft(gradientPatch.left());
+    switch (gradientPatch) {
+      case ExcelGradientFill.Path path -> {
+        gradient.setType(
+            org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
+                "path"));
+        if (path.left() != null) {
+          gradient.setLeft(path.left());
+        }
+        if (path.right() != null) {
+          gradient.setRight(path.right());
+        }
+        if (path.top() != null) {
+          gradient.setTop(path.top());
+        }
+        if (path.bottom() != null) {
+          gradient.setBottom(path.bottom());
+        }
       }
-      if (gradientPatch.right() != null) {
-        gradient.setRight(gradientPatch.right());
+      case ExcelGradientFill.Linear linear -> {
+        if (linear.degree() != null) {
+          gradient.setDegree(linear.degree());
+        }
       }
-      if (gradientPatch.top() != null) {
-        gradient.setTop(gradientPatch.top());
-      }
-      if (gradientPatch.bottom() != null) {
-        gradient.setBottom(gradientPatch.bottom());
-      }
-    } else if (gradientPatch.degree() != null) {
-      gradient.setDegree(gradientPatch.degree());
     }
     for (ExcelGradientStop stop : gradientPatch.stops()) {
       CTGradientStop ctStop = gradient.addNewStop();
@@ -301,16 +310,6 @@ final class WorkbookStyleRegistry {
   private void clearFillColors(XSSFCellStyle cellStyle) {
     cellStyle.setFillForegroundColor((XSSFColor) null);
     cellStyle.setFillBackgroundColor((XSSFColor) null);
-  }
-
-  private ExcelFillPattern effectiveFillPattern(XSSFCellStyle cellStyle, ExcelCellFill fillPatch) {
-    if (fillPatch.pattern() != null) {
-      return fillPatch.pattern();
-    }
-    if (fromPoi(cellStyle.getFillPattern()) == ExcelFillPattern.NONE) {
-      return ExcelFillPattern.SOLID;
-    }
-    return java.util.Optional.<ExcelFillPattern>empty().orElse(null);
   }
 
   private void applyProtectionPatch(XSSFCellStyle cellStyle, ExcelCellProtection protectionPatch) {
@@ -437,23 +436,29 @@ final class WorkbookStyleRegistry {
   private ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
     XSSFCellFill fill = fill(style);
     if (fill.getCTFill().isSetGradientFill()) {
-      return new ExcelCellFillSnapshot(
-          ExcelFillPattern.NONE,
-          null,
-          null,
+      return ExcelCellFillSnapshot.gradient(
           gradientFillSnapshot(fill.getCTFill().getGradientFill()));
     }
     ExcelFillPattern pattern = fromPoi(style.getFillPattern());
     if (pattern == ExcelFillPattern.NONE) {
-      return new ExcelCellFillSnapshot(pattern, null, null, null);
+      return ExcelCellFillSnapshot.pattern(pattern);
     }
-    return new ExcelCellFillSnapshot(
-        pattern,
-        ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor()),
+    ExcelColorSnapshot foreground =
+        ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor());
+    ExcelColorSnapshot background =
         pattern == ExcelFillPattern.SOLID
             ? null
-            : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor()),
-        null);
+            : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor());
+    if (foreground != null && background != null) {
+      return ExcelCellFillSnapshot.patternColors(pattern, foreground, background);
+    }
+    if (foreground != null) {
+      return ExcelCellFillSnapshot.patternForeground(pattern, foreground);
+    }
+    if (background != null) {
+      return ExcelCellFillSnapshot.patternBackground(pattern, background);
+    }
+    return ExcelCellFillSnapshot.pattern(pattern);
   }
 
   private XSSFCellFill fill(XSSFCellStyle style) {
@@ -471,8 +476,9 @@ final class WorkbookStyleRegistry {
             fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom);
     java.util.List<ExcelGradientStopSnapshot> stops =
         java.util.Arrays.stream(fill.getStopArray()).map(this::gradientStopSnapshot).toList();
-    return new ExcelGradientFillSnapshot(
-        type, fill.isSetDegree() ? fill.getDegree() : null, left, right, top, bottom, stops);
+    return "PATH".equals(type)
+        ? ExcelGradientFillSnapshot.path(left, right, top, bottom, stops)
+        : ExcelGradientFillSnapshot.linear(fill.isSetDegree() ? fill.getDegree() : null, stops);
   }
 
   private ExcelGradientStopSnapshot gradientStopSnapshot(CTGradientStop stop) {

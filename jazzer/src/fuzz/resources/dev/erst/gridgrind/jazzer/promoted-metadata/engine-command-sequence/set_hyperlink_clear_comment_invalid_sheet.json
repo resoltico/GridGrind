@@ -10,8 +10,8 @@
       "inputBytes" : 64,
       "commandCount" : 3,
       "commandKinds" : {
-        "DELETE_PIVOT_TABLE" : 1,
-        "AUTO_SIZE_COLUMNS" : 2
+        "AUTO_SIZE_COLUMNS" : 2,
+        "DELETE_PIVOT_TABLE" : 1
       },
       "styleKinds" : { }
     }

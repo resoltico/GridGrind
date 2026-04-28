@@ -86,17 +86,20 @@ collection, a typed empty-sentinel subtype of a sealed interface, or `Optional` 
 Reflection to access or alter private members is unconditionally forbidden in test code. If a
 class requires reflection to test, the class has an architectural flaw — fix the architecture.
 
-### 2.3 Protocol-Layer Default Methods — Narrow Exception
+### 2.3 Protocol Wire Surfaces — No Null Padding
 
-The sole sanctioned null-return site is a `default` method on a **protocol-layer sealed interface**
-that is serialized directly to wire format for external consumers (agents, integrations). These
-defaults exist so that consumer code and JSON serializers can access every possible field from any
-subtype without casting, at the cost of null when the field does not apply.
+Protocol request, response, and discovery DTOs must encode alternative state in the type system,
+not by flattening every possible field onto one interface and returning null when it does not
+apply.
 
-Requirements for these defaults:
-- Permitted only on `sealed interface` types in the `protocol` module.
-- Each default must carry a Javadoc comment stating why it is null and which subtypes populate it.
-- Internal GridGrind code must never call these methods. Use a `switch` expression instead.
+Requirements for protocol wire types:
+- Do not add `default` accessors whose only purpose is to return null for non-applicable subtypes.
+- Model mutually exclusive state with sealed variants, or extract a shared helper record when a
+  field is genuinely common.
+- External JSON must omit absent properties; it must not serialize explicit `null` placeholders as
+  a control protocol for agents or integrations.
+- Add or update tests when touching these surfaces so request, response, and discovery JSON all
+  stay free of `: null` output.
 
 ---
 
@@ -104,8 +107,12 @@ Requirements for these defaults:
 
 ### 3.1 JPMS: Module Boundaries Are Architectural
 
-The `module-info.java` descriptors in `engine`, `protocol`, and `cli` are part of the enforced
-architecture, not packaging trivia. Keep the dependency graph `cli -> protocol -> engine`.
+The `module-info.java` descriptors in `excel-foundation`, `engine`, `contract`, `executor`,
+`authoring-java`, and `cli` are part of the enforced architecture, not packaging trivia. Preserve
+the current product graph from `docs/DEVELOPER_CONTRACT_REPLACEMENT_ADR.md`:
+- `authoring-java -> contract -> excel-foundation`
+- `cli -> executor -> contract -> excel-foundation`
+- `executor -> engine -> excel-foundation`
 Do not bypass module boundaries with broadened exports, transitive leaks, or classpath-only
 workarounds when the correct fix is to move ownership to the right module.
 

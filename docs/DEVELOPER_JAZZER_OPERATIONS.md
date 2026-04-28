@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -439,11 +439,13 @@ diagnostic subprocess trees down authoritatively through the shared
 `scripts/check-process-support.sh` helper; the supported `jazzer/bin/*` happy path does not
 launch `jcmd`.
 
-Operator discipline:
+Operator flow:
 1. Prefer `./check.sh` when you want the supported sequential root-plus-nested verification flow.
-2. Finish any root `./gradlew ...` or `./check.sh` run before starting a nested Jazzer build.
-3. Finish any nested Jazzer run before restarting a root Gradle build.
-4. Treat parallel root-plus-nested execution as unsupported local operator behavior.
+2. Top-level `./check.sh`, `./scripts/validate-devcontainer.sh`, `./scripts/docker-smoke.sh`, and
+   `jazzer/bin/*` now share one repo-wide verification lock.
+3. If one of those entrypoints is already running, start the next one only after the active run
+   finishes instead of trying to overlap them.
+4. Treat any attempt to bypass that serialization as unsupported local operator behavior.
 
 If a recommended dictionary appears interesting, use this procedure:
 1. Save the run log.

@@ -27,20 +27,19 @@
         <exclude name="LoosePackageCoupling"/>
         <!-- Produces false positives on well-structured value/command objects -->
         <exclude name="DataClass"/>
-        <!-- The engine module's POI adapter layer (ExcelSheet, ExcelWorkbook,
-             WorkbookStyleRegistry) is an acknowledged comprehensive facade over Apache POI.
-             These classes are quarantined inside the engine module and never escape that
-             layer. Their structural metric violations (god class, many methods, high cyclomatic
-             and cognitive complexity) are inherent to comprehensive POI wrapping, not accidents. -->
+        <!-- A few remaining workbook-core facades and sealed contract hubs still breach PMD's
+             generic size and complexity thresholds. Those exclusions are transitional rather than
+             permission to grow: ArchitectureSeamAuditTest owns the repository's line-count ratchet
+             and must tighten as the split surfaces continue to come down. -->
         <exclude name="GodClass"/>
         <exclude name="TooManyMethods"/>
         <exclude name="CyclomaticComplexity"/>
         <exclude name="CognitiveComplexity"/>
-        <!-- The protocol orchestrator (GridGrindService) legitimately references all protocol
-             types to translate between the request/response contract and the engine layer. -->
+        <!-- Closed-sum protocol catalogs and workbook command hubs legitimately reference many
+             shipped types at once; the split ratchet lives in ArchitectureSeamAuditTest. -->
         <exclude name="CouplingBetweenObjects"/>
-        <!-- withExceptionData() takes 3-4 nullable Strings representing distinct exception
-             location fields. A wrapper record would add ceremony for no semantic gain. -->
+        <!-- Public wire DTOs deliberately mirror the shipped JSON shape, so wrapping a few
+             distinct fields into extra helper records can make the surface less truthful. -->
         <exclude name="UseObjectForClearerAPI"/>
     </rule>
 

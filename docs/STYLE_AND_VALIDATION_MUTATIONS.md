@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: STYLE_VALIDATION_MUTATIONS
 updated: "2026-04-25"
 route:
@@ -83,10 +83,14 @@ unspecified style properties are left untouched.
     "type": "APPLY_STYLE",
     "style": {
       "font": {
-        "fontColorTheme": 6,
-        "fontColorTint": -0.35
+        "fontColor": {
+          "kind": "THEME",
+          "theme": 6,
+          "tint": -0.35
+        }
       },
       "fill": {
+        "kind": "GRADIENT",
         "gradient": {
           "type": "LINEAR",
           "degree": 45.0,
@@ -94,12 +98,14 @@ unspecified style properties are left untouched.
             {
               "position": 0.0,
               "color": {
+                "kind": "RGB",
                 "rgb": "#1F497D"
               }
             },
             {
               "position": 1.0,
               "color": {
+                "kind": "THEME",
                 "theme": 4,
                 "tint": 0.45
               }
@@ -110,7 +116,10 @@ unspecified style properties are left untouched.
       "border": {
         "bottom": {
           "style": "THIN",
-          "colorIndexed": 8
+          "color": {
+            "kind": "INDEXED",
+            "indexed": 8
+          }
         }
       }
     }
@@ -153,10 +162,7 @@ Font patch:
 | `font.italic` | boolean | `true` / `false` |
 | `font.fontName` | string | Excel font family name, e.g. `"Aptos"` |
 | `font.fontHeight` | object | Typed font height. See below. |
-| `font.fontColor` | string | RGB hex string in `#RRGGBB` form. Lowercase input is normalized to uppercase. |
-| `font.fontColorTheme` | integer | Theme color index for the font color. |
-| `font.fontColorIndexed` | integer | Indexed color slot for the font color. |
-| `font.fontColorTint` | number | Optional tint applied to the chosen font color base. Requires `fontColor`, `fontColorTheme`, or `fontColorIndexed`. |
+| `font.fontColor` | object | Structured `ColorInput` object. See below. |
 | `font.underline` | boolean | `true` adds a single underline, `false` removes it |
 | `font.strikeout` | boolean | `true` / `false` |
 
@@ -168,40 +174,47 @@ Font-height input:
 | `font.fontHeight.points` | number | Required when `type` is `"POINTS"`. Must resolve exactly to whole twips, e.g. `11`, `11.5`, `13.25` |
 | `font.fontHeight.twips` | integer | Required when `type` is `"TWIPS"`. Positive exact twip value where `20` twips = `1` point |
 
-Structured color notes:
+Structured color input:
 
-- Color-bearing write fields use one base color family plus an optional tint:
-  - RGB: `font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, `border.*.color`
-  - theme: `font.fontColorTheme`, `fill.foregroundColorTheme`, `fill.backgroundColorTheme`,
-    `border.*.colorTheme`
-  - indexed: `font.fontColorIndexed`, `fill.foregroundColorIndexed`,
-    `fill.backgroundColorIndexed`, `border.*.colorIndexed`
-- Lowercase RGB hex input is accepted and normalized to uppercase.
-- A tint field requires one corresponding RGB/theme/indexed base field.
-- Alpha channels are not part of the public contract.
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `*.kind` | string | `"RGB"`, `"THEME"`, or `"INDEXED"` |
+| `*.rgb` | string | Required when `kind="RGB"`. `#RRGGBB` hex string; lowercase input is normalized to uppercase. |
+| `*.theme` | integer | Required when `kind="THEME"`. Theme color index. |
+| `*.indexed` | integer | Required when `kind="INDEXED"`. Indexed color slot. |
+| `*.tint` | number | Optional tint applied to the chosen base color. |
+
+Color-bearing write fields all reuse the same `ColorInput` object shape:
+
+- `font.fontColor`
+- `fill.foregroundColor`
+- `fill.backgroundColor`
+- `border.*.color`
+
+Alpha channels are not part of the public contract.
 
 Fill patch:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
-| `fill.pattern` | string | `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
-| `fill.foregroundColor` | string | Foreground RGB color in `#RRGGBB` form |
-| `fill.foregroundColorTheme` | integer | Foreground theme color index |
-| `fill.foregroundColorIndexed` | integer | Foreground indexed color slot |
-| `fill.foregroundColorTint` | number | Optional tint for the chosen foreground base color |
-| `fill.backgroundColor` | string | Background RGB color in `#RRGGBB` form for patterned fills |
-| `fill.backgroundColorTheme` | integer | Background theme color index for patterned fills |
-| `fill.backgroundColorIndexed` | integer | Background indexed color slot for patterned fills |
-| `fill.backgroundColorTint` | number | Optional tint for the chosen background base color |
-| `fill.gradient` | object | Gradient fill payload. When present, pattern/foreground/background fields must be omitted. |
+| `fill.kind` | string | `"PATTERN_ONLY"`, `"PATTERN_FOREGROUND"`, `"PATTERN_BACKGROUND"`, `"PATTERN_FOREGROUND_BACKGROUND"`, or `"GRADIENT"` |
+| `fill.pattern` | string | Required for patterned variants. `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
+| `fill.foregroundColor` | object | `ColorInput` object required by foreground-bearing variants |
+| `fill.backgroundColor` | object | `ColorInput` object required by background-bearing variants |
+| `fill.gradient` | object | `CellGradientFillInput` payload required when `fill.kind="GRADIENT"` |
 
 Fill notes:
 
-- `fill.pattern="NONE"` does not allow colors.
-- `fill.pattern="SOLID"` uses `foregroundColor` only; `backgroundColor` is not allowed.
-- Patterned fills beyond solid are part of the public contract.
-- Gradient fills are authored through `fill.gradient` and are mutually exclusive with patterned
-  fill fields.
+- `fill.kind="PATTERN_ONLY"` accepts `fill.pattern` only. `fill.pattern="NONE"` is valid here.
+- `fill.kind="PATTERN_FOREGROUND"` requires `fill.pattern` plus `fill.foregroundColor`. Use this
+  for solid fills.
+- `fill.kind="PATTERN_BACKGROUND"` requires `fill.pattern` plus `fill.backgroundColor`.
+- `fill.kind="PATTERN_FOREGROUND_BACKGROUND"` requires `fill.pattern`,
+  `fill.foregroundColor`, and `fill.backgroundColor`.
+- `fill.kind="PATTERN_BACKGROUND"` and `fill.kind="PATTERN_FOREGROUND_BACKGROUND"` reject
+  `fill.pattern="SOLID"`.
+- `fill.kind="GRADIENT"` uses `fill.gradient` only and is mutually exclusive with patterned fill
+  fields.
 - `fill.gradient.type="LINEAR"` accepts `degree` only. `fill.gradient.type="PATH"` accepts
   `left`, `right`, `top`, and `bottom` only. Mixing the two geometry models is rejected as an
   invalid request.
@@ -228,15 +241,12 @@ Border patch:
 | `bottom` | object | Optional side-specific override |
 | `left` | object | Optional side-specific override |
 
-Each border-side object can set a visible style, an RGB color, or both:
+Each border-side object can set a visible style, a structured color object, or both:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
 | `style` | string | `"NONE"`, `"THIN"`, `"MEDIUM"`, `"DASHED"`, `"DOTTED"`, `"THICK"`, `"DOUBLE"`, `"HAIR"`, `"MEDIUM_DASHED"`, `"DASH_DOT"`, `"MEDIUM_DASH_DOT"`, `"DASH_DOT_DOT"`, `"MEDIUM_DASH_DOT_DOT"`, `"SLANTED_DASH_DOT"` |
-| `color` | string | Optional RGB color in `#RRGGBB` form |
-| `colorTheme` | integer | Optional theme color index |
-| `colorIndexed` | integer | Optional indexed color slot |
-| `colorTint` | number | Optional tint applied to the chosen border-color base |
+| `color` | object | Optional `ColorInput` object describing the side color |
 
 Border notes:
 
@@ -246,7 +256,7 @@ Border notes:
 - A border color requires an effective visible style on that side, either set on the side itself
   or inherited from `border.all`.
 - `style="NONE"` does not allow a `color`.
-- `colorTint` requires `color`, `colorTheme`, or `colorIndexed`.
+- `color` uses the same structured `ColorInput` object shape as font and fill colors.
 
 Protection patch:
 

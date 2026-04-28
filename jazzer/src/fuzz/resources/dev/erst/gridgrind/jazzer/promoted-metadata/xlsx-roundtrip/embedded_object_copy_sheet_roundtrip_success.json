@@ -10,11 +10,11 @@
       "inputBytes" : 181,
       "commandCount" : 10,
       "commandKinds" : {
-        "COPY_SHEET" : 1,
-        "APPEND_ROW" : 5,
         "SET_EMBEDDED_OBJECT" : 1,
-        "SET_CHART" : 1,
-        "CREATE_SHEET" : 2
+        "APPEND_ROW" : 5,
+        "COPY_SHEET" : 1,
+        "CREATE_SHEET" : 2,
+        "SET_CHART" : 1
       },
       "styleKinds" : { }
     }

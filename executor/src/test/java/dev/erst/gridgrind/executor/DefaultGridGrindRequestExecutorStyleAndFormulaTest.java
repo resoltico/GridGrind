@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.executor;
 
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
+import static dev.erst.gridgrind.executor.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
@@ -149,20 +150,20 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                             false,
                                             "Aptos",
                                             new FontHeightInput.Points(new BigDecimal("11.5")),
-                                            "#1F4E78",
+                                            ColorInput.rgb("#1F4E78"),
                                             true,
                                             true),
-                                        new CellFillInput(
+                                        CellFillInput.patternColors(
                                             dev.erst.gridgrind.excel.foundation.ExcelFillPattern
                                                 .THIN_HORIZONTAL_BANDS,
-                                            "#FFF2CC",
-                                            "#DDEBF7"),
+                                            ColorInput.rgb("#FFF2CC"),
+                                            ColorInput.rgb("#DDEBF7")),
                                         new CellBorderInput(
                                             new CellBorderSideInput(
-                                                ExcelBorderStyle.THIN, "#102030"),
+                                                ExcelBorderStyle.THIN, ColorInput.rgb("#102030")),
                                             null,
                                             new CellBorderSideInput(
-                                                ExcelBorderStyle.DOUBLE, "#203040"),
+                                                ExcelBorderStyle.DOUBLE, ColorInput.rgb("#203040")),
                                             null,
                                             null),
                                         new CellProtectionInput(false, true))))),
@@ -190,9 +191,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertTrue(style.font().strikeout());
     assertEquals(
         dev.erst.gridgrind.excel.foundation.ExcelFillPattern.THIN_HORIZONTAL_BANDS,
-        style.fill().pattern());
-    assertEquals(rgb("#FFF2CC"), style.fill().foregroundColor());
-    assertEquals(rgb("#DDEBF7"), style.fill().backgroundColor());
+        fillPattern(style.fill()));
+    assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
+    assertEquals(rgb("#DDEBF7"), fillBackgroundColor(style.fill()));
     assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
     assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
     assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
@@ -234,31 +235,26 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         null,
                                         null,
                                         new CellFontInput(
-                                            null, true, null, null, null, 6, null, -0.35d, null,
+                                            null,
+                                            true,
+                                            null,
+                                            null,
+                                            ColorInput.theme(6, -0.35d),
+                                            null,
                                             null),
-                                        new CellFillInput(
+                                        CellFillInput.patternForeground(
                                             dev.erst.gridgrind.excel.foundation.ExcelFillPattern
                                                 .SOLID,
-                                            null,
-                                            3,
-                                            null,
-                                            0.30d,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null),
+                                            ColorInput.theme(3, 0.30d)),
                                         new CellBorderInput(
                                             null,
                                             null,
                                             null,
                                             new CellBorderSideInput(
                                                 ExcelBorderStyle.THIN,
-                                                null,
-                                                null,
-                                                Short.toUnsignedInt(
-                                                    IndexedColors.DARK_RED.getIndex()),
-                                                null),
+                                                ColorInput.indexed(
+                                                    Short.toUnsignedInt(
+                                                        IndexedColors.DARK_RED.getIndex()))),
                                             null),
                                         null))),
                             mutate(
@@ -268,29 +264,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         null,
                                         null,
                                         null,
-                                        new CellFillInput(
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            new CellGradientFillInput(
-                                                "LINEAR",
+                                        CellFillInput.gradient(
+                                            CellGradientFillInput.linear(
                                                 45.0d,
-                                                null,
-                                                null,
-                                                null,
-                                                null,
                                                 List.of(
                                                     new CellGradientStopInput(
-                                                        0.0d, new ColorInput("#1F497D")),
+                                                        0.0d, ColorInput.rgb("#1F497D")),
                                                     new CellGradientStopInput(
-                                                        1.0d,
-                                                        new ColorInput(null, 4, null, 0.45d))))),
+                                                        1.0d, ColorInput.theme(4, 0.45d))))),
                                         null,
                                         new CellProtectionInput(true, true))))),
                         inspect(
@@ -303,21 +284,16 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     GridGrindResponse.CellStyleReport gradientStyle = cells.cells().get(1).style();
 
     assertTrue(Files.exists(workbookPath));
-    assertEquals(new CellColorReport(null, 6, null, -0.35d), themedStyle.font().fontColor());
-    assertEquals(new CellColorReport(null, 3, null, 0.30d), themedStyle.fill().foregroundColor());
+    assertEquals(CellColorReport.theme(6, -0.35d), themedStyle.font().fontColor());
+    assertEquals(CellColorReport.theme(3, 0.30d), fillForegroundColor(themedStyle.fill()));
     assertEquals(
-        new CellColorReport(
-            null, null, Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()), null),
+        CellColorReport.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex())),
         themedStyle.border().bottom().color());
-    assertNotNull(gradientStyle.fill().gradient());
-    assertEquals("LINEAR", gradientStyle.fill().gradient().type());
-    assertEquals(45.0d, gradientStyle.fill().gradient().degree());
-    assertEquals(
-        new CellColorReport("#1F497D", null, null, null),
-        gradientStyle.fill().gradient().stops().get(0).color());
-    assertEquals(
-        new CellColorReport(null, 4, null, 0.45d),
-        gradientStyle.fill().gradient().stops().get(1).color());
+    CellGradientFillReport.Linear gradient =
+        assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(gradientStyle.fill()));
+    assertEquals(45.0d, gradient.degree());
+    assertEquals(CellColorReport.rgb("#1F497D"), gradient.stops().get(0).color());
+    assertEquals(CellColorReport.theme(4, 0.45d), gradient.stops().get(1).color());
     assertTrue(gradientStyle.protection().locked());
     assertTrue(gradientStyle.protection().hiddenFormula());
   }
@@ -347,29 +323,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         null,
                                         null,
                                         null,
-                                        new CellFillInput(
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            new CellGradientFillInput(
-                                                "LINEAR",
+                                        CellFillInput.gradient(
+                                            CellGradientFillInput.linear(
                                                 45.0d,
-                                                null,
-                                                null,
-                                                null,
-                                                null,
                                                 List.of(
                                                     new CellGradientStopInput(
-                                                        0.0d, new ColorInput("#1F497D")),
+                                                        0.0d, ColorInput.rgb("#1F497D")),
                                                     new CellGradientStopInput(
-                                                        1.0d,
-                                                        new ColorInput(null, 4, null, 0.45d))))),
+                                                        1.0d, ColorInput.theme(4, 0.45d))))),
                                         null,
                                         new CellProtectionInput(true, true)))),
                             mutate(
@@ -382,34 +343,21 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                         null,
                                         null,
                                         null,
-                                        new CellFillInput(
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            null,
-                                            new CellGradientFillInput(
-                                                "PATH",
-                                                null,
+                                        CellFillInput.gradient(
+                                            CellGradientFillInput.path(
                                                 0.1d,
                                                 0.2d,
                                                 0.3d,
                                                 0.4d,
                                                 List.of(
                                                     new CellGradientStopInput(
-                                                        0.0d, new ColorInput("#112233")),
+                                                        0.0d, ColorInput.rgb("#112233")),
                                                     new CellGradientStopInput(
                                                         1.0d,
-                                                        new ColorInput(
-                                                            null,
-                                                            null,
+                                                        ColorInput.indexed(
                                                             Short.toUnsignedInt(
-                                                                IndexedColors.DARK_RED.getIndex()),
-                                                            null))))),
+                                                                IndexedColors.DARK_RED
+                                                                    .getIndex())))))),
                                         null,
                                         new CellProtectionInput(false, true))))),
                         inspect(
@@ -421,16 +369,18 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     GridGrindResponse.CellStyleReport linearGradientStyle = cells.cells().get(0).style();
     GridGrindResponse.CellStyleReport pathGradientStyle = cells.cells().get(1).style();
 
-    assertEquals("LINEAR", linearGradientStyle.fill().gradient().type());
-    assertEquals(45.0d, linearGradientStyle.fill().gradient().degree());
+    CellGradientFillReport.Linear linearGradient =
+        assertInstanceOf(
+            CellGradientFillReport.Linear.class, fillGradient(linearGradientStyle.fill()));
+    assertEquals(45.0d, linearGradient.degree());
     assertTrue(linearGradientStyle.protection().locked());
     assertTrue(linearGradientStyle.protection().hiddenFormula());
-    assertEquals("PATH", pathGradientStyle.fill().gradient().type());
-    assertNull(pathGradientStyle.fill().gradient().degree());
-    assertEquals(0.1d, pathGradientStyle.fill().gradient().left());
-    assertEquals(0.2d, pathGradientStyle.fill().gradient().right());
-    assertEquals(0.3d, pathGradientStyle.fill().gradient().top());
-    assertEquals(0.4d, pathGradientStyle.fill().gradient().bottom());
+    CellGradientFillReport.Path pathGradient =
+        assertInstanceOf(CellGradientFillReport.Path.class, fillGradient(pathGradientStyle.fill()));
+    assertEquals(0.1d, pathGradient.left());
+    assertEquals(0.2d, pathGradient.right());
+    assertEquals(0.3d, pathGradient.top());
+    assertEquals(0.4d, pathGradient.bottom());
     assertFalse(pathGradientStyle.protection().locked());
     assertTrue(pathGradientStyle.protection().hiddenFormula());
   }
@@ -457,12 +407,12 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new CellSelector.ByAddresses("Data", List.of("A1")),
                             new InspectionQuery.GetCells()))));
 
-    GridGrindResponse.CellReport cell =
+    dev.erst.gridgrind.contract.dto.CellReport cell =
         read(success, "cells", InspectionResult.CellsResult.class).cells().getFirst();
-    assertInstanceOf(GridGrindResponse.CellReport.FormulaReport.class, cell);
-    GridGrindResponse.CellReport evaluation =
-        cast(GridGrindResponse.CellReport.FormulaReport.class, cell).evaluation();
-    assertInstanceOf(GridGrindResponse.CellReport.ErrorReport.class, evaluation);
+    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell);
+    dev.erst.gridgrind.contract.dto.CellReport evaluation =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell).evaluation();
+    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellReport.ErrorReport.class, evaluation);
     assertEquals("ERROR", evaluation.effectiveType());
   }
 
@@ -651,8 +601,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                                 new MutationAction.AppendRow(List.of(formulaCell("SUM("))))))));
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("APPEND_ROW", failure.problem().context().stepType());
-    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("APPEND_ROW", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -725,7 +675,13 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new RichTextRunInput(
                                 text(" FY26"),
                                 new CellFontInput(
-                                    true, false, null, null, "#AABBCC", false, false)))))),
+                                    true,
+                                    false,
+                                    null,
+                                    null,
+                                    ColorInput.rgb("#AABBCC"),
+                                    false,
+                                    false)))))),
             exception));
     assertNull(
         formulaFor(

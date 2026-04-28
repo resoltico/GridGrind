@@ -196,11 +196,29 @@ class ExcelWorkbookImageCatalogSupportTest {
     assertThrows(
         IllegalStateException.class,
         () -> ExcelWorkbookImageCatalogSupport.requirePicturesField(MethodHandles.publicLookup()));
-    assertThrows(
-        IllegalStateException.class,
-        () ->
-            ExcelWorkbookImageCatalogSupport.requirePictureConstructor(
-                MethodHandles.publicLookup()));
+    IllegalStateException picturesFieldFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                ExcelWorkbookImageCatalogSupport.requirePicturesField(
+                    MethodHandles.publicLookup()));
+    IllegalStateException pictureConstructorFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                ExcelWorkbookImageCatalogSupport.requirePictureConstructor(
+                    MethodHandles.publicLookup()));
+    assertTrue(
+        picturesFieldFailure.getMessage().contains("Apache POI private contract unavailable"));
+    assertTrue(
+        picturesFieldFailure
+            .getMessage()
+            .contains(ExcelWorkbookImageCatalogSupport.PICTURES_FIELD_CONTRACT.affectedSurface()));
+    assertTrue(
+        pictureConstructorFailure
+            .getMessage()
+            .contains(
+                ExcelWorkbookImageCatalogSupport.PICTURE_CONSTRUCTOR_CONTRACT.affectedSurface()));
   }
 
   @Test

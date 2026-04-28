@@ -177,16 +177,17 @@ final class XlsxParityProbeRegistry {
 
   static String textCell(InspectionResult.CellsResult cells, String address) {
     return cast(
-            GridGrindResponse.CellReport.TextReport.class, byAddress(cells.cells()).get(address))
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+            byAddress(cells.cells()).get(address))
         .stringValue();
   }
 
-  static Map<String, GridGrindResponse.CellReport> byAddress(
-      List<GridGrindResponse.CellReport> cells) {
+  static Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress(
+      List<dev.erst.gridgrind.contract.dto.CellReport> cells) {
     return cells.stream()
         .collect(
             Collectors.toUnmodifiableMap(
-                GridGrindResponse.CellReport::address, Function.identity()));
+                dev.erst.gridgrind.contract.dto.CellReport::address, Function.identity()));
   }
 
   static boolean matchesWorkbookProtectionReport(
@@ -259,19 +260,15 @@ final class XlsxParityProbeRegistry {
     return new CellStyleInput(
         null,
         null,
-        new CellFontInput(null, true, null, null, null, 6, null, -0.35d, null, null),
-        new CellFillInput(
-            ExcelFillPattern.SOLID, null, 3, null, 0.30d, null, null, null, null, null),
+        new CellFontInput(null, true, null, null, ColorInput.theme(6, -0.35d), null, null),
+        CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.theme(3, 0.30d)),
         new CellBorderInput(
             null,
             null,
             null,
             new CellBorderSideInput(
                 ExcelBorderStyle.THIN,
-                null,
-                null,
-                Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()),
-                null),
+                ColorInput.indexed(Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()))),
             null),
         null);
   }
@@ -281,26 +278,12 @@ final class XlsxParityProbeRegistry {
         null,
         null,
         null,
-        new CellFillInput(
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            new CellGradientFillInput(
-                "LINEAR",
+        CellFillInput.gradient(
+            CellGradientFillInput.linear(
                 45.0d,
-                null,
-                null,
-                null,
-                null,
                 List.of(
-                    new CellGradientStopInput(0.0d, new ColorInput("#1F497D")),
-                    new CellGradientStopInput(1.0d, new ColorInput(null, 4, null, 0.45d))))),
+                    new CellGradientStopInput(0.0d, ColorInput.rgb("#1F497D")),
+                    new CellGradientStopInput(1.0d, ColorInput.theme(4, 0.45d))))),
         null,
         null);
   }
@@ -313,7 +296,7 @@ final class XlsxParityProbeRegistry {
         List.of(
             richTextRun(
                 "Lead",
-                new CellFontInput(true, null, null, null, null, 4, null, -0.20d, null, null)),
+                new CellFontInput(true, null, null, null, ColorInput.theme(4, -0.20d), null, null)),
             richTextRun(" ", null),
             richTextRun(
                 "review scheduled",
@@ -322,10 +305,7 @@ final class XlsxParityProbeRegistry {
                     true,
                     null,
                     null,
-                    null,
-                    null,
-                    Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex()),
-                    null,
+                    ColorInput.indexed(Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
                     null,
                     null))),
         new CommentAnchorInput(4, 1, 8, 7));
@@ -380,9 +360,9 @@ final class XlsxParityProbeRegistry {
                                 new ConditionalFormattingThresholdInput(
                                     ExcelConditionalFormattingThresholdType.MAX, null, null)),
                             List.of(
-                                new ColorInput("#AA2211"),
-                                new ColorInput("#FFDD55"),
-                                new ColorInput("#11CC66")))))));
+                                ColorInput.rgb("#AA2211"),
+                                ColorInput.rgb("#FFDD55"),
+                                ColorInput.rgb("#11CC66")))))));
     PendingMutation dataBar =
         mutate(
             new SheetSelector.ByName("Advanced"),
@@ -392,7 +372,7 @@ final class XlsxParityProbeRegistry {
                     List.of(
                         new ConditionalFormattingRuleInput.DataBarRule(
                             false,
-                            new ColorInput("#123456"),
+                            ColorInput.rgb("#123456"),
                             true,
                             10,
                             90,
@@ -594,15 +574,17 @@ final class XlsxParityProbeRegistry {
     for (String part : parts) {
       if (part.startsWith("rgb=")) {
         String expected = "#" + part.substring("rgb=".length());
-        if (!expected.equals(color.rgb())) {
+        if (!(color instanceof CellColorReport.Rgb rgb) || !expected.equals(rgb.rgb())) {
           return false;
         }
       } else if (part.startsWith("theme=")) {
-        if (!Integer.valueOf(part.substring("theme=".length())).equals(color.theme())) {
+        if (!(color instanceof CellColorReport.Theme theme)
+            || !Integer.valueOf(part.substring("theme=".length())).equals(theme.theme())) {
           return false;
         }
       } else if (part.startsWith("indexed=")) {
-        if (!Integer.valueOf(part.substring("indexed=".length())).equals(color.indexed())) {
+        if (!(color instanceof CellColorReport.Indexed indexed)
+            || !Integer.valueOf(part.substring("indexed=".length())).equals(indexed.indexed())) {
           return false;
         }
       } else if (part.startsWith("tint=")
@@ -641,63 +623,17 @@ final class XlsxParityProbeRegistry {
       boolean visible,
       List<RichTextRunInput> runs,
       CommentAnchorInput anchor) {
-    return new CommentInput(TextSourceInput.inline(text), author, visible, runs, anchor);
+    return new CommentInput(
+        TextSourceInput.inline(text),
+        author,
+        visible,
+        java.util.Optional.of(runs),
+        java.util.Optional.ofNullable(anchor));
   }
 
   static TextSourceInput inlineText(String value) {
     return TextSourceInput.inline(value);
   }
-
-  /**
-   * Incremental-build compatibility alias for the historical monolithic registry layout.
-   *
-   * <p>The parity probe implementation now lives in focused group classes, but keeping the former
-   * nested record names here prevents stale compiled inner classes from surviving no-clean builds
-   * after the split.
-   */
-  record CoreReadObservation(
-      XlsxParityOracle.CoreWorkbookSnapshot direct,
-      GridGrindResponse.WorkbookSummary.WithSheets summary,
-      InspectionResult.SheetSummaryResult opsSummary,
-      InspectionResult.SheetSummaryResult queueSummary,
-      InspectionResult.CellsResult cells,
-      InspectionResult.MergedRegionsResult merged,
-      InspectionResult.HyperlinksResult links,
-      InspectionResult.CommentsResult comments,
-      InspectionResult.SheetLayoutResult layout,
-      InspectionResult.PrintLayoutResult print,
-      InspectionResult.DataValidationsResult validations,
-      InspectionResult.ConditionalFormattingResult formatting,
-      InspectionResult.AutofiltersResult filtersOps,
-      InspectionResult.AutofiltersResult filtersQueue,
-      InspectionResult.TablesResult tables) {}
-
-  /** Incremental-build compatibility alias for the historical monolithic registry layout. */
-  record SheetCopySourceObservation(
-      XlsxParityScenarios.MaterializedScenario source,
-      InspectionResult.CommentsResult sourceComments,
-      InspectionResult.AutofiltersResult sourceAutofilters,
-      InspectionResult.ConditionalFormattingResult sourceFormatting,
-      InspectionResult.SheetSummaryResult sourceSummary,
-      TableEntryReport sourceTable,
-      XlsxParityOracle.CommentSnapshot sourceComment,
-      XlsxParityOracle.AdvancedPrintSnapshot sourcePrint,
-      XlsxParityOracle.AutofilterSnapshot sourceAutofilter,
-      XlsxParityOracle.TableSnapshot sourceDirectTable) {}
-
-  /** Incremental-build compatibility alias for the historical monolithic registry layout. */
-  record SheetCopyCopiedObservation(
-      Path copiedPath,
-      InspectionResult.WorkbookSummaryResult copiedWorkbook,
-      InspectionResult.SheetSummaryResult copiedSummary,
-      InspectionResult.CommentsResult copiedComments,
-      InspectionResult.AutofiltersResult copiedAutofilters,
-      InspectionResult.ConditionalFormattingResult copiedFormatting,
-      TableEntryReport copiedTable,
-      XlsxParityOracle.CommentSnapshot copiedComment,
-      XlsxParityOracle.AdvancedPrintSnapshot copiedPrint,
-      XlsxParityOracle.AutofilterSnapshot copiedAutofilter,
-      XlsxParityOracle.TableSnapshot copiedDirectTable) {}
 
   record ProbeResult(XlsxParityLedger.ExpectedOutcome outcome, String detail) {}
 
