@@ -42,6 +42,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals(
         GridGrindProtocolCatalog.exampleFor("WORKBOOK_HEALTH").orElseThrow().plan(), request);
+    assertFalse(stdout.toString(StandardCharsets.UTF_8).contains(": null"));
   }
 
   @Test
@@ -60,7 +61,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--print-example", failure.problem().context().argument());
+    assertEquals(
+        java.util.Optional.of("--print-example"), parseArgumentsContext(failure).argumentName());
     assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
   }
 
@@ -104,7 +106,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--print-example", failure.problem().context().argument());
+    assertEquals(
+        java.util.Optional.of("--print-example"), parseArgumentsContext(failure).argumentName());
     assertTrue(
         failure.problem().message().contains("did you mean CHART?"),
         () -> "expected CHART suggestion for authored value " + authoredValue);
@@ -146,7 +149,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--task", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--task"), parseArgumentsContext(failure).argumentName());
     assertTrue(failure.problem().message().contains("BOGUS_TASK"));
   }
 
@@ -166,7 +169,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         assertInstanceOf(
             GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--version", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--version"), parseArgumentsContext(failure).argumentName());
     assertTrue(failure.problem().message().contains("Unknown argument"));
   }
 
@@ -203,7 +206,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--print-task-plan", failure.problem().context().argument());
+    assertEquals(
+        java.util.Optional.of("--print-task-plan"), parseArgumentsContext(failure).argumentName());
     assertTrue(failure.problem().message().contains("BOGUS_TASK"));
   }
 
@@ -224,7 +228,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -261,7 +265,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("--print-goal-plan", failure.problem().context().argument());
+    assertEquals(
+        java.util.Optional.of("--print-goal-plan"), parseArgumentsContext(failure).argumentName());
   }
 
   @Test
@@ -295,9 +300,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertTrue(report.valid());
-    assertEquals("NEW", report.summary().sourceType());
-    assertEquals(1, report.summary().stepCount());
-    assertEquals(1, report.summary().mutationStepCount());
+    assertEquals("NEW", report.summary().orElseThrow().sourceType());
+    assertEquals(1, report.summary().orElseThrow().stepCount());
+    assertEquals(1, report.summary().orElseThrow().mutationStepCount());
   }
 
   @Test
@@ -315,8 +320,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_JSON, report.problem().code());
-    assertNull(report.summary());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, report.problem().orElseThrow().code());
+    assertTrue(report.summary().isEmpty());
   }
 
   @Test
@@ -356,9 +361,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertTrue(report.summary().requiresStandardInputBinding());
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, report.problem().code());
-    assertEquals("--request", report.problem().context().argument());
+    assertTrue(report.summary().orElseThrow().requiresStandardInputBinding());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, report.problem().orElseThrow().code());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(report).argumentName());
   }
 
   @Test
@@ -385,7 +390,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertTrue(report.valid());
-    assertFalse(report.summary().requiresStandardInputBinding());
+    assertFalse(report.summary().orElseThrow().requiresStandardInputBinding());
   }
 
   @Test
@@ -460,9 +465,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().code());
-    assertEquals("RESOLVE_INPUTS", report.problem().context().stage());
-    assertEquals("cell text must not be blank", report.problem().message());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
+    assertEquals("RESOLVE_INPUTS", report.problem().orElseThrow().context().stage());
+    assertEquals("cell text must not be blank", report.problem().orElseThrow().message());
   }
 
   @Test
@@ -489,8 +494,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().code());
-    assertEquals("NEW", report.summary().sourceType());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
+    assertEquals("NEW", report.summary().orElseThrow().sourceType());
   }
 
   @Test
@@ -525,11 +530,11 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.problem().code());
-    assertEquals("OPEN_WORKBOOK", report.problem().context().stage());
+    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.problem().orElseThrow().code());
+    assertEquals("OPEN_WORKBOOK", report.problem().orElseThrow().context().stage());
     assertEquals(
-        requestDirectory.resolve("missing-workbook.xlsx").toString(),
-        report.problem().context().sourceWorkbookPath());
+        java.util.Optional.of(requestDirectory.resolve("missing-workbook.xlsx").toString()),
+        openWorkbookContext(report).sourceWorkbookPath());
   }
 
   @Test
@@ -550,8 +555,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.IO_ERROR, report.problem().code());
-    assertNull(report.summary());
+    assertEquals(GridGrindProblemCode.IO_ERROR, report.problem().orElseThrow().code());
+    assertTrue(report.summary().isEmpty());
   }
 
   @Test
@@ -569,6 +574,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
+    assertFalse(
+        stdout.toString(StandardCharsets.UTF_8).contains(": null"),
+        "full protocol catalog output must omit explicit null placeholders");
   }
 
   @Test
@@ -630,6 +638,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertTrue(
         output.contains("\"CellSelector\""),
         "filtered catalog output must identify the target selector family");
+    assertFalse(
+        output.contains(": null"),
+        "filtered catalog entry output must omit explicit null placeholders");
   }
 
   @Test
@@ -740,7 +751,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.journal().outcome().failureCode());
+    assertEquals(
+        GridGrindProblemCode.INVALID_ARGUMENTS,
+        failure.journal().outcome().failureCode().orElseThrow());
     assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
   }
 

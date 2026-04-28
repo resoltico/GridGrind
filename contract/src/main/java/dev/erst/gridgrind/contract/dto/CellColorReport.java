@@ -1,42 +1,85 @@
 package dev.erst.gridgrind.contract.dto;
 
-import java.util.Locale;
-import java.util.Optional;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Objects;
 
 /** Factual workbook color preserving RGB, theme, indexed, and tint semantics. */
-public record CellColorReport(String rgb, Integer theme, Integer indexed, Double tint) {
-  public CellColorReport {
-    rgb = normalizeRgbHex(rgb).orElse(null);
-    if (theme != null && theme < 0) {
-      throw new IllegalArgumentException("theme must not be negative");
-    }
-    if (indexed != null && indexed < 0) {
-      throw new IllegalArgumentException("indexed must not be negative");
-    }
-    if (tint != null && !Double.isFinite(tint)) {
-      throw new IllegalArgumentException("tint must be finite");
-    }
-    if (rgb == null && theme == null && indexed == null) {
-      throw new IllegalArgumentException(
-          "color report must expose rgb, theme, or indexed semantics");
-    }
-  }
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = CellColorReport.Rgb.class, name = "RGB"),
+  @JsonSubTypes.Type(value = CellColorReport.Theme.class, name = "THEME"),
+  @JsonSubTypes.Type(value = CellColorReport.Indexed.class, name = "INDEXED")
+})
+public sealed interface CellColorReport
+    permits CellColorReport.Rgb, CellColorReport.Theme, CellColorReport.Indexed {
+  /** Optional tint adjustment applied to the base color reference. */
+  Double tint();
 
   /** Returns one color report carrying only explicit RGB data. */
-  public CellColorReport(String rgb) {
-    this(rgb, null, null, null);
+  static Rgb rgb(String rgb) {
+    return new Rgb(rgb, null);
   }
 
-  private static Optional<String> normalizeRgbHex(String rgb) {
-    if (rgb == null) {
-      return Optional.empty();
+  /** Returns one RGB-backed report plus tint metadata. */
+  static Rgb rgb(String rgb, Double tint) {
+    return new Rgb(rgb, tint);
+  }
+
+  /** Returns one theme-backed report with no tint adjustment. */
+  static Theme theme(int theme) {
+    return new Theme(theme, null);
+  }
+
+  /** Returns one theme-backed report plus tint metadata. */
+  static Theme theme(int theme, Double tint) {
+    return new Theme(theme, tint);
+  }
+
+  /** Returns one indexed-palette report with no tint adjustment. */
+  static Indexed indexed(int indexed) {
+    return new Indexed(indexed, null);
+  }
+
+  /** Returns one indexed-palette report plus tint metadata. */
+  static Indexed indexed(int indexed, Double tint) {
+    return new Indexed(indexed, tint);
+  }
+
+  /** RGB-backed workbook color report. */
+  record Rgb(String rgb, Double tint) implements CellColorReport {
+    public Rgb {
+      rgb = ProtocolRgbColorSupport.requireRgbHex(rgb, "rgb");
+      requireFiniteOrNull(tint, "tint");
     }
-    if (rgb.isBlank()) {
-      throw new IllegalArgumentException("rgb must not be blank");
+  }
+
+  /** Theme-backed workbook color report. */
+  record Theme(Integer theme, Double tint) implements CellColorReport {
+    public Theme {
+      requireNonNegative(theme, "theme");
+      requireFiniteOrNull(tint, "tint");
     }
-    if (!rgb.matches("^#[0-9A-Fa-f]{6}$")) {
-      throw new IllegalArgumentException("rgb must match #RRGGBB");
+  }
+
+  /** Indexed-palette workbook color report. */
+  record Indexed(Integer indexed, Double tint) implements CellColorReport {
+    public Indexed {
+      requireNonNegative(indexed, "indexed");
+      requireFiniteOrNull(tint, "tint");
     }
-    return Optional.of(rgb.toUpperCase(Locale.ROOT));
+  }
+
+  private static void requireNonNegative(Integer value, String fieldName) {
+    int required = Objects.requireNonNull(value, fieldName + " must not be null");
+    if (required < 0) {
+      throw new IllegalArgumentException(fieldName + " must not be negative");
+    }
+  }
+
+  private static void requireFiniteOrNull(Double value, String fieldName) {
+    if (value != null && !Double.isFinite(value)) {
+      throw new IllegalArgumentException(fieldName + " must be finite");
+    }
   }
 }

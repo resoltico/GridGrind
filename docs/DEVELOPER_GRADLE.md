@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -24,7 +24,7 @@ GridGrind's machine-level setup rule is simple:
 - let the wrapper download the official Gradle distribution pinned by the repository
 - keep the repository checkout on the local Mac filesystem as part of the normal supported setup
 
-The wrapper version is currently `9.4.1`, as declared in
+The wrapper version is currently `9.5.0-rc-4`, as declared in
 [gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
 
 This file therefore documents build architecture and ownership boundaries, not how to install a
@@ -41,6 +41,14 @@ Full verification is part of that local-filesystem rule:
 - mounted external volumes on macOS can reject those locks with `Operation not supported`
 - if that happens, move the repository to local disk instead of standardizing a cache or build-dir
   relocation workaround as the normal workflow
+
+The canonical whole-repo gate also isolates its Gradle runtime on purpose:
+- `./check.sh` always forces `--no-daemon`
+- `./check.sh` sets `GRADLE_USER_HOME` to a repo-scoped path under `tmp/gradle-user-home` unless
+  `GRIDGRIND_GRADLE_USER_HOME` overrides it explicitly
+- the root gate, contributor-container validation, Docker smoke, and `jazzer/bin/*` wrappers now
+  share one repo-wide verification lock, so overlapping top-level verification commands fail fast
+  instead of fighting over caches, daemons, or file locks
 
 ---
 
@@ -103,11 +111,12 @@ The current setup replaces both `buildSrc` trees with one explicit included buil
 for Gradle behavior, and one place to fix infrastructure concerns such as test pulses or cleanup
 tasks.
 
-The included build also cleans its compile output directories before recompiling. That is a
-deliberate defense against stale hidden classes surviving after source deletion. Kotlin
-incremental compilation is intentionally disabled in `gradle/build-logic` as well: the included
-build is small, and deterministic recompilation is more important there than micro-optimizing
-plugin compile time.
+The shared conventions clean Java and build-logic compile output directories before recompiling.
+That is a deliberate defense against stale hidden classes surviving after source deletion in both
+the included build and the product-module test and parity source sets. Kotlin incremental
+compilation is intentionally disabled in `gradle/build-logic` as well: the included build is
+small, and deterministic recompilation is more important there than micro-optimizing plugin
+compile time.
 
 ### Composite build for Jazzer
 
@@ -228,9 +237,15 @@ These are the Gradle-level invariants worth preserving:
 - Jazzer-specific PMD and JaCoCo scopes live beside Jazzer task registration in the shared build
   logic
 - root `./gradlew check` stays focused on the product modules
+- GitHub CI runs the root `./check.sh` whole-repo deterministic gate so nested Jazzer verification,
+  release-surface shell regression coverage, packaging, and Docker smoke cannot drift out of PR
+  validation
 - active Jazzer fuzzing stays local-only; GitHub Actions must not become a live-fuzz surface
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
+- the fixed `./check.sh` stage inventory and Stage 4 shell-regression coverage derive from
+  `scripts/check-stage-contract.sh`, not from parallel copies in root-gate prose and execution
+  wiring
 - root coverage aggregation derives its participants from JaCoCo-enabled Java subprojects and all
   of their `build/jacoco/*.exec` files rather than from a fixed module list
 
@@ -243,7 +258,8 @@ the changelog instead of letting the system drift silently.
 
 Review this setup periodically, especially after Gradle, Kotlin, or Jazzer upgrades:
 
-- Can the shared build logic move from JVM 25 bytecode output to JVM 26 output yet?
+- Is the shared build logic still aligned with the repository's Java 26 baseline after Gradle and
+  Kotlin upgrades?
 - Is any dependency version duplicated outside `gradle/libs.versions.toml`?
 - Has any typed logic crept back into a leaf `.gradle.kts` script?
 - Are root and nested verification scopes still cleanly separated?

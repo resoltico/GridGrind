@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: WORKBOOK_SHEET_MUTATIONS
 updated: "2026-04-25"
 route:

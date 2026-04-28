@@ -100,6 +100,7 @@ final class SelectorSupport {
   }
 
   static int requireRowIndexWithinBounds(int value, String fieldName) {
+    // LIM-008
     requireNonNegative(value, fieldName);
     if (value > ExcelRowSpan.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(fieldName + " must be within Excel .xlsx row bounds");
@@ -108,6 +109,7 @@ final class SelectorSupport {
   }
 
   static int requireColumnIndexWithinBounds(int value, String fieldName) {
+    // LIM-009
     requireNonNegative(value, fieldName);
     if (value > ExcelColumnSpan.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(fieldName + " must be within Excel .xlsx column bounds");

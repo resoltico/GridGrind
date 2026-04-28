@@ -16,6 +16,14 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlink;
 
 /** Materializes POI sheet-clone prerequisites that are otherwise deferred until save-time. */
 final class ExcelSheetClonePreparationSupport {
+  static final PoiPrivateContract HYPERLINKS_FIELD_CONTRACT =
+      PoiPrivateContract.field(
+          XSSFSheet.class, "hyperlinks", "sheet-clone external hyperlink materialization");
+  static final PoiPrivateContract HYPERLINK_CONSTRUCTOR_CONTRACT =
+      PoiPrivateContract.constructor(
+          XSSFHyperlink.class,
+          MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class),
+          "sheet-clone external hyperlink materialization");
   private static final VarHandle HYPERLINKS_FIELD = requireHyperlinksField(MethodHandles.lookup());
   private static final BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink>
       HYPERLINK_CONSTRUCTOR = requireHyperlinkConstructor(MethodHandles.lookup());
@@ -63,12 +71,7 @@ final class ExcelSheetClonePreparationSupport {
   }
 
   static VarHandle requireHyperlinksField(MethodHandles.Lookup lookup) {
-    return PoiPrivateAccessSupport.requireVarHandle(
-        lookup,
-        XSSFSheet.class,
-        "hyperlinks",
-        List.class,
-        "Failed to access POI sheet hyperlink registry");
+    return PoiPrivateAccessSupport.requireVarHandle(lookup, HYPERLINKS_FIELD_CONTRACT, List.class);
   }
 
   static BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink> requireHyperlinkConstructor(
@@ -76,9 +79,8 @@ final class ExcelSheetClonePreparationSupport {
     MethodHandle constructor =
         PoiPrivateAccessSupport.requireConstructor(
                 lookup,
-                XSSFHyperlink.class,
-                MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class),
-                "Failed to access POI hyperlink constructor")
+                HYPERLINK_CONSTRUCTOR_CONTRACT,
+                MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class))
             .asType(
                 MethodType.methodType(
                     XSSFHyperlink.class, CTHyperlink.class, PackageRelationship.class));

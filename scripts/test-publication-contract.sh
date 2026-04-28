@@ -36,6 +36,7 @@ readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
+readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
 test_root=''
@@ -45,6 +46,17 @@ cleanup() {
 }
 
 trap cleanup EXIT
+
+fixed_pattern_exists() {
+    local pattern=$1
+    local path=$2
+
+    if command -v rg >/dev/null 2>&1; then
+        rg -Fq -- "${pattern}" "${path}"
+        return $?
+    fi
+    grep -Fq -- "${pattern}" "${path}"
+}
 
 grep -Eq \
     '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
@@ -132,8 +144,8 @@ grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:${expected
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:latest"' \
     "${container_verify_script}" || die "public container verification no longer checks the latest tag contract"
-grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${repo_root}/check.sh" || die \
-    "root check no longer exercises the release primary-checkout regression"
+grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_script}" || die \
+    "Stage 4 contract no longer exercises the release primary-checkout regression"
 grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
     "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
 
@@ -154,22 +166,22 @@ grep -Fq 'implementation(libs.jackson.databind)' "${contract_build}" || die \
 grep -Fq 'api(libs.jackson.databind)' "${contract_build}" && die \
     "contract still declares jackson-databind as api"
 
-rg -Fq 'build/jacoco/test.exec' "${root_plugin}" && die \
+fixed_pattern_exists 'build/jacoco/test.exec' "${root_plugin}" && die \
     "root aggregated coverage still hardcodes test.exec"
-rg -Fq ':engine:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
-rg -Fq ':protocol:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
-rg -Fq ':cli:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
-rg -Fq ':engine:jacocoTestCoverageVerification' "${root_plugin}" && die \
+fixed_pattern_exists ':engine:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
+fixed_pattern_exists ':protocol:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
+fixed_pattern_exists ':cli:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
+fixed_pattern_exists ':engine:jacocoTestCoverageVerification' "${root_plugin}" && die \
     "root coverage wiring still hardcodes module names"
-rg -Fq ':protocol:jacocoTestCoverageVerification' "${root_plugin}" && die \
+fixed_pattern_exists ':protocol:jacocoTestCoverageVerification' "${root_plugin}" && die \
     "root coverage wiring still hardcodes module names"
-rg -Fq ':cli:jacocoTestCoverageVerification' "${root_plugin}" && die \
+fixed_pattern_exists ':cli:jacocoTestCoverageVerification' "${root_plugin}" && die \
     "root coverage wiring still hardcodes module names"
-rg -Fq 'taskPathsByType(coverageSubprojects, Test::class.java)' "${root_plugin}" || die \
+fixed_pattern_exists 'taskPathsByType(coverageSubprojects, Test::class.java)' "${root_plugin}" || die \
     "root aggregated coverage no longer discovers test tasks dynamically"
-rg -Fq 'coverageSubprojects().flatMap { subproject ->' "${root_plugin}" || die \
+fixed_pattern_exists 'coverageSubprojects().flatMap { subproject ->' "${root_plugin}" || die \
     "root aggregated coverage no longer discovers JaCoCo execution data from all coverage subprojects"
-rg -Fq 'testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile' "${root_plugin}" || die \
+fixed_pattern_exists 'testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile' "${root_plugin}" || die \
     "root aggregated coverage no longer collects execution data from each module test task"
 
 printf 'publication-contract regression: success\n'

@@ -5,14 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Additional branch coverage for selector-family inference across assertion workflows. */
@@ -87,7 +88,7 @@ class WorkbookStepValidationCoverageTest {
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> WorkbookStepValidation.commonTargetTypes(List.of(), "ALL_OF"));
+            () -> AssertionTargetingSupport.commonTargetTypes(List.of(), "ALL_OF", Map.of()));
 
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families", failure.getMessage());

@@ -63,10 +63,21 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for Phase 7 source-backed plan resolution and failure semantics. */
 class SourceBackedPlanResolverTest {
+  @Test
+  void sameOptionalReferenceDistinguishesPresenceMismatches() throws Exception {
+    assertTrue(
+        SourceBackedResolutionIdentitySupport.sameOptionalReference(
+            Optional.empty(), Optional.empty()));
+    assertFalse(
+        SourceBackedResolutionIdentitySupport.sameOptionalReference(
+            Optional.of("left"), Optional.empty()));
+  }
+
   @Test
   void resolveRewritesTextFormulaAndBinarySourcesIntoInlineValues() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-resolve-");
@@ -118,15 +129,16 @@ class SourceBackedPlanResolverTest {
                             "OpsSignature",
                             twoCellAnchor(),
                             false,
-                            "Review before signing.",
-                            "Ada Lovelace",
-                            "Finance",
-                            "ada@example.com",
-                            null,
-                            "invalid",
-                            new PictureDataInput(
-                                ExcelPictureFormat.PNG,
-                                new BinarySourceInput.File("payload.bin")))))));
+                            java.util.Optional.of("Review before signing."),
+                            java.util.Optional.of("Ada Lovelace"),
+                            java.util.Optional.of("Finance"),
+                            java.util.Optional.of("ada@example.com"),
+                            java.util.Optional.empty(),
+                            java.util.Optional.of("invalid"),
+                            java.util.Optional.of(
+                                new PictureDataInput(
+                                    ExcelPictureFormat.PNG,
+                                    new BinarySourceInput.File("payload.bin"))))))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -167,7 +179,7 @@ class SourceBackedPlanResolverTest {
     assertEquals(
         Base64.getEncoder().encodeToString(payloadBytes),
         ((BinarySourceInput.InlineBase64)
-                signatureLineAction.signatureLine().plainSignature().source())
+                signatureLineAction.signatureLine().plainSignature().orElseThrow().source())
             .base64Data());
   }
 
@@ -189,14 +201,16 @@ class SourceBackedPlanResolverTest {
                             "OpsSignature",
                             twoCellAnchor(),
                             false,
-                            "Review before signing.",
-                            "Ada Lovelace",
-                            "Finance",
-                            "ada@example.com",
-                            null,
-                            "invalid",
-                            new PictureDataInput(
-                                ExcelPictureFormat.PNG, new BinarySourceInput.StandardInput()))))));
+                            java.util.Optional.of("Review before signing."),
+                            java.util.Optional.of("Ada Lovelace"),
+                            java.util.Optional.of("Finance"),
+                            java.util.Optional.of("ada@example.com"),
+                            java.util.Optional.empty(),
+                            java.util.Optional.of("invalid"),
+                            java.util.Optional.of(
+                                new PictureDataInput(
+                                    ExcelPictureFormat.PNG,
+                                    new BinarySourceInput.StandardInput())))))));
     WorkbookPlan fileBackedPlan =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -232,8 +246,7 @@ class SourceBackedPlanResolverTest {
                             new TextSourceInput.Utf8File("mapping.xml"))))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(
-            plan, new ExecutionInputBindings(workingDirectory, (byte[]) null));
+        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
 
     MutationAction.ImportCustomXmlMapping action =
         assertInstanceOf(
@@ -269,8 +282,7 @@ class SourceBackedPlanResolverTest {
                     new Assertion.CellValue(new ExpectedCellValue.NumericValue(125.0)))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(
-            plan, new ExecutionInputBindings(workingDirectory, (byte[]) null));
+        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
 
     InspectionStep resolvedInspection =
         assertInstanceOf(InspectionStep.class, resolved.steps().get(0));
@@ -345,7 +357,7 @@ class SourceBackedPlanResolverTest {
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(rangeStep, lineChartStep, pieChartStep)),
-            new ExecutionInputBindings(workingDirectory, (byte[]) null));
+            new ExecutionInputBindings(workingDirectory));
 
     MutationStep resolvedRangeStep = assertInstanceOf(MutationStep.class, resolved.steps().get(0));
     assertNotSame(rangeStep, resolvedRangeStep);
@@ -443,11 +455,21 @@ class SourceBackedPlanResolverTest {
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetComment(
-                new CommentInput(TextSourceInput.standardInput(), "Ada", false, null, null))));
+                new CommentInput(
+                    TextSourceInput.standardInput(),
+                    "Ada",
+                    false,
+                    java.util.Optional.empty(),
+                    java.util.Optional.empty()))));
     assertFalse(
         requiresStandardInputFor(
             new MutationAction.SetComment(
-                new CommentInput(TextSourceInput.inline("Ada"), "Ada", false, null, null))));
+                new CommentInput(
+                    TextSourceInput.inline("Ada"),
+                    "Ada",
+                    false,
+                    java.util.Optional.empty(),
+                    java.util.Optional.empty()))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetComment(
@@ -455,8 +477,9 @@ class SourceBackedPlanResolverTest {
                     TextSourceInput.inline("Ada"),
                     "Ada",
                     false,
-                    List.of(new RichTextRunInput(TextSourceInput.standardInput(), null)),
-                    null))));
+                    java.util.Optional.of(
+                        List.of(new RichTextRunInput(TextSourceInput.standardInput(), null))),
+                    java.util.Optional.empty()))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetPicture(
@@ -725,10 +748,13 @@ class SourceBackedPlanResolverTest {
                             TextSourceInput.utf8File("comment.txt"),
                             "Ada",
                             false,
-                            List.of(
-                                new RichTextRunInput(TextSourceInput.utf8File("run1.txt"), null),
-                                new RichTextRunInput(TextSourceInput.utf8File("run2.txt"), null)),
-                            null))),
+                            java.util.Optional.of(
+                                List.of(
+                                    new RichTextRunInput(
+                                        TextSourceInput.utf8File("run1.txt"), null),
+                                    new RichTextRunInput(
+                                        TextSourceInput.utf8File("run2.txt"), null))),
+                            java.util.Optional.empty()))),
                 new MutationStep(
                     "step-02-set-picture",
                     new SheetSelector.ByName("Budget"),
@@ -881,7 +907,8 @@ class SourceBackedPlanResolverTest {
     assertEquals("Ada Lovelace", ((TextSourceInput.Inline) commentAction.comment().text()).text());
     assertEquals(
         "Ada",
-        ((TextSourceInput.Inline) commentAction.comment().runs().getFirst().source()).text());
+        ((TextSourceInput.Inline) commentAction.comment().runs().orElseThrow().getFirst().source())
+            .text());
 
     MutationAction.SetPicture pictureAction =
         assertInstanceOf(
@@ -994,8 +1021,7 @@ class SourceBackedPlanResolverTest {
                 IllegalArgumentException.class,
                 () ->
                     SourceBackedPlanResolver.resolve(
-                        blankCellTextPlan,
-                        new ExecutionInputBindings(workingDirectory, (byte[]) null)))
+                        blankCellTextPlan, new ExecutionInputBindings(workingDirectory)))
             .getMessage());
 
     WorkbookPlan emptyRichTextRunPlan =
@@ -1016,8 +1042,7 @@ class SourceBackedPlanResolverTest {
                 IllegalArgumentException.class,
                 () ->
                     SourceBackedPlanResolver.resolve(
-                        emptyRichTextRunPlan,
-                        new ExecutionInputBindings(workingDirectory, (byte[]) null)))
+                        emptyRichTextRunPlan, new ExecutionInputBindings(workingDirectory)))
             .getMessage());
 
     WorkbookPlan directoryPlan =
@@ -1035,7 +1060,7 @@ class SourceBackedPlanResolverTest {
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    directoryPlan, new ExecutionInputBindings(workingDirectory, (byte[]) null)));
+                    directoryPlan, new ExecutionInputBindings(workingDirectory)));
     assertTrue(directoryFailure.getMessage().contains("must resolve to a file"));
 
     WorkbookPlan invalidPathPlan =
@@ -1052,7 +1077,7 @@ class SourceBackedPlanResolverTest {
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    invalidPathPlan, new ExecutionInputBindings(workingDirectory, (byte[]) null)));
+                    invalidPathPlan, new ExecutionInputBindings(workingDirectory)));
     assertTrue(invalidPathFailure.getMessage().contains("Invalid cell text path"));
 
     WorkbookPlan textLoopPlan =
@@ -1069,7 +1094,7 @@ class SourceBackedPlanResolverTest {
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    textLoopPlan, new ExecutionInputBindings(workingDirectory, (byte[]) null)));
+                    textLoopPlan, new ExecutionInputBindings(workingDirectory)));
     assertTrue(textLoopFailure.getMessage().contains("Failed to read cell text file"));
 
     WorkbookPlan missingBinaryPlan =
@@ -1091,8 +1116,7 @@ class SourceBackedPlanResolverTest {
             InputSourceNotFoundException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    missingBinaryPlan,
-                    new ExecutionInputBindings(workingDirectory, (byte[]) null)));
+                    missingBinaryPlan, new ExecutionInputBindings(workingDirectory)));
     assertEquals("picture payload", missingBinaryFailure.inputKind());
 
     WorkbookPlan binaryLoopPlan =
@@ -1114,7 +1138,7 @@ class SourceBackedPlanResolverTest {
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    binaryLoopPlan, new ExecutionInputBindings(workingDirectory, (byte[]) null)));
+                    binaryLoopPlan, new ExecutionInputBindings(workingDirectory)));
     assertTrue(binaryLoopFailure.getMessage().contains("Failed to read picture payload file"));
 
     WorkbookPlan emptyBinaryPlan =
@@ -1174,16 +1198,18 @@ class SourceBackedPlanResolverTest {
                 TextSourceInput.inline("Ada"),
                 "Ada",
                 false,
-                List.of(new RichTextRunInput(TextSourceInput.inline("Ada"), null)),
-                null)));
+                java.util.Optional.of(
+                    List.of(new RichTextRunInput(TextSourceInput.inline("Ada"), null))),
+                java.util.Optional.empty())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CommentInput(
                 TextSourceInput.inline("Ada"),
                 "Ada",
                 false,
-                List.of(new RichTextRunInput(TextSourceInput.standardInput(), null)),
-                null)));
+                java.util.Optional.of(
+                    List.of(new RichTextRunInput(TextSourceInput.standardInput(), null))),
+                java.util.Optional.empty())));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -1334,7 +1360,7 @@ class SourceBackedPlanResolverTest {
             InputSourceNotFoundException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    missingFilePlan, new ExecutionInputBindings(Path.of(""), (byte[]) null)));
+                    missingFilePlan, new ExecutionInputBindings(Path.of(""))));
     assertEquals("cell text", notFound.inputKind());
 
     WorkbookPlan standardInputPlan =
@@ -1351,7 +1377,7 @@ class SourceBackedPlanResolverTest {
             InputSourceUnavailableException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    standardInputPlan, new ExecutionInputBindings(Path.of(""), (byte[]) null)));
+                    standardInputPlan, new ExecutionInputBindings(Path.of(""))));
     assertEquals("cell text", unavailable.inputKind());
   }
 
@@ -1375,8 +1401,7 @@ class SourceBackedPlanResolverTest {
                                     new TextSourceInput.Utf8File("space.txt"), null)))))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(
-            plan, new ExecutionInputBindings(workingDirectory, (byte[]) null));
+        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
 
     MutationAction.SetCell richTextAction =
         assertInstanceOf(
@@ -1456,7 +1481,7 @@ class SourceBackedPlanResolverTest {
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(mutationStep, inspectionStep, assertionStep)),
-            new ExecutionInputBindings(Path.of(""), (byte[]) null));
+            new ExecutionInputBindings(Path.of("")));
 
     assertSame(mutationStep, resolved.steps().get(0));
     assertSame(inspectionStep, resolved.steps().get(1));
@@ -1479,7 +1504,12 @@ class SourceBackedPlanResolverTest {
             "comment-inline",
             new CellSelector.ByAddress("Budget", "A1"),
             new MutationAction.SetComment(
-                new CommentInput(TextSourceInput.inline("Ada"), "Ada", false, null, null)));
+                new CommentInput(
+                    TextSourceInput.inline("Ada"),
+                    "Ada",
+                    false,
+                    java.util.Optional.empty(),
+                    java.util.Optional.empty())));
     MutationStep pictureStep =
         new MutationStep(
             "picture-inline",
@@ -1567,7 +1597,7 @@ class SourceBackedPlanResolverTest {
                     validationStep,
                     tableStep,
                     printLayoutStep)),
-            new ExecutionInputBindings(Path.of(""), (byte[]) null));
+            new ExecutionInputBindings(Path.of("")));
 
     assertSame(rangeStep, resolved.steps().get(0));
     assertSame(commentStep, resolved.steps().get(1));
@@ -1611,10 +1641,12 @@ class SourceBackedPlanResolverTest {
                     TextSourceInput.inline("Ada Lovelace"),
                     "Ada",
                     false,
-                    List.of(
-                        new RichTextRunInput(TextSourceInput.inline("Ada"), null),
-                        new RichTextRunInput(TextSourceInput.utf8File("comment-run.txt"), null)),
-                    null)));
+                    java.util.Optional.of(
+                        List.of(
+                            new RichTextRunInput(TextSourceInput.inline("Ada"), null),
+                            new RichTextRunInput(
+                                TextSourceInput.utf8File("comment-run.txt"), null))),
+                    java.util.Optional.empty())));
     MutationStep pictureStep =
         new MutationStep(
             "picture-mixed",
@@ -1702,7 +1734,7 @@ class SourceBackedPlanResolverTest {
                     promptValidationStep,
                     errorValidationStep,
                     printLayoutStep)),
-            new ExecutionInputBindings(workingDirectory, (byte[]) null));
+            new ExecutionInputBindings(workingDirectory));
 
     MutationAction.SetCell resolvedFormulaAction =
         assertInstanceOf(
@@ -1718,7 +1750,9 @@ class SourceBackedPlanResolverTest {
             assertInstanceOf(MutationStep.class, resolved.steps().get(1)).action());
     assertEquals(
         " Lovelace",
-        ((TextSourceInput.Inline) resolvedCommentAction.comment().runs().get(1).source()).text());
+        ((TextSourceInput.Inline)
+                resolvedCommentAction.comment().runs().orElseThrow().get(1).source())
+            .text());
 
     MutationAction.SetPicture resolvedPictureAction =
         assertInstanceOf(
@@ -1831,7 +1865,7 @@ class SourceBackedPlanResolverTest {
                     pictureDescriptionOnlyChanged,
                     footerOnlyChanged,
                     formulaAlreadyInline)),
-            new ExecutionInputBindings(workingDirectory, (byte[]) null));
+            new ExecutionInputBindings(workingDirectory));
 
     assertNotSame(targetAndActionChanged, resolved.steps().get(0));
     assertNotSame(pictureDescriptionOnlyChanged, resolved.steps().get(1));
@@ -1845,7 +1879,7 @@ class SourceBackedPlanResolverTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-formula-source-");
     Files.writeString(
         workingDirectory.resolve("formula.txt"), "=SUM(C1:C2)", StandardCharsets.UTF_8);
-    ExecutionInputBindings bindings = new ExecutionInputBindings(workingDirectory, (byte[]) null);
+    ExecutionInputBindings bindings = new ExecutionInputBindings(workingDirectory);
 
     TextSourceInput.Inline stableSource = TextSourceInput.inline("SUM(A1:A2)");
     assertSame(stableSource, SourceBackedPlanResolver.resolveFormulaSource(stableSource, bindings));

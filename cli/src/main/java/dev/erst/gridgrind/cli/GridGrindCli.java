@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -126,7 +127,9 @@ public final class GridGrindCli {
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               exception.getMessage(),
-              new GridGrindResponse.ProblemContext.ParseArguments(exception.argument()),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                      exception.argument())),
               exception));
       return 2;
     } catch (IllegalArgumentException exception) {
@@ -135,7 +138,8 @@ public final class GridGrindCli {
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message(exception),
-              new GridGrindResponse.ProblemContext.ParseArguments(null),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.unknown()),
               exception));
       return 2;
     }
@@ -170,7 +174,9 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message,
-                  new GridGrindResponse.ProblemContext.ParseArguments("--print-example"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--print-example")),
                   new IllegalArgumentException(message)),
               2);
         }
@@ -192,7 +198,8 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown task: " + cmd.taskFilter(),
-                  new GridGrindResponse.ProblemContext.ParseArguments("--task"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named("--task")),
                   new IllegalArgumentException("Unknown task: " + cmd.taskFilter())),
               2);
         }
@@ -210,7 +217,9 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown task: " + cmd.taskId(),
-                  new GridGrindResponse.ProblemContext.ParseArguments("--print-task-plan"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--print-task-plan")),
                   new IllegalArgumentException("Unknown task: " + cmd.taskId())),
               2);
         }
@@ -233,27 +242,27 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message(exception),
-                  new GridGrindResponse.ProblemContext.ParseArguments("--print-goal-plan"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--print-goal-plan")),
                   exception),
               2);
         }
       }
       case CliCommand.DoctorRequest doctor -> doctorRequest(doctor, stdin, stdout);
-      case CliCommand.PrintProtocolCatalog cmd -> {
-        if (cmd.searchQuery() != null) {
-          yield writePayload(
+      case CliCommand.PrintProtocolCatalogAll cmd ->
+          writePayload(
+              cmd.responsePath(),
+              stdout,
+              GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
+      case CliCommand.PrintProtocolCatalogSearch cmd ->
+          writePayload(
               cmd.responsePath(),
               stdout,
               output ->
                   GridGrindJson.writeCatalogLookupValue(
                       output, GridGrindProtocolCatalog.searchCatalog(cmd.searchQuery())));
-        }
-        if (cmd.operationFilter() == null) {
-          yield writePayload(
-              cmd.responsePath(),
-              stdout,
-              GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
-        }
+      case CliCommand.PrintProtocolCatalogLookup cmd -> {
         List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(cmd.operationFilter());
         if (matches.size() > 1) {
           String message =
@@ -267,7 +276,9 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message,
-                  new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--operation")),
                   new IllegalArgumentException(message)),
               2);
         }
@@ -279,7 +290,9 @@ public final class GridGrindCli {
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown operation: " + cmd.operationFilter(),
-                  new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--operation")),
                   new IllegalArgumentException("Unknown operation: " + cmd.operationFilter())),
               2);
         }
@@ -368,22 +381,24 @@ public final class GridGrindCli {
       return responseWriter.write(
           command.responsePath(),
           stdout,
-          GridGrindResponse.failure(
+          GridGrindResponses.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(command.requestPath()), null, null, null))));
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+                      requestInput(command.requestPath()),
+                      dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()))));
     } catch (IOException exception) {
       return responseWriter.write(
           command.responsePath(),
           stdout,
-          GridGrindResponse.failure(
+          GridGrindResponses.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(command.requestPath()), null, null, null))));
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+                      requestInput(command.requestPath()),
+                      dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()))));
     }
 
     GridGrindResponse response;
@@ -393,7 +408,8 @@ public final class GridGrindCli {
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
-              new GridGrindResponse.ProblemContext.ParseArguments("--request"),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named("--request")),
               new IllegalArgumentException(message));
       return responseWriter.write(command.responsePath(), stdout, response);
     }
@@ -404,12 +420,12 @@ public final class GridGrindCli {
       response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
     } catch (Exception exception) {
       response =
-          GridGrindResponse.failure(
+          GridGrindResponses.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ExecuteRequest(
-                      requestSourceType(request), requestPersistenceType(request))));
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                      requestShape(request))));
     }
 
     return responseWriter.write(command.responsePath(), stdout, response);
@@ -426,22 +442,24 @@ public final class GridGrindCli {
         | InvalidRequestException exception) {
       report =
           RequestDoctorReport.invalid(
-              null,
+              java.util.Optional.empty(),
               List.of(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(command.requestPath()), null, null, null)));
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+                      requestInput(command.requestPath()),
+                      dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable())));
       return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     } catch (IOException exception) {
       report =
           RequestDoctorReport.invalid(
-              null,
+              java.util.Optional.empty(),
               List.of(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(command.requestPath()), null, null, null)));
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
+                      requestInput(command.requestPath()),
+                      dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable())));
       return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     }
 
@@ -455,7 +473,9 @@ public final class GridGrindCli {
               GridGrindProblems.problem(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message,
-                  new GridGrindResponse.ProblemContext.ParseArguments("--request"),
+                  new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                      dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named(
+                          "--request")),
                   new IllegalArgumentException(message)));
       return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     }
@@ -654,9 +674,9 @@ public final class GridGrindCli {
   private GridGrindResponse.Failure failure(
       GridGrindProblemCode code,
       String message,
-      GridGrindResponse.ProblemContext context,
+      dev.erst.gridgrind.contract.dto.ProblemContext context,
       Throwable cause) {
-    return GridGrindResponse.failure(
+    return GridGrindResponses.failure(
         GridGrindProtocolVersion.current(),
         GridGrindProblems.problem(code, message, context, cause));
   }
@@ -665,23 +685,25 @@ public final class GridGrindCli {
     return exception.getMessage();
   }
 
-  private String pathString(Path path) {
-    return path == null ? null : path.toAbsolutePath().toString();
+  private dev.erst.gridgrind.contract.dto.ProblemContext.RequestInput requestInput(Path path) {
+    return path == null
+        ? dev.erst.gridgrind.contract.dto.ProblemContext.RequestInput.standardInput()
+        : dev.erst.gridgrind.contract.dto.ProblemContext.RequestInput.requestFile(
+            path.toAbsolutePath().toString());
   }
 
-  private String requestSourceType(WorkbookPlan request) {
-    return switch (request.source()) {
-      case WorkbookPlan.WorkbookSource.New _ -> "NEW";
-      case WorkbookPlan.WorkbookSource.ExistingFile _ -> "EXISTING";
-    };
-  }
-
-  private String requestPersistenceType(WorkbookPlan request) {
-    return switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
-      case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
-    };
+  private dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape requestShape(
+      WorkbookPlan request) {
+    return dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+        switch (request.source()) {
+          case WorkbookPlan.WorkbookSource.New _ -> "NEW";
+          case WorkbookPlan.WorkbookSource.ExistingFile _ -> "EXISTING";
+        },
+        switch (request.persistence()) {
+          case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
+          case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+          case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+        });
   }
 
   /** Supplies request-template bytes for help rendering. */

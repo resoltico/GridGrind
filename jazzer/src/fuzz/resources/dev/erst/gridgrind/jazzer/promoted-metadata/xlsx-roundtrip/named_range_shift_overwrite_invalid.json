@@ -10,9 +10,9 @@
       "inputBytes" : 83,
       "commandCount" : 4,
       "commandKinds" : {
+        "AUTO_SIZE_COLUMNS" : 2,
         "SET_NAMED_RANGE" : 1,
-        "CREATE_SHEET" : 1,
-        "AUTO_SIZE_COLUMNS" : 2
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : { }
     }

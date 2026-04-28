@@ -324,13 +324,7 @@ final class ExcelSheetCommentRepairSupport {
         font.italic(),
         font.fontName(),
         font.fontHeight(),
-        font.fontColor() == null
-            ? null
-            : new ExcelColor(
-                font.fontColor().rgb(),
-                font.fontColor().theme(),
-                font.fontColor().indexed(),
-                font.fontColor().tint()),
+        ExcelColorSupport.copyOf(font.fontColor()),
         font.underline(),
         font.strikeout());
   }

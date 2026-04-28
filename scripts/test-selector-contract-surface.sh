@@ -25,11 +25,60 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 
+extended_pattern_exists() {
+    local pattern=$1
+    shift
+
+    if command -v rg >/dev/null 2>&1; then
+        rg -n -- "${pattern}" "$@" >/dev/null
+        return $?
+    fi
+    grep -R -n -E --binary-files=without-match -- "${pattern}" "$@" >/dev/null
+}
+
+pcre_pattern_exists() {
+    local pattern=$1
+    shift
+
+    if command -v rg >/dev/null 2>&1; then
+        rg -nUP -- "${pattern}" "$@" >/dev/null
+        return $?
+    fi
+    python3 - "${pattern}" "$@" <<'PY'
+import re
+import sys
+from pathlib import Path
+
+regex = re.compile(sys.argv[1], re.MULTILINE | re.DOTALL)
+
+def iter_files(path_str: str):
+    path = Path(path_str)
+    if path.is_dir():
+        for candidate in path.rglob('*'):
+            if candidate.is_file():
+                yield candidate
+        return
+    if path.is_file():
+        yield path
+
+for root in sys.argv[2:]:
+    for candidate in iter_files(root):
+        try:
+            text = candidate.read_text(errors='ignore')
+        except OSError:
+            continue
+        if regex.search(text):
+            raise SystemExit(0)
+
+raise SystemExit(1)
+PY
+}
+
 check_no_matches() {
     local pattern=$1
     local description=$2
     shift 2
-    if rg -n "${pattern}" "$@" >/dev/null; then
+    if extended_pattern_exists "${pattern}" "$@"; then
         die "${description}"
     fi
 }
@@ -38,7 +87,7 @@ check_no_pcre_matches() {
     local pattern=$1
     local description=$2
     shift 2
-    if rg -nUP "${pattern}" "$@" >/dev/null; then
+    if pcre_pattern_exists "${pattern}" "$@"; then
         die "${description}"
     fi
 }

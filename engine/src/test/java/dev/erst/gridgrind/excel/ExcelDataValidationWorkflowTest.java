@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -121,16 +122,16 @@ class ExcelDataValidationWorkflowTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
-                      WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES)));
+                      AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
+                      AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES)));
       assertTrue(
           workbookFindings.findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
-                      WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES)));
+                      AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
+                      AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES)));
     }
   }
 

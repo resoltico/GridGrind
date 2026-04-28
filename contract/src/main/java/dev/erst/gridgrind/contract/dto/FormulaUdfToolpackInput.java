@@ -1,10 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
-import java.util.LinkedHashSet;
+import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 
 /** One named UDF toolpack registered for workbook formula evaluation. */
 public record FormulaUdfToolpackInput(String name, List<FormulaUdfFunctionInput> functions) {
@@ -13,19 +11,12 @@ public record FormulaUdfToolpackInput(String name, List<FormulaUdfFunctionInput>
     if (name.isBlank()) {
       throw new IllegalArgumentException("name must not be blank");
     }
-    Objects.requireNonNull(functions, "functions must not be null");
-    functions = List.copyOf(functions);
-    if (functions.isEmpty()) {
-      throw new IllegalArgumentException("functions must not be empty");
-    }
-    Set<String> seen = new LinkedHashSet<>();
-    for (FormulaUdfFunctionInput function : functions) {
-      Objects.requireNonNull(function, "functions must not contain nulls");
-      String normalized = function.name().toUpperCase(Locale.ROOT);
-      if (!seen.add(normalized)) {
-        throw new IllegalArgumentException(
-            "functions must not contain duplicate names: " + function.name());
-      }
-    }
+    functions =
+        FormulaEnvironmentSupport.copyRequiredDistinctNamedValues(
+            functions,
+            "functions",
+            "functions must not be empty",
+            "functions must not contain duplicate names: ",
+            FormulaUdfFunctionInput::name);
   }
 }

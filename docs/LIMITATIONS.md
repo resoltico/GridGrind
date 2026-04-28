@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: LIMITATIONS
 updated: "2026-04-25"
 route:
@@ -11,19 +11,23 @@ route:
 # Limitations Registry
 
 **Purpose**: Registry of all hard ceilings enforced by GridGrind, Apache POI 5.5.1, and the
-Excel `.xlsx` format. Every entry has a stable ID (`LIM-NNN`). IDs are referenced in the
-validation code that enforces the limit, in catalog summaries, and in help text, so that any
-change to a limit value propagates consistently across all three surfaces.
+Excel `.xlsx` format. Every entry has a stable ID (`LIM-NNN`), but not every entry has the same
+propagation model. Product-enforced limits are expected to stay traceable into validation code and
+the user-facing contract surfaces that teach them. Upstream reference ceilings remain a canonical
+documentation registry even when GridGrind does not yet surface them through one runtime guard,
+catalog summary, or help line.
 
 **Two categories of limits:**
-- **GridGrind** — operational constraints enforced by request-model constructors, selector
-  helpers, or explicit request validation. Violations produce a structured `INVALID_REQUEST`
-  error with a precise message before any workbook work. These are the limits most likely to
-  change as the product evolves.
-- **Excel/POI** — structural ceilings of the `.xlsx` format reflected in Apache POI
-  `SpreadsheetVersion.EXCEL2007`. Some, such as addressed row/column bounds, are already enforced
-  on relevant public request paths. Others remain format ceilings rather than universal preflight
-  guards and can still surface as raw POI failures or invalid output.
+- **Product-enforced entries** — categories that start with `GridGrind`, including
+  `GridGrind (enforces Excel limit ...)`. These are operational constraints enforced by
+  request-model constructors, selector helpers, or explicit request validation. Violations produce
+  a structured `INVALID_REQUEST` error with a precise message before or at the relevant product
+  boundary. These entries should stay traceable in the enforcing code and, when surfaced to users,
+  in help, catalog, and reference text.
+- **Reference ceilings** — categories such as `Excel/POI` and `Excel format`. These are upstream
+  structural ceilings of the `.xlsx` format or Apache POI 5.5.1. Some are already enforced on
+  relevant public request paths; others remain canonical documentation facts rather than a promise
+  of one universal GridGrind preflight guard.
 
 **Primary references:**
 - Apache POI 5.5.1 SpreadsheetVersion:
@@ -486,8 +490,12 @@ Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 
 When a limit value changes:
 1. Update the registry entry here (the ID stays stable).
-2. Update the constant or literal in the enforcement code (referenced in the entry's **Code** row).
-3. Update all UX strings that surface the value (referenced in the entry's **UX** row).
-4. Update `CHANGELOG.md` under `[Unreleased]`.
+2. For product-enforced entries, update the constant or literal in the enforcement code
+   (referenced in the entry's **Code** row).
+3. For product-enforced entries, update all UX strings that surface the value
+   (referenced in the entry's **UX** row).
+4. For reference ceilings, update the cited upstream source and any impacted explanatory text.
+5. Update `CHANGELOG.md` under `[Unreleased]` when the public behavior or published contract
+   changes.
 
 Upstream POI releases: https://poi.apache.org/changes.html

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -56,7 +56,7 @@ Implemented now:
 
 Deliberately not implemented:
 - any root-build dependency on Jazzer
-- any GitHub CI wiring for Jazzer
+- any GitHub CI wiring for active Jazzer fuzzing
 - any committed local corpus files
 - any committed libFuzzer dictionary files
 - any `.xls`, `.xlsm`, macro, encryption, or signing fuzzing
@@ -71,7 +71,8 @@ GridGrind uses Jazzer as a separate, local-only fuzzing layer.
 
 The non-negotiable decisions are:
 - `jazzer/` is a nested build, not a root subproject.
-- Root `./gradlew check`, root coverage, and GitHub CI stay independent of Jazzer.
+- Root `./gradlew check` and root coverage stay independent of Jazzer, while GitHub CI runs the
+  root `./check.sh` deterministic whole-repo gate.
 - Root `./check.sh` is the supported local orchestrator for sequential root-plus-nested
   verification.
 - Root project-file formatting excludes local-only instruction and scratch areas,
@@ -291,9 +292,9 @@ Tree rules:
 ## Build Model
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")`, so the nested build consumes the live
-local `engine` and `protocol` modules without publishing snapshots. It also imports the shared root
-version catalog from `../gradle/libs.versions.toml` and resolves `gridgrind.*` plugins from the
-shared included build logic under `../gradle/build-logic`.
+local `engine`, `contract`, and `executor` modules without publishing snapshots. It also imports
+the shared root version catalog from `../gradle/libs.versions.toml` and resolves `gridgrind.*`
+plugins from the shared included build logic under `../gradle/build-logic`.
 
 `jazzer/build.gradle.kts` is intentionally thin and now delegates its behavior to the
 `gridgrind.jazzer-conventions` plugin. The nested build still provides:
@@ -461,7 +462,7 @@ Telemetry semantics:
 
 Jazzer/JUnit:
 - Jazzer 0.30.0 publishes JUnit integration in "JUnit 5" terminology
-- the nested build pins JUnit 6 explicitly and works with Gradle 9.4.1 in practice
+- the nested build pins JUnit 6 explicitly and works with Gradle 9.5.0-rc-4 in practice
 
 Structured replay:
 - replay for the structured harnesses uses Jazzer's internal

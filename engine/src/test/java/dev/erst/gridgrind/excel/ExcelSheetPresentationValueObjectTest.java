@@ -39,14 +39,14 @@ class ExcelSheetPresentationValueObjectTest {
     ExcelSheetPresentation presentation =
         new ExcelSheetPresentation(
             new ExcelSheetDisplay(false, false, false, true, true),
-            new ExcelColor("#112233"),
+            ExcelColor.rgb("#112233"),
             new ExcelSheetOutlineSummary(false, false),
             new ExcelSheetDefaults(11, 18.5d),
             List.of(ignoredError));
     ExcelSheetPresentationSnapshot snapshot =
         new ExcelSheetPresentationSnapshot(
             presentation.display(),
-            new ExcelColorSnapshot("#112233"),
+            ExcelColorSnapshot.rgb("#112233"),
             presentation.outlineSummary(),
             presentation.sheetDefaults(),
             presentation.ignoredErrors());

@@ -577,33 +577,33 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             "ApprovalSignature",
             anchor,
             null,
-            null,
-            null,
-            null,
-            null,
-            "Please sign\nbefore release",
-            null,
-            null);
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.of("Please sign\nbefore release"),
+            java.util.Optional.empty(),
+            java.util.Optional.empty());
     SignatureLineInput signerOnly =
         new SignatureLineInput(
             "SignerOnly",
             anchor,
             false,
-            "Review before signing.",
-            "Ada Lovelace",
-            null,
-            null,
-            null,
-            "invalid",
-            null);
+            java.util.Optional.of("Review before signing."),
+            java.util.Optional.of("Ada Lovelace"),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            java.util.Optional.of("invalid"),
+            java.util.Optional.empty());
     InspectionQuery.ExportCustomXmlMapping export =
         new InspectionQuery.ExportCustomXmlMapping(
             new CustomXmlMappingLocator(1L, null), null, null);
 
     assertTrue(captionOnly.allowComments());
-    assertEquals("Please sign\nbefore release", captionOnly.caption());
+    assertEquals("Please sign\nbefore release", captionOnly.caption().orElseThrow());
     assertFalse(signerOnly.allowComments());
-    assertEquals("Ada Lovelace", signerOnly.suggestedSigner());
+    assertEquals("Ada Lovelace", signerOnly.suggestedSigner().orElseThrow());
     assertFalse(export.validateSchema());
     assertEquals("UTF-8", export.encoding());
 
@@ -614,28 +614,55 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 "TooManyLines",
                 anchor,
                 null,
-                null,
-                null,
-                null,
-                null,
-                "one\ntwo\nthree\nfour",
-                null,
-                null));
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of("one\ntwo\nthree\nfour"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new SignatureLineInput(
-                "MissingSigner", anchor, null, null, null, null, null, null, null, null));
+                "MissingSigner",
+                anchor,
+                null,
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new SignatureLineInput(
-                "BlankCaption", anchor, null, null, "Ada", null, null, " ", null, null));
+                "BlankCaption",
+                anchor,
+                null,
+                java.util.Optional.empty(),
+                java.util.Optional.of("Ada"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of(" "),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new SignatureLineInput(
-                "BlankInvalidStamp", anchor, null, null, "Ada", null, null, null, " ", null));
+                "BlankInvalidStamp",
+                anchor,
+                null,
+                java.util.Optional.empty(),
+                java.util.Optional.of("Ada"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of(" "),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -678,13 +705,13 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 null,
-                null,
-                "Ada Lovelace",
-                null,
-                null,
-                null,
-                null,
-                null));
+                java.util.Optional.empty(),
+                java.util.Optional.of("Ada Lovelace"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -1000,14 +1027,15 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 null,
-                null,
-                null,
-                "Grace Hopper",
-                null,
-                null,
-                null,
-                null)
-            .suggestedSigner2());
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of("Grace Hopper"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty())
+            .suggestedSigner2()
+            .orElseThrow());
     assertEquals(
         "ada@example.com",
         new SignatureLineInput(
@@ -1017,14 +1045,15 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
                 null,
-                null,
-                null,
-                null,
-                "ada@example.com",
-                null,
-                null,
-                null)
-            .suggestedSignerEmail());
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of("ada@example.com"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty())
+            .suggestedSignerEmail()
+            .orElseThrow());
   }
 
   private static List<ChartReport.Axis> surfaceAxes() {

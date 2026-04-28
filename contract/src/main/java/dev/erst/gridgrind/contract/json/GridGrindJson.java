@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GoalPlanReport;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
@@ -45,6 +46,8 @@ public final class GridGrindJson {
   private static final Pattern NULL_FIELD_PROBLEM_PATTERN =
       Pattern.compile("problem: ([A-Za-z0-9]+) must not be null", Pattern.CASE_INSENSITIVE);
   private static final JsonMapper JSON_MAPPER = buildMapper(unlimitedJsonFactory());
+  private static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true);
+  private static final JsonMapper DISCOVERY_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true);
   private static final JsonMapper REQUEST_JSON_MAPPER = buildMapper(requestJsonFactory());
 
   private GridGrindJson() {}
@@ -194,44 +197,44 @@ public final class GridGrindJson {
   /** Serializes a request to bytes. */
   public static byte[] writeRequestBytes(WorkbookPlan request) throws IOException {
     Objects.requireNonNull(request, "request must not be null");
-    return writeBytes(request);
+    return writeWireBytes(request);
   }
 
   /** Serializes a response to bytes. */
   public static byte[] writeResponseBytes(GridGrindResponse response) throws IOException {
     Objects.requireNonNull(response, "response must not be null");
-    return writeBytes(response);
+    return writeWireBytes(response);
   }
 
   /** Serializes a protocol catalog to bytes. */
   public static byte[] writeProtocolCatalogBytes(Catalog catalog) throws IOException {
     Objects.requireNonNull(catalog, "catalog must not be null");
-    return writeBytes(catalog);
+    return writeDiscoveryBytes(catalog);
   }
 
   /** Serializes a task catalog to bytes. */
   public static byte[] writeTaskCatalogBytes(TaskCatalog catalog) throws IOException {
     Objects.requireNonNull(catalog, "catalog must not be null");
-    return writeBytes(catalog);
+    return writeDiscoveryBytes(catalog);
   }
 
   /** Serializes a task plan template to bytes. */
   public static byte[] writeTaskPlanTemplateBytes(TaskPlanTemplate template) throws IOException {
     Objects.requireNonNull(template, "template must not be null");
-    return writeBytes(template);
+    return writeDiscoveryBytes(template);
   }
 
   /** Serializes a request doctor report to bytes. */
   public static byte[] writeRequestDoctorReportBytes(RequestDoctorReport report)
       throws IOException {
     Objects.requireNonNull(report, "report must not be null");
-    return writeBytes(report);
+    return writeDiscoveryBytes(report);
   }
 
   /** Serializes a goal plan report to bytes. */
   public static byte[] writeGoalPlanReportBytes(GoalPlanReport report) throws IOException {
     Objects.requireNonNull(report, "report must not be null");
-    return writeBytes(report);
+    return writeDiscoveryBytes(report);
   }
 
   /** Writes a request to an output stream without closing the caller-owned stream. */
@@ -239,7 +242,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(request, "request must not be null");
-    JSON_MAPPER.writeValue(outputStream, request);
+    WIRE_JSON_MAPPER.writeValue(outputStream, request);
   }
 
   /** Writes a response to an output stream without closing the caller-owned stream. */
@@ -247,7 +250,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(response, "response must not be null");
-    JSON_MAPPER.writeValue(outputStream, response);
+    WIRE_JSON_MAPPER.writeValue(outputStream, response);
   }
 
   /** Writes a protocol catalog to an output stream without closing the caller-owned stream. */
@@ -255,7 +258,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(catalog, "catalog must not be null");
-    JSON_MAPPER.writeValue(outputStream, catalog);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, catalog);
   }
 
   /** Writes a task catalog to an output stream without closing the caller-owned stream. */
@@ -263,7 +266,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(catalog, "catalog must not be null");
-    JSON_MAPPER.writeValue(outputStream, catalog);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, catalog);
   }
 
   /** Writes a task plan template to an output stream without closing the caller-owned stream. */
@@ -271,7 +274,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(template, "template must not be null");
-    JSON_MAPPER.writeValue(outputStream, template);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, template);
   }
 
   /** Writes a request doctor report to an output stream without closing the caller-owned stream. */
@@ -279,7 +282,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(report, "report must not be null");
-    JSON_MAPPER.writeValue(outputStream, report);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, report);
   }
 
   /** Writes a goal plan report to an output stream without closing the caller-owned stream. */
@@ -287,7 +290,7 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(report, "report must not be null");
-    JSON_MAPPER.writeValue(outputStream, report);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, report);
   }
 
   /**
@@ -296,7 +299,7 @@ public final class GridGrindJson {
   public static void writeTypeEntry(OutputStream outputStream, TypeEntry entry) throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(entry, "entry must not be null");
-    JSON_MAPPER.writeValue(outputStream, entry);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, entry);
   }
 
   /** Writes one protocol-catalog lookup value to an output stream without closing it. */
@@ -304,14 +307,14 @@ public final class GridGrindJson {
       throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(value, "value must not be null");
-    JSON_MAPPER.writeValue(outputStream, value);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, value);
   }
 
   /** Writes a single task entry to an output stream without closing the caller-owned stream. */
   public static void writeTaskEntry(OutputStream outputStream, TaskEntry entry) throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(entry, "entry must not be null");
-    JSON_MAPPER.writeValue(outputStream, entry);
+    DISCOVERY_JSON_MAPPER.writeValue(outputStream, entry);
   }
 
   /** Returns the maximum accepted JSON request document length in bytes. */
@@ -321,6 +324,7 @@ public final class GridGrindJson {
 
   /** Rejects one request payload length that exceeds the documented transport limit. */
   public static void requireSupportedRequestLength(long lengthBytes) {
+    // LIM-021
     if (lengthBytes > maxRequestDocumentBytes()) {
       throw requestTooLarge(null);
     }
@@ -585,20 +589,33 @@ public final class GridGrindJson {
     return column > 0 ? Optional.of(column) : Optional.empty();
   }
 
-  private static byte[] writeBytes(Object value) throws IOException {
-    return JSON_MAPPER.writeValueAsBytes(value);
+  private static byte[] writeWireBytes(Object value) throws IOException {
+    return WIRE_JSON_MAPPER.writeValueAsBytes(value);
+  }
+
+  private static byte[] writeDiscoveryBytes(Object value) throws IOException {
+    return DISCOVERY_JSON_MAPPER.writeValueAsBytes(value);
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory) {
-    return JsonMapper.builder(jsonFactory)
-        .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
-        .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
-        .enable(SerializationFeature.INDENT_OUTPUT)
-        .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-        .withCoercionConfig(
-            LogicalType.Integer,
-            config -> config.setCoercion(CoercionInputShape.Float, CoercionAction.Fail))
-        .build();
+    return buildMapper(jsonFactory, false);
+  }
+
+  private static JsonMapper buildMapper(JsonFactory jsonFactory, boolean omitNullValues) {
+    JsonMapper.Builder builder =
+        JsonMapper.builder(jsonFactory)
+            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+            .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .withCoercionConfig(
+                LogicalType.Integer,
+                config -> config.setCoercion(CoercionInputShape.Float, CoercionAction.Fail));
+    if (omitNullValues) {
+      builder.changeDefaultPropertyInclusion(
+          value -> value.withValueInclusion(JsonInclude.Include.NON_ABSENT));
+    }
+    return builder.build();
   }
 
   private static JsonFactory unlimitedJsonFactory() {

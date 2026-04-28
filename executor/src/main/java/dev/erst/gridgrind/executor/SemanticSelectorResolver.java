@@ -3,7 +3,6 @@ package dev.erst.gridgrind.executor;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -183,24 +182,26 @@ final class SemanticSelectorResolver {
   }
 
   private boolean matchesKeyCell(ExcelCellSnapshot snapshot, CellInput expectedValue) {
-    GridGrindResponse.CellReport report = InspectionResultCellReportSupport.toCellReport(snapshot);
+    dev.erst.gridgrind.contract.dto.CellReport report =
+        InspectionResultCellReportSupport.toCellReport(snapshot);
     if (expectedValue instanceof CellInput.Blank) {
-      return report instanceof GridGrindResponse.CellReport.BlankReport;
+      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
     }
     if (expectedValue instanceof CellInput.Text text) {
-      return report instanceof GridGrindResponse.CellReport.TextReport textReport
+      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
           && textReport.stringValue().equals(inlineText(text.source(), "table row key TEXT"));
     }
     if (expectedValue instanceof CellInput.Numeric numeric) {
-      return report instanceof GridGrindResponse.CellReport.NumberReport numberReport
+      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
           && Double.compare(numberReport.numberValue(), numeric.number()) == 0;
     }
     if (expectedValue instanceof CellInput.BooleanValue booleanValue) {
-      return report instanceof GridGrindResponse.CellReport.BooleanReport booleanReport
+      return report
+              instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
           && booleanReport.booleanValue().equals(booleanValue.bool());
     }
     CellInput.Formula formula = (CellInput.Formula) expectedValue;
-    return report instanceof GridGrindResponse.CellReport.FormulaReport formulaReport
+    return report instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport
         && formulaReport.formula().equals(inlineText(formula.source(), "table row key FORMULA"));
   }
 

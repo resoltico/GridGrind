@@ -11,6 +11,7 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.JacocoReportsContainer
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.register
 
@@ -37,24 +38,24 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
             configure<SpotlessExtension> {
                 lineEndings = LineEnding.UNIX
-                format("projectFiles") {
-                    target(*projectFileTargets().toTypedArray())
-                    trimTrailingWhitespace()
-                    endWithNewline()
+                format("projectFiles") { formatExtension ->
+                    formatExtension.target(*projectFileTargets().toTypedArray())
+                    formatExtension.trimTrailingWhitespace()
+                    formatExtension.endWithNewline()
                 }
             }
 
             val verifyExplicitImports =
-                tasks.register("verifyExplicitImports") {
-                    group = "verification"
-                    description =
+                tasks.register("verifyExplicitImports") { verifyTask ->
+                    verifyTask.group = "verification"
+                    verifyTask.description =
                         "Fails when handwritten production Java/Kotlin sources use wildcard imports."
 
                     val rootDirectory = layout.projectDirectory.asFile
                     val sourceRoots = explicitImportSourceRoots()
-                    inputs.files(sourceRoots)
+                    verifyTask.inputs.files(sourceRoots)
 
-                    doLast {
+                    verifyTask.doLast {
                         val violations =
                             buildList {
                                 sourceRoots.forEach { sourceRoot ->
@@ -90,64 +91,68 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     }
                 }
 
-            tasks.named("check") {
-                dependsOn("spotlessCheck")
-                dependsOn(verifyExplicitImports)
+            tasks.named("check") { checkTask ->
+                checkTask.dependsOn("spotlessCheck")
+                checkTask.dependsOn(verifyExplicitImports)
             }
 
             val jacocoAggregatedReport =
                 tasks.register<JacocoReport>("jacocoAggregatedReport") {
-                group = "verification"
-                description = "Aggregates JaCoCo coverage reports from all modules into a single report."
+                    group = "verification"
+                    description = "Aggregates JaCoCo coverage reports from all modules into a single report."
 
-                executionData.from(
-                    provider {
-                        coverageSubprojects().flatMap { subproject ->
-                            subproject.tasks.withType(Test::class.java).map { testTask ->
-                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
+                    executionData.from(
+                        provider {
+                            coverageSubprojects().flatMap { subproject ->
+                                subproject.tasks.withType(Test::class.java).map { testTask ->
+                                    testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
+                                }
                             }
-                        }
-                    },
-                )
-                sourceDirectories.from(
-                    provider {
-                        coverageSubprojects().map { subproject ->
-                            subproject.layout.projectDirectory.dir("src/main/java").asFile
-                        }
-                    },
-                )
-                classDirectories.from(
-                    provider {
-                        coverageSubprojects().map { subproject ->
-                            subproject.fileTree(
-                                subproject.layout.buildDirectory.dir("classes/java/main").get().asFile,
-                            ) {
-                                exclude("**/module-info.class")
+                        },
+                    )
+                    sourceDirectories.from(
+                        provider {
+                            coverageSubprojects().map { subproject ->
+                                subproject.layout.projectDirectory.dir("src/main/java").asFile
                             }
-                        }
-                    },
-                )
+                        },
+                    )
+                    classDirectories.from(
+                        provider {
+                            coverageSubprojects().map { subproject ->
+                                subproject.fileTree(
+                                    subproject.layout.buildDirectory.dir("classes/java/main").get().asFile,
+                                ) { patternFilterable ->
+                                    patternFilterable.exclude("**/module-info.class")
+                                }
+                            }
+                        },
+                    )
 
-                reports {
-                    xml.required.set(true)
-                    xml.outputLocation.set(layout.buildDirectory.file("reports/jacoco/aggregated/report.xml"))
-                    html.required.set(true)
-                    html.outputLocation.set(layout.buildDirectory.dir("reports/jacoco/aggregated/html"))
+                    reports { reports: JacocoReportsContainer ->
+                        reports.xml.required.set(true)
+                        reports.xml.outputLocation.set(
+                            layout.buildDirectory.file("reports/jacoco/aggregated/report.xml"),
+                        )
+                        reports.html.required.set(true)
+                        reports.html.outputLocation.set(
+                            layout.buildDirectory.dir("reports/jacoco/aggregated/html"),
+                        )
+                    }
                 }
-            }
 
             val coverage =
-                tasks.register("coverage") {
-                group = "verification"
-                description =
-                    "Runs tests, enforces coverage thresholds, and generates per-module and aggregated coverage reports."
-                dependsOn(jacocoAggregatedReport)
-            }
+                tasks.register("coverage") { coverageTask ->
+                    coverageTask.group = "verification"
+                    coverageTask.description =
+                        "Runs tests, enforces coverage thresholds, and generates per-module and aggregated coverage reports."
+                    coverageTask.dependsOn(jacocoAggregatedReport)
+                }
 
-            tasks.register("parity") {
-                group = "verification"
-                description = "Runs the dedicated Apache POI XSSF parity verification suite."
-                dependsOn(":executor:parityTest")
+            tasks.register("parity") { parityTask ->
+                parityTask.group = "verification"
+                parityTask.description = "Runs the dedicated Apache POI XSSF parity verification suite."
+                parityTask.dependsOn(":executor:parityTest")
             }
 
             gradle.projectsEvaluated {
@@ -168,13 +173,15 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                         candidateProject.tasks.toList()
                     }
 
-                jacocoAggregatedReport.configure {
-                    dependsOn(subprojectTestTasks)
-                    mustRunAfter(listOf("spotlessProjectFiles") + subprojectSpotlessTasks + subprojectCoverageReports)
+                jacocoAggregatedReport.configure { report ->
+                    report.dependsOn(subprojectTestTasks)
+                    report.mustRunAfter(
+                        listOf("spotlessProjectFiles") + subprojectSpotlessTasks + subprojectCoverageReports,
+                    )
                 }
 
-                coverage.configure {
-                    dependsOn(subprojectCoverageVerification + subprojectCoverageReports)
+                coverage.configure { coverageTask ->
+                    coverageTask.dependsOn(subprojectCoverageVerification + subprojectCoverageReports)
                 }
 
                 // Keep repository-wide project-file formatting on a stable file tree. The target set spans
@@ -252,8 +259,8 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
     private fun Project.projectFileTree(
         path: String,
         configureTree: org.gradle.api.file.ConfigurableFileTree.() -> Unit,
-    ) = fileTree(layout.projectDirectory.dir(path)) {
-        configureTree()
+    ) = fileTree(layout.projectDirectory.dir(path)) { fileTree ->
+        fileTree.configureTree()
     }
 
     private fun Project.rootFile(path: String): File =

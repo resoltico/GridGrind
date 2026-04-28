@@ -2,38 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/structural_layout_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/structural_layout_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
       "inputBytes" : 6259,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 9,
-      "operationKinds" : {
-        "SET_ROW_HEIGHT" : 1,
-        "SET_CELL" : 1,
-        "SET_COLUMN_WIDTH" : 1,
-        "SET_SHEET_ZOOM" : 1,
-        "SET_PRINT_LAYOUT" : 1,
-        "SET_SHEET_PANE" : 1,
-        "ENSURE_SHEET" : 1,
-        "MERGE_CELLS" : 1,
-        "SET_SHEET_PRESENTATION" : 1
-      },
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 5,
-      "readKinds" : {
-        "GET_PRINT_LAYOUT" : 1,
-        "GET_MERGED_REGIONS" : 1,
-        "GET_CELLS" : 1,
-        "GET_SHEET_LAYOUT" : 1,
-        "GET_WINDOW" : 1
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-03-26T04:15:55.791946Z",

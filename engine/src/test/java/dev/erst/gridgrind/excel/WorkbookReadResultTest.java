@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -230,8 +232,8 @@ class WorkbookReadResultTest {
             false);
     WorkbookAnalysis.AnalysisFinding finding =
         new WorkbookAnalysis.AnalysisFinding(
-            WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
-            WorkbookAnalysis.AnalysisSeverity.WARNING,
+            AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+            AnalysisSeverity.WARNING,
             "Pivot table name is missing",
             "GridGrind assigned a synthetic identifier for readback.",
             new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
@@ -390,7 +392,7 @@ class WorkbookReadResultTest {
             null,
             false,
             false),
-        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
+        ExcelCellFillSnapshot.pattern(ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),

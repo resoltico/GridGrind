@@ -118,8 +118,8 @@ final class ExcelAutofilterController {
     if (targetRange == null) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               "Autofilter range is invalid",
               "Sheet-owned autofilter range could not be parsed.",
               new WorkbookAnalysis.AnalysisLocation.Sheet(sheetName),
@@ -133,8 +133,8 @@ final class ExcelAutofilterController {
     if (ExcelSheetStructureSupport.headerRowMissing(sheet, targetRange)) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
               "Autofilter header row is blank",
               "Sheet-owned autofilter range does not contain a nonblank header row.",
               location,
@@ -154,8 +154,8 @@ final class ExcelAutofilterController {
       evidence.addAll(overlappingTables);
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
               "Sheet autofilter overlaps a table range",
               "Sheet-owned autofilter metadata overlaps one or more table ranges."
                   + " Table-owned filters should be managed by table definitions instead.",

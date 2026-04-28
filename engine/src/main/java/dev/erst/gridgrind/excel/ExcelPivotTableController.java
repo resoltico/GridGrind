@@ -165,8 +165,8 @@ final class ExcelPivotTableController {
       }
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table name is not unique",
               "Multiple pivot tables share the same case-insensitive name, so exact-name selection is ambiguous.",
@@ -181,8 +181,8 @@ final class ExcelPivotTableController {
     if (ExcelPivotTableIdentitySupport.actualName(handle) == null) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
               handle,
               "Pivot table name is missing",
               "The pivot table does not persist a name, so GridGrind assigned a synthetic identifier for readback.",
@@ -193,8 +193,9 @@ final class ExcelPivotTableController {
     if (location == null) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                  .PIVOT_TABLE_UNSUPPORTED_DETAIL,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table location is malformed",
               "The pivot table location range could not be parsed.",
@@ -206,8 +207,9 @@ final class ExcelPivotTableController {
     if (cacheDefinition == null) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                  .PIVOT_TABLE_MISSING_CACHE_DEFINITION,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table is missing its cache definition relation",
               "The pivot table part no longer points at a pivot cache definition.",
@@ -218,8 +220,9 @@ final class ExcelPivotTableController {
     if (cacheRecords(cacheDefinition) == null) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_RECORDS,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                  .PIVOT_TABLE_MISSING_CACHE_RECORDS,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table is missing its cache records relation",
               "The pivot cache definition does not point at pivot cache records.",
@@ -230,8 +233,9 @@ final class ExcelPivotTableController {
     if (workbookPivotCache(workbook, definition.getCacheId()) == null) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_WORKBOOK_CACHE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                  .PIVOT_TABLE_MISSING_WORKBOOK_CACHE,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table cache is not registered in workbook metadata",
               "The pivot table cacheId is missing from workbook.xml pivotCaches.",
@@ -242,8 +246,9 @@ final class ExcelPivotTableController {
     if (snapshot instanceof ExcelPivotTableSnapshot.Unsupported unsupported) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
+                  .PIVOT_TABLE_UNSUPPORTED_DETAIL,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
               handle,
               "Pivot table contains unsupported detail",
               unsupported.detail(),
@@ -255,8 +260,8 @@ final class ExcelPivotTableController {
     } catch (RuntimeException exception) {
       findings.add(
           finding(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE,
+              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
               handle,
               "Pivot table source is broken",
               Objects.requireNonNullElse(
@@ -267,8 +272,8 @@ final class ExcelPivotTableController {
   }
 
   WorkbookAnalysis.AnalysisFinding finding(
-      WorkbookAnalysis.AnalysisFindingCode code,
-      WorkbookAnalysis.AnalysisSeverity severity,
+      dev.erst.gridgrind.excel.foundation.AnalysisFindingCode code,
+      dev.erst.gridgrind.excel.foundation.AnalysisSeverity severity,
       PivotHandle handle,
       String title,
       String message,

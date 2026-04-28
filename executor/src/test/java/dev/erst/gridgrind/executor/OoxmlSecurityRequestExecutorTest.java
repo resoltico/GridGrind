@@ -52,7 +52,9 @@ class OoxmlSecurityRequestExecutorTest {
     assertEquals(List.of(), security.security().signatures());
     assertEquals(
         "Encrypted workbook",
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                cells.cells().getFirst())
             .stringValue());
   }
 
@@ -215,7 +217,9 @@ class OoxmlSecurityRequestExecutorTest {
         security.security().signatures().getFirst().state());
     assertEquals(
         "Secured",
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                cells.cells().getFirst())
             .stringValue());
   }
 

@@ -97,6 +97,7 @@ public final class SelectorJsonSupport {
     return java.util.Set.copyOf(typeIds.values());
   }
 
+  @SuppressWarnings("UnnecessaryAsync")
   static Map<Class<?>, String> buildTypeIds(List<Class<?>> selectorRoots) {
     Map<Class<?>, String> typeIds = new ConcurrentHashMap<>();
     Map<String, Class<?>> typeIdOwners = new ConcurrentHashMap<>();

@@ -49,11 +49,7 @@ public record ExcelCommentSnapshot(
                                     run.font().fontHeight(),
                                     run.font().fontColor() == null
                                         ? null
-                                        : new ExcelColor(
-                                            run.font().fontColor().rgb(),
-                                            run.font().fontColor().theme(),
-                                            run.font().fontColor().indexed(),
-                                            run.font().fontColor().tint()),
+                                        : ExcelColorSupport.copyOf(run.font().fontColor()),
                                     run.font().underline(),
                                     run.font().strikeout())))
                     .toList()),

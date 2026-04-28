@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.catalog;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** JSON-serializable type entry describing one request or nested union variant. */
 public record TypeEntry(
@@ -30,9 +31,9 @@ public record TypeEntry(
     }
   }
 
-  /** Returns the field entry with the given name, or null when this type has no such field. */
-  public FieldEntry field(String name) {
+  /** Returns the field entry with the given name, or empty when this type has no such field. */
+  public Optional<FieldEntry> field(String name) {
     Objects.requireNonNull(name, "name must not be null");
-    return fields.stream().filter(field -> field.name().equals(name)).findFirst().orElse(null);
+    return fields.stream().filter(field -> field.name().equals(name)).findFirst();
   }
 }

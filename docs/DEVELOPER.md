@@ -1,20 +1,23 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
-  keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, contract, executor, authoring-java, cli]
-  questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
+  keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
+  questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
 ---
 
 # Developer Reference
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
-**Prerequisites**: Java 26 active in the current shell as described in [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md). Docker active in the current shell when running `./check.sh`, as codified in [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md). No global Gradle install is required for repo work; use `./gradlew`.
-**Java and workstation setup**: [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
+**Preferred contributor path**: the committed devcontainer in
+[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md).
+**Fallback contributor path**: host-native Java 26 plus Docker Desktop as documented in
+[DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) and [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md).
 
 Companion references:
+- [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md)
 - [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md)
 - [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 - [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
@@ -23,6 +26,21 @@ Companion references:
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
+
+---
+
+## Preferred Contributor Workflow
+
+GridGrind's preferred local contributor workflow is the committed devcontainer:
+
+- keep the repository on the local macOS filesystem
+- open it in VS Code and reopen in the container
+- run Java, Gradle, Jazzer, shell verification, and Docker-backed repo gates from the container
+  terminal
+
+That path keeps the contributor Java stack aligned with CI's Azul Zulu 26 vendor while isolating
+the repository from host-side Java extension daemons and attach probes. Host-native Java 26 work
+remains supported, but the devcontainer is the documented default.
 
 ---
 
@@ -81,8 +99,8 @@ participate in normal local builds, CI, and release verification.
 
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, while `GridGrindProtocolCatalogFieldGroupSupport` owns the large nested/plain field-shape descriptor registry and `GridGrindProtocolCatalogLookupSupport` owns lookup/search behavior.
-- Jazzer request generation is no longer one monolith: `OperationSequenceModel` owns orchestration, `OperationSequenceValueFactory` owns bounded payload/value generation, and `WorkbookInvariantChecks` is split across focused workbook/cell/engine-surface invariant helpers.
-- Build-failing architecture audits protect these boundaries. Contract source must stay on `excel-foundation`, direct `Cell.setCellFormula(...)` calls must stay inside `ExcelFormulaWriteSupport`, POI reflective access must stay inside `PoiPrivateAccessSupport`, and the split hotspot files must stay below their enforced size ceilings.
+- Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
+- Build-failing architecture audits protect these boundaries. Contract source must stay on `excel-foundation`, direct `Cell.setCellFormula(...)` calls must stay inside `ExcelFormulaWriteSupport`, POI reflective access must stay inside `PoiPrivateAccessSupport`, and the split hotspot files must stay below their enforced size ceilings. `PoiPrivateAccessCompatibilityTest` also fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
 
 ## Contract Replacement Mode
 
@@ -98,6 +116,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 
 | Component | Version |
 |:----------|:--------|
+| Contributor devcontainer | pinned glibc base image plus Azul Zulu 26 JDK; see [DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md) |
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
@@ -105,11 +124,10 @@ transport-and-execution ownership. The accepted architecture decision record for
 | JUnit Jupiter | 6.0.3 |
 | Log4j Core | 2.25.3 |
 
-GridGrind's runtime and product-module baseline is Java 26. The only deliberate exception is the
-shared included build logic under `gradle/build-logic`, which still emits JVM 25 bytecode because
-Kotlin `2.3.0` does not yet target JVM 26 directly. That build logic compiles with the Java 26
-toolchain and only lowers the emitted bytecode level, so the repository no longer requires a
-separate Java 25 installation.
+GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
+all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
+Kotlin `2.4.0-Beta2`, emits JVM 26 bytecode directly, and stays aligned with the repository's
+single Java baseline instead of carrying a separate bytecode-level footnote.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
 `com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream
@@ -119,21 +137,23 @@ Jackson design, not a GridGrind version-skew bug.
 
 ## Commands
 
-`./gradlew check` remains the root-project CI gate: Spotless formatting, explicit-import
-verification, Error Prone, PMD, tests, and JaCoCo coverage verification for `engine`, `contract`,
-`executor`, `authoring-java`, and `cli`. `./check.sh` is the local
-full-stack gate: root `check`
-plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, architecture-split shell regressions,
-packaged-JAR CLI contract verification, release-surface shell checks, and a Docker smoke test
-that runs the image from a non-default working directory with weird request/response/save paths
-while also asserting the published help/version/response contract semantically. `check.sh`
+`./gradlew check` remains the root-project code-quality gate: Spotless formatting,
+explicit-import verification, Error Prone, PMD, tests, and JaCoCo coverage verification for
+`engine`, `contract`, `executor`, `authoring-java`, and `cli`. `./check.sh` is the supported
+whole-repo deterministic gate: root `check` plus `coverage`, nested Jazzer `check`,
+`:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
+release-surface shell checks, and a Docker smoke test that runs the image from a non-default
+working directory with weird request/response/save paths while also asserting the published
+help/version/response contract semantically. `check.sh`
 intentionally lives in the repository root as the canonical contributor entrypoint, while
 `scripts/` contains helper scripts invoked by the root gate and GitHub workflows. Both should be
 clean before a release-quality change is considered done. When Stage 1 reaches long-running Gradle
 `Test` tasks, the shared test conventions emit
 `[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
 so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
-hang.
+hang. The fixed five-stage inventory and the Stage 4 shell-regression list are canonically owned
+by `scripts/check-stage-contract.sh`, so root-gate usage text and execution wiring stay aligned as
+release-surface shell coverage evolves.
 
 Use `./gradlew`, not path-global `gradle`. GridGrind's CLI, fat JAR, release flow, and
 `./check.sh` all depend on the ambient shell `java`, so the local shell must resolve Java 26 from
@@ -141,11 +161,18 @@ a real full JDK. Keep the repository on the local filesystem when you run the fu
 loop; mounted external volumes are outside the supported setup because Gradle project-cache and
 JaCoCo file locking can fail there on macOS. If you edit from a mounted volume, run the heavy
 build/test loop from a local-disk worktree or disposable mirror instead. `./check.sh` now fails
-fast if the shell runtime is wrong.
+fast if the shell runtime is wrong. The same root gate also forces `--no-daemon`, isolates
+`GRADLE_USER_HOME` to a repo-scoped path under `tmp/gradle-user-home` by default, and shares one
+repo-wide verification lock with `scripts/validate-devcontainer.sh`, `scripts/docker-smoke.sh`,
+and `jazzer/bin/*` so top-level verification entrypoints cannot overlap accidentally.
 Docker smoke and release verification should likewise stay independent from personal Docker login
 state by using an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine,
 and local Docker verification now requires `docker buildx` because Stage 5 builds through
 `docker buildx build --load` instead of Docker's legacy builder path.
+The committed contributor devcontainer is validated separately through
+`./scripts/validate-devcontainer.sh`, which builds the contributor image, checks its pinned Java
+and tooling surface, and guards the container-editor routing contract in
+`.devcontainer/devcontainer.json`.
 
 ```bash
 # Run the local full-stack gate
@@ -172,6 +199,7 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 ./gradlew :cli:run --args="--print-task-plan DASHBOARD"
 ./gradlew :cli:run --args='--print-goal-plan "monthly sales dashboard with charts"'
 ./scripts/docker-smoke.sh
+./scripts/validate-devcontainer.sh
 ```
 
 The protocol catalog is generated from the contract record signatures. If you change request
@@ -206,8 +234,9 @@ example request set instead of the emitted template itself.
 
 Release automation is split across three workflows:
 
-- `CI` runs the root-project `./gradlew check` gate and a separate Docker smoke job that builds
-  the fat JAR and verifies the Docker image from a non-default working directory.
+- `CI` runs the supported whole-repo deterministic gate through `./check.sh`, then validates the
+  committed contributor devcontainer surface so the preferred local development environment cannot
+  silently drift away from the documented contract.
 - `Release` builds the fat JAR, black-box verifies the packaged CLI discovery surface, publishes
   the GitHub Release idempotently when a `v*` tag is pushed, and verifies that the published
   release object and `gridgrind.jar` asset exist.
@@ -323,9 +352,9 @@ The table above applies only to the root product modules. The nested Jazzer buil
 coverage contract because its local-only generator, telemetry, and operator classes are exercised
 primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
 `./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
-its shared Spotless and PMD gates. The extracted `OperationSequenceValueFactory` follows the same
-coverage scope as `OperationSequenceModel`, and direct selector-sweep seam tests still exercise
-both generator layers so the exclusion does not mean "untested".
+its shared Spotless and PMD gates. The entire extracted `OperationSequence*` generator family
+follows the same coverage scope as `OperationSequenceModel`, and direct selector-sweep seam tests
+still exercise those split generator layers so the exclusion does not mean "untested".
 
 Supported `jazzer/bin/*` wrappers are part of that operator contract too. They must remain
 compatible with stock macOS `/bin/bash` 3.2 under `set -u`; do not assume Bash 4+ empty-array

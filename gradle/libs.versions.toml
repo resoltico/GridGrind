@@ -1,4 +1,5 @@
 [versions]
+kotlin = "2.4.0-Beta2"
 junit-jupiter = "6.0.3"
 junit-platform-launcher = "6.0.3"
 junit-bom = "6.0.3"
@@ -15,7 +16,7 @@ errorprone = "2.49.0"
 errorprone-plugin = "5.1.0"
 google-java-format = "1.35.0"
 jacoco = "0.8.14"
-pmd = "7.23.0"
+pmd = "7.24.0"
 shadow = "9.4.0"
 spotless = "8.4.0"
 
@@ -41,5 +42,6 @@ xmlsec = { module = "org.apache.santuario:xmlsec", version.ref = "xmlsec" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }

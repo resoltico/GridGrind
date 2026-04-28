@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
@@ -181,8 +179,8 @@ final class InspectionResultAnalysisReportSupport {
   private static GridGrindResponse.AnalysisFindingReport toAnalysisFindingReport(
       WorkbookAnalysis.AnalysisFinding finding) {
     return new GridGrindResponse.AnalysisFindingReport(
-        toAnalysisFindingCode(finding.code()),
-        toAnalysisSeverity(finding.severity()),
+        finding.code(),
+        finding.severity(),
         finding.title(),
         finding.message(),
         toAnalysisLocationReport(finding.location()),
@@ -205,14 +203,5 @@ final class InspectionResultAnalysisReportSupport {
               namedRange.name(),
               InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(namedRange.scope()));
     };
-  }
-
-  private static AnalysisFindingCode toAnalysisFindingCode(
-      WorkbookAnalysis.AnalysisFindingCode code) {
-    return AnalysisFindingCode.valueOf(code.name());
-  }
-
-  private static AnalysisSeverity toAnalysisSeverity(WorkbookAnalysis.AnalysisSeverity severity) {
-    return AnalysisSeverity.valueOf(severity.name());
   }
 }

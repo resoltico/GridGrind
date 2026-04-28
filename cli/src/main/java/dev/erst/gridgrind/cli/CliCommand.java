@@ -33,15 +33,27 @@ sealed interface CliCommand {
   /** Requests that one authored request be linted and summarized without execution. */
   record DoctorRequest(Path requestPath, Path responsePath) implements CliCommand {}
 
+  /** Requests that the machine-readable protocol catalog be emitted as the primary output. */
+  sealed interface PrintProtocolCatalog extends CliCommand
+      permits PrintProtocolCatalogAll, PrintProtocolCatalogLookup, PrintProtocolCatalogSearch {
+    /** Optional output path for the primary command payload. */
+    Path responsePath();
+  }
+
+  /** Requests that the full protocol catalog be emitted. */
+  record PrintProtocolCatalogAll(Path responsePath) implements PrintProtocolCatalog {}
+
   /**
-   * Requests that the machine-readable protocol catalog be emitted as the primary output.
+   * Requests that one uniquely matching catalog entry or type group be emitted.
    *
-   * <p>When {@code operationFilter} is non-null, only the uniquely matching entry is printed.
-   * Duplicate ids must be qualified as {@code <group>:<id>}. When {@code searchQuery} is non-null,
-   * a ranked discovery report is printed. When both are null, the full catalog is printed.
+   * <p>Duplicate ids must be qualified as {@code <group>:<id>}.
    */
-  record PrintProtocolCatalog(String operationFilter, String searchQuery, Path responsePath)
-      implements CliCommand {}
+  record PrintProtocolCatalogLookup(String operationFilter, Path responsePath)
+      implements PrintProtocolCatalog {}
+
+  /** Requests that a ranked protocol-catalog discovery report be emitted. */
+  record PrintProtocolCatalogSearch(String searchQuery, Path responsePath)
+      implements PrintProtocolCatalog {}
 
   /** Requests protocol execution using stdin/stdout or explicit request/response file paths. */
   record Execute(Path requestPath, Path responsePath) implements CliCommand {}

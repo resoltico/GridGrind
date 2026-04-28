@@ -211,8 +211,14 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(TextSourceInput.class, "textSourceTypes"),
           Map.entry(BinarySourceInput.class, "binarySourceTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"),
+          Map.entry(ColorInput.class, "colorInputTypes"),
+          Map.entry(CellGradientFillInput.class, "cellGradientFillInputTypes"),
+          Map.entry(CellFillInput.class, "cellFillInputTypes"),
           Map.entry(GridGrindResponse.NamedRangeReport.class, "namedRangeReportTypes"),
           Map.entry(GridGrindResponse.SheetProtectionReport.class, "sheetProtectionReportTypes"),
+          Map.entry(CellColorReport.class, "cellColorReportTypes"),
+          Map.entry(CellGradientFillReport.class, "cellGradientFillReportTypes"),
+          Map.entry(CellFillReport.class, "cellFillReportTypes"),
           Map.entry(TableStyleReport.class, "tableStyleReportTypes"),
           Map.entry(PivotTableReport.class, "pivotTableReportTypes"),
           Map.entry(PivotTableReport.Source.class, "pivotTableReportSourceTypes"),
@@ -305,10 +311,7 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(CellStyleInput.class, "cellStyleInputType"),
           Map.entry(CellAlignmentInput.class, "cellAlignmentInputType"),
           Map.entry(CellFontInput.class, "cellFontInputType"),
-          Map.entry(ColorInput.class, "colorInputType"),
           Map.entry(RichTextRunInput.class, "richTextRunInputType"),
-          Map.entry(CellFillInput.class, "cellFillInputType"),
-          Map.entry(CellGradientFillInput.class, "cellGradientFillInputType"),
           Map.entry(CellGradientStopInput.class, "cellGradientStopInputType"),
           Map.entry(CellBorderInput.class, "cellBorderInputType"),
           Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
@@ -348,13 +351,10 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(GridGrindResponse.CellStyleReport.class, "cellStyleReportType"),
           Map.entry(CellAlignmentReport.class, "cellAlignmentReportType"),
           Map.entry(CellFontReport.class, "cellFontReportType"),
-          Map.entry(CellFillReport.class, "cellFillReportType"),
           Map.entry(CellBorderReport.class, "cellBorderReportType"),
           Map.entry(CellBorderSideReport.class, "cellBorderSideReportType"),
           Map.entry(CellProtectionReport.class, "cellProtectionReportType"),
-          Map.entry(CellColorReport.class, "cellColorReportType"),
           Map.entry(FontHeightReport.class, "fontHeightReportType"),
-          Map.entry(CellGradientFillReport.class, "cellGradientFillReportType"),
           Map.entry(CellGradientStopReport.class, "cellGradientStopReportType"),
           Map.entry(TableEntryReport.class, "tableEntryReportType"),
           Map.entry(TableColumnReport.class, "tableColumnReportType"),
@@ -402,13 +402,11 @@ public final class CatalogFieldMetadataSupport {
   public static FieldShape fieldShape(ParameterizedType parameterizedType) {
     Objects.requireNonNull(parameterizedType, "parameterizedType must not be null");
     Type rawType = parameterizedType.getRawType();
+    if (rawType == java.util.Optional.class) {
+      return fieldShape(singleTypeArgument(parameterizedType, "Optional"));
+    }
     if (rawType == java.util.List.class) {
-      Type[] typeArguments = parameterizedType.getActualTypeArguments();
-      if (typeArguments.length != 1) {
-        throw new IllegalStateException(
-            "List field must declare exactly one type argument: " + parameterizedType);
-      }
-      return new FieldShape.ListShape(fieldShape(typeArguments[0]));
+      return new FieldShape.ListShape(fieldShape(singleTypeArgument(parameterizedType, "List")));
     }
     throw new IllegalStateException(
         "Unsupported parameterized catalog field type: " + parameterizedType);
@@ -550,11 +548,24 @@ public final class CatalogFieldMetadataSupport {
   }
 
   private static java.util.List<String> enumValues(Type type) {
+    if (type instanceof ParameterizedType parameterizedType
+        && parameterizedType.getRawType() == java.util.Optional.class) {
+      return enumValues(singleTypeArgument(parameterizedType, "Optional"));
+    }
     if (type instanceof Class<?> classType && classType.isEnum()) {
       return Arrays.stream(classType.getEnumConstants())
           .map(value -> ((Enum<?>) value).name())
           .toList();
     }
     return java.util.List.of();
+  }
+
+  private static Type singleTypeArgument(ParameterizedType parameterizedType, String typeName) {
+    Type[] typeArguments = parameterizedType.getActualTypeArguments();
+    if (typeArguments.length != 1) {
+      throw new IllegalStateException(
+          typeName + " field must declare exactly one type argument: " + parameterizedType);
+    }
+    return typeArguments[0];
   }
 }

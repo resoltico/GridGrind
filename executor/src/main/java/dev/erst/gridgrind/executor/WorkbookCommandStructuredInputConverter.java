@@ -138,18 +138,21 @@ final class WorkbookCommandStructuredInputConverter {
         signatureLine.name(),
         toExcelDrawingAnchor(signatureLine.anchor()),
         signatureLine.allowComments(),
-        signatureLine.signingInstructions(),
-        signatureLine.suggestedSigner(),
-        signatureLine.suggestedSigner2(),
-        signatureLine.suggestedSignerEmail(),
-        signatureLine.caption(),
-        signatureLine.invalidStamp(),
-        signatureLine.plainSignature() == null ? null : signatureLine.plainSignature().format(),
-        signatureLine.plainSignature() == null
+        signatureLine.signingInstructions().orElse(null),
+        signatureLine.suggestedSigner().orElse(null),
+        signatureLine.suggestedSigner2().orElse(null),
+        signatureLine.suggestedSignerEmail().orElse(null),
+        signatureLine.caption().orElse(null),
+        signatureLine.invalidStamp().orElse(null),
+        signatureLine.plainSignature().isEmpty()
+            ? null
+            : signatureLine.plainSignature().orElseThrow().format(),
+        signatureLine.plainSignature().isEmpty()
             ? null
             : new ExcelBinaryData(
                 WorkbookCommandSourceSupport.inlineBinary(
-                    signatureLine.plainSignature().source(), "signature-line plain signature")));
+                    signatureLine.plainSignature().orElseThrow().source(),
+                    "signature-line plain signature")));
   }
 
   static ExcelShapeDefinition toExcelShapeDefinition(ShapeInput shape) {

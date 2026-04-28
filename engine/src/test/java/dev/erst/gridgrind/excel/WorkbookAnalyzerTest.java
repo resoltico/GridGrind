@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -129,8 +131,8 @@ class WorkbookAnalyzerTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION)));
+                      AnalysisFindingCode.FORMULA_ERROR_RESULT,
+                      AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION)));
 
       assertEquals(3, hyperlinkHealth.analysis().checkedHyperlinkCount());
       assertTrue(
@@ -139,9 +141,9 @@ class WorkbookAnalyzerTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
+                      AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+                      AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+                      AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
 
       assertEquals(4, namedRangeHealth.analysis().checkedNamedRangeCount());
       assertTrue(
@@ -150,12 +152,12 @@ class WorkbookAnalyzerTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-                      WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET)));
+                      AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
+                      AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET)));
 
       assertEquals(1, autofilterHealth.analysis().checkedAutofilterCount());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+          AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
           autofilterHealth.analysis().findings().getFirst().code());
 
       assertEquals(
@@ -169,7 +171,7 @@ class WorkbookAnalyzerTest {
 
       assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME),
+          List.of(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME),
           pivotTableHealth.analysis().findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
@@ -183,12 +185,12 @@ class WorkbookAnalyzerTest {
           workbookFindings.analysis().findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH));
+              .contains(AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH));
       assertTrue(
           workbookFindings.analysis().findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
+              .contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
     }
   }
 
@@ -231,7 +233,7 @@ class WorkbookAnalyzerTest {
       assertEquals(1, unresolvedFileHealth.checkedHyperlinkCount());
       assertEquals(1, unresolvedFileHealth.summary().warningCount());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+          AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
           unresolvedFileHealth.findings().getFirst().code());
 
       WorkbookAnalysis.NamedRangeHealth namedRangeHealth =
@@ -300,13 +302,13 @@ class WorkbookAnalyzerTest {
 
       assertEquals(1, hyperlinkHealth.findings().size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+          AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
           hyperlinkHealth.findings().getFirst().code());
       assertTrue(
           workbookFindings.findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET));
+              .contains(AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET));
     }
   }
 
@@ -332,9 +334,7 @@ class WorkbookAnalyzerTest {
     assertTrue(
         findings.stream()
             .allMatch(
-                finding ->
-                    finding.code()
-                        == WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_SCOPE_SHADOWING));
+                finding -> finding.code() == AnalysisFindingCode.NAMED_RANGE_SCOPE_SHADOWING));
   }
 
   @Test
@@ -392,7 +392,7 @@ class WorkbookAnalyzerTest {
       assertEquals(1, analysis.summary().warningCount());
       assertEquals(0, analysis.summary().errorCount());
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET),
+          List.of(AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET),
           analysis.findings().stream().map(WorkbookAnalysis.AnalysisFinding::code).toList());
     }
   }
@@ -421,22 +421,22 @@ class WorkbookAnalyzerTest {
         analyzer.summary(
             List.of(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    AnalysisFindingCode.FORMULA_ERROR_RESULT,
+                    AnalysisSeverity.ERROR,
                     "Error",
                     "Error finding",
                     new WorkbookAnalysis.AnalysisLocation.Workbook(),
                     List.of("1/0")),
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
-                    WorkbookAnalysis.AnalysisSeverity.WARNING,
+                    AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
+                    AnalysisSeverity.WARNING,
                     "Warning",
                     "Warning finding",
                     new WorkbookAnalysis.AnalysisLocation.Sheet("Budget"),
                     List.of("[Book]Sheet!A1")),
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                    WorkbookAnalysis.AnalysisSeverity.INFO,
+                    AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                    AnalysisSeverity.INFO,
                     "Info",
                     "Info finding",
                     new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1"),

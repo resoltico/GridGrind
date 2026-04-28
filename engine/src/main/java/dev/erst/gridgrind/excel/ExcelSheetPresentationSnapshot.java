@@ -23,12 +23,6 @@ public record ExcelSheetPresentationSnapshot(
    */
   public ExcelSheetPresentation toAuthoringPresentation() {
     return new ExcelSheetPresentation(
-        display,
-        tabColor == null
-            ? null
-            : new ExcelColor(tabColor.rgb(), tabColor.theme(), tabColor.indexed(), tabColor.tint()),
-        outlineSummary,
-        sheetDefaults,
-        ignoredErrors);
+        display, ExcelColorSupport.copyOf(tabColor), outlineSummary, sheetDefaults, ignoredErrors);
   }
 }

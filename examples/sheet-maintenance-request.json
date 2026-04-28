@@ -79,9 +79,7 @@
           "text" : "Template owner column"
         },
         "author" : "GridGrind",
-        "visible" : false,
-        "runs" : null,
-        "anchor" : null
+        "visible" : false
       }
     }
   }, {

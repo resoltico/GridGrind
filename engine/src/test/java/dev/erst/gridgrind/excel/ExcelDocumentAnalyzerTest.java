@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -78,7 +80,7 @@ class ExcelDocumentAnalyzerTest {
       assertEquals(1, autofilterHealth.checkedAutofilterCount());
       assertEquals(1, autofilterHealth.summary().warningCount());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
+          AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
           autofilterHealth.findings().getFirst().code());
 
       assertEquals(1, tableHealth.checkedTableCount());
@@ -88,7 +90,7 @@ class ExcelDocumentAnalyzerTest {
           analyzer.autofilterHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
       assertEquals(1, budgetAutofilterHealth.summary().warningCount());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+          AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
           budgetAutofilterHealth.findings().getFirst().code());
     }
   }
@@ -98,9 +100,9 @@ class ExcelDocumentAnalyzerTest {
     WorkbookAnalysis.AnalysisSummary summary =
         ExcelDocumentAnalyzer.summarizeFindings(
             List.of(
-                finding(WorkbookAnalysis.AnalysisSeverity.ERROR, "A1"),
-                finding(WorkbookAnalysis.AnalysisSeverity.WARNING, "A2"),
-                finding(WorkbookAnalysis.AnalysisSeverity.INFO, "A3")));
+                finding(AnalysisSeverity.ERROR, "A1"),
+                finding(AnalysisSeverity.WARNING, "A2"),
+                finding(AnalysisSeverity.INFO, "A3")));
 
     assertEquals(3, summary.totalCount());
     assertEquals(1, summary.errorCount());
@@ -108,10 +110,9 @@ class ExcelDocumentAnalyzerTest {
     assertEquals(1, summary.infoCount());
   }
 
-  private static WorkbookAnalysis.AnalysisFinding finding(
-      WorkbookAnalysis.AnalysisSeverity severity, String range) {
+  private static WorkbookAnalysis.AnalysisFinding finding(AnalysisSeverity severity, String range) {
     return new WorkbookAnalysis.AnalysisFinding(
-        WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
+        AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
         severity,
         "Finding",
         "Detail",

@@ -1,42 +1,77 @@
 package dev.erst.gridgrind.excel;
 
-import java.util.Locale;
-import java.util.Optional;
+import java.util.Objects;
 
 /** Immutable factual workbook color preserving RGB, theme, indexed, and tint semantics. */
-public record ExcelColorSnapshot(String rgb, Integer theme, Integer indexed, Double tint) {
-  public ExcelColorSnapshot {
-    rgb = normalizeRgbHex(rgb).orElse(null);
-    if (theme != null && theme < 0) {
-      throw new IllegalArgumentException("theme must not be negative");
-    }
-    if (indexed != null && indexed < 0) {
-      throw new IllegalArgumentException("indexed must not be negative");
-    }
-    if (tint != null && !Double.isFinite(tint)) {
-      throw new IllegalArgumentException("tint must be finite");
-    }
-    if (rgb == null && theme == null && indexed == null) {
-      throw new IllegalArgumentException(
-          "color snapshot must expose rgb, theme, or indexed semantics");
-    }
-  }
+public sealed interface ExcelColorSnapshot
+    permits ExcelColorSnapshot.Rgb, ExcelColorSnapshot.Theme, ExcelColorSnapshot.Indexed {
+  /** Optional tint adjustment applied to the base color reference. */
+  Double tint();
 
   /** Returns one snapshot carrying only explicit RGB data. */
-  public ExcelColorSnapshot(String rgb) {
-    this(rgb, null, null, null);
+  static Rgb rgb(String rgb) {
+    return new Rgb(rgb, null);
   }
 
-  private static Optional<String> normalizeRgbHex(String rgb) {
-    if (rgb == null) {
-      return Optional.empty();
+  /** Returns one RGB-backed snapshot plus tint metadata. */
+  static Rgb rgb(String rgb, Double tint) {
+    return new Rgb(rgb, tint);
+  }
+
+  /** Returns one theme-backed snapshot with no tint adjustment. */
+  static Theme theme(int theme) {
+    return new Theme(theme, null);
+  }
+
+  /** Returns one theme-backed snapshot plus tint metadata. */
+  static Theme theme(int theme, Double tint) {
+    return new Theme(theme, tint);
+  }
+
+  /** Returns one indexed-palette snapshot with no tint adjustment. */
+  static Indexed indexed(int indexed) {
+    return new Indexed(indexed, null);
+  }
+
+  /** Returns one indexed-palette snapshot plus tint metadata. */
+  static Indexed indexed(int indexed, Double tint) {
+    return new Indexed(indexed, tint);
+  }
+
+  /** RGB-backed workbook color snapshot. */
+  record Rgb(String rgb, Double tint) implements ExcelColorSnapshot {
+    public Rgb {
+      rgb = ExcelRgbColorSupport.requireRgbHex(rgb, "rgb");
+      requireFiniteOrNull(tint, "tint");
     }
-    if (rgb.isBlank()) {
-      throw new IllegalArgumentException("rgb must not be blank");
+  }
+
+  /** Theme-backed workbook color snapshot. */
+  record Theme(Integer theme, Double tint) implements ExcelColorSnapshot {
+    public Theme {
+      requireNonNegative(theme, "theme");
+      requireFiniteOrNull(tint, "tint");
     }
-    if (!rgb.matches("^#[0-9A-Fa-f]{6}$")) {
-      throw new IllegalArgumentException("rgb must match #RRGGBB");
+  }
+
+  /** Indexed-palette workbook color snapshot. */
+  record Indexed(Integer indexed, Double tint) implements ExcelColorSnapshot {
+    public Indexed {
+      requireNonNegative(indexed, "indexed");
+      requireFiniteOrNull(tint, "tint");
     }
-    return Optional.of(rgb.toUpperCase(Locale.ROOT));
+  }
+
+  private static void requireNonNegative(Integer value, String fieldName) {
+    int required = Objects.requireNonNull(value, fieldName + " must not be null");
+    if (required < 0) {
+      throw new IllegalArgumentException(fieldName + " must not be negative");
+    }
+  }
+
+  private static void requireFiniteOrNull(Double value, String fieldName) {
+    if (value != null && !Double.isFinite(value)) {
+      throw new IllegalArgumentException(fieldName + " must be finite");
+    }
   }
 }

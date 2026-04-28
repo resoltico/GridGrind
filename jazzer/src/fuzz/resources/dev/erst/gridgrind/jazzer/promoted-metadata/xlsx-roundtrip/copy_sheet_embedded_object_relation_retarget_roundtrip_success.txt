@@ -5,4 +5,4 @@ Outcome: SUCCESS
 Input Bytes: 68
 Command Count: 8
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=5, SET_COMMENT=1, COPY_SHEET=1, SET_EMBEDDED_OBJECT=1
+Command Kinds: CREATE_SHEET=5, COPY_SHEET=1, SET_EMBEDDED_OBJECT=1, SET_COMMENT=1

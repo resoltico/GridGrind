@@ -1,7 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -373,9 +376,8 @@ class ExcelSheetTest {
       assertEquals(220, styledValue.style().font().fontHeight().twips());
       assertFalse(styledValue.style().font().underline());
       assertFalse(styledValue.style().font().strikeout());
-      assertEquals(
-          new ExcelColorSnapshot(null, null, 8, null), styledValue.style().font().fontColor());
-      assertNull(styledValue.style().fill().foregroundColor());
+      assertEquals(ExcelColorSnapshot.indexed(8), styledValue.style().font().fontColor());
+      assertNull(fillForegroundColor(styledValue.style().fill()));
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().top().style());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().right().style());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().bottom().style());
@@ -397,10 +399,10 @@ class ExcelSheetTest {
       assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().alignment().verticalAlignment());
       assertEquals("Calibri", cleared.style().font().fontName());
       assertEquals(220, cleared.style().font().fontHeight().twips());
-      assertEquals(new ExcelColorSnapshot(null, null, 8, null), cleared.style().font().fontColor());
+      assertEquals(ExcelColorSnapshot.indexed(8), cleared.style().font().fontColor());
       assertFalse(cleared.style().font().underline());
       assertFalse(cleared.style().font().strikeout());
-      assertNull(cleared.style().fill().foregroundColor());
+      assertNull(fillForegroundColor(cleared.style().fill()));
       assertEquals(ExcelBorderStyle.NONE, cleared.style().border().top().style());
       assertEquals(ExcelBorderStyle.NONE, cleared.style().border().right().style());
       assertEquals(ExcelBorderStyle.NONE, cleared.style().border().bottom().style());
@@ -454,10 +456,10 @@ class ExcelSheetTest {
                   false,
                   "Aptos",
                   new ExcelFontHeight(280),
-                  new ExcelColor("#1F4E78"),
+                  ExcelColor.rgb("#1F4E78"),
                   true,
                   false),
-              new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
+              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC")),
               new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
               null));
       sheet.applyStyle(
@@ -482,7 +484,7 @@ class ExcelSheetTest {
       assertEquals(rgb("#1F4E78"), styled.style().font().fontColor());
       assertTrue(styled.style().font().underline());
       assertTrue(styled.style().font().strikeout());
-      assertEquals(rgb("#FFF2CC"), styled.style().fill().foregroundColor());
+      assertEquals(rgb("#FFF2CC"), fillForegroundColor(styled.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, styled.style().border().top().style());
       assertEquals(ExcelBorderStyle.DOUBLE, styled.style().border().right().style());
       assertEquals(ExcelBorderStyle.THIN, styled.style().border().bottom().style());
@@ -624,7 +626,7 @@ class ExcelSheetTest {
       sheet.setPresentation(
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              new ExcelColor("#112233"),
+              ExcelColor.rgb("#112233"),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(11, 18.5d),
               List.of(
@@ -662,7 +664,7 @@ class ExcelSheetTest {
       assertEquals(
           new ExcelSheetDisplay(false, false, false, true, true),
           unfrozenLayout.presentation().display());
-      assertEquals(new ExcelColorSnapshot("#112233"), unfrozenLayout.presentation().tabColor());
+      assertEquals(ExcelColorSnapshot.rgb("#112233"), unfrozenLayout.presentation().tabColor());
       assertEquals(
           new ExcelSheetOutlineSummary(false, false),
           unfrozenLayout.presentation().outlineSummary());
@@ -746,7 +748,7 @@ class ExcelSheetTest {
               null,
               new ExcelCellAlignment(null, ExcelHorizontalAlignment.CENTER, null, null, null),
               new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              new ExcelCellFill(ExcelFillPattern.SOLID, "#AABBCC", null),
+              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#AABBCC")),
               new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
               null));
       sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
@@ -756,7 +758,7 @@ class ExcelSheetTest {
           (ExcelCellSnapshot.TextSnapshot)
               sheet.setCell("A1", ExcelCellValue.text("Quarterly report")).snapshotCell("A1");
       assertEquals("Quarterly report", textSnapshot.stringValue());
-      assertEquals(rgb("#AABBCC"), textSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#AABBCC"), fillForegroundColor(textSnapshot.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().border().top().style());
       assertEquals(
           ExcelHorizontalAlignment.CENTER, textSnapshot.style().alignment().horizontalAlignment());
@@ -770,7 +772,7 @@ class ExcelSheetTest {
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot)
               sheet.setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
-      assertEquals(rgb("#AABBCC"), blankSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#AABBCC"), fillForegroundColor(blankSnapshot.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().border().top().style());
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
@@ -794,7 +796,7 @@ class ExcelSheetTest {
               null,
               new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.TOP, null, null),
               new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              new ExcelCellFill(ExcelFillPattern.SOLID, "#DDEBF7", null),
+              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#DDEBF7")),
               new ExcelBorder(null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null),
               null);
       sheet.applyStyle("A1:B1", style);
@@ -811,7 +813,7 @@ class ExcelSheetTest {
                   .snapshotCell("B1");
 
       assertEquals("yyyy-mm-dd", dateSnapshot.style().numberFormat());
-      assertEquals(rgb("#DDEBF7"), dateSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), fillForegroundColor(dateSnapshot.style().fill()));
       assertTrue(dateSnapshot.style().font().bold());
       assertTrue(dateSnapshot.style().alignment().wrapText());
       assertEquals(
@@ -819,7 +821,7 @@ class ExcelSheetTest {
       assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().border().right().style());
 
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.style().numberFormat());
-      assertEquals(rgb("#DDEBF7"), dateTimeSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), fillForegroundColor(dateTimeSnapshot.style().fill()));
       assertTrue(dateTimeSnapshot.style().font().bold());
       assertTrue(dateTimeSnapshot.style().alignment().wrapText());
       assertEquals(
@@ -849,7 +851,7 @@ class ExcelSheetTest {
                               null,
                               null,
                               null,
-                              new ExcelColor("#FF0000"),
+                              ExcelColor.rgb("#FF0000"),
                               null,
                               null))))));
       sheet.applyStyle(
@@ -862,7 +864,7 @@ class ExcelSheetTest {
                   Boolean.TRUE,
                   "Aptos",
                   new ExcelFontHeight(260),
-                  new ExcelColor("#112233"),
+                  ExcelColor.rgb("#112233"),
                   null,
                   null),
               null,
@@ -913,10 +915,10 @@ class ExcelSheetTest {
                   null,
                   "Aptos",
                   ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
-                  new ExcelColor("#A3A3A3"),
+                  ExcelColor.rgb("#A3A3A3"),
                   null,
                   Boolean.TRUE),
-              new ExcelCellFill(ExcelFillPattern.SOLID, "#CDCDCD", null),
+              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#CDCDCD")),
               new ExcelBorder(
                   new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null),
               null));
@@ -930,13 +932,13 @@ class ExcelSheetTest {
       ExcelCellSnapshot.BlankSnapshot untouchedStyledCell =
           (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
 
-      assertEquals(rgb("#CDCDCD"), firstCell.style().fill().foregroundColor());
+      assertEquals(rgb("#CDCDCD"), fillForegroundColor(firstCell.style().fill()));
       assertEquals(rgb("#A3A3A3"), firstCell.style().font().fontColor());
       assertTrue(firstCell.style().font().strikeout());
       assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().border().top().style());
-      assertEquals(rgb("#CDCDCD"), secondCell.style().fill().foregroundColor());
+      assertEquals(rgb("#CDCDCD"), fillForegroundColor(secondCell.style().fill()));
       assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().border().top().style());
-      assertEquals(rgb("#CDCDCD"), untouchedStyledCell.style().fill().foregroundColor());
+      assertEquals(rgb("#CDCDCD"), fillForegroundColor(untouchedStyledCell.style().fill()));
       assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().border().top().style());
     }
   }
@@ -959,7 +961,7 @@ class ExcelSheetTest {
               "0.00",
               new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
               new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              new ExcelCellFill(ExcelFillPattern.SOLID, "#603A79", null),
+              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#603A79")),
               new ExcelBorder(
                   new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
                   null,
@@ -979,7 +981,7 @@ class ExcelSheetTest {
 
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedFirstCell.style().numberFormat());
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedSecondCell.style().numberFormat());
-      assertEquals(rgb("#603A79"), appendedFirstCell.style().fill().foregroundColor());
+      assertEquals(rgb("#603A79"), fillForegroundColor(appendedFirstCell.style().fill()));
       assertTrue(appendedFirstCell.style().font().bold());
       assertTrue(appendedFirstCell.style().alignment().wrapText());
       assertEquals(
@@ -1590,9 +1592,9 @@ class ExcelSheetTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT)));
+                      AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                      AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                      AnalysisFindingCode.FORMULA_ERROR_RESULT)));
     }
   }
 
@@ -1611,7 +1613,7 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       WorkbookAnalysis.AnalysisFinding finding = findings.getFirst();
-      assertEquals(WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE, finding.code());
+      assertEquals(AnalysisFindingCode.FORMULA_EVALUATION_FAILURE, finding.code());
       assertEquals(List.of("1+1", "IllegalStateException"), finding.evidence());
       assertEquals("Formula evaluation failed: IllegalStateException", finding.message());
     }
@@ -1661,8 +1663,7 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-          findings.getFirst().code());
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
     }
   }
 
@@ -1684,7 +1685,7 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
+          AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
           findings.getFirst().code());
     }
   }
@@ -1723,9 +1724,8 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
-          findings.getFirst().code());
-      assertEquals(WorkbookAnalysis.AnalysisSeverity.INFO, findings.getFirst().severity());
+          AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE, findings.getFirst().code());
+      assertEquals(AnalysisSeverity.INFO, findings.getFirst().severity());
       assertEquals(
           List.of("[Forecast.xlsx]Sheet1!A1", "Forecast.xlsx"), findings.getFirst().evidence());
     }
@@ -1753,8 +1753,7 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-          findings.getFirst().code());
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
       assertEquals(List.of("SUM(A2)", "Rates.xlsx"), findings.getFirst().evidence());
     }
   }
@@ -1778,8 +1777,7 @@ class ExcelSheetTest {
 
       assertEquals(1, findings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-          findings.getFirst().code());
+          AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK, findings.getFirst().code());
       assertEquals(List.of("SUM(A2)", ""), findings.getFirst().evidence());
     }
   }
@@ -1823,8 +1821,8 @@ class ExcelSheetTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
+                      AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+                      AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
       assertTrue(
           findings.stream()
               .noneMatch(
@@ -1845,24 +1843,19 @@ class ExcelSheetTest {
     List<WorkbookAnalysis.AnalysisFinding> malformed =
         ExcelSheet.fileHyperlinkFindings(location, "https://example.com/report", storedWorkbook);
     assertEquals(1, malformed.size());
-    assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
-        malformed.getFirst().code());
+    assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformed.getFirst().code());
 
     List<WorkbookAnalysis.AnalysisFinding> unresolved =
         ExcelSheet.fileHyperlinkFindings(
             location, "reports/q1.xlsx", new WorkbookLocation.UnsavedWorkbook());
     assertEquals(1, unresolved.size());
     assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
-        unresolved.getFirst().code());
+        AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET, unresolved.getFirst().code());
 
     List<WorkbookAnalysis.AnalysisFinding> missing =
         ExcelSheet.fileHyperlinkFindings(location, "reports/q1.xlsx", storedWorkbook);
     assertEquals(1, missing.size());
-    assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
-        missing.getFirst().code());
+    assertEquals(AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET, missing.getFirst().code());
     assertTrue(missing.getFirst().message().contains("workbook directory"));
     assertTrue(
         missing
@@ -1879,16 +1872,14 @@ class ExcelSheetTest {
             location, absoluteMissingTarget, new WorkbookLocation.UnsavedWorkbook());
     assertEquals(1, missingAbsolute.size());
     assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
-        missingAbsolute.getFirst().code());
+        AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET, missingAbsolute.getFirst().code());
     assertFalse(missingAbsolute.getFirst().message().contains("workbook directory"));
 
     List<WorkbookAnalysis.AnalysisFinding> missingAbsoluteStored =
         ExcelSheet.fileHyperlinkFindings(location, absoluteMissingTarget, storedWorkbook);
     assertEquals(1, missingAbsoluteStored.size());
     assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
-        missingAbsoluteStored.getFirst().code());
+        AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET, missingAbsoluteStored.getFirst().code());
     assertFalse(missingAbsoluteStored.getFirst().message().contains("workbook directory"));
     assertFalse(
         missingAbsoluteStored
@@ -1905,16 +1896,12 @@ class ExcelSheetTest {
     List<WorkbookAnalysis.AnalysisFinding> malformedUrl =
         ExcelSheet.externalHyperlinkFindings(location, "example.com/report", "URL", false);
     assertEquals(1, malformedUrl.size());
-    assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
-        malformedUrl.getFirst().code());
+    assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformedUrl.getFirst().code());
 
     List<WorkbookAnalysis.AnalysisFinding> malformedEmail =
         ExcelSheet.externalHyperlinkFindings(location, "mailto:", "EMAIL", false);
     assertEquals(1, malformedEmail.size());
-    assertEquals(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
-        malformedEmail.getFirst().code());
+    assertEquals(AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET, malformedEmail.getFirst().code());
   }
 
   @Test
@@ -1967,7 +1954,7 @@ class ExcelSheetTest {
       WorkbookAnalysis.AnalysisLocation.Cell location =
           new WorkbookAnalysis.AnalysisLocation.Cell("Helpers", "A1");
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+          AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
           sheet
               .hyperlinkTargetFindings(
                   location, HyperlinkType.URL, " ", new WorkbookLocation.UnsavedWorkbook())
@@ -2014,20 +2001,18 @@ class ExcelSheetTest {
       List<WorkbookAnalysis.AnalysisFinding> invalidStructure = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "!A1", invalidStructure);
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+          AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
           invalidStructure.getFirst().code());
 
       List<WorkbookAnalysis.AnalysisFinding> missingSheet = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Missing!A1", missingSheet);
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
-          missingSheet.getFirst().code());
+          AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET, missingSheet.getFirst().code());
 
       List<WorkbookAnalysis.AnalysisFinding> invalidRange = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:", invalidRange);
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
-          invalidRange.getFirst().code());
+          AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET, invalidRange.getFirst().code());
 
       List<WorkbookAnalysis.AnalysisFinding> validRange = new ArrayList<>();
       sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:B2", validRange);
@@ -2160,7 +2145,7 @@ class ExcelSheetTest {
   }
 
   private static ExcelColorSnapshot rgb(String rgb) {
-    return new ExcelColorSnapshot(rgb);
+    return ExcelColorSnapshot.rgb(rgb);
   }
 
   @Test

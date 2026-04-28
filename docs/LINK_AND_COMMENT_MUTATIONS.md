@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: LINK_COMMENT_MUTATIONS
 updated: "2026-04-25"
 route:
@@ -112,8 +112,11 @@ requires the authoritative plain `text` plus `author`, and can also author order
         {
           "font": {
             "bold": true,
-            "fontColorTheme": 4,
-            "fontColorTint": -0.2
+            "fontColor": {
+              "kind": "THEME",
+              "theme": 4,
+              "tint": -0.2
+            }
           },
           "source": {
             "type": "INLINE",
@@ -129,7 +132,10 @@ requires the authoritative plain `text` plus `author`, and can also author order
         {
           "font": {
             "italic": true,
-            "fontColorIndexed": 17
+            "fontColor": {
+              "kind": "INDEXED",
+              "indexed": 17
+            }
           },
           "source": {
             "type": "INLINE",

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -64,7 +63,7 @@ class CalculationPolicyExecutorTest {
         CalculationPolicyExecutor.notRequestedReport(markRecalculateOnOpen());
     assertTrue(report.policy().markRecalculateOnOpen());
     assertEquals(CalculationExecutionStatus.NOT_REQUESTED, report.execution().status());
-    assertNull(report.preflight());
+    assertTrue(report.preflight().isEmpty());
   }
 
   @Test
@@ -75,9 +74,9 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.PreflightOutcome clearCachesOnly =
           CalculationPolicyExecutor.preflight(workbook, clearFormulaCaches());
 
-      assertNull(notRequested.report());
+      assertTrue(notRequested.report().isEmpty());
       assertEquals(0, notRequested.evaluationTargetCount());
-      assertNull(clearCachesOnly.report());
+      assertTrue(clearCachesOnly.report().isEmpty());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
@@ -100,10 +99,10 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.execute(
               workbook, calculateAllAndMarkRecalculateOnOpen(), preflight.evaluationTargetCount());
 
-      assertNull(preflight.failure());
-      assertEquals(CalculationReport.Scope.WORKBOOK, preflight.report().scope());
+      assertTrue(preflight.failure().isEmpty());
+      assertEquals(CalculationReport.Scope.WORKBOOK, preflight.report().orElseThrow().scope());
       assertEquals(2, preflight.evaluationTargetCount());
-      assertNull(execution.failure());
+      assertTrue(execution.failure().isEmpty());
       assertEquals(CalculationExecutionStatus.SUCCEEDED, execution.report().status());
       assertEquals(2, execution.report().evaluatedFormulaCount());
       assertTrue(execution.report().markRecalculateOnOpenApplied());
@@ -122,8 +121,8 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.ExecutionOutcome execution =
           CalculationPolicyExecutor.execute(workbook, targeted, preflight.evaluationTargetCount());
 
-      assertNull(preflight.failure());
-      assertEquals(CalculationReport.Scope.TARGETS, preflight.report().scope());
+      assertTrue(preflight.failure().isEmpty());
+      assertEquals(CalculationReport.Scope.TARGETS, preflight.report().orElseThrow().scope());
       assertEquals(1, execution.report().evaluatedFormulaCount());
       assertFalse(execution.report().markRecalculateOnOpenApplied());
     }
@@ -172,10 +171,10 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
-      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().code());
-      assertEquals(1, preflight.report().summary().evaluableNowCount());
-      assertEquals(1, preflight.report().summary().unevaluableNowCount());
-      assertEquals(1, preflight.report().summary().unparseableByPoiCount());
+      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().orElseThrow().code());
+      assertEquals(1, preflight.report().orElseThrow().summary().evaluableNowCount());
+      assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
+      assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(createInvalidFormulaWorkbook())) {
@@ -185,22 +184,26 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.execute(
               workbook, calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1")), 1);
 
-      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().code());
-      assertEquals(CalculationPolicyExecutor.Phase.PREFLIGHT, preflight.failure().phase());
-      assertEquals("Budget", preflight.failure().sheetName());
-      assertEquals("B1", preflight.failure().address());
-      assertEquals("SUM(", preflight.failure().formula());
-      assertEquals(1, preflight.report().summary().unparseableByPoiCount());
+      assertEquals(GridGrindProblemCode.INVALID_FORMULA, preflight.failure().orElseThrow().code());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.PREFLIGHT, preflight.failure().orElseThrow().phase());
+      assertEquals("Budget", preflight.failure().orElseThrow().sheetName());
+      assertEquals("B1", preflight.failure().orElseThrow().address());
+      assertEquals("SUM(", preflight.failure().orElseThrow().formula());
+      assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
       assertEquals(CalculationExecutionStatus.FAILED, targetedExecution.report().status());
-      assertEquals(CalculationPolicyExecutor.Phase.EXECUTION, targetedExecution.failure().phase());
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION,
+          targetedExecution.failure().orElseThrow().phase());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(createMissingExternalWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
-      assertEquals(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK, preflight.failure().code());
-      assertEquals(1, preflight.report().summary().unevaluableNowCount());
+      assertEquals(
+          GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK, preflight.failure().orElseThrow().code());
+      assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(createUdfFormulaWorkbook())) {
@@ -208,8 +211,9 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
       assertEquals(
-          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, preflight.failure().code());
-      assertTrue(preflight.failure().message().contains("DOUBLE"));
+          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION,
+          preflight.failure().orElseThrow().code());
+      assertTrue(preflight.failure().orElseThrow().message().contains("DOUBLE"));
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(createUnsupportedFormulaWorkbook())) {
@@ -218,11 +222,13 @@ class CalculationPolicyExecutorTest {
       CalculationPolicyExecutor.ExecutionOutcome execution =
           CalculationPolicyExecutor.execute(workbook, calculateAll(), 1);
 
-      assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA, preflight.failure().code());
+      assertEquals(
+          GridGrindProblemCode.UNSUPPORTED_FORMULA, preflight.failure().orElseThrow().code());
       assertEquals(CalculationExecutionStatus.FAILED, execution.report().status());
-      assertEquals(CalculationPolicyExecutor.Phase.EXECUTION, execution.failure().phase());
-      assertNotNull(execution.failure().exception());
-      assertTrue(execution.report().message().contains("APP.TITLE"));
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION, execution.failure().orElseThrow().phase());
+      assertNotNull(execution.failure().orElseThrow().exception());
+      assertTrue(execution.report().message().orElseThrow().contains("APP.TITLE"));
     }
 
     try (ExcelWorkbook workbook = failingClearCachesWorkbook()) {
@@ -230,8 +236,11 @@ class CalculationPolicyExecutorTest {
           CalculationPolicyExecutor.execute(workbook, clearFormulaCaches(), 0);
 
       assertEquals(CalculationExecutionStatus.FAILED, clearCachesFailure.report().status());
-      assertEquals(CalculationPolicyExecutor.Phase.EXECUTION, clearCachesFailure.failure().phase());
-      assertTrue(clearCachesFailure.report().message().contains("clear caches failed"));
+      assertEquals(
+          CalculationPolicyExecutor.Phase.EXECUTION,
+          clearCachesFailure.failure().orElseThrow().phase());
+      assertTrue(
+          clearCachesFailure.report().message().orElseThrow().contains("clear caches failed"));
     }
 
     assertEquals(

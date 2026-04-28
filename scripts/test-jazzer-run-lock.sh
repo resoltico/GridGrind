@@ -76,5 +76,7 @@ wait "${owner_pid}" 2>/dev/null || true
 [[ ${contender_status} -ne 0 ]] || die "concurrent contender unexpectedly acquired the Jazzer run lock during startup"
 printf '%s' "${contender_output}" | grep -F "already running with PID ${owner_pid}" >/dev/null || die \
     "concurrent contender did not report the active owner after waiting for pid publication"
+printf '%s' "${contender_output}" | grep -F 'GridGrind verification command' >/dev/null || die \
+    "concurrent contender did not report the repo-wide verification lock scope"
 
 printf 'jazzer-run-lock regression: success\n'

@@ -274,11 +274,13 @@ final class ExcelSheetCopySupport {
               colorScaleRule.thresholds().stream()
                   .map(ExcelSheetCopySupport::copyableThreshold)
                   .toList(),
-              colorScaleRule.colors().stream().map(ExcelColor::new).toList(),
+              colorScaleRule.colors().stream()
+                  .map(color -> (ExcelColor) ExcelColor.rgb(color))
+                  .toList(),
               colorScaleRule.stopIfTrue());
       case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
           new ExcelConditionalFormattingRule.DataBarRule(
-              new ExcelColor(dataBarRule.color()),
+              ExcelColor.rgb(dataBarRule.color()),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),
@@ -392,12 +394,7 @@ final class ExcelSheetCopySupport {
               (int) Math.round(top10.value()), top10.top(), top10.percent());
       case ExcelAutofilterFilterCriterionSnapshot.Color color ->
           new ExcelAutofilterFilterCriterion.Color(
-              color.cellColor(),
-              new ExcelColor(
-                  color.color().rgb(),
-                  color.color().theme(),
-                  color.color().indexed(),
-                  color.color().tint()));
+              color.cellColor(), ExcelColorSupport.copyOf(color.color()));
       case ExcelAutofilterFilterCriterionSnapshot.Icon icon ->
           new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
     };
@@ -424,13 +421,7 @@ final class ExcelSheetCopySupport {
         condition.range(),
         condition.descending(),
         condition.sortBy(),
-        condition.color() == null
-            ? null
-            : new ExcelColor(
-                condition.color().rgb(),
-                condition.color().theme(),
-                condition.color().indexed(),
-                condition.color().tint()),
+        ExcelColorSupport.copyOf(condition.color()),
         condition.iconId());
   }
 

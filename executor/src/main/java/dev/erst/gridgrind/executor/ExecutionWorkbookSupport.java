@@ -40,7 +40,8 @@ final class ExecutionWorkbookSupport {
               ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory),
               FormulaEnvironmentConverter.toExcelFormulaEnvironment(
                   formulaEnvironment, workingDirectory),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(existingFile.security()));
+              OoxmlPackageSecurityConverter.toExcelOpenOptions(
+                  existingFile.security().orElse(null)));
     };
   }
 

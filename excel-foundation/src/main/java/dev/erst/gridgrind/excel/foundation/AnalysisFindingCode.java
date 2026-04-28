@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.contract.dto;
+package dev.erst.gridgrind.excel.foundation;
 
 /** Stable machine-readable code for one derived workbook finding. */
 public enum AnalysisFindingCode {

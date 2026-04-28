@@ -1,73 +1,12 @@
 #!/usr/bin/env bash
 
-# Shared single-run lock support for Jazzer launcher scripts. Expects the caller to define:
+# Shared repo-verification lock adapter for Jazzer launcher scripts. Expects the caller to define:
 #   lock_dir
 #   pid_file
 
-lock_initialization_attempts=40
-lock_initialization_sleep_seconds=0.05
+run_lock_script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+run_lock_repo_root="$(cd -P -- "${run_lock_script_dir}/../.." && pwd)"
+repo_lock_support="${run_lock_repo_root}/scripts/repo-verification-lock-support.sh"
 
-write_lock_pid() {
-  printf '%s\n' "$$" > "${pid_file}"
-}
-
-read_lock_pid() {
-  if [[ -f "${pid_file}" ]]; then
-    <"${pid_file}" tr -d '[:space:]'
-  fi
-}
-
-reclaim_stale_lock() {
-  rm -rf "${lock_dir}"
-  mkdir "${lock_dir}"
-  write_lock_pid
-}
-
-acquire_lock() {
-  local attempt=0
-  local lock_pid=''
-
-  if mkdir "${lock_dir}" 2>/dev/null; then
-    write_lock_pid
-    return 0
-  fi
-
-  for ((attempt = 0; attempt < lock_initialization_attempts; attempt++)); do
-    if [[ ! -d "${lock_dir}" ]]; then
-      if mkdir "${lock_dir}" 2>/dev/null; then
-        write_lock_pid
-        return 0
-      fi
-    fi
-
-    lock_pid="$(read_lock_pid || true)"
-    if [[ -n "${lock_pid}" ]]; then
-      if kill -0 "${lock_pid}" 2>/dev/null; then
-        echo "another Jazzer command is already running with PID ${lock_pid}; run one Jazzer command at a time" >&2
-        exit 1
-      fi
-      reclaim_stale_lock
-      return 0
-    fi
-
-    sleep "${lock_initialization_sleep_seconds}"
-  done
-
-  if [[ -d "${lock_dir}" ]] && [[ ! -f "${pid_file}" ]]; then
-    reclaim_stale_lock
-    return 0
-  fi
-
-  lock_pid="$(read_lock_pid || true)"
-  if [[ -n "${lock_pid}" ]] && kill -0 "${lock_pid}" 2>/dev/null; then
-    echo "another Jazzer command is already running with PID ${lock_pid}; run one Jazzer command at a time" >&2
-    exit 1
-  fi
-
-  echo "another Jazzer command is already starting; run one Jazzer command at a time" >&2
-  exit 1
-}
-
-cleanup_lock() {
-  rm -rf "${lock_dir}"
-}
+# shellcheck source=/dev/null
+source "${repo_lock_support}"

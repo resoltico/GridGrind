@@ -37,6 +37,24 @@ readonly jazzer_conventions_file="${repo_root}/gradle/build-logic/src/main/kotli
 readonly developer_doc="${repo_root}/docs/DEVELOPER.md"
 readonly adr_doc="${repo_root}/docs/DEVELOPER_CONTRACT_REPLACEMENT_ADR.md"
 
+legacy_protocol_reference_exists() {
+    local pattern=$1
+    shift
+
+    if command -v rg >/dev/null 2>&1; then
+        rg -n \
+            "${pattern}" \
+            "$@" \
+            -g'!**/build/**' -g'!**/.gradle/**' -g'!scripts/test-contract-module-split.sh' >/dev/null
+        return $?
+    fi
+    grep -R -n -E --binary-files=without-match \
+        --exclude-dir=build \
+        --exclude-dir=.gradle \
+        --exclude=test-contract-module-split.sh \
+        -- "${pattern}" "$@" >/dev/null
+}
+
 [[ -f "${settings_file}" ]] || die "missing settings.gradle.kts"
 [[ -d "${repo_root}/authoring-java" ]] || die "missing authoring-java module directory"
 [[ -d "${repo_root}/contract" ]] || die "missing contract module directory"
@@ -97,7 +115,7 @@ grep -Fq 'dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.g
 grep -Fq '**Status**: Accepted' "${adr_doc}" || die \
     "contract replacement ADR is missing its accepted status"
 
-if rg -n \
+if legacy_protocol_reference_exists \
     'dev\.erst\.gridgrind\.protocol|project\(":protocol"\)|module dev\.erst\.gridgrind\.protocol|requires dev\.erst\.gridgrind\.protocol|protocol/src/|protocol/build\.gradle\.kts' \
     "${repo_root}/README.md" \
     "${repo_root}/docs" \
@@ -109,8 +127,7 @@ if rg -n \
     "${repo_root}/contract" \
     "${repo_root}/executor" \
     "${repo_root}/engine" \
-    "${repo_root}/.github" \
-    -g'!**/build/**' -g'!**/.gradle/**' -g'!scripts/test-contract-module-split.sh' >/dev/null; then
+    "${repo_root}/.github"; then
     die "legacy protocol module references still exist in the live product/build/doc surface"
 fi
 

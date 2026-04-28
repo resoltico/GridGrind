@@ -50,12 +50,12 @@ class ExcelBorderTest {
 
   @Test
   void validatesBorderSideColorRules() {
-    ExcelBorderSide colorOnly = new ExcelBorderSide(null, new ExcelColor("#a1b2c3"));
+    ExcelBorderSide colorOnly = new ExcelBorderSide(null, ExcelColor.rgb("#a1b2c3"));
 
     assertNull(colorOnly.style());
-    assertEquals(new ExcelColor("#A1B2C3"), colorOnly.color());
+    assertEquals(ExcelColor.rgb("#A1B2C3"), colorOnly.color());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelBorderSide(ExcelBorderStyle.NONE, new ExcelColor("#112233")));
+        () -> new ExcelBorderSide(ExcelBorderStyle.NONE, ExcelColor.rgb("#112233")));
   }
 }

@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
+import dev.erst.gridgrind.contract.dto.FormulaCapabilityKind;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
@@ -20,7 +21,7 @@ final class CalculationPolicyExecutor {
   private CalculationPolicyExecutor() {}
 
   static CalculationPolicyInput normalize(CalculationPolicyInput policy) {
-    return policy == null ? new CalculationPolicyInput(null, false) : policy;
+    return policy == null ? CalculationPolicyInput.defaults() : policy;
   }
 
   static boolean allowsEventRead(CalculationPolicyInput policy) {
@@ -47,17 +48,17 @@ final class CalculationPolicyExecutor {
     CalculationPolicyInput effective = normalize(policy);
     return new CalculationReport(
         effective,
-        null,
-        new CalculationReport.Execution(
-            CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, null));
+        new CalculationReport.Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false));
   }
 
   static PreflightOutcome preflight(ExcelWorkbook workbook, CalculationPolicyInput policy) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     CalculationPolicyInput effective = normalize(policy);
     return switch (effective.effectiveStrategy()) {
-      case CalculationStrategyInput.DoNotCalculate _ -> new PreflightOutcome(null, 0, null);
-      case CalculationStrategyInput.ClearCachesOnly _ -> new PreflightOutcome(null, 0, null);
+      case CalculationStrategyInput.DoNotCalculate _ ->
+          new PreflightOutcome(Optional.empty(), 0, Optional.empty());
+      case CalculationStrategyInput.ClearCachesOnly _ ->
+          new PreflightOutcome(Optional.empty(), 0, Optional.empty());
       case CalculationStrategyInput.EvaluateAll _ -> preflightAll(workbook);
       case CalculationStrategyInput.EvaluateTargets evaluateTargets ->
           preflightTargets(workbook, evaluateTargets);
@@ -81,7 +82,7 @@ final class CalculationPolicyExecutor {
 
   static CalculationReport report(
       CalculationPolicyInput policy,
-      CalculationReport.Preflight preflight,
+      Optional<CalculationReport.Preflight> preflight,
       CalculationReport.Execution execution) {
     return new CalculationReport(normalize(policy), preflight, execution);
   }
@@ -110,22 +111,20 @@ final class CalculationPolicyExecutor {
             toCapabilityReports(assessments));
     Optional<ExcelFormulaCapabilityAssessment> blocking = mostSevereBlockingAssessment(assessments);
     return new PreflightOutcome(
-        report,
+        Optional.of(report),
         assessments.size(),
-        blocking
-            .map(
-                assessment ->
-                    new FailureDetail(
-                        CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
-                        Phase.PREFLIGHT,
-                        assessment.sheetName(),
-                        assessment.address(),
-                        assessment.formula(),
-                        Objects.requireNonNullElse(
-                            assessment.message(),
-                            "Calculation preflight found formulas that are not immediately evaluable."),
-                        null))
-            .orElse(null));
+        blocking.map(
+            assessment ->
+                new FailureDetail(
+                    CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
+                    Phase.PREFLIGHT,
+                    assessment.sheetName(),
+                    assessment.address(),
+                    assessment.formula(),
+                    Objects.requireNonNullElse(
+                        assessment.message(),
+                        "Calculation preflight found formulas that are not immediately evaluable."),
+                    null)));
   }
 
   private static ExecutionOutcome executeDoNotCalculate(
@@ -138,7 +137,7 @@ final class CalculationPolicyExecutor {
     CalculationExecutionStatus status =
         marked ? CalculationExecutionStatus.SUCCEEDED : CalculationExecutionStatus.NOT_REQUESTED;
     return new ExecutionOutcome(
-        new CalculationReport.Execution(status, 0, false, marked, null), null);
+        new CalculationReport.Execution(status, 0, false, marked), Optional.empty());
   }
 
   private static ExecutionOutcome executeClearCachesOnly(
@@ -151,9 +150,8 @@ final class CalculationPolicyExecutor {
         marked = true;
       }
       return new ExecutionOutcome(
-          new CalculationReport.Execution(
-              CalculationExecutionStatus.SUCCEEDED, 0, true, marked, null),
-          null);
+          new CalculationReport.Execution(CalculationExecutionStatus.SUCCEEDED, 0, true, marked),
+          Optional.empty());
     } catch (RuntimeException exception) {
       return new ExecutionOutcome(
           new CalculationReport.Execution(
@@ -161,8 +159,8 @@ final class CalculationPolicyExecutor {
               0,
               false,
               false,
-              GridGrindProblems.messageFor(exception)),
-          new FailureDetail(Phase.EXECUTION, exception));
+              Optional.of(GridGrindProblems.messageFor(exception))),
+          Optional.of(new FailureDetail(Phase.EXECUTION, exception)));
     }
   }
 
@@ -177,8 +175,8 @@ final class CalculationPolicyExecutor {
       }
       return new ExecutionOutcome(
           new CalculationReport.Execution(
-              CalculationExecutionStatus.SUCCEEDED, evaluationTargetCount, false, marked, null),
-          null);
+              CalculationExecutionStatus.SUCCEEDED, evaluationTargetCount, false, marked),
+          Optional.empty());
     } catch (RuntimeException exception) {
       return new ExecutionOutcome(
           new CalculationReport.Execution(
@@ -186,8 +184,8 @@ final class CalculationPolicyExecutor {
               0,
               false,
               false,
-              GridGrindProblems.messageFor(exception)),
-          new FailureDetail(Phase.EXECUTION, exception));
+              Optional.of(GridGrindProblems.messageFor(exception))),
+          Optional.of(new FailureDetail(Phase.EXECUTION, exception)));
     }
   }
 
@@ -206,8 +204,8 @@ final class CalculationPolicyExecutor {
       }
       return new ExecutionOutcome(
           new CalculationReport.Execution(
-              CalculationExecutionStatus.SUCCEEDED, evaluationTargetCount, false, marked, null),
-          null);
+              CalculationExecutionStatus.SUCCEEDED, evaluationTargetCount, false, marked),
+          Optional.empty());
     } catch (RuntimeException exception) {
       return new ExecutionOutcome(
           new CalculationReport.Execution(
@@ -215,8 +213,8 @@ final class CalculationPolicyExecutor {
               0,
               false,
               false,
-              GridGrindProblems.messageFor(exception)),
-          new FailureDetail(Phase.EXECUTION, exception));
+              Optional.of(GridGrindProblems.messageFor(exception))),
+          Optional.of(new FailureDetail(Phase.EXECUTION, exception)));
     }
   }
 
@@ -231,13 +229,20 @@ final class CalculationPolicyExecutor {
       List<ExcelFormulaCapabilityAssessment> assessments) {
     return assessments.stream()
         .map(
-            assessment ->
-                new CalculationReport.FormulaCapability(
-                    new CellSelector.QualifiedAddress(assessment.sheetName(), assessment.address()),
-                    assessment.formula(),
-                    CalculationCapabilityMappings.capabilityKindFor(assessment.capability()),
-                    CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
-                    assessment.message()))
+            assessment -> {
+              FormulaCapabilityKind capability =
+                  CalculationCapabilityMappings.capabilityKindFor(assessment.capability());
+              Optional<String> message =
+                  capability == FormulaCapabilityKind.EVALUABLE_NOW
+                      ? Optional.empty()
+                      : Optional.ofNullable(assessment.message());
+              return new CalculationReport.FormulaCapability(
+                  new CellSelector.QualifiedAddress(assessment.sheetName(), assessment.address()),
+                  assessment.formula(),
+                  capability,
+                  CalculationCapabilityMappings.problemCodeFor(assessment),
+                  message);
+            })
         .toList();
   }
 
@@ -249,17 +254,22 @@ final class CalculationPolicyExecutor {
   }
 
   record PreflightOutcome(
-      CalculationReport.Preflight report, int evaluationTargetCount, FailureDetail failure) {
+      Optional<CalculationReport.Preflight> report,
+      int evaluationTargetCount,
+      Optional<FailureDetail> failure) {
     PreflightOutcome {
+      report = Objects.requireNonNullElseGet(report, Optional::empty);
+      failure = Objects.requireNonNullElseGet(failure, Optional::empty);
       if (evaluationTargetCount < 0) {
         throw new IllegalArgumentException("evaluationTargetCount must be >= 0");
       }
     }
   }
 
-  record ExecutionOutcome(CalculationReport.Execution report, FailureDetail failure) {
+  record ExecutionOutcome(CalculationReport.Execution report, Optional<FailureDetail> failure) {
     ExecutionOutcome {
       Objects.requireNonNull(report, "report must not be null");
+      failure = Objects.requireNonNullElseGet(failure, Optional::empty);
     }
   }
 

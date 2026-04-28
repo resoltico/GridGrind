@@ -15,6 +15,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.RichTextRunReport;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
@@ -62,8 +63,8 @@ final class InspectionResultCellReportSupport {
             comment.text(),
             comment.author(),
             comment.visible(),
-            toRichTextRunReports(comment.runs()).orElse(null),
-            commentAnchorReport(comment).orElse(null)));
+            toRichTextRunReports(comment.runs()),
+            commentAnchorReport(comment)));
   }
 
   static FontHeightReport toFontHeightReport(ExcelFontHeight fontHeight) {
@@ -82,11 +83,7 @@ final class InspectionResultCellReportSupport {
             style.alignment().textRotation(),
             style.alignment().indentation()),
         toCellFontReport(style.font()),
-        new CellFillReport(
-            style.fill().pattern(),
-            toCellColorReport(style.fill().foregroundColor()).orElse(null),
-            toCellColorReport(style.fill().backgroundColor()).orElse(null),
-            toCellGradientFillReport(style.fill().gradient()).orElse(null)),
+        toCellFillReport(style.fill()),
         new CellBorderReport(
             toCellBorderSideReport(style.border().top()),
             toCellBorderSideReport(style.border().right()),
@@ -110,19 +107,19 @@ final class InspectionResultCellReportSupport {
     return new CellBorderSideReport(side.style(), toCellColorReport(side.color()).orElse(null));
   }
 
-  static GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
+  static dev.erst.gridgrind.contract.dto.CellReport toCellReport(ExcelCellSnapshot snapshot) {
     GridGrindResponse.CellStyleReport style = toCellStyleReport(snapshot.style());
-    HyperlinkTarget hyperlink =
-        toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null)).orElse(null);
-    GridGrindResponse.CommentReport comment =
-        toCommentReport(snapshot.metadata().comment().orElse(null)).orElse(null);
+    Optional<HyperlinkTarget> hyperlink =
+        toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
+    Optional<GridGrindResponse.CommentReport> comment =
+        toCommentReport(snapshot.metadata().comment().orElse(null));
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->
-          new GridGrindResponse.CellReport.BlankReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
               s.address(), s.declaredType(), s.displayValue(), style, hyperlink, comment);
       case ExcelCellSnapshot.TextSnapshot s ->
-          new GridGrindResponse.CellReport.TextReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
               s.address(),
               s.declaredType(),
               s.displayValue(),
@@ -130,9 +127,9 @@ final class InspectionResultCellReportSupport {
               hyperlink,
               comment,
               s.stringValue(),
-              toRichTextRunReports(s.richText()).orElse(null));
+              toRichTextRunReports(s.richText()));
       case ExcelCellSnapshot.NumberSnapshot s ->
-          new GridGrindResponse.CellReport.NumberReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
               s.address(),
               s.declaredType(),
               s.displayValue(),
@@ -141,7 +138,7 @@ final class InspectionResultCellReportSupport {
               comment,
               s.numberValue());
       case ExcelCellSnapshot.BooleanSnapshot s ->
-          new GridGrindResponse.CellReport.BooleanReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
               s.address(),
               s.declaredType(),
               s.displayValue(),
@@ -150,7 +147,7 @@ final class InspectionResultCellReportSupport {
               comment,
               s.booleanValue());
       case ExcelCellSnapshot.ErrorSnapshot s ->
-          new GridGrindResponse.CellReport.ErrorReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
               s.address(),
               s.declaredType(),
               s.displayValue(),
@@ -159,7 +156,7 @@ final class InspectionResultCellReportSupport {
               comment,
               s.errorValue());
       case ExcelCellSnapshot.FormulaSnapshot s ->
-          new GridGrindResponse.CellReport.FormulaReport(
+          new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
               s.address(),
               s.declaredType(),
               s.displayValue(),
@@ -185,27 +182,59 @@ final class InspectionResultCellReportSupport {
     return color == null
         ? Optional.empty()
         : Optional.of(
-            new CellColorReport(color.rgb(), color.theme(), color.indexed(), color.tint()));
+            switch (color) {
+              case ExcelColorSnapshot.Rgb rgb -> CellColorReport.rgb(rgb.rgb(), rgb.tint());
+              case ExcelColorSnapshot.Theme theme ->
+                  CellColorReport.theme(theme.theme(), theme.tint());
+              case ExcelColorSnapshot.Indexed indexed ->
+                  CellColorReport.indexed(indexed.indexed(), indexed.tint());
+            });
   }
 
-  private static Optional<CellGradientFillReport> toCellGradientFillReport(
+  private static CellFillReport toCellFillReport(ExcelCellFillSnapshot fill) {
+    return switch (fill) {
+      case ExcelCellFillSnapshot.PatternOnly pattern -> CellFillReport.pattern(pattern.pattern());
+      case ExcelCellFillSnapshot.PatternForeground pattern ->
+          CellFillReport.patternForeground(
+              pattern.pattern(), toCellColorReport(pattern.foregroundColor()).orElseThrow());
+      case ExcelCellFillSnapshot.PatternBackground pattern ->
+          CellFillReport.patternBackground(
+              pattern.pattern(), toCellColorReport(pattern.backgroundColor()).orElseThrow());
+      case ExcelCellFillSnapshot.PatternForegroundBackground pattern ->
+          CellFillReport.patternColors(
+              pattern.pattern(),
+              toCellColorReport(pattern.foregroundColor()).orElseThrow(),
+              toCellColorReport(pattern.backgroundColor()).orElseThrow());
+      case ExcelCellFillSnapshot.Gradient gradient ->
+          CellFillReport.gradient(toCellGradientFillReport(gradient.gradient()));
+    };
+  }
+
+  private static CellGradientFillReport toCellGradientFillReport(
       ExcelGradientFillSnapshot gradient) {
-    return gradient == null
-        ? Optional.empty()
-        : Optional.of(
-            new CellGradientFillReport(
-                gradient.type(),
-                gradient.degree(),
-                gradient.left(),
-                gradient.right(),
-                gradient.top(),
-                gradient.bottom(),
-                gradient.stops().stream()
-                    .map(
-                        stop ->
-                            new CellGradientStopReport(
-                                stop.position(), toCellColorReport(stop.color()).orElse(null)))
-                    .toList()));
+    return switch (gradient) {
+      case ExcelGradientFillSnapshot.Linear linear ->
+          CellGradientFillReport.linear(
+              linear.degree(),
+              linear.stops().stream()
+                  .map(
+                      stop ->
+                          new CellGradientStopReport(
+                              stop.position(), toCellColorReport(stop.color()).orElse(null)))
+                  .toList());
+      case ExcelGradientFillSnapshot.Path path ->
+          CellGradientFillReport.path(
+              path.left(),
+              path.right(),
+              path.top(),
+              path.bottom(),
+              path.stops().stream()
+                  .map(
+                      stop ->
+                          new CellGradientStopReport(
+                              stop.position(), toCellColorReport(stop.color()).orElse(null)))
+                  .toList());
+    };
   }
 
   private static Optional<CommentAnchorReport> commentAnchorReport(ExcelCommentSnapshot comment) {

@@ -70,7 +70,8 @@ final class ExecutionWorkflowSupport {
             calculationSupport.executeCalculationPolicy(workbook, request, journal);
         calculation = calculationOutcome.report();
         calculationExecuted = true;
-        if (calculationOutcome.failure() != null) {
+        if (calculationOutcome.failure().isPresent()) {
+          GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
           return responseSupport.closeWorkbook(
               workbook,
               ExecutionResponseSupport.failureResponse(
@@ -78,12 +79,12 @@ final class ExecutionWorkflowSupport {
                   journal,
                   request.steps().size(),
                   calculation,
-                  calculationOutcome.failure(),
+                  problem,
                   null,
                   null),
               request,
               journal,
-              calculationOutcome.failure().code(),
+              problem.code(),
               null,
               null);
         }
@@ -131,20 +132,15 @@ final class ExecutionWorkflowSupport {
       ExecutionCalculationSupport.CalculationExecutionOutcome calculationOutcome =
           calculationSupport.executeCalculationPolicy(workbook, request, journal);
       calculation = calculationOutcome.report();
-      if (calculationOutcome.failure() != null) {
+      if (calculationOutcome.failure().isPresent()) {
+        GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
         return responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponse(
-                protocolVersion,
-                journal,
-                request.steps().size(),
-                calculation,
-                calculationOutcome.failure(),
-                null,
-                null),
+                protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
             request,
             journal,
-            calculationOutcome.failure().code(),
+            problem.code(),
             null,
             null);
       }
@@ -160,12 +156,9 @@ final class ExecutionWorkflowSupport {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.PersistWorkbook(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory),
-                  ExecutionRequestPaths.persistencePath(
-                      request.source(), request.persistence(), workingDirectory)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeWorkbook(
           workbook,
@@ -213,16 +206,15 @@ final class ExecutionWorkflowSupport {
       materialized =
           ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
               ExecutionRequestPaths.normalizePath(source.path(), workingDirectory),
-              OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security()),
+              OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security().orElse(null)),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.OpenWorkbook(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.workbookReference(request, workingDirectory)));
       openPhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeReadableWorkbook(
           null,
@@ -343,16 +335,11 @@ final class ExecutionWorkflowSupport {
       ExecutionCalculationSupport.CalculationExecutionOutcome calculationOutcome =
           calculationSupport.executeStreamingCalculationPolicy(writer, request, journal);
       calculation = calculationOutcome.report();
-      if (calculationOutcome.failure() != null) {
+      if (calculationOutcome.failure().isPresent()) {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
+        GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
         return ExecutionResponseSupport.failureResponse(
-            protocolVersion,
-            journal,
-            request.steps().size(),
-            calculation,
-            calculationOutcome.failure(),
-            null,
-            null);
+            protocolVersion, journal, request.steps().size(), calculation, problem, null, null);
       }
 
       materializedPath = tempFileFactory.createTempFile("gridgrind-streaming-write-", ".xlsx");
@@ -362,9 +349,8 @@ final class ExecutionWorkflowSupport {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
+                  ExecutionRequestPaths.requestShape(request)));
       return ExecutionResponseSupport.failureResponse(
           protocolVersion, journal, request.steps().size(), calculation, problem, null, null);
     }
@@ -382,12 +368,9 @@ final class ExecutionWorkflowSupport {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.PersistWorkbook(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory),
-                  ExecutionRequestPaths.persistencePath(
-                      request.source(), request.persistence(), workingDirectory)));
+              new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.persistenceReference(request, workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion, journal, request.steps().size(), calculation, problem, null, null);

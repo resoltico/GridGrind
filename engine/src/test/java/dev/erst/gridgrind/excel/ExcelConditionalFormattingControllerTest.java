@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
@@ -165,12 +166,12 @@ class ExcelConditionalFormattingControllerTest {
                           new ExcelConditionalFormattingThreshold(
                               ExcelConditionalFormattingThresholdType.MAX, null, null)),
                       List.of(
-                          new ExcelColor("#AA2211"),
-                          new ExcelColor("#FFDD55"),
-                          new ExcelColor("#11CC66")),
+                          ExcelColor.rgb("#AA2211"),
+                          ExcelColor.rgb("#FFDD55"),
+                          ExcelColor.rgb("#11CC66")),
                       false),
                   new ExcelConditionalFormattingRule.DataBarRule(
-                      new ExcelColor("#123456"),
+                      ExcelColor.rgb("#123456"),
                       true,
                       10,
                       90,
@@ -332,8 +333,7 @@ class ExcelConditionalFormattingControllerTest {
               .noneMatch(
                   finding ->
                       finding.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
+                          == AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
 
       sheet.clearConditionalFormatting(new ExcelRangeSelection.All());
       assertEquals(0, sheet.conditionalFormattingBlockCount());
@@ -428,7 +428,7 @@ class ExcelConditionalFormattingControllerTest {
       List<WorkbookAnalysis.AnalysisFinding> findings =
           controller.conditionalFormattingHealthFindings("Ops", sheet);
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE),
+          List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE),
           findings.stream().map(WorkbookAnalysis.AnalysisFinding::code).distinct().toList());
     }
   }
@@ -446,7 +446,7 @@ class ExcelConditionalFormattingControllerTest {
       secondBlock.getCfRuleArray(0).setPriority(firstRule.getPriority());
       secondBlock.setSqref(List.of());
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
@@ -454,9 +454,9 @@ class ExcelConditionalFormattingControllerTest {
 
       assertEquals(
           List.of(
-              WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-              WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
-              WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION),
+              AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+              AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
+              AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION),
           codes);
     }
   }
@@ -753,9 +753,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .filter(
                   candidate ->
-                      candidate.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA)
+                      candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
               .findFirst()
               .orElseThrow();
 
@@ -784,9 +782,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .filter(
                   candidate ->
-                      candidate.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA)
+                      candidate.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA)
               .findFirst()
               .orElseThrow();
 
@@ -814,9 +810,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .noneMatch(
                   finding ->
-                      finding.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -841,9 +835,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .noneMatch(
                   finding ->
-                      finding.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -869,9 +861,8 @@ class ExcelConditionalFormattingControllerTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
-                      WorkbookAnalysis.AnalysisFindingCode
-                          .CONDITIONAL_FORMATTING_PRIORITY_COLLISION)));
+                      AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
+                      AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION)));
     }
   }
 
@@ -887,7 +878,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE));
+              .contains(AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE));
     }
   }
 
@@ -912,9 +903,7 @@ class ExcelConditionalFormattingControllerTest {
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
               .noneMatch(
                   finding ->
-                      finding.code()
-                          == WorkbookAnalysis.AnalysisFindingCode
-                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+                      finding.code() == AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 
@@ -1050,7 +1039,7 @@ class ExcelConditionalFormattingControllerTest {
                           "0.00", null, null, null, null, null, null, null, null)))));
 
       assertEquals(
-          List.of(WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA),
+          List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA),
           sheet.conditionalFormattingHealthFindings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()

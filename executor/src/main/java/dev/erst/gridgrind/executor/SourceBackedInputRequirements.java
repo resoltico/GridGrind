@@ -89,8 +89,8 @@ final class SourceBackedInputRequirements {
 
   static boolean requiresStandardInput(CommentInput comment) {
     return requiresStandardInput(comment.text())
-        || (comment.runs() != null
-            && comment.runs().stream()
+        || (comment.runs().isPresent()
+            && comment.runs().orElseThrow().stream()
                 .anyMatch(SourceBackedInputRequirements::requiresStandardInput));
   }
 
@@ -100,8 +100,8 @@ final class SourceBackedInputRequirements {
   }
 
   static boolean requiresStandardInput(SignatureLineInput signatureLine) {
-    return signatureLine.plainSignature() != null
-        && requiresStandardInput(signatureLine.plainSignature());
+    return signatureLine.plainSignature().isPresent()
+        && requiresStandardInput(signatureLine.plainSignature().orElseThrow());
   }
 
   static boolean requiresStandardInput(PictureDataInput pictureData) {

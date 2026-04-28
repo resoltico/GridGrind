@@ -17,6 +17,9 @@ import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
  * registry while still reading through POI's public view.
  */
 final class StylesTableFillRegistryAccess {
+  static final PoiPrivateContract FILLS_FIELD_CONTRACT =
+      PoiPrivateContract.field(
+          StylesTable.class, "fills", "gradient-fill registry synchronization");
   private static final VarHandle FILLS_FIELD = requireFillsField(MethodHandles.lookup());
 
   static StylesTableFillRegistryAccess poiApi() {
@@ -42,7 +45,6 @@ final class StylesTableFillRegistryAccess {
   }
 
   static VarHandle requireFillsField(MethodHandles.Lookup lookup) {
-    return PoiPrivateAccessSupport.requireVarHandle(
-        lookup, StylesTable.class, "fills", List.class, "Failed to access POI fill registry");
+    return PoiPrivateAccessSupport.requireVarHandle(lookup, FILLS_FIELD_CONTRACT, List.class);
   }
 }

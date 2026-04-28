@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: QUICK_START
 updated: "2026-04-25"
 route:
@@ -10,8 +10,9 @@ route:
 
 # Quick Start
 
-**Purpose**: Get to a first successful GridGrind run with the least setup and the least guesswork.
-**Best starting point**: generate the built-in `BUDGET` example directly from the artifact with `--print-example BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
+Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
+Generated example JSON omits absent optional sections, so the first printed request is ready for
+copy-paste edits without `null` cleanup.
 
 ---
 
@@ -106,9 +107,7 @@ java -jar gridgrind.jar \
 After a successful run:
 
 - `response.json` should report `status: "SUCCESS"`
-- the built-in budget example persists to
-  `cli/build/generated-workbooks/gridgrind-budget.xlsx` by default; edit `persistence.path` in
-  the request if you want a different output location
+- the workbook is saved to the path set in `persistence.path` inside the request JSON; open the generated `budget-request.json` and edit that field to control the output location
 - if the run fails, GridGrind returns a structured error response instead of saving a partial workbook
 
 ## Good Second Steps

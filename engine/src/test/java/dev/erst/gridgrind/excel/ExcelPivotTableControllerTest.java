@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -219,15 +220,14 @@ class ExcelPivotTableControllerTest {
       XSSFPivotTable pivotTable = workbook.xssfWorkbook().getPivotTables().getFirst();
       pivotTable.getCTPivotTableDefinition().setName(null);
 
-      List<WorkbookAnalysis.AnalysisFindingCode> missingNameCodes =
+      List<AnalysisFindingCode> missingNameCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
       ExcelPivotTableSnapshot snapshot =
           controller.pivotTables(workbook, new ExcelPivotTableSelection.All()).getFirst();
 
-      assertTrue(
-          missingNameCodes.contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
+      assertTrue(missingNameCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
       assertTrue(snapshot.name().startsWith("_GG_PIVOT_"));
 
       XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(pivotTable);
@@ -236,20 +236,14 @@ class ExcelPivotTableControllerTest {
       worksheetSource.unsetRef();
       worksheetSource.setName("MissingSource");
 
-      List<WorkbookAnalysis.AnalysisFindingCode> brokenSourceCodes =
+      List<AnalysisFindingCode> brokenSourceCodes =
           controller.pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
 
-      assertTrue(
-          brokenSourceCodes.contains(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
-      assertTrue(
-          brokenSourceCodes.contains(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
-      assertTrue(
-          brokenSourceCodes.contains(
-              WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
+      assertTrue(brokenSourceCodes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
+      assertTrue(brokenSourceCodes.contains(AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE));
+      assertTrue(brokenSourceCodes.contains(AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL));
     }
   }
 

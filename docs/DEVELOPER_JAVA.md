@@ -1,24 +1,37 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-25"
+updated: "2026-04-28"
 route:
-  keywords: [gridgrind, java26, gradle wrapper, java_home, macos, shell, mounted volumes, local disk]
-  questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]
+  keywords: [gridgrind, java26, zulu26, gradle wrapper, java_home, macos, shell, devcontainer, mounted volumes, local disk]
+  questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "do i need java installed on the host if i use the devcontainer", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]
 ---
 
 # Java 26 And Gradle Workstation Setup
 
-**Purpose**: Document the Java and Gradle setup that GridGrind actually enforces for contributors.
+**Purpose**: Document the Java setup GridGrind enforces for host-native contributors and the Java
+alignment the preferred devcontainer path already bakes in.
 **Prerequisites**: macOS with zsh.
-**Companion references**: [DEVELOPER.md](./DEVELOPER.md), [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
+**Companion references**: [DEVELOPER.md](./DEVELOPER.md),
+[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md), [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
+
+## Preferred Path First
+
+If you use the committed devcontainer, you do not need Java 26 installed in the host shell for
+normal repository work. The container already ships Azul Zulu 26 and is the preferred contributor
+path for this repository.
+
+This file matters in two cases:
+
+- you are deliberately using the host-native contributor path
+- you want to understand the Java contract the devcontainer and CI are aligned to
 
 ## What The Repository Actually Requires
 
 GridGrind's product modules target Java 26 and the repository build is wrapper-first.
 
-What the codebase and scripts actually enforce today:
+What the codebase and scripts actually enforce today for host-native work:
 
 - the active shell must resolve a full JDK 26, not only a JRE
 - `java` and `javac` must both be reachable from the shell
@@ -29,14 +42,17 @@ What the codebase and scripts actually enforce today:
 - full verification should run from a local-disk checkout or local mirror, not from a mounted
   external volume on macOS
 
-The repository does **not** enforce one specific JDK vendor. CI currently uses Azul Zulu 26
-through `actions/setup-java`, but any compatible JDK 26 that satisfies the checks above is valid.
+The repository runtime contract does **not** require one specific host JDK vendor, but the project
+now standardizes CI and the preferred devcontainer on Azul Zulu 26. Host-native work may use any
+compatible JDK 26 that satisfies the checks above, though Zulu 26 is the preferred host-native
+match when you want the closest contributor-to-CI alignment.
 
 ## Canonical Stance
 
 | Component | Recommended source | Why |
 |:----------|:-------------------|:----|
-| JDK | any compatible JDK 26 distribution | GridGrind validates the major version and shell visibility, not the vendor string |
+| Preferred contributor Java | devcontainer-baked Azul Zulu 26 | matches CI vendor and keeps Java tooling out of the host process tree |
+| Host-native JDK | Azul Zulu 26 when convenient; any compatible JDK 26 otherwise | GridGrind validates the major version and shell visibility, while Zulu keeps host-native behavior closest to CI and the devcontainer |
 | Gradle | repository `./gradlew` | the wrapper pins the project Gradle version and is the only supported repo entrypoint |
 | Global `gradle` | optional but unused for repo work | GridGrind already commits wrapper files |
 
@@ -54,7 +70,7 @@ published binaries and archives move forward.
 Gradle toolchains help the build compile consistently, but they do not replace the ambient shell
 runtime for every contributor path.
 
-These flows still depend on the shell-visible `java` command:
+These flows still depend on the shell-visible `java` command when you are outside the devcontainer:
 
 - `java -jar cli/build/libs/gridgrind.jar`
 - `./check.sh`
@@ -77,6 +93,9 @@ Why:
 
 If your main checkout lives on a mounted external volume, keep that checkout for editing if you
 want, but do the full build/test loop from a local-disk worktree or a disposable local mirror.
+The canonical `./check.sh` gate also runs with `--no-daemon`, uses a repo-scoped
+`GRADLE_USER_HOME` under `tmp/gradle-user-home` by default, and shares one repo-wide verification
+lock with the Docker and Jazzer top-level entrypoints.
 
 ## Typical macOS Shell Setup
 
@@ -104,7 +123,7 @@ fi
 
 The goal is simple: both login and interactive shells should resolve the same JDK 26 first.
 
-## Verification Commands
+## Host-Native Verification Commands
 
 Run these from the same shell you will use for repo work:
 
@@ -125,7 +144,7 @@ Expected outcomes:
   surfacing the Apple install stub
 - `./gradlew --version` reports the wrapper-pinned Gradle version
 
-## Full Repository Verification
+## Host-Native Full Repository Verification
 
 Once Java 26 is active in the shell, the normal GridGrind verification loop is:
 
@@ -141,6 +160,8 @@ rerun that sequence from a local-disk mirror or worktree instead of weakening th
 
 ## Common Pitfalls
 
+- forgetting that the preferred devcontainer path already provides Java 26 and then spending time
+  debugging a host Java install you do not actually need
 - relying on the Apple install-stub behavior behind `/usr/bin/java` or `/usr/bin/javac` instead
   of a real JDK 26 launcher
 - assuming Gradle toolchains cover `java -jar` or `./check.sh`

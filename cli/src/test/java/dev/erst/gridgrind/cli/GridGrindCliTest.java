@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -17,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Execution and transport integration tests for GridGrindCli command-line invocation. */
@@ -59,7 +61,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponse.success(
+                    GridGrindResponses.success(
                         null,
                         new GridGrindResponse.PersistenceOutcome.NotSaved(),
                         List.of(),
@@ -92,7 +94,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponse.success(
+                    GridGrindResponses.success(
                         null,
                         new GridGrindResponse.PersistenceOutcome.NotSaved(),
                         List.of(),
@@ -147,8 +149,45 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                   .sinkFor(request, broken)
                   .emit(
                       new ExecutionJournal.Event(
-                          "2026-04-18T11:45:00Z", "OPEN", "opened", null, null)));
+                          "2026-04-18T11:45:00Z",
+                          "OPEN",
+                          "opened",
+                          Optional.empty(),
+                          Optional.empty())));
     }
+  }
+
+  @Test
+  void cliJournalWriterIncludesStepMetadataWhenPresent() throws IOException {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "journal": { "level": "VERBOSE" }
+              },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    new CliJournalWriter()
+        .sinkFor(request, stderr)
+        .emit(
+            new ExecutionJournal.Event(
+                "2026-04-18T11:45:00Z",
+                "STEP",
+                "wrote cell",
+                Optional.of(7),
+                Optional.of("step-007")));
+
+    assertEquals(
+        "[gridgrind] 2026-04-18T11:45:00Z STEP stepId=step-007 stepIndex=7 wrote cell"
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
   }
 
   @Test
@@ -197,11 +236,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals("Budget", workbook.sheetNames().get(0));
     InspectionResult.CellsResult cells =
         (InspectionResult.CellsResult) success.inspections().get(1);
-    GridGrindResponse.CellReport.FormulaReport b3Cell =
-        (GridGrindResponse.CellReport.FormulaReport) cells.cells().get(1);
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport b3Cell =
+        (dev.erst.gridgrind.contract.dto.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula());
     assertEquals(
-        49.0, ((GridGrindResponse.CellReport.NumberReport) b3Cell.evaluation()).numberValue());
+        49.0,
+        ((dev.erst.gridgrind.contract.dto.CellReport.NumberReport) b3Cell.evaluation())
+            .numberValue());
   }
 
   @Test
@@ -242,7 +283,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals("--request", failure.problem().context().argument());
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
     assertTrue(
         failure.problem().message().contains("STANDARD_INPUT-authored values require --request"));
   }
@@ -292,8 +333,9 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
     InspectionResult.CellsResult cells =
         assertInstanceOf(InspectionResult.CellsResult.class, success.inspections().getFirst());
-    GridGrindResponse.CellReport.TextReport a1 =
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport a1 =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
     assertEquals(0, exitCode);
     assertEquals("Quarterly Budget", a1.stringValue());
   }
@@ -331,7 +373,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
 
     assertEquals(0, exitCode);
-    assertEquals("ledger-audit", success.journal().planId());
+    assertEquals("ledger-audit", success.journal().planId().orElseThrow());
     assertTrue(
         stderr.toString(StandardCharsets.UTF_8).contains("[gridgrind]"),
         "verbose journal must emit live stderr lines");
@@ -397,7 +439,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("steps[0].target", failure.problem().context().jsonPath());
+    assertEquals(java.util.Optional.of("steps[0].target"), readRequestContext(failure).jsonPath());
     assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
   }
 

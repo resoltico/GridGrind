@@ -156,7 +156,7 @@ final class XlsxParityCoreProbeGroup {
 
   private static void compareCoreWorkbookCells(
       CoreReadObservation observation, List<String> mismatches) {
-    Map<String, GridGrindResponse.CellReport> cellsByAddress =
+    Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress =
         byAddress(observation.cells().cells());
     compareCoreMergedRegion(observation, mismatches);
     compareCoreRichTextCell(cellsByAddress, mismatches);
@@ -183,23 +183,29 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static void compareCoreRichTextCell(
-      Map<String, GridGrindResponse.CellReport> cellsByAddress, List<String> mismatches) {
-    GridGrindResponse.CellReport.TextReport richTextCell =
-        cast(GridGrindResponse.CellReport.TextReport.class, cellsByAddress.get("A3"));
+      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
+      List<String> mismatches) {
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport richTextCell =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cellsByAddress.get("A3"));
     if (!"Ada Lovelace".equals(richTextCell.stringValue())) {
       mismatches.add("richTextCell.stringValue=%s".formatted(richTextCell.stringValue()));
     }
-    if (richTextCell.richText() == null || richTextCell.richText().size() != 2) {
+    if (richTextCell.richText().map(List::size).orElse(0) != 2) {
       mismatches.add("richText runs=%s".formatted(richTextCell.richText()));
     }
   }
 
   private static void compareCorePrimitiveCells(
-      Map<String, GridGrindResponse.CellReport> cellsByAddress, List<String> mismatches) {
-    GridGrindResponse.CellReport.NumberReport numericCell =
-        cast(GridGrindResponse.CellReport.NumberReport.class, cellsByAddress.get("B3"));
-    GridGrindResponse.CellReport.BooleanReport booleanCell =
-        cast(GridGrindResponse.CellReport.BooleanReport.class, cellsByAddress.get("C3"));
+      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
+      List<String> mismatches) {
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport numericCell =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+            cellsByAddress.get("B3"));
+    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class,
+            cellsByAddress.get("C3"));
     if (numericCell.numberValue() != 12.5d) {
       mismatches.add("numericCell=%s".formatted(numericCell.numberValue()));
     }
@@ -210,12 +216,16 @@ final class XlsxParityCoreProbeGroup {
 
   private static void compareCoreFormulaCell(
       CoreReadObservation observation,
-      Map<String, GridGrindResponse.CellReport> cellsByAddress,
+      Map<String, dev.erst.gridgrind.contract.dto.CellReport> cellsByAddress,
       List<String> mismatches) {
-    GridGrindResponse.CellReport.FormulaReport formulaCell =
-        cast(GridGrindResponse.CellReport.FormulaReport.class, cellsByAddress.get("D3"));
-    GridGrindResponse.CellReport.NumberReport formulaEvaluation =
-        cast(GridGrindResponse.CellReport.NumberReport.class, formulaCell.evaluation());
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
+            cellsByAddress.get("D3"));
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport formulaEvaluation =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+            formulaCell.evaluation());
     if (!formulaCell.formula().equals(observation.direct().formulaText())) {
       mismatches.add(
           "formulaText=%s direct=%s"
@@ -524,9 +534,9 @@ final class XlsxParityCoreProbeGroup {
                 new InspectionQuery.GetCells()));
     InspectionResult.CellsResult cells =
         XlsxParityGridGrind.read(success, "cells", InspectionResult.CellsResult.class);
-    Map<String, GridGrindResponse.CellReport> byAddress = byAddress(cells.cells());
-    GridGrindResponse.CellReport themedCell = byAddress.get("A3");
-    GridGrindResponse.CellReport gradientCell = byAddress.get("A4");
+    Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress = byAddress(cells.cells());
+    dev.erst.gridgrind.contract.dto.CellReport themedCell = byAddress.get("A3");
+    dev.erst.gridgrind.contract.dto.CellReport gradientCell = byAddress.get("A4");
     boolean themedOk = matchesThemedStyle(themedCell, themed);
     boolean gradientOk = matchesGradientStyle(gradientCell, gradient);
     return themedOk && gradientOk
@@ -544,25 +554,43 @@ final class XlsxParityCoreProbeGroup {
   }
 
   private static boolean matchesThemedStyle(
-      GridGrindResponse.CellReport themedCell, XlsxParityOracle.StyleSnapshot themed) {
+      dev.erst.gridgrind.contract.dto.CellReport themedCell,
+      XlsxParityOracle.StyleSnapshot themed) {
     return themedCell != null
         && matchesColorDescriptor(
             themedCell.style().font().fontColor(), themed.fontColorDescriptor())
         && matchesColorDescriptor(
-            themedCell.style().fill().foregroundColor(), themed.fillColorDescriptor())
+            fillForegroundColor(themedCell.style().fill()), themed.fillColorDescriptor())
         && matchesColorDescriptor(
             themedCell.style().border().bottom().color(), themed.borderColorDescriptor());
   }
 
   private static boolean matchesGradientStyle(
-      GridGrindResponse.CellReport gradientCell, XlsxParityOracle.StyleSnapshot gradient) {
+      dev.erst.gridgrind.contract.dto.CellReport gradientCell,
+      XlsxParityOracle.StyleSnapshot gradient) {
+    CellGradientFillReport fillGradient =
+        gradientCell == null ? null : fillGradient(gradientCell.style().fill());
     return gradient.gradientFill()
         && gradientCell != null
-        && gradientCell.style().fill().gradient() != null
-        && approximatelyEquals(45.0d, gradientCell.style().fill().gradient().degree())
-        && gradientCell.style().fill().gradient().stops().size() == 2
-        && matchesColorDescriptor(
-            gradientCell.style().fill().gradient().stops().get(1).color(), "theme=4|tint=0.45");
+        && fillGradient instanceof CellGradientFillReport.Linear linear
+        && approximatelyEquals(45.0d, linear.degree())
+        && linear.stops().size() == 2
+        && matchesColorDescriptor(linear.stops().get(1).color(), "theme=4|tint=0.45");
+  }
+
+  private static CellColorReport fillForegroundColor(CellFillReport fill) {
+    return switch (fill) {
+      case CellFillReport.PatternForeground pattern -> pattern.foregroundColor();
+      case CellFillReport.PatternForegroundBackground pattern -> pattern.foregroundColor();
+      case null, default -> null;
+    };
+  }
+
+  private static CellGradientFillReport fillGradient(CellFillReport fill) {
+    if (fill instanceof CellFillReport.Gradient gradient) {
+      return gradient.gradient();
+    }
+    return null;
   }
 
   static ProbeResult probeRichCommentReadGap(ProbeContext context) {
@@ -579,17 +607,14 @@ final class XlsxParityCoreProbeGroup {
                 new InspectionQuery.GetComments()));
     InspectionResult.CommentsResult comments =
         XlsxParityGridGrind.read(success, "comments", InspectionResult.CommentsResult.class);
+    GridGrindResponse.CommentReport comment =
+        comments.comments().isEmpty() ? null : comments.comments().getFirst().comment();
     boolean parityAchieved =
-        comments.comments().size() == 1
-            && comments.comments().getFirst().comment().author().equals(direct.author())
-            && comments.comments().getFirst().comment().visible() == direct.visible()
-            && comments.comments().getFirst().comment().runs() != null
-            && comments.comments().getFirst().comment().runs().size() == direct.runCount()
-            && comments.comments().getFirst().comment().anchor() != null
-            && comments.comments().getFirst().comment().anchor().firstColumn() == direct.col1()
-            && comments.comments().getFirst().comment().anchor().firstRow() == direct.row1()
-            && comments.comments().getFirst().comment().anchor().lastColumn() == direct.col2()
-            && comments.comments().getFirst().comment().anchor().lastRow() == direct.row2();
+        comment != null
+            && comment.author().equals(direct.author())
+            && comment.visible() == direct.visible()
+            && comment.runs().map(List::size).orElse(0) == direct.runCount()
+            && comment.anchor().filter(anchorMatches(direct)).isPresent();
     return parityAchieved
         ? pass("Rich comment read parity is present.")
         : fail(
@@ -598,6 +623,15 @@ final class XlsxParityCoreProbeGroup {
                 + direct
                 + " observed="
                 + comments.comments());
+  }
+
+  private static java.util.function.Predicate<CommentAnchorReport> anchorMatches(
+      XlsxParityOracle.CommentSnapshot direct) {
+    return anchor ->
+        anchor.firstColumn() == direct.col1()
+            && anchor.firstRow() == direct.row1()
+            && anchor.lastColumn() == direct.col2()
+            && anchor.lastRow() == direct.row2();
   }
 
   static ProbeResult probeDataValidationAnalysisGap(ProbeContext context) {
@@ -1339,7 +1373,8 @@ final class XlsxParityCoreProbeGroup {
                     new InspectionQuery.GetCells())),
             "cells",
             InspectionResult.CellsResult.class);
-    Map<String, GridGrindResponse.CellReport> styledByAddress = byAddress(styledCells.cells());
+    Map<String, dev.erst.gridgrind.contract.dto.CellReport> styledByAddress =
+        byAddress(styledCells.cells());
     boolean authoredOk =
         XlsxParityOracle.style(styledPath, "Ops", "A5").equals(expectedThemed)
             && XlsxParityOracle.style(styledPath, "Ops", "A6").equals(expectedGradient)
@@ -1364,7 +1399,7 @@ final class XlsxParityCoreProbeGroup {
             InspectionResult.CellsResult.class);
     boolean clearedOk =
         clearedCells.cells().stream()
-            .allMatch(GridGrindResponse.CellReport.BlankReport.class::isInstance);
+            .allMatch(dev.erst.gridgrind.contract.dto.CellReport.BlankReport.class::isInstance);
 
     return authoredOk && clearedOk
         ? pass("Advanced style mutation parity is present.")

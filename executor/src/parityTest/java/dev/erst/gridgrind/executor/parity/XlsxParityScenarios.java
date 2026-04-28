@@ -1160,11 +1160,23 @@ public final class XlsxParityScenarios {
                                         richTextRun(
                                             "Ada",
                                             new CellFontInput(
-                                                true, null, null, null, "#204060", null, null)),
+                                                true,
+                                                null,
+                                                null,
+                                                null,
+                                                ColorInput.rgb("#204060"),
+                                                null,
+                                                null)),
                                         richTextRun(
                                             " Lovelace",
                                             new CellFontInput(
-                                                null, true, null, null, "#4080A0", null, null)))),
+                                                null,
+                                                true,
+                                                null,
+                                                null,
+                                                ColorInput.rgb("#4080A0"),
+                                                null,
+                                                null)))),
                                 new CellInput.Numeric(12.5d),
                                 new CellInput.BooleanValue(true),
                                 formula("B3*2")),
@@ -1189,12 +1201,14 @@ public final class XlsxParityScenarios {
                                 null,
                                 "Aptos",
                                 new FontHeightInput.Points(new BigDecimal("11.5")),
-                                "#112233",
+                                ColorInput.rgb("#112233"),
                                 null,
                                 null),
-                            new CellFillInput(ExcelFillPattern.SOLID, "#D9EAF7", null),
+                            CellFillInput.patternForeground(
+                                ExcelFillPattern.SOLID, ColorInput.rgb("#D9EAF7")),
                             new CellBorderInput(
-                                new CellBorderSideInput(ExcelBorderStyle.THIN, "#5B7C99"),
+                                new CellBorderSideInput(
+                                    ExcelBorderStyle.THIN, ColorInput.rgb("#5B7C99")),
                                 null,
                                 null,
                                 null,

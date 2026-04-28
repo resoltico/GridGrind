@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import java.time.LocalDate;
@@ -37,7 +39,13 @@ class CellInputTest {
                         richTextRun(
                             " FY26",
                             new CellFontInput(
-                                Boolean.TRUE, null, null, null, "#AABBCC", null, null))))));
+                                Boolean.TRUE,
+                                null,
+                                null,
+                                null,
+                                ColorInput.rgb("#AABBCC"),
+                                null,
+                                null))))));
     assertEquals(
         new ExcelRichText(
             List.of(
@@ -45,13 +53,7 @@ class CellInputTest {
                 new ExcelRichTextRun(
                     " FY26",
                     new dev.erst.gridgrind.excel.ExcelCellFont(
-                        Boolean.TRUE,
-                        null,
-                        null,
-                        null,
-                        new dev.erst.gridgrind.excel.ExcelColor("#AABBCC"),
-                        null,
-                        null)))),
+                        Boolean.TRUE, null, null, null, ExcelColor.rgb("#AABBCC"), null, null)))),
         richTextValue.value());
 
     ExcelCellValue.NumberValue numberValue =

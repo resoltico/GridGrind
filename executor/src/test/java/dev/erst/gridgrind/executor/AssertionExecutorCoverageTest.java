@@ -4,7 +4,6 @@ import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -12,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
@@ -52,6 +49,8 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
@@ -170,17 +169,23 @@ class AssertionExecutorCoverageTest {
     InspectionResult.FormulaHealthResult formulaHealth =
         inspection(inspected, "formulaHealth", InspectionResult.FormulaHealthResult.class);
 
-    GridGrindResponse.CellReport.TextReport owner =
-        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0));
-    GridGrindResponse.CellReport.NumberReport amount =
-        assertInstanceOf(GridGrindResponse.CellReport.NumberReport.class, cells.cells().get(1));
-    GridGrindResponse.CellReport.BooleanReport enabled =
-        assertInstanceOf(GridGrindResponse.CellReport.BooleanReport.class, cells.cells().get(2));
-    assertInstanceOf(GridGrindResponse.CellReport.BlankReport.class, cells.cells().get(3));
-    GridGrindResponse.CellReport.FormulaReport errorFormula =
-        assertInstanceOf(GridGrindResponse.CellReport.FormulaReport.class, cells.cells().get(4));
-    GridGrindResponse.CellReport.FormulaReport totalFormula =
-        assertInstanceOf(GridGrindResponse.CellReport.FormulaReport.class, cells.cells().get(5));
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport owner =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0));
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport amount =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(1));
+    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport enabled =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class, cells.cells().get(2));
+    assertInstanceOf(
+        dev.erst.gridgrind.contract.dto.CellReport.BlankReport.class, cells.cells().get(3));
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport errorFormula =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(4));
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport totalFormula =
+        assertInstanceOf(
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(5));
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
 
     GridGrindResponse.Success asserted =
@@ -234,7 +239,8 @@ class AssertionExecutorCoverageTest {
                                 new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
                                     .ErrorValue(
                                     assertInstanceOf(
-                                            GridGrindResponse.CellReport.ErrorReport.class,
+                                            dev.erst.gridgrind.contract.dto.CellReport.ErrorReport
+                                                .class,
                                             errorFormula.evaluation())
                                         .errorValue()))),
                         assertThat(
@@ -244,7 +250,8 @@ class AssertionExecutorCoverageTest {
                                 new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
                                     .NumericValue(
                                     assertInstanceOf(
-                                            GridGrindResponse.CellReport.NumberReport.class,
+                                            dev.erst.gridgrind.contract.dto.CellReport.NumberReport
+                                                .class,
                                             totalFormula.evaluation())
                                         .numberValue()))),
                         assertThat(
@@ -442,9 +449,9 @@ class AssertionExecutorCoverageTest {
                             new SheetSelector.ByName("Budget"),
                             new InspectionQuery.AnalyzeFormulaHealth())))));
 
-    GridGrindResponse.CellReport.TextReport owner =
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport owner =
         assertInstanceOf(
-            GridGrindResponse.CellReport.TextReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
             inspection(inspected, "cells", InspectionResult.CellsResult.class).cells().getFirst());
     InspectionResult.WorkbookProtectionResult protection =
         inspection(inspected, "protection", InspectionResult.WorkbookProtectionResult.class);
@@ -470,7 +477,7 @@ class AssertionExecutorCoverageTest {
         List.of(),
         assertInstanceOf(
                 InspectionResult.NamedRangesResult.class,
-                presentMissing.problem().assertionFailure().observations().getFirst())
+                presentMissing.problem().assertionFailure().orElseThrow().observations().getFirst())
             .namedRanges());
 
     GridGrindResponse.Failure absentTable =
@@ -552,7 +559,12 @@ class AssertionExecutorCoverageTest {
         namedRanges.namedRanges(),
         assertInstanceOf(
                 InspectionResult.NamedRangesResult.class,
-                namedRangeMismatch.problem().assertionFailure().observations().getFirst())
+                namedRangeMismatch
+                    .problem()
+                    .assertionFailure()
+                    .orElseThrow()
+                    .observations()
+                    .getFirst())
             .namedRanges());
 
     GridGrindResponse.Failure tableMismatch =
@@ -567,7 +579,7 @@ class AssertionExecutorCoverageTest {
         tables.tables(),
         assertInstanceOf(
                 InspectionResult.TablesResult.class,
-                tableMismatch.problem().assertionFailure().observations().getFirst())
+                tableMismatch.problem().assertionFailure().orElseThrow().observations().getFirst())
             .tables());
 
     GridGrindResponse.Failure severityMismatch =
@@ -698,7 +710,7 @@ class AssertionExecutorCoverageTest {
                                         .Text("Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
-    assertNotNull(notFailure.problem().assertionFailure());
+    assertTrue(notFailure.problem().assertionFailure().isPresent());
   }
 
   @Test
@@ -724,12 +736,13 @@ class AssertionExecutorCoverageTest {
             .message()
             .contains("EXPECT_DISPLAY_VALUE resolved no matching cells"));
     assertEquals(
-        "display-missing-table-cell", displayFailure.problem().assertionFailure().stepId());
+        "display-missing-table-cell",
+        displayFailure.problem().assertionFailure().orElseThrow().stepId());
     assertEquals(
         List.of(),
         assertInstanceOf(
                 InspectionResult.CellsResult.class,
-                displayFailure.problem().assertionFailure().observations().getFirst())
+                displayFailure.problem().assertionFailure().orElseThrow().observations().getFirst())
             .cells());
 
     GridGrindResponse.Failure formulaFailure =
@@ -751,7 +764,8 @@ class AssertionExecutorCoverageTest {
             .message()
             .contains("EXPECT_FORMULA_TEXT resolved no matching cells"));
     assertEquals(
-        "formula-missing-table-cell", formulaFailure.problem().assertionFailure().stepId());
+        "formula-missing-table-cell",
+        formulaFailure.problem().assertionFailure().orElseThrow().stepId());
 
     GridGrindResponse.Failure styleFailure =
         failure(
@@ -768,7 +782,9 @@ class AssertionExecutorCoverageTest {
                     List.of())));
     assertTrue(
         styleFailure.problem().message().contains("EXPECT_CELL_STYLE resolved no matching cells"));
-    assertEquals("style-missing-table-cell", styleFailure.problem().assertionFailure().stepId());
+    assertEquals(
+        "style-missing-table-cell",
+        styleFailure.problem().assertionFailure().orElseThrow().stepId());
   }
 
   @Test
@@ -1032,23 +1048,56 @@ class AssertionExecutorCoverageTest {
                     1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
     GridGrindResponse.CellStyleReport style = style();
-    GridGrindResponse.CellReport.BlankReport blankCell =
-        new GridGrindResponse.CellReport.BlankReport("A1", "BLANK", "", style, null, null);
-    GridGrindResponse.CellReport.TextReport textCell =
-        new GridGrindResponse.CellReport.TextReport(
-            "A2", "STRING", "Owner", style, null, null, "Owner", null);
-    GridGrindResponse.CellReport.NumberReport numberCell =
-        new GridGrindResponse.CellReport.NumberReport(
-            "B2", "NUMERIC", "42", style, null, null, 42.0d);
-    GridGrindResponse.CellReport.BooleanReport booleanCell =
-        new GridGrindResponse.CellReport.BooleanReport(
-            "C2", "BOOLEAN", "TRUE", style, null, null, true);
-    GridGrindResponse.CellReport.ErrorReport errorCell =
-        new GridGrindResponse.CellReport.ErrorReport(
-            "D2", "ERROR", "#DIV/0!", style, null, null, "#DIV/0!");
-    GridGrindResponse.CellReport.FormulaReport formulaCell =
-        new GridGrindResponse.CellReport.FormulaReport(
-            "E2", "FORMULA", "42", style, null, null, "2+40", numberCell);
+    dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
+            "A1", "BLANK", "", style, java.util.Optional.empty(), java.util.Optional.empty());
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport textCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+            "A2",
+            "STRING",
+            "Owner",
+            style,
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            "Owner",
+            java.util.Optional.empty());
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
+            "B2",
+            "NUMERIC",
+            "42",
+            style,
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            42.0d);
+    dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
+            "C2",
+            "BOOLEAN",
+            "TRUE",
+            style,
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            true);
+    dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
+            "D2",
+            "ERROR",
+            "#DIV/0!",
+            style,
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            "#DIV/0!");
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
+        new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
+            "E2",
+            "FORMULA",
+            "42",
+            style,
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            "2+40",
+            numberCell);
 
     assertTrue(AssertionExecutor.matchesCellValue(blankCell, new ExpectedCellValue.Blank()));
     assertFalse(AssertionExecutor.matchesCellValue(textCell, new ExpectedCellValue.Blank()));
@@ -1239,8 +1288,12 @@ class AssertionExecutorCoverageTest {
                 ExecutionModeInput.ReadMode.EVENT_READ,
                 ExecutionModeInput.WriteMode.STREAMING_WRITE)));
 
-    assertEquals("2+3", ExecutionDiagnosticFields.formulaFor(new Assertion.FormulaText("2+3")));
-    assertEquals(null, ExecutionDiagnosticFields.formulaFor(new Assertion.TablePresent()));
+    assertEquals(
+        java.util.Optional.of("2+3"),
+        ExecutionDiagnosticFields.formulaFor(new Assertion.FormulaText("2+3")));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.formulaFor(new Assertion.TablePresent()));
 
     assertTrue(
         executor
@@ -1317,7 +1370,7 @@ class AssertionExecutorCoverageTest {
             null,
             false,
             false),
-        new CellFillReport(ExcelFillPattern.NONE, null, null),
+        CellFillReport.pattern(ExcelFillPattern.NONE),
         new CellBorderReport(emptySide, emptySide, emptySide, emptySide),
         new CellProtectionReport(true, false));
   }

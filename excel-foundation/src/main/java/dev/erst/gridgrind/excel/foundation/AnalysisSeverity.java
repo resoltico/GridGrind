@@ -1,4 +1,4 @@
-package dev.erst.gridgrind.contract.dto;
+package dev.erst.gridgrind.excel.foundation;
 
 /** Severity of one derived workbook finding. */
 public enum AnalysisSeverity {

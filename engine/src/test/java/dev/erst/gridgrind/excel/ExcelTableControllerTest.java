@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -592,15 +593,15 @@ class ExcelTableControllerTest {
       first.getCTTable().addNewTableStyleInfo().setName("MissingStyle");
       second.getCTTable().addNewTableStyleInfo().setName("MissingStyle");
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
 
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_DUPLICATE_HEADER));
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_OVERLAPPING_RANGE));
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_STYLE_MISMATCH));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_DUPLICATE_HEADER));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_OVERLAPPING_RANGE));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_STYLE_MISMATCH));
     }
   }
 
@@ -684,13 +685,13 @@ class ExcelTableControllerTest {
       table.getCTTable().setTotalsRowShown(true);
       table.getCTTable().addNewTableStyleInfo().setName("");
 
-      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+      List<AnalysisFindingCode> codes =
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList();
 
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
-      assertTrue(codes.contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_STYLE_MISMATCH));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_BROKEN_REFERENCE));
+      assertTrue(codes.contains(AnalysisFindingCode.TABLE_STYLE_MISMATCH));
     }
   }
 
@@ -710,8 +711,7 @@ class ExcelTableControllerTest {
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All());
 
       assertEquals(1, findings.size());
-      assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.TABLE_BROKEN_REFERENCE, findings.getFirst().code());
+      assertEquals(AnalysisFindingCode.TABLE_BROKEN_REFERENCE, findings.getFirst().code());
     }
   }
 
@@ -731,9 +731,7 @@ class ExcelTableControllerTest {
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
-      assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
-          findings.getFirst().code());
+      assertEquals(AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH, findings.getFirst().code());
     }
   }
 
@@ -754,8 +752,7 @@ class ExcelTableControllerTest {
 
       assertEquals(1, invalidRangeFindings.size());
       assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
-          invalidRangeFindings.getFirst().code());
+          AnalysisFindingCode.AUTOFILTER_INVALID_RANGE, invalidRangeFindings.getFirst().code());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
@@ -771,9 +768,7 @@ class ExcelTableControllerTest {
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
-      assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
-          findings.getFirst().code());
+      assertEquals(AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW, findings.getFirst().code());
     }
   }
 
@@ -795,9 +790,7 @@ class ExcelTableControllerTest {
           controller.tableAutofilterHealthFindings(workbook, "Ops");
 
       assertEquals(1, findings.size());
-      assertEquals(
-          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
-          findings.getFirst().code());
+      assertEquals(AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH, findings.getFirst().code());
       assertInstanceOf(
           WorkbookAnalysis.AnalysisLocation.Sheet.class, findings.getFirst().location());
     }
@@ -1029,7 +1022,7 @@ class ExcelTableControllerTest {
           controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
+              .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
 
       workbook.save(workbookPath);
     }
@@ -1042,7 +1035,7 @@ class ExcelTableControllerTest {
           controller.tableHealthFindings(reopened, new ExcelTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
-              .contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
+              .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
     }
   }
 

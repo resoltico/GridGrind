@@ -73,11 +73,12 @@ class Phase8ExecutorCoverageTest {
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertTrue(
         failure.problem().message().contains("EXPECT_CELL_VALUE resolved no matching cells"));
-    assertEquals("assert-missing-table-cell", failure.problem().assertionFailure().stepId());
+    assertEquals(
+        "assert-missing-table-cell", failure.problem().assertionFailure().orElseThrow().stepId());
     InspectionResult.CellsResult cellsResult =
         assertInstanceOf(
             InspectionResult.CellsResult.class,
-            failure.problem().assertionFailure().observations().getFirst());
+            failure.problem().assertionFailure().orElseThrow().observations().getFirst());
     assertEquals(List.of(), cellsResult.cells());
   }
 

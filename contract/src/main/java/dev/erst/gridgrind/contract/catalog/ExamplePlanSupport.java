@@ -21,6 +21,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
+import java.util.Optional;
 
 /** Shared DSL helpers for the contract-owned generated example registry. */
 final class ExamplePlanSupport {
@@ -39,7 +40,7 @@ final class ExamplePlanSupport {
       WorkbookStep... steps) {
     return new WorkbookPlan(
         dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-        planId,
+        Optional.ofNullable(planId),
         source,
         persistence,
         execution,

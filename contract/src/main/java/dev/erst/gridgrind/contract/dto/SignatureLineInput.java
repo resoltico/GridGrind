@@ -8,32 +8,31 @@ public record SignatureLineInput(
     String name,
     DrawingAnchorInput anchor,
     Boolean allowComments,
-    String signingInstructions,
-    String suggestedSigner,
-    String suggestedSigner2,
-    String suggestedSignerEmail,
-    String caption,
-    String invalidStamp,
-    PictureDataInput plainSignature) {
+    Optional<String> signingInstructions,
+    Optional<String> suggestedSigner,
+    Optional<String> suggestedSigner2,
+    Optional<String> suggestedSignerEmail,
+    Optional<String> caption,
+    Optional<String> invalidStamp,
+    Optional<PictureDataInput> plainSignature) {
   public SignatureLineInput {
     requireNonBlank(name, "name");
     anchor = requireTwoCellAnchor(anchor);
     allowComments = allowComments == null ? Boolean.TRUE : allowComments;
-    signingInstructions =
-        normalizeOptional(signingInstructions, "signingInstructions").orElse(null);
-    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner").orElse(null);
-    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2").orElse(null);
-    suggestedSignerEmail =
-        normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail").orElse(null);
-    caption = normalizeOptional(caption, "caption").orElse(null);
-    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp").orElse(null);
-    if (caption != null && caption.lines().count() > 3L) {
+    signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
+    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
+    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2");
+    suggestedSignerEmail = normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail");
+    caption = normalizeOptional(caption, "caption");
+    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp");
+    plainSignature = Objects.requireNonNullElseGet(plainSignature, Optional::empty);
+    if (caption.isPresent() && caption.orElseThrow().lines().count() > 3L) {
       throw new IllegalArgumentException("caption must contain at most three lines");
     }
-    if (caption == null
-        && suggestedSigner == null
-        && suggestedSigner2 == null
-        && suggestedSignerEmail == null) {
+    if (caption.isEmpty()
+        && suggestedSigner.isEmpty()
+        && suggestedSigner2.isEmpty()
+        && suggestedSignerEmail.isEmpty()) {
       throw new IllegalArgumentException(
           "caption or at least one suggested signer field must be provided");
     }
@@ -47,14 +46,16 @@ public record SignatureLineInput(
     return value;
   }
 
-  private static Optional<String> normalizeOptional(String value, String fieldName) {
-    if (value == null) {
+  private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    if (normalized.isEmpty()) {
       return Optional.empty();
     }
-    if (value.isBlank()) {
+    String presentValue = normalized.orElseThrow();
+    if (presentValue.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
-    return Optional.of(value);
+    return Optional.of(presentValue);
   }
 
   private static DrawingAnchorInput requireTwoCellAnchor(DrawingAnchorInput anchor) {

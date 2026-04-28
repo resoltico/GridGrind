@@ -132,7 +132,15 @@ class ExcelSheetClonePreparationSupportTest {
             () ->
                 ExcelSheetClonePreparationSupport.requireHyperlinksField(
                     MethodHandles.publicLookup()));
-    assertTrue(hyperlinksFieldLookupFailure.getMessage().contains("POI sheet hyperlink registry"));
+    assertTrue(
+        hyperlinksFieldLookupFailure
+            .getMessage()
+            .contains("Apache POI private contract unavailable"));
+    assertTrue(
+        hyperlinksFieldLookupFailure
+            .getMessage()
+            .contains(
+                ExcelSheetClonePreparationSupport.HYPERLINKS_FIELD_CONTRACT.affectedSurface()));
 
     IllegalStateException hyperlinkConstructorLookupFailure =
         assertThrows(
@@ -141,6 +149,10 @@ class ExcelSheetClonePreparationSupportTest {
                 ExcelSheetClonePreparationSupport.requireHyperlinkConstructor(
                     MethodHandles.publicLookup()));
     assertTrue(
-        hyperlinkConstructorLookupFailure.getMessage().contains("POI hyperlink constructor"));
+        hyperlinkConstructorLookupFailure
+            .getMessage()
+            .contains(
+                ExcelSheetClonePreparationSupport.HYPERLINK_CONSTRUCTOR_CONTRACT
+                    .affectedSurface()));
   }
 }

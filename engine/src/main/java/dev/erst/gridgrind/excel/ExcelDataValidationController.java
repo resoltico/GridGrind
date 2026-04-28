@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.ArrayList;
@@ -573,8 +575,8 @@ final class ExcelDataValidationController {
         if (explicitList.values().isEmpty()) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
-                  WorkbookAnalysis.AnalysisSeverity.ERROR,
+                  AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
+                  AnalysisSeverity.ERROR,
                   "Explicit-list validation is empty",
                   "Explicit-list validation contains no values.",
                   location,
@@ -627,16 +629,16 @@ final class ExcelDataValidationController {
         new WorkbookAnalysis.AnalysisLocation.Range(sheetName, unsupported.ranges().getFirst());
     if ("MISSING_FORMULA".equals(unsupported.kind())) {
       return new WorkbookAnalysis.AnalysisFinding(
-          WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
-          WorkbookAnalysis.AnalysisSeverity.ERROR,
+          AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
+          AnalysisSeverity.ERROR,
           "Data-validation rule is malformed",
           unsupported.detail(),
           location,
           unsupported.ranges());
     }
     return new WorkbookAnalysis.AnalysisFinding(
-        WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
-        WorkbookAnalysis.AnalysisSeverity.WARNING,
+        AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
+        AnalysisSeverity.WARNING,
         "Unsupported data-validation rule",
         unsupported.detail(),
         location,
@@ -710,8 +712,8 @@ final class ExcelDataValidationController {
     if (formula.toUpperCase(Locale.ROOT).contains("#REF!")) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
+              AnalysisSeverity.ERROR,
               "Broken data-validation formula",
               "Data-validation " + label + " contains a broken reference.",
               location,
@@ -731,8 +733,8 @@ final class ExcelDataValidationController {
             }
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES,
-                    WorkbookAnalysis.AnalysisSeverity.WARNING,
+                    AnalysisFindingCode.DATA_VALIDATION_OVERLAPPING_RULES,
+                    AnalysisSeverity.WARNING,
                     "Overlapping data-validation rules",
                     "Two data-validation structures overlap on the same sheet.",
                     new WorkbookAnalysis.AnalysisLocation.Range(sheetName, firstRange),

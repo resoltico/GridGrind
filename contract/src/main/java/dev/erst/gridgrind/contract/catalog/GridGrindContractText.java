@@ -214,11 +214,13 @@ public final class GridGrindContractText {
 
   /** Maximum accepted JSON request document size in bytes. */
   public static long requestDocumentLimitBytes() {
+    // LIM-021
     return REQUEST_DOCUMENT_LIMIT_BYTES;
   }
 
   /** Human-readable summary of the canonical JSON request document limit. */
   public static String requestDocumentLimitSummary() {
+    // LIM-021
     return "request JSON must not exceed 16 MiB ("
         + REQUEST_DOCUMENT_LIMIT_BYTES
         + " bytes); use UTF8_FILE, FILE, or STANDARD_INPUT sources for large authored payloads.";
@@ -226,6 +228,7 @@ public final class GridGrindContractText {
 
   /** One stable product-owned message for oversized JSON request payloads. */
   public static String requestDocumentTooLargeMessage() {
+    // LIM-021
     return "Request JSON exceeds the maximum size of 16 MiB ("
         + REQUEST_DOCUMENT_LIMIT_BYTES
         + " bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT"

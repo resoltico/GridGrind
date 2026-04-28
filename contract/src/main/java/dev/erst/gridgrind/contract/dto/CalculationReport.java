@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Structured response-side report for explicit formula calculation policy, preflight, and
@@ -11,19 +12,30 @@ import java.util.Objects;
  */
 public record CalculationReport(
     CalculationPolicyInput policy,
-    @JsonInclude(JsonInclude.Include.NON_NULL) Preflight preflight,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Preflight> preflight,
     Execution execution) {
   public CalculationReport {
-    policy = policy == null ? new CalculationPolicyInput(null, false) : policy;
+    policy = policy == null ? CalculationPolicyInput.defaults() : policy;
+    preflight = Objects.requireNonNullElseGet(preflight, Optional::empty);
     Objects.requireNonNull(execution, "execution must not be null");
+  }
+
+  /** Creates one calculation report without a preflight section. */
+  public CalculationReport(CalculationPolicyInput policy, Execution execution) {
+    this(policy, Optional.empty(), execution);
+  }
+
+  /** Creates one calculation report with a concrete preflight section. */
+  public CalculationReport(
+      CalculationPolicyInput policy, Preflight preflight, Execution execution) {
+    this(policy, Optional.of(preflight), execution);
   }
 
   /** Returns the default report emitted when calculation was not requested. */
   public static CalculationReport notRequested() {
     return new CalculationReport(
-        new CalculationPolicyInput(null, false),
-        null,
-        new Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, null));
+        CalculationPolicyInput.defaults(),
+        new Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, Optional.empty()));
   }
 
   /** Structured preflight report emitted before any server-side calculation attempt. */
@@ -68,22 +80,24 @@ public record CalculationReport(
       CellSelector.QualifiedAddress cell,
       String formula,
       FormulaCapabilityKind capability,
-      @JsonInclude(JsonInclude.Include.NON_NULL) GridGrindProblemCode problemCode,
-      @JsonInclude(JsonInclude.Include.NON_NULL) String message) {
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindProblemCode> problemCode,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> message) {
     public FormulaCapability {
       Objects.requireNonNull(cell, "cell must not be null");
       WorkbookPlan.requireNonBlank(formula, "formula");
       Objects.requireNonNull(capability, "capability must not be null");
-      if (capability == FormulaCapabilityKind.EVALUABLE_NOW && problemCode != null) {
+      problemCode = Objects.requireNonNullElseGet(problemCode, Optional::empty);
+      message = normalizeOptional(message, "message");
+      if (capability == FormulaCapabilityKind.EVALUABLE_NOW && problemCode.isPresent()) {
         throw new IllegalArgumentException(
             "problemCode is not permitted for EVALUABLE_NOW formulas");
       }
-      if (capability != FormulaCapabilityKind.EVALUABLE_NOW && problemCode == null) {
+      if (capability == FormulaCapabilityKind.EVALUABLE_NOW && message.isPresent()) {
+        throw new IllegalArgumentException("message is not permitted for EVALUABLE_NOW formulas");
+      }
+      if (capability != FormulaCapabilityKind.EVALUABLE_NOW && problemCode.isEmpty()) {
         throw new IllegalArgumentException(
             "problemCode must be present for non-evaluable formula capabilities");
-      }
-      if (message != null) {
-        WorkbookPlan.requireNonBlank(message, "message");
       }
     }
   }
@@ -94,15 +108,27 @@ public record CalculationReport(
       int evaluatedFormulaCount,
       boolean cachesCleared,
       boolean markRecalculateOnOpenApplied,
-      @JsonInclude(JsonInclude.Include.NON_NULL) String message) {
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> message) {
     public Execution {
       Objects.requireNonNull(status, "status must not be null");
       if (evaluatedFormulaCount < 0) {
         throw new IllegalArgumentException("evaluatedFormulaCount must be >= 0");
       }
-      if (message != null) {
-        WorkbookPlan.requireNonBlank(message, "message");
-      }
+      message = normalizeOptional(message, "message");
+    }
+
+    /** Creates one execution report without a message. */
+    public Execution(
+        CalculationExecutionStatus status,
+        int evaluatedFormulaCount,
+        boolean cachesCleared,
+        boolean markRecalculateOnOpenApplied) {
+      this(
+          status,
+          evaluatedFormulaCount,
+          cachesCleared,
+          markRecalculateOnOpenApplied,
+          Optional.empty());
     }
   }
 
@@ -113,5 +139,13 @@ public record CalculationReport(
       copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
     }
     return List.copyOf(copy);
+  }
+
+  private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    if (normalized.isPresent()) {
+      normalized = Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+    }
+    return normalized;
   }
 }

@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Primary fluent Java entrypoint that authors focused workbook workflows and compiles them to the
@@ -29,7 +30,7 @@ import java.util.Objects;
  */
 public final class GridGrindPlan {
   private GridGrindProtocolVersion protocolVersion;
-  private String planId;
+  private Optional<String> planId;
   private WorkbookPlan.WorkbookSource source;
   private WorkbookPlan.WorkbookPersistence persistence;
   private ExecutionPolicyInput execution;
@@ -42,17 +43,17 @@ public final class GridGrindPlan {
   private GridGrindPlan(WorkbookPlan.WorkbookSource source) {
     this(
         GridGrindProtocolVersion.current(),
-        null,
+        Optional.empty(),
         source,
         new WorkbookPlan.WorkbookPersistence.None(),
-        null,
-        null,
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
         List.of());
   }
 
   private GridGrindPlan(
       GridGrindProtocolVersion protocolVersion,
-      String planId,
+      Optional<String> planId,
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
@@ -60,12 +61,13 @@ public final class GridGrindPlan {
       List<WorkbookStep> steps) {
     this.protocolVersion =
         Objects.requireNonNullElse(protocolVersion, GridGrindProtocolVersion.current());
-    this.planId = planId;
+    this.planId = Objects.requireNonNullElseGet(planId, Optional::empty);
     this.source = Objects.requireNonNull(source, "source must not be null");
     this.persistence =
         Objects.requireNonNullElseGet(persistence, WorkbookPlan.WorkbookPersistence.None::new);
-    this.execution = execution;
-    this.formulaEnvironment = formulaEnvironment;
+    this.execution = Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults);
+    this.formulaEnvironment =
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty);
     this.steps = new ArrayList<>(Objects.requireNonNull(steps, "steps must not be null"));
     recountStepIds(this.steps);
   }
@@ -96,10 +98,17 @@ public final class GridGrindPlan {
 
   /** Sets an explicit plan id for journaling and external correlation. */
   public GridGrindPlan planId(String newPlanId) {
-    if (newPlanId != null && newPlanId.isBlank()) {
+    Objects.requireNonNull(newPlanId, "newPlanId must not be null");
+    if (newPlanId.isBlank()) {
       throw new IllegalArgumentException("planId must not be blank");
     }
-    this.planId = newPlanId;
+    this.planId = Optional.of(newPlanId);
+    return this;
+  }
+
+  /** Clears any previously assigned plan id. */
+  public GridGrindPlan clearPlanId() {
+    this.planId = Optional.empty();
     return this;
   }
 
@@ -126,9 +135,7 @@ public final class GridGrindPlan {
   public GridGrindPlan journal(ExecutionJournalLevel level) {
     this.execution =
         new ExecutionPolicyInput(
-            execution == null ? null : execution.mode(),
-            new ExecutionJournalInput(level),
-            execution == null ? null : execution.calculation());
+            execution.mode(), new ExecutionJournalInput(level), execution.calculation());
     return this;
   }
 

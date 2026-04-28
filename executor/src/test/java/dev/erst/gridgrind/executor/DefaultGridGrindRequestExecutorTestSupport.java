@@ -94,6 +94,66 @@ class DefaultGridGrindRequestExecutorTestSupport {
     return cast(GridGrindResponse.Failure.class, response);
   }
 
+  static ProblemContext.ReadRequest readRequestContext(GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.ReadRequest.class, problem.context());
+  }
+
+  static ProblemContext.ReadRequest readRequestContext(GridGrindResponse.Failure failure) {
+    return readRequestContext(failure.problem());
+  }
+
+  static ProblemContext.OpenWorkbook openWorkbookContext(GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.OpenWorkbook.class, problem.context());
+  }
+
+  static ProblemContext.OpenWorkbook openWorkbookContext(GridGrindResponse.Failure failure) {
+    return openWorkbookContext(failure.problem());
+  }
+
+  static ProblemContext.PersistWorkbook persistWorkbookContext(GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.PersistWorkbook.class, problem.context());
+  }
+
+  static ProblemContext.PersistWorkbook persistWorkbookContext(GridGrindResponse.Failure failure) {
+    return persistWorkbookContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteRequest executeRequestContext(GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.ExecuteRequest.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteRequest executeRequestContext(GridGrindResponse.Failure failure) {
+    return executeRequestContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteStep executeStepContext(GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.ExecuteStep.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteStep executeStepContext(GridGrindResponse.Failure failure) {
+    return executeStepContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteCalculation.Preflight calculationPreflightContext(
+      GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.ExecuteCalculation.Preflight.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteCalculation.Preflight calculationPreflightContext(
+      GridGrindResponse.Failure failure) {
+    return calculationPreflightContext(failure.problem());
+  }
+
+  static ProblemContext.ExecuteCalculation.Execution calculationExecutionContext(
+      GridGrindResponse.Problem problem) {
+    return cast(ProblemContext.ExecuteCalculation.Execution.class, problem.context());
+  }
+
+  static ProblemContext.ExecuteCalculation.Execution calculationExecutionContext(
+      GridGrindResponse.Failure failure) {
+    return calculationExecutionContext(failure.problem());
+  }
+
   static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
       case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
@@ -125,11 +185,11 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String sheetNameFor(WorkbookStep step) {
-    return ExecutionDiagnosticFields.sheetNameFor(step);
+    return ExecutionDiagnosticFields.sheetNameFor(step).orElse(null);
   }
 
   static String sheetNameFor(WorkbookStep step, Exception exception) {
-    return ExecutionDiagnosticFields.sheetNameFor(step, exception);
+    return ExecutionDiagnosticFields.sheetNameFor(step, exception).orElse(null);
   }
 
   static String sheetNameFor(
@@ -138,7 +198,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String addressFor(WorkbookStep step, Exception exception) {
-    return ExecutionDiagnosticFields.addressFor(step, exception);
+    return ExecutionDiagnosticFields.addressFor(step, exception).orElse(null);
   }
 
   static String addressFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
@@ -146,7 +206,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String rangeFor(WorkbookStep step, Exception exception) {
-    return ExecutionDiagnosticFields.rangeFor(step, exception);
+    return ExecutionDiagnosticFields.rangeFor(step, exception).orElse(null);
   }
 
   static String rangeFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
@@ -154,7 +214,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String formulaFor(WorkbookStep step, Exception exception) {
-    return ExecutionDiagnosticFields.formulaFor(step, exception);
+    return ExecutionDiagnosticFields.formulaFor(step, exception).orElse(null);
   }
 
   static String formulaFor(ExecutorTestPlanSupport.PendingMutation mutation, Exception exception) {
@@ -167,7 +227,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String namedRangeNameFor(WorkbookStep step, Exception exception) {
-    return ExecutionDiagnosticFields.namedRangeNameFor(step, exception);
+    return ExecutionDiagnosticFields.namedRangeNameFor(step, exception).orElse(null);
   }
 
   static void assertReadContext(
@@ -219,8 +279,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
             null,
             false,
             false),
-        new ExcelCellFillSnapshot(
-            dev.erst.gridgrind.excel.foundation.ExcelFillPattern.NONE, null, null),
+        ExcelCellFillSnapshot.pattern(dev.erst.gridgrind.excel.foundation.ExcelFillPattern.NONE),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
@@ -262,7 +321,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static CellColorReport rgb(String rgb) {
-    return new CellColorReport(rgb);
+    return CellColorReport.rgb(rgb);
   }
 
   static ExcelSheetProtectionSettings excelProtectionSettings() {

@@ -25,6 +25,13 @@ final class ExcelRgbColorSupport {
     return Optional.of(color.toUpperCase(Locale.ROOT));
   }
 
+  /** Normalizes one required {@code #RRGGBB} color literal for storage and comparison. */
+  static String requireRgbHex(String color, String fieldName) {
+    return normalizeRgbHex(
+            Objects.requireNonNull(color, fieldName + " must not be null"), fieldName)
+        .orElseThrow();
+  }
+
   /** Converts one POI workbook color into {@code #RRGGBB}, or null when no RGB is available. */
   static Optional<String> toRgbHex(XSSFColor color) {
     if (color == null) {

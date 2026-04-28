@@ -16,6 +16,7 @@ import dev.erst.gridgrind.contract.catalog.TaskCatalog;
 import dev.erst.gridgrind.contract.catalog.TaskPlanTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -40,11 +41,9 @@ class GridGrindJsonCoverageTest {
   @Test
   void readsResponsesAndCatalogsFromStreamsWithoutClosingThem() throws IOException {
     GridGrindResponse response =
-        GridGrindResponse.success(
-            null,
-            null,
-            null,
-            null,
+        GridGrindResponses.success(
+            List.of(),
+            List.of(),
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -259,8 +258,7 @@ class GridGrindJsonCoverageTest {
                 () ->
                     GridGrindJson.writeResponse(
                         null,
-                        GridGrindResponse.failure(
-                            null,
+                        GridGrindResponses.failure(
                             new GridGrindResponse.Problem(
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON,
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
@@ -272,8 +270,10 @@ class GridGrindJsonCoverageTest {
                                 "bad",
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
                                     .resolution(),
-                                new GridGrindResponse.ProblemContext.ParseArguments("--request"),
-                                null,
+                                new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
+                                    dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument
+                                        .named("--request")),
+                                java.util.Optional.empty(),
                                 List.of()))))
             .getMessage());
     assertEquals(
@@ -497,11 +497,9 @@ class GridGrindJsonCoverageTest {
                 .formatted(largeText)
                 .getBytes(StandardCharsets.UTF_8));
     GridGrindResponse response =
-        GridGrindResponse.success(
-            null,
-            null,
-            null,
-            null,
+        GridGrindResponses.success(
+            List.of(),
+            List.of(),
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -515,6 +513,43 @@ class GridGrindJsonCoverageTest {
     assertStreamSerializationMatchesBytes(
         GridGrindJson.writeProtocolCatalogBytes(catalog),
         out -> GridGrindJson.writeProtocolCatalog(out, catalog));
+  }
+
+  @Test
+  void discoverySerializersOmitExplicitNullProperties() throws IOException {
+    String catalogJson =
+        new String(
+            GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()),
+            StandardCharsets.UTF_8);
+    ByteArrayOutputStream typeEntryOutput = new ByteArrayOutputStream();
+    GridGrindJson.writeTypeEntry(
+        typeEntryOutput, GridGrindProtocolCatalog.entryFor("EXPECT_TABLE_PRESENT").orElseThrow());
+    String typeEntryJson = typeEntryOutput.toString(StandardCharsets.UTF_8);
+
+    assertFalse(catalogJson.contains(": null"));
+    assertFalse(typeEntryJson.contains(": null"));
+    assertFalse(typeEntryJson.contains("targetSelectorRule"));
+  }
+
+  @Test
+  void requestAndResponseSerializersOmitExplicitNullProperties() throws IOException {
+    WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
+    GridGrindResponse response =
+        GridGrindResponses.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
+                    "summary",
+                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+
+    String requestJson =
+        new String(GridGrindJson.writeRequestBytes(request), StandardCharsets.UTF_8);
+    String responseJson =
+        new String(GridGrindJson.writeResponseBytes(response), StandardCharsets.UTF_8);
+
+    assertFalse(requestJson.contains(": null"));
+    assertFalse(responseJson.contains(": null"));
   }
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {

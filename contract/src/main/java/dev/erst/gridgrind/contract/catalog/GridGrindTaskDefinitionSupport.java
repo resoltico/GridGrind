@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.catalog;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.List;
+import java.util.Optional;
 
 /** Shared builders for contract-owned task definitions and starter templates. */
 final class GridGrindTaskDefinitionSupport {
@@ -19,7 +20,7 @@ final class GridGrindTaskDefinitionSupport {
       WorkbookPlan.WorkbookPersistence persistence) {
     return new WorkbookPlan(
         dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-        planId,
+        Optional.ofNullable(planId),
         source,
         persistence,
         template.execution(),

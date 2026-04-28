@@ -25,8 +25,8 @@ final class CliJournalWriter {
             + event.timestamp()
             + " "
             + event.category()
-            + (event.stepId() == null ? "" : " stepId=" + event.stepId())
-            + (event.stepIndex() == null ? "" : " stepIndex=" + event.stepIndex())
+            + event.stepId().map(stepId -> " stepId=" + stepId).orElse("")
+            + event.stepIndex().map(stepIndex -> " stepIndex=" + stepIndex).orElse("")
             + " "
             + event.detail()
             + System.lineSeparator();

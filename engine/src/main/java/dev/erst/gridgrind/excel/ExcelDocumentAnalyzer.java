@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -145,11 +146,11 @@ final class ExcelDocumentAnalyzer {
     int warningCount = 0;
     int infoCount = 0;
     for (WorkbookAnalysis.AnalysisFinding finding : findings) {
-      if (finding.severity() == WorkbookAnalysis.AnalysisSeverity.ERROR) {
+      if (finding.severity() == AnalysisSeverity.ERROR) {
         errorCount++;
         continue;
       }
-      if (finding.severity() == WorkbookAnalysis.AnalysisSeverity.WARNING) {
+      if (finding.severity() == AnalysisSeverity.WARNING) {
         warningCount++;
         continue;
       }

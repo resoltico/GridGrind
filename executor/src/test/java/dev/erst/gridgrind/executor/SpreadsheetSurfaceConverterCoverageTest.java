@@ -80,13 +80,13 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 "OpsSignature",
                 inputAnchor(),
                 false,
-                "Review before signing.",
-                "Ada Lovelace",
-                null,
-                null,
-                null,
-                "invalid",
-                null));
+                java.util.Optional.of("Review before signing."),
+                java.util.Optional.of("Ada Lovelace"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.of("invalid"),
+                java.util.Optional.empty()));
 
     assertEquals(expectedDefinitionPlotTypes(), plotTypes(definition.plots()));
     assertEquals(
@@ -202,13 +202,13 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 "OpsSignature",
                 inputAnchor(),
                 true,
-                null,
-                "Ada Lovelace",
-                null,
-                null,
-                null,
-                null,
-                null));
+                java.util.Optional.empty(),
+                java.util.Optional.of("Ada Lovelace"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty()));
     MutationAction.SetChart stableChartAction =
         new MutationAction.SetChart(
             new ChartInput(
@@ -240,13 +240,13 @@ class SpreadsheetSurfaceConverterCoverageTest {
                 "OpsSignature",
                 inputAnchor(),
                 true,
-                null,
-                "Ada Lovelace",
-                null,
-                null,
-                null,
-                null,
-                null)));
+                java.util.Optional.empty(),
+                java.util.Optional.of("Ada Lovelace"),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty(),
+                java.util.Optional.empty())));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CustomXmlImportInput(
@@ -323,13 +323,14 @@ class SpreadsheetSurfaceConverterCoverageTest {
         "OpsSignature",
         inputAnchor(),
         true,
-        null,
-        "Ada Lovelace",
-        null,
-        null,
-        null,
-        null,
-        new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput()));
+        java.util.Optional.empty(),
+        java.util.Optional.of("Ada Lovelace"),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.of(
+            new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput())));
   }
 
   private static SignatureLineInput signatureLineWithInlineBinary() {
@@ -337,14 +338,15 @@ class SpreadsheetSurfaceConverterCoverageTest {
         "OpsSignature",
         inputAnchor(),
         true,
-        null,
-        "Ada Lovelace",
-        null,
-        null,
-        null,
-        null,
-        new PictureDataInput(
-            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("cGF5bG9hZA==")));
+        java.util.Optional.empty(),
+        java.util.Optional.of("Ada Lovelace"),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.of(
+            new PictureDataInput(
+                ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("cGF5bG9hZA=="))));
   }
 
   private static DrawingAnchorInput.TwoCell inputAnchor() {

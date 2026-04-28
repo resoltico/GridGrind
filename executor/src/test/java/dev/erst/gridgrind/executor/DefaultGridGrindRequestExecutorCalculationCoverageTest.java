@@ -10,13 +10,13 @@ import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.request;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -49,7 +49,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy(calculateAll()),
-            null,
+            FormulaEnvironmentInput.empty(),
             java.util.List.<WorkbookStep>of(
                 new MutationStep(
                     "step-01-ensure-sheet",
@@ -129,7 +129,12 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals("CALCULATION_EXECUTION", failure.problem().context().stage());
     assertEquals(CalculationExecutionStatus.FAILED, failure.calculation().execution().status());
     assertTrue(
-        failure.calculation().execution().message().contains("streaming calculation failed"));
+        failure
+            .calculation()
+            .execution()
+            .message()
+            .orElseThrow()
+            .contains("streaming calculation failed"));
   }
 
   @Test
@@ -154,14 +159,23 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               ExecutionJournalRecorder.start(preflightRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport preflightReport = preflightOutcome.report();
-      GridGrindResponse.Problem preflightFailure = preflightOutcome.failure();
+      GridGrindResponse.Problem preflightFailure = preflightOutcome.failure().orElseThrow();
       assertEquals(CalculationExecutionStatus.FAILED, preflightReport.execution().status());
       assertEquals(
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, preflightFailure.code());
       assertEquals("CALCULATION_PREFLIGHT", preflightFailure.context().stage());
-      assertEquals("Ops", preflightFailure.context().sheetName());
-      assertEquals("A1", preflightFailure.context().address());
-      assertEquals("TEXTAFTER(\"a,b\",\",\")", preflightFailure.context().formula());
+      assertEquals(
+          java.util.Optional.of("Ops"),
+          DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
+              .sheetName());
+      assertEquals(
+          java.util.Optional.of("A1"),
+          DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
+              .address());
+      assertEquals(
+          java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"),
+          DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(preflightFailure)
+              .formula());
     }
 
     WorkbookPlan clearCachesRequest =
@@ -179,13 +193,22 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               ExecutionJournalRecorder.start(clearCachesRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport executionReport = executionOutcome.report();
-      GridGrindResponse.Problem executionFailure = executionOutcome.failure();
+      GridGrindResponse.Problem executionFailure = executionOutcome.failure().orElseThrow();
       assertEquals(CalculationExecutionStatus.FAILED, executionReport.execution().status());
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, executionFailure.code());
       assertEquals("CALCULATION_EXECUTION", executionFailure.context().stage());
-      assertNull(executionFailure.context().sheetName());
-      assertNull(executionFailure.context().address());
-      assertNull(executionFailure.context().formula());
+      assertEquals(
+          java.util.Optional.empty(),
+          DefaultGridGrindRequestExecutorTestSupport.calculationExecutionContext(executionFailure)
+              .sheetName());
+      assertEquals(
+          java.util.Optional.empty(),
+          DefaultGridGrindRequestExecutorTestSupport.calculationExecutionContext(executionFailure)
+              .address());
+      assertEquals(
+          java.util.Optional.empty(),
+          DefaultGridGrindRequestExecutorTestSupport.calculationExecutionContext(executionFailure)
+              .formula());
     }
 
     WorkbookPlan markOnlyRequest =
@@ -205,7 +228,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       CalculationReport markOnlyReport = markOnlyOutcome.report();
       assertEquals(CalculationExecutionStatus.SUCCEEDED, markOnlyReport.execution().status());
       assertTrue(markOnlyReport.execution().markRecalculateOnOpenApplied());
-      assertNull(markOnlyOutcome.failure());
+      assertTrue(markOnlyOutcome.failure().isEmpty());
     }
 
     CalculationPolicyExecutor.FailureDetail codeFailure =
@@ -222,21 +245,50 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, mappedCodeFailure.code());
     assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().stage());
 
-    GridGrindResponse.ProblemContext.ExecuteCalculation nullFailureContext =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation nullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, null);
     assertEquals("CALCULATION_EXECUTION", nullFailureContext.stage());
-    assertNull(nullFailureContext.sheetName());
-    assertNull(nullFailureContext.address());
-    assertNull(nullFailureContext.formula());
+    assertEquals(java.util.Optional.empty(), nullFailureContext.sheetName());
+    assertEquals(java.util.Optional.empty(), nullFailureContext.address());
+    assertEquals(java.util.Optional.empty(), nullFailureContext.formula());
 
-    GridGrindResponse.ProblemContext.ExecuteCalculation preflightNullFailureContext =
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation preflightNullFailureContext =
         calculationSupport.calculationContextFor(
             preflightRequest, CalculationPolicyExecutor.Phase.PREFLIGHT, null);
     assertEquals("CALCULATION_PREFLIGHT", preflightNullFailureContext.stage());
-    assertNull(preflightNullFailureContext.sheetName());
-    assertNull(preflightNullFailureContext.address());
-    assertNull(preflightNullFailureContext.formula());
+    assertEquals(java.util.Optional.empty(), preflightNullFailureContext.sheetName());
+    assertEquals(java.util.Optional.empty(), preflightNullFailureContext.address());
+    assertEquals(java.util.Optional.empty(), preflightNullFailureContext.formula());
+
+    CalculationPolicyExecutor.FailureDetail missingFormulaField =
+        new CalculationPolicyExecutor.FailureDetail(
+            GridGrindProblemCode.INVALID_FORMULA,
+            CalculationPolicyExecutor.Phase.EXECUTION,
+            "Budget",
+            "B4",
+            null,
+            "invalid formula",
+            null);
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation missingFormulaContext =
+        calculationSupport.calculationContextFor(
+            preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, missingFormulaField);
+    assertEquals(java.util.Optional.empty(), missingFormulaContext.sheetName());
+    assertEquals(java.util.Optional.empty(), missingFormulaContext.address());
+
+    CalculationPolicyExecutor.FailureDetail missingAddressField =
+        new CalculationPolicyExecutor.FailureDetail(
+            GridGrindProblemCode.INVALID_FORMULA,
+            CalculationPolicyExecutor.Phase.EXECUTION,
+            "Budget",
+            null,
+            "SUM(",
+            "invalid formula",
+            null);
+    dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation missingAddressContext =
+        calculationSupport.calculationContextFor(
+            preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, missingAddressField);
+    assertEquals(java.util.Optional.empty(), missingAddressContext.sheetName());
   }
 
   private static GridGrindResponse.Failure failure(GridGrindResponse response) {

@@ -1,125 +1,120 @@
-<!--
-RETRIEVAL_HINTS:
-  keywords: [gridgrind, excel, xlsx, workbook, automation, spreadsheet, quick-start]
-  questions: ["what is gridgrind", "who is gridgrind for", "how do i start with gridgrind", "can gridgrind work with existing excel files", "do i need excel installed"]
--->
-
 [![GridGrind Art](https://raw.githubusercontent.com/resoltico/GridGrind/main/images/GridGrind.jpg)](https://github.com/resoltico/GridGrind)
 
 [![CI](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml/badge.svg)](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/resoltico/GridGrind)](https://github.com/resoltico/GridGrind/releases/latest)
 
------
+# GridGrind — .xlsx workbook automation from a JSON request
 
-# GridGrind — a calmer way to keep `.xlsx` workbook work on track
+GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets, write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and returns a structured JSON response. If anything fails, nothing is written. No Excel installation required.
 
-*GridGrind helps you update, check, and read `.xlsx` workbooks in one repeatable run, so spreadsheet work that comes back again and again stops eating manual time.*
+The common alternative is a mix of file-manipulation libraries, hand-written scripts, and post-write checks that run after the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces that split with one atomic pass: request in, result out, workbook saved only when every step succeeds.
 
-## First Sip
+- Write `.xlsx` workbooks from JSON: sheets, cells, styles, tables, formulas, charts, drawings
+- Read facts back in the same plan: cell values, sheet layout, health analysis, pivot data
+- Assert workbook state mid-run — a failed assertion stops the plan before saving
+- Run from Docker or a self-contained JAR, against new workbooks or existing `.xlsx` files
 
-- Keep recurring workbook work consistent.
-- Update a workbook, check it, and read back what matters in one pass.
-- Catch problems before a file is written.
-- Start from a quick start guide, built-in example generators, and real examples instead of a blank page.
+[First run →](docs/QUICK_START.md) · [Snippets](docs/QUICK_REFERENCE.md) · [Latest release](https://github.com/resoltico/GridGrind/releases/latest)
 
-## Who It's For
+## One request, one result
 
-- For teams whose day still runs through Excel workbooks.
-- For people tired of opening the same `.xlsx` files and walking through the same steps by hand.
-- For workbook work that should be consistent, reviewable, and easy to run again.
+Alice logs green coffee arrivals at High Ground Roasters every Monday. One JSON request writes new lot data, asserts the workbook is clean, reads facts back, and saves — or stops cleanly if any step fails:
 
-## What It Changes
+```json
+{
+  "source": { "type": "NEW" },
+  "persistence": { "type": "SAVE_AS", "path": "lots.xlsx" },
+  "steps": [
+    {
+      "stepId": "sheet",
+      "target": { "type": "SHEET_BY_NAME", "name": "Lots" },
+      "action": { "type": "ENSURE_SHEET" }
+    },
+    {
+      "stepId": "log-lot",
+      "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Lots", "address": "A1" },
+      "action": {
+        "type": "SET_CELL",
+        "value": { "type": "TEXT", "source": { "type": "INLINE", "text": "Ethiopia Yirgacheffe" } }
+      }
+    },
+    {
+      "stepId": "check",
+      "target": { "type": "WORKBOOK_CURRENT" },
+      "assertion": {
+        "type": "EXPECT_ANALYSIS_FINDING_ABSENT",
+        "query": { "type": "ANALYZE_WORKBOOK_FINDINGS" },
+        "code": "HYPERLINK_MALFORMED_TARGET"
+      }
+    },
+    {
+      "stepId": "read-back",
+      "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Lots", "addresses": ["A1"] },
+      "query": { "type": "GET_CELLS" }
+    }
+  ]
+}
+```
 
-- Instead of opening a workbook and walking through the same steps again, you set the work up once and run it again when it comes back next week, next month, or in the next handoff.
-- GridGrind can start from a new workbook or from an existing `.xlsx` file.
-- When a run passes, you keep the workbook and the facts you asked for. When it fails, you get a clear error instead of a partly written file.
+Write, assert, read — one plan. GridGrind saves the file only if every step, including the assertion, succeeds.
 
-## Proof and Trust
+## Where it fits
 
-- GridGrind is built on Apache POI XSSF, a long-established Java `.xlsx` library, instead of a home-grown spreadsheet file layer.
-- If a run fails, GridGrind stops before writing the workbook, so you do not get a partly written file.
-- GridGrind ships a user-facing quick start, real example files, and supporting docs when you want more detail.
-- Help/catalog drift and a few key architecture seams are build-audited, so contract-to-engine
-  bleed-through, direct ad hoc formula writes, and discovery-surface regressions fail CI instead
-  of lingering quietly between releases.
-- The wire surface is pinned instead of implied: contract-exposed workbook enums and gradient-fill
-  type tokens are regression-checked so published JSON vocabulary does not drift quietly between
-  releases.
-- Save and reopen behavior is verified, not assumed: committed `.xlsx` round-trip regressions cover
-  workbook metadata such as comments, validations, tables, copied sheets, and drawing-backed
-  content so structural workbook edits do not quietly reopen differently later, including copied
-  embedded-object relation graphs that Apache POI sheet cloning leaves in a non-canonical state.
-- The published Docker image matches the drawing surface too: it ships the minimal font stack
-  required for signature-line preview generation instead of leaving container users to discover a
-  runtime fontconfig failure mid-request.
-- The limits are explicit instead of hand-wavy: low-memory `STREAMING_WRITE` is intentionally narrow and uses `ENSURE_SHEET`, `APPEND_ROW`, and optional `execution.calculation.markRecalculateOnOpen=true`.
-- Formula boundaries are explicit too: scalar `FORMULA` cell values reject array-formula braces, while dedicated `SET_ARRAY_FORMULA` handles contiguous array-formula groups. `LAMBDA` and `LET` are still rejected as `INVALID_FORMULA` today because Apache POI cannot parse them yet.
-- Limits and format boundaries are documented up front in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
-- The scope is explicit: GridGrind is for `.xlsx` workbooks, while `.xls`, `.xlsm`, and `.xlsb` are out of scope.
+Good fit:
+- Recurring `.xlsx` workbook jobs that should run the same way each time — filing, updating, checking, extracting
+- Automation and agent pipelines that create or maintain Excel files without a UI
+- Workbook health checks and fact extraction without saving (`"persistence": {"type": "NONE"}`)
+- Environments without Excel — Linux containers, CI pipelines, server-side workflows
 
-## Start Here
+Skip it when:
+- You need `.xls`, `.xlsm`, or `.xlsb` — GridGrind handles `.xlsx` only
+- Your work is truly one-off and hand-writing JSON adds more friction than it saves
+- You need interactive formula recalculation during editing (GridGrind evaluates on request)
 
-- New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
-- Using Docker `:latest`: for copy-paste-first commands, prefer
-  `docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...`. If you want to refresh
-  once and then run several commands locally, use `docker pull ghcr.io/resoltico/gridgrind:latest`
-  first. A plain `docker run ghcr.io/resoltico/gridgrind:latest ...` can reuse a stale local
-  `latest` tag.
-- Want the shipped example map and path rules: [docs/EXAMPLES.md](docs/EXAMPLES.md)
-- Want a quick runtime sanity check: run `java -jar gridgrind.jar` in an interactive terminal. It prints the same help text as `--help`, and `java -jar gridgrind.jar help` is the explicit equivalent; both exit with code `0`.
-- Want a no-write preflight report saved to disk: `gridgrind --doctor-request --request request.json --response doctor-report.json`
-- Want a concrete example first: `gridgrind --print-example BUDGET --response budget-request.json`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
-- Need to know which built-in examples are fully self-contained versus repo-asset-backed: [docs/EXAMPLES.md](docs/EXAMPLES.md)
-- Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog --response tasks.json`, `gridgrind --print-task-plan PIVOT_REPORT --response pivot-plan.json`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely" --response goal-plan.json`
-- Want Java instead of hand-written JSON: [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md) and [examples/java-authoring-workflow.java](examples/java-authoring-workflow.java)
-- Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
-- Want a copy-sheet maintenance example: [examples/sheet-maintenance-request.json](examples/sheet-maintenance-request.json)
-- Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
-- Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
-- Need one operation or type fast without dumping the whole catalog: `gridgrind --print-protocol-catalog --search chart --response protocol-search.json`
-- Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md). The detailed long-form reference is split behind those entry points into focused docs under `docs/`.
-- Want the runnable download: [latest release](https://github.com/resoltico/GridGrind/releases/latest)
+Server-side formula behavior lives under `execution.calculation`. For append-oriented or
+streaming-friendly plans, keep `strategy=DO_NOT_CALCULATE` and set
+`markRecalculateOnOpen=true` when you want Excel to refresh formulas the next time a person opens
+the workbook. In `STREAMING_WRITE`, the supported mutation set stays intentionally narrow:
+`ENSURE_SHEET` creates tabs and `APPEND_ROW` streams data into them.
 
-## Questions Before You Pour
+## Get it
 
-### Do I need Excel installed?
+**Docker** (recommended — no install beyond Docker, works on macOS, Linux, Windows, x64 and ARM):
 
-No. GridGrind reads and writes `.xlsx` workbooks itself. You can run it without Microsoft Excel on the machine.
+```bash
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
+```
 
-### Can I use existing workbooks?
+**Release JAR** (requires Java 26) — download from [Releases](https://github.com/resoltico/GridGrind/releases/latest), then:
 
-Yes. GridGrind can start from a new workbook or open an existing `.xlsx` file.
+```bash
+java -jar gridgrind.jar --print-example BUDGET --response budget-request.json
+java -jar gridgrind.jar --request budget-request.json --response response.json
+```
 
-### Do I need to start from scratch?
+The artifact is self-describing: `--print-protocol-catalog` emits machine-readable JSON for every operation, `--print-example <id>` generates a ready-to-run request, and `--doctor-request` validates a request without touching a workbook.
+Printed examples, discovery output, and normal execution responses all omit absent optional fields
+instead of publishing explicit JSON `null` placeholders.
 
-No. GridGrind ships built-in example generators, checked-in example files, and a quick start, so you can start from something close to your own workbook job and adjust it.
+- [First run guide](docs/QUICK_START.md) — Docker or JAR, first successful run, common pitfalls
+- [Snippets](docs/QUICK_REFERENCE.md) — request shapes, step patterns, assertion and inspection snippets
+- [Java authoring](docs/JAVA_AUTHORING.md) — build the same plan from Java instead of hand-writing JSON
+- [Operations reference](docs/OPERATIONS.md) — full field list for mutations, assertions, and inspections
+- [Examples](examples/) — ready-to-run request files
+  Includes [chart-request.json](examples/chart-request.json),
+  [signature-line-request.json](examples/signature-line-request.json), and
+  [large-file-modes-request.json](examples/large-file-modes-request.json)
 
-### Can I author workflows in Java instead of raw JSON?
+## What you can check
 
-Yes. The `authoring-java` module builds the same canonical `WorkbookPlan` used by the CLI and
-JSON protocol, and it intentionally stops at that contract boundary. If you want in-process
-execution, pass `plan.toPlan()` to a `GridGrindRequestExecutor` explicitly. See
-[docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md).
-
-### What kinds of workbook work fit best?
-
-GridGrind is strongest when the same `.xlsx` work should run the same way each time: filling workbook content, checking results, reading facts back, and running review or health-check passes.
-For the detailed supported surface, see [docs/OPERATIONS.md](docs/OPERATIONS.md).
-
-### What happens if something fails?
-
-GridGrind returns a clear error response and skips workbook persistence.
-It does not save a partial `.xlsx` file after a failed run.
-
-### Is it right for every kind of spreadsheet work?
-
-No. GridGrind is best for repeat `.xlsx` work that should run the same way each time.
-If your work depends on `.xls`, `.xlsm`, `.xlsb`, or one-off spreadsheet work, it is not the right fit.
-
----
+- Published on [GitHub Releases](https://github.com/resoltico/GridGrind/releases) and [GHCR](https://github.com/resoltico/GridGrind/pkgs/container/gridgrind) as a multi-arch Docker image
+- Built on [Apache POI XSSF](https://poi.apache.org/), a long-established Java `.xlsx` library
+- Atomic writes: a failed run never produces a partial `.xlsx` file
+- Help output and the protocol catalog are regression-tested from the packaged artifact, not only from source builds
+- MIT-licensed, with runnable example files and a self-describing protocol catalog
 
 ## Legal
 
-GridGrind is released under the MIT License. Bundled third-party notices live in [NOTICE](NOTICE), and patent considerations are documented in [PATENTS.md](PATENTS.md).
+GridGrind is MIT-licensed. Its executable JAR bundles Apache POI, Jackson, Apache Log4j, Apache Commons, Apache XMLBeans, SparseBitSet (Apache 2.0), and CurvesAPI (BSD 3-Clause). See [NOTICE](NOTICE) for the complete attribution list and [PATENTS.md](PATENTS.md) for patent considerations.
 
 [LICENSE](LICENSE) | [NOTICE](NOTICE) | [PATENTS.md](PATENTS.md)

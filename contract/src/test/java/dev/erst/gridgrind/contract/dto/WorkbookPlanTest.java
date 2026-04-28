@@ -2,7 +2,6 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -26,17 +25,24 @@ import org.junit.jupiter.api.Test;
 class WorkbookPlanTest {
   @Test
   void defaultsProtocolVersionPersistenceAndOptionalSections() {
-    WorkbookPlan plan = new WorkbookPlan(new WorkbookPlan.WorkbookSource.New(), null, List.of());
+    WorkbookPlan plan =
+        new WorkbookPlan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            List.of());
     WorkbookPlan nullStepsPlan =
-        new WorkbookPlan(new WorkbookPlan.WorkbookSource.New(), null, (List<WorkbookStep>) null);
+        new WorkbookPlan(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            (List<WorkbookStep>) null);
 
     assertEquals(GridGrindProtocolVersion.current(), plan.protocolVersion());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.None.class, plan.persistence());
-    assertNull(plan.planId());
-    assertNull(plan.execution());
-    assertNull(plan.executionMode());
+    assertEquals(java.util.Optional.empty(), plan.planId());
+    assertTrue(plan.execution().isDefault());
+    assertTrue(plan.executionMode().isDefault());
     assertEquals(ExecutionJournalLevel.NORMAL, plan.journalLevel());
-    assertNull(plan.formulaEnvironment());
+    assertTrue(plan.formulaEnvironment().isEmpty());
     assertEquals(List.of(), plan.steps());
     assertEquals(List.of(), nullStepsPlan.steps());
   }
@@ -119,15 +125,16 @@ class WorkbookPlanTest {
     assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, plan.effectiveExecutionMode().readMode());
     assertEquals(formulaEnvironment, plan.formulaEnvironment());
     assertEquals("set-cell", plan.steps().getFirst().stepId());
-    assertNull(
-        new WorkbookPlan(
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookPlan(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 null,
                 new FormulaEnvironmentInput(
                     List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of()),
-                List.of())
-            .formulaEnvironment());
+                List.of()));
   }
 
   @Test
@@ -145,7 +152,7 @@ class WorkbookPlanTest {
             null,
             List.of());
 
-    assertEquals("budget-audit", plan.planId());
+    assertEquals("budget-audit", plan.planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.journalLevel());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.execution().journal().level());
     assertEquals(ExecutionModeInput.ReadMode.FULL_XSSF, plan.effectiveExecutionMode().readMode());
@@ -178,15 +185,14 @@ class WorkbookPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy,
-            null,
+            FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan defaultPlan =
         new WorkbookPlan(
             GridGrindProtocolVersion.current(),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            (ExecutionPolicyInput) null,
-            null,
+            FormulaEnvironmentInput.empty(),
             List.of());
 
     assertEquals(executionPolicy, explicitPlan.execution());
@@ -196,6 +202,26 @@ class WorkbookPlanTest {
         ExecutionJournalLevel.NORMAL, defaultPlan.effectiveExecution().effectiveJournalLevel());
     assertEquals(
         ExecutionModeInput.ReadMode.FULL_XSSF, defaultPlan.effectiveExecutionMode().readMode());
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookPlan(
+                GridGrindProtocolVersion.current(),
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                (ExecutionPolicyInput) null,
+                FormulaEnvironmentInput.empty(),
+                List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookPlan(
+                GridGrindProtocolVersion.current(),
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                executionPolicy,
+                null,
+                List.of()));
   }
 
   @Test

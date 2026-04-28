@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -819,10 +820,11 @@ class ExcelWorkbookTest {
                       false,
                       "Aptos",
                       ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                      new ExcelColor("#1F4E78"),
+                      ExcelColor.rgb("#1F4E78"),
                       true,
                       true),
-                  new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC")),
                   new ExcelBorder(
                       new ExcelBorderSide(ExcelBorderStyle.THIN),
                       null,
@@ -844,7 +846,7 @@ class ExcelWorkbookTest {
     assertEquals(rgb("#1F4E78"), style.font().fontColor());
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
-    assertEquals(rgb("#FFF2CC"), style.fill().foregroundColor());
+    assertEquals(rgb("#FFF2CC"), fillForegroundColor(style.fill()));
     assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
     assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
     assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
@@ -864,20 +866,12 @@ class ExcelWorkbookTest {
               null,
               null,
               null,
-              new ExcelCellFill(
-                  null,
-                  null,
-                  null,
-                  new ExcelGradientFill(
-                      "LINEAR",
+              ExcelCellFill.gradient(
+                  ExcelGradientFill.linear(
                       42.5d,
-                      null,
-                      null,
-                      null,
-                      null,
                       List.of(
-                          new ExcelGradientStop(0.0d, new ExcelColor("#736C00")),
-                          new ExcelGradientStop(1.0d, new ExcelColor(null, 3, null, null))))),
+                          new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
+                          new ExcelGradientStop(1.0d, ExcelColor.theme(3))))),
               null,
               new ExcelCellProtection(true, true)));
       workbook.save(workbookPath);
@@ -887,14 +881,12 @@ class ExcelWorkbookTest {
       ExcelCellStyleSnapshot linearStyle =
           reopenedWorkbook.sheet("Budget").snapshotCell("A1").style();
 
-      assertEquals("LINEAR", linearStyle.fill().gradient().type());
-      assertEquals(42.5d, linearStyle.fill().gradient().degree());
-      assertNull(linearStyle.fill().gradient().left());
-      assertEquals(
-          new ExcelColorSnapshot("#736C00"), linearStyle.fill().gradient().stops().get(0).color());
-      assertEquals(
-          new ExcelColorSnapshot(null, 3, null, null),
-          linearStyle.fill().gradient().stops().get(1).color());
+      ExcelGradientFillSnapshot gradient = fillGradient(linearStyle.fill());
+      assertEquals("LINEAR", gradientType(gradient));
+      assertEquals(42.5d, gradientDegree(gradient));
+      assertNull(gradientLeft(gradient));
+      assertEquals(ExcelColorSnapshot.rgb("#736C00"), gradient.stops().get(0).color());
+      assertEquals(ExcelColorSnapshot.theme(3), gradient.stops().get(1).color());
       assertTrue(linearStyle.protection().locked());
       assertTrue(linearStyle.protection().hiddenFormula());
     }
@@ -1137,7 +1129,7 @@ class ExcelWorkbookTest {
   }
 
   private static ExcelColorSnapshot rgb(String rgb) {
-    return new ExcelColorSnapshot(rgb);
+    return ExcelColorSnapshot.rgb(rgb);
   }
 
   private static boolean columnDefinitionsAreCanonical(XSSFSheet sheet) {

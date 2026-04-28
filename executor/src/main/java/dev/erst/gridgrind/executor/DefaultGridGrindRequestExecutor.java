@@ -58,7 +58,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   public GridGrindResponse execute(
       WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
     ExecutionInputBindings executionBindings =
-        bindings == null ? ExecutionInputBindings.processDefault() : bindings;
+        Objects.requireNonNull(bindings, "bindings must not be null");
     ExecutionJournalRecorder journal =
         ExecutionJournalRecorder.start(request, sink, executionBindings.workingDirectory());
     GridGrindProtocolVersion protocolVersion =
@@ -70,7 +70,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           GridGrindProblems.problem(
               GridGrindProblemCode.INVALID_REQUEST,
               "request must not be null",
-              new GridGrindResponse.ProblemContext.ValidateRequest(null, null),
+              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown()),
               (Throwable) null);
       validationPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
@@ -154,10 +155,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
-              new GridGrindResponse.ProblemContext.OpenWorkbook(
-                  ExecutionRequestPaths.reqSourceType(request),
-                  ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(
+              new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
+                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.workbookReference(
                       request, executionBindings.workingDirectory())));
       openPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(

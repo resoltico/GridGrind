@@ -318,7 +318,7 @@ class WorkbookCommandExecutorTest {
       ExcelSheetPresentation presentation =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              new ExcelColor("#225577"),
+              ExcelColor.rgb("#225577"),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(12, 19.5d),
               List.of(
@@ -332,7 +332,7 @@ class WorkbookCommandExecutorTest {
 
       WorkbookReadResult.SheetLayout layout = workbook.sheet("Budget").layout();
       assertEquals(presentation.display(), layout.presentation().display());
-      assertEquals(new ExcelColorSnapshot("#225577"), layout.presentation().tabColor());
+      assertEquals(ExcelColorSnapshot.rgb("#225577"), layout.presentation().tabColor());
       assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
       assertEquals(presentation.sheetDefaults(), layout.presentation().sheetDefaults());
       assertEquals(

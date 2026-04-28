@@ -2,32 +2,45 @@ package dev.erst.gridgrind.contract.dto;
 
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing plain-text comment payload used by cell comment operations. */
 public record CommentInput(
     TextSourceInput text,
     String author,
     Boolean visible,
-    java.util.List<RichTextRunInput> runs,
-    CommentAnchorInput anchor) {
+    @com.fasterxml.jackson.annotation.JsonInclude(
+            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+        Optional<java.util.List<RichTextRunInput>> runs,
+    @com.fasterxml.jackson.annotation.JsonInclude(
+            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_ABSENT)
+        Optional<CommentAnchorInput> anchor) {
+  /** Creates a plain-text comment payload hidden by default and without rich-text metadata. */
+  public CommentInput(TextSourceInput text, String author) {
+    this(text, author, false);
+  }
+
   /** Creates a plain-text comment payload without rich-text runs or anchor overrides. */
-  public CommentInput(TextSourceInput text, String author, Boolean visible) {
-    this(text, author, visible, null, null);
+  public CommentInput(TextSourceInput text, String author, boolean visible) {
+    this(text, author, visible, Optional.empty(), Optional.empty());
   }
 
   public CommentInput {
     text = requireNonBlankSource(text, "text");
     author = requireNonBlank(author, "author");
     visible = visible == null ? Boolean.FALSE : visible;
-    if (runs != null) {
-      runs = java.util.List.copyOf(runs);
-      if (runs.isEmpty()) {
+    runs = Objects.requireNonNullElseGet(runs, Optional::empty);
+    anchor = Objects.requireNonNullElseGet(anchor, Optional::empty);
+    if (runs.isPresent()) {
+      java.util.List<RichTextRunInput> copiedRuns = java.util.List.copyOf(runs.orElseThrow());
+      if (copiedRuns.isEmpty()) {
         throw new IllegalArgumentException("runs must not be empty when provided");
       }
-      for (RichTextRunInput run : runs) {
+      for (RichTextRunInput run : copiedRuns) {
         Objects.requireNonNull(run, "runs must not contain null values");
       }
-      validateRunsAgainstInlineText(text, runs);
+      validateRunsAgainstInlineText(text, copiedRuns);
+      runs = Optional.of(copiedRuns);
     }
   }
 

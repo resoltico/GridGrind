@@ -2,13 +2,13 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct validation coverage for Phase 6 calculation contract types. */
@@ -63,12 +63,12 @@ class CalculationContractTypesTest {
             new ExecutionModeInput(null, null),
             new ExecutionJournalInput(null),
             new CalculationPolicyInput(null, false));
-    ExecutionPolicyInput customExecution = new ExecutionPolicyInput(null, null, markedPolicy);
+    ExecutionPolicyInput customExecution = ExecutionPolicyInput.calculation(markedPolicy);
 
     assertTrue(defaultExecution.isDefault());
-    assertNull(defaultExecution.mode());
-    assertNull(defaultExecution.journal());
-    assertNull(defaultExecution.calculation());
+    assertEquals(new ExecutionModeInput(null, null), defaultExecution.mode());
+    assertEquals(new ExecutionJournalInput(null), defaultExecution.journal());
+    assertEquals(new CalculationPolicyInput(null, false), defaultExecution.calculation());
     assertFalse(customExecution.isDefault());
     assertEquals(markedPolicy, customExecution.effectiveCalculation());
     assertTrue(
@@ -78,21 +78,79 @@ class CalculationContractTypesTest {
   }
 
   @Test
+  void executionPolicyFiltersAndNormalizedExecutionDefaultsBehavePrecisely() {
+    ExecutionPolicyInput.DefaultFilter policyFilter = new ExecutionPolicyInput.DefaultFilter();
+    ExecutionPolicyInput.ExecutionModeDefaultFilter modeFilter =
+        new ExecutionPolicyInput.ExecutionModeDefaultFilter();
+    ExecutionPolicyInput.ExecutionJournalDefaultFilter journalFilter =
+        new ExecutionPolicyInput.ExecutionJournalDefaultFilter();
+    ExecutionPolicyInput.CalculationPolicyDefaultFilter calculationFilter =
+        new ExecutionPolicyInput.CalculationPolicyDefaultFilter();
+    ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
+    ExecutionPolicyInput customPolicy =
+        new ExecutionPolicyInput(
+            new ExecutionModeInput(
+                ExecutionModeInput.ReadMode.EVENT_READ,
+                ExecutionModeInput.WriteMode.STREAMING_WRITE),
+            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
+            CalculationPolicyInput.create(new CalculationStrategyInput.EvaluateAll(), true));
+    ExecutionModeInput defaultMode = new ExecutionModeInput(null, null);
+    ExecutionModeInput customMode =
+        new ExecutionModeInput(
+            ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.STREAMING_WRITE);
+    ExecutionJournalInput defaultJournal = new ExecutionJournalInput(null);
+    ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY);
+    CalculationPolicyInput defaultCalculation = new CalculationPolicyInput(null, false);
+    CalculationPolicyInput customCalculation =
+        CalculationPolicyInput.create(new CalculationStrategyInput.EvaluateAll(), true);
+
+    assertTrue(filterMatches(policyFilter, null));
+    assertTrue(filterMatches(policyFilter, defaultPolicy));
+    assertFalse(filterMatches(policyFilter, customPolicy));
+    assertFalse(filterMatches(policyFilter, "policy"));
+    assertEquals(0, policyFilter.hashCode());
+
+    assertTrue(filterMatches(modeFilter, null));
+    assertTrue(filterMatches(modeFilter, defaultMode));
+    assertFalse(filterMatches(modeFilter, customMode));
+    assertFalse(filterMatches(modeFilter, "mode"));
+    assertEquals(0, modeFilter.hashCode());
+
+    assertTrue(filterMatches(journalFilter, null));
+    assertTrue(filterMatches(journalFilter, defaultJournal));
+    assertFalse(filterMatches(journalFilter, customJournal));
+    assertFalse(filterMatches(journalFilter, "journal"));
+    assertEquals(0, journalFilter.hashCode());
+
+    assertTrue(filterMatches(calculationFilter, null));
+    assertTrue(filterMatches(calculationFilter, defaultCalculation));
+    assertFalse(filterMatches(calculationFilter, customCalculation));
+    assertFalse(filterMatches(calculationFilter, "calculation"));
+    assertEquals(0, calculationFilter.hashCode());
+
+    assertTrue(defaultMode.isDefault());
+    assertFalse(customMode.isDefault());
+    assertTrue(defaultJournal.isDefault());
+    assertFalse(customJournal.isDefault());
+    assertEquals(ExecutionJournalLevel.NORMAL, ExecutionJournalInput.effectiveLevel(null));
+  }
+
+  @Test
   void validatesCalculationReportsAndJournalCalculationEnvelope() {
     CalculationReport.FormulaCapability evaluable =
         new CalculationReport.FormulaCapability(
             new CellSelector.QualifiedAddress("Budget", "B1"),
             "A1*2",
             FormulaCapabilityKind.EVALUABLE_NOW,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty());
     CalculationReport.FormulaCapability blocking =
         new CalculationReport.FormulaCapability(
             new CellSelector.QualifiedAddress("Budget", "C1"),
             "APP.TITLE()",
             FormulaCapabilityKind.UNEVALUABLE_NOW,
-            GridGrindProblemCode.UNSUPPORTED_FORMULA,
-            "Unsupported formula function APP.TITLE at Budget!C1: APP.TITLE()");
+            Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
+            Optional.of("Unsupported formula function APP.TITLE at Budget!C1: APP.TITLE()"));
     CalculationReport.Preflight preflight =
         new CalculationReport.Preflight(
             CalculationReport.Scope.TARGETS,
@@ -100,13 +158,13 @@ class CalculationContractTypesTest {
             new CalculationReport.Summary(1, 1, 0),
             List.of(evaluable, blocking));
     CalculationReport.Execution execution =
-        new CalculationReport.Execution(CalculationExecutionStatus.SUCCEEDED, 1, false, true, null);
+        new CalculationReport.Execution(CalculationExecutionStatus.SUCCEEDED, 1, false, true);
     CalculationReport report =
         new CalculationReport(new CalculationPolicyInput(null, true), preflight, execution);
 
     assertTrue(CalculationReport.notRequested().policy().isDefault());
-    assertTrue(new CalculationReport(null, null, execution).policy().isDefault());
-    assertEquals(2, report.preflight().checkedFormulaCount());
+    assertTrue(new CalculationReport(null, execution).policy().isDefault());
+    assertEquals(2, report.preflight().orElseThrow().checkedFormulaCount());
     assertTrue(report.execution().markRecalculateOnOpenApplied());
     assertEquals(
         "scope must not be null",
@@ -158,8 +216,8 @@ class CalculationContractTypesTest {
                 new CellSelector.QualifiedAddress("Budget", "B1"),
                 "A1*2",
                 FormulaCapabilityKind.EVALUABLE_NOW,
-                GridGrindProblemCode.INVALID_FORMULA,
-                "unexpected"));
+                Optional.of(GridGrindProblemCode.INVALID_FORMULA),
+                Optional.of("unexpected")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -167,18 +225,27 @@ class CalculationContractTypesTest {
                 new CellSelector.QualifiedAddress("Budget", "B1"),
                 "A1*2",
                 FormulaCapabilityKind.UNPARSEABLE_BY_POI,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CalculationReport.FormulaCapability(
+                new CellSelector.QualifiedAddress("Budget", "B1"),
+                "A1*2",
+                FormulaCapabilityKind.EVALUABLE_NOW,
+                Optional.empty(),
+                Optional.of("unexpected")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CalculationReport.Execution(
-                CalculationExecutionStatus.SUCCEEDED, -1, false, false, null));
+                CalculationExecutionStatus.SUCCEEDED, -1, false, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CalculationReport.Execution(
-                CalculationExecutionStatus.FAILED, 0, false, false, " "));
+                CalculationExecutionStatus.FAILED, 0, false, false, Optional.of(" ")));
     assertThrows(IllegalArgumentException.class, () -> new CalculationReport.Summary(-1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new CalculationReport.Summary(0, -1, 0));
     assertThrows(IllegalArgumentException.class, () -> new CalculationReport.Summary(0, 0, -1));
@@ -194,23 +261,31 @@ class CalculationContractTypesTest {
   }
 
   @Test
-  void executeCalculationContextMergesExceptionFactsWithoutOverwritingExistingValues() {
-    GridGrindResponse.ProblemContext.ExecuteCalculation base =
-        new GridGrindResponse.ProblemContext.ExecuteCalculation.Preflight(
-            "EXISTING", "SAVE_AS", null, null, null);
-    GridGrindResponse.ProblemContext.ExecuteCalculation enriched =
-        base.withExceptionData("Budget", "B1", "APP.TITLE()");
-    GridGrindResponse.ProblemContext.ExecuteCalculation preserved =
-        new GridGrindResponse.ProblemContext.ExecuteCalculation.Execution(
-                "EXISTING", "SAVE_AS", "Ops", "C4", "SUM(A1:A3)")
-            .withExceptionData("Ignored", "Ignored", "Ignored");
+  void executeCalculationContextMergesTypedLocationsWithoutCrossShapePadding() {
+    ProblemContext.ExecuteCalculation base =
+        new ProblemContext.ExecuteCalculation.Preflight(
+            ProblemContext.RequestShape.known("EXISTING", "SAVE_AS"),
+            ProblemContext.ProblemLocation.unknown());
+    ProblemContext.ExecuteCalculation enriched =
+        base.withLocation(
+            ProblemContext.ProblemLocation.formulaCell("Budget", "B1", "APP.TITLE()"));
+    ProblemContext.ExecuteCalculation preserved =
+        new ProblemContext.ExecuteCalculation.Execution(
+                ProblemContext.RequestShape.known("EXISTING", "SAVE_AS"),
+                ProblemContext.ProblemLocation.formulaCell("Ops", "C4", "SUM(A1:A3)"))
+            .withLocation(
+                ProblemContext.ProblemLocation.formulaCell("Ignored", "Ignored", "Ignored"));
 
     assertEquals("CALCULATION_PREFLIGHT", enriched.stage());
-    assertEquals("Budget", enriched.sheetName());
-    assertEquals("B1", enriched.address());
-    assertEquals("APP.TITLE()", enriched.formula());
-    assertEquals("Ops", preserved.sheetName());
-    assertEquals("C4", preserved.address());
-    assertEquals("SUM(A1:A3)", preserved.formula());
+    assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
+    assertEquals(java.util.Optional.of("B1"), enriched.address());
+    assertEquals(java.util.Optional.of("APP.TITLE()"), enriched.formula());
+    assertEquals(java.util.Optional.of("Ops"), preserved.sheetName());
+    assertEquals(java.util.Optional.of("C4"), preserved.address());
+    assertEquals(java.util.Optional.of("SUM(A1:A3)"), preserved.formula());
+  }
+
+  private static boolean filterMatches(Object filter, Object candidate) {
+    return filter.equals(candidate);
   }
 }

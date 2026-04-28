@@ -5,9 +5,17 @@ import java.util.Objects;
 
 /** Optional top-level request settings that select low-memory execution families. */
 public record ExecutionModeInput(ReadMode readMode, WriteMode writeMode) {
+  private static final ReadMode DEFAULT_READ_MODE = ReadMode.FULL_XSSF;
+  private static final WriteMode DEFAULT_WRITE_MODE = WriteMode.FULL_XSSF;
+
+  /** Returns the default execution mode that keeps both reads and writes on full XSSF. */
+  public static ExecutionModeInput defaults() {
+    return new ExecutionModeInput(DEFAULT_READ_MODE, DEFAULT_WRITE_MODE);
+  }
+
   public ExecutionModeInput {
-    readMode = Objects.requireNonNullElse(readMode, ReadMode.FULL_XSSF);
-    writeMode = Objects.requireNonNullElse(writeMode, WriteMode.FULL_XSSF);
+    readMode = Objects.requireNonNullElse(readMode, DEFAULT_READ_MODE);
+    writeMode = Objects.requireNonNullElse(writeMode, DEFAULT_WRITE_MODE);
   }
 
   /** Returns whether this execution-mode object leaves both reads and writes on full XSSF. */

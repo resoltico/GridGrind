@@ -117,7 +117,7 @@ final class ExecutorTestPlanSupport {
   }
 
   static ExecutionPolicyInput executionPolicy(CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(null, null, calculation);
+    return ExecutionPolicyInput.calculation(calculation);
   }
 
   static ExecutionPolicyInput executionPolicy(
@@ -239,11 +239,11 @@ final class ExecutorTestPlanSupport {
       List<InspectionStep> inspections) {
     return new WorkbookPlan(
         GridGrindProtocolVersion.current(),
-        null,
+        java.util.Optional.empty(),
         source,
         persistence,
-        execution,
-        formulaEnvironment,
+        execution == null ? ExecutionPolicyInput.defaults() : execution,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
         steps(mutations, assertions, inspections));
   }
 
@@ -282,7 +282,10 @@ final class ExecutorTestPlanSupport {
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
     return new WorkbookPlan(
-        source, persistence, formulaEnvironment, steps(mutations, assertions, inspections));
+        source,
+        persistence,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
@@ -291,7 +294,11 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(source, persistence, formulaEnvironment, steps(mutations, inspections));
+    return new WorkbookPlan(
+        source,
+        persistence,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -300,7 +307,11 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
-    return new WorkbookPlan(source, persistence, formulaEnvironment, steps(mutations, inspections));
+    return new WorkbookPlan(
+        source,
+        persistence,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -315,7 +326,7 @@ final class ExecutorTestPlanSupport {
         source,
         persistence,
         executionMode,
-        formulaEnvironment,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
         steps(mutations, assertions, inspections));
   }
 
@@ -327,7 +338,11 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
     return new WorkbookPlan(
-        source, persistence, executionMode, formulaEnvironment, steps(mutations, inspections));
+        source,
+        persistence,
+        executionMode,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -338,7 +353,11 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return new WorkbookPlan(
-        source, persistence, executionMode, formulaEnvironment, steps(mutations, inspections));
+        source,
+        persistence,
+        executionMode,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps(mutations, inspections));
   }
 
   static List<String> inspectionIds(GridGrindResponse.Success success) {

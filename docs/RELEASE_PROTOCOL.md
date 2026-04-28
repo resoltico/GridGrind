@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-25"
 route:
@@ -158,6 +158,9 @@ Then verify every item in this checklist. All must be true before any commit or 
   - `delete_branch_on_merge` is enabled
   - `main` is protected with admin enforcement
   - required status checks are exactly `Check` and `Docker smoke`
+- Workflow `CI` also publishes a `Contributor devcontainer` job. Branch protection does not need
+  to require that context, but the release verifiers and release operator still treat it as
+  release-blocking because it guards the committed preferred contributor environment.
 
 Before cutting the release branch, enumerate open PRs so dependency-automation work is never
 surprise-discovered after publication:
@@ -236,9 +239,12 @@ Treat the PR itself as a second scope-verification checkpoint:
 - Every new commit pushed to the release branch reopens both the Step 2 staging checkpoint and
   this PR diff checkpoint. Re-verify both after each fix commit.
 
-Do not proceed until **every** required job in workflow `CI` has `"conclusion": "SUCCESS"`.
-At the time of writing that means both `Check` and `Docker smoke`. If any required job fails,
-fix the failure, push to the release branch, and wait again — do not merge a red PR.
+Do not proceed until **every** release-blocking job in workflow `CI` has `"conclusion":
+"SUCCESS"`. At the time of writing that means `Check`, `Docker smoke`, and
+`Contributor devcontainer`. Branch protection still requires only `Check` and `Docker smoke`, but
+the devcontainer job remains release-blocking here because it protects the committed contributor
+environment contract. If any blocking job fails, fix the failure, push to the release branch, and
+wait again — do not merge a red PR.
 
 ### Step 4 — Merge PR, wait for main CI, and verify the merge handoff
 
@@ -255,8 +261,9 @@ gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefNa
 The `--admin` flag uses administrator privileges to get the merge through branch protection
 without relying on an interactive local follow-up flow. If required pull-request reviews are
 enabled, `--admin` also bypasses the self-approval dead-end that a PR author cannot satisfy in a
-single-owner release. CI status checks (`Check` and `Docker smoke`) remain the authoritative
-quality gate; any review requirement is optional policy, not the release-quality signal.
+single-owner release. CI release-blocking jobs (`Check`, `Docker smoke`, and
+`Contributor devcontainer`) remain the authoritative quality gate; any review requirement is
+optional policy, not the release-quality signal.
 
 If the release is being driven from a dedicated worktree while the primary checkout already has
 `main` checked out, do not rely on `gh pr merge` or `git checkout main` in the auxiliary
@@ -291,8 +298,9 @@ Requirements before continuing:
 - `mergedAt` is populated.
 - The checked-out verifier commit contains the merge commit you expect.
 - The checkout used for `./scripts/verify-release-merge-handoff.sh` exactly matches `origin/main`.
-- The merged `main` commit already has successful `Check` and `Docker smoke` runs from workflow
-  `CI`. `./scripts/verify-release-merge-handoff.sh` is the authoritative gate for this handoff.
+- The merged `main` commit already has successful `Check`, `Docker smoke`, and
+  `Contributor devcontainer` runs from workflow `CI`. `./scripts/verify-release-merge-handoff.sh`
+  is the authoritative gate for this handoff.
 - The remote release branch is deleted by the merge step.
 
 GitHub auto-delete on merge should also be enabled at the repository level. `--delete-branch`
@@ -344,7 +352,8 @@ An existing-tag rerun is expected to fail unless all of the following are still 
 - `gradle.properties` in the checked-out tag still reports `version=X.Y.Z`
 - the workflow checkout matches the exact remote `vX.Y.Z` tag commit
 - that tag commit remains reachable from the default branch (`main`)
-- that exact commit already has successful `Check` and `Docker smoke` runs from workflow `CI`
+- that exact commit already has successful `Check`, `Docker smoke`, and
+  `Contributor devcontainer` runs from workflow `CI`
 
 ### Step 6 — Branch hygiene
 

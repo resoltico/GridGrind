@@ -14,13 +14,8 @@ import dev.erst.gridgrind.contract.dto.CellBorderInput;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillInput;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
 import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillInput;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
 import dev.erst.gridgrind.contract.dto.CellGradientStopInput;
 import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
@@ -28,7 +23,6 @@ import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.CommentAnchorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
@@ -481,18 +475,8 @@ final class GridGrindProtocolCatalogPlainTypeDescriptors {
                   "fontName",
                   "fontHeight",
                   "fontColor",
-                  "fontColorTheme",
-                  "fontColorIndexed",
-                  "fontColorTint",
                   "underline",
                   "strikeout")),
-          plainTypeDescriptor(
-              "colorInputType",
-              ColorInput.class,
-              "ColorInput",
-              "Color payload preserving RGB, theme, indexed, and tint semantics."
-                  + " At least one of rgb, theme, or indexed must be supplied.",
-              List.of("rgb", "theme", "indexed", "tint")),
           plainTypeDescriptor(
               "richTextRunInputType",
               RichTextRunInput.class,
@@ -501,33 +485,6 @@ final class GridGrindProtocolCatalogPlainTypeDescriptors {
                   + " text must be non-empty; font is an optional override patch."
                   + " The ordered run texts concatenate to the stored plain string value.",
               List.of("font")),
-          plainTypeDescriptor(
-              "cellFillInputType",
-              CellFillInput.class,
-              "CellFillInput",
-              "Fill patch for cell styling. pattern controls solid and patterned fills;"
-                  + " colors can use RGB, theme, indexed, and tint semantics."
-                  + " gradient is mutually exclusive with patterned fill fields.",
-              List.of(
-                  "pattern",
-                  "foregroundColor",
-                  "foregroundColorTheme",
-                  "foregroundColorIndexed",
-                  "foregroundColorTint",
-                  "backgroundColor",
-                  "backgroundColorTheme",
-                  "backgroundColorIndexed",
-                  "backgroundColorTint",
-                  "gradient")),
-          plainTypeDescriptor(
-              "cellGradientFillInputType",
-              CellGradientFillInput.class,
-              "CellGradientFillInput",
-              "Gradient fill payload for cell-style authoring."
-                  + " LINEAR gradients use degree, PATH gradients use left/right/top/bottom,"
-                  + " and the two geometry modes must not be mixed."
-                  + " stops must contain at least two entries.",
-              List.of("type", "degree", "left", "right", "top", "bottom")),
           plainTypeDescriptor(
               "cellGradientStopInputType",
               CellGradientStopInput.class,
@@ -546,7 +503,7 @@ final class GridGrindProtocolCatalogPlainTypeDescriptors {
               CellBorderSideInput.class,
               "CellBorderSideInput",
               "One border side defined by its border style and optional color semantics.",
-              List.of("style", "color", "colorTheme", "colorIndexed", "colorTint")),
+              List.of("style", "color")),
           plainTypeDescriptor(
               "cellProtectionInputType",
               CellProtectionInput.class,
@@ -821,12 +778,6 @@ final class GridGrindProtocolCatalogPlainTypeDescriptors {
               "Exact cell-font report.",
               List.of("fontColor")),
           plainTypeDescriptor(
-              "cellFillReportType",
-              CellFillReport.class,
-              "CellFillReport",
-              "Exact cell-fill report including pattern, colors, or gradient payload.",
-              List.of("foregroundColor", "backgroundColor", "gradient")),
-          plainTypeDescriptor(
               "cellBorderReportType",
               CellBorderReport.class,
               "CellBorderReport",
@@ -845,23 +796,11 @@ final class GridGrindProtocolCatalogPlainTypeDescriptors {
               "Exact cell-protection report.",
               List.of()),
           plainTypeDescriptor(
-              "cellColorReportType",
-              CellColorReport.class,
-              "CellColorReport",
-              "Exact workbook color report preserving RGB, theme, indexed, and tint semantics.",
-              List.of("rgb", "theme", "indexed", "tint")),
-          plainTypeDescriptor(
               "fontHeightReportType",
               FontHeightReport.class,
               "FontHeightReport",
               "Exact font-height report expressed in twips and points.",
               List.of()),
-          plainTypeDescriptor(
-              "cellGradientFillReportType",
-              CellGradientFillReport.class,
-              "CellGradientFillReport",
-              "Exact gradient-fill report with geometry and stops.",
-              List.of("degree", "left", "right", "top", "bottom")),
           plainTypeDescriptor(
               "cellGradientStopReportType",
               CellGradientStopReport.class,

@@ -20,6 +20,9 @@ import org.gradle.process.JavaForkOptions
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
+import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRule
+import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRulesContainer
 
 class GridGrindJazzerConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -44,9 +47,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
             val sourceSets = extensions.getByType<SourceSetContainer>()
             val mainSourceSet = sourceSets.getByName("main")
-            val fuzzSourceSet = sourceSets.create("fuzz") {
-                java.setSrcDirs(listOf("src/fuzz/java"))
-                resources.setSrcDirs(listOf("src/fuzz/resources"))
+            val fuzzSourceSet = sourceSets.create("fuzz") { fuzzSourceSet ->
+                fuzzSourceSet.java.setSrcDirs(listOf("src/fuzz/java"))
+                fuzzSourceSet.resources.setSrcDirs(listOf("src/fuzz/resources"))
             }
             val jazzerAgentJar =
                 tasks.named<Jar>("jar") {
@@ -63,11 +66,11 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
             fuzzSourceSet.compileClasspath += mainSourceSet.output
             fuzzSourceSet.runtimeClasspath += mainSourceSet.output
 
-            configurations.named(fuzzSourceSet.implementationConfigurationName) {
-                extendsFrom(configurations.getByName("implementation"))
+            configurations.named(fuzzSourceSet.implementationConfigurationName) { configuration ->
+                configuration.extendsFrom(configurations.getByName("implementation"))
             }
-            configurations.named(fuzzSourceSet.runtimeOnlyConfigurationName) {
-                extendsFrom(configurations.getByName("runtimeOnly"))
+            configurations.named(fuzzSourceSet.runtimeOnlyConfigurationName) { configuration ->
+                configuration.extendsFrom(configurations.getByName("runtimeOnly"))
             }
 
             dependencies.apply {
@@ -198,10 +201,10 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
             val regressionTarget = topology.runTarget("regression")
             val jazzerRegression =
-                tasks.register(regressionTarget.taskName) {
-                    description = "Runs all Jazzer harnesses in regression mode."
-                    group = "verification"
-                    dependsOn(regressionTasks)
+                tasks.register(regressionTarget.taskName) { jazzerRegressionTask ->
+                    jazzerRegressionTask.description = "Runs all Jazzer harnesses in regression mode."
+                    jazzerRegressionTask.group = "verification"
+                    jazzerRegressionTask.dependsOn(regressionTasks)
                 }
 
             tasks.named<Test>("test") {
@@ -221,21 +224,21 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
             tasks.withType(Pmd::class.java)
                 .matching { task -> task.name == "pmdMain" }
-                .configureEach {
-                    ruleSetFiles = files(jazzerMainPmdRuleset)
-                    ruleSets = emptyList()
+                .configureEach { pmd ->
+                    pmd.ruleSetFiles = files(jazzerMainPmdRuleset)
+                    pmd.ruleSets = emptyList()
                 }
 
             tasks.withType(Pmd::class.java)
                 .matching { task -> task.name == "pmdFuzz" }
-                .configureEach {
-                    ruleSetFiles = files(jazzerFuzzPmdRuleset)
-                    ruleSets = emptyList()
+                .configureEach { pmd ->
+                    pmd.ruleSetFiles = files(jazzerFuzzPmdRuleset)
+                    pmd.ruleSets = emptyList()
                 }
 
             val jazzerCoverageClasses =
-                mainSourceSet.output.classesDirs.asFileTree.matching {
-                    exclude(*JAZZER_COVERAGE_EXCLUSIONS.toTypedArray())
+                mainSourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
+                    patternFilterable.exclude(*JAZZER_COVERAGE_EXCLUSIONS.toTypedArray())
                 }
 
             tasks.named<JacocoReport>("jacocoTestReport") {
@@ -264,44 +267,44 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                     )
                     sourceDirectories.setFrom(mainSourceSet.allJava.srcDirs)
                     classDirectories.setFrom(jazzerCoverageClasses)
-                    violationRules {
-                        rule {
-                            limit {
-                                minimum = BigDecimal(JAZZER_COVERAGE_MINIMUM)
+                    violationRules { rules: JacocoViolationRulesContainer ->
+                        rules.rule { rule: JacocoViolationRule ->
+                            rule.limit { limit: JacocoLimit ->
+                                limit.minimum = BigDecimal(JAZZER_COVERAGE_MINIMUM)
                             }
                         }
                     }
                 }
 
-            tasks.named("check") {
-                dependsOn(jazzerCoverageVerification)
+            tasks.named("check") { checkTask ->
+                checkTask.dependsOn(jazzerCoverageVerification)
             }
 
-            tasks.named("check") {
-                dependsOn(jazzerRegression)
+            tasks.named("check") { checkTask ->
+                checkTask.dependsOn(jazzerRegression)
             }
 
-            tasks.register("fuzzAllLocal") {
-                description = "Runs all active local-only fuzzing tasks."
-                group = "verification"
-                dependsOn(fuzzTasks)
+            tasks.register("fuzzAllLocal") { fuzzAllTask ->
+                fuzzAllTask.description = "Runs all active local-only fuzzing tasks."
+                fuzzAllTask.group = "verification"
+                fuzzAllTask.dependsOn(fuzzTasks)
             }
 
             fuzzTasks.windowed(size = 2, step = 1, partialWindows = false).forEach { (first, second) ->
-                second.configure {
-                    mustRunAfter(first)
+                second.configure { task ->
+                    task.mustRunAfter(first)
                 }
             }
 
             val jazzerSupportTests = tasks.named<Test>("test")
             regressionTasks.windowed(size = 2, step = 1, partialWindows = false).forEach { (first, second) ->
-                second.configure {
-                    mustRunAfter(first)
-                    mustRunAfter(jazzerSupportTests)
+                second.configure { task ->
+                    task.mustRunAfter(first)
+                    task.mustRunAfter(jazzerSupportTests)
                 }
             }
-            regressionTasks.firstOrNull()?.configure {
-                mustRunAfter(jazzerSupportTests)
+            regressionTasks.firstOrNull()?.configure { task ->
+                task.mustRunAfter(jazzerSupportTests)
             }
 
             tasks.register<CleanLocalCorpusTask>("cleanLocalCorpus") {
@@ -463,8 +466,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 "dev/erst/gridgrind/jazzer/support/GeneratedProtocolWorkflow*.class",
                 "dev/erst/gridgrind/jazzer/support/HarnessTelemetry*.class",
                 "dev/erst/gridgrind/jazzer/support/JazzerGridGrindFuzzData*.class",
-                "dev/erst/gridgrind/jazzer/support/OperationSequenceModel*.class",
-                "dev/erst/gridgrind/jazzer/support/OperationSequenceValueFactory*.class",
+                "dev/erst/gridgrind/jazzer/support/OperationSequence*.class",
                 "dev/erst/gridgrind/jazzer/support/StyleKindIntrospection*.class",
                 "dev/erst/gridgrind/jazzer/support/WorkbookStyleInputs*.class",
                 "dev/erst/gridgrind/jazzer/tool/JazzerCli*.class",

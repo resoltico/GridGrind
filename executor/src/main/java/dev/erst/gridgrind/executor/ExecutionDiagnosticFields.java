@@ -2,6 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
@@ -10,169 +11,271 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import java.util.Optional;
 
-/** Resolves workbook-step and exception facts into journal-friendly diagnostic fields. */
+/** Resolves workbook-step and exception facts into journal-friendly diagnostic locations. */
 final class ExecutionDiagnosticFields {
   private ExecutionDiagnosticFields() {}
 
-  static String sheetNameFor(WorkbookStep step) {
+  static ProblemContext.ProblemLocation locationFor(WorkbookStep step) {
     return switch (step) {
-      case MutationStep mutationStep -> {
-        String fromAction = sheetNameFor(mutationStep.action());
-        yield fromAction != null ? fromAction : sheetNameFor(mutationStep.target());
-      }
-      case AssertionStep assertionStep -> sheetNameFor(assertionStep.target());
-      case InspectionStep inspectionStep -> sheetNameFor(inspectionStep.target());
+      case MutationStep mutationStep ->
+          ProblemContext.mergeLocation(
+              locationFor(mutationStep.action()), locationFor(mutationStep.target()));
+      case AssertionStep assertionStep ->
+          ProblemContext.mergeLocation(
+              locationFor(assertionStep.target()), locationFor(assertionStep.assertion()));
+      case InspectionStep inspectionStep -> locationFor(inspectionStep.target());
     };
   }
 
-  static String sheetNameFor(WorkbookStep step, Exception exception) {
-    String fromStep = sheetNameFor(step);
-    return fromStep != null ? fromStep : sheetNameFor(exception);
+  static ProblemContext.ProblemLocation locationFor(WorkbookStep step, Exception exception) {
+    return ProblemContext.mergeLocation(locationFor(step), locationFor(exception));
   }
 
-  static String addressFor(WorkbookStep step) {
+  static ProblemContext.ProblemLocation locationFor(Exception exception) {
+    Optional<String> namedRange = ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception);
+    Optional<String> sheetName = ExecutionExceptionDiagnosticFields.sheetNameFor(exception);
+    Optional<String> address = ExecutionExceptionDiagnosticFields.addressFor(exception);
+    Optional<String> range = ExecutionExceptionDiagnosticFields.rangeFor(exception);
+    Optional<String> formula = ExecutionExceptionDiagnosticFields.formulaFor(exception);
+    if (namedRange.isPresent() && sheetName.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(
+          sheetName.orElseThrow(), namedRange.orElseThrow());
+    }
+    if (namedRange.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+    }
+    if (sheetName.isPresent() && address.isPresent() && formula.isPresent()) {
+      return ProblemContext.ProblemLocation.formulaCell(
+          sheetName.orElseThrow(), address.orElseThrow(), formula.orElseThrow());
+    }
+    if (sheetName.isPresent() && address.isPresent()) {
+      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+    }
+    if (sheetName.isPresent()) {
+      return ProblemContext.ProblemLocation.sheet(sheetName.orElseThrow());
+    }
+    if (address.isPresent()) {
+      return ProblemContext.ProblemLocation.address(address.orElseThrow());
+    }
+    if (range.isPresent()) {
+      return ProblemContext.ProblemLocation.range(range.orElseThrow());
+    }
+    return ProblemContext.ProblemLocation.unknown();
+  }
+
+  static ProblemContext.ProblemLocation locationFor(MutationAction action) {
+    Optional<String> namedRange = ExecutionActionDiagnosticFields.namedRangeNameFor(action);
+    Optional<String> sheetName = ExecutionActionDiagnosticFields.sheetNameFor(action);
+    Optional<String> address = ExecutionActionDiagnosticFields.addressFor(action);
+    Optional<String> range = ExecutionActionDiagnosticFields.rangeFor(action);
+    if (namedRange.isPresent() && sheetName.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(
+          sheetName.orElseThrow(), namedRange.orElseThrow());
+    }
+    if (namedRange.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+    }
+    if (sheetName.isPresent() && address.isPresent()) {
+      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+    }
+    if (range.isPresent()) {
+      return sheetName.isPresent()
+          ? ProblemContext.ProblemLocation.range(sheetName.orElseThrow(), range.orElseThrow())
+          : ProblemContext.ProblemLocation.range(range.orElseThrow());
+    }
+    return ProblemContext.ProblemLocation.unknown();
+  }
+
+  static ProblemContext.ProblemLocation locationFor(Assertion assertion) {
+    return ProblemContext.ProblemLocation.unknown();
+  }
+
+  static ProblemContext.ProblemLocation locationFor(Selector selector) {
+    Optional<String> namedRange = ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector);
+    Optional<String> sheetName = ExecutionSelectorDiagnosticFields.sheetNameFor(selector);
+    Optional<String> address = ExecutionSelectorDiagnosticFields.addressFor(selector);
+    Optional<String> range = ExecutionSelectorDiagnosticFields.rangeFor(selector);
+    if (namedRange.isPresent() && sheetName.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(
+          sheetName.orElseThrow(), namedRange.orElseThrow());
+    }
+    if (namedRange.isPresent()) {
+      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+    }
+    if (sheetName.isPresent() && address.isPresent()) {
+      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+    }
+    if (sheetName.isPresent() && range.isPresent()) {
+      return ProblemContext.ProblemLocation.range(sheetName.orElseThrow(), range.orElseThrow());
+    }
+    if (sheetName.isPresent()) {
+      return ProblemContext.ProblemLocation.sheet(sheetName.orElseThrow());
+    }
+    return ProblemContext.ProblemLocation.unknown();
+  }
+
+  static Optional<String> sheetNameFor(WorkbookStep step) {
     return switch (step) {
-      case MutationStep mutationStep -> {
-        String fromAction = addressFor(mutationStep.action());
-        yield fromAction != null ? fromAction : addressFor(mutationStep.target());
-      }
-      case AssertionStep assertionStep -> addressFor(assertionStep.target());
-      case InspectionStep inspectionStep -> addressFor(inspectionStep.target());
+      case MutationStep mutationStep ->
+          ExecutionSelectorDiagnosticFields.sheetNameFor(mutationStep.target())
+              .or(() -> ExecutionActionDiagnosticFields.sheetNameFor(mutationStep.action()));
+      case AssertionStep assertionStep ->
+          ExecutionSelectorDiagnosticFields.sheetNameFor(assertionStep.target());
+      case InspectionStep inspectionStep ->
+          ExecutionSelectorDiagnosticFields.sheetNameFor(inspectionStep.target());
     };
   }
 
-  static String addressFor(WorkbookStep step, Exception exception) {
-    String fromStep = addressFor(step);
-    return fromStep != null ? fromStep : addressFor(exception);
+  static Optional<String> sheetNameFor(WorkbookStep step, Exception exception) {
+    return sheetNameFor(step).or(() -> ExecutionExceptionDiagnosticFields.sheetNameFor(exception));
   }
 
-  static String rangeFor(WorkbookStep step) {
+  static Optional<String> addressFor(WorkbookStep step) {
     return switch (step) {
-      case MutationStep mutationStep -> {
-        String fromAction = rangeFor(mutationStep.action());
-        yield fromAction != null ? fromAction : rangeFor(mutationStep.target());
-      }
-      case AssertionStep assertionStep -> rangeFor(assertionStep.target());
-      case InspectionStep inspectionStep -> rangeFor(inspectionStep.target());
+      case MutationStep mutationStep ->
+          ExecutionSelectorDiagnosticFields.addressFor(mutationStep.target())
+              .or(() -> ExecutionActionDiagnosticFields.addressFor(mutationStep.action()));
+      case AssertionStep assertionStep ->
+          ExecutionSelectorDiagnosticFields.addressFor(assertionStep.target());
+      case InspectionStep inspectionStep ->
+          ExecutionSelectorDiagnosticFields.addressFor(inspectionStep.target());
     };
   }
 
-  static String rangeFor(WorkbookStep step, Exception exception) {
-    String fromStep = rangeFor(step);
-    return fromStep != null ? fromStep : rangeFor(exception);
+  static Optional<String> addressFor(WorkbookStep step, Exception exception) {
+    return addressFor(step).or(() -> ExecutionExceptionDiagnosticFields.addressFor(exception));
   }
 
-  static String formulaFor(WorkbookStep step) {
+  static Optional<String> rangeFor(WorkbookStep step) {
     return switch (step) {
-      case MutationStep mutationStep -> formulaFor(mutationStep.action());
-      case AssertionStep assertionStep -> formulaFor(assertionStep.assertion());
-      case InspectionStep _ -> null;
+      case MutationStep mutationStep ->
+          ExecutionSelectorDiagnosticFields.rangeFor(mutationStep.target())
+              .or(() -> ExecutionActionDiagnosticFields.rangeFor(mutationStep.action()));
+      case AssertionStep assertionStep ->
+          ExecutionSelectorDiagnosticFields.rangeFor(assertionStep.target());
+      case InspectionStep inspectionStep ->
+          ExecutionSelectorDiagnosticFields.rangeFor(inspectionStep.target());
     };
   }
 
-  static String formulaFor(WorkbookStep step, Exception exception) {
-    String fromStep = formulaFor(step);
-    return fromStep != null ? fromStep : formulaFor(exception);
+  static Optional<String> rangeFor(WorkbookStep step, Exception exception) {
+    return rangeFor(step).or(() -> ExecutionExceptionDiagnosticFields.rangeFor(exception));
   }
 
-  static String namedRangeNameFor(WorkbookStep step) {
+  static Optional<String> formulaFor(WorkbookStep step) {
     return switch (step) {
-      case MutationStep mutationStep -> {
-        String fromAction = namedRangeNameFor(mutationStep.action());
-        yield fromAction != null ? fromAction : namedRangeNameFor(mutationStep.target());
-      }
-      case AssertionStep assertionStep -> namedRangeNameFor(assertionStep.target());
-      case InspectionStep inspectionStep -> namedRangeNameFor(inspectionStep.target());
+      case MutationStep mutationStep ->
+          ExecutionActionDiagnosticFields.formulaFor(mutationStep.action());
+      case AssertionStep assertionStep ->
+          ExecutionActionDiagnosticFields.formulaFor(assertionStep.assertion());
+      case InspectionStep _ -> Optional.empty();
     };
   }
 
-  static String namedRangeNameFor(WorkbookStep step, Exception exception) {
-    String fromStep = namedRangeNameFor(step);
-    return fromStep != null ? fromStep : namedRangeNameFor(exception);
+  static Optional<String> formulaFor(WorkbookStep step, Exception exception) {
+    return formulaFor(step).or(() -> ExecutionExceptionDiagnosticFields.formulaFor(exception));
   }
 
-  static String sheetNameFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.sheetNameFor(exception).orElse(null);
+  static Optional<String> namedRangeNameFor(WorkbookStep step) {
+    return switch (step) {
+      case MutationStep mutationStep ->
+          ExecutionSelectorDiagnosticFields.namedRangeNameFor(mutationStep.target())
+              .or(() -> ExecutionActionDiagnosticFields.namedRangeNameFor(mutationStep.action()));
+      case AssertionStep assertionStep ->
+          ExecutionSelectorDiagnosticFields.namedRangeNameFor(assertionStep.target());
+      case InspectionStep inspectionStep ->
+          ExecutionSelectorDiagnosticFields.namedRangeNameFor(inspectionStep.target());
+    };
   }
 
-  static String addressFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.addressFor(exception).orElse(null);
+  static Optional<String> namedRangeNameFor(WorkbookStep step, Exception exception) {
+    return namedRangeNameFor(step)
+        .or(() -> ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception));
   }
 
-  static String rangeFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.rangeFor(exception).orElse(null);
+  static Optional<String> sheetNameFor(Exception exception) {
+    return ExecutionExceptionDiagnosticFields.sheetNameFor(exception);
   }
 
-  static String formulaFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.formulaFor(exception).orElse(null);
+  static Optional<String> addressFor(Exception exception) {
+    return ExecutionExceptionDiagnosticFields.addressFor(exception);
   }
 
-  static String namedRangeNameFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception).orElse(null);
+  static Optional<String> rangeFor(Exception exception) {
+    return ExecutionExceptionDiagnosticFields.rangeFor(exception);
   }
 
-  static String sheetNameFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.sheetNameFor(action).orElse(null);
+  static Optional<String> formulaFor(Exception exception) {
+    return ExecutionExceptionDiagnosticFields.formulaFor(exception);
   }
 
-  static String addressFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.addressFor(action).orElse(null);
+  static Optional<String> namedRangeNameFor(Exception exception) {
+    return ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception);
   }
 
-  static String rangeFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.rangeFor(action).orElse(null);
+  static Optional<String> sheetNameFor(MutationAction action) {
+    return ExecutionActionDiagnosticFields.sheetNameFor(action);
   }
 
-  static String formulaFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.formulaFor(action).orElse(null);
+  static Optional<String> addressFor(MutationAction action) {
+    return ExecutionActionDiagnosticFields.addressFor(action);
   }
 
-  static String formulaFor(Assertion assertion) {
-    return ExecutionActionDiagnosticFields.formulaFor(assertion).orElse(null);
+  static Optional<String> rangeFor(MutationAction action) {
+    return ExecutionActionDiagnosticFields.rangeFor(action);
   }
 
-  static String namedRangeNameFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.namedRangeNameFor(action).orElse(null);
+  static Optional<String> formulaFor(MutationAction action) {
+    return ExecutionActionDiagnosticFields.formulaFor(action);
   }
 
-  static String sheetNameFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.sheetNameFor(selector).orElse(null);
+  static Optional<String> formulaFor(Assertion assertion) {
+    return ExecutionActionDiagnosticFields.formulaFor(assertion);
   }
 
-  static String addressFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.addressFor(selector).orElse(null);
+  static Optional<String> namedRangeNameFor(MutationAction action) {
+    return ExecutionActionDiagnosticFields.namedRangeNameFor(action);
   }
 
-  static String rangeFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.rangeFor(selector).orElse(null);
+  static Optional<String> sheetNameFor(Selector selector) {
+    return ExecutionSelectorDiagnosticFields.sheetNameFor(selector);
   }
 
-  static String namedRangeNameFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector).orElse(null);
+  static Optional<String> addressFor(Selector selector) {
+    return ExecutionSelectorDiagnosticFields.addressFor(selector);
   }
 
-  static String singleSheetName(CellSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
+  static Optional<String> rangeFor(Selector selector) {
+    return ExecutionSelectorDiagnosticFields.rangeFor(selector);
   }
 
-  static String singleSheetName(RangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
+  static Optional<String> namedRangeNameFor(Selector selector) {
+    return ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector);
   }
 
-  static String singleSheetName(NamedRangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
+  static Optional<String> singleSheetName(CellSelector selector) {
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
   }
 
-  static String singleSheetName(NamedRangeSelector.Ref selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
+  static Optional<String> singleSheetName(RangeSelector selector) {
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
   }
 
-  static String singleNamedRangeName(NamedRangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector).orElse(null);
+  static Optional<String> singleSheetName(NamedRangeSelector selector) {
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
   }
 
-  static String singleNamedRangeName(NamedRangeSelector.Ref selector) {
-    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector).orElse(null);
+  static Optional<String> singleSheetName(NamedRangeSelector.Ref selector) {
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
+  }
+
+  static Optional<String> singleNamedRangeName(NamedRangeSelector selector) {
+    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector);
+  }
+
+  static Optional<String> singleNamedRangeName(NamedRangeSelector.Ref selector) {
+    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector);
   }
 }

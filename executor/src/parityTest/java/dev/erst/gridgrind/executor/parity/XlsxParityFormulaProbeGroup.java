@@ -50,14 +50,14 @@ final class XlsxParityFormulaProbeGroup {
                 "cells",
                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                 new InspectionQuery.GetCells()));
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         cast(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", InspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    GridGrindResponse.CellReport.NumberReport evaluation =
-        cast(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation());
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport evaluation =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 7.5d && evaluation.numberValue() == poiValue && "7.5".equals(cachedValue)
         ? pass("External-workbook formula bindings evaluate and persist cached results.")
@@ -89,14 +89,16 @@ final class XlsxParityFormulaProbeGroup {
                 "cells",
                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                 new InspectionQuery.GetCells()));
-    GridGrindResponse.CellReport.FormulaReport cachedFormula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport cachedFormula =
         cast(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(cachedSuccess, "cells", InspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    GridGrindResponse.CellReport.NumberReport cachedEvaluation =
-        cast(GridGrindResponse.CellReport.NumberReport.class, cachedFormula.evaluation());
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport cachedEvaluation =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+            cachedFormula.evaluation());
     return poiStrictFails
             && poiCachedValue == 7.5d
             && strictFailure.problem().code() == GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK
@@ -130,14 +132,14 @@ final class XlsxParityFormulaProbeGroup {
                 "cells",
                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                 new InspectionQuery.GetCells()));
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         cast(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", InspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    GridGrindResponse.CellReport.NumberReport evaluation =
-        cast(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation());
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport evaluation =
+        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 42.0d && evaluation.numberValue() == poiValue && "42.0".equals(cachedValue)
         ? pass("Template-backed UDF toolpacks evaluate and persist cached results.")

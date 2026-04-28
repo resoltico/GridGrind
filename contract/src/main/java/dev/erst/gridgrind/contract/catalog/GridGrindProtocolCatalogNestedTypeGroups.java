@@ -731,6 +731,12 @@ final class GridGrindProtocolCatalogNestedTypeGroups {
                       "Specify font height in exact twips (20 twips = 1 point)."
                           + " Write format: {\"type\":\"TWIPS\",\"twips\":260}."
                           + " Read-back returns the same plain object shape as POINTS."))),
+          GridGrindProtocolCatalogStyleTypeGroups.COLOR_INPUT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_GRADIENT_FILL_INPUT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_FILL_INPUT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_COLOR_REPORT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_GRADIENT_FILL_REPORT_TYPES,
+          GridGrindProtocolCatalogStyleTypeGroups.CELL_FILL_REPORT_TYPES,
           nestedTypeGroup(
               "dataValidationRuleTypes",
               DataValidationRuleInput.class,

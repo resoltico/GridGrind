@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Verify that a tag-targeted publication candidate is safe to publish: the checked-out commit must
 # match the remote tag, the tag version must match gradle.properties, the tag commit must still be
-# reachable from the default branch, and the required CI checks must already be green on that
+# reachable from the default branch, and the release-blocking CI checks must already be green on that
 # exact commit.
 
 set -euo pipefail
@@ -27,7 +27,7 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly script_repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly tag_name="${1:-${RELEASE_TAG:-${GITHUB_REF_NAME:-}}}"
-readonly required_checks_csv="${GRIDGRIND_REQUIRED_RELEASE_CHECKS:-Check,Docker smoke}"
+readonly blocking_checks_csv="${GRIDGRIND_RELEASE_BLOCKING_CHECKS:-Check,Docker smoke,Contributor devcontainer}"
 
 [[ -n "${tag_name}" ]] || die "release tag is required"
 [[ "${tag_name}" == v* ]] || die "release tag must start with v"
@@ -97,22 +97,22 @@ readonly check_runs_tsv="$(gh api \
     "/repos/${repo_full_name}/commits/${tag_commit_sha}/check-runs?per_page=100" \
     --jq '.check_runs[] | [.name, .status, .conclusion] | @tsv')"
 
-required_check_names=()
+blocking_check_names=()
 while IFS= read -r raw_check_name || [[ -n "${raw_check_name}" ]]; do
     trimmed_check_name="$(printf '%s' "${raw_check_name}" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
     [[ -n "${trimmed_check_name}" ]] || continue
-    required_check_names+=("${trimmed_check_name}")
-done < <(printf '%s' "${required_checks_csv}" | tr ',' '\n')
+    blocking_check_names+=("${trimmed_check_name}")
+done < <(printf '%s' "${blocking_checks_csv}" | tr ',' '\n')
 
-((${#required_check_names[@]} > 0)) || die "no required publication checks configured"
+((${#blocking_check_names[@]} > 0)) || die "no release-blocking publication checks configured"
 
 missing_checks=()
-for required_check_name in "${required_check_names[@]}"; do
-    if ! printf '%s\n' "${check_runs_tsv}" | awk -F '\t' -v target="${required_check_name}" '
+for blocking_check_name in "${blocking_check_names[@]}"; do
+    if ! printf '%s\n' "${check_runs_tsv}" | awk -F '\t' -v target="${blocking_check_name}" '
         $1 == target && $2 == "completed" && $3 == "success" { found = 1 }
         END { exit found ? 0 : 1 }
     '; then
-        missing_checks+=("${required_check_name}")
+        missing_checks+=("${blocking_check_name}")
     fi
 done
 
@@ -131,11 +131,11 @@ if ((${#missing_checks[@]} > 0)); then
         fi
     )"
     die \
-        "tag ${tag_name} commit ${tag_commit_sha} is missing successful required checks (${missing_checks[*]}). Observed check runs: ${observed_checks}"
+        "tag ${tag_name} commit ${tag_commit_sha} is missing successful release-blocking checks (${missing_checks[*]}). Observed check runs: ${observed_checks}"
 fi
 
-printf 'Verified release candidate %s at %s on origin/%s with required checks: %s\n' \
+printf 'Verified release candidate %s at %s on origin/%s with release-blocking checks: %s\n' \
     "${tag_name}" \
     "${tag_commit_sha}" \
     "${default_branch}" \
-    "$(IFS=', '; printf '%s' "${required_check_names[*]}")"
+    "$(IFS=', '; printf '%s' "${blocking_check_names[*]}")"

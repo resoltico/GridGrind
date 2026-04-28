@@ -148,14 +148,16 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new InspectionQuery.GetHyperlinks())));
 
     GridGrindResponse.Success success = success(response);
-    GridGrindResponse.CellReport.TextReport linkedCell =
+    dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
         cast(
-            GridGrindResponse.CellReport.TextReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
             read(success, "cells", InspectionResult.CellsResult.class).cells().getFirst());
     InspectionResult.HyperlinksResult hyperlinks =
         read(success, "hyperlinks", InspectionResult.HyperlinksResult.class);
 
-    assertEquals(new HyperlinkTarget.File(linkedFile.toString()), linkedCell.hyperlink());
+    assertEquals(
+        java.util.Optional.of(new HyperlinkTarget.File(linkedFile.toString())),
+        linkedCell.hyperlink());
     assertEquals(
         new HyperlinkTarget.File(linkedFile.toString()),
         hyperlinks.hyperlinks().getFirst().hyperlink());
@@ -271,8 +273,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("MOVE_SHEET", failure.problem().context().stepType());
-    assertEquals("Missing", failure.problem().context().sheetName());
+    assertEquals("MOVE_SHEET", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Missing"), executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -297,9 +299,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(2, failure.problem().context().stepIndex());
-    assertEquals("RENAME_SHEET", failure.problem().context().stepType());
-    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals(2, executeStepContext(failure).stepIndex());
+    assertEquals("RENAME_SHEET", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
     assertEquals("Sheet already exists: Summary", failure.problem().message());
   }
 
@@ -321,8 +323,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                                 new MutationAction.MoveSheet(1))))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("MOVE_SHEET", failure.problem().context().stepType());
-    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("MOVE_SHEET", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
     assertEquals(
         "targetIndex out of range: workbook has 1 sheet(s), valid positions are 0 to 0; got 1",
         failure.problem().message());
@@ -358,9 +360,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                                 new MutationAction.UnmergeCells())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("UNMERGE_CELLS", failure.problem().context().stepType());
-    assertEquals("Budget", failure.problem().context().sheetName());
-    assertEquals("A1:B2", failure.problem().context().range());
+    assertEquals("UNMERGE_CELLS", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("A1:B2"), executeStepContext(failure).range());
     assertEquals("No merged region matches range: A1:B2", failure.problem().message());
   }
 
@@ -380,8 +382,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                                     new PaneInput.Frozen(1, 1, 1, 1)))))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
-    assertEquals("SET_SHEET_PANE", failure.problem().context().stepType());
-    assertEquals("Missing", failure.problem().context().sheetName());
+    assertEquals("SET_SHEET_PANE", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Missing"), executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -407,10 +409,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.NAMED_RANGE_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(1, failure.problem().context().stepIndex());
-    assertEquals("GET_NAMED_RANGES", failure.problem().context().stepType());
-    assertEquals("ranges", failure.problem().context().stepId());
-    assertEquals("BudgetTotal", failure.problem().context().namedRangeName());
+    assertEquals(1, executeStepContext(failure).stepIndex());
+    assertEquals("GET_NAMED_RANGES", executeStepContext(failure).stepType());
+    assertEquals("ranges", executeStepContext(failure).stepId());
+    assertEquals(
+        java.util.Optional.of("BudgetTotal"), executeStepContext(failure).namedRangeName());
   }
 
   @Test
@@ -452,7 +455,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         "After",
         cast(
-                GridGrindResponse.CellReport.TextReport.class,
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 read(success, "cells", InspectionResult.CellsResult.class).cells().getFirst())
             .stringValue());
     assertEquals(List.of("Budget", "Summary"), XlsxRoundTrip.sheetOrder(workbookPath));
@@ -480,7 +483,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCategory.RESOURCE, failure.problem().category());
     assertEquals(GridGrindProblemRecovery.CHANGE_REQUEST, failure.problem().recovery());
     assertEquals(
-        workbookPath.toAbsolutePath().toString(), failure.problem().context().sourceWorkbookPath());
+        java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
+        openWorkbookContext(failure).sourceWorkbookPath());
   }
 
   @Test
@@ -499,9 +503,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(0, failure.problem().context().stepIndex());
-    assertEquals("AUTO_SIZE_COLUMNS", failure.problem().context().stepType());
-    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals(0, executeStepContext(failure).stepIndex());
+    assertEquals("AUTO_SIZE_COLUMNS", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -521,10 +525,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("GET_WINDOW", failure.problem().context().stepType());
-    assertEquals("cells", failure.problem().context().stepId());
-    assertEquals("Budget", failure.problem().context().sheetName());
-    assertEquals("A1", failure.problem().context().address());
+    assertEquals("GET_WINDOW", executeStepContext(failure).stepType());
+    assertEquals("cells", executeStepContext(failure).stepId());
+    assertEquals(java.util.Optional.of("Budget"), executeStepContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
   }
 
   @Test
@@ -544,9 +548,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals("GET_SHEET_SUMMARY", failure.problem().context().stepType());
-    assertEquals("sheet", failure.problem().context().stepId());
-    assertEquals("Missing", failure.problem().context().sheetName());
+    assertEquals("GET_SHEET_SUMMARY", executeStepContext(failure).stepType());
+    assertEquals("sheet", executeStepContext(failure).stepId());
+    assertEquals(java.util.Optional.of("Missing"), executeStepContext(failure).sheetName());
   }
 
   @Test
@@ -568,8 +572,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(1, failure.problem().context().stepIndex());
-    assertEquals("DELETE_SHEET", failure.problem().context().stepType());
+    assertEquals(1, executeStepContext(failure).stepIndex());
+    assertEquals("DELETE_SHEET", executeStepContext(failure).stepType());
     assertTrue(failure.problem().message().contains("at least one sheet"));
   }
 
@@ -597,9 +601,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(3, failure.problem().context().stepIndex());
-    assertEquals("DELETE_SHEET", failure.problem().context().stepType());
-    assertEquals("Alpha", failure.problem().context().sheetName());
+    assertEquals(3, executeStepContext(failure).stepIndex());
+    assertEquals("DELETE_SHEET", executeStepContext(failure).stepType());
+    assertEquals(java.util.Optional.of("Alpha"), executeStepContext(failure).sheetName());
     assertTrue(failure.problem().message().contains("last visible sheet"));
   }
 
@@ -623,7 +627,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     assertEquals(
-        workbookPath.toAbsolutePath().toString(), failure.problem().context().persistencePath());
+        java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
+        persistWorkbookContext(failure).persistencePath());
   }
 
   @Test
@@ -716,8 +721,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCategory.FORMULA, failure.problem().category());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("Invalid formula at Data!A1: SUM(", failure.problem().message());
-    assertEquals("A1", failure.problem().context().address());
-    assertEquals("SUM(", failure.problem().context().formula());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
+    assertEquals(java.util.Optional.of("SUM("), executeStepContext(failure).formula());
   }
 
   @Test
@@ -742,8 +747,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(GridGrindProblemCategory.FORMULA, failure.problem().category());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("Invalid formula at Data!A1: [^owe_e`ffffff", failure.problem().message());
-    assertEquals("A1", failure.problem().context().address());
-    assertEquals("[^owe_e`ffffff", failure.problem().context().formula());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
+    assertEquals(java.util.Optional.of("[^owe_e`ffffff"), executeStepContext(failure).formula());
     assertEquals(
         "Invalid formula at Data!A1: [^owe_e`ffffff",
         failure.problem().causes().getFirst().message());
@@ -781,13 +786,14 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, lambdaFailure.problem().code());
     assertEquals("Invalid formula at Data!A1: LAMBDA(x,x*2)(5)", lambdaFailure.problem().message());
-    assertEquals("A1", lambdaFailure.problem().context().address());
-    assertEquals("LAMBDA(x,x*2)(5)", lambdaFailure.problem().context().formula());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(lambdaFailure).address());
+    assertEquals(
+        java.util.Optional.of("LAMBDA(x,x*2)(5)"), executeStepContext(lambdaFailure).formula());
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, letFailure.problem().code());
     assertEquals("Invalid formula at Data!A1: LET(x,5,x*2)", letFailure.problem().message());
-    assertEquals("A1", letFailure.problem().context().address());
-    assertEquals("LET(x,5,x*2)", letFailure.problem().context().formula());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(letFailure).address());
+    assertEquals(java.util.Optional.of("LET(x,5,x*2)"), executeStepContext(letFailure).formula());
   }
 
   @Test
@@ -821,9 +827,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(
         "User-defined function TEXTAFTER is not registered at Data!C1: TEXTAFTER(\"a,b\",\",\")",
         failure.problem().message());
-    assertEquals("Data", failure.problem().context().sheetName());
-    assertEquals("C1", failure.problem().context().address());
-    assertEquals("TEXTAFTER(\"a,b\",\",\")", failure.problem().context().formula());
+    assertEquals(java.util.Optional.of("Data"), calculationPreflightContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("C1"), calculationPreflightContext(failure).address());
+    assertEquals(
+        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"),
+        calculationPreflightContext(failure).formula());
   }
 
   @Test
@@ -837,7 +845,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 executionPolicy(calculateAll()),
-                null,
+                FormulaEnvironmentInput.empty(),
                 List.<WorkbookStep>of(
                     new MutationStep(
                         "step-0",
@@ -920,9 +928,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     assertEquals("CALCULATION_PREFLIGHT", failure.problem().context().stage());
-    assertEquals("Data", failure.problem().context().sheetName());
-    assertEquals("C1", failure.problem().context().address());
-    assertEquals("TEXTAFTER(\"a,b\",\",\")", failure.problem().context().formula());
+    assertEquals(java.util.Optional.of("Data"), calculationPreflightContext(failure).sheetName());
+    assertEquals(java.util.Optional.of("C1"), calculationPreflightContext(failure).address());
+    assertEquals(
+        java.util.Optional.of("TEXTAFTER(\"a,b\",\",\")"),
+        calculationPreflightContext(failure).formula());
   }
 
   @Test

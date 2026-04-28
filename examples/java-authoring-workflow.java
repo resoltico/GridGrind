@@ -66,7 +66,7 @@ final class JavaAuthoringWorkflowExample {
     return new DefaultGridGrindRequestExecutor()
         .execute(
             build(workspace).toPlan(),
-            new ExecutionInputBindings(workspace, (byte[]) null),
+            new ExecutionInputBindings(workspace),
             ExecutionJournalSink.NOOP);
   }
 }

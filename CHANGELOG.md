@@ -5,6 +5,96 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.60.0] - 2026-04-28
+
+### Changed
+
+- GridGrind now ships a committed contributor devcontainer based on a pinned glibc image plus
+  Azul Zulu 26, and the developer docs now treat that containerized workflow as the preferred
+  contributor path while keeping host-native Java guidance accurate as a fallback.
+- The shared Gradle build logic now uses Kotlin `2.4.0-Beta2` on Gradle `9.5.0-rc-4` and emits
+  JVM 26 bytecode directly, so the build no longer carries a separate JVM 25 exception below the
+  repository's Java 26 baseline.
+- The canonical `./check.sh` gate now runs with an isolated repo-scoped `GRADLE_USER_HOME`,
+  always forces `--no-daemon`, and shares one repo-wide verification lock with devcontainer,
+  Docker-smoke, and Jazzer wrapper entrypoints so local full verification no longer overlaps
+  through shared daemon or cache state by accident.
+- `./check.sh` now derives its fixed five-stage inventory, Stage 4 release-surface shell
+  regression list, and usage text from `scripts/check-stage-contract.sh`, and a dedicated shell
+  regression now guards that canonical owner so the root gate cannot drift back into parallel
+  stage definitions.
+- Discovery and planning JSON now omit absent optional fields instead of emitting explicit
+  `null` placeholders. `--print-protocol-catalog`, `--print-task-catalog`,
+  `--print-task-plan`, `--print-goal-plan`, and `--doctor-request` stay schema-compatible while
+  becoming easier for agents and shell tooling to consume directly.
+- Request and response JSON now omit absent optional fields too, including `--print-example`
+  output, checked-in `examples/*.json`, and normal execution responses, so the full public JSON
+  surface no longer uses explicit `null` placeholders as a control protocol.
+- Workbook-analysis finding codes and severities now come from one shared
+  `excel-foundation` owner instead of parallel copies in engine and contract modules, so the
+  published vocabulary no longer depends on lockstep duplicate enums.
+- The limitations registry now distinguishes product-enforced limits from upstream reference
+  ceilings instead of implying that every documented Excel or POI ceiling is surfaced through the
+  same runtime/help/catalog propagation path.
+- Canonical request plans now keep default execution and formula-environment state as normalized
+  objects in memory instead of collapsing those sections back to `null`, so authoring, executor,
+  and JSON emission all share one default model.
+- Request-doctor and calculation telemetry contracts now keep optional summary, problem,
+  preflight, and message state as explicit `Optional`-backed fields in memory instead of raw
+  `null` padding, so Java authoring, CLI fallback handling, executor telemetry, and tests all
+  share the same absence model as the public JSON wire shape.
+- Jazzer's deterministic coverage gate now treats the extracted `OperationSequence*` generator
+  helpers as one exclusion family, so splitting the fuzz-workflow generator into smaller seams no
+  longer breaks Stage 2 verification just because the coverage scope list drifted.
+
+### Fixed
+
+- CI now validates the committed devcontainer surface in addition to the whole-repo deterministic
+  gate, so the preferred contributor environment cannot silently drift away from the documented
+  Java, editor-routing, and container-base contract.
+- Release CI no longer strands branch protection on stale check names while the release verifiers
+  silently ignore the committed devcontainer job. The `CI` workflow now keeps `Check` and
+  `Docker smoke` as the required contexts, exposes `Contributor devcontainer` as a separate job,
+  and the tag/merge release verifiers now treat that contributor-environment job as
+  release-blocking too.
+- `./check.sh` progress monitoring no longer assumes BSD `stat`. The root gate now sources a
+  portable file-size helper with BSD, GNU, and generic fallback behavior, and a dedicated shell
+  regression keeps the Linux/macOS seam from breaking release CI again.
+- The CLI-contract and public-container publication regressions no longer push full fixture
+  payloads through huge process environments. They now write case fixtures under `tmp/` and
+  verify those release surfaces through file paths, avoiding Linux `Argument list too long`
+  failures in release CI.
+- Release-surface shell regressions now follow the repo search-tool portability contract: they
+  prefer `rg` when available but fall back cleanly when it is not, instead of silently weakening
+  or breaking verification on lean CI runners.
+- The engine now names every private Apache POI contract it still depends on for relation
+  removal, sheet-clone hyperlink preparation, workbook picture-catalog synchronization, and
+  gradient-fill registry access. Compatibility tests and runtime failures now point at the exact
+  broken POI seam and affected feature instead of failing later with generic reflection errors.
+- `--print-protocol-catalog` no longer routes full-catalog, ranked-search, and exact-entry lookup
+  through one nullable union command model. The CLI now uses dedicated typed variants internally,
+  so discovery behavior is explicit instead of being inferred from null combinations.
+- Protocol-catalog target-selector metadata no longer relies on internal null-sentinel helper
+  returns. Derived selector rules now flow through typed `Optional` seams, and exact entry lookups
+  stop printing `targetSelectorRule: null` noise for operations that do not need a rule.
+- Release-surface shell regressions no longer validate the CLI contract against hand-maintained
+  fake help/catalog/task/goal/doctor blobs. The verifier tests now derive their baseline payloads
+  from the built GridGrind CLI artifact and mutate only the field under test.
+- Current agent and Jazzer architecture guidance no longer teaches the deleted top-level
+  `protocol` module, and a build-failing architecture audit now guards the live
+  `cli -> executor -> contract` plus `executor -> engine` graph.
+- The success/failure response seam no longer depends on nested null-padding helpers for cell and
+  problem-context variants. `CellReport` and `ProblemContext` now live as dedicated top-level
+  contract types, and a build-failing seam audit guards `GridGrindResponse.java` against growing
+  back into an unbounded god-file.
+- Build-failing seam audits now also guard `ProblemContext.java`,
+  `OperationSequenceModel.java`, and `OperationSequenceValueFactory.java` after splitting their
+  selector/assertion and chart-generation sub-foundations into dedicated helpers, so contract and
+  Jazzer boundary theory no longer depends on a handful of oversized god-files.
+- Chart clone-preparation helpers no longer use raw `null` to represent missing formula-node text
+  payloads. The rewrite seam now uses `Optional` internally and preserves the same public failure
+  when POI loses the node text during restore.
+
 ## [0.59.0] - 2026-04-25
 
 ### Changed
@@ -2327,7 +2417,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.59.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.60.0...HEAD
+[0.60.0]: https://github.com/resoltico/GridGrind/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/resoltico/GridGrind/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/resoltico/GridGrind/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/resoltico/GridGrind/compare/v0.56.0...v0.57.0

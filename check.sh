@@ -5,47 +5,19 @@
 # human-facing project gate entrypoint. The scripts/ directory is reserved for subordinate helper
 # scripts that workflows and this root gate invoke.
 #
-# Stage 1 runs all root-project quality gates and generates coverage reports for local inspection:
-#   check    -> Spotless (format), explicit-import verification, Error Prone (compile-time
-#               checks), PMD (static analysis), JaCoCo coverage thresholds, and all unit tests
-#   coverage -> per-module and aggregated JaCoCo HTML/XML reports
+# The fixed five-stage contract is canonically owned by scripts/check-stage-contract.sh so usage
+# text, stage selection, and Stage 4 script coverage cannot drift independently.
 #
-# Stage 2 runs the nested Jazzer verification build:
-#   jazzer check -> shared Spotless/PMD, deterministic Jazzer support tests, dedicated Jazzer
-#                   coverage verification, and committed-seed regression replay
-#
-# CI runs only the root check task (verification without report generation).
-#
-# Stage 3 mirrors the GitHub release packaging workflow:
-#   :cli:shadowJar -> build the distributable fat JAR
-#
-# Stage 4 syntax-checks the release-surface shell scripts, verifies the packaged CLI contract
-# including interactive no-arg help, and runs targeted shell regressions:
-#   bash -n check.sh scripts/*.sh jazzer/bin/*
-#   scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar
-#   scripts/test-check-process-support.sh
-#   scripts/test-contract-module-split.sh
-#   scripts/test-explicit-import-gate.sh
-#   scripts/test-jazzer-public-surface.sh
-#   scripts/test-jazzer-run-lock.sh
-#   scripts/test-selector-contract-surface.sh
-#   scripts/test-verify-release-merge-handoff.sh
-#   scripts/test-verify-release-candidate-tag.sh
-#   scripts/test-verify-release-primary-checkout.sh
-#   scripts/test-verify-cli-contract.sh
-#   scripts/test-verify-container-publication.sh
-#   scripts/test-publication-contract.sh
-#
-# Stage 5 exercises the Docker release surface from a non-default working directory:
-#   scripts/docker-smoke.sh -> build the image through docker buildx with an anonymous
-#                              DOCKER_CONFIG and verify help/request/response/save behavior
+# CI runs this whole-repo deterministic gate, including nested Jazzer verification, release-surface
+# shell regressions, and Docker smoke. Active fuzzing remains local-only.
 #
 # The script is location-independent: it always targets the repository that contains this file,
 # even when invoked from another working directory or through a symlink.
 #
-# Local runs keep the Gradle daemon for speed. When CI is set, the script adds --no-daemon
-# automatically to match the GitHub workflows. Non-interactive runs use --console=plain unless
-# the caller already selected a console mode.
+# The canonical whole-repo gate always runs without the Gradle daemon and with an isolated
+# repo-scoped GRADLE_USER_HOME so full verification does not share daemon or cache state with
+# unrelated host builds or editor tooling. Non-interactive runs use --console=plain unless the
+# caller already selected a console mode.
 #
 # Local shell resolution must already point at Java 26. GridGrind's product modules, CLI fat JAR,
 # and release flow all rely on the ambient `java` command, not only Gradle toolchains. On macOS,
@@ -128,7 +100,13 @@ readonly repo_root="$(resolve_script_dir)"
 readonly gradlew="${repo_root}/gradlew"
 readonly project_cache_dir_root="${GRIDGRIND_PROJECT_CACHE_DIR:-}"
 readonly project_cache_dir="$(prepare_project_cache_dir "${project_cache_dir_root}")"
+readonly file_support_script="${repo_root}/scripts/check-file-support.sh"
 readonly process_support_script="${repo_root}/scripts/check-process-support.sh"
+readonly repo_lock_support_script="${repo_root}/scripts/repo-verification-lock-support.sh"
+readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
+readonly gradle_user_home="${GRIDGRIND_GRADLE_USER_HOME:-${repo_root}/tmp/gradle-user-home}"
+readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
+readonly pid_file="${lock_dir}/pid"
 current_stage_id='startup'
 current_stage_label='starting'
 current_stage_log_path=''
@@ -142,9 +120,18 @@ readonly diagnostics_command_timeout_seconds=5
 readonly diagnostics_process_capture_limit=6
 readonly stall_exit_code=124
 
+[[ -f "${file_support_script}" ]] || die "missing file support helper at ${file_support_script}"
 [[ -f "${process_support_script}" ]] || die "missing process support helper at ${process_support_script}"
+[[ -f "${repo_lock_support_script}" ]] || die "missing repo verification lock helper at ${repo_lock_support_script}"
+[[ -f "${stage_contract_script}" ]] || die "missing check stage contract helper at ${stage_contract_script}"
+# shellcheck source=/dev/null
+source "${file_support_script}"
 # shellcheck source=/dev/null
 source "${process_support_script}"
+# shellcheck source=/dev/null
+source "${repo_lock_support_script}"
+# shellcheck source=/dev/null
+source "${stage_contract_script}"
 
 format_duration() {
     local total_seconds=$1
@@ -167,12 +154,9 @@ print_usage() {
     printf '%s\n' \
         'Usage: ./check.sh [supported gradle options]' \
         '' \
-        'Runs five fixed stages against the repository that contains this script:' \
-        '  1. check coverage' \
-        '  2. jazzer check' \
-        '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-public-surface.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-cli-contract.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
-        '  5. scripts/docker-smoke.sh' \
+        'Runs five fixed stages against the repository that contains this script:'
+    check_stage_usage_lines
+    printf '%s\n' \
         '' \
         'Supported options:' \
         '  -h, --help' \
@@ -180,7 +164,7 @@ print_usage() {
         '  --console plain|auto|rich|verbose' \
         '  --warning-mode=all|fail|summary|none' \
         '  --warning-mode all|fail|summary|none' \
-        '  --daemon, --no-daemon' \
+        '  --no-daemon' \
         '  --dry-run, -m' \
         '  --stacktrace, --full-stacktrace, -s, -S' \
         '  --info, --debug, --warn, --quiet, -i, -q' \
@@ -232,15 +216,6 @@ epoch_seconds() {
 }
 
 readonly check_started_at="$(epoch_seconds)"
-
-file_size_bytes() {
-    local file_path=$1
-    if [[ ! -f "${file_path}" ]]; then
-        printf '0'
-        return
-    fi
-    stat -f '%z' "${file_path}"
-}
 
 latest_nonempty_line() {
     local log_path=$1
@@ -626,6 +601,7 @@ run_monitored_command() {
 
 emit_final_status() {
     local exit_code=$?
+    cleanup_lock
     local total_elapsed_seconds
     total_elapsed_seconds=$(($(epoch_seconds) - check_started_at))
     [[ "${emit_final_status_enabled}" == true ]] || return 0
@@ -664,7 +640,6 @@ current_stage_id='argument-validation'
 current_stage_label='argument validation'
 
 gradle_args=()
-has_daemon_flag=false
 has_console_flag=false
 expects_value=''
 for gradle_arg in "$@"; do
@@ -682,8 +657,10 @@ for gradle_arg in "$@"; do
             print_usage
             exit 0
             ;;
-        --daemon|--no-daemon)
-            has_daemon_flag=true
+        --daemon)
+            die "./check.sh always runs without the Gradle daemon; remove --daemon"
+            ;;
+        --no-daemon)
             gradle_args+=("${gradle_arg}")
             ;;
         --console)
@@ -719,7 +696,7 @@ done
 
 [[ -z "${expects_value}" ]] || die "option ${expects_value} requires a value"
 
-if [[ -n "${CI:-}" && "${has_daemon_flag}" == false ]]; then
+if ! printf '%s\n' "${gradle_args[@]}" | grep -Fx -- '--no-daemon' >/dev/null 2>&1; then
     gradle_args+=(--no-daemon)
 fi
 
@@ -730,6 +707,8 @@ fi
 current_stage_id='java-validation'
 current_stage_label='Java 26 shell validation'
 require_shell_java_26
+mkdir -p "${gradle_user_home}"
+acquire_lock
 
 run_stage() {
     local stage_id=$1
@@ -743,6 +722,12 @@ run_stage() {
             env
             "GRIDGRIND_TEST_PULSE=1"
             "GRIDGRIND_TEST_PULSE_INTERVAL_MS=${gradle_test_pulse_interval_millis}"
+            "GRADLE_USER_HOME=${gradle_user_home}"
+        )
+    else
+        command_prefix+=(
+            env
+            "GRADLE_USER_HOME=${gradle_user_home}"
         )
     fi
     if [[ -n "${project_cache_dir}" ]]; then
@@ -767,42 +752,8 @@ run_shell_stage() {
     run_monitored_command "${stage_id}" "${stage_label}" "${repo_root}" "$@"
 }
 
-run_stage 'quality-gates' 'Stage 1/5: running quality gates' "${repo_root}" check coverage
-run_stage \
-    'jazzer-check' \
-    'Stage 2/5: running Jazzer support tests and regression replay' \
-    "${repo_root}/jazzer" \
-    check
-run_stage 'cli-shadowjar' 'Stage 3/5: building CLI fat JAR' "${repo_root}" :cli:shadowJar
-
-shell_syntax_targets=("${repo_root}/check.sh")
-if [[ -d "${repo_root}/scripts" ]]; then
-    while IFS= read -r shell_script_path; do
-        shell_syntax_targets+=("${shell_script_path}")
-    done < <(find "${repo_root}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
-fi
-if [[ -d "${repo_root}/jazzer/bin" ]]; then
-    while IFS= read -r shell_script_path; do
-        shell_syntax_targets+=("${shell_script_path}")
-    done < <(find "${repo_root}/jazzer/bin" -maxdepth 1 -type f | sort)
-fi
-
-run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell scripts' \
-    bash -c '
-        set -euo pipefail
-        bash -n "$@"
-        "'"${repo_root}"'/scripts/verify-cli-contract.sh" jar "'"${repo_root}"'/cli/build/libs/gridgrind.jar" >/dev/null
-        "'"${repo_root}"'/scripts/test-check-process-support.sh"
-        "'"${repo_root}"'/scripts/test-contract-module-split.sh"
-        "'"${repo_root}"'/scripts/test-explicit-import-gate.sh"
-        "'"${repo_root}"'/scripts/test-jazzer-public-surface.sh"
-        "'"${repo_root}"'/scripts/test-jazzer-run-lock.sh"
-        "'"${repo_root}"'/scripts/test-selector-contract-surface.sh"
-        "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
-        "'"${repo_root}"'/scripts/test-verify-release-candidate-tag.sh"
-        "'"${repo_root}"'/scripts/test-verify-release-primary-checkout.sh"
-        "'"${repo_root}"'/scripts/test-verify-cli-contract.sh"
-        "'"${repo_root}"'/scripts/test-verify-container-publication.sh"
-        "'"${repo_root}"'/scripts/test-publication-contract.sh"
-    ' bash "${shell_syntax_targets[@]}"
-run_shell_stage 'docker-smoke' 'Stage 5/5: running Docker smoke test' "${repo_root}/scripts/docker-smoke.sh"
+for stage_index in "${!check_stage_ids[@]}"; do
+    stage_id="${check_stage_ids[stage_index]}"
+    stage_label="${check_stage_labels[stage_index]}"
+    check_stage_execute "${stage_id}" "${stage_label}" "${repo_root}"
+done

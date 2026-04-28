@@ -108,10 +108,11 @@ class AdvancedMutationCommandConverterTest {
                         text("Ada Lovelace"),
                         "GridGrind",
                         true,
-                        List.of(
-                            new RichTextRunInput(text("Ada"), null),
-                            new RichTextRunInput(text(" Lovelace"), null)),
-                        new CommentAnchorInput(1, 2, 4, 6)))));
+                        java.util.Optional.of(
+                            List.of(
+                                new RichTextRunInput(text("Ada"), null),
+                                new RichTextRunInput(text(" Lovelace"), null))),
+                        java.util.Optional.of(new CommentAnchorInput(1, 2, 4, 6))))));
     assertEquals(
         new ExcelComment(
             "Ada Lovelace",
@@ -217,13 +218,13 @@ class AdvancedMutationCommandConverterTest {
                         "OpsSignature",
                         anchor,
                         false,
-                        "Review before signing.",
-                        "Ada Lovelace",
-                        "Finance",
-                        "ada@example.com",
-                        null,
-                        "invalid",
-                        pictureData))));
+                        java.util.Optional.of("Review before signing."),
+                        java.util.Optional.of("Ada Lovelace"),
+                        java.util.Optional.of("Finance"),
+                        java.util.Optional.of("ada@example.com"),
+                        java.util.Optional.empty(),
+                        java.util.Optional.of("invalid"),
+                        java.util.Optional.of(pictureData)))));
     WorkbookCommand.SetShape shapeCommand =
         assertInstanceOf(
             WorkbookCommand.SetShape.class,
@@ -627,57 +628,41 @@ class AdvancedMutationCommandConverterTest {
             new CellStyleInput(
                 null,
                 null,
-                new CellFontInput(null, null, null, null, null, 2, null, 0.4d, true, null),
-                new CellFillInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new CellGradientFillInput(
-                        " path ",
-                        null,
+                new CellFontInput(null, null, null, null, ColorInput.theme(2, 0.4d), true, null),
+                CellFillInput.gradient(
+                    CellGradientFillInput.path(
                         0.1d,
                         0.2d,
                         0.3d,
                         0.4d,
                         List.of(
-                            new CellGradientStopInput(0.0d, new ColorInput("#112233")),
-                            new CellGradientStopInput(1.0d, new ColorInput(null, 5, null, 0.2d))))),
+                            new CellGradientStopInput(0.0d, ColorInput.rgb("#112233")),
+                            new CellGradientStopInput(1.0d, ColorInput.theme(5, 0.2d))))),
                 new CellBorderInput(
-                    null, new CellBorderSideInput(null, null, 1, null, 0.15d), null, null, null),
+                    null,
+                    new CellBorderSideInput(null, ColorInput.theme(1, 0.15d)),
+                    null,
+                    null,
+                    null),
                 null));
 
     assertEquals(
-        new ExcelCellFont(null, null, null, null, new ExcelColor(null, 2, null, 0.4d), true, null),
+        new ExcelCellFont(null, null, null, null, ExcelColor.theme(2, 0.4d), true, null),
         style.font());
     assertEquals(
-        new ExcelCellFill(
-            null,
-            null,
-            null,
-            new ExcelGradientFill(
-                "PATH",
-                null,
+        ExcelCellFill.gradient(
+            ExcelGradientFill.path(
                 0.1d,
                 0.2d,
                 0.3d,
                 0.4d,
                 List.of(
-                    new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
-                    new ExcelGradientStop(1.0d, new ExcelColor(null, 5, null, 0.2d))))),
+                    new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
+                    new ExcelGradientStop(1.0d, ExcelColor.theme(5, 0.2d))))),
         style.fill());
     assertEquals(
         new ExcelBorder(
-            null,
-            new ExcelBorderSide(null, new ExcelColor(null, 1, null, 0.15d)),
-            null,
-            null,
-            null),
+            null, new ExcelBorderSide(null, ExcelColor.theme(1, 0.15d)), null, null, null),
         style.border());
 
     assertEquals(
@@ -687,7 +672,7 @@ class AdvancedMutationCommandConverterTest {
                     ExcelConditionalFormattingThresholdType.MIN, null, null),
                 new ExcelConditionalFormattingThreshold(
                     ExcelConditionalFormattingThresholdType.MAX, null, null)),
-            List.of(new ExcelColor("#112233"), new ExcelColor("#AABBCC")),
+            List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#AABBCC")),
             true),
         WorkbookCommandConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.ColorScaleRule(
@@ -697,11 +682,11 @@ class AdvancedMutationCommandConverterTest {
                         ExcelConditionalFormattingThresholdType.MIN, null, null),
                     new ConditionalFormattingThresholdInput(
                         ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                List.of(new ColorInput("#112233"), new ColorInput("#AABBCC")))));
+                List.of(ColorInput.rgb("#112233"), ColorInput.rgb("#AABBCC")))));
 
     assertEquals(
         new ExcelConditionalFormattingRule.DataBarRule(
-            new ExcelColor(null, 4, null, 0.25d),
+            ExcelColor.theme(4, 0.25d),
             true,
             10,
             90,
@@ -713,7 +698,7 @@ class AdvancedMutationCommandConverterTest {
         WorkbookCommandConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.DataBarRule(
                 false,
-                new ColorInput(null, 4, null, 0.25d),
+                ColorInput.theme(4, 0.25d),
                 true,
                 10,
                 90,
@@ -765,61 +750,71 @@ class AdvancedMutationCommandConverterTest {
 
     assertEquals("SET_WORKBOOK_PROTECTION", setProtection.actionType());
     assertEquals("CLEAR_WORKBOOK_PROTECTION", clearProtection.actionType());
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
 
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
-    assertNull(
+    assertEquals(
+        java.util.Optional.empty(),
         ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
@@ -850,8 +845,7 @@ class AdvancedMutationCommandConverterTest {
             new AutofilterFilterColumnInput(
                 4L,
                 true,
-                new AutofilterFilterCriterionInput.Color(
-                    false, new ColorInput(null, 3, null, 0.25d))),
+                new AutofilterFilterCriterionInput.Color(false, ColorInput.theme(3, 0.25d))),
             new AutofilterFilterColumnInput(
                 5L, true, new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2))),
         new AutofilterSortStateInput(
@@ -861,7 +855,7 @@ class AdvancedMutationCommandConverterTest {
             null,
             List.of(
                 new AutofilterSortConditionInput(
-                    "B2:B9", true, null, new ColorInput("#AABBCC"), null),
+                    "B2:B9", true, null, ColorInput.rgb("#AABBCC"), null),
                 new AutofilterSortConditionInput("C2:C9", false, "ICON", null, 2))));
   }
 
@@ -924,9 +918,7 @@ class AdvancedMutationCommandConverterTest {
         new ExcelAutofilterFilterColumn(
             3L, true, new ExcelAutofilterFilterCriterion.Top10(10, true, false)),
         new ExcelAutofilterFilterColumn(
-            4L,
-            true,
-            new ExcelAutofilterFilterCriterion.Color(false, new ExcelColor(null, 3, null, 0.25d))),
+            4L, true, new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.theme(3, 0.25d))),
         new ExcelAutofilterFilterColumn(
             5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2)));
   }
@@ -938,7 +930,7 @@ class AdvancedMutationCommandConverterTest {
         true,
         "",
         List.of(
-            new ExcelAutofilterSortCondition("B2:B9", true, "", new ExcelColor("#AABBCC"), null),
+            new ExcelAutofilterSortCondition("B2:B9", true, "", ExcelColor.rgb("#AABBCC"), null),
             new ExcelAutofilterSortCondition("C2:C9", false, "ICON", null, 2)));
   }
 }

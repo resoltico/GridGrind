@@ -63,7 +63,7 @@ class GridGrindPlanTest {
             .assertThat(Targets.cell("Budget", "A1").valueEquals(Values.expectedText("Owner")));
 
     WorkbookPlan canonical = plan.toPlan();
-    assertEquals("budget-plan", canonical.planId());
+    assertEquals("budget-plan", canonical.planId().orElseThrow());
     assertEquals("mutation-001", canonical.steps().get(0).stepId());
     assertEquals("mutation-002", canonical.steps().get(1).stepId());
     assertEquals("inspection-001", canonical.steps().get(2).stepId());
@@ -149,7 +149,7 @@ class GridGrindPlanTest {
 
     WorkbookPlan plan =
         GridGrindPlan.from(imported)
-            .planId(null)
+            .clearPlanId()
             .mutate(Targets.sheet("Budget").renameTo("Budget 2026"))
             .inspect(Targets.cell("Budget 2026", "A1").read())
             .assertThat(Targets.cell("Budget 2026", "A1").valueEquals(Values.expectedBlank()))
@@ -165,7 +165,7 @@ class GridGrindPlanTest {
   @Test
   void conveniencePersistenceMethodsCoverInMemoryAndOverwriteBranches() {
     GridGrindPlan plan = GridGrindPlan.newWorkbook();
-    assertEquals(plan, plan.planId(null));
+    assertEquals(plan, plan.clearPlanId());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.None.class,
         plan.saveAs(tempDir.resolve("copy.xlsx")).inMemoryOnly().toPlan().persistence());
@@ -219,18 +219,17 @@ class GridGrindPlanTest {
             GridGrindResponse.Success.class,
             new DefaultGridGrindRequestExecutor()
                 .execute(
-                    plan.toPlan(),
-                    new ExecutionInputBindings(tempDir, (byte[]) null),
-                    ExecutionJournalSink.NOOP));
+                    plan.toPlan(), new ExecutionInputBindings(tempDir), ExecutionJournalSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
     assertEquals(1, response.assertions().size());
     assertNotNull(response.journal());
     InspectionResult.CellsResult cellsResult =
         assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
-    GridGrindResponse.CellReport.NumberReport numberReport =
+    dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport =
         assertInstanceOf(
-            GridGrindResponse.CellReport.NumberReport.class, cellsResult.cells().getFirst());
+            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
+            cellsResult.cells().getFirst());
     assertEquals("Budget", cellsResult.sheetName());
     assertEquals("B2", numberReport.address());
     assertEquals(125.0, numberReport.numberValue());

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Verify that the merged release commit is exactly the current remote default-branch head and wait
-# for the required CI checks on that commit before any release tag is created.
+# for the release-blocking CI checks on that commit before any release tag is created.
 
 set -euo pipefail
 
@@ -44,10 +44,10 @@ format_observed_checks() {
     '
 }
 
-required_check_state() {
+blocking_check_state() {
     local checks_tsv=$1
-    local required_check_name=$2
-    printf '%s\n' "${checks_tsv}" | awk -F '\t' -v target="${required_check_name}" '
+    local blocking_check_name=$2
+    printf '%s\n' "${checks_tsv}" | awk -F '\t' -v target="${blocking_check_name}" '
         BEGIN {
             has_success = 0
             has_pending = 0
@@ -84,7 +84,7 @@ require_non_negative_integer() {
 
 readonly script_dir="$(resolve_script_dir)"
 readonly script_repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
-readonly required_checks_csv="${GRIDGRIND_REQUIRED_RELEASE_CHECKS:-Check,Docker smoke}"
+readonly blocking_checks_csv="${GRIDGRIND_RELEASE_BLOCKING_CHECKS:-Check,Docker smoke,Contributor devcontainer}"
 readonly poll_interval_seconds="${GRIDGRIND_RELEASE_CHECK_POLL_INTERVAL_SECONDS:-10}"
 readonly timeout_seconds="${GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS:-900}"
 
@@ -105,13 +105,13 @@ readonly local_head_sha="$(git rev-parse HEAD)"
 [[ "${target_commit_sha}" == "${local_head_sha}" ]] || die \
     "target commit ${target_commit_sha} does not match checked-out HEAD ${local_head_sha}"
 
-required_check_names=()
+blocking_check_names=()
 while IFS= read -r trimmed_check_name || [[ -n "${trimmed_check_name}" ]]; do
     [[ -n "${trimmed_check_name}" ]] || continue
-    required_check_names+=("${trimmed_check_name}")
-done < <(trimmed_csv_entries "${required_checks_csv}")
+    blocking_check_names+=("${trimmed_check_name}")
+done < <(trimmed_csv_entries "${blocking_checks_csv}")
 
-((${#required_check_names[@]} > 0)) || die "no required merge-handoff checks configured"
+((${#blocking_check_names[@]} > 0)) || die "no release-blocking merge-handoff checks configured"
 
 readonly repo_full_name="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
 readonly default_branch="$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')"
@@ -141,17 +141,17 @@ while true; do
 
     pending_checks=()
     failed_checks=()
-    for required_check_name in "${required_check_names[@]}"; do
-        case "$(required_check_state "${check_runs_tsv}" "${required_check_name}")" in
+    for blocking_check_name in "${blocking_check_names[@]}"; do
+        case "$(blocking_check_state "${check_runs_tsv}" "${blocking_check_name}")" in
             success) ;;
             pending|missing)
-                pending_checks+=("${required_check_name}")
+                pending_checks+=("${blocking_check_name}")
                 ;;
             failure)
-                failed_checks+=("${required_check_name}")
+                failed_checks+=("${blocking_check_name}")
                 ;;
             *)
-                die "unsupported required-check state for ${required_check_name}"
+                die "unsupported release-blocking-check state for ${blocking_check_name}"
                 ;;
         esac
     done
@@ -160,20 +160,20 @@ while true; do
 
     if ((${#failed_checks[@]} > 0)); then
         die \
-            "release merge handoff failed for ${target_commit_sha}; required checks failed (${failed_checks[*]}). Observed check runs: ${observed_checks}"
+            "release merge handoff failed for ${target_commit_sha}; release-blocking checks failed (${failed_checks[*]}). Observed check runs: ${observed_checks}"
     fi
 
     if ((${#pending_checks[@]} == 0)); then
-        printf 'Verified release merge handoff at %s on origin/%s with required checks: %s\n' \
+        printf 'Verified release merge handoff at %s on origin/%s with release-blocking checks: %s\n' \
             "${target_commit_sha}" \
             "${default_branch}" \
-            "$(IFS=', '; printf '%s' "${required_check_names[*]}")"
+            "$(IFS=', '; printf '%s' "${blocking_check_names[*]}")"
         exit 0
     fi
 
     if ((SECONDS >= deadline_epoch)); then
         die \
-            "timed out waiting for release merge handoff checks (${pending_checks[*]}) on ${target_commit_sha}. Observed check runs: ${observed_checks}"
+            "timed out waiting for release merge handoff release-blocking checks (${pending_checks[*]}) on ${target_commit_sha}. Observed check runs: ${observed_checks}"
     fi
 
     remaining_seconds="$((deadline_epoch - SECONDS))"
@@ -181,7 +181,7 @@ while true; do
         remaining_seconds=0
     fi
 
-    printf 'Waiting for release merge handoff checks on %s (%ss remaining). Pending: %s. Observed: %s\n' \
+    printf 'Waiting for release merge handoff release-blocking checks on %s (%ss remaining). Pending: %s. Observed: %s\n' \
         "${target_commit_sha}" \
         "${remaining_seconds}" \
         "$(IFS=', '; printf '%s' "${pending_checks[*]}")" \

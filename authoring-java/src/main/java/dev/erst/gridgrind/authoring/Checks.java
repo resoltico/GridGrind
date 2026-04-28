@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.authoring;
 
 import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
 import java.util.Objects;
 

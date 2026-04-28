@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /** Request path, source, and persistence facts shared across executor workflows. */
 final class ExecutionRequestPaths {
@@ -21,10 +22,10 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookPersistence.None _ -> new ExcelOoxmlPersistenceOptions(null, null);
       case WorkbookPlan.WorkbookPersistence.OverwriteSource overwrite ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              overwrite.security(), workingDirectory);
+              overwrite.security().orElse(null), workingDirectory);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
-              saveAs.security(), workingDirectory);
+              saveAs.security().orElse(null), workingDirectory);
     };
   }
 
@@ -40,7 +41,7 @@ final class ExecutionRequestPaths {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ -> null;
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          existingFile.security() == null ? null : existingFile.security().password();
+          existingFile.security().map(security -> security.password()).orElse(null);
     };
   }
 
@@ -100,6 +101,37 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookSource.New _ -> null;
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           normalizePath(existingFile.path(), workingDirectory).toString();
+    };
+  }
+
+  static dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape requestShape(
+      WorkbookPlan request) {
+    return dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+        reqSourceType(request), reqPersistenceType(request));
+  }
+
+  static dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference workbookReference(
+      WorkbookPlan request, Path workingDirectory) {
+    return switch (request.source()) {
+      case WorkbookPlan.WorkbookSource.New _ ->
+          dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference.newWorkbook();
+      case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
+          dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference.existingFile(
+              normalizePath(existingFile.path(), workingDirectory).toString());
+    };
+  }
+
+  static dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference persistenceReference(
+      WorkbookPlan request, Path workingDirectory) {
+    return switch (request.persistence()) {
+      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
+          dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference.overwriteSource(
+              Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
+      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
+          dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference.saveAs(
+              normalizePath(saveAs.path(), workingDirectory).toString());
+      case WorkbookPlan.WorkbookPersistence.None _ ->
+          throw new IllegalArgumentException("persistence reference requires a saving policy");
     };
   }
 

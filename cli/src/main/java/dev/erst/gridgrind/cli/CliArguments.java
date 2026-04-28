@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Parses raw command-line arguments into a typed GridGrind CLI command. */
 final class CliArguments {
@@ -15,11 +16,12 @@ final class CliArguments {
     int index = 0;
     while (index < args.length) {
       String argument = args[index];
-      ImmediateParseResult immediate =
-          index == 0 ? parseImmediateCommand(args, index, argument) : null;
-      if (immediate != null) {
-        requireNoTrailingArguments(args, immediate.nextIndex());
-        return immediate.command();
+      Optional<ImmediateParseResult> immediate =
+          index == 0 ? parseImmediateCommand(args, index, argument) : Optional.empty();
+      if (immediate.isPresent()) {
+        ImmediateParseResult result = immediate.orElseThrow();
+        requireNoTrailingArguments(args, result.nextIndex());
+        return result.command();
       }
       index = consumeArgument(args, index, argument, options);
     }
@@ -38,37 +40,40 @@ final class CliArguments {
     return valueIndex;
   }
 
-  private static ImmediateParseResult parseImmediateCommand(
+  private static Optional<ImmediateParseResult> parseImmediateCommand(
       String[] args, int index, String argument) {
     return switch (argument) {
-      case "--help", "-h", "help" -> parseHelpCommand(args, index);
-      case "--version" -> parseVersionCommand(args, index);
-      case "--license" -> parseLicenseCommand(args, index);
-      case "--print-request-template" -> parseRequestTemplateCommand(args, index);
+      case "--help", "-h", "help" -> Optional.of(parseHelpCommand(args, index));
+      case "--version" -> Optional.of(parseVersionCommand(args, index));
+      case "--license" -> Optional.of(parseLicenseCommand(args, index));
+      case "--print-request-template" -> Optional.of(parseRequestTemplateCommand(args, index));
       case "--print-example" -> {
         int valueIndex = nextValueIndex(args, index, "--print-example");
         TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
-        yield new ImmediateParseResult(
-            new CliCommand.PrintExample(args[valueIndex], response.responsePath()),
-            response.nextIndex());
+        yield Optional.of(
+            new ImmediateParseResult(
+                new CliCommand.PrintExample(args[valueIndex], response.responsePath()),
+                response.nextIndex()));
       }
-      case "--print-task-catalog" -> parseTaskCatalogCommand(args, index);
+      case "--print-task-catalog" -> Optional.of(parseTaskCatalogCommand(args, index));
       case "--print-task-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-task-plan");
         TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
-        yield new ImmediateParseResult(
-            new CliCommand.PrintTaskPlan(args[valueIndex], response.responsePath()),
-            response.nextIndex());
+        yield Optional.of(
+            new ImmediateParseResult(
+                new CliCommand.PrintTaskPlan(args[valueIndex], response.responsePath()),
+                response.nextIndex()));
       }
       case "--print-goal-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-goal-plan");
         TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
-        yield new ImmediateParseResult(
-            new CliCommand.PrintGoalPlan(args[valueIndex], response.responsePath()),
-            response.nextIndex());
+        yield Optional.of(
+            new ImmediateParseResult(
+                new CliCommand.PrintGoalPlan(args[valueIndex], response.responsePath()),
+                response.nextIndex()));
       }
-      case "--print-protocol-catalog" -> parseProtocolCatalogCommand(args, index);
-      default -> null;
+      case "--print-protocol-catalog" -> Optional.of(parseProtocolCatalogCommand(args, index));
+      default -> Optional.empty();
     };
   }
 
@@ -168,7 +173,18 @@ final class CliArguments {
           "--search", "--print-protocol-catalog does not allow both --operation and --search");
     }
     return new ImmediateParseResult(
-        new CliCommand.PrintProtocolCatalog(operationFilter, searchQuery, responsePath), nextIndex);
+        protocolCatalogCommand(operationFilter, searchQuery, responsePath), nextIndex);
+  }
+
+  private static CliCommand.PrintProtocolCatalog protocolCatalogCommand(
+      String operationFilter, String searchQuery, Path responsePath) {
+    if (searchQuery != null) {
+      return new CliCommand.PrintProtocolCatalogSearch(searchQuery, responsePath);
+    }
+    if (operationFilter != null) {
+      return new CliCommand.PrintProtocolCatalogLookup(operationFilter, responsePath);
+    }
+    return new CliCommand.PrintProtocolCatalogAll(responsePath);
   }
 
   private static TrailingResponseParseResult parseTrailingResponse(String[] args, int index) {

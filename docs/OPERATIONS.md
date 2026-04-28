@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.59.0"
+version: "0.60.0"
 domain: OPERATIONS
 updated: "2026-04-25"
 route:
@@ -36,7 +36,10 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 current request model, every mutation action, every assertion type, every inspection query,
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
 fields. Use `--search` when you only know part of the name or summary, then switch to
-`--operation <group>:<id>` for the exact entry once you have the stable qualified id.
+`--operation <group>:<id>` for the exact entry once you have the stable qualified id. Discovery,
+printed example requests, doctor reports, and normal execution responses all omit absent optional
+fields instead of publishing explicit JSON `null` placeholders, so the machine-readable surface is
+easier for agents and shell tooling to consume directly.
 Task discovery is layered on top of that same catalog surface:
 `--print-task-catalog --response tasks.json`, `--print-task-plan <id> --response task-plan.json`,
 and `--print-goal-plan "<goal>" --response goal-plan.json` now emit

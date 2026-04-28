@@ -61,13 +61,14 @@ class FormulaEnvironmentRequestExecutorTest {
                                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                                 new InspectionQuery.GetCells())))));
 
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             ((InspectionResult.CellsResult) success.inspections().getFirst()).cells().getFirst());
     assertEquals(
         7.5d,
-        assertInstanceOf(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
             .numberValue());
   }
 
@@ -94,13 +95,14 @@ class FormulaEnvironmentRequestExecutorTest {
                                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                                 new InspectionQuery.GetCells())))));
 
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             ((InspectionResult.CellsResult) success.inspections().getFirst()).cells().getFirst());
     assertEquals(
         7.5d,
-        assertInstanceOf(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
             .numberValue());
   }
 
@@ -133,13 +135,14 @@ class FormulaEnvironmentRequestExecutorTest {
                                 new CellSelector.ByAddresses("Ops", List.of("B1")),
                                 new InspectionQuery.GetCells())))));
 
-    GridGrindResponse.CellReport.FormulaReport formula =
+    dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
-            GridGrindResponse.CellReport.FormulaReport.class,
+            dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             ((InspectionResult.CellsResult) success.inspections().getFirst()).cells().getFirst());
     assertEquals(
         42.0d,
-        assertInstanceOf(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation())
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
             .numberValue());
   }
 
@@ -161,7 +164,9 @@ class FormulaEnvironmentRequestExecutorTest {
                         List.of())));
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
-    assertEquals("DOUBLE(A1)", failure.problem().context().formula());
+    assertEquals(
+        java.util.Optional.of("DOUBLE(A1)"),
+        DefaultGridGrindRequestExecutorTestSupport.calculationPreflightContext(failure).formula());
   }
 
   @Test

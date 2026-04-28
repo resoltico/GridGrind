@@ -24,7 +24,10 @@ import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for step validation seams introduced by the canonical step envelope. */
@@ -125,8 +128,7 @@ class WorkbookStepValidationTest {
 
     Assertion analysisSeverity =
         new Assertion.AnalysisMaxSeverity(
-            new InspectionQuery.AnalyzeFormulaHealth(),
-            dev.erst.gridgrind.contract.dto.AnalysisSeverity.WARNING);
+            new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING);
     assertEquals(
         analysisSeverity,
         WorkbookStepValidation.requireCompatible(
@@ -213,7 +215,7 @@ class WorkbookStepValidationTest {
             WorkbookStepValidation.allowedTargetTypes(
                 new Assertion.AnalysisFindingPresent(
                     new InspectionQuery.AnalyzeFormulaHealth(),
-                    dev.erst.gridgrind.contract.dto.AnalysisFindingCode.FORMULA_ERROR_RESULT,
+                    AnalysisFindingCode.FORMULA_ERROR_RESULT,
                     null,
                     null))));
   }
@@ -237,13 +239,14 @@ class WorkbookStepValidationTest {
   @Test
   void exposesAssertionTargetSelectorRulesForDynamicAndDirectSelectorFamilies() {
     assertEquals(
-        "Matches the nested analysis query's target selectors.",
+        Optional.of("Matches the nested analysis query's target selectors."),
         WorkbookStepValidation.targetSelectorRuleForAssertionType(
             Assertion.AnalysisFindingAbsent.class));
     assertEquals(
-        null, WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.CellValue.class));
+        Optional.empty(),
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.CellValue.class));
     assertEquals(
-        null,
+        Optional.empty(),
         WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.TableAbsent.class));
   }
 
@@ -337,15 +340,16 @@ class WorkbookStepValidationTest {
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
                             null),
                         false,
-                        "Review before signing.",
-                        "Ada Lovelace",
-                        "Finance",
-                        "ada@example.com",
-                        null,
-                        null,
-                        new dev.erst.gridgrind.contract.dto.PictureDataInput(
-                            dev.erst.gridgrind.excel.foundation.ExcelPictureFormat.PNG,
-                            binary("AQID")))))));
+                        java.util.Optional.of("Review before signing."),
+                        java.util.Optional.of("Ada Lovelace"),
+                        java.util.Optional.of("Finance"),
+                        java.util.Optional.of("ada@example.com"),
+                        java.util.Optional.empty(),
+                        java.util.Optional.empty(),
+                        java.util.Optional.of(
+                            new dev.erst.gridgrind.contract.dto.PictureDataInput(
+                                dev.erst.gridgrind.excel.foundation.ExcelPictureFormat.PNG,
+                                binary("AQID"))))))));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(

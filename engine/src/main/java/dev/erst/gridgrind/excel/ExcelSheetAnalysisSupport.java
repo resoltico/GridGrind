@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +58,8 @@ final class ExcelSheetAnalysisSupport {
               == ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE) {
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
-                    WorkbookAnalysis.AnalysisSeverity.INFO,
+                    AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
+                    AnalysisSeverity.INFO,
                     "External workbook uses cached result",
                     "Formula references external workbook "
                         + workbookName
@@ -68,8 +70,8 @@ final class ExcelSheetAnalysisSupport {
             hasStaticMissingExternalWorkbookFinding = true;
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                    AnalysisSeverity.ERROR,
                     "External workbook is missing or unbound",
                     "Formula references external workbook "
                         + workbookName
@@ -82,8 +84,8 @@ final class ExcelSheetAnalysisSupport {
         if (hasUnregisteredUserDefinedFunction(formulaContext, leadingFunctionName, formula)) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
-                  WorkbookAnalysis.AnalysisSeverity.ERROR,
+                  AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
+                  AnalysisSeverity.ERROR,
                   "User-defined function is not registered",
                   "Formula references user-defined function "
                       + leadingFunctionName
@@ -96,8 +98,8 @@ final class ExcelSheetAnalysisSupport {
                 functionName ->
                     findings.add(
                         new WorkbookAnalysis.AnalysisFinding(
-                            WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                            WorkbookAnalysis.AnalysisSeverity.INFO,
+                            AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                            AnalysisSeverity.INFO,
                             "Volatile formula function",
                             "Formula uses volatile function " + functionName + ".",
                             location,
@@ -107,8 +109,8 @@ final class ExcelSheetAnalysisSupport {
           if (evaluated != null && evaluated.getCellType() == CellType.ERROR) {
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    AnalysisFindingCode.FORMULA_ERROR_RESULT,
+                    AnalysisSeverity.ERROR,
                     "Formula evaluates to an error",
                     "Formula currently evaluates to "
                         + FormulaError.forInt(evaluated.getErrorValue()).getString()
@@ -123,8 +125,8 @@ final class ExcelSheetAnalysisSupport {
                   FormulaExceptions.missingExternalWorkbookName(exception, formula);
               findings.add(
                   new WorkbookAnalysis.AnalysisFinding(
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
-                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                      AnalysisSeverity.ERROR,
                       "External workbook is missing or unbound",
                       "Formula evaluation failed because external workbook "
                           + workbookName
@@ -136,8 +138,8 @@ final class ExcelSheetAnalysisSupport {
               formulaContext, exception, formula)) {
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
-                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
+                    AnalysisSeverity.ERROR,
                     "Formula evaluation failed",
                     "Formula evaluation failed: " + exceptionMessage(exception),
                     location,
@@ -249,8 +251,8 @@ final class ExcelSheetAnalysisSupport {
     if (bangIndex <= 0 || bangIndex >= target.length() - 1) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+              AnalysisSeverity.ERROR,
               "Invalid document hyperlink target",
               "Document hyperlink target must include a sheet and cell or range reference.",
               location,
@@ -263,8 +265,8 @@ final class ExcelSheetAnalysisSupport {
     if (sheet.getWorkbook().getSheet(targetSheetName) == null) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+              AnalysisSeverity.ERROR,
               "Document hyperlink targets a missing sheet",
               "Document hyperlink target sheet does not exist: " + targetSheetName,
               location,
@@ -281,8 +283,8 @@ final class ExcelSheetAnalysisSupport {
     } catch (IllegalArgumentException exception) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+              AnalysisSeverity.ERROR,
               "Invalid document hyperlink target",
               "Document hyperlink target is not a valid cell or range reference.",
               location,
@@ -306,8 +308,8 @@ final class ExcelSheetAnalysisSupport {
       case FileHyperlinkResolution.UnresolvedRelativePath unresolvedRelativePath ->
           List.of(
               new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
-                  WorkbookAnalysis.AnalysisSeverity.WARNING,
+                  AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+                  AnalysisSeverity.WARNING,
                   "Relative file hyperlink cannot be resolved yet",
                   "Relative file hyperlink targets cannot be validated until the workbook has a"
                       + " filesystem location.",
@@ -317,8 +319,8 @@ final class ExcelSheetAnalysisSupport {
           Files.notExists(resolvedPath.resolvedPath())
               ? List.of(
                   new WorkbookAnalysis.AnalysisFinding(
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
-                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+                      AnalysisSeverity.ERROR,
                       "File hyperlink targets a missing path",
                       missingFileTargetMessage(resolvedPath, workbookLocation),
                       location,
@@ -395,8 +397,8 @@ final class ExcelSheetAnalysisSupport {
   private static WorkbookAnalysis.AnalysisFinding malformedHyperlinkFinding(
       WorkbookAnalysis.AnalysisLocation.Cell location, String message, List<String> evidence) {
     return new WorkbookAnalysis.AnalysisFinding(
-        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
-        WorkbookAnalysis.AnalysisSeverity.ERROR,
+        AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+        AnalysisSeverity.ERROR,
         "Malformed hyperlink target",
         "Hyperlink target is malformed: " + message,
         location,

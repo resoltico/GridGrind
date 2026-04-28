@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -15,56 +17,6 @@ public sealed interface WorkbookAnalysis
         WorkbookAnalysis.HyperlinkHealth,
         WorkbookAnalysis.NamedRangeHealth,
         WorkbookAnalysis.WorkbookFindings {
-
-  /** Severity of one derived workbook finding. */
-  enum AnalysisSeverity {
-    INFO,
-    WARNING,
-    ERROR
-  }
-
-  /** Stable machine-readable code for one derived workbook finding. */
-  enum AnalysisFindingCode {
-    FORMULA_ERROR_RESULT,
-    FORMULA_EVALUATION_FAILURE,
-    FORMULA_EXTERNAL_REFERENCE,
-    FORMULA_MISSING_EXTERNAL_WORKBOOK,
-    FORMULA_USES_CACHED_EXTERNAL_VALUE,
-    FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
-    FORMULA_VOLATILE_FUNCTION,
-    DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
-    DATA_VALIDATION_MALFORMED_RULE,
-    DATA_VALIDATION_UNSUPPORTED_RULE,
-    DATA_VALIDATION_BROKEN_FORMULA,
-    DATA_VALIDATION_OVERLAPPING_RULES,
-    CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-    CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
-    CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
-    CONDITIONAL_FORMATTING_EMPTY_RANGE,
-    AUTOFILTER_INVALID_RANGE,
-    AUTOFILTER_MISSING_HEADER_ROW,
-    AUTOFILTER_TABLE_MISMATCH,
-    TABLE_OVERLAPPING_RANGE,
-    TABLE_BLANK_HEADER,
-    TABLE_DUPLICATE_HEADER,
-    TABLE_BROKEN_REFERENCE,
-    TABLE_STYLE_MISMATCH,
-    PIVOT_TABLE_MISSING_NAME,
-    PIVOT_TABLE_DUPLICATE_NAME,
-    PIVOT_TABLE_MISSING_CACHE_DEFINITION,
-    PIVOT_TABLE_MISSING_WORKBOOK_CACHE,
-    PIVOT_TABLE_MISSING_CACHE_RECORDS,
-    PIVOT_TABLE_BROKEN_SOURCE,
-    PIVOT_TABLE_UNSUPPORTED_DETAIL,
-    HYPERLINK_MALFORMED_TARGET,
-    HYPERLINK_MISSING_FILE_TARGET,
-    HYPERLINK_MISSING_DOCUMENT_SHEET,
-    HYPERLINK_UNRESOLVED_FILE_TARGET,
-    HYPERLINK_INVALID_DOCUMENT_TARGET,
-    NAMED_RANGE_BROKEN_REFERENCE,
-    NAMED_RANGE_UNRESOLVED_TARGET,
-    NAMED_RANGE_SCOPE_SHADOWING
-  }
 
   /** Precise workbook location attached to one derived analysis finding. */
   sealed interface AnalysisLocation

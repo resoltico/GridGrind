@@ -1,23 +1,39 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.LinkedHashSet;
+import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
 import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-import java.util.Set;
 
 /** Request-scoped formula-evaluation environment for external workbooks and UDFs. */
 public record FormulaEnvironmentInput(
     List<FormulaExternalWorkbookInput> externalWorkbooks,
     FormulaMissingWorkbookPolicy missingWorkbookPolicy,
     List<FormulaUdfToolpackInput> udfToolpacks) {
+  /** Returns the default empty formula environment with no external workbooks or UDFs. */
+  public static FormulaEnvironmentInput empty() {
+    return new FormulaEnvironmentInput(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of());
+  }
+
   public FormulaEnvironmentInput {
-    externalWorkbooks = copyExternalWorkbooks(externalWorkbooks);
+    externalWorkbooks =
+        FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
+            externalWorkbooks,
+            "externalWorkbooks",
+            "externalWorkbooks must not contain duplicate workbookName values: ",
+            FormulaExternalWorkbookInput::workbookName);
     missingWorkbookPolicy =
         missingWorkbookPolicy == null ? FormulaMissingWorkbookPolicy.ERROR : missingWorkbookPolicy;
-    udfToolpacks = copyUdfToolpacks(udfToolpacks);
-    requireDistinctUdfFunctions(udfToolpacks);
+    udfToolpacks =
+        FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
+            udfToolpacks,
+            "udfToolpacks",
+            "udfToolpacks must not contain duplicate names: ",
+            FormulaUdfToolpackInput::name);
+    FormulaEnvironmentSupport.requireDistinctNestedNames(
+        udfToolpacks,
+        FormulaUdfToolpackInput::functions,
+        FormulaUdfFunctionInput::name,
+        "udfToolpacks must not define duplicate function names across toolpacks: ");
   }
 
   /** Returns whether this environment carries any behavior beyond the default evaluator state. */
@@ -28,54 +44,16 @@ public record FormulaEnvironmentInput(
         && udfToolpacks.isEmpty();
   }
 
-  private static List<FormulaExternalWorkbookInput> copyExternalWorkbooks(
-      List<FormulaExternalWorkbookInput> externalWorkbooks) {
-    if (externalWorkbooks == null) {
-      return List.of();
+  /** Custom Jackson inclusion filter that omits an empty formula-environment object. */
+  public static final class EmptyFilter {
+    @Override
+    public boolean equals(Object other) {
+      return other == null || (other instanceof FormulaEnvironmentInput input && input.isEmpty());
     }
-    List<FormulaExternalWorkbookInput> copy = List.copyOf(externalWorkbooks);
-    Set<String> seen = new LinkedHashSet<>();
-    for (FormulaExternalWorkbookInput externalWorkbook : copy) {
-      Objects.requireNonNull(externalWorkbook, "externalWorkbooks must not contain nulls");
-      String normalized = externalWorkbook.workbookName().toUpperCase(Locale.ROOT);
-      if (!seen.add(normalized)) {
-        throw new IllegalArgumentException(
-            "externalWorkbooks must not contain duplicate workbookName values: "
-                + externalWorkbook.workbookName());
-      }
-    }
-    return copy;
-  }
 
-  private static List<FormulaUdfToolpackInput> copyUdfToolpacks(
-      List<FormulaUdfToolpackInput> udfToolpacks) {
-    if (udfToolpacks == null) {
-      return List.of();
-    }
-    List<FormulaUdfToolpackInput> copy = List.copyOf(udfToolpacks);
-    Set<String> seen = new LinkedHashSet<>();
-    for (FormulaUdfToolpackInput udfToolpack : copy) {
-      Objects.requireNonNull(udfToolpack, "udfToolpacks must not contain nulls");
-      String normalized = udfToolpack.name().toUpperCase(Locale.ROOT);
-      if (!seen.add(normalized)) {
-        throw new IllegalArgumentException(
-            "udfToolpacks must not contain duplicate names: " + udfToolpack.name());
-      }
-    }
-    return copy;
-  }
-
-  private static void requireDistinctUdfFunctions(List<FormulaUdfToolpackInput> udfToolpacks) {
-    Set<String> seen = new LinkedHashSet<>();
-    for (FormulaUdfToolpackInput toolpack : udfToolpacks) {
-      for (FormulaUdfFunctionInput function : toolpack.functions()) {
-        String normalized = function.name().toUpperCase(Locale.ROOT);
-        if (!seen.add(normalized)) {
-          throw new IllegalArgumentException(
-              "udfToolpacks must not define duplicate function names across toolpacks: "
-                  + function.name());
-        }
-      }
+    @Override
+    public int hashCode() {
+      return 0;
     }
   }
 }

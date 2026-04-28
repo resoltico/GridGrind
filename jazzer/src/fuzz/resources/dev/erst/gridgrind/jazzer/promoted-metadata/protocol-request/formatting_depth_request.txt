@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formatting_depth_request.json
 Harness: protocol-request
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Missing required field 'kind'
 Input Bytes: 6727
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 6
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 3
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_WINDOW=1, GET_CELLS=1, GET_FORMULA_SURFACE=1
-Style Kinds: horizontal_alignment=3, alignment=3, locked=3, protection=3, fill=2, fill_pattern=2, bold=2, font_color=2, fill_foreground_color=2, fill_color=2, border_all_color=2, border=2, border_all=2, font_height=2, font_name=2, vertical_alignment=2, hidden_formula=2, font=2, border_bottom_color=1, text_rotation=1, border_top_color=1, indentation=1, fill_pattern_solid=1, font_height_points=1, wrap_text=1, border_top=1, number_format=1, font_height_twips=1, fill_background_color=1, border_bottom=1, fill_patterned=1
-Operation Kinds: APPLY_STYLE=3, SET_RANGE=1, AUTO_SIZE_COLUMNS=1, ENSURE_SHEET=1
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

@@ -46,18 +46,29 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 javaExtension.toolchain.languageVersion.set(JavaLanguageVersion.of(gridgrindJavaVersion))
                 javaExtension.modularity.inferModulePath.set(true)
                 javaExtension.withSourcesJar()
+                dependencies.add(
+                    "testRuntimeOnly",
+                    libs.findLibrary("junit-platform-launcher").get().get(),
+                )
 
                 val mainSourceSet = javaExtension.sourceSets.named("main")
+                val hasOwnTestSources =
+                    javaExtension.sourceSets.named("test").map { sourceSet ->
+                        sourceSet.allSource.files.any(File::isFile)
+                    }
                 val coverageClasses =
                     mainSourceSet.map { sourceSet ->
-                        sourceSet.output.classesDirs.asFileTree.matching {
-                            exclude("module-info.class")
+                        sourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
+                            patternFilterable.exclude("module-info.class")
                         }
                     }
 
                 tasks.named("jacocoTestReport", JacocoReport::class.java).configure(
                     object : Action<JacocoReport> {
                         override fun execute(report: JacocoReport) {
+                            report.onlyIf("project has first-party test sources") {
+                                hasOwnTestSources.get()
+                            }
                             report.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
                             report.classDirectories.setFrom(coverageClasses)
                         }
@@ -68,6 +79,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     .configure(
                         object : Action<JacocoCoverageVerification> {
                             override fun execute(verification: JacocoCoverageVerification) {
+                                verification.onlyIf("project has first-party test sources") {
+                                    hasOwnTestSources.get()
+                                }
                                 verification.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
                                 verification.classDirectories.setFrom(coverageClasses)
                             }
@@ -78,11 +92,13 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
 
             extensions.configure<SpotlessExtension> {
-                java {
-                    target("src/*/java/**/*.java")
-                    googleJavaFormat(libs.findVersion("google-java-format").get().requiredVersion)
-                    removeUnusedImports()
-                    formatAnnotations()
+                java { formatExtension ->
+                    formatExtension.target("src/*/java/**/*.java")
+                    formatExtension.googleJavaFormat(
+                        libs.findVersion("google-java-format").get().requiredVersion,
+                    )
+                    formatExtension.removeUnusedImports()
+                    formatExtension.formatAnnotations()
                 }
             }
 
@@ -113,6 +129,10 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(JavaCompile::class.java).configureEach(
                 object : Action<JavaCompile> {
                     override fun execute(javaCompile: JavaCompile) {
+                        javaCompile.options.isIncremental = false
+                        javaCompile.doFirst {
+                            cleanDirectoryContents(javaCompile.destinationDirectory.get().asFile)
+                        }
                         javaCompile.options.errorprone.disableWarningsInGeneratedCode.set(true)
                         javaCompile.options.errorprone.error(
                             "BadImport",
@@ -210,9 +230,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 },
             )
 
-            tasks.named("check").configure {
-                dependsOn("spotlessCheck")
-                dependsOn("jacocoTestCoverageVerification")
+            tasks.named("check").configure { checkTask ->
+                checkTask.dependsOn("spotlessCheck")
+                checkTask.dependsOn("jacocoTestCoverageVerification")
             }
 
             tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java).configure(
@@ -276,5 +296,13 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             ),
             "${projectPath}${File.separator}${test.name}.exec",
         )
+    }
+
+    private fun cleanDirectoryContents(directory: File) {
+        if (!directory.exists()) {
+            directory.mkdirs()
+            return
+        }
+        directory.listFiles()?.forEach(File::deleteRecursively)
     }
 }

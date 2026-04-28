@@ -95,19 +95,16 @@ final class WorkbookCommandConverter {
    * Converts one protocol mutation action plus selector into the matching workbook-core command.
    */
   static WorkbookCommand toCommand(Selector target, MutationAction action) {
-    return java
-        .util
-        .List
-        .<java.util.function.BiFunction<Selector, MutationAction, Optional<WorkbookCommand>>>of(
-            WorkbookCommandWorkbookMutationConverter::toCommand,
-            WorkbookCommandCellMutationConverter::toCommand,
-            WorkbookCommandDrawingMutationConverter::toCommand,
-            WorkbookCommandStructuredMutationConverter::toCommand)
-        .stream()
-        .map(converter -> converter.apply(target, action))
-        .flatMap(Optional::stream)
-        .findFirst()
-        .orElseThrow();
+    return switch (action) {
+      case MutationAction.WorkbookMutationAction workbookAction ->
+          WorkbookCommandWorkbookMutationConverter.toCommand(target, workbookAction);
+      case MutationAction.CellMutationAction cellAction ->
+          WorkbookCommandCellMutationConverter.toCommand(target, cellAction);
+      case MutationAction.DrawingMutationAction drawingAction ->
+          WorkbookCommandDrawingMutationConverter.toCommand(target, drawingAction);
+      case MutationAction.StructuredMutationAction structuredAction ->
+          WorkbookCommandStructuredMutationConverter.toCommand(target, structuredAction);
+    };
   }
 
   static ExcelCellValue toExcelCellValue(CellInput value) {

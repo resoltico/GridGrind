@@ -40,10 +40,37 @@ class FormulaEnvironmentInputTest {
                 .externalWorkbooks()
                 .add(new FormulaExternalWorkbookInput("Other.xlsx", "tmp/other.xlsx")));
 
-    FormulaEnvironmentInput defaults = new FormulaEnvironmentInput(null, null, null);
+    FormulaEnvironmentInput defaults = FormulaEnvironmentInput.empty();
     assertTrue(defaults.isEmpty());
     assertEquals(List.of(), defaults.externalWorkbooks());
     assertEquals(List.of(), defaults.udfToolpacks());
+  }
+
+  @Test
+  void emptyFilterOnlyMatchesTrulyEmptyFormulaEnvironments() {
+    FormulaEnvironmentInput.EmptyFilter filter = new FormulaEnvironmentInput.EmptyFilter();
+    FormulaEnvironmentInput defaults = FormulaEnvironmentInput.empty();
+    FormulaEnvironmentInput externalWorkbookOnly =
+        new FormulaEnvironmentInput(
+            List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")), null, null);
+    FormulaEnvironmentInput permissiveMissingWorkbookPolicy =
+        new FormulaEnvironmentInput(
+            List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of());
+    FormulaEnvironmentInput udfOnly =
+        new FormulaEnvironmentInput(
+            null,
+            null,
+            List.of(
+                new FormulaUdfToolpackInput(
+                    "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2")))));
+
+    assertTrue(filterMatches(filter, null));
+    assertTrue(filterMatches(filter, defaults));
+    assertFalse(filterMatches(filter, externalWorkbookOnly));
+    assertFalse(filterMatches(filter, permissiveMissingWorkbookPolicy));
+    assertFalse(filterMatches(filter, udfOnly));
+    assertFalse(filterMatches(filter, "not-a-formula-environment"));
+    assertEquals(0, filter.hashCode());
   }
 
   @Test
@@ -140,5 +167,9 @@ class FormulaEnvironmentInputTest {
                     new FormulaUdfToolpackInput("math", List.of(validFunction)),
                     new FormulaUdfToolpackInput(
                         "stats", List.of(new FormulaUdfFunctionInput("double", 1, 1, "ARG1"))))));
+  }
+
+  private static boolean filterMatches(Object filter, Object candidate) {
+    return filter.equals(candidate);
   }
 }

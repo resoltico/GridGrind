@@ -2,52 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 19831,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 10,
-      "operationKinds" : {
-        "SET_AUTOFILTER" : 1,
-        "SET_RANGE" : 1,
-        "SET_DATA_VALIDATION" : 1,
-        "APPLY_STYLE" : 2,
-        "SET_PRINT_LAYOUT" : 1,
-        "SET_COMMENT" : 1,
-        "SET_WORKBOOK_PROTECTION" : 1,
-        "ENSURE_SHEET" : 1,
-        "SET_TABLE" : 1
-      },
-      "styleKinds" : {
-        "fill" : 2,
-        "fill_pattern_solid" : 1,
-        "font" : 1,
-        "border" : 1,
-        "italic" : 1,
-        "fill_pattern" : 1,
-        "border_bottom" : 1
-      },
+      "inputBytes" : 20205,
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 11,
-      "readKinds" : {
-        "ANALYZE_AUTOFILTER_HEALTH" : 1,
-        "ANALYZE_TABLE_HEALTH" : 1,
-        "GET_WORKBOOK_PROTECTION" : 1,
-        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
-        "GET_CELLS" : 1,
-        "GET_WORKBOOK_SUMMARY" : 1,
-        "GET_TABLES" : 1,
-        "GET_DATA_VALIDATIONS" : 1,
-        "GET_PRINT_LAYOUT" : 1,
-        "GET_AUTOFILTERS" : 1,
-        "GET_COMMENTS" : 1
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-04-11T11:53:26.843681Z",

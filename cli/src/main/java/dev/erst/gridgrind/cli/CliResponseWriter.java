@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.executor.GridGrindProblems;
@@ -35,8 +36,11 @@ final class CliResponseWriter {
     } catch (IOException exception) {
       GridGrindResponse.Problem problem =
           GridGrindProblems.fromException(
-              exception, new GridGrindResponse.ProblemContext.WriteResponse(targetPath.toString()));
-      write(stdout, GridGrindResponse.failure(GridGrindProtocolVersion.current(), problem));
+              exception,
+              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
+                      targetPath.toString())));
+      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
       return 1;
     }
   }
@@ -63,13 +67,16 @@ final class CliResponseWriter {
     } catch (IOException exception) {
       GridGrindResponse.Problem problem =
           GridGrindProblems.fromException(
-              exception, new GridGrindResponse.ProblemContext.WriteResponse(targetPath.toString()));
+              exception,
+              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
+                      targetPath.toString())));
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
                 problem, GridGrindProblems.problemCause(failure.problem()));
       }
-      write(stdout, GridGrindResponse.failure(GridGrindProtocolVersion.current(), problem));
+      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
       return 1;
     }
   }
@@ -106,11 +113,14 @@ final class CliResponseWriter {
     } catch (IOException exception) {
       GridGrindResponse.Problem problem =
           GridGrindProblems.fromException(
-              exception, new GridGrindResponse.ProblemContext.WriteResponse(targetPath.toString()));
-      if (report.problem() != null) {
+              exception,
+              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
+                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
+                      targetPath.toString())));
+      if (report.problem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(
-                problem, GridGrindProblems.problemCause(report.problem()));
+                problem, GridGrindProblems.problemCause(report.problem().orElseThrow()));
       }
       writeDoctorReport(
           stdout, RequestDoctorReport.invalid(report.summary(), report.warnings(), problem));
