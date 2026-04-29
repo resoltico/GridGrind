@@ -149,7 +149,7 @@ class WorkbookPlanTest {
                 new ExecutionModeInput(
                     ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
                 new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-            null,
+            FormulaEnvironmentInput.empty(),
             List.of());
 
     assertEquals("budget-audit", plan.planId().orElseThrow());
@@ -166,8 +166,8 @@ class WorkbookPlanTest {
                         " ",
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        null,
-                        null,
+                        ExecutionPolicyInput.defaults(),
+                        FormulaEnvironmentInput.empty(),
                         List.of()))
             .getMessage());
   }

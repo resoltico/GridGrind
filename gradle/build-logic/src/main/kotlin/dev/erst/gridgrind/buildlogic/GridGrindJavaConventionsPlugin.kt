@@ -34,7 +34,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             pluginManager.apply("net.ltgt.errorprone")
             pluginManager.apply("pmd")
 
-            repositories.mavenCentral()
+            configureGridGrindRepositories()
 
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
             val repositoryLayout = GridGrindRepositoryLayout.locate(this)

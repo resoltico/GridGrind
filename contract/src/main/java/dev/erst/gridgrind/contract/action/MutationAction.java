@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.action;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
@@ -182,9 +184,22 @@ public sealed interface MutationAction {
   /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
   record CopySheet(String newSheetName, SheetCopyPosition position)
       implements WorkbookMutationAction {
+    @JsonCreator
+    static CopySheet create(
+        @JsonProperty("newSheetName") String newSheetName,
+        @JsonProperty("position") SheetCopyPosition position) {
+      return new CopySheet(
+          newSheetName, position == null ? new SheetCopyPosition.AppendAtEnd() : position);
+    }
+
+    /** Copies one sheet to the end of the workbook. */
+    public CopySheet(String newSheetName) {
+      this(newSheetName, new SheetCopyPosition.AppendAtEnd());
+    }
+
     public CopySheet {
       Validation.requireSheetName(newSheetName, "newSheetName");
-      position = position == null ? new SheetCopyPosition.AppendAtEnd() : position;
+      Objects.requireNonNull(position, "position must not be null");
     }
   }
 
@@ -317,8 +332,18 @@ public sealed interface MutationAction {
 
   /** Applies one outline group to the requested inclusive zero-based row band. */
   record GroupRows(Boolean collapsed) implements WorkbookMutationAction {
+    @JsonCreator
+    static GroupRows create(@JsonProperty("collapsed") Boolean collapsed) {
+      return new GroupRows(collapsed == null ? Boolean.FALSE : collapsed);
+    }
+
+    /** Applies one non-collapsed outline group. */
+    public GroupRows() {
+      this(Boolean.FALSE);
+    }
+
     public GroupRows {
-      collapsed = collapsed == null ? Boolean.FALSE : collapsed;
+      Objects.requireNonNull(collapsed, "collapsed must not be null");
     }
   }
 
@@ -329,8 +354,18 @@ public sealed interface MutationAction {
 
   /** Applies one outline group to the requested inclusive zero-based column band. */
   record GroupColumns(Boolean collapsed) implements WorkbookMutationAction {
+    @JsonCreator
+    static GroupColumns create(@JsonProperty("collapsed") Boolean collapsed) {
+      return new GroupColumns(collapsed == null ? Boolean.FALSE : collapsed);
+    }
+
+    /** Applies one non-collapsed outline group. */
+    public GroupColumns() {
+      this(Boolean.FALSE);
+    }
+
     public GroupColumns {
-      collapsed = collapsed == null ? Boolean.FALSE : collapsed;
+      Objects.requireNonNull(collapsed, "collapsed must not be null");
     }
   }
 
@@ -528,13 +563,21 @@ public sealed interface MutationAction {
   record SetAutofilter(
       List<AutofilterFilterColumnInput> criteria, AutofilterSortStateInput sortState)
       implements StructuredMutationAction {
+    @JsonCreator
+    static SetAutofilter create(
+        @JsonProperty("criteria") List<AutofilterFilterColumnInput> criteria,
+        @JsonProperty("sortState") AutofilterSortStateInput sortState) {
+      return new SetAutofilter(criteria == null ? List.of() : criteria, sortState);
+    }
+
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter() {
       this(List.of(), null);
     }
 
     public SetAutofilter {
-      criteria = criteria == null ? List.of() : new ArrayList<>(criteria);
+      Objects.requireNonNull(criteria, "criteria must not be null");
+      criteria = new ArrayList<>(criteria);
       for (AutofilterFilterColumnInput criterion : criteria) {
         Objects.requireNonNull(criterion, "criteria must not contain null values");
       }
@@ -582,7 +625,8 @@ public sealed interface MutationAction {
   /** Appends a new row of values after the last occupied row on the sheet. */
   record AppendRow(List<CellInput> values) implements CellMutationAction {
     public AppendRow {
-      values = values == null ? List.of() : new ArrayList<>(values);
+      Objects.requireNonNull(values, "values must not be null");
+      values = new ArrayList<>(values);
       if (values.isEmpty()) {
         throw new IllegalArgumentException("values must not be empty");
       }
@@ -687,9 +731,7 @@ public sealed interface MutationAction {
     }
 
     static List<List<CellInput>> copyRows(List<List<CellInput>> rows) {
-      if (rows == null) {
-        return List.of();
-      }
+      Objects.requireNonNull(rows, "rows must not be null");
       List<List<CellInput>> copy = new ArrayList<>(rows.size());
       for (List<CellInput> row : rows) {
         copy.add(row == null ? null : new ArrayList<>(row));

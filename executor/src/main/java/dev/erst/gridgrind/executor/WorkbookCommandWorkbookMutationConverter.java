@@ -31,8 +31,7 @@ final class WorkbookCommandWorkbookMutationConverter {
           new WorkbookCommand.CopySheet(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
               copySheet.newSheetName(),
-              WorkbookCommandStructuredInputConverter.toExcelSheetCopyPosition(
-                  copySheet.position()));
+              WorkbookCommandLayoutInputConverter.toExcelSheetCopyPosition(copySheet.position()));
       case MutationAction.SetActiveSheet _ ->
           new WorkbookCommand.SetActiveSheet(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name());
@@ -46,7 +45,7 @@ final class WorkbookCommandWorkbookMutationConverter {
       case MutationAction.SetSheetProtection setSheetProtection ->
           new WorkbookCommand.SetSheetProtection(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandStructuredInputConverter.toExcelSheetProtectionSettings(
+              WorkbookCommandLayoutInputConverter.toExcelSheetProtectionSettings(
                   setSheetProtection.protection()),
               setSheetProtection.password());
       case MutationAction.ClearSheetProtection _ ->
@@ -54,7 +53,7 @@ final class WorkbookCommandWorkbookMutationConverter {
               WorkbookCommandSelectorSupport.sheetByName(target, action).name());
       case MutationAction.SetWorkbookProtection setWorkbookProtection ->
           new WorkbookCommand.SetWorkbookProtection(
-              WorkbookCommandStructuredInputConverter.toExcelWorkbookProtectionSettings(
+              WorkbookCommandLayoutInputConverter.toExcelWorkbookProtectionSettings(
                   setWorkbookProtection.protection()));
       case MutationAction.ClearWorkbookProtection _ ->
           new WorkbookCommand.ClearWorkbookProtection();
@@ -161,7 +160,7 @@ final class WorkbookCommandWorkbookMutationConverter {
       case MutationAction.SetSheetPane setSheetPane ->
           new WorkbookCommand.SetSheetPane(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandStructuredInputConverter.toExcelSheetPane(setSheetPane.pane()));
+              WorkbookCommandLayoutInputConverter.toExcelSheetPane(setSheetPane.pane()));
       case MutationAction.SetSheetZoom setSheetZoom ->
           new WorkbookCommand.SetSheetZoom(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
@@ -169,13 +168,12 @@ final class WorkbookCommandWorkbookMutationConverter {
       case MutationAction.SetSheetPresentation setSheetPresentation ->
           new WorkbookCommand.SetSheetPresentation(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandStructuredInputConverter.toExcelSheetPresentation(
+              WorkbookCommandLayoutInputConverter.toExcelSheetPresentation(
                   setSheetPresentation.presentation()));
       case MutationAction.SetPrintLayout setPrintLayout ->
           new WorkbookCommand.SetPrintLayout(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandStructuredInputConverter.toExcelPrintLayout(
-                  setPrintLayout.printLayout()));
+              WorkbookCommandLayoutInputConverter.toExcelPrintLayout(setPrintLayout.printLayout()));
       case MutationAction.ClearPrintLayout _ ->
           new WorkbookCommand.ClearPrintLayout(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name());

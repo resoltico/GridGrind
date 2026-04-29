@@ -223,16 +223,16 @@ class Phase7ExecutorCoverageTest {
         new dev.erst.gridgrind.contract.dto.ChartInput(
             "Revenue",
             drawingAnchor,
-            null,
-            null,
-            null,
-            null,
+            new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
+            new dev.erst.gridgrind.contract.dto.ChartInput.Legend.Visible(
+                dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition.RIGHT),
+            dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs.GAP,
+            true,
             java.util.List.of(
                 new dev.erst.gridgrind.contract.dto.ChartInput.Bar(
-                    null,
-                    null,
-                    null,
-                    null,
+                    false,
+                    dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection.COLUMN,
+                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
                     null,
                     null,
                     java.util.List.of(
@@ -290,8 +290,7 @@ class Phase7ExecutorCoverageTest {
             new MutationAction.SetSheetPresentation(
                 dev.erst.gridgrind.contract.dto.SheetPresentationInput.defaults()),
             new MutationAction.SetPrintLayout(
-                new dev.erst.gridgrind.contract.dto.PrintLayoutInput(
-                    null, null, null, null, null, null, null)),
+                dev.erst.gridgrind.contract.dto.PrintLayoutInput.defaults()),
             new MutationAction.SetRange(
                 java.util.List.of(
                     java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),

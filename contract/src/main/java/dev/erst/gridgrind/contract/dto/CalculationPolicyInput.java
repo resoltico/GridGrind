@@ -19,8 +19,7 @@ public record CalculationPolicyInput(
   }
 
   public CalculationPolicyInput {
-    strategy =
-        Objects.requireNonNullElseGet(strategy, CalculationStrategyInput.DoNotCalculate::new);
+    Objects.requireNonNull(strategy, "strategy must not be null");
   }
 
   /** Creates a calculation policy with the provided strategy and no open-time recalc flag. */
@@ -28,12 +27,13 @@ public record CalculationPolicyInput(
     this(strategy, false);
   }
 
-  /** Deserializes request and response payloads while treating omitted flags as false. */
   @JsonCreator
-  public static CalculationPolicyInput create(
+  static CalculationPolicyInput create(
       @JsonProperty("strategy") CalculationStrategyInput strategy,
       @JsonProperty("markRecalculateOnOpen") Boolean markRecalculateOnOpen) {
-    return new CalculationPolicyInput(strategy, Boolean.TRUE.equals(markRecalculateOnOpen));
+    return new CalculationPolicyInput(
+        strategy == null ? new CalculationStrategyInput.DoNotCalculate() : strategy,
+        Boolean.TRUE.equals(markRecalculateOnOpen));
   }
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */

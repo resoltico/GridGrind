@@ -126,8 +126,7 @@ class FormulaEnvironmentRequestExecutorTest {
                                 new FormulaUdfToolpackInput(
                                     "math",
                                     List.of(
-                                        new FormulaUdfFunctionInput(
-                                            "DOUBLE", 1, null, "ARG1*2"))))),
+                                        new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2"))))),
                         List.of(),
                         List.of(
                             inspect(

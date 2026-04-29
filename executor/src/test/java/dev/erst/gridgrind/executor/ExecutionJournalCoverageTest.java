@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
+import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
@@ -28,7 +29,6 @@ import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.RowBandSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.contract.selector.SelectorCardinality;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableRowSelector;
@@ -277,8 +277,8 @@ class ExecutionJournalCoverageTest {
         expandedAnyOf);
 
     assertEquals(
-        List.of(new ExecutionJournal.Target("CUSTOMSELECTOR", "custom-selector")),
-        expandedTargets(new CustomSelector("custom-selector")));
+        List.of(new ExecutionJournal.Target("TABLE_ROW", "Row 3 in Table BudgetTable")),
+        expandedTargets(new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 3)));
   }
 
   @Test
@@ -373,20 +373,8 @@ class ExecutionJournalCoverageTest {
         new ExecutionPolicyInput(
             ExecutionModeInput.defaults(),
             new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-        null,
+        FormulaEnvironmentInput.empty(),
         List.of());
-  }
-
-  private record CustomSelector(String label) implements Selector {
-    @Override
-    public SelectorCardinality cardinality() {
-      return SelectorCardinality.ZERO_OR_ONE;
-    }
-
-    @Override
-    public String toString() {
-      return label;
-    }
   }
 
   private static List<ExecutionJournal.Target> expandedTargets(Selector selector) {

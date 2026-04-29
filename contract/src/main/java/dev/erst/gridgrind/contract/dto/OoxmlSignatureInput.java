@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.util.Objects;
 import java.util.Optional;
@@ -9,18 +12,33 @@ public record OoxmlSignatureInput(
     String pkcs12Path,
     String keystorePassword,
     String keyPassword,
-    String alias,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> alias,
     ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
-    String description) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> description) {
+  @JsonCreator
+  static OoxmlSignatureInput create(
+      @JsonProperty("pkcs12Path") String pkcs12Path,
+      @JsonProperty("keystorePassword") String keystorePassword,
+      @JsonProperty("keyPassword") String keyPassword,
+      @JsonProperty("alias") String alias,
+      @JsonProperty("digestAlgorithm") ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
+      @JsonProperty("description") String description) {
+    return new OoxmlSignatureInput(
+        pkcs12Path,
+        keystorePassword,
+        keyPassword == null ? keystorePassword : keyPassword,
+        Optional.ofNullable(alias),
+        digestAlgorithm == null ? ExcelOoxmlSignatureDigestAlgorithm.SHA256 : digestAlgorithm,
+        Optional.ofNullable(description));
+  }
+
   public OoxmlSignatureInput {
     pkcs12Path = normalizeRequired(pkcs12Path, "pkcs12Path");
     keystorePassword = normalizeRequired(keystorePassword, "keystorePassword");
-    keyPassword =
-        keyPassword == null ? keystorePassword : normalizeRequired(keyPassword, "keyPassword");
-    alias = normalizeOptional(alias, "alias").orElse(null);
-    digestAlgorithm =
-        Objects.requireNonNullElse(digestAlgorithm, ExcelOoxmlSignatureDigestAlgorithm.SHA256);
-    description = normalizeOptional(description, "description").orElse(null);
+    keyPassword = normalizeRequired(keyPassword, "keyPassword");
+    alias = normalizeOptional(alias, "alias");
+    Objects.requireNonNull(digestAlgorithm, "digestAlgorithm must not be null");
+    description = normalizeOptional(description, "description");
   }
 
   private static String normalizeRequired(String value, String fieldName) {
@@ -31,13 +49,15 @@ public record OoxmlSignatureInput(
     return value;
   }
 
-  private static Optional<String> normalizeOptional(String value, String fieldName) {
-    if (value == null) {
+  private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    if (normalized.isEmpty()) {
       return Optional.empty();
     }
-    if (value.isBlank()) {
+    String presentValue = normalized.orElseThrow();
+    if (presentValue.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
-    return Optional.of(value);
+    return Optional.of(presentValue);
   }
 }

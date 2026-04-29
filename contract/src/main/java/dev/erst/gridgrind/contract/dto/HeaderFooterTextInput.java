@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import java.util.Objects;
 
 /** Plain left, center, and right header or footer text segments in protocol form. */
 public record HeaderFooterTextInput(
@@ -14,8 +17,20 @@ public record HeaderFooterTextInput(
   }
 
   public HeaderFooterTextInput {
-    left = left == null ? new TextSourceInput.Inline("") : left;
-    center = center == null ? new TextSourceInput.Inline("") : center;
-    right = right == null ? new TextSourceInput.Inline("") : right;
+    Objects.requireNonNull(left, "left must not be null");
+    Objects.requireNonNull(center, "center must not be null");
+    Objects.requireNonNull(right, "right must not be null");
+  }
+
+  @JsonCreator
+  static HeaderFooterTextInput create(
+      @JsonProperty("left") TextSourceInput left,
+      @JsonProperty("center") TextSourceInput center,
+      @JsonProperty("right") TextSourceInput right) {
+    HeaderFooterTextInput defaults = blank();
+    return new HeaderFooterTextInput(
+        left == null ? defaults.left() : left,
+        center == null ? defaults.center() : center,
+        right == null ? defaults.right() : right);
   }
 }

@@ -12,7 +12,7 @@ class FormulaEnvironmentInputTest {
     FormulaExternalWorkbookInput externalWorkbook =
         new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx");
     FormulaUdfFunctionInput udfFunction =
-        new FormulaUdfFunctionInput("_pkg.DOUBLE2", 1, null, " = ARG1 * 2 ");
+        new FormulaUdfFunctionInput("_pkg.DOUBLE2", 1, 1, " = ARG1 * 2 ");
     List<FormulaExternalWorkbookInput> externalWorkbooks =
         new java.util.ArrayList<>(List.of(externalWorkbook));
     List<FormulaUdfToolpackInput> udfToolpacks =
@@ -20,7 +20,8 @@ class FormulaEnvironmentInputTest {
             List.of(new FormulaUdfToolpackInput("math", List.of(udfFunction))));
 
     FormulaEnvironmentInput environment =
-        new FormulaEnvironmentInput(externalWorkbooks, null, udfToolpacks);
+        new FormulaEnvironmentInput(
+            externalWorkbooks, FormulaMissingWorkbookPolicy.ERROR, udfToolpacks);
     externalWorkbooks.clear();
     udfToolpacks.clear();
 
@@ -52,14 +53,16 @@ class FormulaEnvironmentInputTest {
     FormulaEnvironmentInput defaults = FormulaEnvironmentInput.empty();
     FormulaEnvironmentInput externalWorkbookOnly =
         new FormulaEnvironmentInput(
-            List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")), null, null);
+            List.of(new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.xlsx")),
+            FormulaMissingWorkbookPolicy.ERROR,
+            List.of());
     FormulaEnvironmentInput permissiveMissingWorkbookPolicy =
         new FormulaEnvironmentInput(
             List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of());
     FormulaEnvironmentInput udfOnly =
         new FormulaEnvironmentInput(
-            null,
-            null,
+            List.of(),
+            FormulaMissingWorkbookPolicy.ERROR,
             List.of(
                 new FormulaUdfToolpackInput(
                     "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2")))));

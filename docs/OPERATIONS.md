@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: OPERATIONS
 updated: "2026-04-25"
 route:
@@ -38,6 +38,8 @@ required versus optional fields, and the allowed nested selectors or payload gro
 fields. Use `--search` when you only know part of the name or summary, then switch to
 `--operation <group>:<id>` for the exact entry once you have the stable qualified id. Discovery,
 printed example requests, doctor reports, and normal execution responses all omit absent optional
+fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
+placeholders.
 fields instead of publishing explicit JSON `null` placeholders, so the machine-readable surface is
 easier for agents and shell tooling to consume directly.
 Task discovery is layered on top of that same catalog surface:

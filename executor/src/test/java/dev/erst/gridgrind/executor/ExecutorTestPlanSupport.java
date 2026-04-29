@@ -122,7 +122,7 @@ final class ExecutorTestPlanSupport {
 
   static ExecutionPolicyInput executionPolicy(
       ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(mode, null, calculation);
+    return new ExecutionPolicyInput(mode, calculation);
   }
 
   static TextSourceInput text(String value) {

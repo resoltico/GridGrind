@@ -708,13 +708,13 @@ class AdvancedDtoCoverageTest {
                         0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "))
             .getMessage());
 
-    TableColumnReport tableColumn = new TableColumnReport(1L, "Amount", null, null, null, null);
+    TableColumnReport tableColumn = TableColumnReport.create(1L, "Amount", null, null, null, null);
     assertEquals("", tableColumn.uniqueName());
     assertEquals(
         "id must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new TableColumnReport(-1L, "Amount", null, null, null, null))
+                () -> new TableColumnReport(-1L, "Amount", "", "", "", ""))
             .getMessage());
 
     PrintSetupReport defaults = PrintSetupReport.defaults();

@@ -9,7 +9,9 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,11 +23,11 @@ public final class GridGrindRequestDoctor {
 
   /** Creates the production doctor backed by the same request validator used for execution. */
   public GridGrindRequestDoctor() {
-    this(new ExecutionValidationSupport(), new ExecutionWorkbookSupport(Files::createTempFile));
+    this(new ExecutionValidationSupport(), defaultWorkbookSupport());
   }
 
   GridGrindRequestDoctor(ExecutionValidationSupport validationSupport) {
-    this(validationSupport, new ExecutionWorkbookSupport(Files::createTempFile));
+    this(validationSupport, defaultWorkbookSupport());
   }
 
   GridGrindRequestDoctor(
@@ -152,5 +154,13 @@ public final class GridGrindRequestDoctor {
     return new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
         ExecutionRequestPaths.requestShape(request),
         ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()));
+  }
+
+  private static ExecutionWorkbookSupport defaultWorkbookSupport() {
+    return new ExecutionWorkbookSupport(GridGrindRequestDoctor::createTempWorkbookFile);
+  }
+
+  static Path createTempWorkbookFile(String prefix, String suffix) throws IOException {
+    return Files.createTempFile(prefix, suffix);
   }
 }

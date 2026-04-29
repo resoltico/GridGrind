@@ -1330,9 +1330,9 @@ class ExcelDrawingCoverageTest {
   @Test
   void ioSupportWrapsCheckedIoFailures() {
     assertEquals("ok", ExcelIoSupport.unchecked("boom", () -> "ok"));
-    IllegalStateException failure =
+    java.io.UncheckedIOException failure =
         assertThrows(
-            IllegalStateException.class,
+            java.io.UncheckedIOException.class,
             () ->
                 ExcelIoSupport.unchecked(
                     "boom",

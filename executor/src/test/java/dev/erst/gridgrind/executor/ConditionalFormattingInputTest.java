@@ -13,6 +13,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for protocol-facing conditional-formatting authoring inputs and conversion. */
@@ -31,23 +32,34 @@ class ConditionalFormattingInputTest {
                         true,
                         false,
                         new FontHeightInput.Points(BigDecimal.valueOf(11)),
-                        "#102030",
+                        Optional.of("#102030"),
                         true,
                         true,
-                        "#E0F0AA",
-                        new DifferentialBorderInput(
-                            new DifferentialBorderSideInput(ExcelBorderStyle.THIN, "#405060"),
-                            null,
-                            null,
-                            null,
-                            null))),
+                        Optional.of("#E0F0AA"),
+                        Optional.of(
+                            new DifferentialBorderInput(
+                                Optional.of(
+                                    new DifferentialBorderSideInput(
+                                        ExcelBorderStyle.THIN, Optional.of("#405060"))),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty())))),
                 new ConditionalFormattingRuleInput.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
                     "9",
                     false,
                     new DifferentialStyleInput(
-                        null, null, true, null, null, null, null, "#AAEECC", null))));
+                        null,
+                        null,
+                        true,
+                        null,
+                        Optional.empty(),
+                        null,
+                        null,
+                        Optional.of("#AAEECC"),
+                        Optional.empty()))));
 
     assertEquals(
         new ExcelConditionalFormattingBlockDefinition(
@@ -99,7 +111,15 @@ class ConditionalFormattingInputTest {
                         "A1>0",
                         false,
                         new DifferentialStyleInput(
-                            null, true, null, null, null, null, null, null, null)))));
+                            null,
+                            true,
+                            null,
+                            null,
+                            Optional.empty(),
+                            null,
+                            null,
+                            Optional.empty(),
+                            Optional.empty())))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -110,14 +130,31 @@ class ConditionalFormattingInputTest {
                         "A1>0",
                         false,
                         new DifferentialStyleInput(
-                            null, true, null, null, null, null, null, null, null)))));
+                            null,
+                            true,
+                            null,
+                            null,
+                            Optional.empty(),
+                            null,
+                            null,
+                            Optional.empty(),
+                            Optional.empty())))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleInput.FormulaRule(
                 " ",
                 false,
-                new DifferentialStyleInput(null, true, null, null, null, null, null, null, null)));
+                new DifferentialStyleInput(
+                    null,
+                    true,
+                    null,
+                    null,
+                    Optional.empty(),
+                    null,
+                    null,
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -126,24 +163,69 @@ class ConditionalFormattingInputTest {
                 " ",
                 null,
                 false,
-                new DifferentialStyleInput(null, true, null, null, null, null, null, null, null)));
+                new DifferentialStyleInput(
+                    null,
+                    true,
+                    null,
+                    null,
+                    Optional.empty(),
+                    null,
+                    null,
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DifferentialStyleInput(null, null, null, null, null, null, null, null, null));
+        () ->
+            new DifferentialStyleInput(
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DifferentialStyleInput(" ", null, null, null, null, null, null, null, null));
+        () ->
+            new DifferentialStyleInput(
+                " ",
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DifferentialBorderInput(null, null, null, null, null));
+        () ->
+            new DifferentialBorderInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
-        NullPointerException.class, () -> new DifferentialBorderSideInput(null, "#102030"));
+        NullPointerException.class,
+        () -> new DifferentialBorderSideInput(null, Optional.of("#102030")));
   }
 
   @Test
   void delegatesComparisonRuleSemanticsToEngineNormalization() {
     DifferentialStyleInput style =
-        new DifferentialStyleInput(null, true, null, null, null, null, null, null, null);
+        new DifferentialStyleInput(
+            null,
+            true,
+            null,
+            null,
+            Optional.empty(),
+            null,
+            null,
+            Optional.empty(),
+            Optional.empty());
 
     ConditionalFormattingRuleInput.CellValueRule missingUpperBound =
         new ConditionalFormattingRuleInput.CellValueRule(
@@ -169,11 +251,16 @@ class ConditionalFormattingInputTest {
   void convertsDifferentialBordersWithExplicitSides() {
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            new DifferentialBorderSideInput(ExcelBorderStyle.THIN, "#102030"),
-            new DifferentialBorderSideInput(ExcelBorderStyle.DASHED, "#203040"),
-            new DifferentialBorderSideInput(ExcelBorderStyle.DOUBLE, "#304050"),
-            new DifferentialBorderSideInput(ExcelBorderStyle.HAIR, "#405060"),
-            new DifferentialBorderSideInput(ExcelBorderStyle.DOTTED, "#506070"));
+            Optional.of(
+                new DifferentialBorderSideInput(ExcelBorderStyle.THIN, Optional.of("#102030"))),
+            Optional.of(
+                new DifferentialBorderSideInput(ExcelBorderStyle.DASHED, Optional.of("#203040"))),
+            Optional.of(
+                new DifferentialBorderSideInput(ExcelBorderStyle.DOUBLE, Optional.of("#304050"))),
+            Optional.of(
+                new DifferentialBorderSideInput(ExcelBorderStyle.HAIR, Optional.of("#405060"))),
+            Optional.of(
+                new DifferentialBorderSideInput(ExcelBorderStyle.DOTTED, Optional.of("#506070"))));
 
     assertEquals(
         new ExcelDifferentialBorder(

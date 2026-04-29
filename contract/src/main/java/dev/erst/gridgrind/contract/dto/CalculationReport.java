@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +17,7 @@ public record CalculationReport(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Preflight> preflight,
     Execution execution) {
   public CalculationReport {
-    policy = policy == null ? CalculationPolicyInput.defaults() : policy;
+    Objects.requireNonNull(policy, "policy must not be null");
     preflight = Objects.requireNonNullElseGet(preflight, Optional::empty);
     Objects.requireNonNull(execution, "execution must not be null");
   }
@@ -36,6 +38,15 @@ public record CalculationReport(
     return new CalculationReport(
         CalculationPolicyInput.defaults(),
         new Execution(CalculationExecutionStatus.NOT_REQUESTED, 0, false, false, Optional.empty()));
+  }
+
+  @JsonCreator
+  static CalculationReport create(
+      @JsonProperty("policy") CalculationPolicyInput policy,
+      @JsonProperty("preflight") Optional<Preflight> preflight,
+      @JsonProperty("execution") Execution execution) {
+    return new CalculationReport(
+        policy == null ? CalculationPolicyInput.defaults() : policy, preflight, execution);
   }
 
   /** Structured preflight report emitted before any server-side calculation attempt. */

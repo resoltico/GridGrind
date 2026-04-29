@@ -43,11 +43,11 @@ class MutationActionTest {
   @Test
   void validatesScalarActionArguments() {
     assertEquals(125, new MutationAction.SetSheetZoom(125).zoomPercent());
-    assertFalse(new MutationAction.GroupRows(null).collapsed());
-    assertFalse(new MutationAction.GroupColumns(null).collapsed());
+    assertFalse(new MutationAction.GroupRows().collapsed());
+    assertFalse(new MutationAction.GroupColumns().collapsed());
     assertEquals(
         new SheetCopyPosition.AppendAtEnd(),
-        new MutationAction.CopySheet("Budget Copy", null).position());
+        new MutationAction.CopySheet("Budget Copy").position());
     assertEquals(
         "BudgetTotal",
         new MutationAction.SetNamedRange(
@@ -62,6 +62,13 @@ class MutationActionTest {
         () ->
             new MutationAction.SetNamedRange(
                 " ", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4")));
+
+    assertEquals(
+        new SheetCopyPosition.AppendAtEnd(),
+        MutationAction.CopySheet.create("Budget Copy", null).position());
+    assertFalse(MutationAction.GroupRows.create(null).collapsed());
+    assertFalse(MutationAction.GroupColumns.create(null).collapsed());
+    assertEquals(List.of(), MutationAction.SetAutofilter.create(null, null).criteria());
   }
 
   @Test
@@ -162,7 +169,10 @@ class MutationActionTest {
                 IllegalArgumentException.class,
                 () -> MutationAction.Validation.requireZoomPercent(401))
             .getMessage());
-    assertEquals(List.of(), MutationAction.Validation.copyRows(null));
+    assertEquals(
+        "rows must not be null",
+        assertThrows(NullPointerException.class, () -> MutationAction.Validation.copyRows(null))
+            .getMessage());
     assertEquals(
         java.util.Arrays.asList((List<CellInput>) null),
         MutationAction.Validation.copyRows(java.util.Arrays.asList((List<CellInput>) null)));
@@ -232,7 +242,7 @@ class MutationActionTest {
 
   @Test
   void actionConstructorsCoverNullCollectionDefaulting() {
-    assertEquals(List.of(), new MutationAction.SetAutofilter(null, null).criteria());
+    assertEquals(List.of(), new MutationAction.SetAutofilter().criteria());
     assertEquals(
         "criteria must not contain null values",
         assertThrows(
@@ -244,8 +254,8 @@ class MutationActionTest {
                         null))
             .getMessage());
     assertEquals(
-        "values must not be empty",
-        assertThrows(IllegalArgumentException.class, () -> new MutationAction.AppendRow(null))
+        "values must not be null",
+        assertThrows(NullPointerException.class, () -> new MutationAction.AppendRow(null))
             .getMessage());
   }
 

@@ -15,9 +15,9 @@ final class OoxmlPackageSecurityConverter {
   private OoxmlPackageSecurityConverter() {}
 
   static ExcelOoxmlOpenOptions toExcelOpenOptions(OoxmlOpenSecurityInput input) {
-    return input == null
+    return input == null || input.password().isEmpty()
         ? new ExcelOoxmlOpenOptions.Unencrypted()
-        : new ExcelOoxmlOpenOptions.Encrypted(input.password());
+        : new ExcelOoxmlOpenOptions.Encrypted(input.password().orElseThrow());
   }
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
@@ -47,8 +47,8 @@ final class OoxmlPackageSecurityConverter {
             ExecutionRequestPaths.normalizePath(input.pkcs12Path(), workingDirectory),
             input.keystorePassword(),
             input.keyPassword(),
-            input.alias(),
+            input.alias().orElse(null),
             input.digestAlgorithm(),
-            input.description());
+            input.description().orElse(null));
   }
 }

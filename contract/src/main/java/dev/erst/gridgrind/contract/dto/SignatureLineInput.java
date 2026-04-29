@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -15,10 +16,25 @@ public record SignatureLineInput(
     Optional<String> caption,
     Optional<String> invalidStamp,
     Optional<PictureDataInput> plainSignature) {
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  static SignatureLineInput create(SignatureLineJson json) {
+    return new SignatureLineInput(
+        json.name(),
+        json.anchor(),
+        json.allowComments() == null ? Boolean.TRUE : json.allowComments(),
+        json.signingInstructions(),
+        json.suggestedSigner(),
+        json.suggestedSigner2(),
+        json.suggestedSignerEmail(),
+        json.caption(),
+        json.invalidStamp(),
+        json.plainSignature());
+  }
+
   public SignatureLineInput {
     requireNonBlank(name, "name");
     anchor = requireTwoCellAnchor(anchor);
-    allowComments = allowComments == null ? Boolean.TRUE : allowComments;
+    Objects.requireNonNull(allowComments, "allowComments must not be null");
     signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
     suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
     suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2");
@@ -64,4 +80,16 @@ public record SignatureLineInput(
       case DrawingAnchorInput.TwoCell twoCell -> twoCell;
     };
   }
+
+  private record SignatureLineJson(
+      String name,
+      DrawingAnchorInput anchor,
+      Boolean allowComments,
+      Optional<String> signingInstructions,
+      Optional<String> suggestedSigner,
+      Optional<String> suggestedSigner2,
+      Optional<String> suggestedSignerEmail,
+      Optional<String> caption,
+      Optional<String> invalidStamp,
+      Optional<PictureDataInput> plainSignature) {}
 }

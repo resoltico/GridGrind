@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -462,7 +462,7 @@ Telemetry semantics:
 
 Jazzer/JUnit:
 - Jazzer 0.30.0 publishes JUnit integration in "JUnit 5" terminology
-- the nested build pins JUnit 6 explicitly and works with Gradle 9.5.0-rc-4 in practice
+- the nested build pins JUnit 6 explicitly and works with Gradle 9.5.0 in practice
 
 Structured replay:
 - replay for the structured harnesses uses Jazzer's internal

@@ -14,7 +14,7 @@ class ExecutionJournalTest {
     ExecutionJournal journal =
         new ExecutionJournal(
             Optional.of("plan-1"),
-            null,
+            ExecutionJournalLevel.NORMAL,
             new ExecutionJournal.SourceSummary(Optional.of("NEW"), Optional.empty()),
             new ExecutionJournal.PersistenceSummary(Optional.of("NONE"), Optional.empty()),
             ExecutionJournal.Phase.notStarted(),
@@ -25,7 +25,7 @@ class ExecutionJournalTest {
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
             List.of(),
-            null,
+            List.of(),
             new ExecutionJournal.Outcome(
                 ExecutionJournal.Status.SUCCEEDED,
                 0,
@@ -34,7 +34,7 @@ class ExecutionJournalTest {
                 Optional.empty(),
                 Optional.empty(),
                 Optional.empty()),
-            null);
+            List.of());
 
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
     assertEquals(List.of(), journal.warnings());

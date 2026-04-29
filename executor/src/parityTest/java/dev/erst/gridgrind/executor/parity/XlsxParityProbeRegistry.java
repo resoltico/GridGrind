@@ -141,11 +141,12 @@ final class XlsxParityProbeRegistry {
         FormulaMissingWorkbookPolicy.ERROR,
         List.of(
             new FormulaUdfToolpackInput(
-                "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, null, "ARG1*2")))));
+                "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, "ARG1*2")))));
   }
 
   static OoxmlOpenSecurityInput encryptedOpenSecurity() {
-    return new OoxmlOpenSecurityInput(XlsxParityScenarios.ENCRYPTION_PASSWORD);
+    return new OoxmlOpenSecurityInput(
+        java.util.Optional.of(XlsxParityScenarios.ENCRYPTION_PASSWORD));
   }
 
   static OoxmlSignatureInput signingInput(Path pkcs12Path, String description) {
@@ -153,9 +154,9 @@ final class XlsxParityProbeRegistry {
         pkcs12Path.toAbsolutePath().toString(),
         XlsxParityScenarios.SIGNING_KEYSTORE_PASSWORD,
         XlsxParityScenarios.SIGNING_KEY_PASSWORD,
-        XlsxParityScenarios.SIGNING_KEY_ALIAS,
-        null,
-        description);
+        java.util.Optional.of(XlsxParityScenarios.SIGNING_KEY_ALIAS),
+        dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+        java.util.Optional.ofNullable(description));
   }
 
   static <T> T cast(Class<T> type, Object value) {

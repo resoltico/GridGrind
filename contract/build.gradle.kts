@@ -28,6 +28,17 @@ fun downstreamCoverageExecutionData() =
         }
     }
 
+fun localCoverageExecutionData() =
+    provider {
+        listOf(
+            tasks.named<Test>("test")
+                .get()
+                .extensions
+                .getByType(JacocoTaskExtension::class.java)
+                .destinationFile
+        )
+    }
+
 dependencies {
     api(project(":excel-foundation"))
     // Jackson 3.x still owns annotations via the Jackson 2.x coordinates and package namespace.
@@ -42,11 +53,15 @@ dependencies {
 }
 
 tasks.named<JacocoReport>("jacocoTestReport") {
+    dependsOn(tasks.named<Test>("test"))
+    executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())
     executionData.from(downstreamCoverageExecutionData())
 }
 
 tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn(tasks.named<Test>("test"))
+    executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())
     executionData.from(downstreamCoverageExecutionData())
 }

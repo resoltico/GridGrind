@@ -35,8 +35,8 @@ public final class GridGrindProtocolCatalog {
           Optional.empty(),
           new WorkbookPlan.WorkbookSource.New(),
           new WorkbookPlan.WorkbookPersistence.None(),
-          null,
-          null,
+          dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+          dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
           List.of());
   private static final TypeEntry REQUEST_TYPE =
       typeEntry(

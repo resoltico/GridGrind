@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the protocol-to-engine OOXML package-security conversion seam. */
@@ -23,16 +24,16 @@ class OoxmlPackageSecurityConverterTest {
                 "/tmp/signing-material.p12",
                 "keystore-pass",
                 "key-pass",
-                "gridgrind-signing",
+                Optional.of("gridgrind-signing"),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA512,
-                "GridGrind signing test"));
+                Optional.of("GridGrind signing test")));
 
     assertEquals(
         "source-pass",
         assertInstanceOf(
                 ExcelOoxmlOpenOptions.Encrypted.class,
                 OoxmlPackageSecurityConverter.toExcelOpenOptions(
-                    new OoxmlOpenSecurityInput("source-pass")))
+                    new OoxmlOpenSecurityInput(Optional.of("source-pass"))))
             .password());
     assertEquals(
         "persist-pass",
@@ -78,9 +79,9 @@ class OoxmlPackageSecurityConverterTest {
                 "keys/signing-material.p12",
                 "keystore-pass",
                 "key-pass",
-                "gridgrind-signing",
+                Optional.of("gridgrind-signing"),
                 ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                "GridGrind signing test"));
+                Optional.of("GridGrind signing test")));
     Path workingDirectory = Path.of("/tmp/gridgrind-request-bundle");
 
     assertEquals(

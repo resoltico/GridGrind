@@ -3,7 +3,65 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.61.0] - 2026-04-29
+
+### Changed
+
+- The Gradle wrapper now pins stable Gradle `9.5.0`, and the shared build conventions now add the
+  official JaCoCo snapshots repository narrowly for `org.jacoco` artifacts so the repo can pin
+  the exact published snapshot that corresponds to JaCoCo trunk build
+  `0.8.15.202604281210` while keeping the rest of dependency resolution release-only.
+- Request, response, and discovery JSON readers now reject explicit `null` placeholders anywhere
+  in the public wire surface. Absent state must be expressed by omitting the property, so
+  GridGrind no longer accepts `null` as an alternate control channel during request parsing or
+  machine-readable catalog/report reads.
+- Selector is now a sealed root with explicit permitted selector families, so selector dispatch
+  and selector-oriented tests regain compile-time exhaustiveness instead of relying on ad hoc
+  fallback implementations.
+- The contributor docs now include a step-by-step Docker-only Jazzer walkthrough for first-time
+  Docker users, including image build, container entry, the first short active harness run, the
+  output to expect while fuzzing, and where to inspect the resulting summaries afterward.
+- The contributor docs now treat the Dev Container Specification as the canonical environment
+  owner, keep VS Code as an optional overlay rather than a hard dependency, and document the
+  tooling-agnostic `devcontainer up` / `devcontainer exec` workflow step by step alongside the
+  existing integrated and raw-Docker paths.
+
+### Fixed
+
+- Conditional-formatting differential colors, borders, and data-validation prompt/error report
+  fields, plus dynamic autofilter numeric bounds, now use typed absence in the contract layer
+  instead of raw `null` padding, so Java authoring, executor converters, and fuzz invariants
+  share the same presence model as the JSON wire format.
+- Missing-cell, missing-workbook, and unregistered-UDF failures no longer masquerade as
+  `IllegalArgumentException`, unchecked IO wrapping now preserves IO failure type, and chart-title
+  formula resolution failures now leave warning-level evidence instead of disappearing silently.
+- The nested Jazzer support-test and coverage gates now bind deterministic `*Test.class` inputs
+  explicitly under Gradle `9.5.0`, so the Jazzer verification stage no longer compiles its
+  test suite and then misclassifies it as `NO-SOURCE`.
+- The supported `jazzer/bin/*` wrapper surface now forwards Gradle properties and console options
+  in the order Gradle actually accepts, so documented commands such as
+  `jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=5m --console=plain` start live fuzzing
+  instead of falling back to Gradle help.
+- Terminal-only Docker fuzzing now uses cross-platform corpus-size accounting in the Jazzer
+  launcher, so active harness commands no longer fail immediately inside the Linux contributor
+  container while the same command works on macOS.
+- The committed devcontainer now repairs its named Gradle and general-cache mounts on start, and
+  devcontainer validation now proves those mounts stay writable for the remote user even after a
+  prior ad hoc Docker workflow left root-owned entries behind.
+- Source-backed request resolution no longer leaves selector and structured-authored-value binding
+  collapsed into one PMD-suppressed seam. Selector resolution and structured payload resolution
+  now live in dedicated helpers, keeping the top-level resolver closer to orchestration than a
+  kitchen-sink translator.
+- Structured workbook-command translation no longer keeps sheet-layout, drawing, and tabular
+  authored-input conversion collapsed into one oversized PMD-suppressed helper. Dedicated layout,
+  drawing, and tabular converters now carry those seams, keeping the remaining validation/filter
+  converter small enough for the enforced import and size audits.
+- Read-request failures now preserve a path-only JSON cursor when semantic validation can still
+  identify the offending request field but no stable line/column survives tree-backed parsing, so
+  CLI and response contexts no longer erase that cue entirely.
+- The repo now carries a permanent `.codex/OBSERVATIONS_INCIDENTAL.txt` audit ledger, Gradle
+  dependencies are covered by Dependabot, and stale investigation or release artifacts under
+  `tmp/` are cleaned instead of lingering between sessions.
 
 ## [0.60.0] - 2026-04-28
 
@@ -2417,7 +2475,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.60.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.61.0...HEAD
+[0.61.0]: https://github.com/resoltico/GridGrind/compare/v0.60.0...v0.61.0
 [0.60.0]: https://github.com/resoltico/GridGrind/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/resoltico/GridGrind/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/resoltico/GridGrind/compare/v0.57.0...v0.58.0

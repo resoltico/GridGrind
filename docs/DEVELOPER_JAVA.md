@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, java26, zulu26, gradle wrapper, java_home, macos, shell, devcontainer, mounted volumes, local disk]
   questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "do i need java installed on the host if i use the devcontainer", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]
@@ -20,7 +20,7 @@ alignment the preferred devcontainer path already bakes in.
 
 If you use the committed devcontainer, you do not need Java 26 installed in the host shell for
 normal repository work. The container already ships Azul Zulu 26 and is the preferred contributor
-path for this repository.
+path for this repository, whether you enter it through VS Code or through the Dev Container CLI.
 
 This file matters in two cases:
 

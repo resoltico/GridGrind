@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -32,18 +34,35 @@ public record WorkbookPlan(
         FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookStep> steps) {
   public WorkbookPlan {
-    protocolVersion =
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     planId = Objects.requireNonNullElseGet(planId, Optional::empty);
     if (planId.isPresent()) {
       planId = Optional.of(requireNonBlank(planId.orElseThrow(), "planId"));
     }
     Objects.requireNonNull(source, "source must not be null");
-    persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
-    execution = Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults);
-    formulaEnvironment =
-        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty);
+    Objects.requireNonNull(persistence, "persistence must not be null");
+    Objects.requireNonNull(execution, "execution must not be null");
+    Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null");
     steps = copySteps(steps);
+  }
+
+  @JsonCreator
+  static WorkbookPlan create(
+      @JsonProperty("protocolVersion") GridGrindProtocolVersion protocolVersion,
+      @JsonProperty("planId") Optional<String> planId,
+      @JsonProperty("source") WorkbookSource source,
+      @JsonProperty("persistence") WorkbookPersistence persistence,
+      @JsonProperty("execution") ExecutionPolicyInput execution,
+      @JsonProperty("formulaEnvironment") FormulaEnvironmentInput formulaEnvironment,
+      @JsonProperty("steps") List<WorkbookStep> steps) {
+    return new WorkbookPlan(
+        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion,
+        planId,
+        source,
+        persistence == null ? new WorkbookPersistence.None() : persistence,
+        execution == null ? ExecutionPolicyInput.defaults() : execution,
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        steps);
   }
 
   /** Creates a plan with one concrete plan id string when external callers already have it. */
@@ -62,6 +81,41 @@ public record WorkbookPlan(
         persistence,
         execution,
         formulaEnvironment,
+        steps);
+  }
+
+  /** Creates a plan with one concrete plan id string and default execution settings. */
+  public WorkbookPlan(
+      GridGrindProtocolVersion protocolVersion,
+      String planId,
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      List<WorkbookStep> steps) {
+    this(
+        protocolVersion,
+        Optional.of(requireNonBlank(planId, "planId")),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps);
+  }
+
+  /** Creates a plan with one concrete plan id string and the given execution settings. */
+  public WorkbookPlan(
+      GridGrindProtocolVersion protocolVersion,
+      String planId,
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      ExecutionPolicyInput execution,
+      List<WorkbookStep> steps) {
+    this(
+        protocolVersion,
+        Optional.of(requireNonBlank(planId, "planId")),
+        Objects.requireNonNull(source, "source must not be null"),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
+        Objects.requireNonNull(execution, "execution must not be null"),
+        FormulaEnvironmentInput.empty(),
         steps);
   }
 

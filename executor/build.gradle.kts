@@ -4,6 +4,9 @@ import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     `java-library`
@@ -63,9 +66,26 @@ val parityTest =
         shouldRunAfter(tasks.named<Test>("test"))
     }
 
+fun parityCoverageExecutionData() =
+    provider {
+        listOf(
+            parityTest.get().extensions.getByType(JacocoTaskExtension::class.java).destinationFile
+        )
+    }
+
 tasks.named("check") {
     dependsOn(parityTest)
     dependsOn("pmdParityTest")
+}
+
+tasks.named<JacocoReport>("jacocoTestReport") {
+    dependsOn(parityTest)
+    executionData.from(parityCoverageExecutionData())
+}
+
+tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+    dependsOn(parityTest)
+    executionData.from(parityCoverageExecutionData())
 }
 
 tasks.named<Pmd>("pmdParityTest") {

@@ -316,7 +316,6 @@ cat > "${signature_request_path}" <<JSON
           "suggestedSigner": "Ada Lovelace",
           "suggestedSigner2": "Finance",
           "suggestedSignerEmail": "ada@example.com",
-          "caption": null,
           "invalidStamp": "invalid",
           "plainSignature": {
             "format": "PNG",

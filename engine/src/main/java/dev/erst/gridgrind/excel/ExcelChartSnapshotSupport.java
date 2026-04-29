@@ -19,6 +19,9 @@ import org.w3c.dom.NodeList;
 
 /** Chart snapshot and chart-readback helpers. */
 final class ExcelChartSnapshotSupport {
+  private static final System.Logger LOGGER =
+      System.getLogger(ExcelChartSnapshotSupport.class.getName());
+
   private ExcelChartSnapshotSupport() {}
 
   static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
@@ -148,6 +151,10 @@ final class ExcelChartSnapshotSupport {
                           sheet, formula, "Chart title formula"),
                       formulaRuntime));
     } catch (RuntimeException exception) {
+      LOGGER.log(
+          System.Logger.Level.WARNING,
+          "Failed to resolve chart title formula '" + formula + "'; using cached or empty title",
+          exception);
       return Optional.empty();
     }
   }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.List;
 import java.util.Objects;
 
@@ -35,19 +36,18 @@ public record PrintSetupInput(
   }
 
   public PrintSetupInput {
-    margins = margins == null ? defaults().margins() : margins;
-    printGridlines = Boolean.TRUE.equals(printGridlines);
-    horizontallyCentered = Boolean.TRUE.equals(horizontallyCentered);
-    verticallyCentered = Boolean.TRUE.equals(verticallyCentered);
-    paperSize = paperSize == null ? 0 : paperSize;
-    draft = Boolean.TRUE.equals(draft);
-    blackAndWhite = Boolean.TRUE.equals(blackAndWhite);
-    copies = copies == null ? 0 : copies;
-    useFirstPageNumber = Boolean.TRUE.equals(useFirstPageNumber);
-    firstPageNumber = firstPageNumber == null ? 0 : firstPageNumber;
-    rowBreaks = copyIndexes(rowBreaks == null ? List.of() : rowBreaks, "rowBreaks");
-    columnBreaks = copyIndexes(columnBreaks == null ? List.of() : columnBreaks, "columnBreaks");
     Objects.requireNonNull(margins, "margins must not be null");
+    Objects.requireNonNull(printGridlines, "printGridlines must not be null");
+    Objects.requireNonNull(horizontallyCentered, "horizontallyCentered must not be null");
+    Objects.requireNonNull(verticallyCentered, "verticallyCentered must not be null");
+    Objects.requireNonNull(paperSize, "paperSize must not be null");
+    Objects.requireNonNull(draft, "draft must not be null");
+    Objects.requireNonNull(blackAndWhite, "blackAndWhite must not be null");
+    Objects.requireNonNull(copies, "copies must not be null");
+    Objects.requireNonNull(useFirstPageNumber, "useFirstPageNumber must not be null");
+    Objects.requireNonNull(firstPageNumber, "firstPageNumber must not be null");
+    rowBreaks = copyIndexes(rowBreaks, "rowBreaks");
+    columnBreaks = copyIndexes(columnBreaks, "columnBreaks");
     if (paperSize < 0) {
       throw new IllegalArgumentException("paperSize must not be negative");
     }
@@ -69,4 +69,36 @@ public record PrintSetupInput(
     }
     return copy;
   }
+
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  static PrintSetupInput create(PrintSetupJson json) {
+    PrintSetupInput defaults = defaults();
+    return new PrintSetupInput(
+        json.margins() == null ? defaults.margins() : json.margins(),
+        Boolean.TRUE.equals(json.printGridlines()),
+        Boolean.TRUE.equals(json.horizontallyCentered()),
+        Boolean.TRUE.equals(json.verticallyCentered()),
+        json.paperSize() == null ? defaults.paperSize() : json.paperSize(),
+        Boolean.TRUE.equals(json.draft()),
+        Boolean.TRUE.equals(json.blackAndWhite()),
+        json.copies() == null ? defaults.copies() : json.copies(),
+        Boolean.TRUE.equals(json.useFirstPageNumber()),
+        json.firstPageNumber() == null ? defaults.firstPageNumber() : json.firstPageNumber(),
+        json.rowBreaks() == null ? List.of() : json.rowBreaks(),
+        json.columnBreaks() == null ? List.of() : json.columnBreaks());
+  }
+
+  private record PrintSetupJson(
+      PrintMarginsInput margins,
+      Boolean printGridlines,
+      Boolean horizontallyCentered,
+      Boolean verticallyCentered,
+      Integer paperSize,
+      Boolean draft,
+      Boolean blackAndWhite,
+      Integer copies,
+      Boolean useFirstPageNumber,
+      Integer firstPageNumber,
+      List<Integer> rowBreaks,
+      List<Integer> columnBreaks) {}
 }

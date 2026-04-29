@@ -1,0 +1,111 @@
+------------------------------------------------------------------------
+ID: M7Q2K9P
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: .codex/OBSERVATIONS_INCIDENTAL.txt:1-40
+CATEGORY: DIRECTIVE
+OBSERVATION: The repository-specific incidental observation ledger did not exist, so sessions had
+no permanent place to re-cue unrelated defects discovered during other work.
+CURRENT: missing observation ledger
+FIX: Create the permanent ledger in the documented format and keep future incidental findings in
+it instead of leaving them implicit.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: R4T8C2L
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: tmp:1-999
+CATEGORY: DEFECT
+OBSERVATION: Stale release bootstrap patches, null-audit dumps, and probe artifacts were left
+under tmp/, violating the repo rule that temporary investigation artifacts must be deleted unless
+promoted.
+CURRENT: tmp/release-bootstrap-0.60.0/*, tmp/null-patterns-20260428.txt, tmp/review-probes-20260426/*
+FIX: Delete the stale artifacts, keep only active repo-scoped scratch state that the canonical
+checks intentionally use, and promote any lasting theory into code, docs, or this ledger.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: J8S4P1M
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindJazzerConventionsPlugin.kt:210-222
+CATEGORY: DEFECT
+OBSERVATION: The nested Jazzer `test` task under Gradle 9.5.0-rc-4 and Java 26 was compiling
+support tests and then reporting `NO-SOURCE`, which in turn broke the Jazzer coverage gate with
+stale or mismatched execution data.
+CURRENT: Jazzer deterministic support tests skipped at execution time even though test classes were built
+FIX: Bind the Jazzer `test` task to explicit `*Test.class` inputs and disable the broken scanner path so
+support tests and coverage verification execute against the current compiled classes.
+EFFORT: MINOR
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: V4N2Q8R
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/DifferentialStyleInput.java:8-39
+CATEGORY: DEFECT
+OBSERVATION: The first pass of the conditional-formatting null-padding cleanup fixed prompt, color,
+and dynamic-filter fields, but differential border presence was still modeled with raw nullable
+members below the same wire surface.
+CURRENT: differential style and border DTOs still used nullable border slots beneath Optional color fields
+FIX: Promote conditional-formatting differential borders and border sides to Optional-bearing contract
+fields and update executor and Jazzer surfaces to preserve typed omission end to end.
+EFFORT: MODERATE
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: K6L1W4B
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: executor/src/main/java/dev/erst/gridgrind/executor/WorkbookCommandStructuredInputConverter.java:1-891
+CATEGORY: MAINTAINABILITY
+OBSERVATION: Structured workbook-command input translation still carried drawing, layout,
+named-range, pivot/table, validation, and filtering concerns in one oversized PMD-suppressed
+converter even after the source-backed resolver split.
+CURRENT: one conversion helper over the repo's enforced line budget and hidden behind an import-count suppression
+FIX: Split drawing, tabular, and layout/named-range translation into dedicated helpers so the
+remaining validation/filter converter satisfies both the line-count and PMD import audits.
+EFFORT: MODERATE
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: P9C3X7M
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/ProblemContext.java:150-232
+CATEGORY: DEFECT
+OBSERVATION: Read-request failure contexts could capture a JSON path from semantic validation
+without line/column data, but the contract model had no path-only location variant and silently
+dropped that cue.
+CURRENT: JSON path lost whenever line/column were unavailable
+FIX: Add a path-only JSON-location variant and teach request-problem enrichment to preserve it
+instead of collapsing to unavailable.
+EFFORT: MINOR
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: S3R7K5Q
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: executor/src/main/java/dev/erst/gridgrind/executor/SourceBackedPlanResolver.java:1-770
+CATEGORY: MAINTAINABILITY
+OBSERVATION: Source-backed authored-value resolution had collapsed selector handling, structured
+payload binding, and orchestration into one PMD-suppressed resolver seam.
+CURRENT: selector and structured-input binding coupled in one oversized resolver
+FIX: Extract selector-specific and structured-input-specific helper seams so the top-level resolver owns
+orchestration instead of every authored payload family directly.
+EFFORT: MODERATE
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: H1V6N3D
+DATE: 2026-04-29
+STATUS: ACTIONED
+FILE: docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md:170-170
+CATEGORY: DIRECTIVE
+OBSERVATION: Public docs still described omitted response fields as JSON null placeholders even
+though the shipped wire serializers omit absent properties and the readers now reject explicit
+nulls.
+CURRENT: tabColor / dominantType / stage documented as null-bearing fields
+FIX: Update the docs to describe omission semantics truthfully and state that request payloads
+must omit absent fields rather than sending explicit nulls.
+EFFORT: MINOR
+------------------------------------------------------------------------

@@ -43,8 +43,8 @@ final class ExamplePlanSupport {
         Optional.ofNullable(planId),
         source,
         persistence,
-        execution,
-        null,
+        java.util.Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
+        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
         List.of(steps));
   }
 

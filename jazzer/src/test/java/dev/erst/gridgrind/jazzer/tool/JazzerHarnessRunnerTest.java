@@ -55,7 +55,8 @@ class JazzerHarnessRunnerTest {
               harness -> {
                 executedMethod[0] = harness.methodName();
                 return 0;
-              });
+              },
+              () -> false);
 
       assertEquals(0, exitCode);
       assertTrue(
@@ -80,7 +81,11 @@ class JazzerHarnessRunnerTest {
           JazzerHarnessRunner.run(
               NonFuzzHarnessFixture.class.getName(),
               new PrintWriter(output, true),
-              new PrintWriter(errors, true));
+              new PrintWriter(errors, true),
+              harness -> {
+                throw new AssertionError("executor must not run when no fuzz tests exist");
+              },
+              () -> false);
 
       assertEquals(1, exitCode);
       assertTrue(output.toString().isBlank());
@@ -96,7 +101,11 @@ class JazzerHarnessRunnerTest {
           JazzerHarnessRunner.run(
               MultiFuzzHarnessFixture.class.getName(),
               new PrintWriter(output, true),
-              new PrintWriter(errors, true));
+              new PrintWriter(errors, true),
+              harness -> {
+                throw new AssertionError("executor must not run when multiple fuzz tests exist");
+              },
+              () -> false);
 
       assertEquals(1, exitCode);
       assertTrue(output.toString().isBlank());
@@ -115,7 +124,8 @@ class JazzerHarnessRunnerTest {
               SuccessfulFuzzHarnessFixture.class.getName(),
               new PrintWriter(output, true),
               new PrintWriter(errors, true),
-              harness -> 77);
+              harness -> 77,
+              () -> false);
 
       assertEquals(77, exitCode);
       assertTrue(

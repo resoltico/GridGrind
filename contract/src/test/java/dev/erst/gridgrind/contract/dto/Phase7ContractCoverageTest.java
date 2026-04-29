@@ -52,7 +52,7 @@ class Phase7ContractCoverageTest {
   @Test
   void sourceBackedDtosPreserveDeferredValuesAndDefaultOptionalFlags() {
     CommentInput defaultVisibleComment =
-        new CommentInput(
+        CommentInput.create(
             TextSourceInput.inline("Owner note"),
             "Ada",
             null,
@@ -82,7 +82,7 @@ class Phase7ContractCoverageTest {
             java.util.Optional.empty());
     assertEquals(2, mixedSourceComment.runs().orElseThrow().size());
 
-    HeaderFooterTextInput defaults = new HeaderFooterTextInput(null, null, null);
+    HeaderFooterTextInput defaults = HeaderFooterTextInput.blank();
     assertEquals("", ((TextSourceInput.Inline) defaults.left()).text());
     assertEquals("", ((TextSourceInput.Inline) defaults.center()).text());
     assertEquals("", ((TextSourceInput.Inline) defaults.right()).text());
@@ -143,8 +143,8 @@ class Phase7ContractCoverageTest {
     DataValidationInput validation =
         new DataValidationInput(
             new DataValidationRuleInput.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", "10"),
-            null,
-            null,
+            false,
+            false,
             new DataValidationPromptInput(
                 TextSourceInput.utf8File("prompt-title.txt"),
                 TextSourceInput.utf8File("prompt.txt"),

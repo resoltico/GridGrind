@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: ERRORS
 updated: "2026-04-25"
 route:
@@ -363,7 +363,7 @@ Each entry carries:
 |:------|:------------|
 | `code` | Stable GridGrind problem code for this diagnostic entry. |
 | `message` | Product-owned diagnostic message for this entry. |
-| `stage` | Pipeline stage where this diagnostic originated, or `null` if not attributed to a stage. |
+| `stage` | Pipeline stage where this diagnostic originated; omitted when the entry is not attributed to a stage. |
 
 Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA`,
 `MISSING_EXTERNAL_WORKBOOK`, `UNREGISTERED_USER_DEFINED_FUNCTION`, and `UNSUPPORTED_FORMULA`

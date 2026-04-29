@@ -257,13 +257,13 @@ class WorkbookStepValidationTest {
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.InsertRows())));
     assertEquals(
         List.of(RowBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupRows(null))));
+        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupRows())));
     assertEquals(
         List.of(ColumnBandSelector.Insertion.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.InsertColumns())));
     assertEquals(
         List.of(ColumnBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupColumns(null))));
+        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupColumns())));
     assertEquals(
         List.of(DrawingObjectSelector.ByName.class),
         List.of(

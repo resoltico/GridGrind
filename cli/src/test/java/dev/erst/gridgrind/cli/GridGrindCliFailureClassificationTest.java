@@ -452,8 +452,8 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
     assertEquals(java.util.Optional.of("steps[0].target"), readRequestContext(failure).jsonPath());
-    assertEquals(java.util.Optional.of(14), readRequestContext(failure).jsonLine());
-    assertTrue(readRequestContext(failure).jsonColumn().isPresent());
+    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonLine());
+    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonColumn());
   }
 
   @Test

@@ -23,7 +23,7 @@ import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
@@ -294,14 +294,13 @@ final class WorkbookAssetExamples {
                         ExamplePlanSupport.anchor(4, 0, 8, 12),
                         new ChartInput.Title.Text(TextSourceInput.inline("Roadmap")),
                         new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-                        ExcelChartDisplayBlanksAs.SPAN,
+                        dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs.SPAN,
                         false,
                         List.of(
                             new ChartInput.Bar(
                                 true,
                                 ExcelChartBarDirection.COLUMN,
-                                null,
-                                null,
+                                ExcelChartBarGrouping.CLUSTERED,
                                 null,
                                 null,
                                 List.of(
@@ -415,7 +414,7 @@ final class WorkbookAssetExamples {
             "package-security-inspection-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
-                new OoxmlOpenSecurityInput("GridGrind-2026")),
+                new OoxmlOpenSecurityInput(java.util.Optional.of("GridGrind-2026"))),
             new WorkbookPlan.WorkbookPersistence.None(),
             null,
             ExamplePlanSupport.read(

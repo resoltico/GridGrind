@@ -61,6 +61,44 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void rejectsExplicitNullPlaceholdersDuringRequestRead() {
+    InvalidRequestException topLevelNull =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "execution": null,
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException nestedNull =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "summary",
+                          "target": null,
+                          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Missing required field 'execution'", topLevelNull.getMessage());
+    assertEquals("Missing required field 'steps[0].target'", nestedNull.getMessage());
+  }
+
+  @Test
   @SuppressWarnings("StringConcatToTextBlock")
   void roundTripsRequestsResponsesAndCatalogs() throws IOException {
     WorkbookPlan request =

@@ -48,8 +48,9 @@ class CalculationContractTypesTest {
                     new CellSelector.QualifiedAddress("Budget", "B1"),
                     new CellSelector.QualifiedAddress("Budget", "B1"))));
 
-    CalculationPolicyInput defaultPolicy = new CalculationPolicyInput(null, false);
-    CalculationPolicyInput markedPolicy = CalculationPolicyInput.create(null, true);
+    CalculationPolicyInput defaultPolicy = CalculationPolicyInput.defaults();
+    CalculationPolicyInput markedPolicy =
+        new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
     CalculationPolicyInput targetedPolicy = new CalculationPolicyInput(evaluateTargets);
 
     assertTrue(defaultPolicy.isDefault());
@@ -60,15 +61,15 @@ class CalculationContractTypesTest {
 
     ExecutionPolicyInput defaultExecution =
         new ExecutionPolicyInput(
-            new ExecutionModeInput(null, null),
-            new ExecutionJournalInput(null),
-            new CalculationPolicyInput(null, false));
+            ExecutionModeInput.defaults(),
+            ExecutionJournalInput.defaults(),
+            CalculationPolicyInput.defaults());
     ExecutionPolicyInput customExecution = ExecutionPolicyInput.calculation(markedPolicy);
 
     assertTrue(defaultExecution.isDefault());
-    assertEquals(new ExecutionModeInput(null, null), defaultExecution.mode());
-    assertEquals(new ExecutionJournalInput(null), defaultExecution.journal());
-    assertEquals(new CalculationPolicyInput(null, false), defaultExecution.calculation());
+    assertEquals(ExecutionModeInput.defaults(), defaultExecution.mode());
+    assertEquals(ExecutionJournalInput.defaults(), defaultExecution.journal());
+    assertEquals(CalculationPolicyInput.defaults(), defaultExecution.calculation());
     assertFalse(customExecution.isDefault());
     assertEquals(markedPolicy, customExecution.effectiveCalculation());
     assertTrue(
@@ -93,16 +94,16 @@ class CalculationContractTypesTest {
                 ExecutionModeInput.ReadMode.EVENT_READ,
                 ExecutionModeInput.WriteMode.STREAMING_WRITE),
             new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
-            CalculationPolicyInput.create(new CalculationStrategyInput.EvaluateAll(), true));
-    ExecutionModeInput defaultMode = new ExecutionModeInput(null, null);
+            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true));
+    ExecutionModeInput defaultMode = ExecutionModeInput.defaults();
     ExecutionModeInput customMode =
         new ExecutionModeInput(
             ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.STREAMING_WRITE);
-    ExecutionJournalInput defaultJournal = new ExecutionJournalInput(null);
+    ExecutionJournalInput defaultJournal = ExecutionJournalInput.defaults();
     ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY);
-    CalculationPolicyInput defaultCalculation = new CalculationPolicyInput(null, false);
+    CalculationPolicyInput defaultCalculation = CalculationPolicyInput.defaults();
     CalculationPolicyInput customCalculation =
-        CalculationPolicyInput.create(new CalculationStrategyInput.EvaluateAll(), true);
+        new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
 
     assertTrue(filterMatches(policyFilter, null));
     assertTrue(filterMatches(policyFilter, defaultPolicy));
@@ -160,10 +161,14 @@ class CalculationContractTypesTest {
     CalculationReport.Execution execution =
         new CalculationReport.Execution(CalculationExecutionStatus.SUCCEEDED, 1, false, true);
     CalculationReport report =
-        new CalculationReport(new CalculationPolicyInput(null, true), preflight, execution);
+        new CalculationReport(
+            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true),
+            preflight,
+            execution);
 
     assertTrue(CalculationReport.notRequested().policy().isDefault());
-    assertTrue(new CalculationReport(null, execution).policy().isDefault());
+    assertTrue(
+        CalculationReport.create(null, java.util.Optional.empty(), execution).policy().isDefault());
     assertEquals(2, report.preflight().orElseThrow().checkedFormulaCount());
     assertTrue(report.execution().markRecalculateOnOpenApplied());
     assertEquals(

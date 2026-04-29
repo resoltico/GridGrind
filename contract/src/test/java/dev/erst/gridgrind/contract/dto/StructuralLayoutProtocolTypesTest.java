@@ -122,7 +122,7 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void printLayoutInputNormalizesNullsToSupportedDefaults() {
-    PrintLayoutInput input = new PrintLayoutInput(null, null, null, null, null, null, null);
+    PrintLayoutInput input = PrintLayoutInput.defaults();
 
     assertEquals(new PrintAreaInput.None(), input.printArea());
     assertEquals(ExcelPrintOrientation.PORTRAIT, input.orientation());
@@ -231,8 +231,7 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void sheetPresentationInputsAndReportsNormalizeAndValidate() {
-    SheetPresentationInput defaultPresentation =
-        new SheetPresentationInput(null, null, null, null, null);
+    SheetPresentationInput defaultPresentation = SheetPresentationInput.defaults();
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             new SheetDisplayInput(false, false, false, true, true),
@@ -294,7 +293,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new SheetPresentationInput(
+            SheetPresentationInput.create(
                 null,
                 null,
                 null,
@@ -334,15 +333,16 @@ class StructuralLayoutProtocolTypesTest {
 
   @Test
   void sheetDisplayDefaultsAndIgnoredErrorDtosCoverConstructorBranches() {
-    assertEquals(SheetDisplayInput.defaults(), new SheetDisplayInput(null, null, null, null, null));
+    assertEquals(
+        SheetDisplayInput.defaults(), SheetDisplayInput.create(null, null, null, null, null));
     assertEquals(
         new SheetDisplayInput(false, false, true, true, false),
-        new SheetDisplayInput(false, false, null, true, null));
-    assertEquals(SheetOutlineSummaryInput.defaults(), new SheetOutlineSummaryInput(null, null));
+        SheetDisplayInput.create(false, false, null, true, null));
+    assertEquals(SheetOutlineSummaryInput.defaults(), SheetOutlineSummaryInput.create(null, null));
     assertEquals(
-        new SheetOutlineSummaryInput(true, false), new SheetOutlineSummaryInput(null, false));
-    assertEquals(SheetDefaultsInput.defaults(), new SheetDefaultsInput(null, null));
-    assertEquals(new SheetDefaultsInput(8, 18.5d), new SheetDefaultsInput(null, 18.5d));
+        new SheetOutlineSummaryInput(true, false), SheetOutlineSummaryInput.create(null, false));
+    assertEquals(SheetDefaultsInput.defaults(), SheetDefaultsInput.create(null, null));
+    assertEquals(new SheetDefaultsInput(8, 18.5d), SheetDefaultsInput.create(null, 18.5d));
     assertEquals(SheetDefaultsReport.defaults(), new SheetDefaultsReport(8, 15.0d));
 
     java.util.List<ExcelIgnoredErrorType> errorTypesWithNull =

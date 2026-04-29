@@ -35,6 +35,8 @@ import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.core.exc.StreamConstraintsException;
 import tools.jackson.core.json.JsonFactory;
 import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Additional parser-wording and invalid-payload coverage for the shared JSON codec. */
 class GridGrindJsonCoverageTest {
@@ -165,6 +167,15 @@ class GridGrindJsonCoverageTest {
   }
 
   @Test
+  void invalidRequestBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readRequest("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
   void invalidGoalPlanReportBytesSurfaceInvalidJson() {
     assertInstanceOf(
         InvalidJsonException.class,
@@ -180,6 +191,148 @@ class GridGrindJsonCoverageTest {
         assertThrows(
             InvalidJsonException.class,
             () -> GridGrindJson.readRequestDoctorReport("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void emptyJsonDocumentsSurfaceInvalidJsonAcrossByteAndStreamReads() {
+    assertEquals(
+        "Invalid JSON payload",
+        assertThrows(InvalidJsonException.class, () -> GridGrindJson.readRequest(new byte[0]))
+            .getMessage());
+    assertEquals(
+        "Invalid JSON payload",
+        assertThrows(
+                InvalidJsonException.class,
+                () -> GridGrindJson.readResponse(new ByteArrayInputStream(new byte[0])))
+            .getMessage());
+  }
+
+  @Test
+  void rejectsTopLevelAndArrayNullRequestPayloads() {
+    assertEquals(
+        "problem: <root> must not be null",
+        assertThrows(
+                InvalidRequestException.class,
+                () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
+            .getMessage());
+    assertEquals(
+        "problem: <root> must not be null",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        new ByteArrayInputStream("null".getBytes(StandardCharsets.UTF_8))))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'steps[0]'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        """
+                        {
+                          "source": { "type": "NEW" },
+                          "steps": [null]
+                        }
+                        """
+                            .getBytes(StandardCharsets.UTF_8)))
+            .getMessage());
+  }
+
+  @Test
+  void rejectsExplicitNullPlaceholdersAcrossNonRequestWireReads() throws IOException {
+    GridGrindResponse response =
+        GridGrindResponses.success(
+            List.of(),
+            List.of(),
+            List.of(
+                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
+                    "summary",
+                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
+    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
+    GoalPlanReport goalPlanReport =
+        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.clean(
+            new RequestDoctorReport.Summary(
+                "NEW",
+                "NONE",
+                "FULL_XSSF",
+                "FULL_XSSF",
+                "DO_NOT_CALCULATE",
+                false,
+                false,
+                0,
+                0,
+                0,
+                0));
+
+    assertEquals(
+        "Missing required field 'warnings'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readResponse(
+                        new ByteArrayInputStream(
+                            withTopLevelNull(
+                                GridGrindJson.writeResponseBytes(response), "warnings"))))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'warnings'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readResponse(
+                        withTopLevelNull(GridGrindJson.writeResponseBytes(response), "warnings")))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'shippedExamples'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readProtocolCatalog(
+                        withTopLevelNull(
+                            GridGrindJson.writeProtocolCatalogBytes(catalog), "shippedExamples")))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'tasks'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readTaskCatalog(
+                        withTopLevelNull(
+                            GridGrindJson.writeTaskCatalogBytes(taskCatalog), "tasks")))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'authoringNotes'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readTaskPlanTemplate(
+                        withTopLevelNull(
+                            GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate),
+                            "authoringNotes")))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'candidates'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readGoalPlanReport(
+                        withTopLevelNull(
+                            GridGrindJson.writeGoalPlanReportBytes(goalPlanReport), "candidates")))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'warnings'",
+        assertThrows(
+                InvalidRequestException.class,
+                () ->
+                    GridGrindJson.readRequestDoctorReport(
+                        withTopLevelNull(
+                            GridGrindJson.writeRequestDoctorReportBytes(doctorReport), "warnings")))
+            .getMessage());
   }
 
   @Test
@@ -368,6 +521,10 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'fieldName'",
         GridGrindJson.message(new IllegalArgumentException("problem: fieldName must not be null")));
+    assertEquals(
+        "Missing required field 'steps[0].target'",
+        GridGrindJson.message(
+            new IllegalArgumentException("problem: steps[0].target must not be null")));
     assertEquals(
         "JSON value has the wrong shape for this field",
         GridGrindJson.message(
@@ -561,6 +718,13 @@ class GridGrindJsonCoverageTest {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     writer.write(outputStream);
     assertArrayEquals(expected, outputStream.toByteArray());
+  }
+
+  private static byte[] withTopLevelNull(byte[] bytes, String fieldName) throws IOException {
+    JsonMapper mapper = JsonMapper.builder().build();
+    ObjectNode node = (ObjectNode) mapper.readTree(bytes);
+    node.putNull(fieldName);
+    return mapper.writeValueAsBytes(node);
   }
 
   /** Input stream wrapper that records whether caller-owned close was triggered. */

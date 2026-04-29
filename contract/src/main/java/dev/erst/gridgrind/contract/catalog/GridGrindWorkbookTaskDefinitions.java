@@ -337,7 +337,7 @@ final class GridGrindWorkbookTaskDefinitions {
             ExamplePlanSupport.step(
                 "copy-template",
                 new SheetSelector.ByName("Template"),
-                new MutationAction.CopySheet("Template Copy", null)),
+                new MutationAction.CopySheet("Template Copy")),
             ExamplePlanSupport.read(
                 "comments-after-copy",
                 new CellSelector.AllUsedInSheet("Template Copy"),

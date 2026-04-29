@@ -38,55 +38,58 @@ final class ExecutionJournalTargetResolver {
   }
 
   static List<ExecutionJournal.Target> expandedTargets(Selector selector) {
-    List<ExecutionJournal.Target> targets =
-        switch (selector) {
-          case SheetSelector.ByNames byNames ->
-              byNames.names().stream()
-                  .map(name -> new ExecutionJournal.Target("SHEET", "Sheet " + name))
-                  .toList();
-          case CellSelector.ByAddresses byAddresses ->
-              byAddresses.addresses().stream()
-                  .map(
-                      address ->
-                          new ExecutionJournal.Target(
-                              "CELL", "Cell " + byAddresses.sheetName() + "!" + address))
-                  .toList();
-          case CellSelector.ByQualifiedAddresses qualifiedAddresses ->
-              qualifiedAddresses.cells().stream()
-                  .map(
-                      cell ->
-                          new ExecutionJournal.Target(
-                              "CELL", "Cell " + cell.sheetName() + "!" + cell.address()))
-                  .toList();
-          case RangeSelector.ByRanges byRanges ->
-              byRanges.ranges().stream()
-                  .map(
-                      range ->
-                          new ExecutionJournal.Target(
-                              "RANGE", "Range " + byRanges.sheetName() + "!" + range))
-                  .toList();
-          case TableSelector.ByNames byNames ->
-              byNames.names().stream()
-                  .map(name -> new ExecutionJournal.Target("TABLE", "Table " + name))
-                  .toList();
-          case PivotTableSelector.ByNames byNames ->
-              byNames.names().stream()
-                  .map(name -> new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table " + name))
-                  .toList();
-          case NamedRangeSelector.ByNames byNames ->
-              byNames.names().stream()
-                  .map(name -> new ExecutionJournal.Target("NAMED_RANGE", "Named range " + name))
-                  .toList();
-          case NamedRangeSelector.AnyOf anyOf -> {
-            List<ExecutionJournal.Target> expanded = new ArrayList<>();
-            for (NamedRangeSelector.Ref ref : anyOf.selectors()) {
-              expanded.addAll(expandedNamedRangeRefTargets(ref));
-            }
-            yield List.copyOf(expanded);
-          }
-          default -> List.of(summaryTarget(selector));
-        };
-    return targets;
+    if (selector instanceof SheetSelector.ByNames byNames) {
+      return byNames.names().stream()
+          .map(name -> new ExecutionJournal.Target("SHEET", "Sheet " + name))
+          .toList();
+    }
+    if (selector instanceof CellSelector.ByAddresses byAddresses) {
+      return byAddresses.addresses().stream()
+          .map(
+              address ->
+                  new ExecutionJournal.Target(
+                      "CELL", "Cell " + byAddresses.sheetName() + "!" + address))
+          .toList();
+    }
+    if (selector instanceof CellSelector.ByQualifiedAddresses qualifiedAddresses) {
+      return qualifiedAddresses.cells().stream()
+          .map(
+              cell ->
+                  new ExecutionJournal.Target(
+                      "CELL", "Cell " + cell.sheetName() + "!" + cell.address()))
+          .toList();
+    }
+    if (selector instanceof RangeSelector.ByRanges byRanges) {
+      return byRanges.ranges().stream()
+          .map(
+              range ->
+                  new ExecutionJournal.Target(
+                      "RANGE", "Range " + byRanges.sheetName() + "!" + range))
+          .toList();
+    }
+    if (selector instanceof TableSelector.ByNames byNames) {
+      return byNames.names().stream()
+          .map(name -> new ExecutionJournal.Target("TABLE", "Table " + name))
+          .toList();
+    }
+    if (selector instanceof PivotTableSelector.ByNames byNames) {
+      return byNames.names().stream()
+          .map(name -> new ExecutionJournal.Target("PIVOT_TABLE", "Pivot table " + name))
+          .toList();
+    }
+    if (selector instanceof NamedRangeSelector.ByNames byNames) {
+      return byNames.names().stream()
+          .map(name -> new ExecutionJournal.Target("NAMED_RANGE", "Named range " + name))
+          .toList();
+    }
+    if (selector instanceof NamedRangeSelector.AnyOf anyOf) {
+      List<ExecutionJournal.Target> expanded = new ArrayList<>();
+      for (NamedRangeSelector.Ref ref : anyOf.selectors()) {
+        expanded.addAll(expandedNamedRangeRefTargets(ref));
+      }
+      return List.copyOf(expanded);
+    }
+    return List.of(summaryTarget(selector));
   }
 
   private static List<ExecutionJournal.Target> expandedNamedRangeRefTargets(
@@ -121,7 +124,6 @@ final class ExecutionJournalTargetResolver {
       case NamedRangeSelector _ -> "NAMED_RANGE";
       case TableRowSelector _ -> "TABLE_ROW";
       case TableCellSelector _ -> "TABLE_CELL";
-      default -> selector.getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT);
     };
   }
 
@@ -207,7 +209,6 @@ final class ExecutionJournalTargetResolver {
               + summaryLabel(byKeyCell.table());
       case TableCellSelector.ByColumnName byColumnName ->
           "Column " + byColumnName.columnName() + " in " + summaryLabel(byColumnName.row());
-      default -> selector.toString();
     };
   }
 

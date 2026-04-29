@@ -81,6 +81,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for SequenceIntrospection operation and command labeling. */
@@ -229,7 +230,15 @@ class SequenceIntrospectionTest {
                                 "A2>0",
                                 true,
                                 new DifferentialStyleInput(
-                                    "0.00", true, null, null, null, null, null, null, null))))))));
+                                    "0.00",
+                                    true,
+                                    null,
+                                    null,
+                                    Optional.empty(),
+                                    null,
+                                    null,
+                                    Optional.empty(),
+                                    Optional.empty()))))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         mutationKind(

@@ -666,14 +666,14 @@ class DtoEdgeCoverageTest {
         "iconId must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new AutofilterSortConditionReport("A1:A2", false, null, null, -1))
+                () -> AutofilterSortConditionReport.create("A1:A2", false, null, null, -1))
             .getMessage());
     assertEquals(
         "conditions must not contain null values",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new AutofilterSortStateReport(
+                    AutofilterSortStateReport.create(
                         "A1:B2",
                         false,
                         false,
@@ -689,16 +689,16 @@ class DtoEdgeCoverageTest {
             1,
             0,
             List.of("Owner"),
-            List.of(new TableColumnReport(1L, "Owner", null, null, null, null)),
+            List.of(TableColumnReport.create(1L, "Owner", null, null, null, null)),
             new TableStyleReport.Named("TableStyleMedium2", true, false, false, false),
             true,
-            null,
+            "",
             false,
             false,
             false,
-            null,
-            null,
-            null);
+            "",
+            "",
+            "");
     assertEquals("", table.comment());
     assertEquals("", table.headerRowCellStyle());
     assertEquals("", table.dataCellStyle());

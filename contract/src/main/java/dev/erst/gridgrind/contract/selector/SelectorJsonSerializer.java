@@ -10,13 +10,9 @@ final class SelectorJsonSerializer extends ValueSerializer<Selector> {
   @Override
   public void serialize(Selector selector, JsonGenerator generator, SerializationContext context) {
     Class<?> selectorType = selector.getClass();
-    RecordComponent[] components = selectorType.getRecordComponents();
-    if (components == null) {
-      throw new IllegalStateException("Selector runtime type must be a record: " + selectorType);
-    }
     generator.writeStartObject(selector);
     generator.writeStringProperty("type", SelectorJsonSupport.typeIdFor(selectorType));
-    for (RecordComponent component : components) {
+    for (RecordComponent component : selectorType.getRecordComponents()) {
       generator.writePOJOProperty(component.getName(), readComponent(selector, component));
     }
     generator.writeEndObject();

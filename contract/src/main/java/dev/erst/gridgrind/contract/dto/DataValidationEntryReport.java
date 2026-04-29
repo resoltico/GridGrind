@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing factual report for one data-validation structure read from a sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -41,10 +43,13 @@ public sealed interface DataValidationEntryReport
       DataValidationRuleInput rule,
       boolean allowBlank,
       boolean suppressDropDownArrow,
-      DataValidationPromptInput prompt,
-      DataValidationErrorAlertInput errorAlert) {
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DataValidationPromptInput> prompt,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<DataValidationErrorAlertInput> errorAlert) {
     public DataValidationDefinitionReport {
       Objects.requireNonNull(rule, "rule must not be null");
+      Objects.requireNonNull(prompt, "prompt must not be null");
+      Objects.requireNonNull(errorAlert, "errorAlert must not be null");
     }
   }
 

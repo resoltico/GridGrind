@@ -112,11 +112,26 @@ corpus_file_count() {
 corpus_total_bytes() {
   local run_dir="$1"
   local corpus_dir="${run_dir}/.cifuzz-corpus"
+  local sample_file=''
+  local -a stat_command=()
   if [[ ! -d "${corpus_dir}" ]]; then
     echo 0
     return
   fi
-  find "${corpus_dir}" -type f -exec stat -f '%z' {} + 2>/dev/null | awk '{sum += $1} END {print sum + 0}'
+  sample_file="$(find "${corpus_dir}" -type f -print -quit 2>/dev/null || true)"
+  if [[ -z "${sample_file}" ]]; then
+    echo 0
+    return
+  fi
+  if stat -f '%z' "${sample_file}" >/dev/null 2>&1; then
+    stat_command=(stat -f '%z')
+  elif stat -c '%s' "${sample_file}" >/dev/null 2>&1; then
+    stat_command=(stat -c '%s')
+  else
+    find "${corpus_dir}" -type f -exec wc -c {} + 2>/dev/null | awk '{sum += $1} END {print sum + 0}'
+    return
+  fi
+  find "${corpus_dir}" -type f -exec "${stat_command[@]}" {} + 2>/dev/null | awk '{sum += $1} END {print sum + 0}'
 }
 
 collect_descendant_pids() {
@@ -218,8 +233,14 @@ if is_active_fuzz_task "${task_name}"; then
   remove_daemon_args
 fi
 
+gradle_command=("${repo_root}/gradlew" --project-dir "${jazzer_root}")
+if [[ "${active_fuzz_task}" -eq 1 ]]; then
+  gradle_command+=(--no-daemon)
+fi
+gradle_command+=("${gradle_args[@]}" "${task_name}")
+
 if [[ -z "${target_key}" ]]; then
-  "${repo_root}/gradlew" --project-dir "${jazzer_root}" --no-configuration-cache "${task_name}" "${gradle_args[@]}"
+  "${gradle_command[@]}"
   exit $?
 fi
 
@@ -247,12 +268,7 @@ if [[ -n "${duration_seconds}" ]]; then
   watchdog_seconds=$((duration_seconds + 120))
 fi
 
-gradle_command=("${repo_root}/gradlew" --project-dir "${jazzer_root}")
-if [[ "${active_fuzz_task}" -eq 1 ]]; then
-  gradle_command+=(--no-daemon)
-fi
-
-"${gradle_command[@]}" "${task_name}" "${gradle_args[@]}" \
+"${gradle_command[@]}" \
   > >(tee "${log_path}" "${latest_log_path}") 2>&1 &
 gradle_pid="$!"
 

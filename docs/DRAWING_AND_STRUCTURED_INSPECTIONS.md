@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
 updated: "2026-04-25"
 route:
@@ -167,7 +167,7 @@ The returned `layout.presentation` object reports:
 
 - `display`: `displayGridlines`, `displayZeros`, `displayRowColHeadings`, `displayFormulas`, and
   `rightToLeft`
-- `tabColor`: `null` or a structured color report
+- `tabColor`: omitted when the sheet has no tab color, or a structured color report when one is set
 - `outlineSummary`: `rowSumsBelow` and `rowSumsRight`
 - `sheetDefaults`: `defaultColumnWidth` and `defaultRowHeightPoints`
 - `ignoredErrors`: factual ignored-error blocks grouped by range
@@ -517,7 +517,7 @@ entirely blank, `dataRowCount` is `0`.
 `rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
 with `INVALID_REQUEST`.
 
-`dominantType` per column is `null` when all data cells are blank, or when two or more types tie
+`dominantType` is omitted per column when all data cells are blank, or when two or more types tie
 for the highest count. Formula cells contribute their evaluated result type (e.g. `NUMBER`,
 `STRING`) to `observedTypes` and `dominantType`, not `FORMULA`.
 
