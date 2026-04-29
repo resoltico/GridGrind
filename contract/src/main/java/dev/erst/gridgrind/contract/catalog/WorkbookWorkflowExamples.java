@@ -205,7 +205,7 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-04-copy-sheet",
                 ExamplePlanSupport.sheet("Template"),
-                new MutationAction.CopySheet("Template Copy", null)),
+                new MutationAction.CopySheet("Template Copy")),
             ExamplePlanSupport.read(
                 "step-05-read-comments",
                 new CellSelector.AllUsedInSheet("Template Copy"),
@@ -225,8 +225,7 @@ final class WorkbookWorkflowExamples {
             "assertion-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
-                null, new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE), null),
+            new ExecutionPolicyInput(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
             ExamplePlanSupport.step(
                 "ensure-budget",
                 ExamplePlanSupport.sheet("Budget"),
@@ -268,8 +267,8 @@ final class WorkbookWorkflowExamples {
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
             new ExecutionPolicyInput(
-                new ExecutionModeInput(null, ExecutionModeInput.WriteMode.STREAMING_WRITE),
-                null,
+                new ExecutionModeInput(ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                ExecutionJournalInput.defaults(),
                 new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -12,7 +12,8 @@ route:
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
 **Preferred contributor path**: the committed devcontainer in
-[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md).
+[DEVELOPER_DEVCONTAINER.md](./DEVELOPER_DEVCONTAINER.md), entered either through VS Code Dev
+Containers or the tooling-agnostic Dev Container CLI.
 **Fallback contributor path**: host-native Java 26 plus Docker Desktop as documented in
 [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) and [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md).
 
@@ -34,7 +35,9 @@ Companion references:
 GridGrind's preferred local contributor workflow is the committed devcontainer:
 
 - keep the repository on the local macOS filesystem
-- open it in VS Code and reopen in the container
+- materialize the committed devcontainer through a devcontainer-spec client
+- use VS Code `Reopen in Container` for the most integrated editor path, or
+  `devcontainer up` plus `devcontainer exec` for the tooling-agnostic path
 - run Java, Gradle, Jazzer, shell verification, and Docker-backed repo gates from the container
   terminal
 
@@ -171,8 +174,8 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 `docker buildx build --load` instead of Docker's legacy builder path.
 The committed contributor devcontainer is validated separately through
 `./scripts/validate-devcontainer.sh`, which builds the contributor image, checks its pinned Java
-and tooling surface, and guards the container-editor routing contract in
-`.devcontainer/devcontainer.json`.
+and tooling surface, guards the portable devcontainer contract, and verifies the committed VS Code
+overlay contract in `.devcontainer/devcontainer.json`.
 
 ```bash
 # Run the local full-stack gate

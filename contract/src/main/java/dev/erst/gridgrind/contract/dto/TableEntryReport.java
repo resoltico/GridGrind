@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.List;
 import java.util.Objects;
 
@@ -69,11 +70,32 @@ public record TableEntryReport(
     columnNames = copyColumnNames(columnNames);
     Objects.requireNonNull(columns, "columns must not be null");
     columns = copyColumns(columns);
-    comment = comment == null ? "" : comment;
-    headerRowCellStyle = headerRowCellStyle == null ? "" : headerRowCellStyle;
-    dataCellStyle = dataCellStyle == null ? "" : dataCellStyle;
-    totalsRowCellStyle = totalsRowCellStyle == null ? "" : totalsRowCellStyle;
+    Objects.requireNonNull(comment, "comment must not be null");
+    Objects.requireNonNull(headerRowCellStyle, "headerRowCellStyle must not be null");
+    Objects.requireNonNull(dataCellStyle, "dataCellStyle must not be null");
+    Objects.requireNonNull(totalsRowCellStyle, "totalsRowCellStyle must not be null");
     Objects.requireNonNull(style, "style must not be null");
+  }
+
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  static TableEntryReport create(TableEntryReportJson json) {
+    return new TableEntryReport(
+        json.name(),
+        json.sheetName(),
+        json.range(),
+        json.headerRowCount(),
+        json.totalsRowCount(),
+        json.columnNames(),
+        json.columns(),
+        json.style(),
+        json.hasAutofilter(),
+        json.comment() == null ? "" : json.comment(),
+        json.published(),
+        json.insertRow(),
+        json.insertRowShift(),
+        json.headerRowCellStyle() == null ? "" : json.headerRowCellStyle(),
+        json.dataCellStyle() == null ? "" : json.dataCellStyle(),
+        json.totalsRowCellStyle() == null ? "" : json.totalsRowCellStyle());
   }
 
   private static List<String> copyColumnNames(List<String> columnNames) {
@@ -89,4 +111,22 @@ public record TableEntryReport(
     }
     return List.copyOf(columns);
   }
+
+  private record TableEntryReportJson(
+      String name,
+      String sheetName,
+      String range,
+      int headerRowCount,
+      int totalsRowCount,
+      List<String> columnNames,
+      List<TableColumnReport> columns,
+      TableStyleReport style,
+      boolean hasAutofilter,
+      String comment,
+      boolean published,
+      boolean insertRow,
+      boolean insertRowShift,
+      String headerRowCellStyle,
+      String dataCellStyle,
+      String totalsRowCellStyle) {}
 }

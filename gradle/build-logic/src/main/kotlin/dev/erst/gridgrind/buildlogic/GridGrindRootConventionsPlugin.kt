@@ -25,7 +25,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             val libs = versionCatalog()
 
             description = providers.gradleProperty("gridgrindDescription").get()
-            repositories.mavenCentral()
+            configureGridGrindRepositories()
 
             allprojects {
                 group = providers.gradleProperty("group").get()

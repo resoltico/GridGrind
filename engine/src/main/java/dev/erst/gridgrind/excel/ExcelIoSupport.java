@@ -1,17 +1,18 @@
 package dev.erst.gridgrind.excel;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 
 /** Shared unchecked IO bridge for workbook-side helper flows. */
 final class ExcelIoSupport {
   private ExcelIoSupport() {}
 
-  /** Executes one checked-IO supplier and rethrows failures as {@link IllegalStateException}. */
+  /** Executes one checked-IO supplier and rethrows failures as {@link UncheckedIOException}. */
   static <T> T unchecked(String failureMessage, IoSupplier<T> supplier) {
     try {
       return supplier.get();
     } catch (IOException exception) {
-      throw new IllegalStateException(failureMessage, exception);
+      throw new UncheckedIOException(failureMessage, exception);
     }
   }
 

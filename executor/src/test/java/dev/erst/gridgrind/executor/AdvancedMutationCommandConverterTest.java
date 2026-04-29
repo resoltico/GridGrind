@@ -82,6 +82,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
@@ -131,7 +132,7 @@ class AdvancedMutationCommandConverterTest {
                 new WorkbookSelector.Current(),
                 new MutationAction.SetWorkbookProtection(
                     new WorkbookProtectionInput(
-                        null, true, null, "book-secret", "review-secret"))));
+                        false, true, false, "book-secret", "review-secret"))));
     assertEquals(
         new ExcelWorkbookProtectionSettings(false, true, false, "book-secret", "review-secret"),
         protectionCommand.protection());
@@ -148,7 +149,7 @@ class AdvancedMutationCommandConverterTest {
                 new RangeSelector.ByRange("Budget", "A1:C4"), new MutationAction.SetAutofilter()));
     assertEquals(List.of(), simpleAutofilter.criteria());
     assertNull(simpleAutofilter.sortState());
-    assertEquals(List.of(), new MutationAction.SetAutofilter(null, null).criteria());
+    assertEquals(List.of(), new MutationAction.SetAutofilter().criteria());
 
     WorkbookCommand.SetAutofilter advancedAutofilter =
         assertInstanceOf(
@@ -478,7 +479,8 @@ class AdvancedMutationCommandConverterTest {
                         new ChartInput.Legend.Hidden(),
                         ExcelChartDisplayBlanksAs.ZERO,
                         false,
-                        new ChartInput.Line(true, null, null, List.of(firstSeries))))));
+                        new ChartInput.Line(
+                            true, ExcelChartGrouping.STANDARD, List.of(firstSeries))))));
     WorkbookCommand.SetChart pieCommand =
         assertInstanceOf(
             WorkbookCommand.SetChart.class,
@@ -492,7 +494,7 @@ class AdvancedMutationCommandConverterTest {
                         null,
                         null,
                         null,
-                        new ChartInput.Pie(null, 120, List.of(secondSeries))))));
+                        new ChartInput.Pie(false, 120, List.of(secondSeries))))));
 
     assertEquals("Ops", lineCommand.sheetName());
     ExcelChartDefinition lineChart = lineCommand.chart();
@@ -541,7 +543,12 @@ class AdvancedMutationCommandConverterTest {
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             new ChartInput.Bar(
-                true, ExcelChartBarDirection.BAR, null, null, null, null, List.of(barSeries)));
+                true,
+                ExcelChartBarDirection.BAR,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                List.of(barSeries)));
     ChartInput lineInput =
         chartInput(
             "OpsLine",
@@ -552,8 +559,7 @@ class AdvancedMutationCommandConverterTest {
             true,
             new ChartInput.Line(
                 false,
-                null,
-                null,
+                ExcelChartGrouping.STANDARD,
                 List.of(
                     chartSeries(
                         new ChartInput.Title.Formula("Summary!$C$1"),
@@ -827,9 +833,7 @@ class AdvancedMutationCommandConverterTest {
     return new MutationAction.SetAutofilter(
         List.of(
             new AutofilterFilterColumnInput(
-                0L,
-                null,
-                new AutofilterFilterCriterionInput.Values(List.of("Queued", "Ready"), true)),
+                0L, new AutofilterFilterCriterionInput.Values(List.of("Queued", "Ready"), true)),
             new AutofilterFilterColumnInput(
                 1L,
                 false,
@@ -839,7 +843,10 @@ class AdvancedMutationCommandConverterTest {
                         new AutofilterFilterCriterionInput.CustomConditionInput(
                             "greaterThan", "5")))),
             new AutofilterFilterColumnInput(
-                2L, true, new AutofilterFilterCriterionInput.Dynamic("TODAY", 1.0d, 2.0d)),
+                2L,
+                true,
+                new AutofilterFilterCriterionInput.Dynamic(
+                    "TODAY", java.util.Optional.of(1.0d), java.util.Optional.of(2.0d))),
             new AutofilterFilterColumnInput(
                 3L, true, new AutofilterFilterCriterionInput.Top10(10, true, false)),
             new AutofilterFilterColumnInput(
@@ -850,12 +857,10 @@ class AdvancedMutationCommandConverterTest {
                 5L, true, new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2))),
         new AutofilterSortStateInput(
             "A2:F9",
-            null,
+            false,
             true,
-            null,
             List.of(
-                new AutofilterSortConditionInput(
-                    "B2:B9", true, null, ColorInput.rgb("#AABBCC"), null),
+                new AutofilterSortConditionInput("B2:B9", true, ColorInput.rgb("#AABBCC"), null),
                 new AutofilterSortConditionInput("C2:C9", false, "ICON", null, 2))));
   }
 
@@ -876,7 +881,13 @@ class AdvancedMutationCommandConverterTest {
       Boolean plotOnlyVisibleCells,
       ChartInput.Plot plot) {
     return new ChartInput(
-        name, anchor, title, legend, displayBlanksAs, plotOnlyVisibleCells, List.of(plot));
+        name,
+        anchor,
+        title == null ? new ChartInput.Title.None() : title,
+        legend == null ? new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT) : legend,
+        displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
+        plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
+        List.of(plot));
   }
 
   private static ChartInput.Series chartSeries(

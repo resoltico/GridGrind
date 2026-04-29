@@ -336,7 +336,10 @@ class SourceBackedPlanResolverTest {
                     null,
                     ExcelChartDisplayBlanksAs.ZERO,
                     true,
-                    new ChartInput.Line(false, null, null, List.of(chartSeries())))));
+                    new ChartInput.Line(
+                        false,
+                        dev.erst.gridgrind.excel.foundation.ExcelChartGrouping.STANDARD,
+                        List.of(chartSeries())))));
     MutationStep pieChartStep =
         new MutationStep(
             "set-pie-chart-file-backed",
@@ -507,7 +510,12 @@ class SourceBackedPlanResolverTest {
                     ExcelChartDisplayBlanksAs.GAP,
                     true,
                     new ChartInput.Bar(
-                        false, null, null, null, null, null, List.of(chartSeries()))))));
+                        false,
+                        dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection.COLUMN,
+                        dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                        null,
+                        null,
+                        List.of(chartSeries()))))));
     assertFalse(
         requiresStandardInputFor(
             new MutationAction.SetChart(
@@ -518,7 +526,10 @@ class SourceBackedPlanResolverTest {
                     null,
                     ExcelChartDisplayBlanksAs.ZERO,
                     true,
-                    new ChartInput.Line(false, null, null, List.of(chartSeries()))))));
+                    new ChartInput.Line(
+                        false,
+                        dev.erst.gridgrind.excel.foundation.ExcelChartGrouping.STANDARD,
+                        List.of(chartSeries()))))));
     assertFalse(
         requiresStandardInputFor(
             new MutationAction.SetChart(
@@ -638,53 +649,35 @@ class SourceBackedPlanResolverTest {
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new HeaderFooterTextInput(TextSourceInput.standardInput(), null, null),
-                    null))));
+                printLayoutWithHeader(
+                    new HeaderFooterTextInput(
+                        TextSourceInput.standardInput(),
+                        TextSourceInput.inline(""),
+                        TextSourceInput.inline(""))))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                printLayoutWithHeader(
                     new HeaderFooterTextInput(
                         TextSourceInput.inline("left"),
                         TextSourceInput.standardInput(),
-                        TextSourceInput.inline("right")),
-                    null))));
+                        TextSourceInput.inline("right"))))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                printLayoutWithHeader(
                     new HeaderFooterTextInput(
                         TextSourceInput.inline("left"),
                         TextSourceInput.inline("center"),
-                        TextSourceInput.standardInput()),
-                    null))));
+                        TextSourceInput.standardInput())))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new HeaderFooterTextInput(TextSourceInput.standardInput(), null, null)))));
+                printLayoutWithFooter(
+                    new HeaderFooterTextInput(
+                        TextSourceInput.standardInput(),
+                        TextSourceInput.inline(""),
+                        TextSourceInput.inline(""))))));
   }
 
   @Test
@@ -777,7 +770,12 @@ class SourceBackedPlanResolverTest {
                             ExcelChartDisplayBlanksAs.GAP,
                             true,
                             new ChartInput.Bar(
-                                false, null, null, null, null, null, List.of(chartSeries()))))),
+                                false,
+                                dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection.COLUMN,
+                                dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                                null,
+                                null,
+                                List.of(chartSeries()))))),
                 new MutationStep(
                     "step-04-set-line-chart",
                     new SheetSelector.ByName("Budget"),
@@ -789,7 +787,10 @@ class SourceBackedPlanResolverTest {
                             null,
                             ExcelChartDisplayBlanksAs.ZERO,
                             true,
-                            new ChartInput.Line(false, null, null, List.of(chartSeries()))))),
+                            new ChartInput.Line(
+                                false,
+                                dev.erst.gridgrind.excel.foundation.ExcelChartGrouping.STANDARD,
+                                List.of(chartSeries()))))),
                 new MutationStep(
                     "step-05-set-pie-chart",
                     new SheetSelector.ByName("Budget"),
@@ -881,17 +882,11 @@ class SourceBackedPlanResolverTest {
                     "step-11-print-layout",
                     new SheetSelector.ByName("Budget"),
                     new MutationAction.SetPrintLayout(
-                        new PrintLayoutInput(
-                            null,
-                            null,
-                            null,
-                            null,
-                            null,
+                        printLayoutWithHeader(
                             new HeaderFooterTextInput(
                                 TextSourceInput.utf8File("header-left.txt"),
                                 TextSourceInput.utf8File("header-center.txt"),
-                                TextSourceInput.utf8File("header-right.txt")),
-                            null))),
+                                TextSourceInput.utf8File("header-right.txt"))))),
                 assertion,
                 inspection));
 
@@ -1303,27 +1298,18 @@ class SourceBackedPlanResolverTest {
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
-            new PrintLayoutInput(
-                null,
-                null,
-                null,
-                null,
-                null,
+            printLayoutWithHeader(
                 new HeaderFooterTextInput(
                     TextSourceInput.inline("left"),
                     TextSourceInput.inline("center"),
-                    TextSourceInput.inline("right")),
-                null)));
+                    TextSourceInput.inline("right")))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
-            new PrintLayoutInput(
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                new HeaderFooterTextInput(TextSourceInput.standardInput(), null, null))));
+            printLayoutWithFooter(
+                new HeaderFooterTextInput(
+                    TextSourceInput.standardInput(),
+                    TextSourceInput.inline(""),
+                    TextSourceInput.inline("")))));
 
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
@@ -1569,12 +1555,7 @@ class SourceBackedPlanResolverTest {
             "print-layout-inline",
             new SheetSelector.ByName("Budget"),
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
                         TextSourceInput.inline("left"),
                         TextSourceInput.inline("center"),
@@ -1706,12 +1687,7 @@ class SourceBackedPlanResolverTest {
             "print-layout-mixed",
             new SheetSelector.ByName("Budget"),
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
                         TextSourceInput.inline("left"),
                         TextSourceInput.utf8File("header-center.txt"),
@@ -1834,12 +1810,7 @@ class SourceBackedPlanResolverTest {
             "footer-only-changed",
             new SheetSelector.ByName("Budget"),
             new MutationAction.SetPrintLayout(
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
+                printLayoutWithHeaderAndFooter(
                     new HeaderFooterTextInput(
                         TextSourceInput.inline("header-left"),
                         TextSourceInput.inline("header-center"),
@@ -1955,6 +1926,46 @@ class SourceBackedPlanResolverTest {
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
+  private static PrintLayoutInput printLayoutWithHeader(HeaderFooterTextInput header) {
+    PrintLayoutInput defaults = PrintLayoutInput.defaults();
+    return new PrintLayoutInput(
+        defaults.printArea(),
+        defaults.orientation(),
+        defaults.scaling(),
+        defaults.repeatingRows(),
+        defaults.repeatingColumns(),
+        header,
+        defaults.footer(),
+        defaults.setup());
+  }
+
+  private static PrintLayoutInput printLayoutWithFooter(HeaderFooterTextInput footer) {
+    PrintLayoutInput defaults = PrintLayoutInput.defaults();
+    return new PrintLayoutInput(
+        defaults.printArea(),
+        defaults.orientation(),
+        defaults.scaling(),
+        defaults.repeatingRows(),
+        defaults.repeatingColumns(),
+        defaults.header(),
+        footer,
+        defaults.setup());
+  }
+
+  private static PrintLayoutInput printLayoutWithHeaderAndFooter(
+      HeaderFooterTextInput header, HeaderFooterTextInput footer) {
+    PrintLayoutInput defaults = PrintLayoutInput.defaults();
+    return new PrintLayoutInput(
+        defaults.printArea(),
+        defaults.orientation(),
+        defaults.scaling(),
+        defaults.repeatingRows(),
+        defaults.repeatingColumns(),
+        header,
+        footer,
+        defaults.setup());
+  }
+
   private static boolean requiresStandardInputFor(MutationAction action) {
     Object target =
         switch (action) {
@@ -2002,7 +2013,16 @@ class SourceBackedPlanResolverTest {
       Boolean plotOnlyVisibleCells,
       ChartInput.Plot plot) {
     return new ChartInput(
-        name, anchor, title, legend, displayBlanksAs, plotOnlyVisibleCells, List.of(plot));
+        name,
+        anchor,
+        title == null ? new ChartInput.Title.None() : title,
+        legend == null
+            ? new ChartInput.Legend.Visible(
+                dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition.RIGHT)
+            : legend,
+        displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
+        plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
+        List.of(plot));
   }
 
   private static byte[] pngBytes() {

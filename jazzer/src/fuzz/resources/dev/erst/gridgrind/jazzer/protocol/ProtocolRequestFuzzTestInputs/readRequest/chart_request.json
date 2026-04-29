@@ -120,8 +120,7 @@
         },
         "target": {
           "sheetName": "Ops",
-          "range": "A2:A4",
-          "formula": null
+          "range": "A2:A4"
         }
       }
     },
@@ -139,8 +138,7 @@
         },
         "target": {
           "sheetName": "Ops",
-          "range": "C2:C4",
-          "formula": null
+          "range": "C2:C4"
         }
       }
     },
@@ -189,8 +187,6 @@
               "varyColors": true,
               "barDirection": "COLUMN",
               "grouping": "CLUSTERED",
-              "gapWidth": null,
-              "overlap": null,
               "axes": [
                 {
                   "kind": "CATEGORY",
@@ -221,11 +217,7 @@
                   "values": {
                     "type": "REFERENCE",
                     "formula": "Ops!$B$2:$B$4"
-                  },
-                  "smooth": null,
-                  "markerStyle": null,
-                  "markerSize": null,
-                  "explosion": null
+                  }
                 },
                 {
                   "title": {
@@ -242,11 +234,7 @@
                   "values": {
                     "type": "REFERENCE",
                     "formula": "ChartActual"
-                  },
-                  "smooth": null,
-                  "markerStyle": null,
-                  "markerSize": null,
-                  "explosion": null
+                  }
                 }
               ]
             }

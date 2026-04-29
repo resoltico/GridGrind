@@ -631,7 +631,15 @@ final class OperationSequenceValueFactory {
             ? "0.00"
             : null;
     return new DifferentialStyleInput(
-        numberFormat, bold, italic, null, fontColor, underline, strikeout, fillColor, null);
+        numberFormat,
+        bold,
+        italic,
+        null,
+        java.util.Optional.ofNullable(fontColor),
+        underline,
+        strikeout,
+        java.util.Optional.ofNullable(fillColor),
+        java.util.Optional.empty());
   }
 
   static ExcelDifferentialStyle nextExcelDifferentialStyle(GridGrindFuzzData data) {

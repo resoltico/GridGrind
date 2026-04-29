@@ -31,13 +31,13 @@ class SpreadsheetSurfaceEdgeCoverageTest {
   @Test
   void chartInputFamiliesNormalizeExtendedPlotBranches() {
     ChartInput.Axis defaultVisibleAxis =
-        new ChartInput.Axis(
+        ChartInput.Axis.create(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             null);
     ChartInput.Series series =
-        new ChartInput.Series(
+        ChartInput.Series.create(
             null,
             new ChartInput.DataSource.StringLiteral(List.of("Jan", "Feb")),
             new ChartInput.DataSource.NumericLiteral(List.of(10.0d, 18.0d)),
@@ -46,10 +46,10 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             (short) 8,
             12L);
 
-    ChartInput.Area area = new ChartInput.Area(null, null, null, List.of(series));
-    ChartInput.Area3D area3D = new ChartInput.Area3D(null, null, 42, null, List.of(series));
+    ChartInput.Area area = ChartInput.Area.create(null, null, null, List.of(series));
+    ChartInput.Area3D area3D = ChartInput.Area3D.create(null, null, 42, null, List.of(series));
     ChartInput.Bar3D bar3D =
-        new ChartInput.Bar3D(
+        ChartInput.Bar3D.create(
             null,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.PERCENT_STACKED,
@@ -58,13 +58,13 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             ExcelChartBarShape.CONE,
             null,
             List.of(series));
-    ChartInput.Doughnut doughnut = new ChartInput.Doughnut(null, 45, 40, List.of(series));
-    ChartInput.Line3D line3D = new ChartInput.Line3D(null, null, 16, null, List.of(series));
-    ChartInput.Pie3D pie3D = new ChartInput.Pie3D(null, List.of(series));
-    ChartInput.Radar radar = new ChartInput.Radar(null, null, null, List.of(series));
-    ChartInput.Scatter scatter = new ChartInput.Scatter(null, null, null, List.of(series));
-    ChartInput.Surface surface = new ChartInput.Surface(null, null, null, List.of(series));
-    ChartInput.Surface3D surface3D = new ChartInput.Surface3D(null, null, null, List.of(series));
+    ChartInput.Doughnut doughnut = ChartInput.Doughnut.create(null, 45, 40, List.of(series));
+    ChartInput.Line3D line3D = ChartInput.Line3D.create(null, null, 16, null, List.of(series));
+    ChartInput.Pie3D pie3D = ChartInput.Pie3D.create(null, List.of(series));
+    ChartInput.Radar radar = ChartInput.Radar.create(null, null, null, List.of(series));
+    ChartInput.Scatter scatter = ChartInput.Scatter.create(null, null, null, List.of(series));
+    ChartInput.Surface surface = ChartInput.Surface.create(null, null, null, List.of(series));
+    ChartInput.Surface3D surface3D = ChartInput.Surface3D.create(null, null, null, List.of(series));
 
     assertTrue(defaultVisibleAxis.visible());
     assertTrue(series.title() instanceof ChartInput.Title.None);
@@ -101,7 +101,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Series(
+            ChartInput.Series.create(
                 null,
                 new ChartInput.DataSource.Reference("Categories"),
                 new ChartInput.DataSource.Reference("Values"),
@@ -112,7 +112,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Series(
+            ChartInput.Series.create(
                 null,
                 new ChartInput.DataSource.Reference("Categories"),
                 new ChartInput.DataSource.Reference("Values"),
@@ -123,7 +123,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Series(
+            ChartInput.Series.create(
                 null,
                 new ChartInput.DataSource.Reference("Categories"),
                 new ChartInput.DataSource.Reference("Values"),
@@ -139,10 +139,10 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () -> new ChartInput.DataSource.NumericLiteral(List.of(1.0d, null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartInput.Doughnut(false, 0, 9, List.of(series)));
+        () -> ChartInput.Doughnut.create(false, 0, 9, List.of(series)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartInput.Doughnut(false, 0, 91, List.of(series)));
+        () -> ChartInput.Doughnut.create(false, 0, 91, List.of(series)));
   }
 
   @Test
@@ -576,7 +576,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         new SignatureLineInput(
             "ApprovalSignature",
             anchor,
-            null,
+            true,
             java.util.Optional.empty(),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
@@ -598,7 +598,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             java.util.Optional.empty());
     InspectionQuery.ExportCustomXmlMapping export =
         new InspectionQuery.ExportCustomXmlMapping(
-            new CustomXmlMappingLocator(1L, null), null, null);
+            new CustomXmlMappingLocator(1L, null), false, "UTF-8");
 
     assertTrue(captionOnly.allowComments());
     assertEquals("Please sign\nbefore release", captionOnly.caption().orElseThrow());
@@ -613,7 +613,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new SignatureLineInput(
                 "TooManyLines",
                 anchor,
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
@@ -627,7 +627,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new SignatureLineInput(
                 "MissingSigner",
                 anchor,
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
@@ -641,7 +641,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new SignatureLineInput(
                 "BlankCaption",
                 anchor,
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.of("Ada"),
                 java.util.Optional.empty(),
@@ -655,7 +655,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new SignatureLineInput(
                 "BlankInvalidStamp",
                 anchor,
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.of("Ada"),
                 java.util.Optional.empty(),
@@ -704,7 +704,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(1, 2, 0, 0),
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.of("Ada Lovelace"),
                 java.util.Optional.empty(),
@@ -715,7 +715,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Bar(
+            ChartInput.Bar.create(
                 null,
                 null,
                 null,
@@ -723,7 +723,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 101,
                 null,
                 List.of(
-                    new ChartInput.Series(
+                    ChartInput.Series.create(
                         null,
                         new ChartInput.DataSource.StringLiteral(List.of("Jan")),
                         new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
@@ -734,7 +734,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Bar(
+            ChartInput.Bar.create(
                 null,
                 null,
                 null,
@@ -742,7 +742,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 -101,
                 null,
                 List.of(
-                    new ChartInput.Series(
+                    ChartInput.Series.create(
                         null,
                         new ChartInput.DataSource.StringLiteral(List.of("Jan")),
                         new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
@@ -752,7 +752,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                         null))));
     assertEquals(
         ExcelChartBarDirection.COLUMN,
-        new ChartInput.Bar3D(
+        ChartInput.Bar3D.create(
                 null,
                 null,
                 null,
@@ -761,7 +761,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 null,
                 List.of(
-                    new ChartInput.Series(
+                    ChartInput.Series.create(
                         null,
                         new ChartInput.DataSource.StringLiteral(List.of("Jan")),
                         new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
@@ -771,12 +771,12 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                         null)))
             .barDirection());
     assertNull(
-        new ChartInput.Doughnut(
+        ChartInput.Doughnut.create(
                 null,
                 0,
                 null,
                 List.of(
-                    new ChartInput.Series(
+                    ChartInput.Series.create(
                         null,
                         new ChartInput.DataSource.StringLiteral(List.of("Jan")),
                         new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
@@ -788,12 +788,12 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Doughnut(
+            ChartInput.Doughnut.create(
                 null,
                 0,
                 91,
                 List.of(
-                    new ChartInput.Series(
+                    ChartInput.Series.create(
                         null,
                         new ChartInput.DataSource.StringLiteral(List.of("Jan")),
                         new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
@@ -1026,7 +1026,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(1, 2, 0, 0),
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.of("Grace Hopper"),
@@ -1044,7 +1044,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     new DrawingMarkerInput(1, 2, 0, 0),
                     new DrawingMarkerInput(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                null,
+                true,
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),
                 java.util.Optional.empty(),

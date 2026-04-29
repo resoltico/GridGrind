@@ -140,8 +140,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         new ExecutionPolicyInput(
-                            null, new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-                        null,
+                            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+                        FormulaEnvironmentInput.empty(),
                         steps(
                             List.of(
                                 mutate(
@@ -177,8 +177,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         new ExecutionPolicyInput(
-                            null, new ExecutionJournalInput(ExecutionJournalLevel.NORMAL)),
-                        null,
+                            new ExecutionJournalInput(ExecutionJournalLevel.NORMAL)),
+                        FormulaEnvironmentInput.empty(),
                         List.of(
                             new InspectionStep(
                                 "missing-sheet",
@@ -585,8 +585,18 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                     headerFooter("Budget", "", ""),
                                     headerFooter("", "Page &P", ""),
                                     new PrintSetupInput(
-                                        null, true, null, null, null, null, null, null, null, null,
-                                        null, null))))),
+                                        PrintSetupInput.defaults().margins(),
+                                        true,
+                                        false,
+                                        false,
+                                        PrintSetupInput.defaults().paperSize(),
+                                        false,
+                                        false,
+                                        PrintSetupInput.defaults().copies(),
+                                        false,
+                                        PrintSetupInput.defaults().firstPageNumber(),
+                                        List.of(),
+                                        List.of()))))),
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("A1")),
@@ -1209,16 +1219,30 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                                             "B2>5",
                                             true,
                                             new DifferentialStyleInput(
-                                                "0.00", true, null, null, "#102030", null, null,
-                                                "#E0F0AA", null)),
+                                                "0.00",
+                                                true,
+                                                null,
+                                                null,
+                                                java.util.Optional.of("#102030"),
+                                                null,
+                                                null,
+                                                java.util.Optional.of("#E0F0AA"),
+                                                java.util.Optional.empty())),
                                         new ConditionalFormattingRuleInput.CellValueRule(
                                             ExcelComparisonOperator.BETWEEN,
                                             "1",
                                             "10",
                                             false,
                                             new DifferentialStyleInput(
-                                                null, null, true, null, null, null, null, null,
-                                                null))))))),
+                                                null,
+                                                null,
+                                                true,
+                                                null,
+                                                java.util.Optional.empty(),
+                                                null,
+                                                null,
+                                                java.util.Optional.empty(),
+                                                java.util.Optional.empty()))))))),
                     inspect(
                         "conditional-formatting",
                         new RangeSelector.AllOnSheet("Budget"),

@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
@@ -36,14 +38,19 @@ public record ExecutionPolicyInput(
   }
 
   public ExecutionPolicyInput {
-    mode = Objects.requireNonNullElseGet(mode, ExecutionModeInput::defaults);
-    journal = Objects.requireNonNullElseGet(journal, ExecutionJournalInput::defaults);
-    calculation = Objects.requireNonNullElseGet(calculation, CalculationPolicyInput::defaults);
+    Objects.requireNonNull(mode, "mode must not be null");
+    Objects.requireNonNull(journal, "journal must not be null");
+    Objects.requireNonNull(calculation, "calculation must not be null");
   }
 
   /** Creates an execution policy that only sets the read/write execution mode family. */
   public ExecutionPolicyInput(ExecutionModeInput mode) {
     this(mode, ExecutionJournalInput.defaults(), CalculationPolicyInput.defaults());
+  }
+
+  /** Creates an execution policy that only customizes journal rendering. */
+  public ExecutionPolicyInput(ExecutionJournalInput journal) {
+    this(ExecutionModeInput.defaults(), journal, CalculationPolicyInput.defaults());
   }
 
   /**
@@ -52,6 +59,24 @@ public record ExecutionPolicyInput(
    */
   public ExecutionPolicyInput(ExecutionModeInput mode, ExecutionJournalInput journal) {
     this(mode, journal, CalculationPolicyInput.defaults());
+  }
+
+  /**
+   * Creates an execution policy that sets mode and calculation while leaving journaling defaulted.
+   */
+  public ExecutionPolicyInput(ExecutionModeInput mode, CalculationPolicyInput calculation) {
+    this(mode, ExecutionJournalInput.defaults(), calculation);
+  }
+
+  @JsonCreator
+  static ExecutionPolicyInput create(
+      @JsonProperty("mode") ExecutionModeInput mode,
+      @JsonProperty("journal") ExecutionJournalInput journal,
+      @JsonProperty("calculation") CalculationPolicyInput calculation) {
+    return new ExecutionPolicyInput(
+        mode == null ? ExecutionModeInput.defaults() : mode,
+        journal == null ? ExecutionJournalInput.defaults() : journal,
+        calculation == null ? CalculationPolicyInput.defaults() : calculation);
   }
 
   /**

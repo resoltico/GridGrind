@@ -51,6 +51,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
@@ -1279,16 +1280,30 @@ public final class XlsxParityScenarios {
                                     "D3>20",
                                     false,
                                     new DifferentialStyleInput(
-                                        null, true, null, null, "#006100", null, null, "#C6EFCE",
-                                        null)),
+                                        null,
+                                        true,
+                                        null,
+                                        null,
+                                        Optional.of("#006100"),
+                                        null,
+                                        null,
+                                        Optional.of("#C6EFCE"),
+                                        Optional.empty())),
                                 new ConditionalFormattingRuleInput.CellValueRule(
                                     ExcelComparisonOperator.LESS_THAN,
                                     "20",
                                     null,
                                     false,
                                     new DifferentialStyleInput(
-                                        null, null, null, null, "#9C0006", null, null, "#FFC7CE",
-                                        null)))))),
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        Optional.of("#9C0006"),
+                                        null,
+                                        null,
+                                        Optional.of("#FFC7CE"),
+                                        Optional.empty())))))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A2:D4"), new MutationAction.SetAutofilter()),
                 mutate(
@@ -1369,6 +1384,38 @@ public final class XlsxParityScenarios {
   }
 
   private static WorkbookPlan chartAuthoringRequest(Path workbookPath) {
+    ChartInput opsChart =
+        new ChartInput(
+            "OpsChart",
+            twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            chartTitle("Roadmap"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            List.of(
+                new ChartInput.Bar(
+                    true,
+                    ExcelChartBarDirection.COLUMN,
+                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    null,
+                    null,
+                    List.of(
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("B1"),
+                            new ChartInput.DataSource.Reference("A2:A4"),
+                            new ChartInput.DataSource.Reference("B2:B4"),
+                            null,
+                            null,
+                            null,
+                            null),
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("C1"),
+                            new ChartInput.DataSource.Reference("ChartCategories"),
+                            new ChartInput.DataSource.Reference("ChartActual"),
+                            null,
+                            null,
+                            null,
+                            null)))));
     return ParityPlanSupport.request(
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
@@ -1418,42 +1465,7 @@ public final class XlsxParityScenarios {
                     "ChartActual",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Chart", "C2:C4"))),
-            mutate(
-                new SheetSelector.ByName("Chart"),
-                new MutationAction.SetChart(
-                    new ChartInput(
-                        "OpsChart",
-                        twoCellAnchorInput(
-                            4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                        chartTitle("Roadmap"),
-                        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-                        ExcelChartDisplayBlanksAs.SPAN,
-                        false,
-                        List.of(
-                            new ChartInput.Bar(
-                                true,
-                                ExcelChartBarDirection.COLUMN,
-                                null,
-                                null,
-                                null,
-                                null,
-                                List.of(
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Formula("B1"),
-                                        new ChartInput.DataSource.Reference("A2:A4"),
-                                        new ChartInput.DataSource.Reference("B2:B4"),
-                                        null,
-                                        null,
-                                        null,
-                                        null),
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Formula("C1"),
-                                        new ChartInput.DataSource.Reference("ChartCategories"),
-                                        new ChartInput.DataSource.Reference("ChartActual"),
-                                        null,
-                                        null,
-                                        null,
-                                        null)))))))),
+            mutate(new SheetSelector.ByName("Chart"), new MutationAction.SetChart(opsChart))),
         List.of());
   }
 

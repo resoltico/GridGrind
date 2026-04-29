@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -24,7 +24,7 @@ GridGrind's machine-level setup rule is simple:
 - let the wrapper download the official Gradle distribution pinned by the repository
 - keep the repository checkout on the local Mac filesystem as part of the normal supported setup
 
-The wrapper version is currently `9.5.0-rc-4`, as declared in
+The wrapper version is currently `9.5.0`, as declared in
 [gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
 
 This file therefore documents build architecture and ownership boundaries, not how to install a
@@ -129,6 +129,15 @@ iteration fast and ensures fuzzing runs against the exact working tree under rev
 The root version catalog in `gradle/libs.versions.toml` is the shared dependency authority. The
 nested Jazzer build imports that catalog instead of repeating overlapping coordinates locally. That
 avoids silent version skew between the main product modules and Jazzer support code.
+
+JaCoCo note:
+- GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
+  official JaCoCo trunk build `0.8.15.202604281210`, because that line is where official Java 26
+  support landed before the next JaCoCo release
+- the shared build conventions therefore add JaCoCo's documented snapshot repository narrowly for
+  `org.jacoco` artifacts instead of widening the whole build to general snapshot resolution
+- do not "simplify" that repo wiring away unless JaCoCo Java 26 support is available in a normal
+  release and the version catalog is bumped in the same change
 
 Jackson note:
 - `tools.jackson.core:jackson-databind` 3.x intentionally still depends on

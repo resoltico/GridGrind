@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,8 +19,7 @@ public record FormulaUdfFunctionInput(
   public FormulaUdfFunctionInput {
     name = requireFunctionName(name);
     minimumArgumentCount = requireMinimumArgumentCount(minimumArgumentCount);
-    maximumArgumentCount =
-        maximumArgumentCount == null ? minimumArgumentCount : maximumArgumentCount;
+    Objects.requireNonNull(maximumArgumentCount, "maximumArgumentCount must not be null");
     requireMaximumArgumentCount(minimumArgumentCount, maximumArgumentCount);
     formulaTemplate = normalizeFormulaTemplate(formulaTemplate);
     int highestPlaceholderIndex = highestPlaceholderIndex(formulaTemplate);
@@ -29,6 +30,11 @@ public record FormulaUdfFunctionInput(
               + " but maximumArgumentCount is "
               + maximumArgumentCount);
     }
+  }
+
+  /** Creates a function whose minimum and maximum arity are the same exact count. */
+  public FormulaUdfFunctionInput(String name, int exactArgumentCount, String formulaTemplate) {
+    this(name, exactArgumentCount, exactArgumentCount, formulaTemplate);
   }
 
   private static String requireFunctionName(String name) {
@@ -76,5 +82,19 @@ public record FormulaUdfFunctionInput(
       highest = Math.max(highest, Integer.parseInt(matcher.group(1)));
     }
     return highest;
+  }
+
+  @JsonCreator
+  static FormulaUdfFunctionInput create(
+      @JsonProperty("name") String name,
+      @JsonProperty("minimumArgumentCount") Integer minimumArgumentCount,
+      @JsonProperty("maximumArgumentCount") Integer maximumArgumentCount,
+      @JsonProperty("formulaTemplate") String formulaTemplate) {
+    Integer normalizedMinimum = requireMinimumArgumentCount(minimumArgumentCount);
+    return new FormulaUdfFunctionInput(
+        name,
+        normalizedMinimum,
+        maximumArgumentCount == null ? normalizedMinimum : maximumArgumentCount,
+        formulaTemplate);
   }
 }

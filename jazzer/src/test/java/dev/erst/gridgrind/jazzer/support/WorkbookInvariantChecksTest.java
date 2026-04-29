@@ -239,8 +239,8 @@ class WorkbookInvariantChecksTest {
                                     ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
                                 true,
                                 false,
-                                null,
-                                null)))),
+                                Optional.empty(),
+                                Optional.empty())))),
                 new InspectionResult.FormulaSurfaceResult(
                     "formula-surface",
                     new GridGrindResponse.FormulaSurfaceReport(
@@ -1114,7 +1114,8 @@ class WorkbookInvariantChecksTest {
         existingRequest(
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 workbookPath.toString(),
-                new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput("GridGrind-2026")),
+                new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput(
+                    java.util.Optional.of("GridGrind-2026"))),
             inspect(
                 "security",
                 new WorkbookSelector.Current(),

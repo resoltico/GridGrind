@@ -85,7 +85,7 @@ final class ParityPlanSupport {
 
   static ExecutionPolicyInput executionPolicy(
       dev.erst.gridgrind.contract.dto.ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(mode, null, calculation);
+    return new ExecutionPolicyInput(mode, calculation);
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {

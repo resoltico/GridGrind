@@ -557,7 +557,7 @@ class ExecutorPhase3CoverageTest {
         "open-secret",
         ExecutionRequestPaths.sourceEncryptionPassword(
             new WorkbookPlan.WorkbookSource.ExistingFile(
-                "/tmp/in.xlsx", new OoxmlOpenSecurityInput("open-secret"))));
+                "/tmp/in.xlsx", new OoxmlOpenSecurityInput(java.util.Optional.of("open-secret")))));
   }
 
   private static void assertStreamingPersistenceBehaviors() throws IOException {
@@ -742,8 +742,7 @@ class ExecutorPhase3CoverageTest {
   }
 
   private static void assertSelectorSheetAndAddressDiagnostics() {
-    Selector customSelector =
-        () -> dev.erst.gridgrind.contract.selector.SelectorCardinality.ZERO_OR_ONE;
+    Selector selectorWithoutSheetOrAddress = new WorkbookSelector.Current();
 
     assertEquals(
         java.util.Optional.of("Budget"),
@@ -830,11 +829,14 @@ class ExecutorPhase3CoverageTest {
         ExecutionDiagnosticFields.sheetNameFor(
             new SheetSelector.ByNames(List.of("Budget", "Forecast"))));
     assertEquals(
-        java.util.Optional.empty(), ExecutionDiagnosticFields.sheetNameFor(customSelector));
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.sheetNameFor(selectorWithoutSheetOrAddress));
     assertEquals(
         java.util.Optional.empty(),
         ExecutionDiagnosticFields.addressFor(new SheetSelector.ByName("Budget")));
-    assertEquals(java.util.Optional.empty(), ExecutionDiagnosticFields.addressFor(customSelector));
+    assertEquals(
+        java.util.Optional.empty(),
+        ExecutionDiagnosticFields.addressFor(selectorWithoutSheetOrAddress));
 
     assertEquals(
         java.util.Optional.of("A1"),
@@ -1044,7 +1046,15 @@ class ExecutorPhase3CoverageTest {
                     "B2>0",
                     true,
                     new DifferentialStyleInput(
-                        null, true, null, null, null, null, null, null, null)))));
+                        null,
+                        true,
+                        null,
+                        null,
+                        java.util.Optional.empty(),
+                        null,
+                        null,
+                        java.util.Optional.empty(),
+                        java.util.Optional.empty())))));
   }
 
   private static Path createWorkbookFile(String prefix) throws IOException {

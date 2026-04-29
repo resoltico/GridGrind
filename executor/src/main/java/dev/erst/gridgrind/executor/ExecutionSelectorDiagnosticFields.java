@@ -21,58 +21,25 @@ final class ExecutionSelectorDiagnosticFields {
   private ExecutionSelectorDiagnosticFields() {}
 
   static Optional<String> sheetNameFor(Selector selector) {
-    if (selector instanceof WorkbookSelector) {
-      return Optional.empty();
-    }
-    if (selector instanceof SheetSelector sheetSelector) {
-      return sheetNameFor(sheetSelector);
-    }
-    if (selector instanceof CellSelector cellSelector) {
-      return singleSheetName(cellSelector);
-    }
-    if (selector instanceof RangeSelector rangeSelector) {
-      return singleSheetName(rangeSelector);
-    }
-    if (selector instanceof RowBandSelector.Span span) {
-      return Optional.of(span.sheetName());
-    }
-    if (selector instanceof RowBandSelector.Insertion insertion) {
-      return Optional.of(insertion.sheetName());
-    }
-    if (selector instanceof ColumnBandSelector.Span span) {
-      return Optional.of(span.sheetName());
-    }
-    if (selector instanceof ColumnBandSelector.Insertion insertion) {
-      return Optional.of(insertion.sheetName());
-    }
-    if (selector instanceof DrawingObjectSelector.AllOnSheet allOnSheet) {
-      return Optional.of(allOnSheet.sheetName());
-    }
-    if (selector instanceof DrawingObjectSelector.ByName byName) {
-      return Optional.of(byName.sheetName());
-    }
-    if (selector instanceof ChartSelector.AllOnSheet allOnSheet) {
-      return Optional.of(allOnSheet.sheetName());
-    }
-    if (selector instanceof ChartSelector.ByName byName) {
-      return Optional.of(byName.sheetName());
-    }
-    if (selector instanceof TableSelector tableSelector) {
-      return sheetNameFor(tableSelector);
-    }
-    if (selector instanceof PivotTableSelector pivotTableSelector) {
-      return sheetNameFor(pivotTableSelector);
-    }
-    if (selector instanceof NamedRangeSelector namedRangeSelector) {
-      return singleSheetName(namedRangeSelector);
-    }
-    if (selector instanceof TableRowSelector tableRowSelector) {
-      return sheetNameFor(tableRowSelector);
-    }
-    if (selector instanceof TableCellSelector.ByColumnName byColumnName) {
-      return sheetNameFor(byColumnName.row());
-    }
-    return Optional.empty();
+    return switch (selector) {
+      case WorkbookSelector _ -> Optional.empty();
+      case SheetSelector sheetSelector -> sheetNameFor(sheetSelector);
+      case CellSelector cellSelector -> singleSheetName(cellSelector);
+      case RangeSelector rangeSelector -> singleSheetName(rangeSelector);
+      case RowBandSelector.Span span -> Optional.of(span.sheetName());
+      case RowBandSelector.Insertion insertion -> Optional.of(insertion.sheetName());
+      case ColumnBandSelector.Span span -> Optional.of(span.sheetName());
+      case ColumnBandSelector.Insertion insertion -> Optional.of(insertion.sheetName());
+      case DrawingObjectSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
+      case DrawingObjectSelector.ByName byName -> Optional.of(byName.sheetName());
+      case ChartSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
+      case ChartSelector.ByName byName -> Optional.of(byName.sheetName());
+      case TableSelector tableSelector -> sheetNameFor(tableSelector);
+      case PivotTableSelector pivotTableSelector -> sheetNameFor(pivotTableSelector);
+      case NamedRangeSelector namedRangeSelector -> singleSheetName(namedRangeSelector);
+      case TableRowSelector tableRowSelector -> sheetNameFor(tableRowSelector);
+      case TableCellSelector.ByColumnName byColumnName -> sheetNameFor(byColumnName.row());
+    };
   }
 
   static Optional<String> addressFor(Selector selector) {

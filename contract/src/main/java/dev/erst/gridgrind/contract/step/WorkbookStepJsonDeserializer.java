@@ -68,8 +68,8 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
             + (assertionNode == null ? 0 : 1)
             + (queryNode == null ? 0 : 1);
     if (stepPayloadCount != 1) {
-      throw inputMismatch(
-          parser, "Each step must contain exactly one of 'action', 'assertion', or 'query'");
+      throw stepFailure(
+          context, "Each step must contain exactly one of 'action', 'assertion', or 'query'");
     }
     if (actionNode != null) {
       MutationAction action =
@@ -153,7 +153,7 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       String fieldName) {
     try {
       return deserializeNode(node, parser, targetType);
-    } catch (JacksonException exception) {
+    } catch (JacksonException | IllegalArgumentException exception) {
       throw DatabindException.wrapWithPath(
           context, exception, new Reference(WorkbookStep.class, fieldName));
     }
@@ -244,6 +244,10 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       DeserializationContext context, String fieldName, JacksonException failure) {
     return DatabindException.wrapWithPath(
         context, failure, new Reference(WorkbookStep.class, fieldName));
+  }
+
+  private static JacksonException stepFailure(DeserializationContext context, String message) {
+    return DatabindException.from(context, message);
   }
 
   static String selectorFamilySummary(Iterable<Class<? extends Selector>> selectorTypes) {

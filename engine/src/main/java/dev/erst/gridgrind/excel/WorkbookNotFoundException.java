@@ -3,7 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.nio.file.Path;
 
 /** Signals that a workbook file path does not exist on disk. */
-public final class WorkbookNotFoundException extends IllegalArgumentException {
+public final class WorkbookNotFoundException extends java.util.NoSuchElementException {
   private static final long serialVersionUID = 1L;
 
   private final Path workbookPath;

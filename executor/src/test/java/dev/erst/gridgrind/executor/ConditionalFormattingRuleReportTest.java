@@ -14,6 +14,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for conditional-formatting protocol report shapes and conversions. */
@@ -147,25 +148,43 @@ class ConditionalFormattingRuleReportTest {
 
     assertTrue(InspectionResultValidationReportSupport.toDifferentialStyleReport(null).isEmpty());
     assertTrue(InspectionResultValidationReportSupport.toDifferentialBorderReport(null).isEmpty());
-    assertEquals("#111111", report.fontColor());
-    assertEquals("#EEEEEE", report.fillColor());
+    assertEquals(Optional.of("#111111"), report.fontColor());
+    assertEquals(Optional.of("#EEEEEE"), report.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT),
         report.unsupportedFeatures());
-    assertEquals(ExcelBorderStyle.DASHED, borderReport.top().style());
-    assertNull(sparseBorderReport.top());
-    assertEquals("#AABBCC", borderSideReport.color());
+    assertEquals(ExcelBorderStyle.DASHED, borderReport.top().orElseThrow().style());
+    assertTrue(sparseBorderReport.top().isEmpty());
+    assertEquals(Optional.of("#AABBCC"), borderSideReport.color());
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                " ", null, null, null, null, null, null, null, null, List.of()));
+                " ",
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty(),
+                List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new DifferentialStyleReport(
-                null, null, null, null, null, null, null, null, null, List.of()));
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty(),
+                List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -174,15 +193,21 @@ class ConditionalFormattingRuleReportTest {
                 null,
                 null,
                 null,
+                Optional.empty(),
                 null,
                 null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 List.of((ExcelConditionalFormattingUnsupportedFeature) null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DifferentialBorderReport(null, null, null, null, null));
+        () ->
+            new DifferentialBorderReport(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertTrue(
         InspectionResultValidationReportSupport.toDifferentialBorderSideReport(null).isEmpty());
   }

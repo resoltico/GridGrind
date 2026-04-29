@@ -16,6 +16,7 @@
   "containerEnv": {
     "GRIDGRIND_DEVCONTAINER": "1"
   },
+  "postStartCommand": "./scripts/devcontainer-prepare-user-home.sh",
   "remoteUser": "vscode",
   "updateRemoteUserUID": true,
   "customizations": {

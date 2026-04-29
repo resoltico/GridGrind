@@ -372,6 +372,30 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     XlsxParityScenarios.MaterializedScenario chart =
         context.copiedScenario(XlsxParityScenarios.CHART, "chart-mutation-source");
     Path outputPath = context.derivedWorkbook("chart-mutated");
+    ChartInput actualFocusChart =
+        new ChartInput(
+            "OpsChart",
+            twoCellAnchorInput(4, 1, 11, 17, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            chartTitle("Actual focus"),
+            new ChartInput.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            true,
+            List.of(
+                new ChartInput.Bar(
+                    false,
+                    ExcelChartBarDirection.BAR,
+                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    null,
+                    null,
+                    List.of(
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("C1"),
+                            new ChartInput.DataSource.Reference("A2:A4"),
+                            new ChartInput.DataSource.Reference("C2:C4"),
+                            null,
+                            null,
+                            null,
+                            null)))));
     GridGrindResponse.Success success =
         XlsxParityGridGrind.mutateWorkbook(
             chart.workbookPath(),
@@ -382,32 +406,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                     new MutationAction.SetCell(text("Touch"))),
                 mutate(
                     new SheetSelector.ByName("Chart"),
-                    new MutationAction.SetChart(
-                        new ChartInput(
-                            "OpsChart",
-                            twoCellAnchorInput(
-                                4, 1, 11, 17, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                            chartTitle("Actual focus"),
-                            new ChartInput.Legend.Hidden(),
-                            ExcelChartDisplayBlanksAs.ZERO,
-                            true,
-                            List.of(
-                                new ChartInput.Bar(
-                                    false,
-                                    ExcelChartBarDirection.BAR,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    List.of(
-                                        new ChartInput.Series(
-                                            new ChartInput.Title.Formula("C1"),
-                                            new ChartInput.DataSource.Reference("A2:A4"),
-                                            new ChartInput.DataSource.Reference("C2:C4"),
-                                            null,
-                                            null,
-                                            null,
-                                            null)))))))),
+                    new MutationAction.SetChart(actualFocusChart))),
             inspect(
                 "charts", new ChartSelector.AllOnSheet("Chart"), new InspectionQuery.GetCharts()),
             inspect(
@@ -502,38 +501,36 @@ final class XlsxParityDrawingChartPivotProbeGroup {
     InspectionResult.DrawingObjectsResult drawing =
         XlsxParityGridGrind.read(success, "drawing", InspectionResult.DrawingObjectsResult.class);
     Path replacementPath = context.derivedWorkbook("chart-combo-replaced");
+    ChartInput replacementChart =
+        new ChartInput(
+            "ComboChart",
+            twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            chartTitle("Roadmap"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            List.of(
+                new ChartInput.Bar(
+                    true,
+                    ExcelChartBarDirection.COLUMN,
+                    dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
+                    null,
+                    null,
+                    List.of(
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("B1"),
+                            new ChartInput.DataSource.Reference("A2:A4"),
+                            new ChartInput.DataSource.Reference("B2:B4"),
+                            null,
+                            null,
+                            null,
+                            null)))));
     XlsxParityGridGrind.mutateWorkbook(
         chart.workbookPath(),
         replacementPath,
         List.of(
             mutate(
-                new SheetSelector.ByName("Chart"),
-                new MutationAction.SetChart(
-                    new ChartInput(
-                        "ComboChart",
-                        twoCellAnchorInput(
-                            4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                        chartTitle("Roadmap"),
-                        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-                        ExcelChartDisplayBlanksAs.SPAN,
-                        false,
-                        List.of(
-                            new ChartInput.Bar(
-                                true,
-                                ExcelChartBarDirection.COLUMN,
-                                null,
-                                null,
-                                null,
-                                null,
-                                List.of(
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Formula("B1"),
-                                        new ChartInput.DataSource.Reference("A2:A4"),
-                                        new ChartInput.DataSource.Reference("B2:B4"),
-                                        null,
-                                        null,
-                                        null,
-                                        null)))))))));
+                new SheetSelector.ByName("Chart"), new MutationAction.SetChart(replacementChart))));
     if (directCharts.size() != 1
         || directCharts.getFirst().plots().size() != 2
         || directDrawing.objects().size() != 1

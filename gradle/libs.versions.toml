@@ -15,7 +15,9 @@ slf4j = "2.0.17"
 errorprone = "2.49.0"
 errorprone-plugin = "5.1.0"
 google-java-format = "1.35.0"
-jacoco = "0.8.14"
+# Official JaCoCo trunk build 0.8.15.202604281210 currently publishes to Maven snapshots as the
+# exact artifact version below; keep the repository wiring aligned with this pin.
+jacoco = "0.8.15-20260428.121054-96"
 pmd = "7.24.0"
 shadow = "9.4.0"
 spotless = "8.4.0"

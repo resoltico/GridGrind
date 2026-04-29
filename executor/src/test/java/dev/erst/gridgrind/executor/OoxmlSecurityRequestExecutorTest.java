@@ -31,7 +31,8 @@ class OoxmlSecurityRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(
                             encryptedWorkbook.workbookPath().toString(),
-                            new OoxmlOpenSecurityInput(encryptedWorkbook.password())),
+                            new OoxmlOpenSecurityInput(
+                                java.util.Optional.of(encryptedWorkbook.password()))),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         List.of(),
                         List.of(
@@ -85,7 +86,7 @@ class OoxmlSecurityRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(
                             encryptedWorkbook.workbookPath().toString(),
-                            new OoxmlOpenSecurityInput("wrong-password")),
+                            new OoxmlOpenSecurityInput(java.util.Optional.of("wrong-password"))),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         List.of(),
                         List.of(
@@ -170,9 +171,10 @@ class OoxmlSecurityRequestExecutorTest {
                                     signingMaterial.pkcs12Path().toString(),
                                     signingMaterial.keystorePassword(),
                                     signingMaterial.keyPassword(),
-                                    signingMaterial.alias(),
-                                    null,
-                                    "GridGrind protocol signing test"))),
+                                    java.util.Optional.of(signingMaterial.alias()),
+                                    dev.erst.gridgrind.excel.foundation
+                                        .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                                    java.util.Optional.of("GridGrind protocol signing test")))),
                         mutations(
                             mutate(
                                 new SheetSelector.ByName("Secure"),
@@ -192,7 +194,8 @@ class OoxmlSecurityRequestExecutorTest {
                         new WorkbookPlan.WorkbookSource.ExistingFile(
                             securedWorkbook.toString(),
                             new OoxmlOpenSecurityInput(
-                                OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD)),
+                                java.util.Optional.of(
+                                    OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD))),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         List.of(),
                         List.of(
@@ -242,9 +245,10 @@ class OoxmlSecurityRequestExecutorTest {
                                     outputPath.resolveSibling("missing.p12").toString(),
                                     "keystore-pass",
                                     "key-pass",
-                                    null,
-                                    null,
-                                    null))),
+                                    java.util.Optional.empty(),
+                                    dev.erst.gridgrind.excel.foundation
+                                        .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                                    java.util.Optional.empty()))),
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Secure"),

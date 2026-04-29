@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/chart_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 6633
+Input Bytes: 6220
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
@@ -12,4 +12,4 @@ Read Count: 1
 Assertion Kinds: EXPECT_CHART_PRESENT=1
 Read Kinds: GET_CHARTS=1
 Style Kinds: (none)
-Operation Kinds: SET_NAMED_RANGE=2, ENSURE_SHEET=1, SET_RANGE=1, SET_CHART=1
+Operation Kinds: SET_NAMED_RANGE=2, SET_CHART=1, SET_RANGE=1, ENSURE_SHEET=1

@@ -330,17 +330,19 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     if (style.fontHeight() != null) {
       WorkbookInvariantCellSurfaceChecks.requireFontHeightShape(style.fontHeight());
     }
-    if (style.fontColor() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          style.fontColor(), "conditional formatting fontColor");
-    }
-    if (style.fillColor() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          style.fillColor(), "conditional formatting fillColor");
-    }
-    if (style.border() != null) {
-      requireDifferentialBorderShape(style.border());
-    }
+    style
+        .fontColor()
+        .ifPresent(
+            color ->
+                WorkbookInvariantChecks.requireNonBlank(color, "conditional formatting fontColor"));
+    style
+        .fillColor()
+        .ifPresent(
+            color ->
+                WorkbookInvariantChecks.requireNonBlank(color, "conditional formatting fillColor"));
+    style
+        .border()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderShape);
     WorkbookInvariantChecks.require(
         style.unsupportedFeatures() != null,
         "conditional formatting unsupportedFeatures must not be null");
@@ -356,21 +358,21 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
   static void requireDifferentialBorderShape(DifferentialBorderReport border) {
     WorkbookInvariantChecks.require(
         border != null, "conditional formatting border must not be null");
-    if (border.all() != null) {
-      requireDifferentialBorderSideShape(border.all());
-    }
-    if (border.top() != null) {
-      requireDifferentialBorderSideShape(border.top());
-    }
-    if (border.right() != null) {
-      requireDifferentialBorderSideShape(border.right());
-    }
-    if (border.bottom() != null) {
-      requireDifferentialBorderSideShape(border.bottom());
-    }
-    if (border.left() != null) {
-      requireDifferentialBorderSideShape(border.left());
-    }
+    border
+        .all()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderSideShape);
+    border
+        .top()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderSideShape);
+    border
+        .right()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderSideShape);
+    border
+        .bottom()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderSideShape);
+    border
+        .left()
+        .ifPresent(WorkbookInvariantAnalysisSurfaceChecks::requireDifferentialBorderSideShape);
   }
 
   static void requireDifferentialBorderSideShape(DifferentialBorderSideReport side) {
@@ -378,9 +380,11 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
         side != null, "conditional formatting border side must not be null");
     WorkbookInvariantChecks.require(
         side.style() != null, "conditional formatting border style must not be null");
-    if (side.color() != null) {
-      WorkbookInvariantChecks.requireNonBlank(side.color(), "conditional formatting border color");
-    }
+    side.color()
+        .ifPresent(
+            color ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    color, "conditional formatting border color"));
   }
 
   static void requireTableStyleShape(TableStyleReport style) {
@@ -423,20 +427,25 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
           WorkbookInvariantChecks.requireNonBlank(
               customFormula.formula(), "custom validation formula");
     }
-    if (validation.prompt() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          validation.prompt().title(), "data validation prompt title");
-      WorkbookInvariantChecks.requireNonBlank(
-          validation.prompt().text(), "data validation prompt text");
-    }
-    if (validation.errorAlert() != null) {
-      WorkbookInvariantChecks.require(
-          validation.errorAlert().style() != null, "data validation error style must not be null");
-      WorkbookInvariantChecks.requireNonBlank(
-          validation.errorAlert().title(), "data validation error title");
-      WorkbookInvariantChecks.requireNonBlank(
-          validation.errorAlert().text(), "data validation error text");
-    }
+    validation
+        .prompt()
+        .ifPresent(
+            prompt -> {
+              WorkbookInvariantChecks.requireNonBlank(
+                  prompt.title(), "data validation prompt title");
+              WorkbookInvariantChecks.requireNonBlank(prompt.text(), "data validation prompt text");
+            });
+    validation
+        .errorAlert()
+        .ifPresent(
+            errorAlert -> {
+              WorkbookInvariantChecks.require(
+                  errorAlert.style() != null, "data validation error style must not be null");
+              WorkbookInvariantChecks.requireNonBlank(
+                  errorAlert.title(), "data validation error title");
+              WorkbookInvariantChecks.requireNonBlank(
+                  errorAlert.text(), "data validation error text");
+            });
   }
 
   static void requireComparisonRuleShape(Object operator, String formula1) {

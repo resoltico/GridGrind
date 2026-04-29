@@ -87,11 +87,9 @@ class GridGrindPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionPolicyInput(
-                null,
                 new dev.erst.gridgrind.contract.dto.ExecutionJournalInput(
-                    ExecutionJournalLevel.NORMAL),
-                null),
-            new FormulaEnvironmentInput(List.of(), null, List.of()),
+                    ExecutionJournalLevel.NORMAL)),
+            FormulaEnvironmentInput.empty(),
             List.of());
 
     WorkbookPlan roundTrip = GridGrindPlan.from(canonical).toPlan();
@@ -112,7 +110,7 @@ class GridGrindPlanTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             new ExecutionPolicyInput(
                 mode, new ExecutionJournalInput(ExecutionJournalLevel.NORMAL), calculation),
-            null,
+            FormulaEnvironmentInput.empty(),
             List.of());
 
     WorkbookPlan journaled =
@@ -130,8 +128,6 @@ class GridGrindPlanTest {
             "imported",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
-            null,
             List.of(
                 new MutationStep(
                     "mutation-001",

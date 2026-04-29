@@ -47,6 +47,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
             val sourceSets = extensions.getByType<SourceSetContainer>()
             val mainSourceSet = sourceSets.getByName("main")
+            val testSourceSet = sourceSets.getByName("test")
             val fuzzSourceSet = sourceSets.create("fuzz") { fuzzSourceSet ->
                 fuzzSourceSet.java.setSrcDirs(listOf("src/fuzz/java"))
                 fuzzSourceSet.resources.setSrcDirs(listOf("src/fuzz/resources"))
@@ -214,6 +215,10 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                     }.files.size
                 description = "Runs deterministic Jazzer support tests."
                 group = "verification"
+                testClassesDirs = testSourceSet.output.classesDirs
+                classpath = testSourceSet.runtimeClasspath
+                isScanForTestClasses = false
+                include("**/*Test.class")
                 useJUnitPlatform()
                 maxParallelForks = 1
                 enableNativeAccess()

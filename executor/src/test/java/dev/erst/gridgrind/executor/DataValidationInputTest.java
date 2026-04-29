@@ -23,8 +23,8 @@ class DataValidationInputTest {
         new DataValidationInput(
             new DataValidationRuleInput.DateRule(
                 ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", null),
-            null,
-            null,
+            false,
+            false,
             prompt("Ship date", "Use today or later.", null),
             errorAlert(
                 ExcelDataValidationErrorStyle.WARNING,

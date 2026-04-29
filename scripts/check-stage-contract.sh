@@ -25,6 +25,8 @@ readonly check_stage4_script_paths=(
     scripts/test-explicit-import-gate.sh
     scripts/test-jazzer-public-surface.sh
     scripts/test-jazzer-run-lock.sh
+    scripts/test-jazzer-portable-stat.sh
+    scripts/test-jazzer-wrapper-arg-order.sh
     scripts/test-repo-verification-lock.sh
     scripts/test-selector-contract-surface.sh
     scripts/test-verify-release-merge-handoff.sh

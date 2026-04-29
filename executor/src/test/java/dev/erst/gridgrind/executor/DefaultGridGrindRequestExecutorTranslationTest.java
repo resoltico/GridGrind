@@ -520,7 +520,15 @@ class DefaultGridGrindRequestExecutorTranslationTest
                                 "A1>0",
                                 false,
                                 new DifferentialStyleInput(
-                                    null, true, null, null, null, null, null, null, null))))))));
+                                    null,
+                                    true,
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    java.util.Optional.empty()))))))));
     assertInstanceOf(
         WorkbookCommand.ClearConditionalFormatting.class,
         command(
@@ -579,16 +587,14 @@ class DefaultGridGrindRequestExecutorTranslationTest
             command(
                 mutate(
                     new SheetSelector.ByName("Budget"),
-                    new MutationAction.SetPrintLayout(
-                        new PrintLayoutInput(null, null, null, null, null, null, null)))));
+                    new MutationAction.SetPrintLayout(PrintLayoutInput.defaults()))));
     WorkbookCommand.SetSheetPresentation defaultSheetPresentation =
         cast(
             WorkbookCommand.SetSheetPresentation.class,
             command(
                 mutate(
                     new SheetSelector.ByName("Budget"),
-                    new MutationAction.SetSheetPresentation(
-                        new SheetPresentationInput(null, null, null, null, null)))));
+                    new MutationAction.SetSheetPresentation(SheetPresentationInput.defaults()))));
 
     assertEquals(new ExcelSheetPane.None(), setSheetPaneNone.pane());
     assertEquals(
@@ -1948,7 +1954,15 @@ class DefaultGridGrindRequestExecutorTranslationTest
                             "B2>0",
                             true,
                             new DifferentialStyleInput(
-                                null, true, null, null, null, null, null, null, null)))))),
+                                null,
+                                true,
+                                null,
+                                null,
+                                java.util.Optional.empty(),
+                                null,
+                                null,
+                                java.util.Optional.empty(),
+                                java.util.Optional.empty())))))),
         exception,
         "Budget",
         null,
@@ -2086,7 +2100,15 @@ class DefaultGridGrindRequestExecutorTranslationTest
                                 "B2>0",
                                 true,
                                 new DifferentialStyleInput(
-                                    null, true, null, null, null, null, null, null, null)))))),
+                                    null,
+                                    true,
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    java.util.Optional.empty())))))),
             invalidFormula));
     assertNull(
         rangeFor(
@@ -2100,7 +2122,15 @@ class DefaultGridGrindRequestExecutorTranslationTest
                                 "B2>0",
                                 true,
                                 new DifferentialStyleInput(
-                                    null, true, null, null, null, null, null, null, null)))))),
+                                    null,
+                                    true,
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    java.util.Optional.empty())))))),
             invalidFormula));
     assertNull(
         rangeFor(
@@ -2228,7 +2258,15 @@ class DefaultGridGrindRequestExecutorTranslationTest
                                 "B2>0",
                                 true,
                                 new DifferentialStyleInput(
-                                    null, true, null, null, null, null, null, null, null)))))),
+                                    null,
+                                    true,
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    null,
+                                    null,
+                                    java.util.Optional.empty(),
+                                    java.util.Optional.empty())))))),
             mutate(
                 new RangeSelector.AllOnSheet("Budget"),
                 new MutationAction.ClearConditionalFormatting()),

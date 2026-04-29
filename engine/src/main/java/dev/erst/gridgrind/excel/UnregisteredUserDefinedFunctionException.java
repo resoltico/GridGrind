@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 /** Signals that formula evaluation required a user-defined function that was not registered. */
-public final class UnregisteredUserDefinedFunctionException extends IllegalArgumentException
+public final class UnregisteredUserDefinedFunctionException extends java.util.NoSuchElementException
     implements FormulaException {
   private static final long serialVersionUID = 1L;
 

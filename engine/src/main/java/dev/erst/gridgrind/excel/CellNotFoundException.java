@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 /** Signals that a requested cell address does not currently exist in the sheet. */
-public final class CellNotFoundException extends IllegalArgumentException {
+public final class CellNotFoundException extends java.util.NoSuchElementException {
   private static final long serialVersionUID = 1L;
 
   private final String address;

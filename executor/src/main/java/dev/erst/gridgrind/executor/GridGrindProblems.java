@@ -204,13 +204,16 @@ public final class GridGrindProblems {
       case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
           dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation jsonLocation =
-              pe.jsonLine() == null || pe.jsonColumn() == null
-                  ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()
-                  : pe.jsonPath() == null
-                      ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.lineColumn(
-                          pe.jsonLine(), pe.jsonColumn())
-                      : dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located(
-                          pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
+              pe.jsonPath() != null && (pe.jsonLine() == null || pe.jsonColumn() == null)
+                  ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.pathOnly(
+                      pe.jsonPath())
+                  : pe.jsonLine() == null || pe.jsonColumn() == null
+                      ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()
+                      : pe.jsonPath() == null
+                          ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.lineColumn(
+                              pe.jsonLine(), pe.jsonColumn())
+                          : dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located(
+                              pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
           yield rc.withJson(jsonLocation);
         }
         yield context;

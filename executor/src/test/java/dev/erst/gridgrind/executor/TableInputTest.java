@@ -16,7 +16,7 @@ class TableInputTest {
   @Test
   void validatesAndConvertsToWorkbookDefinition() {
     TableInput input =
-        new TableInput(
+        TableInput.create(
             "BudgetTable",
             "Budget",
             "A1:C4",
@@ -55,7 +55,7 @@ class TableInputTest {
   @Test
   void defaultsMissingTotalsRowFlagToFalse() {
     TableInput input =
-        new TableInput("BudgetTable", "Budget", "A1:C4", null, new TableStyleInput.None());
+        new TableInput("BudgetTable", "Budget", "A1:C4", false, new TableStyleInput.None());
 
     assertFalse(input.showTotalsRow());
     assertEquals(
@@ -74,13 +74,13 @@ class TableInputTest {
             true,
             true,
             new TableStyleInput.None(),
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
+            dev.erst.gridgrind.contract.source.TextSourceInput.inline(""),
+            false,
+            false,
+            false,
+            "",
+            "",
+            "",
             List.of(new TableColumnInput(1, "", "Total", " SUM ", "")));
 
     assertEquals(

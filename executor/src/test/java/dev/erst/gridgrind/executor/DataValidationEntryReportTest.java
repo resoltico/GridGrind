@@ -12,6 +12,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for protocol-facing data-validation read reports. */
@@ -27,8 +28,8 @@ class DataValidationEntryReportTest {
                 new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done")),
                 true,
                 false,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     DataValidationEntryReport.Unsupported unsupported =
         new DataValidationEntryReport.Unsupported(List.of("B1:B3"), "ANY", "Not modeled");
     ranges.clear();
@@ -44,8 +45,8 @@ class DataValidationEntryReportTest {
                     new DataValidationRuleInput.ExplicitList(List.of("Queued")),
                     false,
                     false,
-                    null,
-                    null)));
+                    Optional.empty(),
+                    Optional.empty())));
     assertThrows(
         IllegalArgumentException.class,
         () -> new DataValidationEntryReport.Unsupported(List.of(" "), "ANY", "detail"));
@@ -126,8 +127,8 @@ class DataValidationEntryReportTest {
                 new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"), false, false, null, null));
 
     assertInstanceOf(DataValidationRuleInput.ExplicitList.class, explicitList.rule());
-    assertNotNull(explicitList.prompt());
-    assertNotNull(explicitList.errorAlert());
+    assertTrue(explicitList.prompt().isPresent());
+    assertTrue(explicitList.errorAlert().isPresent());
     assertInstanceOf(DataValidationRuleInput.FormulaList.class, formulaList.rule());
     assertInstanceOf(DataValidationRuleInput.WholeNumber.class, wholeNumber.rule());
     assertInstanceOf(DataValidationRuleInput.DecimalNumber.class, decimal.rule());

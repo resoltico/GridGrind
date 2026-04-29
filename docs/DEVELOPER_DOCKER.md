@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER_DOCKER
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, docker, docker desktop, devcontainer, contributor container, docker smoke, check.sh, anonymous docker config, docker context, container]
   questions: ["how should i set up docker for gridgrind", "what is the difference between the gridgrind devcontainer and runtime container", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]
@@ -21,8 +21,8 @@ Supported workstation shape:
 - the `docker buildx` plugin is available in the current shell
 - the active Docker context targets the local Docker Desktop engine
 - the repository checkout lives on the Mac's local filesystem
-- Visual Studio Code plus the Dev Containers extension are available if you use the preferred
-  contributor workflow
+- either Visual Studio Code plus the Dev Containers extension or the Dev Container CLI are
+  available if you use the preferred contributor workflow
 
 ## Canonical Stance
 
@@ -45,8 +45,9 @@ The repository now enforces these Docker-runtime rules in `scripts/docker-smoke.
 Two separate container surfaces matter in this repository:
 
 - contributor container: `.devcontainer/Dockerfile` plus `.devcontainer/devcontainer.json`,
-  glibc-based, full Zulu 26 JDK, editor tooling, and official Docker-outside-of-Docker wiring so
-  the contributor shell talks to the host Docker Desktop engine
+  glibc-based, full Zulu 26 JDK, official Docker-outside-of-Docker wiring so the contributor shell
+  talks to the host Docker Desktop engine, and an optional VS Code overlay under
+  `customizations.vscode`
 - published runtime container: `Dockerfile`, Alpine-based, minimal JRE surface for executing the
   shipped `gridgrind.jar`
 
@@ -105,10 +106,12 @@ Then the supported local gates are:
 ```
 
 `./scripts/validate-devcontainer.sh` builds the contributor devcontainer image, checks that it
-still exposes Azul Zulu Java 26 on a glibc base, and verifies the committed VS Code container
-routing contract. Run it when you change `.devcontainer/` or contributor-container docs. It shares
-the same repo-wide verification lock as `./check.sh`, `./scripts/docker-smoke.sh`, and
-`jazzer/bin/*`, so these top-level verification entrypoints are intentionally serialized.
+still exposes Azul Zulu Java 26 on a glibc base, verifies the portable devcontainer contract,
+checks that the container-start repair keeps cache mounts writable for the remote user, and
+verifies the committed VS Code overlay contract. Run it when you change `.devcontainer/`,
+contributor-container docs, or the devcontainer start hooks. It shares the same repo-wide
+verification lock as `./check.sh`, `./scripts/docker-smoke.sh`, and `jazzer/bin/*`, so these
+top-level verification entrypoints are intentionally serialized.
 
 `./check.sh` Stage 5 invokes `scripts/docker-smoke.sh`, which:
 - builds the local image from the repository root through `docker buildx build --load`

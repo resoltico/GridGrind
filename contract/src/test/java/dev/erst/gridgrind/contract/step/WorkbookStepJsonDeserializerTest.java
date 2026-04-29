@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
@@ -214,6 +215,25 @@ class WorkbookStepJsonDeserializerTest {
         "Unknown target selector type 'BY_RIDDLE'; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
         unknownTargetType.getMessage());
     assertEquals("steps[0].target", unknownTargetType.jsonPath());
+  }
+
+  @Test
+  void wrapsIllegalArgumentActionPayloadsAgainstTheActionField() {
+    InvalidRequestException invalidAction =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    requestWithStepBody(
+                        """
+                        "stepId": "zoom-too-far",
+                        "target": { "type": "SHEET_BY_NAME", "sheetName": "Budget" },
+                        "action": { "type": "SET_SHEET_ZOOM", "zoomPercent": 401 }
+                        """)));
+
+    assertEquals(
+        "zoomPercent must be between 10 and 400 inclusive: 401", invalidAction.getMessage());
+    assertEquals("steps[0].action", invalidAction.jsonPath());
   }
 
   @Test

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.60.0"
+version: "0.61.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-28"
+updated: "2026-04-29"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -39,6 +39,11 @@ route:
 All supported scripts use the shared lock under `jazzer/.local/run-lock/`, so only one Jazzer
 command runs at a time.
 
+These scripts are thin shell wrappers, not a separate argument parser. They forward Gradle
+properties and options to the nested Jazzer build, so flags such as `-PjazzerMaxDuration=5m` and
+`--console=plain` are expected here. The flip side is that `--help` shows Gradle help, not a
+wrapper-specific usage screen.
+
 ---
 
 ## Choose the Surface
@@ -53,6 +58,8 @@ command runs at a time.
   owns interrupt and timeout teardown.
 - that same wrapper surface must remain compatible with stock macOS `/bin/bash` 3.2 under
   `set -u`, including zero-argument cleanup scripts such as `jazzer/bin/clean-local-findings`
+- wrapper arguments are forwarded through to Gradle tasks under `jazzer/`, so think of this
+  surface as "project-owned launcher plus Gradle arguments", not as a bespoke standalone CLI
 
 Do not run active fuzzing through raw `./gradlew --project-dir jazzer ...` tasks. Those tasks are
 an implementation detail under the wrapper, not a supported fuzz operator interface.
@@ -94,6 +101,163 @@ It does not perform active fuzzing. During long support cases the task emits `[J
 class-start, test-complete, class-complete, and throttled `test-progress` lines so `./check.sh`
 can distinguish active work from a real stall.
 
+### Run One Docker-Only Fuzz Session From A Fresh Terminal
+
+Use this when the repository is on your Mac, Docker Desktop is running, and you do not want to
+install host Java, Gradle, or Jazzer tooling.
+
+Important boundary:
+
+- the repo stays on the host filesystem
+- the container provides the Java and Gradle environment
+- `jazzer/bin/*` does not auto-enter Docker on your behalf
+- you enter the container first, then run the Jazzer commands there
+
+Run these commands in order.
+
+1. Change into the repository on the host:
+
+   ```bash
+   cd /absolute/path/to/GridGrind
+   ```
+
+   This is the directory Docker will bind-mount into the contributor container.
+
+2. Confirm Docker Desktop is running:
+
+   ```bash
+   docker info >/dev/null && echo "Docker is running"
+   ```
+
+   If this command fails, start Docker Desktop first. Do not continue until it succeeds.
+
+3. Build the contributor image from the committed devcontainer definition:
+
+   ```bash
+   docker build --pull -f .devcontainer/Dockerfile -t gridgrind-fuzz-dev:local .devcontainer
+   ```
+
+   This image contains the contributor shell tools plus the pinned Azul Zulu 26 JDK.
+
+4. Start an interactive shell inside that image:
+
+   ```bash
+   docker run --rm -it \
+     --name gridgrind-fuzz-shell \
+     -e HOME=/tmp/gridgrind-home \
+     -e GRADLE_USER_HOME=/tmp/gridgrind-home/.gradle \
+     -v "$PWD":/workspaces/gridgrind \
+     -w /workspaces/gridgrind \
+     gridgrind-fuzz-dev:local \
+     bash
+   ```
+
+   Why the temporary `HOME` and `GRADLE_USER_HOME` matter:
+
+   - a plain `docker run` does not apply the full devcontainer runtime contract
+   - named volumes mounted directly onto `/home/vscode/.gradle` or `/home/vscode/.cache` can come
+     up owned by `root`
+   - that ownership mismatch makes the Gradle wrapper fail before Jazzer starts
+   - the temporary writable home avoids that trap for ad hoc terminal-only sessions
+
+5. Now that you are inside the container, create the writable temporary directories:
+
+   ```bash
+   mkdir -p "$HOME" "$GRADLE_USER_HOME"
+   ```
+
+6. Prove the container has the expected Java toolchain:
+
+   ```bash
+   java --version
+   javac --version
+   ```
+
+   Expected result:
+
+   - both commands succeed
+   - Java major version is `26`
+   - the vendor string shows Azul Zulu
+
+7. Ask Jazzer for the current run-state summary:
+
+   ```bash
+   ./jazzer/bin/status --console=plain
+   ```
+
+   What this proves:
+
+   - the Gradle wrapper can run in the container
+   - the nested Jazzer build is reachable
+   - existing local summaries can be read
+
+   On the first run in a fresh container, this can spend time downloading Gradle and building the
+   nested support classes before it prints the status table.
+
+8. Start one short real fuzz session:
+
+   ```bash
+   ./jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=15s --console=plain
+   ```
+
+   Why this is the recommended first session:
+
+   - it exercises one real active harness
+   - `15s` is short enough to prove the setup without committing to a long run
+   - it shows the exact supported `jazzer/bin/*` invocation shape
+
+9. Watch for active-fuzz output.
+
+   A healthy active run is not silent. Expect lines such as:
+
+   - `[JAZZER-PULSE] ... phase=plan ...`
+   - `INFO: using inputs from: ...`
+   - `#16384 pulse ...`
+   - `#32768 pulse ...`
+   - `#156789 DONE ...`
+   - `[JAZZER-PULSE] ... phase=finish status=SUCCESS ...`
+   - `BUILD SUCCESSFUL`
+
+   If the command returns immediately with no `JAZZER-PULSE`, no `INFO:`, and no libFuzzer
+   `pulse` lines, treat that as a failed launch and investigate the wrapper or container setup.
+
+10. Read the structured summary for the run you just finished:
+
+    ```bash
+    ./jazzer/bin/report protocol-request --console=plain
+    ```
+
+    This prints the latest summary in human-readable form, including outcome, duration, corpus,
+    execution count, and replay status.
+
+11. If you want to inspect the raw summary file directly:
+
+    ```bash
+    cat jazzer/.local/runs/protocol-request/latest-summary.txt
+    ```
+
+12. When you are done, leave the container:
+
+    ```bash
+    exit
+    ```
+
+After you exit:
+
+- the container process is removed because `docker run` used `--rm`
+- the repository changes and Jazzer artifacts remain on the host because the checkout was
+  bind-mounted
+- local run history lives under `jazzer/.local/runs/protocol-request/`
+
+If you later want to fuzz all four active harnesses instead of just one, use:
+
+```bash
+./jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
+```
+
+Run that from inside the container shell too. The `5m` duration applies per harness, not total, so
+expect roughly twenty minutes of fuzzing before setup overhead.
+
 ### Run One Harness
 
 ```bash
@@ -122,6 +286,10 @@ jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
 
 `fuzz-all` is intentionally sequential. It calls the four per-harness scripts one by one so each
 harness gets its own summary and history directory.
+
+The example above is the real supported invocation shape. `fuzz-all` simply forwards those
+arguments to each per-harness launcher, and each launcher then runs the corresponding nested
+Gradle task with the repo-owned timeout, logging, lock, and teardown behavior layered on top.
 
 Each active fuzz launcher also preloads the project-owned `JazzerPremainAgent`, so live fuzzing on
 Java 26 starts with startup-time instrumentation already published to Byte Buddy instead of

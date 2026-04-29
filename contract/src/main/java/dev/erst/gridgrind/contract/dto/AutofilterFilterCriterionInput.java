@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
@@ -47,15 +48,20 @@ public sealed interface AutofilterFilterCriterionInput
   }
 
   /** Dynamic-date or moving-window autofilter criterion. */
-  record Dynamic(String type, Double value, Double maxValue)
+  record Dynamic(
+      String type,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> value,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> maxValue)
       implements AutofilterFilterCriterionInput {
     public Dynamic {
       Objects.requireNonNull(type, "type must not be null");
       if (type.isBlank()) {
         throw new IllegalArgumentException("type must not be blank");
       }
-      value = finiteOrNull(value, "value").orElse(null);
-      maxValue = finiteOrNull(maxValue, "maxValue").orElse(null);
+      Objects.requireNonNull(value, "value must not be null");
+      Objects.requireNonNull(maxValue, "maxValue must not be null");
+      value = value.map(entry -> finite(entry, "value"));
+      maxValue = maxValue.map(entry -> finite(entry, "maxValue"));
     }
   }
 
@@ -111,13 +117,10 @@ public sealed interface AutofilterFilterCriterionInput
     return copy;
   }
 
-  private static Optional<Double> finiteOrNull(Double value, String fieldName) {
-    if (value == null) {
-      return Optional.empty();
-    }
+  private static Double finite(Double value, String fieldName) {
     if (!Double.isFinite(value)) {
       throw new IllegalArgumentException(fieldName + " must be finite");
     }
-    return Optional.of(value);
+    return value;
   }
 }

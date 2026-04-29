@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
 import java.util.Optional;
@@ -28,7 +30,7 @@ public record CommentInput(
   public CommentInput {
     text = requireNonBlankSource(text, "text");
     author = requireNonBlank(author, "author");
-    visible = visible == null ? Boolean.FALSE : visible;
+    Objects.requireNonNull(visible, "visible must not be null");
     runs = Objects.requireNonNullElseGet(runs, Optional::empty);
     anchor = Objects.requireNonNullElseGet(anchor, Optional::empty);
     if (runs.isPresent()) {
@@ -42,6 +44,16 @@ public record CommentInput(
       validateRunsAgainstInlineText(text, copiedRuns);
       runs = Optional.of(copiedRuns);
     }
+  }
+
+  @JsonCreator
+  static CommentInput create(
+      @JsonProperty("text") TextSourceInput text,
+      @JsonProperty("author") String author,
+      @JsonProperty("visible") Boolean visible,
+      @JsonProperty("runs") Optional<java.util.List<RichTextRunInput>> runs,
+      @JsonProperty("anchor") Optional<CommentAnchorInput> anchor) {
+    return new CommentInput(text, author, visible == null ? Boolean.FALSE : visible, runs, anchor);
   }
 
   private static void validateRunsAgainstInlineText(

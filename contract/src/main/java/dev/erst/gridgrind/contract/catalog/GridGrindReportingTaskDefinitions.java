@@ -23,6 +23,7 @@ import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import java.util.List;
@@ -280,8 +281,7 @@ final class GridGrindReportingTaskDefinitions {
                             new ChartInput.Bar(
                                 true,
                                 ExcelChartBarDirection.COLUMN,
-                                null,
-                                null,
+                                ExcelChartBarGrouping.CLUSTERED,
                                 null,
                                 null,
                                 List.of(
@@ -394,7 +394,7 @@ final class GridGrindReportingTaskDefinitions {
                     new DataValidationInput(
                         new DataValidationRuleInput.ExplicitList(List.of("NEW", "REVIEW", "DONE")),
                         true,
-                        null,
+                        false,
                         null,
                         null))),
             ExamplePlanSupport.step(

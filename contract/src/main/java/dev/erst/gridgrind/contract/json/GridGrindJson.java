@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.core.JacksonException;
@@ -30,6 +31,7 @@ import tools.jackson.core.json.JsonFactory;
 import tools.jackson.core.json.JsonFactoryBuilder;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.cfg.CoercionAction;
 import tools.jackson.databind.cfg.CoercionInputShape;
@@ -44,7 +46,7 @@ public final class GridGrindJson {
   private static final Pattern MISSING_TYPE_ID_FIELD_PATTERN =
       Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
   private static final Pattern NULL_FIELD_PROBLEM_PATTERN =
-      Pattern.compile("problem: ([A-Za-z0-9]+) must not be null", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("problem: ([A-Za-z0-9.\\[\\]_]+) must not be null", Pattern.CASE_INSENSITIVE);
   private static final JsonMapper JSON_MAPPER = buildMapper(unlimitedJsonFactory());
   private static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true);
   private static final JsonMapper DISCOVERY_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true);
@@ -55,143 +57,92 @@ public final class GridGrindJson {
   /** Reads a request from an input stream without closing the caller-owned stream. */
   public static WorkbookPlan readRequest(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return REQUEST_JSON_MAPPER.readValue(inputStream, WorkbookPlan.class);
-    } catch (JacksonException exception) {
-      throw invalidRequestPayload(exception);
-    }
+    return readValue(
+        inputStream, REQUEST_JSON_MAPPER, WorkbookPlan.class, GridGrindJson::invalidRequestPayload);
   }
 
   /** Reads a request from a byte array. */
   public static WorkbookPlan readRequest(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
     requireSupportedRequestLength(bytes.length);
-    try {
-      return REQUEST_JSON_MAPPER.readValue(bytes, WorkbookPlan.class);
-    } catch (JacksonException exception) {
-      throw invalidRequestPayload(exception);
-    }
+    return readValue(
+        bytes, REQUEST_JSON_MAPPER, WorkbookPlan.class, GridGrindJson::invalidRequestPayload);
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */
   public static GridGrindResponse readResponse(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, GridGrindResponse.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(
+        inputStream, JSON_MAPPER, GridGrindResponse.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a response from a byte array. */
   public static GridGrindResponse readResponse(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, GridGrindResponse.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, GridGrindResponse.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a protocol catalog from an input stream without closing the caller-owned stream. */
   public static Catalog readProtocolCatalog(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, Catalog.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(inputStream, JSON_MAPPER, Catalog.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a protocol catalog from a byte array. */
   public static Catalog readProtocolCatalog(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, Catalog.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, Catalog.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a task catalog from an input stream without closing the caller-owned stream. */
   public static TaskCatalog readTaskCatalog(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, TaskCatalog.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(inputStream, JSON_MAPPER, TaskCatalog.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a task catalog from a byte array. */
   public static TaskCatalog readTaskCatalog(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, TaskCatalog.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, TaskCatalog.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a task plan template from an input stream without closing the caller-owned stream. */
   public static TaskPlanTemplate readTaskPlanTemplate(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, TaskPlanTemplate.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(
+        inputStream, JSON_MAPPER, TaskPlanTemplate.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a task plan template from a byte array. */
   public static TaskPlanTemplate readTaskPlanTemplate(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, TaskPlanTemplate.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, TaskPlanTemplate.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a request doctor report from an input stream without closing the caller-owned stream. */
   public static RequestDoctorReport readRequestDoctorReport(InputStream inputStream)
       throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, RequestDoctorReport.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(
+        inputStream, JSON_MAPPER, RequestDoctorReport.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a request doctor report from a byte array. */
   public static RequestDoctorReport readRequestDoctorReport(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, RequestDoctorReport.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, RequestDoctorReport.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a goal plan report from an input stream without closing the caller-owned stream. */
   public static GoalPlanReport readGoalPlanReport(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    try {
-      return JSON_MAPPER.readValue(inputStream, GoalPlanReport.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(inputStream, JSON_MAPPER, GoalPlanReport.class, GridGrindJson::invalidPayload);
   }
 
   /** Reads a goal plan report from a byte array. */
   public static GoalPlanReport readGoalPlanReport(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    try {
-      return JSON_MAPPER.readValue(bytes, GoalPlanReport.class);
-    } catch (JacksonException exception) {
-      throw invalidPayload(exception);
-    }
+    return readValue(bytes, JSON_MAPPER, GoalPlanReport.class, GridGrindJson::invalidPayload);
   }
 
   /** Serializes a request to bytes. */
@@ -595,6 +546,105 @@ public final class GridGrindJson {
 
   private static byte[] writeDiscoveryBytes(Object value) throws IOException {
     return DISCOVERY_JSON_MAPPER.writeValueAsBytes(value);
+  }
+
+  private static <T> T readValue(
+      InputStream inputStream,
+      JsonMapper mapper,
+      Class<T> targetType,
+      Function<JacksonException, IllegalArgumentException> failureMapper)
+      throws IOException {
+    return decodeValue(
+        readTree(inputStream, mapper, failureMapper), mapper, targetType, failureMapper);
+  }
+
+  private static <T> T readValue(
+      byte[] bytes,
+      JsonMapper mapper,
+      Class<T> targetType,
+      Function<JacksonException, IllegalArgumentException> failureMapper)
+      throws IOException {
+    return decodeValue(readTree(bytes, mapper, failureMapper), mapper, targetType, failureMapper);
+  }
+
+  private static JsonNode readTree(
+      InputStream inputStream,
+      JsonMapper mapper,
+      Function<JacksonException, IllegalArgumentException> failureMapper)
+      throws IOException {
+    try {
+      return requirePresentDocument(mapper.readTree(inputStream));
+    } catch (JacksonException exception) {
+      throw failureMapper.apply(exception);
+    }
+  }
+
+  private static JsonNode readTree(
+      byte[] bytes,
+      JsonMapper mapper,
+      Function<JacksonException, IllegalArgumentException> failureMapper)
+      throws IOException {
+    try {
+      return requirePresentDocument(mapper.readTree(bytes));
+    } catch (JacksonException exception) {
+      throw failureMapper.apply(exception);
+    }
+  }
+
+  private static <T> T decodeValue(
+      JsonNode node,
+      JsonMapper mapper,
+      Class<T> targetType,
+      Function<JacksonException, IllegalArgumentException> failureMapper)
+      throws IOException {
+    requireNonNullRoot(node);
+    try {
+      rejectExplicitNullMembers(node, "");
+      return mapper.treeToValue(node, targetType);
+    } catch (JacksonException exception) {
+      throw failureMapper.apply(exception);
+    } catch (IllegalArgumentException exception) {
+      throw new InvalidRequestException(message(exception), null, null, null, exception);
+    }
+  }
+
+  private static void rejectExplicitNullMembers(JsonNode node, String path) {
+    if (node.isObject()) {
+      for (var entry : node.properties()) {
+        String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
+        if (entry.getValue().isNull()) {
+          throw new IllegalArgumentException("problem: " + childPath + " must not be null");
+        }
+        rejectExplicitNullMembers(entry.getValue(), childPath);
+      }
+      return;
+    }
+    if (node.isArray()) {
+      for (int index = 0; index < node.size(); index++) {
+        JsonNode child = node.get(index);
+        String childPath = path + "[" + index + "]";
+        if (child.isNull()) {
+          throw new IllegalArgumentException("problem: " + childPath + " must not be null");
+        }
+        rejectExplicitNullMembers(child, childPath);
+      }
+    }
+  }
+
+  private static void requireNonNullRoot(JsonNode node) {
+    if (node.isNull()) {
+      throw new InvalidRequestException("problem: <root> must not be null", null, null, null, null);
+    }
+  }
+
+  private static JsonNode requirePresentDocument(JsonNode node) {
+    return Optional.ofNullable(node)
+        .filter(candidate -> !candidate.isMissingNode())
+        .orElseThrow(GridGrindJson::invalidJsonPayloadException);
+  }
+
+  private static InvalidJsonException invalidJsonPayloadException() {
+    return new InvalidJsonException("Invalid JSON payload", null, null, null, null);
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory) {

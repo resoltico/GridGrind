@@ -44,8 +44,8 @@ final class InspectionResultValidationReportSupport {
         toDataValidationRuleInput(definition.rule()),
         definition.allowBlank(),
         definition.suppressDropDownArrow(),
-        promptInput(definition).orElse(null),
-        errorAlertInput(definition).orElse(null));
+        promptInput(definition),
+        errorAlertInput(definition));
   }
 
   static ConditionalFormattingEntryReport toConditionalFormattingEntryReport(
@@ -140,11 +140,11 @@ final class InspectionResultValidationReportSupport {
             style.bold(),
             style.italic(),
             InspectionResultCellReportSupport.toFontHeightReport(style.fontHeight()),
-            style.fontColor(),
+            Optional.ofNullable(style.fontColor()),
             style.underline(),
             style.strikeout(),
-            style.fillColor(),
-            toDifferentialBorderReport(style.border()).orElse(null),
+            Optional.ofNullable(style.fillColor()),
+            toDifferentialBorderReport(style.border()),
             style.unsupportedFeatures()));
   }
 
@@ -155,18 +155,19 @@ final class InspectionResultValidationReportSupport {
     }
     return Optional.of(
         new DifferentialBorderReport(
-            toDifferentialBorderSideReport(border.all()).orElse(null),
-            toDifferentialBorderSideReport(border.top()).orElse(null),
-            toDifferentialBorderSideReport(border.right()).orElse(null),
-            toDifferentialBorderSideReport(border.bottom()).orElse(null),
-            toDifferentialBorderSideReport(border.left()).orElse(null)));
+            toDifferentialBorderSideReport(border.all()),
+            toDifferentialBorderSideReport(border.top()),
+            toDifferentialBorderSideReport(border.right()),
+            toDifferentialBorderSideReport(border.bottom()),
+            toDifferentialBorderSideReport(border.left())));
   }
 
   static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(
       ExcelDifferentialBorderSide side) {
     return side == null
         ? Optional.empty()
-        : Optional.of(new DifferentialBorderSideReport(side.style(), side.color()));
+        : Optional.of(
+            new DifferentialBorderSideReport(side.style(), Optional.ofNullable(side.color())));
   }
 
   private static Optional<DataValidationPromptInput> promptInput(

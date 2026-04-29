@@ -264,7 +264,7 @@ final class XlsxParitySecurityProbeGroup {
     GridGrindResponse wrongPasswordResponse =
         XlsxParityGridGrind.executeReadWorkbook(
             encrypted.workbookPath(),
-            new OoxmlOpenSecurityInput("gridgrind-phase9-wrong-password"),
+            new OoxmlOpenSecurityInput(java.util.Optional.of("gridgrind-phase9-wrong-password")),
             inspect(
                 "security",
                 new WorkbookSelector.Current(),

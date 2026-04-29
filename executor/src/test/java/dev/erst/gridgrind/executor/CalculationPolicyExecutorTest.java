@@ -81,7 +81,7 @@ class CalculationPolicyExecutorTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       CalculationPolicyExecutor.ExecutionOutcome doNotCalculate =
-          CalculationPolicyExecutor.execute(workbook, new CalculationPolicyInput(null, false), 0);
+          CalculationPolicyExecutor.execute(workbook, CalculationPolicyInput.defaults(), 0);
 
       assertEquals(CalculationExecutionStatus.NOT_REQUESTED, doNotCalculate.report().status());
       assertFalse(doNotCalculate.report().markRecalculateOnOpenApplied());

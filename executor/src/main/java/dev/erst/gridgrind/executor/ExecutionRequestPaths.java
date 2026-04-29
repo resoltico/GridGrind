@@ -41,7 +41,10 @@ final class ExecutionRequestPaths {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ -> null;
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          existingFile.security().map(security -> security.password()).orElse(null);
+          existingFile
+              .security()
+              .flatMap(dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput::password)
+              .orElse(null);
     };
   }
 

@@ -13,18 +13,18 @@
       "persistenceKind" : "NONE",
       "operationCount" : 5,
       "operationKinds" : {
-        "ENSURE_SHEET" : 2,
-        "SET_CELL" : 3
+        "SET_CELL" : 3,
+        "ENSURE_SHEET" : 2
       },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
       "readCount" : 4,
       "readKinds" : {
-        "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "GET_SHEET_SUMMARY" : 1,
+        "GET_CELLS" : 1,
         "ANALYZE_FORMULA_HEALTH" : 1,
-        "GET_CELLS" : 1
+        "GET_SHEET_SUMMARY" : 1,
+        "ANALYZE_WORKBOOK_FINDINGS" : 1
       }
     }
   },

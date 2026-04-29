@@ -2,10 +2,10 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_null_primitive_boolean.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestShapeException
-Message: Missing required field 'target'
+Kind: InvalidRequestException
+Message: Missing required field 'steps[0].action.conditionalFormatting.rules[0].stopIfTrue'
 Input Bytes: 688
-Decode Outcome: INVALID_REQUEST_SHAPE
+Decode Outcome: INVALID_REQUEST
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0

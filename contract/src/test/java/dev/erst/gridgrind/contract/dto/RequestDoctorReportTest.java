@@ -53,7 +53,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.INFO,
                         true,
                         Optional.empty(),
@@ -66,7 +66,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.INFO,
                         true,
                         Optional.of(summary),
@@ -79,7 +79,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.ERROR,
                         false,
                         Optional.of(summary),
@@ -92,7 +92,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.WARNING,
                         true,
                         Optional.of(summary),
@@ -105,7 +105,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.WARNING,
                         false,
                         Optional.of(summary),
@@ -118,7 +118,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.INFO,
                         true,
                         Optional.of(summary),
@@ -226,7 +226,7 @@ class RequestDoctorReportTest {
                 NullPointerException.class,
                 () ->
                     new RequestDoctorReport(
-                        null,
+                        GridGrindProtocolVersion.current(),
                         AnalysisSeverity.WARNING,
                         true,
                         Optional.of(

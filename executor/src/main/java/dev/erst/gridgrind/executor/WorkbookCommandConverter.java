@@ -117,12 +117,12 @@ final class WorkbookCommandConverter {
 
   static ExcelCustomXmlImportDefinition toExcelCustomXmlImportDefinition(
       CustomXmlImportInput input) {
-    return WorkbookCommandStructuredInputConverter.toExcelCustomXmlImportDefinition(input);
+    return WorkbookCommandDrawingInputConverter.toExcelCustomXmlImportDefinition(input);
   }
 
   static ExcelCustomXmlMappingLocator toExcelCustomXmlMappingLocator(
       dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
-    return WorkbookCommandStructuredInputConverter.toExcelCustomXmlMappingLocator(locator);
+    return WorkbookCommandDrawingInputConverter.toExcelCustomXmlMappingLocator(locator);
   }
 
   static ExcelRichText toExcelRichText(CellInput.RichText richText) {
@@ -142,29 +142,29 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelPictureDefinition toExcelPictureDefinition(PictureInput picture) {
-    return WorkbookCommandStructuredInputConverter.toExcelPictureDefinition(picture);
+    return WorkbookCommandDrawingInputConverter.toExcelPictureDefinition(picture);
   }
 
   static ExcelChartDefinition toExcelChartDefinition(ChartInput chart) {
-    return WorkbookCommandStructuredInputConverter.toExcelChartDefinition(chart);
+    return WorkbookCommandDrawingInputConverter.toExcelChartDefinition(chart);
   }
 
   static ExcelSignatureLineDefinition toExcelSignatureLineDefinition(
       SignatureLineInput signatureLine) {
-    return WorkbookCommandStructuredInputConverter.toExcelSignatureLineDefinition(signatureLine);
+    return WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(signatureLine);
   }
 
   static ExcelShapeDefinition toExcelShapeDefinition(ShapeInput shape) {
-    return WorkbookCommandStructuredInputConverter.toExcelShapeDefinition(shape);
+    return WorkbookCommandDrawingInputConverter.toExcelShapeDefinition(shape);
   }
 
   static ExcelEmbeddedObjectDefinition toExcelEmbeddedObjectDefinition(
       EmbeddedObjectInput embeddedObject) {
-    return WorkbookCommandStructuredInputConverter.toExcelEmbeddedObjectDefinition(embeddedObject);
+    return WorkbookCommandDrawingInputConverter.toExcelEmbeddedObjectDefinition(embeddedObject);
   }
 
   static ExcelDrawingAnchor.TwoCell toExcelDrawingAnchor(DrawingAnchorInput anchor) {
-    return WorkbookCommandStructuredInputConverter.toExcelDrawingAnchor(anchor);
+    return WorkbookCommandDrawingInputConverter.toExcelDrawingAnchor(anchor);
   }
 
   static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {
@@ -238,35 +238,35 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelTableDefinition toExcelTableDefinition(TableInput table) {
-    return WorkbookCommandStructuredInputConverter.toExcelTableDefinition(table);
+    return WorkbookCommandTabularInputConverter.toExcelTableDefinition(table);
   }
 
   static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableInput pivotTable) {
-    return WorkbookCommandStructuredInputConverter.toExcelPivotTableDefinition(pivotTable);
+    return WorkbookCommandTabularInputConverter.toExcelPivotTableDefinition(pivotTable);
   }
 
   static ExcelTableStyle toExcelTableStyle(TableStyleInput style) {
-    return WorkbookCommandStructuredInputConverter.toExcelTableStyle(style);
+    return WorkbookCommandTabularInputConverter.toExcelTableStyle(style);
   }
 
   static ExcelNamedRangeScope toExcelNamedRangeScope(NamedRangeScope scope) {
-    return WorkbookCommandStructuredInputConverter.toExcelNamedRangeScope(scope);
+    return WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(scope);
   }
 
   static ExcelNamedRangeScope toExcelNamedRangeScope(NamedRangeSelector.ScopedExact selector) {
-    return WorkbookCommandStructuredInputConverter.toExcelNamedRangeScope(selector);
+    return WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(selector);
   }
 
   static String toExcelNamedRangeName(NamedRangeSelector.ScopedExact selector) {
-    return WorkbookCommandStructuredInputConverter.toExcelNamedRangeName(selector);
+    return WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector);
   }
 
   static ExcelNamedRangeTarget toExcelNamedRangeTarget(NamedRangeTarget target) {
-    return WorkbookCommandStructuredInputConverter.toExcelNamedRangeTarget(target);
+    return WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(target);
   }
 
   /* Converts a protocol sheet copy-position variant into the engine position type. */
   static ExcelSheetCopyPosition toExcelSheetCopyPosition(SheetCopyPosition position) {
-    return WorkbookCommandStructuredInputConverter.toExcelSheetCopyPosition(position);
+    return WorkbookCommandLayoutInputConverter.toExcelSheetCopyPosition(position);
   }
 }

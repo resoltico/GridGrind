@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -28,13 +30,44 @@ public record ChartInput(
     ExcelChartDisplayBlanksAs displayBlanksAs,
     Boolean plotOnlyVisibleCells,
     List<Plot> plots) {
+  @JsonCreator
+  static ChartInput create(
+      @JsonProperty("name") String name,
+      @JsonProperty("anchor") DrawingAnchorInput anchor,
+      @JsonProperty("title") Title title,
+      @JsonProperty("legend") Legend legend,
+      @JsonProperty("displayBlanksAs") ExcelChartDisplayBlanksAs displayBlanksAs,
+      @JsonProperty("plotOnlyVisibleCells") Boolean plotOnlyVisibleCells,
+      @JsonProperty("plots") List<Plot> plots) {
+    return new ChartInput(
+        name,
+        anchor,
+        title == null ? new Title.None() : title,
+        legend == null ? new Legend.Visible(ExcelChartLegendPosition.RIGHT) : legend,
+        displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
+        plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
+        plots);
+  }
+
+  /** Creates one chart with the standard visible legend and gap display defaults. */
+  public ChartInput(String name, DrawingAnchorInput anchor, List<Plot> plots) {
+    this(
+        name,
+        anchor,
+        new Title.None(),
+        new Legend.Visible(ExcelChartLegendPosition.RIGHT),
+        ExcelChartDisplayBlanksAs.GAP,
+        Boolean.TRUE,
+        plots);
+  }
+
   public ChartInput {
     requireNonBlank(name, "name");
     Objects.requireNonNull(anchor, "anchor must not be null");
-    title = title == null ? new Title.None() : title;
-    legend = legend == null ? new Legend.Visible(ExcelChartLegendPosition.RIGHT) : legend;
-    displayBlanksAs = displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs;
-    plotOnlyVisibleCells = plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells;
+    Objects.requireNonNull(title, "title must not be null");
+    Objects.requireNonNull(legend, "legend must not be null");
+    Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null");
+    Objects.requireNonNull(plotOnlyVisibleCells, "plotOnlyVisibleCells must not be null");
     plots = copyNonEmptyValues(plots, "plots");
   }
 
@@ -93,11 +126,26 @@ public record ChartInput(
       ExcelChartAxisPosition position,
       ExcelChartAxisCrosses crosses,
       Boolean visible) {
+    @JsonCreator
+    static Axis create(
+        @JsonProperty("kind") ExcelChartAxisKind kind,
+        @JsonProperty("position") ExcelChartAxisPosition position,
+        @JsonProperty("crosses") ExcelChartAxisCrosses crosses,
+        @JsonProperty("visible") Boolean visible) {
+      return new Axis(kind, position, crosses, visible == null ? Boolean.TRUE : visible);
+    }
+
     public Axis {
       Objects.requireNonNull(kind, "kind must not be null");
       Objects.requireNonNull(position, "position must not be null");
       Objects.requireNonNull(crosses, "crosses must not be null");
-      visible = visible == null ? Boolean.TRUE : visible;
+      Objects.requireNonNull(visible, "visible must not be null");
+    }
+
+    /** Creates one visible axis without requiring callers to repeat the visibility default. */
+    public Axis(
+        ExcelChartAxisKind kind, ExcelChartAxisPosition position, ExcelChartAxisCrosses crosses) {
+      this(kind, position, crosses, Boolean.TRUE);
     }
   }
 
@@ -110,8 +158,27 @@ public record ChartInput(
       ExcelChartMarkerStyle markerStyle,
       Short markerSize,
       Long explosion) {
+    @JsonCreator
+    static Series create(
+        @JsonProperty("title") Title title,
+        @JsonProperty("categories") DataSource categories,
+        @JsonProperty("values") DataSource values,
+        @JsonProperty("smooth") Boolean smooth,
+        @JsonProperty("markerStyle") ExcelChartMarkerStyle markerStyle,
+        @JsonProperty("markerSize") Short markerSize,
+        @JsonProperty("explosion") Long explosion) {
+      return new Series(
+          title == null ? new Title.None() : title,
+          categories,
+          values,
+          smooth,
+          markerStyle,
+          markerSize,
+          explosion);
+    }
+
     public Series {
-      title = title == null ? new Title.None() : title;
+      Objects.requireNonNull(title, "title must not be null");
       Objects.requireNonNull(categories, "categories must not be null");
       Objects.requireNonNull(values, "values must not be null");
       if (markerSize != null && (markerSize < 2 || markerSize > 72)) {
@@ -120,6 +187,17 @@ public record ChartInput(
       if (explosion != null && explosion < 0L) {
         throw new IllegalArgumentException("explosion must not be negative");
       }
+    }
+
+    /** Creates one series with no explicit title. */
+    public Series(
+        DataSource categories,
+        DataSource values,
+        Boolean smooth,
+        ExcelChartMarkerStyle markerStyle,
+        Short markerSize,
+        Long explosion) {
+      this(new Title.None(), categories, values, smooth, markerStyle, markerSize, explosion);
     }
   }
 
@@ -191,11 +269,29 @@ public record ChartInput(
   public record Area(
       Boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Area create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Area(
+          defaultBoolean(varyColors),
+          grouping == null ? ExcelChartGrouping.STANDARD : grouping,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Area {
-      varyColors = defaultBoolean(varyColors);
-      grouping = grouping == null ? ExcelChartGrouping.STANDARD : grouping;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one area plot with the default category/value axis pair. */
+    public Area(Boolean varyColors, ExcelChartGrouping grouping, List<Series> series) {
+      this(varyColors, grouping, defaultCategoryAxes(), series);
     }
   }
 
@@ -207,11 +303,32 @@ public record ChartInput(
       List<Axis> axes,
       List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Area3D create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("gapDepth") Integer gapDepth,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Area3D(
+          defaultBoolean(varyColors),
+          grouping == null ? ExcelChartGrouping.STANDARD : grouping,
+          gapDepth,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Area3D {
-      varyColors = defaultBoolean(varyColors);
-      grouping = grouping == null ? ExcelChartGrouping.STANDARD : grouping;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one 3D area plot with the default category/value axis pair. */
+    public Area3D(
+        Boolean varyColors, ExcelChartGrouping grouping, Integer gapDepth, List<Series> series) {
+      this(varyColors, grouping, gapDepth, defaultCategoryAxes(), series);
     }
   }
 
@@ -225,15 +342,45 @@ public record ChartInput(
       List<Axis> axes,
       List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Bar create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("barDirection") ExcelChartBarDirection barDirection,
+        @JsonProperty("grouping") ExcelChartBarGrouping grouping,
+        @JsonProperty("gapWidth") Integer gapWidth,
+        @JsonProperty("overlap") Integer overlap,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Bar(
+          defaultBoolean(varyColors),
+          barDirection == null ? ExcelChartBarDirection.COLUMN : barDirection,
+          grouping == null ? ExcelChartBarGrouping.CLUSTERED : grouping,
+          gapWidth,
+          overlap,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Bar {
-      varyColors = defaultBoolean(varyColors);
-      barDirection = barDirection == null ? ExcelChartBarDirection.COLUMN : barDirection;
-      grouping = grouping == null ? ExcelChartBarGrouping.CLUSTERED : grouping;
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(barDirection, "barDirection must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
       if (overlap != null && (overlap < -100 || overlap > 100)) {
         throw new IllegalArgumentException("overlap must be between -100 and 100");
       }
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one bar plot with the default category/value axis pair. */
+    public Bar(
+        Boolean varyColors,
+        ExcelChartBarDirection barDirection,
+        ExcelChartBarGrouping grouping,
+        Integer gapWidth,
+        Integer overlap,
+        List<Series> series) {
+      this(varyColors, barDirection, grouping, gapWidth, overlap, defaultCategoryAxes(), series);
     }
   }
 
@@ -248,12 +395,53 @@ public record ChartInput(
       List<Axis> axes,
       List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Bar3D create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("barDirection") ExcelChartBarDirection barDirection,
+        @JsonProperty("grouping") ExcelChartBarGrouping grouping,
+        @JsonProperty("gapDepth") Integer gapDepth,
+        @JsonProperty("gapWidth") Integer gapWidth,
+        @JsonProperty("shape") ExcelChartBarShape shape,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Bar3D(
+          defaultBoolean(varyColors),
+          barDirection == null ? ExcelChartBarDirection.COLUMN : barDirection,
+          grouping == null ? ExcelChartBarGrouping.CLUSTERED : grouping,
+          gapDepth,
+          gapWidth,
+          shape,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Bar3D {
-      varyColors = defaultBoolean(varyColors);
-      barDirection = barDirection == null ? ExcelChartBarDirection.COLUMN : barDirection;
-      grouping = grouping == null ? ExcelChartBarGrouping.CLUSTERED : grouping;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(barDirection, "barDirection must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one 3D bar plot with the default category/value axis pair. */
+    public Bar3D(
+        Boolean varyColors,
+        ExcelChartBarDirection barDirection,
+        ExcelChartBarGrouping grouping,
+        Integer gapDepth,
+        Integer gapWidth,
+        ExcelChartBarShape shape,
+        List<Series> series) {
+      this(
+          varyColors,
+          barDirection,
+          grouping,
+          gapDepth,
+          gapWidth,
+          shape,
+          defaultCategoryAxes(),
+          series);
     }
   }
 
@@ -261,8 +449,17 @@ public record ChartInput(
   public record Doughnut(
       Boolean varyColors, Integer firstSliceAngle, Integer holeSize, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Doughnut create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("firstSliceAngle") Integer firstSliceAngle,
+        @JsonProperty("holeSize") Integer holeSize,
+        @JsonProperty("series") List<Series> series) {
+      return new Doughnut(defaultBoolean(varyColors), firstSliceAngle, holeSize, series);
+    }
+
     public Doughnut {
-      varyColors = defaultBoolean(varyColors);
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
       validateAngle(firstSliceAngle);
       if (holeSize != null && (holeSize < 10 || holeSize > 90)) {
         throw new IllegalArgumentException("holeSize must be between 10 and 90");
@@ -275,11 +472,29 @@ public record ChartInput(
   public record Line(
       Boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Line create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Line(
+          defaultBoolean(varyColors),
+          grouping == null ? ExcelChartGrouping.STANDARD : grouping,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Line {
-      varyColors = defaultBoolean(varyColors);
-      grouping = grouping == null ? ExcelChartGrouping.STANDARD : grouping;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one line plot with the default category/value axis pair. */
+    public Line(Boolean varyColors, ExcelChartGrouping grouping, List<Series> series) {
+      this(varyColors, grouping, defaultCategoryAxes(), series);
     }
   }
 
@@ -291,19 +506,48 @@ public record ChartInput(
       List<Axis> axes,
       List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Line3D create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("gapDepth") Integer gapDepth,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Line3D(
+          defaultBoolean(varyColors),
+          grouping == null ? ExcelChartGrouping.STANDARD : grouping,
+          gapDepth,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Line3D {
-      varyColors = defaultBoolean(varyColors);
-      grouping = grouping == null ? ExcelChartGrouping.STANDARD : grouping;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one 3D line plot with the default category/value axis pair. */
+    public Line3D(
+        Boolean varyColors, ExcelChartGrouping grouping, Integer gapDepth, List<Series> series) {
+      this(varyColors, grouping, gapDepth, defaultCategoryAxes(), series);
     }
   }
 
   /** Pie chart plot. */
   public record Pie(Boolean varyColors, Integer firstSliceAngle, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Pie create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("firstSliceAngle") Integer firstSliceAngle,
+        @JsonProperty("series") List<Series> series) {
+      return new Pie(defaultBoolean(varyColors), firstSliceAngle, series);
+    }
+
     public Pie {
-      varyColors = defaultBoolean(varyColors);
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
       validateAngle(firstSliceAngle);
       series = copySeries(series);
     }
@@ -311,8 +555,15 @@ public record ChartInput(
 
   /** 3D pie chart plot. */
   public record Pie3D(Boolean varyColors, List<Series> series) implements Plot {
+    @JsonCreator
+    static Pie3D create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("series") List<Series> series) {
+      return new Pie3D(defaultBoolean(varyColors), series);
+    }
+
     public Pie3D {
-      varyColors = defaultBoolean(varyColors);
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
       series = copySeries(series);
     }
   }
@@ -321,11 +572,29 @@ public record ChartInput(
   public record Radar(
       Boolean varyColors, ExcelChartRadarStyle style, List<Axis> axes, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Radar create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("style") ExcelChartRadarStyle style,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Radar(
+          defaultBoolean(varyColors),
+          style == null ? ExcelChartRadarStyle.STANDARD : style,
+          axes == null ? defaultCategoryAxes() : axes,
+          series);
+    }
+
     public Radar {
-      varyColors = defaultBoolean(varyColors);
-      style = style == null ? ExcelChartRadarStyle.STANDARD : style;
-      axes = copyAxes(axes, "axes", defaultCategoryAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(style, "style must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one radar plot with the default category/value axis pair. */
+    public Radar(Boolean varyColors, ExcelChartRadarStyle style, List<Series> series) {
+      this(varyColors, style, defaultCategoryAxes(), series);
     }
   }
 
@@ -333,33 +602,87 @@ public record ChartInput(
   public record Scatter(
       Boolean varyColors, ExcelChartScatterStyle style, List<Axis> axes, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Scatter create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("style") ExcelChartScatterStyle style,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Scatter(
+          defaultBoolean(varyColors),
+          style == null ? ExcelChartScatterStyle.LINE_MARKER : style,
+          axes == null ? defaultScatterAxes() : axes,
+          series);
+    }
+
     public Scatter {
-      varyColors = defaultBoolean(varyColors);
-      style = style == null ? ExcelChartScatterStyle.LINE_MARKER : style;
-      axes = copyAxes(axes, "axes", defaultScatterAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(style, "style must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one scatter plot with the default X/Y axis pair. */
+    public Scatter(Boolean varyColors, ExcelChartScatterStyle style, List<Series> series) {
+      this(varyColors, style, defaultScatterAxes(), series);
     }
   }
 
   /** Surface chart plot. */
   public record Surface(Boolean varyColors, Boolean wireframe, List<Axis> axes, List<Series> series)
       implements Plot {
+    @JsonCreator
+    static Surface create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("wireframe") Boolean wireframe,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Surface(
+          defaultBoolean(varyColors),
+          defaultBoolean(wireframe),
+          axes == null ? defaultSurfaceAxes() : axes,
+          series);
+    }
+
     public Surface {
-      varyColors = defaultBoolean(varyColors);
-      wireframe = defaultBoolean(wireframe);
-      axes = copyAxes(axes, "axes", defaultSurfaceAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(wireframe, "wireframe must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one surface plot with the default category/value/series axes. */
+    public Surface(Boolean varyColors, Boolean wireframe, List<Series> series) {
+      this(varyColors, wireframe, defaultSurfaceAxes(), series);
     }
   }
 
   /** 3D surface chart plot. */
   public record Surface3D(
       Boolean varyColors, Boolean wireframe, List<Axis> axes, List<Series> series) implements Plot {
+    @JsonCreator
+    static Surface3D create(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("wireframe") Boolean wireframe,
+        @JsonProperty("axes") List<Axis> axes,
+        @JsonProperty("series") List<Series> series) {
+      return new Surface3D(
+          defaultBoolean(varyColors),
+          defaultBoolean(wireframe),
+          axes == null ? defaultSurfaceAxes() : axes,
+          series);
+    }
+
     public Surface3D {
-      varyColors = defaultBoolean(varyColors);
-      wireframe = defaultBoolean(wireframe);
-      axes = copyAxes(axes, "axes", defaultSurfaceAxes());
+      Objects.requireNonNull(varyColors, "varyColors must not be null");
+      Objects.requireNonNull(wireframe, "wireframe must not be null");
+      axes = copyAxes(axes, "axes");
       series = copySeries(series);
+    }
+
+    /** Creates one 3D surface plot with the default category/value/series axes. */
+    public Surface3D(Boolean varyColors, Boolean wireframe, List<Series> series) {
+      this(varyColors, wireframe, defaultSurfaceAxes(), series);
     }
   }
 
@@ -414,10 +737,7 @@ public record ChartInput(
     return copyNonEmptyValues(series, "series");
   }
 
-  private static List<Axis> copyAxes(List<Axis> axes, String fieldName, List<Axis> defaults) {
-    if (axes == null) {
-      return defaults;
-    }
+  private static List<Axis> copyAxes(List<Axis> axes, String fieldName) {
     return copyNonEmptyValues(axes, fieldName);
   }
 

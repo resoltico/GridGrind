@@ -152,11 +152,15 @@ public sealed interface ProblemContext {
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = JsonLocation.Unavailable.class, name = "UNAVAILABLE"),
+    @JsonSubTypes.Type(value = JsonLocation.PathOnly.class, name = "PATH_ONLY"),
     @JsonSubTypes.Type(value = JsonLocation.LineColumn.class, name = "LINE_COLUMN"),
     @JsonSubTypes.Type(value = JsonLocation.Located.class, name = "LOCATED")
   })
   sealed interface JsonLocation
-      permits JsonLocation.Unavailable, JsonLocation.LineColumn, JsonLocation.Located {
+      permits JsonLocation.Unavailable,
+          JsonLocation.PathOnly,
+          JsonLocation.LineColumn,
+          JsonLocation.Located {
     /** Returns the explicit unavailable JSON-location variant. */
     static JsonLocation unavailable() {
       return new Unavailable();
@@ -167,6 +171,11 @@ public sealed interface ProblemContext {
       Objects.requireNonNull(jsonLine, "jsonLine must not be null");
       Objects.requireNonNull(jsonColumn, "jsonColumn must not be null");
       return new LineColumn(jsonLine, jsonColumn);
+    }
+
+    /** Returns a JSON-location variant with path only. */
+    static JsonLocation pathOnly(String jsonPath) {
+      return new PathOnly(requireNonBlank(jsonPath, "jsonPath"));
     }
 
     /** Returns a JSON-location variant with path, line, and column. */
@@ -180,6 +189,7 @@ public sealed interface ProblemContext {
     default Optional<String> jsonPathValue() {
       return switch (this) {
         case Located located -> Optional.of(located.jsonPath());
+        case PathOnly pathOnly -> Optional.of(pathOnly.jsonPath());
         case LineColumn _ -> Optional.empty();
         case Unavailable _ -> Optional.empty();
       };
@@ -190,6 +200,7 @@ public sealed interface ProblemContext {
       return switch (this) {
         case LineColumn lineColumn -> Optional.of(lineColumn.jsonLine());
         case Located located -> Optional.of(located.jsonLine());
+        case PathOnly _ -> Optional.empty();
         case Unavailable _ -> Optional.empty();
       };
     }
@@ -199,12 +210,20 @@ public sealed interface ProblemContext {
       return switch (this) {
         case LineColumn lineColumn -> Optional.of(lineColumn.jsonColumn());
         case Located located -> Optional.of(located.jsonColumn());
+        case PathOnly _ -> Optional.empty();
         case Unavailable _ -> Optional.empty();
       };
     }
 
     /** No JSON cursor could be derived for the request failure. */
     record Unavailable() implements JsonLocation {}
+
+    /** Only the JSON path was available from request validation. */
+    record PathOnly(String jsonPath) implements JsonLocation {
+      public PathOnly {
+        jsonPath = requireNonBlank(jsonPath, "jsonPath");
+      }
+    }
 
     /** Only the request line and column were available from the parser. */
     record LineColumn(int jsonLine, int jsonColumn) implements JsonLocation {
@@ -673,20 +692,27 @@ public sealed interface ProblemContext {
     }
   }
 
+  /** Common request-shape context for stages that need source and persistence families. */
+  sealed interface RequestShapeContext extends ProblemContext
+      permits ValidateRequest, ResolveInputs, OpenWorkbook, ExecuteCalculation {
+    /** Returns the authored request shape active for the failure context. */
+    RequestShape request();
+
+    /** Returns the decoded request source family when known. */
+    default Optional<String> sourceType() {
+      return request().sourceTypeValue();
+    }
+
+    /** Returns the decoded request persistence family when known. */
+    default Optional<String> persistenceType() {
+      return request().persistenceTypeValue();
+    }
+  }
+
   /** Context for failures that occur while validating request fields before execution. */
-  record ValidateRequest(RequestShape request) implements ProblemContext {
+  record ValidateRequest(RequestShape request) implements RequestShapeContext {
     public ValidateRequest {
       Objects.requireNonNull(request, "request must not be null");
-    }
-
-    /** Returns the decoded request source family when validation reached that point. */
-    public Optional<String> sourceType() {
-      return request.sourceTypeValue();
-    }
-
-    /** Returns the decoded request persistence family when validation reached that point. */
-    public Optional<String> persistenceType() {
-      return request.persistenceTypeValue();
     }
 
     @Override
@@ -696,20 +722,10 @@ public sealed interface ProblemContext {
   }
 
   /** Context for failures that occur while resolving source-backed authored inputs. */
-  record ResolveInputs(RequestShape request, InputReference input) implements ProblemContext {
+  record ResolveInputs(RequestShape request, InputReference input) implements RequestShapeContext {
     public ResolveInputs {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(input, "input must not be null");
-    }
-
-    /** Returns the decoded request source family when input resolution reached that point. */
-    public Optional<String> sourceType() {
-      return request.sourceTypeValue();
-    }
-
-    /** Returns the decoded request persistence family when input resolution reached that point. */
-    public Optional<String> persistenceType() {
-      return request.persistenceTypeValue();
     }
 
     /** Returns the authored input kind when one failing binding was identified. */
@@ -729,20 +745,11 @@ public sealed interface ProblemContext {
   }
 
   /** Context for failures that occur while opening the source workbook. */
-  record OpenWorkbook(RequestShape request, WorkbookReference workbook) implements ProblemContext {
+  record OpenWorkbook(RequestShape request, WorkbookReference workbook)
+      implements RequestShapeContext {
     public OpenWorkbook {
       Objects.requireNonNull(request, "request must not be null");
       Objects.requireNonNull(workbook, "workbook must not be null");
-    }
-
-    /** Returns the decoded request source family when workbook opening reached that point. */
-    public Optional<String> sourceType() {
-      return request.sourceTypeValue();
-    }
-
-    /** Returns the decoded request persistence family when workbook opening reached that point. */
-    public Optional<String> persistenceType() {
-      return request.persistenceTypeValue();
     }
 
     /** Returns the opened workbook path when execution targeted one existing file. */
@@ -757,11 +764,8 @@ public sealed interface ProblemContext {
   }
 
   /** Common calculation-failure context for the two top-level calculation stages. */
-  sealed interface ExecuteCalculation extends ProblemContext
+  sealed interface ExecuteCalculation extends RequestShapeContext
       permits ExecuteCalculation.Preflight, ExecuteCalculation.Execution {
-    /** Returns the authored request shape active for the calculation failure. */
-    RequestShape request();
-
     /** Returns the best-known workbook location derived for the calculation failure. */
     ProblemLocation location();
 
@@ -773,16 +777,6 @@ public sealed interface ProblemContext {
         case Preflight context -> new Preflight(context.request(), merged);
         case Execution context -> new Execution(context.request(), merged);
       };
-    }
-
-    /** Returns the decoded request source family when known. */
-    default Optional<String> sourceType() {
-      return request().sourceTypeValue();
-    }
-
-    /** Returns the decoded request persistence family when known. */
-    default Optional<String> persistenceType() {
-      return request().persistenceTypeValue();
     }
 
     /** Returns the localized sheet name when available. */
