@@ -24,14 +24,6 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 
-if rg -n '\{"source":\{"type":"NEW"\},"steps":\[\]\}.*--doctor-request' \
-    "${repo_root}/README.md" \
-    "${repo_root}/docs" \
-    "${repo_root}/jazzer/README.md" \
-    --glob '*.md' >/dev/null; then
-    die 'documentation still contains the obsolete no-envelope doctor-request example'
-fi
-
 export GRIDGRIND_REPO_ROOT="${repo_root}"
 
 python3 - <<'PY'
@@ -49,6 +41,17 @@ request_required = {
     "formulaEnvironment",
     "steps",
 }
+
+for doc in [root / "README.md", *frontmatter_files]:
+    for line in doc.read_text(encoding="utf-8").splitlines():
+        if (
+            '{"source":{"type":"NEW"},"steps":[]}' in line
+            and "--doctor-request" in line
+        ):
+            raise SystemExit(
+                "documentation still contains the obsolete no-envelope doctor-request example: "
+                f"{doc.relative_to(root)}"
+            )
 
 for doc in frontmatter_files:
     text = doc.read_text(encoding="utf-8")

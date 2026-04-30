@@ -74,10 +74,6 @@ public final class JazzerCli {
         targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
             : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
-    if (summaries.isEmpty()) {
-      System.out.println("No Jazzer summaries recorded yet.");
-      return;
-    }
     System.out.println(JazzerTextRenderer.renderStatus(summaries));
   }
 

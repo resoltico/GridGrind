@@ -81,6 +81,17 @@ class JazzerTextRendererTest {
     assertTrue(statusText.contains("findings=1, expected-invalid=1, replay-clean=1"));
   }
 
+  /**
+   * Keeps the empty-status surface stable so shell regressions do not depend on prior local runs.
+   */
+  @Test
+  void renderStatus_rendersHelpfulEmptyState() {
+    String statusText = JazzerTextRenderer.renderStatus(List.of());
+
+    assertTrue(statusText.contains("Jazzer Status"));
+    assertTrue(statusText.contains("(no summaries recorded)"));
+  }
+
   /** Preserves relative input paths so committed replay text does not hard-code one workspace. */
   @Test
   void renderReplay_preservesRelativeInputPaths() {
