@@ -45,8 +45,7 @@ public record CalculationReport(
       @JsonProperty("policy") CalculationPolicyInput policy,
       @JsonProperty("preflight") Optional<Preflight> preflight,
       @JsonProperty("execution") Execution execution) {
-    return new CalculationReport(
-        policy == null ? CalculationPolicyInput.defaults() : policy, preflight, execution);
+    return new CalculationReport(policy, preflight, execution);
   }
 
   /** Structured preflight report emitted before any server-side calculation attempt. */

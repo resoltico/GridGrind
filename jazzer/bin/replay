@@ -1,16 +1,79 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ $# -ge 1 ]]; then
+  case "$1" in
+    --help|-h|help)
+      cat <<EOF
+Usage: jazzer/bin/replay <target> <input-path> [--json] [gradle-options...]
+Replays one saved input against the matching replay harness.
+Valid targets: protocol-request, protocol-workflow, engine-command-sequence, xlsx-roundtrip
+EOF
+      exit 0
+      ;;
+  esac
+fi
+
 if [[ $# -lt 2 ]]; then
   echo "usage: $0 <target> <input-path> [--json] [gradle-args...]" >&2
   exit 1
 fi
 
+valid_targets=(protocol-request protocol-workflow engine-command-sequence xlsx-roundtrip)
+
+print_usage() {
+  cat <<EOF
+Usage: jazzer/bin/replay <target> <input-path> [--json] [gradle-options...]
+Replays one saved input against the matching replay harness.
+Valid targets: protocol-request, protocol-workflow, engine-command-sequence, xlsx-roundtrip
+EOF
+}
+
+is_valid_target() {
+  local candidate="$1"
+  local valid=''
+  for valid in "${valid_targets[@]}"; do
+    if [[ "${candidate}" == "${valid}" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+fail_usage() {
+  local message="$1"
+  printf '%s\n\n' "${message}" >&2
+  print_usage >&2
+  exit 2
+}
+
+resolve_existing_input_path() {
+  local raw_path="$1"
+  local absolute_path=''
+  local parent_dir=''
+  if [[ "${raw_path}" == /* ]]; then
+    absolute_path="${raw_path}"
+  else
+    absolute_path="${PWD}/${raw_path}"
+  fi
+  if [[ ! -e "${absolute_path}" ]]; then
+    fail_usage "Replay input does not exist: ${absolute_path}"
+  fi
+  if [[ ! -f "${absolute_path}" ]]; then
+    fail_usage "Replay input is not a regular file: ${absolute_path}"
+  fi
+  parent_dir="$(cd -P -- "$(dirname -- "${absolute_path}")" && pwd)"
+  printf '%s/%s\n' "${parent_dir}" "$(basename -- "${absolute_path}")"
+}
+
 script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 target="$1"
 input_path="$2"
 shift 2
-input_path="$(cd -P -- "$(dirname -- "${input_path}")" && pwd)/$(basename -- "${input_path}")"
+if ! is_valid_target "${target}"; then
+  fail_usage "Unknown Jazzer target: ${target}"
+fi
+input_path="$(resolve_existing_input_path "${input_path}")"
 
 gradle_args=("-PjazzerTarget=${target}" "-PjazzerInput=${input_path}")
 if [[ $# -ge 1 && "$1" == "--json" ]]; then

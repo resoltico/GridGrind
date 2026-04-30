@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.ChartAxisInput;
+import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartLegendInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
@@ -45,11 +51,11 @@ final class OperationSequenceChartFactory {
         List.of(nextExcelChartPlotDefinition(data)));
   }
 
-  private static ChartInput.Title nextChartTitleInput(GridGrindFuzzData data) {
+  private static ChartTitleInput nextChartTitleInput(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
-      case 0 -> new ChartInput.Title.None();
-      case 1 -> new ChartInput.Title.Text(TextSourceInput.inline("Chart " + data.consumeInt(0, 9)));
-      default -> new ChartInput.Title.Formula(data.consumeBoolean() ? "B1" : "C1");
+      case 0 -> new ChartTitleInput.None();
+      case 1 -> new ChartTitleInput.Text(TextSourceInput.inline("Chart " + data.consumeInt(0, 9)));
+      default -> new ChartTitleInput.Formula(data.consumeBoolean() ? "B1" : "C1");
     };
   }
 
@@ -61,10 +67,10 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ChartInput.Legend nextChartLegendInput(GridGrindFuzzData data) {
+  private static ChartLegendInput nextChartLegendInput(GridGrindFuzzData data) {
     return data.consumeBoolean()
-        ? new ChartInput.Legend.Hidden()
-        : new ChartInput.Legend.Visible(nextChartLegendPosition(data));
+        ? new ChartLegendInput.Hidden()
+        : new ChartLegendInput.Visible(nextChartLegendPosition(data));
   }
 
   private static ExcelChartDefinition.Legend nextExcelChartLegend(GridGrindFuzzData data) {
@@ -139,24 +145,24 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ChartInput.Plot nextChartPlotInput(GridGrindFuzzData data) {
+  private static ChartPlotInput nextChartPlotInput(GridGrindFuzzData data) {
     Boolean varyColors = data.consumeBoolean();
     return switch (selectorSlot(nextSelectorByte(data)) % 13) {
       case 0 ->
-          new ChartInput.Area(
+          new ChartPlotInput.Area(
               varyColors,
               nextChartGrouping(data),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 1 ->
-          new ChartInput.Area3D(
+          new ChartPlotInput.Area3D(
               varyColors,
               nextChartGrouping(data),
               nextOptionalInt(data, 0, 500),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 2 ->
-          new ChartInput.Bar(
+          new ChartPlotInput.Bar(
               varyColors,
               nextChartBarDirection(data),
               nextChartBarGrouping(data),
@@ -165,7 +171,7 @@ final class OperationSequenceChartFactory {
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 3 ->
-          new ChartInput.Bar3D(
+          new ChartPlotInput.Bar3D(
               varyColors,
               nextChartBarDirection(data),
               nextChartBarGrouping(data),
@@ -175,48 +181,48 @@ final class OperationSequenceChartFactory {
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 4 ->
-          new ChartInput.Doughnut(
+          new ChartPlotInput.Doughnut(
               varyColors,
               nextOptionalInt(data, 0, 360),
               nextOptionalInt(data, 10, 90),
               nextChartSeriesInputs(data, true));
       case 5 ->
-          new ChartInput.Line(
+          new ChartPlotInput.Line(
               varyColors,
               nextChartGrouping(data),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 6 ->
-          new ChartInput.Line3D(
+          new ChartPlotInput.Line3D(
               varyColors,
               nextChartGrouping(data),
               nextOptionalInt(data, 0, 500),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 7 ->
-          new ChartInput.Pie(
+          new ChartPlotInput.Pie(
               varyColors, nextOptionalInt(data, 0, 360), nextChartSeriesInputs(data, true));
-      case 8 -> new ChartInput.Pie3D(varyColors, nextChartSeriesInputs(data, true));
+      case 8 -> new ChartPlotInput.Pie3D(varyColors, nextChartSeriesInputs(data, true));
       case 9 ->
-          new ChartInput.Radar(
+          new ChartPlotInput.Radar(
               varyColors,
               nextChartRadarStyle(data),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 10 ->
-          new ChartInput.Scatter(
+          new ChartPlotInput.Scatter(
               varyColors,
               nextChartScatterStyle(data),
               nextChartAxesInputScatter(),
               nextChartSeriesInputs(data, false));
       case 11 ->
-          new ChartInput.Surface(
+          new ChartPlotInput.Surface(
               varyColors,
               data.consumeBoolean(),
               nextChartAxesInputSurface(),
               nextChartSeriesInputs(data, false));
       default ->
-          new ChartInput.Surface3D(
+          new ChartPlotInput.Surface3D(
               varyColors,
               data.consumeBoolean(),
               nextChartAxesInputSurface(),
@@ -313,47 +319,47 @@ final class OperationSequenceChartFactory {
     return data.consumeBoolean() ? data.consumeInt(minimum, maximum) : null;
   }
 
-  private static List<ChartInput.Axis> nextChartAxesInputCategory() {
+  private static List<ChartAxisInput> nextChartAxesInputCategory() {
     return List.of(
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ChartInput.Axis> nextChartAxesInputScatter() {
+  private static List<ChartAxisInput> nextChartAxesInputScatter() {
     return List.of(
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
   }
 
-  private static List<ChartInput.Axis> nextChartAxesInputSurface() {
+  private static List<ChartAxisInput> nextChartAxesInputSurface() {
     return List.of(
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.VALUE,
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true),
-        new ChartInput.Axis(
+        new ChartAxisInput(
             ExcelChartAxisKind.SERIES,
             ExcelChartAxisPosition.RIGHT,
             ExcelChartAxisCrosses.AUTO_ZERO,
@@ -407,9 +413,9 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ChartInput.Series> nextChartSeriesInputs(
+  private static List<ChartSeriesInput> nextChartSeriesInputs(
       GridGrindFuzzData data, boolean pieChart) {
-    List<ChartInput.Series> series = new ArrayList<>();
+    List<ChartSeriesInput> series = new ArrayList<>();
     series.add(nextChartSeriesInput(data, "B1", "B2:B4"));
     if (!pieChart && data.consumeBoolean()) {
       series.add(nextChartSeriesInput(data, "C1", "C2:C4"));
@@ -427,12 +433,12 @@ final class OperationSequenceChartFactory {
     return List.copyOf(series);
   }
 
-  private static ChartInput.Series nextChartSeriesInput(
+  private static ChartSeriesInput nextChartSeriesInput(
       GridGrindFuzzData data, String titleFormula, String valuesFormula) {
-    return new ChartInput.Series(
+    return new ChartSeriesInput(
         data.consumeBoolean()
-            ? new ChartInput.Title.Formula(titleFormula)
-            : new ChartInput.Title.Text(TextSourceInput.inline("Series " + data.consumeInt(0, 9))),
+            ? new ChartTitleInput.Formula(titleFormula)
+            : new ChartTitleInput.Text(TextSourceInput.inline("Series " + data.consumeInt(0, 9))),
         nextChartDataSourceInput(data, "A2:A4", data.consumeBoolean()),
         nextChartDataSourceInput(data, valuesFormula, true),
         null,
@@ -455,15 +461,15 @@ final class OperationSequenceChartFactory {
         data.consumeBoolean() ? Long.valueOf(data.consumeInt(0, 50)) : null);
   }
 
-  private static ChartInput.DataSource nextChartDataSourceInput(
+  private static ChartDataSourceInput nextChartDataSourceInput(
       GridGrindFuzzData data, String formula, boolean numeric) {
     if (data.consumeBoolean()) {
-      return new ChartInput.DataSource.Reference(formula);
+      return new ChartDataSourceInput.Reference(formula);
     }
     if (numeric) {
-      return new ChartInput.DataSource.NumericLiteral(nextNumericLiteralValues(data));
+      return new ChartDataSourceInput.NumericLiteral(nextNumericLiteralValues(data));
     }
-    return new ChartInput.DataSource.StringLiteral(nextStringLiteralValues(data));
+    return new ChartDataSourceInput.StringLiteral(nextStringLiteralValues(data));
   }
 
   private static ExcelChartDefinition.DataSource nextExcelChartDataSource(

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -124,7 +124,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
 | Jackson Databind | 3.1.2 |
-| JUnit Jupiter | 6.0.3 |
+| JUnit Jupiter | 6.1.0-RC1 |
 | Log4j Core | 2.25.3 |
 
 GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
@@ -408,7 +408,8 @@ Run any JSON fixture with:
 ./gradlew :cli:run --args="--request examples/<file>.json"
 ```
 
-Examples that persist a workbook write to `cli/build/generated-workbooks/`; the no-save examples
+Examples that persist a workbook write to `generated-workbooks/` beside the request file; for the
+checked-in repository fixtures that means `examples/generated-workbooks/`. The no-save examples
 return JSON only.
 
 The Java example is compiled and executed by `:authoring-java:test` and demonstrates how the

@@ -48,7 +48,7 @@ class ExampleExecutionFixturesTest {
   void builtInExamplesExecuteFromARepositoryRootWorkspace() throws IOException {
     Path workspace = Files.createDirectories(tempDir.resolve("artifact-workspace"));
     copyExamplesDirectory(locateRepoRoot().resolve("examples"), workspace.resolve("examples"));
-    Files.createDirectories(workspace.resolve("cli/build/generated-workbooks"));
+    Files.createDirectories(workspace.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
@@ -95,7 +95,7 @@ class ExampleExecutionFixturesTest {
     Path workspace = Files.createDirectories(tempDir.resolve("repository-workspace"));
     Path examplesDirectory = workspace.resolve("examples");
     copyExamplesDirectory(locateRepoRoot().resolve("examples"), examplesDirectory);
-    Files.createDirectories(workspace.resolve("cli/build/generated-workbooks"));
+    Files.createDirectories(examplesDirectory.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings exampleBindings = new ExecutionInputBindings(examplesDirectory);

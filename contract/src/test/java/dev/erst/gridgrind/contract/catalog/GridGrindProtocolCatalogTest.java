@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -189,6 +190,22 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
+  void requiredFieldsExcludeCatalogAndJsonIgnoredRecordComponents() {
+    assertEquals(
+        List.of("visible"),
+        GridGrindProtocolCatalog.requiredFields(CatalogIgnoredComponentRecord.class, List.of()));
+    assertEquals(
+        List.of("visible"),
+        GridGrindProtocolCatalog.requiredFields(CatalogIgnoredAccessorRecord.class, List.of()));
+    assertEquals(
+        List.of("visible"),
+        GridGrindProtocolCatalog.requiredFields(JsonIgnoredComponentRecord.class, List.of()));
+    assertEquals(
+        List.of("visible"),
+        GridGrindProtocolCatalog.requiredFields(JsonIgnoredAccessorRecord.class, List.of()));
+  }
+
+  @Test
   void requestTemplateAndCatalogEncodeDeterministically() throws IOException {
     assertArrayEquals(
         GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()),
@@ -207,18 +224,6 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         "Catalog optional field 'missing' does not exist on " + MutationStep.class.getName(),
         missingOptionalField.getMessage());
-
-    IllegalStateException primitiveOptionalField =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                GridGrindProtocolCatalog.requiredFields(
-                    PrimitiveFixture.class, List.of("enabled")));
-    assertEquals(
-        "Catalog optional field 'enabled' on "
-            + PrimitiveFixture.class.getName()
-            + " uses primitive component type boolean",
-        primitiveOptionalField.getMessage());
 
     IllegalStateException missingNestedDescriptor =
         assertThrows(
@@ -261,6 +266,28 @@ class GridGrindProtocolCatalogTest {
             + BlankPropertySealedType.class.getName()
             + " to declare a non-blank @JsonTypeInfo property",
         blankDiscriminatorCoverage.getMessage());
+  }
+
+  private record CatalogIgnoredComponentRecord(String visible, @CatalogIgnored String hidden) {}
+
+  private record CatalogIgnoredAccessorRecord(String visible, String hidden) {
+    @SuppressWarnings("UnusedMethod")
+    @CatalogIgnored
+    @Override
+    public String hidden() {
+      return hidden;
+    }
+  }
+
+  private record JsonIgnoredComponentRecord(String visible, @JsonIgnore String hidden) {}
+
+  private record JsonIgnoredAccessorRecord(String visible, String hidden) {
+    @SuppressWarnings("UnusedMethod")
+    @JsonIgnore
+    @Override
+    public String hidden() {
+      return hidden;
+    }
   }
 
   @Test
@@ -306,9 +333,6 @@ class GridGrindProtocolCatalogTest {
                 () -> new TypeEntry("BROKEN", "summary", List.of(), List.of(), " "))
             .getMessage());
   }
-
-  /** Primitive record used to verify optional-field validation. */
-  private record PrimitiveFixture(boolean enabled) {}
 
   /** Non-annotated sealed type used for discriminator validation. */
   private sealed interface NonAnnotatedSealedType permits NotARecord {}

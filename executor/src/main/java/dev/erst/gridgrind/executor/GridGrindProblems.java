@@ -2,7 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -36,7 +36,7 @@ public final class GridGrindProblems {
   private GridGrindProblems() {}
 
   /** Builds a fully populated problem from a classified exception. */
-  public static GridGrindResponse.Problem fromException(
+  public static GridGrindProblemDetail.Problem fromException(
       Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
@@ -49,7 +49,7 @@ public final class GridGrindProblems {
   }
 
   /** Builds a fully populated problem from an explicit code and message. */
-  public static GridGrindResponse.Problem problem(
+  public static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
@@ -62,23 +62,23 @@ public final class GridGrindProblems {
   /**
    * Builds a fully populated problem from an explicit code, message, and already-structured causes.
    */
-  public static GridGrindResponse.Problem problem(
+  public static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
-      List<GridGrindResponse.ProblemCause> causes) {
+      List<GridGrindProblemDetail.ProblemCause> causes) {
     return problem(code, message, context, null, causes);
   }
 
-  private static GridGrindResponse.Problem problem(
+  private static GridGrindProblemDetail.Problem problem(
       GridGrindProblemCode code,
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
       AssertionFailure assertionFailure,
-      List<GridGrindResponse.ProblemCause> causes) {
+      List<GridGrindProblemDetail.ProblemCause> causes) {
     Objects.requireNonNull(code, "code must not be null");
     Objects.requireNonNull(context, "context must not be null");
-    return new GridGrindResponse.Problem(
+    return new GridGrindProblemDetail.Problem(
         code,
         code.category(),
         code.recovery(),
@@ -91,13 +91,13 @@ public final class GridGrindProblems {
   }
 
   /** Appends an extra structured cause while preserving the primary classified problem. */
-  public static GridGrindResponse.Problem appendCause(
-      GridGrindResponse.Problem problem, GridGrindResponse.ProblemCause cause) {
+  public static GridGrindProblemDetail.Problem appendCause(
+      GridGrindProblemDetail.Problem problem, GridGrindProblemDetail.ProblemCause cause) {
     Objects.requireNonNull(problem, "problem must not be null");
     Objects.requireNonNull(cause, "cause must not be null");
-    List<GridGrindResponse.ProblemCause> causes = new ArrayList<>(problem.causes());
+    List<GridGrindProblemDetail.ProblemCause> causes = new ArrayList<>(problem.causes());
     causes.add(cause);
-    return new GridGrindResponse.Problem(
+    return new GridGrindProblemDetail.Problem(
         problem.code(),
         problem.category(),
         problem.recovery(),
@@ -110,7 +110,7 @@ public final class GridGrindProblems {
   }
 
   /** Converts an exception into one supplemental cause entry for secondary-failure reporting. */
-  public static GridGrindResponse.ProblemCause supplementalCause(
+  public static GridGrindProblemDetail.ProblemCause supplementalCause(
       String stage, Throwable exception, String messagePrefix) {
     Objects.requireNonNull(stage, "stage must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
@@ -118,13 +118,14 @@ public final class GridGrindProblems {
         messagePrefix == null || messagePrefix.isBlank()
             ? messageFor(exception)
             : messagePrefix + ": " + messageFor(exception);
-    return new GridGrindResponse.ProblemCause(codeFor(exception), message, stage);
+    return new GridGrindProblemDetail.ProblemCause(codeFor(exception), message, stage);
   }
 
   /** Converts an already-built problem into a synthetic cause entry for fallback reporting. */
-  public static GridGrindResponse.ProblemCause problemCause(GridGrindResponse.Problem problem) {
+  public static GridGrindProblemDetail.ProblemCause problemCause(
+      GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
-    return new GridGrindResponse.ProblemCause(
+    return new GridGrindProblemDetail.ProblemCause(
         problem.code(), problem.title() + ": " + problem.message(), problem.context().stage());
   }
 
@@ -170,16 +171,17 @@ public final class GridGrindProblems {
   /**
    * Returns the public diagnostic entries for one failure without exposing raw throwable internals.
    */
-  static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception) {
+  static List<GridGrindProblemDetail.ProblemCause> causesFor(Throwable exception) {
     return causesFor(exception, "EXECUTE_REQUEST");
   }
 
-  private static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception, String stage) {
+  private static List<GridGrindProblemDetail.ProblemCause> causesFor(
+      Throwable exception, String stage) {
     if (exception == null) {
       return List.of();
     }
     return List.of(
-        new GridGrindResponse.ProblemCause(codeFor(exception), messageFor(exception), stage));
+        new GridGrindProblemDetail.ProblemCause(codeFor(exception), messageFor(exception), stage));
   }
 
   private static AssertionFailure assertionFailureFor(Throwable exception) {
@@ -203,17 +205,18 @@ public final class GridGrindProblems {
     return switch (context) {
       case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
-          dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation jsonLocation =
+          dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation jsonLocation =
               pe.jsonPath() != null && (pe.jsonLine() == null || pe.jsonColumn() == null)
-                  ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.pathOnly(
-                      pe.jsonPath())
+                  ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                      .pathOnly(pe.jsonPath())
                   : pe.jsonLine() == null || pe.jsonColumn() == null
-                      ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.unavailable()
+                      ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                          .unavailable()
                       : pe.jsonPath() == null
-                          ? dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.lineColumn(
-                              pe.jsonLine(), pe.jsonColumn())
-                          : dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located(
-                              pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
+                          ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                              .JsonLocation.lineColumn(pe.jsonLine(), pe.jsonColumn())
+                          : dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                              .JsonLocation.located(pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
           yield rc.withJson(jsonLocation);
         }
         yield context;

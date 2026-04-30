@@ -107,9 +107,16 @@ final class NativeStandardInputProbe implements BooleanSupplier {
 
   static NativeStandardInputProbe windowsCurrentProcess() {
     Linker linker = Linker.nativeLinker();
-    SymbolLookup kernel32Lookup =
-        libraryLookup(() -> SymbolLookup.libraryLookup("Kernel32", Arena.global())).orElse(null);
-    return windowsCurrentProcessFromLookup(kernel32Lookup, linker::downcallHandle);
+    return windowsCurrentProcess(
+        (Supplier<Optional<SymbolLookup>>) NativeStandardInputProbe::kernel32LibraryLookup,
+        downcallHandleProvider(linker));
+  }
+
+  static NativeStandardInputProbe windowsCurrentProcess(
+      Supplier<Optional<SymbolLookup>> libraryLookupSupplier,
+      DowncallHandleProvider downcallHandleProvider) {
+    SymbolLookup kernel32Lookup = libraryLookupSupplier.get().orElse(null);
+    return windowsCurrentProcessFromLookup(kernel32Lookup, downcallHandleProvider);
   }
 
   static Optional<SymbolLookup> libraryLookup(Supplier<SymbolLookup> lookupFactory) {
@@ -118,6 +125,35 @@ final class NativeStandardInputProbe implements BooleanSupplier {
     } catch (RuntimeException | LinkageError exception) {
       return Optional.empty();
     }
+  }
+
+  static Supplier<Optional<SymbolLookup>> libraryLookupSupplier(
+      Supplier<SymbolLookup> lookupFactory) {
+    Objects.requireNonNull(lookupFactory, "lookupFactory must not be null");
+    return () -> libraryLookup(lookupFactory);
+  }
+
+  static Optional<SymbolLookup> namedLibraryLookup(String libraryName) {
+    Objects.requireNonNull(libraryName, "libraryName must not be null");
+    return libraryLookup(() -> SymbolLookup.libraryLookup(libraryName, Arena.global()));
+  }
+
+  static Optional<SymbolLookup> kernel32LibraryLookup() {
+    return kernel32LibraryLookup(System.getProperty("os.name", ""), "Kernel32");
+  }
+
+  static Optional<SymbolLookup> kernel32LibraryLookup(String osName, String libraryName) {
+    Objects.requireNonNull(osName, "osName must not be null");
+    Objects.requireNonNull(libraryName, "libraryName must not be null");
+    if (!isWindows(osName)) {
+      return Optional.empty();
+    }
+    return namedLibraryLookup(libraryName);
+  }
+
+  static DowncallHandleProvider downcallHandleProvider(Linker linker) {
+    Objects.requireNonNull(linker, "linker must not be null");
+    return linker::downcallHandle;
   }
 
   static NativeStandardInputProbe windowsCurrentProcessFromLookup(

@@ -3,12 +3,12 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport.*;
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 
+import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
@@ -37,66 +37,69 @@ final class OperationSequenceCommandFactory {
     return switch (selectorFamily(selector)) {
       case 0x0 ->
           switch (selectorSlot(selector)) {
-            case 0x0 -> new WorkbookCommand.CreateSheet(targetSheet);
-            case 0x1 -> new WorkbookCommand.RenameSheet(targetSheet, primarySheet + "Renamed");
-            case 0x2 -> new WorkbookCommand.DeleteSheet(targetSheet);
-            case 0x3 -> new WorkbookCommand.MoveSheet(targetSheet, data.consumeInt(0, 2));
+            case 0x0 -> new WorkbookSheetCommand.CreateSheet(targetSheet);
+            case 0x1 -> new WorkbookSheetCommand.RenameSheet(targetSheet, primarySheet + "Renamed");
+            case 0x2 -> new WorkbookSheetCommand.DeleteSheet(targetSheet);
+            case 0x3 -> new WorkbookSheetCommand.MoveSheet(targetSheet, data.consumeInt(0, 2));
             case 0x4 ->
-                new WorkbookCommand.CopySheet(
+                new WorkbookSheetCommand.CopySheet(
                     targetSheet, nextCopySheetName(targetSheet), nextExcelSheetCopyPosition(data));
-            case 0x5 -> new WorkbookCommand.SetActiveSheet(targetSheet);
+            case 0x5 -> new WorkbookSheetCommand.SetActiveSheet(targetSheet);
             case 0x6 ->
-                new WorkbookCommand.SetSelectedSheets(
+                new WorkbookSheetCommand.SetSelectedSheets(
                     nextSelectedSheetNames(data, primarySheet, secondarySheet));
             case 0x7 ->
-                new WorkbookCommand.SetSheetVisibility(targetSheet, nextSheetVisibility(data));
+                new WorkbookSheetCommand.SetSheetVisibility(targetSheet, nextSheetVisibility(data));
             case 0x8 ->
-                new WorkbookCommand.SetSheetProtection(
+                new WorkbookSheetCommand.SetSheetProtection(
                     targetSheet, nextSheetProtectionSettings(data));
-            default -> new WorkbookCommand.ClearSheetProtection(targetSheet);
+            default -> new WorkbookSheetCommand.ClearSheetProtection(targetSheet);
           };
       case 0x1 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.MergeCells(
+                new WorkbookStructureCommand.MergeCells(
                     targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
             case 0x1 ->
-                new WorkbookCommand.UnmergeCells(
+                new WorkbookStructureCommand.UnmergeCells(
                     targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
             case 0x2 ->
-                new WorkbookCommand.SetColumnWidth(
+                new WorkbookStructureCommand.SetColumnWidth(
                     targetSheet,
                     columnSpan.first(),
                     columnSpan.last(),
                     data.consumeRegularDouble(1.0d, 20.0d));
             case 0x3 ->
-                new WorkbookCommand.SetRowHeight(
+                new WorkbookStructureCommand.SetRowHeight(
                     targetSheet,
                     rowSpan.first(),
                     rowSpan.last(),
                     data.consumeRegularDouble(5.0d, 40.0d));
-            case 0x4 -> new WorkbookCommand.SetSheetPane(targetSheet, nextExcelSheetPane(data));
-            case 0x5 -> new WorkbookCommand.SetSheetZoom(targetSheet, data.consumeInt(10, 400));
-            case 0x6 -> new WorkbookCommand.SetPrintLayout(targetSheet, nextExcelPrintLayout(data));
-            default -> new WorkbookCommand.ClearPrintLayout(targetSheet);
+            case 0x4 ->
+                new WorkbookLayoutCommand.SetSheetPane(targetSheet, nextExcelSheetPane(data));
+            case 0x5 ->
+                new WorkbookLayoutCommand.SetSheetZoom(targetSheet, data.consumeInt(10, 400));
+            case 0x6 ->
+                new WorkbookLayoutCommand.SetPrintLayout(targetSheet, nextExcelPrintLayout(data));
+            default -> new WorkbookLayoutCommand.ClearPrintLayout(targetSheet);
           };
       case 0x2 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.SetCell(
+                new WorkbookCellCommand.SetCell(
                     targetSheet,
                     FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
                     FuzzDataDecoders.nextExcelCellValue(data));
             case 0x1 -> {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
-              yield new WorkbookCommand.SetRange(
+              yield new WorkbookCellCommand.SetRange(
                   targetSheet, range, FuzzDataDecoders.nextExcelMatrix(data, 2, 2));
             }
             case 0x2 ->
-                new WorkbookCommand.ClearRange(
+                new WorkbookCellCommand.ClearRange(
                     targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
             default ->
-                new WorkbookCommand.AppendRow(
+                new WorkbookCellCommand.AppendRow(
                     targetSheet,
                     List.of(
                         FuzzDataDecoders.nextExcelCellValue(data),
@@ -105,35 +108,39 @@ final class OperationSequenceCommandFactory {
       case 0x3 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.SetHyperlink(
+                new WorkbookAnnotationCommand.SetHyperlink(
                     targetSheet,
                     FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
                     nextExcelHyperlink(data));
             case 0x1 ->
-                new WorkbookCommand.ClearHyperlink(
+                new WorkbookAnnotationCommand.ClearHyperlink(
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
             case 0x2 ->
-                new WorkbookCommand.SetComment(
+                new WorkbookAnnotationCommand.SetComment(
                     targetSheet,
                     FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
                     nextExcelComment(data));
             case 0x3 ->
-                new WorkbookCommand.ClearComment(
+                new WorkbookAnnotationCommand.ClearComment(
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
             case 0x4 ->
-                new WorkbookCommand.SetPicture(targetSheet, nextExcelPictureDefinition(data));
-            case 0x5 -> new WorkbookCommand.SetChart(targetSheet, nextExcelChartDefinition(data));
-            case 0x6 -> new WorkbookCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
+                new WorkbookDrawingCommand.SetPicture(
+                    targetSheet, nextExcelPictureDefinition(data));
+            case 0x5 ->
+                new WorkbookDrawingCommand.SetChart(targetSheet, nextExcelChartDefinition(data));
+            case 0x6 ->
+                new WorkbookDrawingCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
             case 0x7 ->
-                new WorkbookCommand.SetEmbeddedObject(
+                new WorkbookDrawingCommand.SetEmbeddedObject(
                     targetSheet, nextExcelEmbeddedObjectDefinition(data));
             case 0x8 ->
-                new WorkbookCommand.SetDrawingObjectAnchor(
+                new WorkbookDrawingCommand.SetDrawingObjectAnchor(
                     targetSheet, nextDrawingObjectName(data), nextExcelDrawingAnchor(data));
             case 0x9 ->
-                new WorkbookCommand.DeleteDrawingObject(targetSheet, nextDrawingObjectName(data));
+                new WorkbookDrawingCommand.DeleteDrawingObject(
+                    targetSheet, nextDrawingObjectName(data));
             default ->
-                new WorkbookCommand.ApplyStyle(
+                new WorkbookFormattingCommand.ApplyStyle(
                     targetSheet,
                     validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
                     FuzzDataDecoders.nextStyle(data));
@@ -141,31 +148,32 @@ final class OperationSequenceCommandFactory {
       case 0x4 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.SetDataValidation(
+                new WorkbookFormattingCommand.SetDataValidation(
                     targetSheet,
                     validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
                     nextExcelDataValidationDefinition(data));
             case 0x1 ->
-                new WorkbookCommand.ClearDataValidations(
+                new WorkbookFormattingCommand.ClearDataValidations(
                     targetSheet, nextExcelRangeSelection(data, validRange));
             case 0x2 ->
-                new WorkbookCommand.SetConditionalFormatting(
+                new WorkbookFormattingCommand.SetConditionalFormatting(
                     targetSheet, nextExcelConditionalFormattingBlockDefinition(data, validRange));
             default ->
-                new WorkbookCommand.ClearConditionalFormatting(
+                new WorkbookFormattingCommand.ClearConditionalFormatting(
                     targetSheet, nextExcelRangeSelection(data, validRange));
           };
       case 0x5 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.SetAutofilter(targetSheet, nextAutofilterRange(validRange));
-            case 0x1 -> new WorkbookCommand.ClearAutofilter(targetSheet);
+                new WorkbookTabularCommand.SetAutofilter(
+                    targetSheet, nextAutofilterRange(validRange));
+            case 0x1 -> new WorkbookTabularCommand.ClearAutofilter(targetSheet);
             case 0x2 ->
-                new WorkbookCommand.SetTable(
+                new WorkbookTabularCommand.SetTable(
                     nextExcelTableDefinition(data, targetSheet, tableName, validRange));
-            case 0x3 -> new WorkbookCommand.DeleteTable(tableName, targetSheet);
+            case 0x3 -> new WorkbookTabularCommand.DeleteTable(tableName, targetSheet);
             case 0x4 ->
-                new WorkbookCommand.SetPivotTable(
+                new WorkbookTabularCommand.SetPivotTable(
                     nextExcelPivotTableDefinition(
                         data,
                         targetSheet,
@@ -175,13 +183,13 @@ final class OperationSequenceCommandFactory {
                         validName,
                         validRange));
             default ->
-                new WorkbookCommand.DeletePivotTable(
+                new WorkbookTabularCommand.DeletePivotTable(
                     validName ? pivotTableName : nextPivotTableName(data, false), targetSheet);
           };
       case 0x6 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.SetNamedRange(
+                new WorkbookMetadataCommand.SetNamedRange(
                     new ExcelNamedRangeDefinition(
                         validName ? namedRangeName : nextNamedRangeName(data, false),
                         data.consumeBoolean()
@@ -193,7 +201,7 @@ final class OperationSequenceCommandFactory {
                                 ? "A1:B2"
                                 : FuzzDataDecoders.nextNonBlankRange(data, false))));
             default ->
-                new WorkbookCommand.DeleteNamedRange(
+                new WorkbookMetadataCommand.DeleteNamedRange(
                     validName ? namedRangeName : nextNamedRangeName(data, false),
                     data.consumeBoolean()
                         ? new ExcelNamedRangeScope.WorkbookScope()
@@ -202,65 +210,65 @@ final class OperationSequenceCommandFactory {
       case 0x7 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                new WorkbookCommand.InsertRows(
+                new WorkbookStructureCommand.InsertRows(
                     targetSheet, rowSpan.first(), rowSpan.last() - rowSpan.first() + 1);
             case 0x1 ->
-                new WorkbookCommand.DeleteRows(
+                new WorkbookStructureCommand.DeleteRows(
                     targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
             case 0x2 ->
-                new WorkbookCommand.ShiftRows(
+                new WorkbookStructureCommand.ShiftRows(
                     targetSheet,
                     new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
                     nextNonZeroDelta(data, 2));
             case 0x3 ->
-                new WorkbookCommand.InsertColumns(
+                new WorkbookStructureCommand.InsertColumns(
                     targetSheet, columnSpan.first(), columnSpan.last() - columnSpan.first() + 1);
             case 0x4 ->
-                new WorkbookCommand.DeleteColumns(
+                new WorkbookStructureCommand.DeleteColumns(
                     targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
             case 0x5 ->
-                new WorkbookCommand.ShiftColumns(
+                new WorkbookStructureCommand.ShiftColumns(
                     targetSheet,
                     new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
                     nextNonZeroDelta(data, 2));
             case 0x6 ->
-                new WorkbookCommand.SetRowVisibility(
+                new WorkbookStructureCommand.SetRowVisibility(
                     targetSheet,
                     new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
                     data.consumeBoolean());
             case 0x7 ->
-                new WorkbookCommand.SetColumnVisibility(
+                new WorkbookStructureCommand.SetColumnVisibility(
                     targetSheet,
                     new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
                     data.consumeBoolean());
             case 0x8 ->
-                new WorkbookCommand.GroupRows(
+                new WorkbookStructureCommand.GroupRows(
                     targetSheet,
                     new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
                     data.consumeBoolean());
             case 0x9 ->
-                new WorkbookCommand.UngroupRows(
+                new WorkbookStructureCommand.UngroupRows(
                     targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
             case 0xA ->
-                new WorkbookCommand.GroupColumns(
+                new WorkbookStructureCommand.GroupColumns(
                     targetSheet,
                     new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
                     data.consumeBoolean());
             default ->
-                new WorkbookCommand.UngroupColumns(
+                new WorkbookStructureCommand.UngroupColumns(
                     targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
           };
       default ->
           switch (selectorSlot(selector)) {
-            case 0x0 -> new WorkbookCommand.AutoSizeColumns(targetSheet);
+            case 0x0 -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
             case 0x1 ->
-                new WorkbookCommand.SetWorkbookProtection(
+                new WorkbookSheetCommand.SetWorkbookProtection(
                     new ExcelWorkbookProtectionSettings(true, false, false, null, null));
-            case 0x2 -> new WorkbookCommand.ClearWorkbookProtection();
+            case 0x2 -> new WorkbookSheetCommand.ClearWorkbookProtection();
             case 0x3 ->
-                new WorkbookCommand.SetSheetPresentation(
+                new WorkbookLayoutCommand.SetSheetPresentation(
                     targetSheet, ExcelSheetPresentation.defaults());
-            default -> new WorkbookCommand.AutoSizeColumns(targetSheet);
+            default -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
           };
     };
   }

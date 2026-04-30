@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, java26, zulu26, gradle wrapper, java_home, macos, shell, devcontainer, mounted volumes, local disk]
   questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "do i need java installed on the host if i use the devcontainer", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]

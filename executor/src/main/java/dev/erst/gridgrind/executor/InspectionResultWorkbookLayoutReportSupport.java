@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindLayoutSurfaceReports;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextReport;
 import dev.erst.gridgrind.contract.dto.IgnoredErrorReport;
 import dev.erst.gridgrind.contract.dto.PaneReport;
@@ -17,7 +17,6 @@ import dev.erst.gridgrind.contract.dto.SheetDisplayReport;
 import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.contract.dto.SheetPresentationReport;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -28,20 +27,20 @@ import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 final class InspectionResultWorkbookLayoutReportSupport {
   private InspectionResultWorkbookLayoutReportSupport() {}
 
-  static GridGrindResponse.SheetProtectionReport toSheetProtectionReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection protection) {
+  static GridGrindWorkbookSurfaceReports.SheetProtectionReport toSheetProtectionReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection protection) {
     return switch (protection) {
-      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected _ ->
-          new GridGrindResponse.SheetProtectionReport.Unprotected();
-      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected protectedState ->
-          new GridGrindResponse.SheetProtectionReport.Protected(
+      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected _ ->
+          new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected();
+      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected protectedState ->
+          new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected(
               toSheetProtectionSettings(protectedState.settings()));
     };
   }
 
-  static GridGrindResponse.WindowReport toWindowReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.Window window) {
-    return new GridGrindResponse.WindowReport(
+  static GridGrindLayoutSurfaceReports.WindowReport toWindowReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.Window window) {
+    return new GridGrindLayoutSurfaceReports.WindowReport(
         window.sheetName(),
         window.topLeftAddress(),
         window.rowCount(),
@@ -49,7 +48,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
         window.rows().stream()
             .map(
                 row ->
-                    new GridGrindResponse.WindowRowReport(
+                    new GridGrindLayoutSurfaceReports.WindowRowReport(
                         row.rowIndex(),
                         row.cells().stream()
                             .map(InspectionResultCellReportSupport::toCellReport)
@@ -57,23 +56,23 @@ final class InspectionResultWorkbookLayoutReportSupport {
             .toList());
   }
 
-  static GridGrindResponse.CellHyperlinkReport toCellHyperlinkReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.CellHyperlink hyperlink) {
-    return new GridGrindResponse.CellHyperlinkReport(
+  static GridGrindLayoutSurfaceReports.CellHyperlinkReport toCellHyperlinkReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.CellHyperlink hyperlink) {
+    return new GridGrindLayoutSurfaceReports.CellHyperlinkReport(
         hyperlink.address(),
         InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink.hyperlink()).orElse(null));
   }
 
-  static GridGrindResponse.CellCommentReport toCellCommentReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.CellComment comment) {
-    return new GridGrindResponse.CellCommentReport(
+  static GridGrindLayoutSurfaceReports.CellCommentReport toCellCommentReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment comment) {
+    return new GridGrindLayoutSurfaceReports.CellCommentReport(
         comment.address(),
         InspectionResultCellReportSupport.toCommentReport(comment.comment()).orElse(null));
   }
 
-  static GridGrindResponse.SheetLayoutReport toSheetLayoutReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout layout) {
-    return new GridGrindResponse.SheetLayoutReport(
+  static GridGrindLayoutSurfaceReports.SheetLayoutReport toSheetLayoutReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout layout) {
+    return new GridGrindLayoutSurfaceReports.SheetLayoutReport(
         layout.sheetName(),
         toPaneReport(layout.pane()),
         layout.zoomPercent(),
@@ -81,7 +80,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
         layout.columns().stream()
             .map(
                 column ->
-                    new GridGrindResponse.ColumnLayoutReport(
+                    new GridGrindLayoutSurfaceReports.ColumnLayoutReport(
                         column.columnIndex(),
                         column.widthCharacters(),
                         column.hidden(),
@@ -91,7 +90,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
         layout.rows().stream()
             .map(
                 row ->
-                    new GridGrindResponse.RowLayoutReport(
+                    new GridGrindLayoutSurfaceReports.RowLayoutReport(
                         row.rowIndex(),
                         row.heightPoints(),
                         row.hidden(),
@@ -101,7 +100,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
   }
 
   static PrintLayoutReport toPrintLayoutReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult printLayout) {
+      dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult printLayout) {
     return new PrintLayoutReport(
         printLayout.sheetName(),
         toPrintAreaReport(printLayout.printLayout().layout().printArea()),
@@ -141,7 +140,7 @@ final class InspectionResultWorkbookLayoutReportSupport {
             presentation.display().displayRowColHeadings(),
             presentation.display().displayFormulas(),
             presentation.display().rightToLeft()),
-        toCellColorReport(presentation.tabColor()),
+        InspectionResultCellReportSupport.toCellColorReport(presentation.tabColor()),
         new SheetOutlineSummaryReport(
             presentation.outlineSummary().rowSumsBelow(),
             presentation.outlineSummary().rowSumsRight()),
@@ -225,9 +224,5 @@ final class InspectionResultWorkbookLayoutReportSupport {
         settings.selectLockedCellsLocked(),
         settings.selectUnlockedCellsLocked(),
         settings.sortLocked());
-  }
-
-  private static CellColorReport toCellColorReport(ExcelColorSnapshot color) {
-    return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
   }
 }

@@ -2,7 +2,6 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
@@ -11,29 +10,30 @@ import java.util.Objects;
  * recalc.
  */
 public record CalculationPolicyInput(
-    @JsonInclude(JsonInclude.Include.NON_NULL) CalculationStrategyInput strategy,
-    @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean markRecalculateOnOpen) {
+    CalculationStrategyInput strategy, boolean markRecalculateOnOpen) {
   /** Returns the default do-not-calculate policy with no open-time recalculation request. */
   public static CalculationPolicyInput defaults() {
     return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
+  }
+
+  /** Returns a calculation policy that customizes only the strategy. */
+  public static CalculationPolicyInput strategy(CalculationStrategyInput strategy) {
+    return new CalculationPolicyInput(strategy, false);
   }
 
   public CalculationPolicyInput {
     Objects.requireNonNull(strategy, "strategy must not be null");
   }
 
-  /** Creates a calculation policy with the provided strategy and no open-time recalc flag. */
-  public CalculationPolicyInput(CalculationStrategyInput strategy) {
-    this(strategy, false);
-  }
-
+  /** Reads one calculation policy while applying the documented request defaults. */
   @JsonCreator
-  static CalculationPolicyInput create(
+  public CalculationPolicyInput(
       @JsonProperty("strategy") CalculationStrategyInput strategy,
       @JsonProperty("markRecalculateOnOpen") Boolean markRecalculateOnOpen) {
-    return new CalculationPolicyInput(
-        strategy == null ? new CalculationStrategyInput.DoNotCalculate() : strategy,
-        Boolean.TRUE.equals(markRecalculateOnOpen));
+    this(
+        strategy,
+        Objects.requireNonNull(markRecalculateOnOpen, "markRecalculateOnOpen must not be null")
+            .booleanValue());
   }
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */

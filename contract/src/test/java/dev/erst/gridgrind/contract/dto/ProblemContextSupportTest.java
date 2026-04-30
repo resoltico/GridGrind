@@ -11,145 +11,156 @@ class ProblemContextSupportTest {
   @Test
   void mergeLocationComposesSheetCellRangeNamedRangeAndFormulaVariants() {
     assertEquals(
-        new ProblemContext.ProblemLocation.Cell("Budget", "B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.address("B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Range("Budget", "A1:B2"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.range("A1:B2")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2")));
     assertEquals(
-        new ProblemContext.ProblemLocation.FormulaCell("Budget", "B4", "SUM(B2:B3)"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
+            "Budget", "B4", "SUM(B2:B3)"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.formulaCell("Ignored", "B4", "SUM(B2:B3)")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Ignored", "B4", "SUM(B2:B3)")));
     assertEquals(
-        new ProblemContext.ProblemLocation.FormulaCell("Budget", "B4", "SUM(B2:B3)"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
+            "Budget", "B4", "SUM(B2:B3)"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.cell("Budget", "B4"),
-            ProblemContext.ProblemLocation.formulaCell("Archive", "C9", "SUM(B2:B3)")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Archive", "C9", "SUM(B2:B3)")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Cell("Budget", "B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.address("B4"),
-            ProblemContext.ProblemLocation.sheet("Budget")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget")));
     assertEquals(
-        new ProblemContext.ProblemLocation.FormulaCell("Budget", "B4", "SUM(B2:B3)"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
+            "Budget", "B4", "SUM(B2:B3)"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.address("B4"),
-            ProblemContext.ProblemLocation.formulaCell("Budget", "C5", "SUM(B2:B3)")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Budget", "C5", "SUM(B2:B3)")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Range("Budget", "A1:B2"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.sheet("Budget")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget")));
     assertEquals(
-        new ProblemContext.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.namedRange("Budget", "BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal")));
     assertEquals(
-        ProblemContext.ProblemLocation.address("B4"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.address("B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.unknown(),
-            ProblemContext.ProblemLocation.address("B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.unknown(),
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4")));
     assertEquals(
-        ProblemContext.ProblemLocation.sheet("Budget"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.sheet("Archive")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Archive")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Cell("Budget", "C7"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "C7"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.cell("Archive", "C7")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Archive", "C7")));
     assertEquals(
-        ProblemContext.ProblemLocation.namedRange("BudgetTotal"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.namedRange("BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Range("Budget", "C1:D4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "C1:D4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            new ProblemContext.ProblemLocation.Range("Archive", "C1:D4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Archive", "C1:D4")));
     assertEquals(
-        new ProblemContext.ProblemLocation.SheetNamedRange("Ops", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Ops", "BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            new ProblemContext.ProblemLocation.SheetNamedRange("Ops", "BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
+                "Ops", "BudgetTotal")));
   }
 
   @Test
   void mergeLocationPreservesSpecificCurrentLocationsAndRejectsBlankValues() {
-    ProblemContext.ProblemLocation current =
-        ProblemContext.ProblemLocation.formulaCell("Budget", "B4", "SUM(B2:B3)");
+    ProblemContextWorkbookSurfaces.ProblemLocation current =
+        ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell("Budget", "B4", "SUM(B2:B3)");
 
     assertEquals(
         current,
-        ProblemContext.mergeLocation(current, ProblemContext.ProblemLocation.sheet("Archive")));
+        ProblemContext.mergeLocation(
+            current, ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Archive")));
     assertInstanceOf(
-        ProblemContext.ProblemLocation.NamedRange.class,
+        ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange.class,
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.sheet("Budget"),
-            ProblemContext.ProblemLocation.namedRange("BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Budget"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal")));
     assertEquals(
-        ProblemContext.ProblemLocation.namedRange("Budget", "BudgetTotal"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.namedRange("Budget", "BudgetTotal"),
-            ProblemContext.ProblemLocation.cell("Budget", "B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(
-        ProblemContext.ProblemLocation.namedRange("BudgetTotal"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.namedRange("BudgetTotal"),
-            ProblemContext.ProblemLocation.cell("Budget", "B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Range("Budget", "A1:B2"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
         ProblemContext.mergeLocation(
-            new ProblemContext.ProblemLocation.Range("Budget", "A1:B2"),
-            ProblemContext.ProblemLocation.namedRange("BudgetTotal")));
+            new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Cell("Budget", "B4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.cell("Budget", "B4"),
-            ProblemContext.ProblemLocation.sheet("Archive")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.sheet("Archive")));
     assertEquals(
-        ProblemContext.ProblemLocation.address("B4"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.address("B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.address("B4"),
-            ProblemContext.ProblemLocation.range("A1:B2")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2")));
     assertEquals(
-        ProblemContext.ProblemLocation.range("A1:B2"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.address("B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.address("B4")));
     assertEquals(
-        new ProblemContext.ProblemLocation.FormulaCell("Budget", "B4", "SUM(B2:B3)"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
+            "Budget", "B4", "SUM(B2:B3)"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.formulaCell("Budget", "B4", "SUM(B2:B3)")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Budget", "B4", "SUM(B2:B3)")));
     assertEquals(
-        ProblemContext.ProblemLocation.cell("Budget", "B4"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.cell("Budget", "B4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(
-        ProblemContext.ProblemLocation.namedRange("BudgetTotal"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            ProblemContext.ProblemLocation.namedRange("BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal")));
     assertEquals(
-        new ProblemContext.ProblemLocation.Range("Budget", "C1:D4"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "C1:D4"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            new ProblemContext.ProblemLocation.Range("Budget", "C1:D4")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            new ProblemContextWorkbookSurfaces.ProblemLocation.Range("Budget", "C1:D4")));
     assertEquals(
-        new ProblemContext.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
+        new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal"),
         ProblemContext.mergeLocation(
-            ProblemContext.ProblemLocation.range("A1:B2"),
-            new ProblemContext.ProblemLocation.SheetNamedRange("Budget", "BudgetTotal")));
+            ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2"),
+            new ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange(
+                "Budget", "BudgetTotal")));
     assertEquals(
         "field must not be blank",
         assertThrows(

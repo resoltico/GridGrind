@@ -2,9 +2,11 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -13,6 +15,29 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for App process entry point and exit handler wiring. */
 class AppTest {
+  private static final String EMPTY_SUCCESS_REQUEST =
+      """
+      {
+        "protocolVersion": "V1",
+        "source": { "type": "NEW" },
+        "persistence": { "type": "NONE" },
+        "execution": {
+          "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+          "journal": { "level": "NORMAL" },
+          "calculation": {
+            "strategy": { "type": "DO_NOT_CALCULATE" },
+            "markRecalculateOnOpen": false
+          }
+        },
+        "formulaEnvironment": {
+          "externalWorkbooks": [],
+          "missingWorkbookPolicy": "ERROR",
+          "udfToolpacks": []
+        },
+        "steps": []
+      }
+      """;
+
   @Test
   void runDelegatesToCliAndDoesNotCallExitHandlerOnSuccess() throws IOException {
     AtomicInteger observedExitCode = new AtomicInteger(-1);
@@ -48,22 +73,55 @@ class AppTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.CloseResource")
-  void mainMethodRunsEndToEndWithValidRequestOnStdin() throws IOException {
-    byte[] jsonRequest =
-        "{\"protocolVersion\":\"V1\",\"source\":{\"type\":\"NEW\"},\"persistence\":{\"type\":\"NONE\"},\"steps\":[]}"
-            .getBytes(StandardCharsets.UTF_8);
+  void runWithProductionCliWiringConsumesStdinAndWritesResponse() throws IOException {
+    byte[] jsonRequest = EMPTY_SUCCESS_REQUEST.getBytes(StandardCharsets.UTF_8);
     java.io.ByteArrayOutputStream capturedOut = new java.io.ByteArrayOutputStream();
-    InputStream originalIn = System.in;
-    PrintStream originalOut = System.out;
-    try {
+    java.io.ByteArrayOutputStream capturedErr = new java.io.ByteArrayOutputStream();
+    AtomicInteger observedExitCode = new AtomicInteger(-1);
+
+    App app = new App(() -> new GridGrindCli()::run, observedExitCode::set);
+
+    app.run(new String[0], new ByteArrayInputStream(jsonRequest), capturedOut, capturedErr);
+
+    GridGrindResponse response = GridGrindJson.readResponse(capturedOut.toByteArray());
+
+    assertEquals(-1, observedExitCode.get());
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    assertTrue(capturedErr.toString(StandardCharsets.UTF_8).isBlank());
+  }
+
+  @Test
+  void mainConsumesSystemStreamsAndWritesResponse() throws IOException {
+    byte[] jsonRequest = EMPTY_SUCCESS_REQUEST.getBytes(StandardCharsets.UTF_8);
+    SystemStreams originalStreams = captureCurrentSystemStreams();
+    ByteArrayOutputStream capturedOut = new ByteArrayOutputStream();
+    ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
+    try (PrintStream redirectedOut = new PrintStream(capturedOut, true, StandardCharsets.UTF_8);
+        PrintStream redirectedErr = new PrintStream(capturedErr, true, StandardCharsets.UTF_8)) {
       System.setIn(new ByteArrayInputStream(jsonRequest));
-      System.setOut(new PrintStream(capturedOut, false, StandardCharsets.UTF_8));
+      System.setOut(redirectedOut);
+      System.setErr(redirectedErr);
+
       App.main(new String[0]);
     } finally {
-      System.setIn(originalIn);
-      System.setOut(originalOut);
+      originalStreams.restore();
     }
-    assertFalse(capturedOut.toString(StandardCharsets.UTF_8).isBlank());
+
+    GridGrindResponse response = GridGrindJson.readResponse(capturedOut.toByteArray());
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    assertTrue(capturedErr.toString(StandardCharsets.UTF_8).isBlank());
+  }
+
+  private static SystemStreams captureCurrentSystemStreams() {
+    return new SystemStreams(System.in, System.out, System.err);
+  }
+
+  /** Preserves and restores the mutable JVM-wide process streams during App entry-point tests. */
+  private record SystemStreams(java.io.InputStream stdin, PrintStream stdout, PrintStream stderr) {
+    void restore() {
+      System.setIn(stdin);
+      System.setOut(stdout);
+      System.setErr(stderr);
+    }
   }
 }

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -25,7 +25,7 @@ gridgrind --print-example BUDGET --response budget-request.json
 gridgrind --print-example SHEET_MAINTENANCE --response sheet-maintenance.json
 gridgrind --print-example WORKBOOK_HEALTH --response workbook-health.json
 gridgrind --print-example ASSERTION --response assertion.json
-printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
+gridgrind --print-request-template | gridgrind --doctor-request
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
@@ -45,12 +45,38 @@ primary output can be captured to a file instead of stdout.
   "source": {
     "type": "NEW"
   },
+  "persistence": {
+    "type": "NONE"
+  },
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
   "steps": []
 }
 ```
 
 Every non-empty step needs a caller-defined `stepId`. Step kind is inferred from exactly one of
 `action`, `assertion`, or `query`; do not send `step.type`.
+`gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below
+are request fragments, not standalone full requests, unless the section explicitly shows the full
+top-level envelope.
 
 ## Common Source And Persistence Shapes
 
@@ -326,30 +352,11 @@ Read sheet layout:
 }
 ```
 
-Run a no-save workbook-health pass:
-
-```json
-{
-  "source": {
-    "type": "EXISTING",
-    "path": "budget.xlsx"
-  },
-  "persistence": {
-    "type": "NONE"
-  },
-  "steps": [
-    {
-      "stepId": "lint",
-      "target": {
-        "type": "WORKBOOK_CURRENT"
-      },
-      "query": {
-        "type": "ANALYZE_WORKBOOK_FINDINGS"
-      }
-    }
-  ]
-}
-```
+Run a no-save workbook-health pass by starting from the smallest valid request above, switching
+`source` to `EXISTING`, keeping `persistence.type` as `NONE`, and adding one
+`ANALYZE_WORKBOOK_FINDINGS` step against `WORKBOOK_CURRENT`. The full runnable shape lives in
+[REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) and
+[../examples/workbook-health-request.json](../examples/workbook-health-request.json).
 
 ## Response Anchors Worth Remembering
 

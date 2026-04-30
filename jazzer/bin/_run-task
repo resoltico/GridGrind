@@ -43,6 +43,156 @@ is_active_fuzz_task() {
   esac
 }
 
+valid_target_keys=(regression protocol-request protocol-workflow engine-command-sequence xlsx-roundtrip)
+
+gradle_property_value() {
+  local property_name="$1"
+  local arg=''
+  for arg in "${gradle_args[@]}"; do
+    if [[ "${arg}" == "-P${property_name}="* ]]; then
+      echo "${arg#-P${property_name}=}"
+      return 0
+    fi
+  done
+  echo ""
+}
+
+is_help_flag() {
+  local arg=''
+  for arg in "${gradle_args[@]}"; do
+    case "${arg}" in
+      --help|-h|help) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+is_valid_target_key() {
+  local candidate="$1"
+  local valid=''
+  for valid in "${valid_target_keys[@]}"; do
+    if [[ "${valid}" == "${candidate}" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+wrapper_usage() {
+  local target_list
+  target_list="$(IFS=', '; echo "${valid_target_keys[*]}")"
+  case "${task_name}" in
+    fuzzProtocolRequest)
+      cat <<EOF
+Usage: jazzer/bin/fuzz-protocol-request [gradle-options...]
+Starts active fuzzing for the protocol-request harness.
+EOF
+      ;;
+    fuzzProtocolWorkflow)
+      cat <<EOF
+Usage: jazzer/bin/fuzz-protocol-workflow [gradle-options...]
+Starts active fuzzing for the protocol-workflow harness.
+EOF
+      ;;
+    fuzzEngineCommandSequence)
+      cat <<EOF
+Usage: jazzer/bin/fuzz-engine-command-sequence [gradle-options...]
+Starts active fuzzing for the engine-command-sequence harness.
+EOF
+      ;;
+    fuzzXlsxRoundTrip)
+      cat <<EOF
+Usage: jazzer/bin/fuzz-xlsx-roundtrip [gradle-options...]
+Starts active fuzzing for the xlsx-roundtrip harness.
+EOF
+      ;;
+    jazzerStatus)
+      cat <<EOF
+Usage: jazzer/bin/status [target] [gradle-options...]
+Prints the latest local Jazzer run summaries.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerReport)
+      cat <<EOF
+Usage: jazzer/bin/report [target] [gradle-options...]
+Prints the detailed latest local Jazzer summary for one target or all targets.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerListFindings)
+      cat <<EOF
+Usage: jazzer/bin/list-findings [target] [gradle-options...]
+Lists saved finding artifacts for one target or all targets.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerListCorpus)
+      cat <<EOF
+Usage: jazzer/bin/list-corpus [target] [gradle-options...]
+Lists local corpus and promoted inputs for one target or all targets.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerRefreshPromotedMetadata)
+      cat <<EOF
+Usage: jazzer/bin/refresh-promoted-metadata [target] [gradle-options...]
+Replays promoted inputs and refreshes their stored metadata.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerReplay)
+      cat <<EOF
+Usage: jazzer/bin/replay <target> <input-path> [--json] [gradle-options...]
+Replays one saved input against the matching replay harness.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerPromote)
+      cat <<EOF
+Usage: jazzer/bin/promote <target> <input-path> <name> [gradle-options...]
+Promotes one replayable input into the committed regression surface.
+Valid targets: ${target_list}
+EOF
+      ;;
+    jazzerRegression)
+      cat <<EOF
+Usage: jazzer/bin/regression [gradle-options...]
+Replays all committed regression inputs across every Jazzer harness.
+EOF
+      ;;
+    cleanLocalCorpus)
+      cat <<EOF
+Usage: jazzer/bin/clean-local-corpus [gradle-options...]
+Deletes local non-promoted fuzz corpus files.
+EOF
+      ;;
+    cleanLocalFindings)
+      cat <<EOF
+Usage: jazzer/bin/clean-local-findings [gradle-options...]
+Deletes local non-promoted finding artifacts.
+EOF
+      ;;
+    *)
+      cat <<EOF
+Usage: $0 <gradle-task> [gradle-args...]
+EOF
+      ;;
+  esac
+}
+
+if is_help_flag; then
+  wrapper_usage
+  exit 0
+fi
+
+requested_target="$(gradle_property_value jazzerTarget)"
+if [[ -n "${requested_target}" ]] && ! is_valid_target_key "${requested_target}"; then
+  printf 'Unknown Jazzer target: %s\n\n' "${requested_target}" >&2
+  wrapper_usage >&2
+  exit 2
+fi
+
 ensure_plain_console() {
   local has_console=0
   for arg in "${gradle_args[@]}"; do

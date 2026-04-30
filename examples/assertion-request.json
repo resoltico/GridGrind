@@ -8,9 +8,24 @@
     "type" : "NONE"
   },
   "execution" : {
+    "mode" : {
+      "readMode" : "FULL_XSSF",
+      "writeMode" : "FULL_XSSF"
+    },
     "journal" : {
       "level" : "VERBOSE"
+    },
+    "calculation" : {
+      "strategy" : {
+        "type" : "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen" : false
     }
+  },
+  "formulaEnvironment" : {
+    "externalWorkbooks" : [ ],
+    "missingWorkbookPolicy" : "ERROR",
+    "udfToolpacks" : [ ]
   },
   "steps" : [ {
     "stepId" : "ensure-budget",

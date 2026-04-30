@@ -237,6 +237,56 @@ class ExcelChartFallbackCoverageTest {
   }
 
   @Test
+  void titleFormulaFallbackTreatsErrorCachedScalarsAsRecoverable() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      sheet.createRow(0).createCell(0).setCellValue("Labels");
+      sheet.getRow(0).createCell(1).setCellFormula("1/0");
+      workbook
+          .getCreationHelper()
+          .createFormulaEvaluator()
+          .evaluateFormulaCell(sheet.getRow(0).getCell(1));
+
+      XSSFChart chart =
+          sheet
+              .createDrawingPatriarch()
+              .createChart(sheet.createDrawingPatriarch().createAnchor(0, 0, 0, 0, 1, 1, 8, 10));
+
+      assertEquals(
+          Optional.empty(),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
+      assertEquals("", ExcelChartSnapshotSupport.resolvedTitleFormulaText(chart, "B1"));
+    }
+  }
+
+  @Test
+  void titleFormulaFallbackReturnsEmptyForMalformedReferencesAndRuntimeFailures()
+      throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      sheet.createRow(0).createCell(0).setCellValue("Plan");
+      sheet.getRow(0).createCell(1).setCellFormula("UPPER(A1)");
+
+      XSSFChart chart =
+          sheet
+              .createDrawingPatriarch()
+              .createChart(sheet.createDrawingPatriarch().createAnchor(0, 0, 0, 0, 1, 1, 8, 10));
+
+      assertEquals(
+          Optional.empty(),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+              chart, null, "not-a-cell-reference", null));
+      assertEquals(
+          Optional.empty(),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+              chart,
+              null,
+              "B1",
+              FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom"))));
+    }
+  }
+
+  @Test
   void plotCreationWrapperDelegatesWithoutAnExplicitRuntime() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");

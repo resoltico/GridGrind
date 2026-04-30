@@ -2,10 +2,10 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/unknown_field_rejection.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestShapeException
-Message: Unknown field 'dataFormat'
+Kind: InvalidRequestException
+Message: Missing required field 'execution'
 Input Bytes: 152
-Decode Outcome: INVALID_REQUEST_SHAPE
+Decode Outcome: INVALID_REQUEST
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0

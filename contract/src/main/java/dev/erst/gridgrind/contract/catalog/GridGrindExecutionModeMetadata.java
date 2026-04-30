@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -23,7 +25,7 @@ public final class GridGrindExecutionModeMetadata {
       new StreamingWriteMode(
           ExecutionModeInput.WriteMode.STREAMING_WRITE,
           WorkbookPlan.WorkbookSource.New.class,
-          List.of(MutationAction.EnsureSheet.class, MutationAction.AppendRow.class),
+          List.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class),
           CalculationStrategyInput.DoNotCalculate.class,
           true);
 
@@ -199,9 +201,10 @@ public final class GridGrindExecutionModeMetadata {
       return "execution.mode.writeMode="
           + mode.name()
           + " requires "
-          + GridGrindProtocolTypeNames.mutationActionTypeName(MutationAction.EnsureSheet.class)
+          + GridGrindProtocolTypeNames.mutationActionTypeName(
+              WorkbookMutationAction.EnsureSheet.class)
           + " before "
-          + GridGrindProtocolTypeNames.mutationActionTypeName(MutationAction.AppendRow.class)
+          + GridGrindProtocolTypeNames.mutationActionTypeName(CellMutationAction.AppendRow.class)
           + " so the streaming writer has a"
           + " materialized sheet target";
     }
@@ -211,7 +214,8 @@ public final class GridGrindExecutionModeMetadata {
       return "execution.mode.writeMode="
           + mode.name()
           + " requires "
-          + GridGrindProtocolTypeNames.mutationActionTypeName(MutationAction.EnsureSheet.class)
+          + GridGrindProtocolTypeNames.mutationActionTypeName(
+              WorkbookMutationAction.EnsureSheet.class)
           + " before any assertion step so the streaming workbook can"
           + " materialize a sheet";
     }
@@ -221,7 +225,8 @@ public final class GridGrindExecutionModeMetadata {
       return "execution.mode.writeMode="
           + mode.name()
           + " requires "
-          + GridGrindProtocolTypeNames.mutationActionTypeName(MutationAction.EnsureSheet.class)
+          + GridGrindProtocolTypeNames.mutationActionTypeName(
+              WorkbookMutationAction.EnsureSheet.class)
           + " before any inspection step so the streaming workbook can"
           + " materialize a sheet";
     }
@@ -231,7 +236,8 @@ public final class GridGrindExecutionModeMetadata {
       return "execution.mode.writeMode="
           + mode.name()
           + " requires at least one "
-          + GridGrindProtocolTypeNames.mutationActionTypeName(MutationAction.EnsureSheet.class)
+          + GridGrindProtocolTypeNames.mutationActionTypeName(
+              WorkbookMutationAction.EnsureSheet.class)
           + " mutation";
     }
 

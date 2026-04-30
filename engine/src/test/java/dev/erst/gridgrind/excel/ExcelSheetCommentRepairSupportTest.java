@@ -34,19 +34,19 @@ import org.xml.sax.SAXException;
 class ExcelSheetCommentRepairSupportTest {
   @Test
   void commentsAfterShiftColumnsKeepsMovedCommentWhenTargetsCollide() {
-    List<WorkbookReadResult.CellComment> shifted =
+    List<WorkbookSheetResult.CellComment> shifted =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(
-                new WorkbookReadResult.CellComment(
+                new WorkbookSheetResult.CellComment(
                     "A2", new ExcelCommentSnapshot("stationary", "GridGrind", true, null, null)),
-                new WorkbookReadResult.CellComment(
+                new WorkbookSheetResult.CellComment(
                     "B2", new ExcelCommentSnapshot("moving", "GridGrind", true, null, null))),
             new ExcelColumnSpan(1, 1),
             -1);
 
     assertEquals(
         List.of(
-            new WorkbookReadResult.CellComment(
+            new WorkbookSheetResult.CellComment(
                 "A2", new ExcelCommentSnapshot("moving", "GridGrind", true, null, null))),
         shifted);
   }
@@ -91,20 +91,20 @@ class ExcelSheetCommentRepairSupportTest {
 
   @Test
   void insertDeleteAndShiftColumnHelpersRewriteReadComments() {
-    List<WorkbookReadResult.CellComment> inserted =
+    List<WorkbookSheetResult.CellComment> inserted =
         ExcelSheetCommentRepairSupport.commentsAfterInsertColumns(
             List.of(comment("A2", "Stationary"), comment("C2", "Shifted")), 1, 1);
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("D2", "Shifted")), inserted);
 
-    List<WorkbookReadResult.CellComment> deleted =
+    List<WorkbookSheetResult.CellComment> deleted =
         ExcelSheetCommentRepairSupport.commentsAfterDeleteColumns(
             List.of(comment("A2", "Stationary"), comment("D2", "Shifted")),
             new ExcelColumnSpan(1, 2));
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Shifted")), deleted);
 
-    List<WorkbookReadResult.CellComment> shiftedRight =
+    List<WorkbookSheetResult.CellComment> shiftedRight =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(
                 comment("A2", "Stationary"),
@@ -118,7 +118,7 @@ class ExcelSheetCommentRepairSupportTest {
         List.of(comment("A2", "Stationary"), comment("C2", "Moving"), comment("E2", "Far")),
         shiftedRight);
 
-    List<WorkbookReadResult.CellComment> unchanged =
+    List<WorkbookSheetResult.CellComment> unchanged =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("A2", "Stationary"), comment("B2", "Moving")),
             new ExcelColumnSpan(1, 1),
@@ -126,7 +126,7 @@ class ExcelSheetCommentRepairSupportTest {
 
     assertEquals(List.of(comment("A2", "Stationary"), comment("B2", "Moving")), unchanged);
 
-    List<WorkbookReadResult.CellComment> shiftedLeft =
+    List<WorkbookSheetResult.CellComment> shiftedLeft =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("B2", "Moving"), comment("D2", "Stationary")),
             new ExcelColumnSpan(1, 1),
@@ -134,7 +134,7 @@ class ExcelSheetCommentRepairSupportTest {
 
     assertEquals(List.of(comment("A2", "Moving"), comment("D2", "Stationary")), shiftedLeft);
 
-    List<WorkbookReadResult.CellComment> shiftedLeftOutsideWindow =
+    List<WorkbookSheetResult.CellComment> shiftedLeftOutsideWindow =
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(comment("C2", "Stationary"), comment("F2", "Moving")),
             new ExcelColumnSpan(5, 5),
@@ -352,7 +352,7 @@ class ExcelSheetCommentRepairSupportTest {
   private static void assertVisibleComments(
       ExcelWorkbook workbook, String sheetName, Map<String, ExcelComment> expected) {
     Map<String, ExcelComment> actual = new java.util.LinkedHashMap<>();
-    for (WorkbookReadResult.CellComment comment :
+    for (WorkbookSheetResult.CellComment comment :
         workbook.sheet(sheetName).comments(new ExcelCellSelection.AllUsedCells())) {
       actual.put(comment.address(), comment.comment().toPlainComment());
     }
@@ -432,8 +432,8 @@ class ExcelSheetCommentRepairSupportTest {
     return Map.copyOf(counts);
   }
 
-  private static WorkbookReadResult.CellComment comment(String address, String text) {
-    return new WorkbookReadResult.CellComment(
+  private static WorkbookSheetResult.CellComment comment(String address, String text) {
+    return new WorkbookSheetResult.CellComment(
         address, new ExcelCommentSnapshot(text, "GridGrind", true, null, null));
   }
 

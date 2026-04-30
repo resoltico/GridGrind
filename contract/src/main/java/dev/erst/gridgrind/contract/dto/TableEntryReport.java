@@ -1,8 +1,11 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing factual report for one table loaded from a workbook. */
 public record TableEntryReport(
@@ -15,13 +18,13 @@ public record TableEntryReport(
     List<TableColumnReport> columns,
     TableStyleReport style,
     boolean hasAutofilter,
-    String comment,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> comment,
     boolean published,
     boolean insertRow,
     boolean insertRowShift,
-    String headerRowCellStyle,
-    String dataCellStyle,
-    String totalsRowCellStyle) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> headerRowCellStyle,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> dataCellStyle,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> totalsRowCellStyle) {
   /** Creates a table report with defaulted per-column metadata and optional flags. */
   public TableEntryReport(
       String name,
@@ -39,18 +42,16 @@ public record TableEntryReport(
         headerRowCount,
         totalsRowCount,
         columnNames,
-        columnNames.stream()
-            .map(columnName -> new TableColumnReport(0L, columnName, "", "", "", ""))
-            .toList(),
+        columnNames.stream().map(columnName -> new TableColumnReport(0L, columnName)).toList(),
         style,
         hasAutofilter,
-        "",
+        Optional.empty(),
         false,
         false,
         false,
-        "",
-        "",
-        "");
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   public TableEntryReport {
@@ -70,32 +71,49 @@ public record TableEntryReport(
     columnNames = copyColumnNames(columnNames);
     Objects.requireNonNull(columns, "columns must not be null");
     columns = copyColumns(columns);
-    Objects.requireNonNull(comment, "comment must not be null");
-    Objects.requireNonNull(headerRowCellStyle, "headerRowCellStyle must not be null");
-    Objects.requireNonNull(dataCellStyle, "dataCellStyle must not be null");
-    Objects.requireNonNull(totalsRowCellStyle, "totalsRowCellStyle must not be null");
+    comment = normalizeOptional(comment);
+    headerRowCellStyle = normalizeOptional(headerRowCellStyle);
+    dataCellStyle = normalizeOptional(dataCellStyle);
+    totalsRowCellStyle = normalizeOptional(totalsRowCellStyle);
     Objects.requireNonNull(style, "style must not be null");
   }
 
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  static TableEntryReport create(TableEntryReportJson json) {
+  @JsonCreator
+  @SuppressWarnings("PMD.ExcessiveParameterList")
+  static TableEntryReport create(
+      @JsonProperty("name") String name,
+      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("range") String range,
+      @JsonProperty("headerRowCount") int headerRowCount,
+      @JsonProperty("totalsRowCount") int totalsRowCount,
+      @JsonProperty("columnNames") List<String> columnNames,
+      @JsonProperty("columns") List<TableColumnReport> columns,
+      @JsonProperty("style") TableStyleReport style,
+      @JsonProperty("hasAutofilter") boolean hasAutofilter,
+      @JsonProperty("comment") Optional<String> comment,
+      @JsonProperty("published") boolean published,
+      @JsonProperty("insertRow") boolean insertRow,
+      @JsonProperty("insertRowShift") boolean insertRowShift,
+      @JsonProperty("headerRowCellStyle") Optional<String> headerRowCellStyle,
+      @JsonProperty("dataCellStyle") Optional<String> dataCellStyle,
+      @JsonProperty("totalsRowCellStyle") Optional<String> totalsRowCellStyle) {
     return new TableEntryReport(
-        json.name(),
-        json.sheetName(),
-        json.range(),
-        json.headerRowCount(),
-        json.totalsRowCount(),
-        json.columnNames(),
-        json.columns(),
-        json.style(),
-        json.hasAutofilter(),
-        json.comment() == null ? "" : json.comment(),
-        json.published(),
-        json.insertRow(),
-        json.insertRowShift(),
-        json.headerRowCellStyle() == null ? "" : json.headerRowCellStyle(),
-        json.dataCellStyle() == null ? "" : json.dataCellStyle(),
-        json.totalsRowCellStyle() == null ? "" : json.totalsRowCellStyle());
+        name,
+        sheetName,
+        range,
+        headerRowCount,
+        totalsRowCount,
+        columnNames,
+        columns,
+        style,
+        hasAutofilter,
+        comment,
+        published,
+        insertRow,
+        insertRowShift,
+        headerRowCellStyle,
+        dataCellStyle,
+        totalsRowCellStyle);
   }
 
   private static List<String> copyColumnNames(List<String> columnNames) {
@@ -112,21 +130,15 @@ public record TableEntryReport(
     return List.copyOf(columns);
   }
 
-  private record TableEntryReportJson(
-      String name,
-      String sheetName,
-      String range,
-      int headerRowCount,
-      int totalsRowCount,
-      List<String> columnNames,
-      List<TableColumnReport> columns,
-      TableStyleReport style,
-      boolean hasAutofilter,
-      String comment,
-      boolean published,
-      boolean insertRow,
-      boolean insertRowShift,
-      String headerRowCellStyle,
-      String dataCellStyle,
-      String totalsRowCellStyle) {}
+  private static Optional<String> normalizeOptional(Optional<String> value) {
+    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    if (normalized.isPresent()) {
+      String text = normalized.orElseThrow();
+      if (text.isBlank()) {
+        return Optional.empty();
+      }
+      return Optional.of(text);
+    }
+    return Optional.empty();
+  }
 }

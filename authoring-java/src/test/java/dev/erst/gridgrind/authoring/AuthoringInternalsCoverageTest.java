@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -22,7 +22,7 @@ class AuthoringInternalsCoverageTest {
   void plannedStepsPreserveExplicitIdsAndRejectInvalidInputs() {
     SheetSelector.ByName sheetSelector = new SheetSelector.ByName("Budget");
     CellSelector.ByAddress cellSelector = new CellSelector.ByAddress("Budget", "A1");
-    MutationAction.EnsureSheet ensureSheet = new MutationAction.EnsureSheet();
+    WorkbookMutationAction.EnsureSheet ensureSheet = new WorkbookMutationAction.EnsureSheet();
     InspectionQuery.GetCells cellQuery = new InspectionQuery.GetCells();
     Assertion.CellValue present =
         new Assertion.CellValue(Values.toExpectedCellValue(Values.expectedBlank()));

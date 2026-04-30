@@ -57,28 +57,42 @@ final class GridGrindProtocolCatalogLookupSupport {
     String catalogGroup = ref.catalogGroup().toLowerCase(Locale.ROOT);
     String summary = summaryFor(ref.value()).toLowerCase(Locale.ROOT);
     String combined = lookupId + " " + qualifiedId + " " + catalogGroup + " " + summary;
-    Integer rank = null;
-    if (lookupId.equals(normalizedQuery) || qualifiedId.equals(normalizedQuery)) {
-      rank = 0;
-    } else if (containsAllTokens(lookupId, tokens) || containsAllTokens(qualifiedId, tokens)) {
-      rank = 1;
-    } else if (containsAllTokens(summary, tokens)) {
-      rank = 2;
-    } else if (containsAllTokens(combined, tokens)) {
-      rank = 3;
-    }
-    if (rank == null) {
+    Optional<Integer> rank =
+        searchRank(normalizedQuery, tokens, lookupId, qualifiedId, summary, combined);
+    if (rank.isEmpty()) {
       return Optional.empty();
     }
     return Optional.of(
         new RankedSearchMatch(
-            rank,
+            rank.orElseThrow(),
             new CatalogSearchMatch(
                 ref.catalogGroup(),
                 ref.lookupId(),
                 ref.qualifiedId(),
                 kindFor(ref.value()),
                 summaryFor(ref.value()))));
+  }
+
+  private static Optional<Integer> searchRank(
+      String normalizedQuery,
+      List<String> tokens,
+      String lookupId,
+      String qualifiedId,
+      String summary,
+      String combined) {
+    if (lookupId.equals(normalizedQuery) || qualifiedId.equals(normalizedQuery)) {
+      return Optional.of(0);
+    }
+    if (containsAllTokens(lookupId, tokens) || containsAllTokens(qualifiedId, tokens)) {
+      return Optional.of(1);
+    }
+    if (containsAllTokens(summary, tokens)) {
+      return Optional.of(2);
+    }
+    if (containsAllTokens(combined, tokens)) {
+      return Optional.of(3);
+    }
+    return Optional.empty();
   }
 
   private static boolean containsAllTokens(String haystack, List<String> tokens) {

@@ -54,11 +54,11 @@ public final class StyleKindIntrospection {
     if (alignment == null) {
       return;
     }
-    increment(kinds, "wrap_text", alignment.wrapText() != null);
-    increment(kinds, "horizontal_alignment", alignment.horizontalAlignment() != null);
-    increment(kinds, "vertical_alignment", alignment.verticalAlignment() != null);
-    increment(kinds, "text_rotation", alignment.textRotation() != null);
-    increment(kinds, "indentation", alignment.indentation() != null);
+    increment(kinds, "wrap_text", alignment.wrapText().isPresent());
+    increment(kinds, "horizontal_alignment", alignment.horizontalAlignment().isPresent());
+    increment(kinds, "vertical_alignment", alignment.verticalAlignment().isPresent());
+    increment(kinds, "text_rotation", alignment.textRotation().isPresent());
+    increment(kinds, "indentation", alignment.indentation().isPresent());
   }
 
   private static void appendProtocolFontKinds(Map<String, Long> kinds, CellFontInput font) {

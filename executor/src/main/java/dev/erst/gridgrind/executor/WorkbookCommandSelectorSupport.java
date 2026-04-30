@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
@@ -66,7 +67,7 @@ final class WorkbookCommandSelectorSupport {
     return requireTarget(target, NamedRangeSelector.ScopedExact.class, action.actionType());
   }
 
-  static void ensureTableIdentity(Selector target, MutationAction.SetTable action) {
+  static void ensureTableIdentity(Selector target, StructuredMutationAction.SetTable action) {
     TableSelector.ByNameOnSheet selector = tableByNameOnSheet(target, action);
     if (!selector.name().equals(action.table().name())
         || !selector.sheetName().equals(action.table().sheetName())) {
@@ -75,7 +76,8 @@ final class WorkbookCommandSelectorSupport {
     }
   }
 
-  static void ensurePivotTableIdentity(Selector target, MutationAction.SetPivotTable action) {
+  static void ensurePivotTableIdentity(
+      Selector target, StructuredMutationAction.SetPivotTable action) {
     PivotTableSelector.ByNameOnSheet selector = pivotTableByNameOnSheet(target, action);
     if (!selector.name().equals(action.pivotTable().name())
         || !selector.sheetName().equals(action.pivotTable().sheetName())) {
@@ -84,7 +86,8 @@ final class WorkbookCommandSelectorSupport {
     }
   }
 
-  static void ensureNamedRangeIdentity(Selector target, MutationAction.SetNamedRange action) {
+  static void ensureNamedRangeIdentity(
+      Selector target, StructuredMutationAction.SetNamedRange action) {
     NamedRangeSelector.ScopedExact selector = namedRangeScopedExact(target, action);
     if (!WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector).equals(action.name())
         || !WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(selector)

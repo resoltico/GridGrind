@@ -1,8 +1,15 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
@@ -28,7 +35,13 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.util.List;
 import java.util.Objects;
 
-/** Detects whether any authored request surface depends on bound standard input. */
+/**
+ * Detects whether any authored request surface depends on bound standard input.
+ *
+ * <p>This seam intentionally spans the full source-backed request vocabulary, so import count
+ * tracks protocol coverage rather than accidental coupling.
+ */
+@SuppressWarnings("PMD.ExcessiveImports")
 final class SourceBackedInputRequirements {
   private SourceBackedInputRequirements() {}
 
@@ -45,28 +58,29 @@ final class SourceBackedInputRequirements {
 
   static boolean requiresStandardInput(MutationAction action) {
     return switch (action) {
-      case MutationAction.SetCell setCell -> requiresStandardInput(setCell.value());
-      case MutationAction.SetRange setRange ->
+      case CellMutationAction.SetCell setCell -> requiresStandardInput(setCell.value());
+      case CellMutationAction.SetRange setRange ->
           setRange.rows().stream()
               .flatMap(List::stream)
               .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case MutationAction.SetComment setComment -> requiresStandardInput(setComment.comment());
-      case MutationAction.SetPicture setPicture -> requiresStandardInput(setPicture.picture());
-      case MutationAction.SetSignatureLine setSignatureLine ->
+      case CellMutationAction.SetComment setComment -> requiresStandardInput(setComment.comment());
+      case DrawingMutationAction.SetPicture setPicture ->
+          requiresStandardInput(setPicture.picture());
+      case DrawingMutationAction.SetSignatureLine setSignatureLine ->
           requiresStandardInput(setSignatureLine.signatureLine());
-      case MutationAction.SetChart setChart -> requiresStandardInput(setChart.chart());
-      case MutationAction.SetShape setShape -> requiresStandardInput(setShape.shape());
-      case MutationAction.SetEmbeddedObject setEmbeddedObject ->
+      case DrawingMutationAction.SetChart setChart -> requiresStandardInput(setChart.chart());
+      case DrawingMutationAction.SetShape setShape -> requiresStandardInput(setShape.shape());
+      case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject ->
           requiresStandardInput(setEmbeddedObject.embeddedObject());
-      case MutationAction.SetDataValidation setDataValidation ->
+      case StructuredMutationAction.SetDataValidation setDataValidation ->
           requiresStandardInput(setDataValidation.validation());
-      case MutationAction.SetTable setTable -> requiresStandardInput(setTable.table());
-      case MutationAction.AppendRow appendRow ->
+      case StructuredMutationAction.SetTable setTable -> requiresStandardInput(setTable.table());
+      case CellMutationAction.AppendRow appendRow ->
           appendRow.values().stream()
               .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case MutationAction.SetPrintLayout setPrintLayout ->
+      case WorkbookMutationAction.SetPrintLayout setPrintLayout ->
           requiresStandardInput(setPrintLayout.printLayout());
-      case MutationAction.ImportCustomXmlMapping importCustomXmlMapping ->
+      case StructuredMutationAction.ImportCustomXmlMapping importCustomXmlMapping ->
           requiresStandardInput(importCustomXmlMapping.mapping());
       default -> false;
     };
@@ -113,43 +127,43 @@ final class SourceBackedInputRequirements {
         || chart.plots().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
   }
 
-  static boolean requiresStandardInput(ChartInput.Title title) {
-    return title instanceof ChartInput.Title.Text text && requiresStandardInput(text.source());
+  static boolean requiresStandardInput(ChartTitleInput title) {
+    return title instanceof ChartTitleInput.Text text && requiresStandardInput(text.source());
   }
 
-  static boolean requiresStandardInput(ChartInput.Plot plot) {
+  static boolean requiresStandardInput(ChartPlotInput plot) {
     return switch (plot) {
-      case ChartInput.Area area ->
+      case ChartPlotInput.Area area ->
           area.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Area3D area3D ->
+      case ChartPlotInput.Area3D area3D ->
           area3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Bar bar ->
+      case ChartPlotInput.Bar bar ->
           bar.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Bar3D bar3D ->
+      case ChartPlotInput.Bar3D bar3D ->
           bar3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Doughnut doughnut ->
+      case ChartPlotInput.Doughnut doughnut ->
           doughnut.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Line line ->
+      case ChartPlotInput.Line line ->
           line.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Line3D line3D ->
+      case ChartPlotInput.Line3D line3D ->
           line3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Pie pie ->
+      case ChartPlotInput.Pie pie ->
           pie.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Pie3D pie3D ->
+      case ChartPlotInput.Pie3D pie3D ->
           pie3D.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Radar radar ->
+      case ChartPlotInput.Radar radar ->
           radar.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Scatter scatter ->
+      case ChartPlotInput.Scatter scatter ->
           scatter.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Surface surface ->
+      case ChartPlotInput.Surface surface ->
           surface.series().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-      case ChartInput.Surface3D surface3D ->
+      case ChartPlotInput.Surface3D surface3D ->
           surface3D.series().stream()
               .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
     };
   }
 
-  static boolean requiresStandardInput(ChartInput.Series series) {
+  static boolean requiresStandardInput(ChartSeriesInput series) {
     return requiresStandardInput(series.title());
   }
 

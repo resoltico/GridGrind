@@ -12,7 +12,7 @@ public final class App {
 
   /** Creates the production App wired to the default CLI factory and {@code System::exit}. */
   public App() {
-    this(() -> new GridGrindCli()::run, System::exit);
+    this(new ProductionCliFactory(), System::exit);
   }
 
   App(CliFactory cliFactory, ExitHandler exitHandler) {
@@ -22,11 +22,23 @@ public final class App {
 
   /** Entry point: creates an App with production defaults and runs the CLI. */
   public static void main(String[] args) throws IOException {
-    new App().run(args);
+    new App().run(args, System.in, System.out, System.err);
   }
 
   void run(String[] args) throws IOException {
-    int exitCode = cliFactory.create().run(args, System.in, System.out, System.err);
+    run(args, System.in, System.out, System.err);
+  }
+
+  void run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
+      throws IOException {
+    int exitCode =
+        cliFactory
+            .create()
+            .run(
+                args,
+                Objects.requireNonNull(stdin, "stdin must not be null"),
+                Objects.requireNonNull(stdout, "stdout must not be null"),
+                Objects.requireNonNull(stderr, "stderr must not be null"));
     if (exitCode != 0) {
       exitHandler.exit(exitCode);
     }
@@ -52,5 +64,14 @@ public final class App {
   interface ExitHandler {
     /** Terminates the process with the given exit code. */
     void exit(int exitCode);
+  }
+
+  /** Creates the production CLI runner from the repository-owned CLI entry point. */
+  private static final class ProductionCliFactory implements CliFactory {
+    @Override
+    public CliRunner create() {
+      GridGrindCli cli = new GridGrindCli();
+      return cli::run;
+    }
   }
 }

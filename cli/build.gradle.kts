@@ -16,11 +16,46 @@ dependencies {
 }
 
 application {
+    applicationDefaultJvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
     mainClass = "dev.erst.gridgrind.cli.App"
+}
+
+val cleanStartScripts by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("scripts"))
+}
+
+val cleanShadowStartScripts by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("scriptsShadow"))
+}
+
+val cleanInstalledDist by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("install/cli"))
+}
+
+val cleanInstalledShadowDist by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
+}
+
+tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts") {
+    applicationName = "gridgrind"
+    dependsOn(cleanStartScripts)
+}
+
+tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startShadowScripts") {
+    applicationName = "gridgrind"
+    dependsOn(cleanShadowStartScripts)
+}
+
+tasks.named<Sync>("installDist") {
+    dependsOn(cleanInstalledDist)
+}
+
+tasks.named<Sync>("installShadowDist") {
+    dependsOn(cleanInstalledShadowDist)
 }
 
 tasks.named<Test>("test") {

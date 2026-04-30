@@ -53,9 +53,7 @@ class AssertionTypesTest {
                 () -> new ExpectedCellValue.NumericValue(Double.NaN))
             .getMessage());
     assertEquals(
-        "value must not be null",
-        assertThrows(NullPointerException.class, () -> new ExpectedCellValue.BooleanValue(null))
-            .getMessage());
+        new ExpectedCellValue.BooleanValue(true), new ExpectedCellValue.BooleanValue(true));
     assertEquals(
         "error must not be blank",
         assertThrows(IllegalArgumentException.class, () -> new ExpectedCellValue.ErrorValue(" "))

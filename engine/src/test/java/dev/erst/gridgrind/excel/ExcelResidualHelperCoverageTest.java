@@ -201,11 +201,11 @@ class ExcelResidualHelperCoverageTest {
 
       assertThrows(
           IllegalStateException.class,
-          () -> ExcelChartPlotSnapshotSupport.snapshotDataSource(sheet, null));
+          () -> ExcelChartSeriesSnapshotSupport.snapshotDataSource(sheet, null, null));
       assertInstanceOf(
           ExcelChartSnapshot.DataSource.NumericLiteral.class,
-          ExcelChartPlotSnapshotSupport.snapshotDataSource(
-              sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d})));
+          ExcelChartSeriesSnapshotSupport.snapshotDataSource(
+              sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d}), null));
 
       ExcelChartMutationSupport.createChart(
           sheet,
@@ -422,12 +422,12 @@ class ExcelResidualHelperCoverageTest {
 
       WorkbookCommandExecutor.applyCellValueCommand(
           workbook,
-          new WorkbookCommand.SetArrayFormula(
+          new WorkbookCellCommand.SetArrayFormula(
               "Ops", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")));
       assertEquals(1, sheet.arrayFormulas().size());
 
       WorkbookCommandExecutor.applyCellValueCommand(
-          workbook, new WorkbookCommand.ClearArrayFormula("Ops", "D2"));
+          workbook, new WorkbookCellCommand.ClearArrayFormula("Ops", "D2"));
       assertEquals(List.of(), sheet.arrayFormulas());
 
       assertThrows(
@@ -462,23 +462,23 @@ class ExcelResidualHelperCoverageTest {
 
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.SetSignatureLine(
+          new WorkbookDrawingCommand.SetSignatureLine(
               "Ops",
               signatureDefinition("OpsSignature", ExcelChartTestSupport.anchor(1, 8, 4, 12))));
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.SetNamedRange(
+          new WorkbookMetadataCommand.SetNamedRange(
               new ExcelNamedRangeDefinition(
                   "BudgetTotal",
                   new ExcelNamedRangeScope.WorkbookScope(),
                   new ExcelNamedRangeTarget("Ops", "B2"))));
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.DeleteNamedRange(
+          new WorkbookMetadataCommand.DeleteNamedRange(
               "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.SetShape(
+          new WorkbookDrawingCommand.SetShape(
               "Ops",
               new ExcelShapeDefinition(
                   "Mover",
@@ -488,16 +488,16 @@ class ExcelResidualHelperCoverageTest {
                   "text")));
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.SetDrawingObjectAnchor(
+          new WorkbookDrawingCommand.SetDrawingObjectAnchor(
               "Ops", "Mover", ExcelChartTestSupport.anchor(9, 8, 12, 12)));
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
-          workbook, new WorkbookCommand.DeleteDrawingObject("Ops", "Mover"));
+          workbook, new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "Mover"));
     }
 
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
       WorkbookCommandExecutor.applyWorkbookMetadataCommand(
           workbook,
-          new WorkbookCommand.ImportCustomXmlMapping(
+          new WorkbookMetadataCommand.ImportCustomXmlMapping(
               new ExcelCustomXmlImportDefinition(
                   new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
                   "<CORSO><NOME>Ops</NOME><DOCENTE>Agent</DOCENTE><TUTOR>Grid</TUTOR><CDL>QA</CDL>"
@@ -879,11 +879,11 @@ class ExcelResidualHelperCoverageTest {
   }
 
   private static ExcelChartMarkerStyle invokeMarkerStyle(CTMarker marker) {
-    return ExcelChartPlotSnapshotSupport.markerStyle(marker).orElse(null);
+    return ExcelChartSeriesSnapshotSupport.markerStyle(marker).orElse(null);
   }
 
   private static Short invokeMarkerSize(CTMarker marker) {
-    return ExcelChartPlotSnapshotSupport.markerSize(marker);
+    return ExcelChartSeriesSnapshotSupport.markerSize(marker);
   }
 
   private static void restoreProperty(String name, String value) {

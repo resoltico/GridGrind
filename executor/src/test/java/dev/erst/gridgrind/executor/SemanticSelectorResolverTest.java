@@ -9,12 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -54,7 +54,7 @@ class SemanticSelectorResolverTest {
                   new TableCellSelector.ByColumnName(
                       new TableRowSelector.ByIndex(new TableSelector.ByName("TextTable"), 0),
                       "Amount"),
-                  new MutationAction.SetCell(textCell("Updated"))));
+                  new CellMutationAction.SetCell(textCell("Updated"))));
       assertEquals("Texts", indexedRowTarget.sheetName());
       assertEquals("B2", indexedRowTarget.address());
     }
@@ -67,12 +67,12 @@ class SemanticSelectorResolverTest {
       assertSame(
           directCell,
           resolver.resolveMutationTarget(
-              workbook, directCell, new MutationAction.SetCell(textCell("Owner"))));
+              workbook, directCell, new CellMutationAction.SetCell(textCell("Owner"))));
 
       TableCellSelector.ByColumnName tableCell = textAmountCellTarget();
       assertSame(
           tableCell,
-          resolver.resolveMutationTarget(workbook, tableCell, new MutationAction.ClearRange()));
+          resolver.resolveMutationTarget(workbook, tableCell, new CellMutationAction.ClearRange()));
       assertSame(
           tableCell,
           resolver.resolveAssertionTarget(
@@ -246,7 +246,7 @@ class SemanticSelectorResolverTest {
                           new TableRowSelector.ByKeyCell(
                               new TableSelector.ByName("TextTable"), "Item", textCell("Missing")),
                           "Amount"),
-                      new MutationAction.SetCell(textCell("Updated"))));
+                      new CellMutationAction.SetCell(textCell("Updated"))));
       assertTrue(missingRow.getMessage().contains("matched no rows"));
 
       IllegalArgumentException outOfRange =
@@ -340,7 +340,7 @@ class SemanticSelectorResolverTest {
                               "Item",
                               new CellInput.Text(TextSourceInput.utf8File("item.txt"))),
                           "Amount"),
-                      new MutationAction.SetCell(textCell("Updated"))));
+                      new CellMutationAction.SetCell(textCell("Updated"))));
       assertTrue(unresolvedTextSource.getMessage().contains("must be resolved to INLINE text"));
     }
   }
@@ -367,7 +367,7 @@ class SemanticSelectorResolverTest {
         assertInstanceOf(
             CellSelector.ByAddress.class,
             resolver.resolveMutationTarget(
-                workbook, target, new MutationAction.SetCell(textCell("Updated"))));
+                workbook, target, new CellMutationAction.SetCell(textCell("Updated"))));
     assertEquals(expectedSheet, mutationTarget.sheetName());
     assertEquals(expectedAddress, mutationTarget.address());
 
@@ -378,7 +378,7 @@ class SemanticSelectorResolverTest {
     assertEquals(expectedSheet, assertionTarget.sheetName());
     assertEquals(expectedAddress, assertionTarget.address());
 
-    GridGrindResponse.CellStyleReport expectedStyle =
+    GridGrindWorkbookSurfaceReports.CellStyleReport expectedStyle =
         InspectionResultCellReportSupport.toCellReport(
                 workbook.sheet(expectedSheet).snapshotCell(expectedAddress))
             .style();
@@ -389,7 +389,7 @@ class SemanticSelectorResolverTest {
                 resolver.resolveMutationTarget(
                     workbook,
                     target,
-                    new MutationAction.SetHyperlink(
+                    new CellMutationAction.SetHyperlink(
                         new HyperlinkTarget.Url("https://example.com"))))
             .address());
     assertEquals(
@@ -397,7 +397,7 @@ class SemanticSelectorResolverTest {
         assertInstanceOf(
                 CellSelector.ByAddress.class,
                 resolver.resolveMutationTarget(
-                    workbook, target, new MutationAction.ClearHyperlink()))
+                    workbook, target, new CellMutationAction.ClearHyperlink()))
             .address());
     assertEquals(
         expectedAddress,
@@ -406,7 +406,7 @@ class SemanticSelectorResolverTest {
                 resolver.resolveMutationTarget(
                     workbook,
                     target,
-                    new MutationAction.SetComment(
+                    new CellMutationAction.SetComment(
                         new CommentInput(
                             TextSourceInput.inline("Note"),
                             "Ada",
@@ -418,7 +418,8 @@ class SemanticSelectorResolverTest {
         expectedAddress,
         assertInstanceOf(
                 CellSelector.ByAddress.class,
-                resolver.resolveMutationTarget(workbook, target, new MutationAction.ClearComment()))
+                resolver.resolveMutationTarget(
+                    workbook, target, new CellMutationAction.ClearComment()))
             .address());
 
     assertEquals(

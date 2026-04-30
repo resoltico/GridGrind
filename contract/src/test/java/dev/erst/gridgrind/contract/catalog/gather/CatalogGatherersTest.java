@@ -2,6 +2,8 @@ package dev.erst.gridgrind.contract.catalog.gather;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.erst.gridgrind.contract.catalog.CatalogIgnored;
 import dev.erst.gridgrind.contract.catalog.FieldEntry;
 import dev.erst.gridgrind.contract.catalog.FieldRequirement;
 import dev.erst.gridgrind.contract.catalog.FieldShape;
@@ -112,6 +114,16 @@ class CatalogGatherersTest {
   }
 
   @Test
+  void expandFieldsWithMetadataSkipsCatalogAndJsonIgnoredComponentsAndAccessors() {
+    List<FieldEntry> actual =
+        Arrays.stream(IgnoredCatalogFixture.class.getRecordComponents())
+            .gather(CatalogGatherers.expandFieldsWithMetadata(Set.of()))
+            .toList();
+
+    assertEquals(List.of("visible"), actual.stream().map(FieldEntry::name).toList());
+  }
+
+  @Test
   void duplicateEntryFailureIncludesLabelAndBothValues() {
     IllegalStateException failure =
         CatalogDuplicateFailures.duplicateEntryFailure("test label", "LEFT", "RIGHT");
@@ -134,6 +146,25 @@ class CatalogGatherersTest {
   record Entry(String key, String value) {}
 
   record CatalogFixture(String title, List<String> notes, Mode enabled) {}
+
+  record IgnoredCatalogFixture(
+      String visible,
+      @CatalogIgnored String hiddenByComponent,
+      String hiddenByCatalogAccessor,
+      @JsonIgnore String hiddenByJsonComponent,
+      String hiddenByJsonAccessor) {
+    @CatalogIgnored
+    @Override
+    public String hiddenByCatalogAccessor() {
+      return hiddenByCatalogAccessor;
+    }
+
+    @JsonIgnore
+    @Override
+    public String hiddenByJsonAccessor() {
+      return hiddenByJsonAccessor;
+    }
+  }
 
   /** Sample enum used to assert catalog enum-value metadata enrichment. */
   enum Mode {

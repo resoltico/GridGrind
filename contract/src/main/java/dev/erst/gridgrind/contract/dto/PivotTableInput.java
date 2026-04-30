@@ -85,7 +85,7 @@ public record PivotTableInput(
     public DataField {
       sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");
-      displayName = displayName == null || displayName.isBlank() ? sourceColumnName : displayName;
+      displayName = requireNonBlank(displayName, "displayName");
       if (valueFormat != null && valueFormat.isBlank()) {
         throw new IllegalArgumentException("valueFormat must not be blank");
       }
@@ -93,9 +93,7 @@ public record PivotTableInput(
   }
 
   private static List<String> copyDistinctNames(List<String> names, String fieldName) {
-    if (names == null) {
-      return List.of();
-    }
+    Objects.requireNonNull(names, fieldName + " must not be null");
     List<String> copy = new ArrayList<>(names.size());
     Set<String> unique = new LinkedHashSet<>();
     for (String name : names) {

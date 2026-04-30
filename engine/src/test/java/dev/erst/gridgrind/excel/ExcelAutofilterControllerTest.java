@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
+import dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
@@ -83,16 +84,11 @@ class ExcelAutofilterControllerTest {
               "A1:F3",
               true,
               true,
-              STSortMethod.STROKE.toString(),
+              Optional.of(ExcelAutofilterSortMethod.STROKE),
               List.of(
-                  new ExcelAutofilterSortCondition(
-                      "A2:A3",
-                      true,
-                      STSortBy.CELL_COLOR.toString(),
-                      ExcelColor.rgb("#102030"),
-                      null),
-                  new ExcelAutofilterSortCondition(
-                      "B2:B3", false, STSortBy.ICON.toString(), null, 4))));
+                  new ExcelAutofilterSortCondition.CellColor(
+                      "A2:A3", true, ExcelColor.rgb("#102030")),
+                  new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4))));
 
       ExcelAutofilterSnapshot.SheetOwned snapshot =
           assertInstanceOf(
@@ -124,16 +120,11 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
           snapshot.filterColumns().get(5).criterion());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "A2:A3",
-              true,
-              STSortBy.CELL_COLOR.toString(),
-              ExcelColorSnapshot.rgb("#102030"),
-              null),
+          new ExcelAutofilterSortConditionSnapshot.CellColor(
+              "A2:A3", true, ExcelColorSnapshot.rgb("#102030")),
           snapshot.sortState().orElseThrow().conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "B2:B3", false, STSortBy.ICON.toString(), null, 4),
+          new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4),
           snapshot.sortState().orElseThrow().conditions().get(1));
     }
   }
@@ -190,42 +181,6 @@ class ExcelAutofilterControllerTest {
                               new ExcelAutofilterFilterColumn(
                                   0L, true, new ExcelAutofilterFilterCriterion.Icon("unknown", 0))),
                           null))
-              .getMessage());
-      assertEquals(
-          "unsupported autofilter sort method: diagonal",
-          assertThrows(
-                  IllegalArgumentException.class,
-                  () ->
-                      controller.setSheetAutofilter(
-                          sheet,
-                          "A1:F3",
-                          List.of(),
-                          new ExcelAutofilterSortState(
-                              "A1:F3",
-                              false,
-                              false,
-                              "diagonal",
-                              List.of(
-                                  new ExcelAutofilterSortCondition(
-                                      "A2:A3", false, "", null, null)))))
-              .getMessage());
-      assertEquals(
-          "unsupported autofilter sortBy value: sideways",
-          assertThrows(
-                  IllegalArgumentException.class,
-                  () ->
-                      controller.setSheetAutofilter(
-                          sheet,
-                          "A1:F3",
-                          List.of(),
-                          new ExcelAutofilterSortState(
-                              "A1:F3",
-                              false,
-                              false,
-                              "",
-                              List.of(
-                                  new ExcelAutofilterSortCondition(
-                                      "A2:A3", false, "sideways", null, null)))))
               .getMessage());
     }
   }
@@ -385,27 +340,21 @@ class ExcelAutofilterControllerTest {
       assertEquals("A1:H5", sortSnapshot.range());
       assertTrue(sortSnapshot.caseSensitive());
       assertTrue(sortSnapshot.columnSort());
-      assertEquals(STSortMethod.STROKE.toString(), sortSnapshot.sortMethod());
+      assertEquals(Optional.of(ExcelAutofilterSortMethod.STROKE), sortSnapshot.sortMethod());
       assertEquals(4, sortSnapshot.conditions().size());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "A2:A5", true, STSortBy.CELL_COLOR.toString(), ExcelColorSnapshot.rgb("#AABBCC"), 1),
+          new ExcelAutofilterSortConditionSnapshot.CellColor(
+              "A2:A5", true, ExcelColorSnapshot.rgb("#AABBCC")),
           sortSnapshot.conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "B2:B5",
-              false,
-              STSortBy.FONT_COLOR.toString(),
-              ExcelColorSnapshot.rgb("#102030"),
-              null),
+          new ExcelAutofilterSortConditionSnapshot.FontColor(
+              "B2:B5", false, ExcelColorSnapshot.rgb("#102030")),
           sortSnapshot.conditions().get(1));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "C2:C5", false, "", ExcelColorSnapshot.rgb("#AABBCC"), null),
+          new ExcelAutofilterSortConditionSnapshot.Value("C2:C5", false),
           sortSnapshot.conditions().get(2));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "D2:D5", false, STSortBy.ICON.toString(), null, 3),
+          new ExcelAutofilterSortConditionSnapshot.Icon("D2:D5", false, 3),
           sortSnapshot.conditions().get(3));
     }
   }
@@ -437,7 +386,7 @@ class ExcelAutofilterControllerTest {
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters.Factory.newInstance();
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false),
-          ExcelAutofilterController.valuesCriterion(values));
+          ExcelAutofilterOoxmlSupport.valuesCriterion(values));
 
       var customFilters =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters.Factory.newInstance();
@@ -446,74 +395,78 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterFilterCriterionSnapshot.Custom(
               false,
               List.of(new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Ada"))),
-          ExcelAutofilterController.customCriterion(customFilters));
+          ExcelAutofilterOoxmlSupport.customCriterion(customFilters));
 
       var dynamic =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter.Factory.newInstance();
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Dynamic("UNKNOWN", null, null),
-          ExcelAutofilterController.dynamicCriterion(dynamic));
+          ExcelAutofilterOoxmlSupport.dynamicCriterion(dynamic));
 
       var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       top10.setVal(5.0d);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5.0d, null),
-          ExcelAutofilterController.top10Criterion(top10));
+          ExcelAutofilterOoxmlSupport.top10Criterion(top10));
 
       var icon =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter.Factory.newInstance();
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Icon("UNKNOWN", 0),
-          ExcelAutofilterController.iconCriterion(icon));
+          ExcelAutofilterOoxmlSupport.iconCriterion(icon));
 
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
-          ExcelAutofilterController.dxfColor(workbook, fillDxfId, true));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, fillDxfId, true));
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#102030")),
-          ExcelAutofilterController.dxfColor(workbook, fontDxfId, false));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontDxfId, false));
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#AABBCC")),
-          ExcelAutofilterController.dxfColor(workbook, fillDxfId, false));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, fillDxfId, false));
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#102030")),
-          ExcelAutofilterController.dxfColor(workbook, fontDxfId, true));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontDxfId, true));
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, emptyDxfId, true));
-      assertEquals(Optional.empty(), ExcelAutofilterController.dxfColor(workbook, 99L, true));
+          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, emptyDxfId, true));
+      assertEquals(Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, 99L, true));
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfAt(workbook.getStylesSource(), -1L));
+          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfAt(workbook.getStylesSource(), -1L));
       assertTrue(
-          ExcelAutofilterController.dxfAt(workbook.getStylesSource(), fillDxfId).isPresent());
+          ExcelAutofilterOoxmlSupport.dxfAt(workbook.getStylesSource(), fillDxfId).isPresent());
       // Gradient fill (no patternFill) — covers isSetPatternFill()=false in both cellColor and
       // fallback-fill branches.
       long gradientFillDxfId = putGradientFillDxf(workbook);
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, true));
+          Optional.empty(),
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, gradientFillDxfId, true));
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, false));
+          Optional.empty(),
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, gradientFillDxfId, false));
       // PatternFill with no fgColor — covers isSetFgColor()=false in both cellColor and
       // fallback-fill branches.
       long noFgColorDxfId = putPatternFillNoFgColorDxf(workbook);
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, true));
+          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, noFgColorDxfId, true));
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, false));
+          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, noFgColorDxfId, false));
       // Font with no color array — covers sizeOfColorArray()=0 in both font branches.
       long fontNoColorDxfId = putFontNoColorDxf(workbook);
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, false));
+          Optional.empty(),
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontNoColorDxfId, false));
       assertEquals(
-          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, true));
+          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, fontNoColorDxfId, true));
 
       var autoFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
       var sortState = autoFilter.addNewSortState();
+      autoFilter.setRef("A1:A5");
       sortState.addNewSortCondition().setRef("A2:A5");
       ExcelAutofilterSortStateSnapshot sortSnapshot =
-          controller.sortState(workbook, autoFilter).orElseThrow();
-      assertEquals("", sortSnapshot.range());
-      assertEquals("", sortSnapshot.sortMethod());
+          ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow();
+      assertEquals("A1:A5", sortSnapshot.range());
+      assertEquals(Optional.empty(), sortSnapshot.sortMethod());
     }
   }
 
@@ -532,7 +485,7 @@ class ExcelAutofilterControllerTest {
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(false, null),
-          ExcelAutofilterController.colorCriterion(workbook, absentColorFilter));
+          ExcelAutofilterOoxmlSupport.colorCriterion(workbook, absentColorFilter));
 
       var fillColorFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
@@ -540,7 +493,7 @@ class ExcelAutofilterControllerTest {
       fillColorFilter.setDxfId(fillDxfId);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(true, ExcelColorSnapshot.rgb("#AABBCC")),
-          ExcelAutofilterController.colorCriterion(workbook, fillColorFilter));
+          ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fillColorFilter));
 
       var fontColorFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
@@ -548,18 +501,18 @@ class ExcelAutofilterControllerTest {
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Color(
               false, ExcelColorSnapshot.rgb("#102030")),
-          ExcelAutofilterController.colorCriterion(workbook, fontColorFilter));
+          ExcelAutofilterOoxmlSupport.colorCriterion(workbook, fontColorFilter));
 
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#214365")),
-          ExcelAutofilterController.dxfColor(workbook, mixedDxfId, true));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, mixedDxfId, true));
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#FEDCBA")),
-          ExcelAutofilterController.dxfColor(workbook, mixedDxfId, false));
+          ExcelAutofilterOoxmlSupport.dxfColor(workbook, mixedDxfId, false));
 
       var autoFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
-      assertEquals(Optional.empty(), controller.sortState(workbook, autoFilter));
+      assertEquals(Optional.empty(), ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter));
 
       var sortState = autoFilter.addNewSortState();
       sortState.setRef("A1:E5");
@@ -588,38 +541,28 @@ class ExcelAutofilterControllerTest {
       iconOnlySort.setIconId(4L);
 
       ExcelAutofilterSortStateSnapshot snapshot =
-          controller.sortState(workbook, autoFilter).orElseThrow();
+          ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter).orElseThrow();
       assertEquals("A1:E5", snapshot.range());
       assertFalse(snapshot.caseSensitive());
       assertFalse(snapshot.columnSort());
-      assertEquals("", snapshot.sortMethod());
+      assertEquals(Optional.empty(), snapshot.sortMethod());
       assertEquals(5, snapshot.conditions().size());
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot("A2:A5", false, "", null, null),
+          new ExcelAutofilterSortConditionSnapshot.Value("A2:A5", false),
           snapshot.conditions().get(0));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "B2:B5",
-              true,
-              STSortBy.CELL_COLOR.toString(),
-              ExcelColorSnapshot.rgb("#AABBCC"),
-              null),
+          new ExcelAutofilterSortConditionSnapshot.CellColor(
+              "B2:B5", true, ExcelColorSnapshot.rgb("#AABBCC")),
           snapshot.conditions().get(1));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "C2:C5",
-              false,
-              STSortBy.FONT_COLOR.toString(),
-              ExcelColorSnapshot.rgb("#102030"),
-              null),
+          new ExcelAutofilterSortConditionSnapshot.FontColor(
+              "C2:C5", false, ExcelColorSnapshot.rgb("#102030")),
           snapshot.conditions().get(2));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "D2:D5", false, "", ExcelColorSnapshot.rgb("#AABBCC"), null),
+          new ExcelAutofilterSortConditionSnapshot.Value("D2:D5", false),
           snapshot.conditions().get(3));
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "E2:E5", false, STSortBy.ICON.toString(), null, 4),
+          new ExcelAutofilterSortConditionSnapshot.Icon("E2:E5", false, 4),
           snapshot.conditions().get(4));
 
       var reflectedIconSort =
@@ -628,9 +571,8 @@ class ExcelAutofilterControllerTest {
       reflectedIconSort.setSortBy(STSortBy.ICON);
       reflectedIconSort.setIconId(2L);
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot(
-              "F2:F5", false, STSortBy.ICON.toString(), null, 2),
-          ExcelAutofilterController.sortConditionSnapshot(workbook, reflectedIconSort));
+          new ExcelAutofilterSortConditionSnapshot.Icon("F2:F5", false, 2),
+          ExcelAutofilterOoxmlSupport.sortConditionSnapshot(workbook, reflectedIconSort));
     }
   }
 
@@ -653,10 +595,9 @@ class ExcelAutofilterControllerTest {
                   "A1:B3",
                   false,
                   false,
-                  "",
-                  List.of(
-                      new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null)))),
-          controller.sortState(workbook, autoFilter));
+                  Optional.empty(),
+                  List.of(new ExcelAutofilterSortConditionSnapshot.Value("A2:A3", false)))),
+          ExcelAutofilterOoxmlSupport.sortState(workbook, autoFilter));
 
       var values =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters.Factory.newInstance();
@@ -664,7 +605,7 @@ class ExcelAutofilterControllerTest {
       values.setBlank(false);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), false),
-          ExcelAutofilterController.valuesCriterion(values));
+          ExcelAutofilterOoxmlSupport.valuesCriterion(values));
 
       var customFilters =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters.Factory.newInstance();
@@ -675,7 +616,7 @@ class ExcelAutofilterControllerTest {
               false,
               List.of(
                   new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Queue"))),
-          ExcelAutofilterController.customCriterion(customFilters));
+          ExcelAutofilterOoxmlSupport.customCriterion(customFilters));
 
       var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       top10.setTop(false);
@@ -683,14 +624,14 @@ class ExcelAutofilterControllerTest {
       top10.setVal(10d);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Top10(false, false, 10d, null),
-          ExcelAutofilterController.top10Criterion(top10));
+          ExcelAutofilterOoxmlSupport.top10Criterion(top10));
 
       var defaultTop =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
       defaultTop.setVal(5d);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5d, null),
-          ExcelAutofilterController.top10Criterion(defaultTop));
+          ExcelAutofilterOoxmlSupport.top10Criterion(defaultTop));
 
       var explicitTop =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
@@ -698,7 +639,7 @@ class ExcelAutofilterControllerTest {
       explicitTop.setVal(7d);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 7d, null),
-          ExcelAutofilterController.top10Criterion(explicitTop));
+          ExcelAutofilterOoxmlSupport.top10Criterion(explicitTop));
 
       var percentTop =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
@@ -707,7 +648,7 @@ class ExcelAutofilterControllerTest {
       percentTop.setFilterVal(2d);
       assertEquals(
           new ExcelAutofilterFilterCriterionSnapshot.Top10(true, true, 3d, 2d),
-          ExcelAutofilterController.top10Criterion(percentTop));
+          ExcelAutofilterOoxmlSupport.top10Criterion(percentTop));
     }
   }
 
@@ -724,12 +665,12 @@ class ExcelAutofilterControllerTest {
               "A1:B3",
               false,
               false,
-              "",
-              List.of(new ExcelAutofilterSortCondition("A2:A3", false, "", null, null))));
+              Optional.empty(),
+              List.of(new ExcelAutofilterSortCondition.Value("A2:A3", false))));
 
       var snapshot = controller.sheetOwnedAutofilters(sheet).getFirst();
       assertEquals(
-          new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null),
+          new ExcelAutofilterSortConditionSnapshot.Value("A2:A3", false),
           assertInstanceOf(ExcelAutofilterSnapshot.SheetOwned.class, snapshot)
               .sortState()
               .orElseThrow()

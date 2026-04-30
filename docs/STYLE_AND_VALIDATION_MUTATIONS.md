@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -301,6 +301,7 @@ authoritative on its target cells and any remaining fragments are retained aroun
         ]
       },
       "allowBlank": true,
+      "suppressDropDownArrow": false,
       "prompt": {
         "title": {
           "type": "INLINE",
@@ -343,7 +344,9 @@ authoritative on its target cells and any remaining fragments are retained aroun
         "operator": "BETWEEN",
         "formula1": "1",
         "formula2": "5"
-      }
+      },
+      "allowBlank": false,
+      "suppressDropDownArrow": false
     }
   }
 }
@@ -368,12 +371,12 @@ Supported rule families:
 | `TEXT_LENGTH` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `CUSTOM_FORMULA` | `formula` | A leading `=` is accepted and stripped automatically. |
 
-Optional validation fields:
+Validation fields:
 
 | Field | Description |
 |:------|:------------|
-| `allowBlank` | Allow empty cells to bypass validation. Defaults to `false`. |
-| `suppressDropDownArrow` | Hide Excel's list dropdown arrow when the rule supports it. Defaults to `false`. |
+| `allowBlank` | Explicitly choose whether empty cells bypass validation. |
+| `suppressDropDownArrow` | Explicitly choose whether Excel hides the list dropdown arrow when the rule supports it. |
 | `prompt` | Optional prompt box with source-backed `title` and `text` values plus optional `showPromptBox` (defaults to `true`). |
 | `errorAlert` | Optional error box with `style`, source-backed `title` / `text`, and optional `showErrorBox` (defaults to `true`). |
 

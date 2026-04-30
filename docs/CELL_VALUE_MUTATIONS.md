@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: CELL_VALUE_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, cell mutations, set-cell, set-range, clear-range, array-formula]
   questions: ["how do i write cells in gridgrind", "how do i write ranges in gridgrind", "how do i use array formulas in gridgrind"]

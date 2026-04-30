@@ -3,6 +3,73 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.62.0] - 2026-05-01
+
+### Changed
+
+- The shared version catalog now pins JUnit `6.1.0-RC1` and the exact published JaCoCo snapshot
+  artifact that corresponds to official trunk build `0.8.15.202604290352`, keeping Java 26
+  coverage support aligned with a concrete reproducible Maven coordinate.
+- Problem diagnostics and response reports now live in focused public contract namespaces instead
+  of two giant wire god-files, so execution-stage contexts, persistence outcomes, workbook facts,
+  layout facts, schema or formula facts, analysis facts, and failure facts each have one narrower
+  owner.
+- Workbook coordination now flows through one immutable workbook context instead of direct
+  controller hoarding inside `ExcelWorkbook`, which reduces cross-feature coupling at the
+  workbook façade boundary.
+- The chart authoring contract moved JSON-entry defaults behind owned normalization helpers so
+  public `@JsonCreator` methods no longer carry ad hoc defaulting branches inline.
+
+### Fixed
+
+- The packaged `installShadowDist` launcher now ships as `gridgrind`, and its first-contact help
+  path no longer leaks Java native-access warnings or other stderr noise before the product help
+  text.
+- CLI discovery failures now explain their next corrective move directly: dependent flags such as
+  `--task`, `--operation`, and `--search` name the parent command they require, unknown task ids
+  point back to `--print-task-catalog` and `--print-goal-plan`, unknown protocol lookup ids point
+  to protocol-catalog search, and missing request files identify the unreadable path explicitly.
+- Built-in example lookup failures now point operators back to the packaged help surface’s
+  generated-example section, and the packaged help synopsis now advertises `--license` alongside
+  the other first-contact commands.
+- Inserted rows inside existing sheet content now inherit adjacent visual formatting instead of
+  materializing as workbook-default blanks, so row-height, row-style, font, fill, wrap, and cell
+  style facts follow the surrounding authored sheet after `INSERT_ROWS`.
+- Inserted columns inside existing sheet content now inherit adjacent visual formatting instead of
+  materializing as workbook-default blanks, so column-width, default-column-style, font, fill,
+  wrap, and cell-style facts follow the surrounding authored sheet after `INSERT_COLUMNS`.
+- Cell text, workbook style, worksheet hyperlink, formula length, formula nesting, and formula
+  argument ceilings from the limitations registry are now anchored at central write seams with
+  explicit enforcement instead of being left implicit in downstream Apache POI failures.
+- Chart-title live-resolution fallbacks no longer flood fuzzing sessions with repeated warnings
+  when a title formula evaluates to an error-cached scalar and the code intentionally falls back
+  to cached or empty text.
+- Data-validation request payloads now require explicit `allowBlank` and
+  `suppressDropDownArrow` booleans on the public wire surface instead of inheriting hidden JSON
+  defaults, and the shipped request examples and Jazzer regression fixtures now author those
+  choices directly.
+- Jazzer verification tool tasks now keep their arguments lazy without forfeiting configuration
+  cache safety, so `jazzerStatus`, `jazzerReplay`, `jazzerRefreshPromotedMetadata`, and Gradle
+  task listing no longer discard the cache or demand unrelated Gradle properties.
+- Jazzer wrapper `--help` and invalid-target failures now stay on the project-owned wrapper
+  surface instead of falling through to generic Gradle help or Java stack traces.
+- Jazzer replay and promotion wrappers now reject missing or non-file inputs before Gradle boots,
+  and invalid replay or promotion targets now print the correct wrapper usage instead of leaking
+  the internal `_run-task` contract.
+- `STREAMING_WRITE` now keeps SXSSF shared strings enabled, so repeated-text workbooks no longer
+  balloon into inline-string-heavy `.xlsx` packages that are much larger than equivalent
+  full-XSSF or Excel-authored files.
+- Built-in and checked-in example requests now save into request-local `generated-workbooks/`
+  paths instead of hard-coding the repository build tree into printed example payloads.
+- Request JSON once again accepts the documented omitted top-level defaults for
+  `protocolVersion`, `persistence`, `execution`, `formulaEnvironment`, and `steps`, while
+  continuing to reject explicit `null` placeholders on the public wire.
+- Comment and signature-line request payloads now require explicit authored booleans on the wire
+  instead of silently coercing missing visibility or comment-allowance fields to defaults during
+  JSON decoding.
+
 ## [0.61.0] - 2026-04-29
 
 ### Changed
@@ -2475,7 +2542,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.61.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.62.0...HEAD
+[0.62.0]: https://github.com/resoltico/GridGrind/compare/v0.61.0...v0.62.0
 [0.61.0]: https://github.com/resoltico/GridGrind/compare/v0.60.0...v0.61.0
 [0.60.0]: https://github.com/resoltico/GridGrind/compare/v0.59.0...v0.60.0
 [0.59.0]: https://github.com/resoltico/GridGrind/compare/v0.58.0...v0.59.0

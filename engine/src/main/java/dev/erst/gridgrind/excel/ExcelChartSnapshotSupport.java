@@ -150,6 +150,15 @@ final class ExcelChartSnapshotSupport {
                       ExcelChartSourceSupport.resolveSingleCellReference(
                           sheet, formula, "Chart title formula"),
                       formulaRuntime));
+    } catch (IllegalArgumentException exception) {
+      if (recoverableTitleFormulaResolutionFailure(exception)) {
+        return Optional.empty();
+      }
+      LOGGER.log(
+          System.Logger.Level.WARNING,
+          "Failed to resolve chart title formula '" + formula + "'; using cached or empty title",
+          exception);
+      return Optional.empty();
     } catch (RuntimeException exception) {
       LOGGER.log(
           System.Logger.Level.WARNING,
@@ -217,6 +226,11 @@ final class ExcelChartSnapshotSupport {
     };
   }
 
+  private static boolean recoverableTitleFormulaResolutionFailure(
+      IllegalArgumentException exception) {
+    return "Chart source formulas must not cache error values".equals(exception.getMessage());
+  }
+
   static List<String> resolvedOrCachedReferenceValues(
       XSSFSheet contextSheet,
       String referenceFormula,
@@ -229,7 +243,7 @@ final class ExcelChartSnapshotSupport {
       String referenceFormula,
       org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
       ExcelFormulaRuntime formulaRuntime) {
-    return ExcelChartPlotSnapshotSupport.resolvedOrCachedReferenceValues(
+    return ExcelChartSeriesSnapshotSupport.resolvedOrCachedReferenceValues(
         contextSheet, referenceFormula, source, formulaRuntime);
   }
 

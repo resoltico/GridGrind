@@ -64,13 +64,13 @@ public final class JazzerReplaySupport {
               "PARSED",
               SequenceIntrospection.sourceKind(request),
               SequenceIntrospection.persistenceKind(request),
-              request.mutationSteps().size(),
-              SequenceIntrospection.mutationKinds(request.mutationSteps()),
-              SequenceIntrospection.styleKinds(request.mutationSteps()),
+              request.stepPartition().mutations().size(),
+              SequenceIntrospection.mutationKinds(request.stepPartition().mutations()),
+              SequenceIntrospection.styleKinds(request.stepPartition().mutations()),
               SequenceIntrospection.assertionCount(request),
-              SequenceIntrospection.assertionKinds(request.assertionSteps()),
+              SequenceIntrospection.assertionKinds(request.stepPartition().assertions()),
               SequenceIntrospection.inspectionCount(request),
-              SequenceIntrospection.inspectionKinds(request.inspectionSteps()));
+              SequenceIntrospection.inspectionKinds(request.stepPartition().inspections()));
       return new ReplayOutcome.Success(JazzerHarness.protocolRequest().key(), details);
     } catch (InvalidJsonException expected) {
       ProtocolRequestDetails details =
@@ -298,13 +298,13 @@ public final class JazzerReplaySupport {
         inputLength,
         SequenceIntrospection.sourceKind(request),
         SequenceIntrospection.persistenceKind(request),
-        request.mutationSteps().size(),
-        SequenceIntrospection.mutationKinds(request.mutationSteps()),
-        SequenceIntrospection.styleKinds(request.mutationSteps()),
+        request.stepPartition().mutations().size(),
+        SequenceIntrospection.mutationKinds(request.stepPartition().mutations()),
+        SequenceIntrospection.styleKinds(request.stepPartition().mutations()),
         SequenceIntrospection.assertionCount(request),
-        SequenceIntrospection.assertionKinds(request.assertionSteps()),
+        SequenceIntrospection.assertionKinds(request.stepPartition().assertions()),
         SequenceIntrospection.inspectionCount(request),
-        SequenceIntrospection.inspectionKinds(request.inspectionSteps()),
+        SequenceIntrospection.inspectionKinds(request.stepPartition().inspections()),
         response == null ? "NOT_EXECUTED" : SequenceIntrospection.responseKind(response));
   }
 

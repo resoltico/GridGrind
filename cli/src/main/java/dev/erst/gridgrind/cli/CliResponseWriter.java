@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
@@ -34,12 +35,12 @@ final class CliResponseWriter {
       writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           GridGrindProblems.fromException(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
-                      targetPath.toString())));
+                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
+                      .responseFile(targetPath.toString())));
       write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
       return 1;
     }
@@ -65,12 +66,12 @@ final class CliResponseWriter {
       writePayload(targetPath, GridGrindJson.writeResponseBytes(response));
       return logicalExitCode;
     } catch (IOException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           GridGrindProblems.fromException(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
-                      targetPath.toString())));
+                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
+                      .responseFile(targetPath.toString())));
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
@@ -111,12 +112,12 @@ final class CliResponseWriter {
       writePayload(targetPath, GridGrindJson.writeRequestDoctorReportBytes(report));
       return doctorExitCodeFor(report);
     } catch (IOException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           GridGrindProblems.fromException(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContext.ResponseOutput.responseFile(
-                      targetPath.toString())));
+                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
+                      .responseFile(targetPath.toString())));
       if (report.problem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(

@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -48,14 +50,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
   @Test
   void threeArgumentConstructorStillRunsWithDefaultJournalWriter() throws IOException {
-    String request =
-        """
-        {
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": []
-        }
-        """;
+    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -63,7 +58,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
                     GridGrindResponses.success(
                         null,
-                        new GridGrindResponse.PersistenceOutcome.NotSaved(),
+                        new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
                         List.of(),
                         List.of(),
                         List.of()),
@@ -81,14 +76,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
   @Test
   void fourArgumentConstructorStillUsesProvidedJournalWriter() throws IOException {
-    String request =
-        """
-        {
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": []
-        }
-        """;
+    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -96,7 +84,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
                     GridGrindResponses.success(
                         null,
-                        new GridGrindResponse.PersistenceOutcome.NotSaved(),
+                        new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
                         List.of(),
                         List.of(),
                         List.of()),
@@ -124,16 +112,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   void cliJournalWriterSwallowsBestEffortIoFailures() throws IOException {
     WorkbookPlan request =
         GridGrindJson.readRequest(
-            """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "execution": {
-                "journal": { "level": "VERBOSE" }
-              },
-              "steps": []
-            }
-            """
+            requestJson(
+                    "{ \"type\": \"NEW\" }",
+                    "{ \"type\": \"NONE\" }",
+                    verboseExecutionJson(),
+                    emptyFormulaEnvironmentJson(),
+                    "[]")
                 .getBytes(StandardCharsets.UTF_8));
     CliJournalWriter writer = new CliJournalWriter();
     try (OutputStream broken =
@@ -161,16 +145,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   void cliJournalWriterIncludesStepMetadataWhenPresent() throws IOException {
     WorkbookPlan request =
         GridGrindJson.readRequest(
-            """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "execution": {
-                "journal": { "level": "VERBOSE" }
-              },
-              "steps": []
-            }
-            """
+            requestJson(
+                    "{ \"type\": \"NEW\" }",
+                    "{ \"type\": \"NONE\" }",
+                    verboseExecutionJson(),
+                    emptyFormulaEnvironmentJson(),
+                    "[]")
                 .getBytes(StandardCharsets.UTF_8));
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -193,29 +173,27 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void readsJsonRequestFromStdinAndWritesJsonResponse() throws IOException {
     String request =
-        """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "execution": {
-                "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
-              },
-              "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
-                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
-                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
-                ] } },
-                { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
-                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
-                  { "type": "NUMBER", "number": 49.0 }
-                ] } },
-                { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
-                { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
-                { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
-              ]
-            }
-            """;
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            evaluateAllExecutionJson(),
+            emptyFormulaEnvironmentJson(),
+            """
+            [
+              { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+              { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
+                { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
+              ] } },
+              { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
+                { "type": "NUMBER", "number": 49.0 }
+              ] } },
+              { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
+              { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
+              { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
+            ]
+            """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -231,7 +209,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals(List.of(), success.warnings());
-    GridGrindResponse.WorkbookSummary workbook =
+    GridGrindWorkbookSurfaceReports.WorkbookSummary workbook =
         ((InspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
     assertEquals("Budget", workbook.sheetNames().get(0));
     InspectionResult.CellsResult cells =
@@ -248,26 +226,25 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void rejectsStandardInputAuthoredValuesWhenRequestAlsoUsesStdin() throws IOException {
     String request =
-        """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "TEXT",
-                      "source": { "type": "STANDARD_INPUT" }
-                    }
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "STANDARD_INPUT" }
                   }
                 }
-              ]
-            }
-            """;
+              }
+            ]
+            """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -293,31 +270,30 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     Path requestPath = Files.createTempFile("gridgrind-stdin-request-", ".json");
     Files.writeString(
         requestPath,
-        """
-        {
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-            {
-              "stepId": "set-title",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "action": {
-                "type": "SET_CELL",
-                "value": {
-                  "type": "TEXT",
-                  "source": { "type": "STANDARD_INPUT" }
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "STANDARD_INPUT" }
+                  }
                 }
+              },
+              {
+                "stepId": "cells",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "query": { "type": "GET_CELLS" }
               }
-            },
-            {
-              "stepId": "cells",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "query": { "type": "GET_CELLS" }
-            }
-          ]
-        }
-        """,
+            ]
+            """),
         StandardCharsets.UTF_8);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -343,20 +319,18 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void verboseExecutionJournalStreamsLiveEventsToStderr() throws IOException {
     String request =
-        """
-            {
-              "planId": "ledger-audit",
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "execution": {
-                "journal": { "level": "VERBOSE" }
-              },
-              "steps": [
-                { "stepId": "ensure-ledger", "target": { "type": "SHEET_BY_NAME", "name": "Ledger" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
-              ]
-            }
-            """;
+        requestJsonWithPlanId(
+            "ledger-audit",
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            verboseExecutionJson(),
+            emptyFormulaEnvironmentJson(),
+            """
+            [
+              { "stepId": "ensure-ledger", "target": { "type": "SHEET_BY_NAME", "name": "Ledger" }, "action": { "type": "ENSURE_SHEET" } },
+              { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
+            ]
+            """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -385,13 +359,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void returnsStructuredJsonErrorForInvalidRequest() throws IOException {
     String request =
-        """
-            {
-              "source": { "type": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
-              "persistence": { "type": "NONE" },
-              "steps": []
-            }
-            """;
+        requestJson(
+            "{ \"type\": \"EXISTING\", \"path\": \"/tmp/does-not-exist.xlsx\" }",
+            "{ \"type\": \"NONE\" }",
+            "[]");
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -414,15 +385,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   @Test
   void reportsInvalidSheetCharactersDuringRequestRead() throws IOException {
     String request =
-        """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "steps": [
-                { "stepId": "ensure-bad-sheet", "target": { "type": "SHEET_BY_NAME", "name": "Bad:Name" }, "action": { "type": "ENSURE_SHEET" } }
-              ]
-            }
-            """;
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              { "stepId": "ensure-bad-sheet", "target": { "type": "SHEET_BY_NAME", "name": "Bad:Name" }, "action": { "type": "ENSURE_SHEET" } }
+            ]
+            """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -444,13 +414,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void acceptsSetTableRequestsThatOmitShowTotalsRow() throws IOException {
+  void acceptsExplicitSetTableRequestsWithShowTotalsRowFalse() throws IOException {
     String request =
-        """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "steps": [
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
                 { "stepId": "ensure-dispatch", "target": { "type": "SHEET_BY_NAME", "name": "Dispatch" }, "action": { "type": "ENSURE_SHEET" } },
                 {
                   "stepId": "seed-dispatch",
@@ -482,14 +452,23 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                       "name": "DispatchQueue",
                       "sheetName": "Dispatch",
                       "range": "A1:B3",
-                      "style": { "type": "NONE" }
+                      "showTotalsRow": false,
+                      "hasAutofilter": true,
+                      "style": { "type": "NONE" },
+                      "comment": { "type": "INLINE", "text": "" },
+                      "published": false,
+                      "insertRow": false,
+                      "insertRowShift": false,
+                      "headerRowCellStyle": "",
+                      "dataCellStyle": "",
+                      "totalsRowCellStyle": "",
+                      "columns": []
                     }
                   }
                 },
                 { "stepId": "tables", "target": { "type": "TABLE_ALL" }, "query": { "type": "GET_TABLES" } }
               ]
-            }
-            """;
+            """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -518,16 +497,15 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     Files.writeString(
         requestPath,
-        """
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
-              ]
-            }
-            """);
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+              { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
+            ]
+            """));
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =

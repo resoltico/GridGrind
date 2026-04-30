@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import java.io.ByteArrayOutputStream;
@@ -22,26 +23,25 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Black-box CLI regressions for request-file-relative execution paths and payloads. */
-class GridGrindCliRequestPathRootingTest {
+class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
   @Test
   void requestFileRootsRelativePersistencePathsInItsOwnDirectory() throws IOException {
     Path requestDirectory = Files.createTempDirectory("gridgrind-cli-request-root-");
     Path requestPath = requestDirectory.resolve("relative-save.json");
     Files.writeString(
         requestPath,
-        """
-        {
-          "source": { "type": "NEW" },
-          "persistence": { "type": "SAVE_AS", "path": "result.xlsx" },
-          "steps": [
-            {
-              "stepId": "ensure-budget",
-              "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-              "action": { "type": "ENSURE_SHEET" }
-            }
-          ]
-        }
-        """);
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\" }",
+            """
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              }
+            ]
+            """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -54,9 +54,9 @@ class GridGrindCliRequestPathRootingTest {
     GridGrindResponse.Success response =
         assertInstanceOf(
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    GridGrindResponse.PersistenceOutcome.SavedAs persistence =
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
         assertInstanceOf(
-            GridGrindResponse.PersistenceOutcome.SavedAs.class, response.persistence());
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
 
     assertEquals(0, exitCode);
     assertEquals(requestDirectory.resolve("result.xlsx").toString(), persistence.executionPath());
@@ -71,19 +71,18 @@ class GridGrindCliRequestPathRootingTest {
     Path requestPath = requestDirectory.resolve("existing-source.json");
     Files.writeString(
         requestPath,
-        """
-        {
-          "source": { "type": "EXISTING", "path": "input.xlsx" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "cells",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "A1" },
-              "query": { "type": "GET_CELLS" }
-            }
-          ]
-        }
-        """);
+        requestJson(
+            "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              {
+                "stepId": "cells",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "A1" },
+                "query": { "type": "GET_CELLS" }
+              }
+            ]
+            """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -116,35 +115,34 @@ class GridGrindCliRequestPathRootingTest {
         requestDirectory.resolve("title.txt"), "Quarterly Budget", StandardCharsets.UTF_8);
     Files.writeString(
         requestPath,
-        """
-        {
-          "source": { "type": "NEW" },
-          "persistence": { "type": "NONE" },
-          "steps": [
-            {
-              "stepId": "ensure-budget",
-              "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-              "action": { "type": "ENSURE_SHEET" }
-            },
-            {
-              "stepId": "set-title",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "action": {
-                "type": "SET_CELL",
-                "value": {
-                  "type": "TEXT",
-                  "source": { "type": "UTF8_FILE", "path": "title.txt" }
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
+                  }
                 }
+              },
+              {
+                "stepId": "read-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "query": { "type": "GET_CELLS" }
               }
-            },
-            {
-              "stepId": "read-title",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "query": { "type": "GET_CELLS" }
-            }
-          ]
-        }
-        """);
+            ]
+            """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -175,28 +173,28 @@ class GridGrindCliRequestPathRootingTest {
     Path requestPath = scenario.directory().resolve("external-formula-request.json");
     Files.writeString(
         requestPath,
-        """
-        {
-          "source": { "type": "EXISTING", "path": "external-formula.xlsx" },
-          "persistence": { "type": "NONE" },
-          "execution": {
-            "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
-          },
-          "formulaEnvironment": {
-            "externalWorkbooks": [
-              { "workbookName": "referenced.xlsx", "path": "refs/referenced.xlsx" }
-            ],
-            "missingWorkbookPolicy": "ERROR"
-          },
-          "steps": [
+        requestJson(
+            "{ \"type\": \"EXISTING\", \"path\": \"external-formula.xlsx\" }",
+            "{ \"type\": \"NONE\" }",
+            evaluateAllExecutionJson(),
+            """
             {
-              "stepId": "cells",
-              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "B1" },
-              "query": { "type": "GET_CELLS" }
+              "externalWorkbooks": [
+                { "workbookName": "referenced.xlsx", "path": "refs/referenced.xlsx" }
+              ],
+              "missingWorkbookPolicy": "ERROR",
+              "udfToolpacks": []
             }
-          ]
-        }
-        """);
+            """,
+            """
+            [
+              {
+                "stepId": "cells",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "B1" },
+                "query": { "type": "GET_CELLS" }
+              }
+            ]
+            """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =

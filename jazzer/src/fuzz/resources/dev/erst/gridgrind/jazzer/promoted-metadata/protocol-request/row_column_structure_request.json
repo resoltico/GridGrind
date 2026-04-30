@@ -2,39 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
       "inputBytes" : 12706,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 16,
-      "operationKinds" : {
-        "SET_CELL" : 2,
-        "GROUP_COLUMNS" : 1,
-        "SET_ROW_VISIBILITY" : 1,
-        "GROUP_ROWS" : 1,
-        "DELETE_ROWS" : 1,
-        "INSERT_ROWS" : 1,
-        "SHIFT_ROWS" : 1,
-        "SET_COLUMN_VISIBILITY" : 1,
-        "SHIFT_COLUMNS" : 1,
-        "ENSURE_SHEET" : 2,
-        "DELETE_COLUMNS" : 1,
-        "INSERT_COLUMNS" : 1,
-        "SET_RANGE" : 2
-      },
+      "decodeOutcome" : "INVALID_REQUEST",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 2,
-      "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_SHEET_LAYOUT" : 1
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-04-06T01:57:49.328066Z",

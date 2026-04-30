@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/budget_request.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 5054
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 7
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'mode'
+Input Bytes: 5044
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 5
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_WINDOW=1, GET_SHEET_SCHEMA=1, GET_CELLS=1, GET_FORMULA_SURFACE=1, GET_WORKBOOK_SUMMARY=1
-Style Kinds: alignment=2, horizontal_alignment=2, number_format=1, vertical_alignment=1, font=1, wrap_text=1, bold=1
-Operation Kinds: APPLY_STYLE=2, SET_CELL=2, AUTO_SIZE_COLUMNS=1, ENSURE_SHEET=1, SET_RANGE=1
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

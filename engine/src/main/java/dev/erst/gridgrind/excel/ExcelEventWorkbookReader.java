@@ -22,7 +22,7 @@ import org.xml.sax.XMLReader;
 /** Low-memory factual workbook reader backed by POI's XSSF event-model package access. */
 public final class ExcelEventWorkbookReader {
   /** Executes supported introspection commands against one workbook path using the event model. */
-  public List<WorkbookReadResult.Introspection> apply(
+  public List<WorkbookReadIntrospectionResult> apply(
       Path workbookPath, Iterable<WorkbookReadCommand.Introspection> commands) throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
@@ -31,7 +31,7 @@ public final class ExcelEventWorkbookReader {
       XSSFReader reader = new XSSFReader(pkg);
       EventWorkbookMetadata metadata = EventWorkbookMetadata.workbookMetadata(reader);
       Map<String, EventSheetSummary> sheetSummaries = new ConcurrentHashMap<>();
-      List<WorkbookReadResult.Introspection> results = new ArrayList<>();
+      List<WorkbookReadIntrospectionResult> results = new ArrayList<>();
       for (WorkbookReadCommand.Introspection command : commands) {
         Objects.requireNonNull(command, "command must not contain nulls");
         results.add(applyOne(reader, metadata, sheetSummaries, command));
@@ -45,7 +45,7 @@ public final class ExcelEventWorkbookReader {
     }
   }
 
-  private WorkbookReadResult.Introspection applyOne(
+  private WorkbookReadIntrospectionResult applyOne(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries,
@@ -53,10 +53,10 @@ public final class ExcelEventWorkbookReader {
       throws IOException {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
-          new WorkbookReadResult.WorkbookSummaryResult(
+          new WorkbookCoreResult.WorkbookSummaryResult(
               getWorkbookSummary.stepId(), workbookSummary(reader, metadata, sheetSummaries));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
-          new WorkbookReadResult.SheetSummaryResult(
+          new WorkbookSheetResult.SheetSummaryResult(
               getSheetSummary.stepId(),
               sheetSummary(reader, metadata, sheetSummaries, getSheetSummary.sheetName()));
       default ->
@@ -67,13 +67,13 @@ public final class ExcelEventWorkbookReader {
     };
   }
 
-  private WorkbookReadResult.WorkbookSummary workbookSummary(
+  private WorkbookCoreResult.WorkbookSummary workbookSummary(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries)
       throws IOException {
     if (metadata.sheets().isEmpty()) {
-      return new WorkbookReadResult.WorkbookSummary.Empty(
+      return new WorkbookCoreResult.WorkbookSummary.Empty(
           0, List.of(), metadata.namedRangeCount(), metadata.forceFormulaRecalculationOnOpen());
     }
     List<String> selectedSheetNames = new ArrayList<>();
@@ -85,7 +85,7 @@ public final class ExcelEventWorkbookReader {
     if (selectedSheetNames.isEmpty()) {
       selectedSheetNames = List.of(EventWorkbookMetadata.activeSheetName(metadata));
     }
-    return new WorkbookReadResult.WorkbookSummary.WithSheets(
+    return new WorkbookCoreResult.WorkbookSummary.WithSheets(
         metadata.sheets().size(),
         metadata.sheetNames(),
         EventWorkbookMetadata.activeSheetName(metadata),
@@ -94,7 +94,7 @@ public final class ExcelEventWorkbookReader {
         metadata.forceFormulaRecalculationOnOpen());
   }
 
-  private WorkbookReadResult.SheetSummary sheetSummary(
+  private WorkbookSheetResult.SheetSummary sheetSummary(
       XSSFReader reader,
       EventWorkbookMetadata metadata,
       Map<String, EventSheetSummary> sheetSummaries,
@@ -102,7 +102,7 @@ public final class ExcelEventWorkbookReader {
       throws IOException {
     EventSheetReference sheet = metadata.sheetByName().get(sheetName);
     EventSheetSummary summary = sheetSnapshot(reader, metadata, sheetSummaries, sheetName);
-    return new WorkbookReadResult.SheetSummary(
+    return new WorkbookSheetResult.SheetSummary(
         sheetName,
         sheet.visibility(),
         summary.protection(),

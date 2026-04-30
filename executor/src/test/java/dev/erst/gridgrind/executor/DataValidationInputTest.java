@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 /** Tests for the top-level data-validation transport model. */
 class DataValidationInputTest {
   @Test
-  void defaultsBooleansAndConvertsToEngineDefinition() {
+  void convertsToEngineDefinitionAndNestedPromptDefaults() {
     DataValidationInput input =
         new DataValidationInput(
             new DataValidationRuleInput.DateRule(

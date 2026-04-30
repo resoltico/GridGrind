@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json
 Harness: protocol-request
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'execution'
 Input Bytes: 12706
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 16
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 2
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_CELLS=1, GET_SHEET_LAYOUT=1
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_CELL=2, ENSURE_SHEET=2, SET_RANGE=2, GROUP_COLUMNS=1, SET_ROW_VISIBILITY=1, GROUP_ROWS=1, DELETE_ROWS=1, INSERT_ROWS=1, SHIFT_ROWS=1, SET_COLUMN_VISIBILITY=1, SHIFT_COLUMNS=1, DELETE_COLUMNS=1, INSERT_COLUMNS=1
+Operation Kinds: (none)

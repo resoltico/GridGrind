@@ -12,11 +12,11 @@ import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -45,14 +45,16 @@ class ExecutionJournalCoverageTest {
   @Test
   void defaultExecutorMethodForwardsAndRejectsNullSink() {
     WorkbookPlan request =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     GridGrindResponse.Success expected =
         GridGrindResponses.success(
             null,
-            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             List.of(),
             List.of(),
             List.of());
@@ -365,15 +367,15 @@ class ExecutionJournalCoverageTest {
   }
 
   private static WorkbookPlan verbosePlan() {
-    return new WorkbookPlan(
+    return WorkbookPlan.identified(
         GridGrindProtocolVersion.current(),
         "phase-5-plan",
         new WorkbookPlan.WorkbookSource.New(),
         new WorkbookPlan.WorkbookPersistence.None(),
-        new ExecutionPolicyInput(
+        ExecutionPolicyInput.modeAndJournal(
             ExecutionModeInput.defaults(),
             new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-        FormulaEnvironmentInput.empty(),
+        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
         List.of());
   }
 

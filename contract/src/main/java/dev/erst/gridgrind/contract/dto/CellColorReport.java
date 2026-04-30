@@ -2,7 +2,6 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.Objects;
 
 /** Factual workbook color preserving RGB, theme, indexed, and tint semantics. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
@@ -55,7 +54,7 @@ public sealed interface CellColorReport
   }
 
   /** Theme-backed workbook color report. */
-  record Theme(Integer theme, Double tint) implements CellColorReport {
+  record Theme(int theme, Double tint) implements CellColorReport {
     public Theme {
       requireNonNegative(theme, "theme");
       requireFiniteOrNull(tint, "tint");
@@ -63,16 +62,15 @@ public sealed interface CellColorReport
   }
 
   /** Indexed-palette workbook color report. */
-  record Indexed(Integer indexed, Double tint) implements CellColorReport {
+  record Indexed(int indexed, Double tint) implements CellColorReport {
     public Indexed {
       requireNonNegative(indexed, "indexed");
       requireFiniteOrNull(tint, "tint");
     }
   }
 
-  private static void requireNonNegative(Integer value, String fieldName) {
-    int required = Objects.requireNonNull(value, fieldName + " must not be null");
-    if (required < 0) {
+  private static void requireNonNegative(int value, String fieldName) {
+    if (value < 0) {
       throw new IllegalArgumentException(fieldName + " must not be negative");
     }
   }

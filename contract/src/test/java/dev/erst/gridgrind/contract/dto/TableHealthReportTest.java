@@ -11,15 +11,15 @@ import org.junit.jupiter.api.Test;
 class TableHealthReportTest {
   @Test
   void validatesCountsAndCopiesFindings() {
-    GridGrindResponse.AnalysisSummaryReport summary =
-        new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0);
-    GridGrindResponse.AnalysisFindingReport finding =
-        new GridGrindResponse.AnalysisFindingReport(
+    GridGrindAnalysisReports.AnalysisSummaryReport summary =
+        new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0);
+    GridGrindAnalysisReports.AnalysisFindingReport finding =
+        new GridGrindAnalysisReports.AnalysisFindingReport(
             AnalysisFindingCode.TABLE_OVERLAPPING_RANGE,
             AnalysisSeverity.ERROR,
             "Table range overlaps another table",
             "Table metadata overlaps one or more other tables on the same sheet.",
-            new GridGrindResponse.AnalysisLocationReport.Range("Budget", "A1:C4"),
+            new GridGrindAnalysisReports.AnalysisLocationReport.Range("Budget", "A1:C4"),
             List.of("BudgetTable@A1:C4", "Queue@B1:D4"));
 
     TableHealthReport report = new TableHealthReport(1, summary, List.of(finding));

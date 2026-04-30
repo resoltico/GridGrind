@@ -60,65 +60,65 @@ class WorkbookAnalyzerTest {
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
-      WorkbookReadResult.FormulaHealthResult formulaHealth =
+      WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
           cast(
-              WorkbookReadResult.FormulaHealthResult.class,
+              WorkbookAnalysisResult.FormulaHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeFormulaHealth(
                       "formulaHealth", new ExcelSheetSelection.All())));
-      WorkbookReadResult.HyperlinkHealthResult hyperlinkHealth =
+      WorkbookAnalysisResult.HyperlinkHealthResult hyperlinkHealth =
           cast(
-              WorkbookReadResult.HyperlinkHealthResult.class,
+              WorkbookAnalysisResult.HyperlinkHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeHyperlinkHealth(
                       "hyperlinkHealth", new ExcelSheetSelection.All())));
-      WorkbookReadResult.NamedRangeHealthResult namedRangeHealth =
+      WorkbookAnalysisResult.NamedRangeHealthResult namedRangeHealth =
           cast(
-              WorkbookReadResult.NamedRangeHealthResult.class,
+              WorkbookAnalysisResult.NamedRangeHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
                       "namedRangeHealth", new ExcelNamedRangeSelection.All())));
-      WorkbookReadResult.AutofilterHealthResult autofilterHealth =
+      WorkbookAnalysisResult.AutofilterHealthResult autofilterHealth =
           cast(
-              WorkbookReadResult.AutofilterHealthResult.class,
+              WorkbookAnalysisResult.AutofilterHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeAutofilterHealth(
                       "autofilterHealth", new ExcelSheetSelection.All())));
-      WorkbookReadResult.ConditionalFormattingHealthResult conditionalFormattingHealth =
+      WorkbookAnalysisResult.ConditionalFormattingHealthResult conditionalFormattingHealth =
           cast(
-              WorkbookReadResult.ConditionalFormattingHealthResult.class,
+              WorkbookAnalysisResult.ConditionalFormattingHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
                       "conditionalFormattingHealth", new ExcelSheetSelection.All())));
-      WorkbookReadResult.TableHealthResult tableHealth =
+      WorkbookAnalysisResult.TableHealthResult tableHealth =
           cast(
-              WorkbookReadResult.TableHealthResult.class,
+              WorkbookAnalysisResult.TableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeTableHealth(
                       "tableHealth", new ExcelTableSelection.All())));
-      WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
+      WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
           cast(
-              WorkbookReadResult.PivotTableHealthResult.class,
+              WorkbookAnalysisResult.PivotTableHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzePivotTableHealth(
                       "pivotTableHealth", new ExcelPivotTableSelection.All())));
-      WorkbookReadResult.WorkbookFindingsResult workbookFindings =
+      WorkbookAnalysisResult.WorkbookFindingsResult workbookFindings =
           cast(
-              WorkbookReadResult.WorkbookFindingsResult.class,
+              WorkbookAnalysisResult.WorkbookFindingsResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),

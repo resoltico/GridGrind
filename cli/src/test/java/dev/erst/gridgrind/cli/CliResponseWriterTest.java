@@ -3,6 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
@@ -96,12 +97,13 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     Path responseDirectory = Files.createTempDirectory("gridgrind-doctor-problem-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     RequestDoctorReport.Summary summary = summary();
-    GridGrindResponse.Problem originalProblem =
+    GridGrindProblemDetail.Problem originalProblem =
         GridGrindProblems.problem(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
             new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
-                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE")),
+                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                    "NEW", "NONE")),
             new IOException("bad request"));
 
     int exitCode =

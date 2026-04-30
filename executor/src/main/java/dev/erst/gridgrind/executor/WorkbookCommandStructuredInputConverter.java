@@ -267,12 +267,24 @@ final class WorkbookCommandStructuredInputConverter {
 
   private static ExcelAutofilterSortCondition toExcelAutofilterSortCondition(
       AutofilterSortConditionInput condition) {
-    return new ExcelAutofilterSortCondition(
-        condition.range(),
-        condition.descending(),
-        condition.sortBy(),
-        WorkbookCommandCellInputConverter.toExcelColor(condition.color()).orElse(null),
-        condition.iconId());
+    return switch (condition) {
+      case AutofilterSortConditionInput.Value value ->
+          new ExcelAutofilterSortCondition.Value(value.range(), value.descending());
+      case AutofilterSortConditionInput.CellColor cellColor ->
+          new ExcelAutofilterSortCondition.CellColor(
+              cellColor.range(),
+              cellColor.descending(),
+              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                  cellColor.color(), "autofilter cell sort color"));
+      case AutofilterSortConditionInput.FontColor fontColor ->
+          new ExcelAutofilterSortCondition.FontColor(
+              fontColor.range(),
+              fontColor.descending(),
+              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                  fontColor.color(), "autofilter font sort color"));
+      case AutofilterSortConditionInput.Icon icon ->
+          new ExcelAutofilterSortCondition.Icon(icon.range(), icon.descending(), icon.iconId());
+    };
   }
 
   private static ExcelConditionalFormattingThreshold toExcelConditionalFormattingThreshold(

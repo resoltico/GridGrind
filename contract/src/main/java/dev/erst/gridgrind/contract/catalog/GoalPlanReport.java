@@ -15,8 +15,7 @@ public record GoalPlanReport(
     List<String> suggestedIntentTags,
     List<Candidate> candidates) {
   public GoalPlanReport {
-    protocolVersion =
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     goal = CatalogRecordValidation.requireNonBlank(goal, "goal");
     normalizedTerms = CatalogRecordValidation.copyStrings(normalizedTerms, "normalizedTerms");
     unmatchedTerms = CatalogRecordValidation.copyStrings(unmatchedTerms, "unmatchedTerms");

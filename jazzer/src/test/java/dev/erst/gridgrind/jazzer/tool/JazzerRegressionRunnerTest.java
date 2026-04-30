@@ -233,7 +233,29 @@ class JazzerRegressionRunnerTest {
     private PromotionMetadata validProtocolRequestMetadata() throws IOException {
       Path inputPath = protocolRequestInputPath();
       Files.createDirectories(inputPath.getParent());
-      Files.writeString(inputPath, "{\"source\":{\"type\":\"NEW\"},\"steps\":[]}");
+      Files.writeString(
+          inputPath,
+          """
+          {
+            "protocolVersion": "V1",
+            "source": { "type": "NEW" },
+            "persistence": { "type": "NONE" },
+            "execution": {
+              "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+              "journal": { "level": "NORMAL" },
+              "calculation": {
+                "strategy": { "type": "DO_NOT_CALCULATE" },
+                "markRecalculateOnOpen": false
+              }
+            },
+            "formulaEnvironment": {
+              "externalWorkbooks": [],
+              "missingWorkbookPolicy": "ERROR",
+              "udfToolpacks": []
+            },
+            "steps": []
+          }
+          """);
       ReplayOutcome outcome =
           JazzerReplaySupport.replay(
               JazzerHarness.protocolRequest(), Files.readAllBytes(inputPath));

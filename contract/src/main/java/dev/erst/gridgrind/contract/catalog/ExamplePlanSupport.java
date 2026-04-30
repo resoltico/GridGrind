@@ -21,7 +21,6 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
-import java.util.Optional;
 
 /** Shared DSL helpers for the contract-owned generated example registry. */
 final class ExamplePlanSupport {
@@ -38,14 +37,21 @@ final class ExamplePlanSupport {
       WorkbookPlan.WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
       WorkbookStep... steps) {
-    return new WorkbookPlan(
-        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-        Optional.ofNullable(planId),
+    return WorkbookPlan.identified(
+        planId,
         source,
         persistence,
-        java.util.Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
+        java.util.Objects.requireNonNull(execution, "execution must not be null"),
         dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
         List.of(steps));
+  }
+
+  static WorkbookPlan defaultExecutionPlan(
+      String planId,
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      WorkbookStep... steps) {
+    return plan(planId, source, persistence, ExecutionPolicyInput.defaults(), steps);
   }
 
   static WorkbookPlan.WorkbookPersistence.SaveAs saveAs(String path) {

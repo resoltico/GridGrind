@@ -6,7 +6,27 @@
   },
   "persistence" : {
     "type" : "SAVE_AS",
-    "path" : "../cli/build/generated-workbooks/gridgrind-signature-line.xlsx"
+    "path" : "generated-workbooks/gridgrind-signature-line.xlsx"
+  },
+  "execution" : {
+    "mode" : {
+      "readMode" : "FULL_XSSF",
+      "writeMode" : "FULL_XSSF"
+    },
+    "journal" : {
+      "level" : "NORMAL"
+    },
+    "calculation" : {
+      "strategy" : {
+        "type" : "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen" : false
+    }
+  },
+  "formulaEnvironment" : {
+    "externalWorkbooks" : [ ],
+    "missingWorkbookPolicy" : "ERROR",
+    "udfToolpacks" : [ ]
   },
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",

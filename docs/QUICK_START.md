@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: QUICK_START
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -11,8 +11,9 @@ route:
 # Quick Start
 
 Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
-Generated example JSON omits absent optional sections, so the first printed request is ready for
-copy-paste edits without `null` cleanup.
+Generated example JSON already includes the explicit top-level request envelope, so the first
+printed request is ready for copy-paste edits without inventing missing execution or formula
+sections yourself.
 
 ---
 

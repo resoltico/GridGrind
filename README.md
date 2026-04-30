@@ -22,8 +22,22 @@ Alice logs green coffee arrivals at High Ground Roasters every Monday. One JSON 
 
 ```json
 {
+  "protocolVersion": "V1",
   "source": { "type": "NEW" },
   "persistence": { "type": "SAVE_AS", "path": "lots.xlsx" },
+  "execution": {
+    "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+    "journal": { "level": "NORMAL" },
+    "calculation": {
+      "strategy": { "type": "DO_NOT_CALCULATE" },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
   "steps": [
     {
       "stepId": "sheet",
@@ -57,6 +71,8 @@ Alice logs green coffee arrivals at High Ground Roasters every Monday. One JSON 
 ```
 
 Write, assert, read — one plan. GridGrind saves the file only if every step, including the assertion, succeeds.
+`--print-request-template` emits the canonical minimal request scaffold when you want to start from
+the exact current wire envelope instead of a hand-written example.
 
 ## Where it fits
 

@@ -4,6 +4,9 @@ import static dev.erst.gridgrind.executor.SourceBackedResolutionIdentitySupport.
 import static dev.erst.gridgrind.executor.SourceBackedResolutionIdentitySupport.sameReference;
 
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
@@ -149,11 +152,11 @@ final class SourceBackedStructuredInputResolver {
 
   static ChartInput resolveChart(ChartInput chart, ExecutionInputBindings bindings)
       throws IOException {
-    ChartInput.Title resolvedTitle = resolveChartTitle(chart.title(), bindings);
-    List<ChartInput.Plot> resolvedPlots = new ArrayList<>(chart.plots().size());
+    ChartTitleInput resolvedTitle = resolveChartTitle(chart.title(), bindings);
+    List<ChartPlotInput> resolvedPlots = new ArrayList<>(chart.plots().size());
     boolean changed = !sameReference(resolvedTitle, chart.title());
-    for (ChartInput.Plot plot : chart.plots()) {
-      ChartInput.Plot resolvedPlot = resolveChartPlot(plot, bindings);
+    for (ChartPlotInput plot : chart.plots()) {
+      ChartPlotInput resolvedPlot = resolveChartPlot(plot, bindings);
       resolvedPlots.add(resolvedPlot);
       changed |= !sameReference(resolvedPlot, plot);
     }
@@ -169,48 +172,49 @@ final class SourceBackedStructuredInputResolver {
         : chart;
   }
 
-  private static ChartInput.Title resolveChartTitle(
-      ChartInput.Title title, ExecutionInputBindings bindings) throws IOException {
+  private static ChartTitleInput resolveChartTitle(
+      ChartTitleInput title, ExecutionInputBindings bindings) throws IOException {
     return switch (title) {
-      case ChartInput.Title.None none -> none;
-      case ChartInput.Title.Formula formula -> formula;
-      case ChartInput.Title.Text text ->
+      case ChartTitleInput.None none -> none;
+      case ChartTitleInput.Formula formula -> formula;
+      case ChartTitleInput.Text text ->
           sameReference(
                   SourceBackedPlanResolver.resolveTextSource(
                       text.source(), bindings, true, "chart title"),
                   text.source())
               ? text
-              : new ChartInput.Title.Text(
+              : new ChartTitleInput.Text(
                   SourceBackedPlanResolver.resolveTextSource(
                       text.source(), bindings, true, "chart title"));
     };
   }
 
-  private static ChartInput.Plot resolveChartPlot(
-      ChartInput.Plot plot, ExecutionInputBindings bindings) throws IOException {
+  private static ChartPlotInput resolveChartPlot(
+      ChartPlotInput plot, ExecutionInputBindings bindings) throws IOException {
     return switch (plot) {
-      case ChartInput.Area area -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(area.series(), bindings);
+      case ChartPlotInput.Area area -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(area.series(), bindings);
         yield sameReference(resolvedSeries, area.series())
             ? area
-            : new ChartInput.Area(area.varyColors(), area.grouping(), area.axes(), resolvedSeries);
+            : new ChartPlotInput.Area(
+                area.varyColors(), area.grouping(), area.axes(), resolvedSeries);
       }
-      case ChartInput.Area3D area3D -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(area3D.series(), bindings);
+      case ChartPlotInput.Area3D area3D -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(area3D.series(), bindings);
         yield sameReference(resolvedSeries, area3D.series())
             ? area3D
-            : new ChartInput.Area3D(
+            : new ChartPlotInput.Area3D(
                 area3D.varyColors(),
                 area3D.grouping(),
                 area3D.gapDepth(),
                 area3D.axes(),
                 resolvedSeries);
       }
-      case ChartInput.Bar bar -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(bar.series(), bindings);
+      case ChartPlotInput.Bar bar -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(bar.series(), bindings);
         yield sameReference(resolvedSeries, bar.series())
             ? bar
-            : new ChartInput.Bar(
+            : new ChartPlotInput.Bar(
                 bar.varyColors(),
                 bar.barDirection(),
                 bar.grouping(),
@@ -219,11 +223,11 @@ final class SourceBackedStructuredInputResolver {
                 bar.axes(),
                 resolvedSeries);
       }
-      case ChartInput.Bar3D bar3D -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(bar3D.series(), bindings);
+      case ChartPlotInput.Bar3D bar3D -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(bar3D.series(), bindings);
         yield sameReference(resolvedSeries, bar3D.series())
             ? bar3D
-            : new ChartInput.Bar3D(
+            : new ChartPlotInput.Bar3D(
                 bar3D.varyColors(),
                 bar3D.barDirection(),
                 bar3D.grouping(),
@@ -233,93 +237,95 @@ final class SourceBackedStructuredInputResolver {
                 bar3D.axes(),
                 resolvedSeries);
       }
-      case ChartInput.Doughnut doughnut -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(doughnut.series(), bindings);
+      case ChartPlotInput.Doughnut doughnut -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(doughnut.series(), bindings);
         yield sameReference(resolvedSeries, doughnut.series())
             ? doughnut
-            : new ChartInput.Doughnut(
+            : new ChartPlotInput.Doughnut(
                 doughnut.varyColors(),
                 doughnut.firstSliceAngle(),
                 doughnut.holeSize(),
                 resolvedSeries);
       }
-      case ChartInput.Line line -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(line.series(), bindings);
+      case ChartPlotInput.Line line -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(line.series(), bindings);
         yield sameReference(resolvedSeries, line.series())
             ? line
-            : new ChartInput.Line(line.varyColors(), line.grouping(), line.axes(), resolvedSeries);
+            : new ChartPlotInput.Line(
+                line.varyColors(), line.grouping(), line.axes(), resolvedSeries);
       }
-      case ChartInput.Line3D line3D -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(line3D.series(), bindings);
+      case ChartPlotInput.Line3D line3D -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(line3D.series(), bindings);
         yield sameReference(resolvedSeries, line3D.series())
             ? line3D
-            : new ChartInput.Line3D(
+            : new ChartPlotInput.Line3D(
                 line3D.varyColors(),
                 line3D.grouping(),
                 line3D.gapDepth(),
                 line3D.axes(),
                 resolvedSeries);
       }
-      case ChartInput.Pie pie -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(pie.series(), bindings);
+      case ChartPlotInput.Pie pie -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(pie.series(), bindings);
         yield sameReference(resolvedSeries, pie.series())
             ? pie
-            : new ChartInput.Pie(pie.varyColors(), pie.firstSliceAngle(), resolvedSeries);
+            : new ChartPlotInput.Pie(pie.varyColors(), pie.firstSliceAngle(), resolvedSeries);
       }
-      case ChartInput.Pie3D pie3D -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(pie3D.series(), bindings);
+      case ChartPlotInput.Pie3D pie3D -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(pie3D.series(), bindings);
         yield sameReference(resolvedSeries, pie3D.series())
             ? pie3D
-            : new ChartInput.Pie3D(pie3D.varyColors(), resolvedSeries);
+            : new ChartPlotInput.Pie3D(pie3D.varyColors(), resolvedSeries);
       }
-      case ChartInput.Radar radar -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(radar.series(), bindings);
+      case ChartPlotInput.Radar radar -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(radar.series(), bindings);
         yield sameReference(resolvedSeries, radar.series())
             ? radar
-            : new ChartInput.Radar(radar.varyColors(), radar.style(), radar.axes(), resolvedSeries);
+            : new ChartPlotInput.Radar(
+                radar.varyColors(), radar.style(), radar.axes(), resolvedSeries);
       }
-      case ChartInput.Scatter scatter -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(scatter.series(), bindings);
+      case ChartPlotInput.Scatter scatter -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(scatter.series(), bindings);
         yield sameReference(resolvedSeries, scatter.series())
             ? scatter
-            : new ChartInput.Scatter(
+            : new ChartPlotInput.Scatter(
                 scatter.varyColors(), scatter.style(), scatter.axes(), resolvedSeries);
       }
-      case ChartInput.Surface surface -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(surface.series(), bindings);
+      case ChartPlotInput.Surface surface -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(surface.series(), bindings);
         yield sameReference(resolvedSeries, surface.series())
             ? surface
-            : new ChartInput.Surface(
+            : new ChartPlotInput.Surface(
                 surface.varyColors(), surface.wireframe(), surface.axes(), resolvedSeries);
       }
-      case ChartInput.Surface3D surface3D -> {
-        List<ChartInput.Series> resolvedSeries = resolveChartSeries(surface3D.series(), bindings);
+      case ChartPlotInput.Surface3D surface3D -> {
+        List<ChartSeriesInput> resolvedSeries = resolveChartSeries(surface3D.series(), bindings);
         yield sameReference(resolvedSeries, surface3D.series())
             ? surface3D
-            : new ChartInput.Surface3D(
+            : new ChartPlotInput.Surface3D(
                 surface3D.varyColors(), surface3D.wireframe(), surface3D.axes(), resolvedSeries);
       }
     };
   }
 
-  private static List<ChartInput.Series> resolveChartSeries(
-      List<ChartInput.Series> series, ExecutionInputBindings bindings) throws IOException {
-    List<ChartInput.Series> resolvedSeries = new ArrayList<>(series.size());
+  private static List<ChartSeriesInput> resolveChartSeries(
+      List<ChartSeriesInput> series, ExecutionInputBindings bindings) throws IOException {
+    List<ChartSeriesInput> resolvedSeries = new ArrayList<>(series.size());
     boolean changed = false;
-    for (ChartInput.Series value : series) {
-      ChartInput.Title resolvedTitle = resolveChartTitle(value.title(), bindings);
-      ChartInput.Series resolved = resolvedChartSeries(value, resolvedTitle);
+    for (ChartSeriesInput value : series) {
+      ChartTitleInput resolvedTitle = resolveChartTitle(value.title(), bindings);
+      ChartSeriesInput resolved = resolvedChartSeries(value, resolvedTitle);
       resolvedSeries.add(resolved);
       changed |= !sameReference(resolved, value);
     }
     return changed ? List.copyOf(resolvedSeries) : series;
   }
 
-  private static ChartInput.Series resolvedChartSeries(
-      ChartInput.Series series, ChartInput.Title resolvedTitle) {
+  private static ChartSeriesInput resolvedChartSeries(
+      ChartSeriesInput series, ChartTitleInput resolvedTitle) {
     return sameReference(resolvedTitle, series.title())
         ? series
-        : new ChartInput.Series(
+        : new ChartSeriesInput(
             resolvedTitle,
             series.categories(),
             series.values(),

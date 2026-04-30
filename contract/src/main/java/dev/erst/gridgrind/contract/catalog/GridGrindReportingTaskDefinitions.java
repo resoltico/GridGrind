@@ -7,8 +7,16 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport
 import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport.ref;
 import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport.task;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
+import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartLegendInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
@@ -29,6 +37,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import java.util.List;
 
 /** Contract-owned task definitions for report, dashboard, intake, and pivot workflows. */
+@SuppressWarnings("PMD.ExcessiveImports")
 final class GridGrindReportingTaskDefinitions {
   private GridGrindReportingTaskDefinitions() {}
 
@@ -95,19 +104,18 @@ final class GridGrindReportingTaskDefinitions {
             "build a report table",
             "typed worksheet report",
             "create a report workbook"),
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "tabular-report-starter",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs("tabular-report.xlsx"),
-            null,
             ExamplePlanSupport.step(
                 "ensure-report",
                 ExamplePlanSupport.sheet("Report"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "seed-report-rows",
                 ExamplePlanSupport.range("Report", "A1:C4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Item"),
@@ -128,8 +136,8 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "define-report-table",
                 ExamplePlanSupport.table("ReportTable", "Report"),
-                new MutationAction.SetTable(
-                    new TableInput(
+                new StructuredMutationAction.SetTable(
+                    TableInput.withDefaultMetadata(
                         "ReportTable",
                         "Report",
                         "A1:C4",
@@ -139,7 +147,7 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "auto-size",
                 ExamplePlanSupport.sheet("Report"),
-                new MutationAction.AutoSizeColumns()),
+                new WorkbookMutationAction.AutoSizeColumns()),
             ExamplePlanSupport.read(
                 "report-cells",
                 ExamplePlanSupport.cells("Report", "A1", "B4", "C4"),
@@ -216,17 +224,18 @@ final class GridGrindReportingTaskDefinitions {
             "executive dashboard",
             "monthly sales dashboard",
             "chart workbook"),
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "dashboard-starter",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs("dashboard-output.xlsx"),
-            null,
             ExamplePlanSupport.step(
-                "ensure-data", ExamplePlanSupport.sheet("Data"), new MutationAction.EnsureSheet()),
+                "ensure-data",
+                ExamplePlanSupport.sheet("Data"),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "seed-data",
                 ExamplePlanSupport.range("Data", "A1:C4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Month"),
@@ -247,56 +256,56 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "ensure-dashboard",
                 ExamplePlanSupport.sheet("Dashboard"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "set-title",
                 ExamplePlanSupport.cell("Dashboard", "A1"),
-                new MutationAction.SetCell(ExamplePlanSupport.text("Monthly Sales Dashboard"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.text("Monthly Sales Dashboard"))),
             ExamplePlanSupport.step(
                 "set-categories",
                 new NamedRangeSelector.WorkbookScope("DashboardCategories"),
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "DashboardCategories",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Data", "A2:A4"))),
             ExamplePlanSupport.step(
                 "set-actual",
                 new NamedRangeSelector.WorkbookScope("DashboardActual"),
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "DashboardActual",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Data", "C2:C4"))),
             ExamplePlanSupport.step(
                 "set-chart",
                 ExamplePlanSupport.sheet("Dashboard"),
-                new MutationAction.SetChart(
+                new DrawingMutationAction.SetChart(
                     new ChartInput(
                         "RevenueChart",
                         ExamplePlanSupport.anchor(4, 1, 9, 15),
-                        new ChartInput.Title.Text(TextSourceInput.inline("Revenue Overview")),
-                        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                        new ChartTitleInput.Text(TextSourceInput.inline("Revenue Overview")),
+                        new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                         ExcelChartDisplayBlanksAs.SPAN,
                         false,
                         List.of(
-                            new ChartInput.Bar(
+                            new ChartPlotInput.Bar(
                                 true,
                                 ExcelChartBarDirection.COLUMN,
                                 ExcelChartBarGrouping.CLUSTERED,
                                 null,
                                 null,
                                 List.of(
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Text(TextSourceInput.inline("Plan")),
-                                        new ChartInput.DataSource.Reference("DashboardCategories"),
-                                        new ChartInput.DataSource.Reference("Data!$B$2:$B$4"),
+                                    new ChartSeriesInput(
+                                        new ChartTitleInput.Text(TextSourceInput.inline("Plan")),
+                                        new ChartDataSourceInput.Reference("DashboardCategories"),
+                                        new ChartDataSourceInput.Reference("Data!$B$2:$B$4"),
                                         null,
                                         null,
                                         null,
                                         null),
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
-                                        new ChartInput.DataSource.Reference("DashboardCategories"),
-                                        new ChartInput.DataSource.Reference("DashboardActual"),
+                                    new ChartSeriesInput(
+                                        new ChartTitleInput.Text(TextSourceInput.inline("Actual")),
+                                        new ChartDataSourceInput.Reference("DashboardCategories"),
+                                        new ChartDataSourceInput.Reference("DashboardActual"),
                                         null,
                                         null,
                                         null,
@@ -378,11 +387,11 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "ensure-intake",
                 ExamplePlanSupport.sheet("Intake"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "append-header",
                 ExamplePlanSupport.sheet("Intake"),
-                new MutationAction.AppendRow(
+                new CellMutationAction.AppendRow(
                     List.of(
                         ExamplePlanSupport.text("Ticket"),
                         ExamplePlanSupport.text("Owner"),
@@ -390,7 +399,7 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "set-status-validation",
                 ExamplePlanSupport.range("Intake", "C2:C500"),
-                new MutationAction.SetDataValidation(
+                new StructuredMutationAction.SetDataValidation(
                     new DataValidationInput(
                         new DataValidationRuleInput.ExplicitList(List.of("NEW", "REVIEW", "DONE")),
                         true,
@@ -400,7 +409,7 @@ final class GridGrindReportingTaskDefinitions {
             ExamplePlanSupport.step(
                 "append-sample-row",
                 ExamplePlanSupport.sheet("Intake"),
-                new MutationAction.AppendRow(
+                new CellMutationAction.AppendRow(
                     List.of(
                         ExamplePlanSupport.text("T-100"),
                         ExamplePlanSupport.text("Ada"),

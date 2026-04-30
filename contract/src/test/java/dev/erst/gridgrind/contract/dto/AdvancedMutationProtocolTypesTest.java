@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
@@ -34,7 +35,7 @@ class AdvancedMutationProtocolTypesTest {
   @Test
   void ooxmlSecurityInputsNormalizeAndValidate() {
     OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.of("source-pass"));
-    OoxmlEncryptionInput encryption = new OoxmlEncryptionInput("persist-pass", null);
+    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.agile("persist-pass");
     OoxmlSignatureInput signature =
         new OoxmlSignatureInput(
             "tmp/signing-material.p12",
@@ -57,7 +58,8 @@ class AdvancedMutationProtocolTypesTest {
 
     assertThrows(
         IllegalArgumentException.class, () -> new OoxmlOpenSecurityInput(Optional.of(" ")));
-    assertThrows(IllegalArgumentException.class, () -> new OoxmlEncryptionInput(" ", null));
+    assertThrows(IllegalArgumentException.class, () -> OoxmlEncryptionInput.agile(" "));
+    assertThrows(NullPointerException.class, () -> new OoxmlEncryptionInput("persist-pass", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -206,7 +208,7 @@ class AdvancedMutationProtocolTypesTest {
     DrawingMarkerInput to = new DrawingMarkerInput(4, 6);
     DrawingAnchorInput.TwoCell anchor =
         new DrawingAnchorInput.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
-    DrawingAnchorInput.TwoCell defaultAnchor = new DrawingAnchorInput.TwoCell(from, to, null);
+    DrawingAnchorInput.TwoCell defaultAnchor = DrawingAnchorInput.TwoCell.moveAndResize(from, to);
     PictureDataInput pictureData =
         new PictureDataInput(
             ExcelPictureFormat.PNG,
@@ -221,9 +223,6 @@ class AdvancedMutationProtocolTypesTest {
             anchor,
             " rect ",
             text("Queue"));
-    ShapeInput defaultShape =
-        new ShapeInput(
-            "DefaultShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, " ", null);
     ShapeInput connector =
         new ShapeInput("OpsConnector", ExcelAuthoredDrawingShapeKind.CONNECTOR, anchor, null, null);
     EmbeddedObjectInput embeddedObject =
@@ -250,10 +249,14 @@ class AdvancedMutationProtocolTypesTest {
 
     DrawingAnchorInput.TwoCell sameRowAnchor =
         new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 0, 3), new DrawingMarkerInput(2, 2, 0, 4), null);
+            new DrawingMarkerInput(1, 2, 0, 3),
+            new DrawingMarkerInput(2, 2, 0, 4),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     DrawingAnchorInput.TwoCell sameColAnchor =
         new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 3, 0), new DrawingMarkerInput(1, 3, 4, 0), null);
+            new DrawingMarkerInput(1, 2, 3, 0),
+            new DrawingMarkerInput(1, 3, 4, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
 
     assertEquals(4, to.columnIndex());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, anchor.behavior());
@@ -262,16 +265,21 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, sameColAnchor.behavior());
     assertEquals(ExcelPictureFormat.PNG, picture.image().format());
     assertEquals(text("Queue preview"), picture.description());
-    ShapeInput nullPresetShape =
-        new ShapeInput(
-            "NullPreset", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, null, null);
     assertEquals("rect", shape.presetGeometryToken());
-    assertEquals("rect", defaultShape.presetGeometryToken());
-    assertEquals("rect", nullPresetShape.presetGeometryToken());
     assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connector.kind());
     assertEquals("payload.txt", embeddedObject.fileName());
     assertTrue(signatureLine.allowComments());
     assertEquals("Ada Lovelace", signatureLine.suggestedSigner().orElseThrow());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(
+                "DefaultShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, " ", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(
+                "NullPreset", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, null, null));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(-1, 0, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, -1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, -1, 0));
@@ -280,22 +288,31 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(1, 1, 0, 0), null));
+                new DrawingMarkerInput(1, 2, 0, 0),
+                new DrawingMarkerInput(1, 1, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(2, 2, 0, 0), new DrawingMarkerInput(1, 2, 0, 0), null));
+                new DrawingMarkerInput(2, 2, 0, 0),
+                new DrawingMarkerInput(1, 2, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 0, 4), new DrawingMarkerInput(2, 2, 0, 3), null));
+                new DrawingMarkerInput(1, 2, 0, 4),
+                new DrawingMarkerInput(2, 2, 0, 3),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new DrawingAnchorInput.TwoCell(
-                new DrawingMarkerInput(1, 2, 4, 0), new DrawingMarkerInput(1, 3, 3, 0), null));
+                new DrawingMarkerInput(1, 2, 4, 0),
+                new DrawingMarkerInput(1, 3, 3, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE));
+    assertThrows(NullPointerException.class, () -> new DrawingAnchorInput.TwoCell(from, to, null));
     assertThrows(
         NullPointerException.class, () -> new PictureDataInput(null, binary("cGF5bG9hZA==")));
     assertThrows(
@@ -425,11 +442,10 @@ class AdvancedMutationProtocolTypesTest {
   @Test
   void chartInputsNormalizeAndValidate() {
     DrawingAnchorInput.TwoCell anchor =
-        new DrawingAnchorInput.TwoCell(
-            new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(6, 12, 0, 0), null);
-    ChartInput.Series firstSeries =
-        chartSeries(new ChartInput.Title.Formula("B1"), "A2:A4", "B2:B4");
-    ChartInput.Series secondSeries = chartSeries(null, "ChartCategories", "ChartActual");
+        DrawingAnchorInput.TwoCell.moveAndResize(
+            new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(6, 12, 0, 0));
+    ChartSeriesInput firstSeries = chartSeries(new ChartTitleInput.Formula("B1"), "A2:A4", "B2:B4");
+    ChartSeriesInput secondSeries = chartSeries(null, "ChartCategories", "ChartActual");
     ChartInput bar =
         chartInput(
             "OpsChart",
@@ -438,16 +454,22 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            ChartInput.Bar.create(null, null, null, null, null, null, List.of(firstSeries)));
+            new ChartPlotInput.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                List.of(firstSeries)));
     ChartInput line =
         chartInput(
             "TrendChart",
             anchor,
-            new ChartInput.Title.Text(text("Trend")),
-            new ChartInput.Legend.Hidden(),
+            new ChartTitleInput.Text(text("Trend")),
+            new ChartLegendInput.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            new ChartInput.Line(true, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
+            new ChartPlotInput.Line(true, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
     ChartInput defaultLine =
         chartInput(
             "DefaultTrend",
@@ -456,7 +478,7 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            ChartInput.Line.create(null, null, null, List.of(secondSeries)));
+            new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(secondSeries)));
     ChartInput pie =
         chartInput(
             "ShareChart",
@@ -465,7 +487,7 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            ChartInput.Pie.create(null, 180, List.of(secondSeries)));
+            new ChartPlotInput.Pie(false, 180, List.of(secondSeries)));
     ChartInput defaultPie =
         chartInput(
             "DefaultShare",
@@ -474,54 +496,54 @@ class AdvancedMutationProtocolTypesTest {
             null,
             null,
             null,
-            ChartInput.Pie.create(null, null, List.of(secondSeries)));
+            new ChartPlotInput.Pie(false, null, List.of(secondSeries)));
     ChartInput explicitPie =
         chartInput(
             "ExplicitShare",
             anchor,
-            new ChartInput.Title.Text(text("Share")),
-            new ChartInput.Legend.Hidden(),
+            new ChartTitleInput.Text(text("Share")),
+            new ChartLegendInput.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            new ChartInput.Pie(true, 90, List.of(secondSeries)));
+            new ChartPlotInput.Pie(true, 90, List.of(secondSeries)));
 
-    ChartInput.Bar barPlot = assertInstanceOf(ChartInput.Bar.class, bar.plots().getFirst());
-    ChartInput.Line linePlot = assertInstanceOf(ChartInput.Line.class, line.plots().getFirst());
-    ChartInput.Line defaultLinePlot =
-        assertInstanceOf(ChartInput.Line.class, defaultLine.plots().getFirst());
-    ChartInput.Pie piePlot = assertInstanceOf(ChartInput.Pie.class, pie.plots().getFirst());
-    ChartInput.Pie defaultPiePlot =
-        assertInstanceOf(ChartInput.Pie.class, defaultPie.plots().getFirst());
-    ChartInput.Pie explicitPiePlot =
-        assertInstanceOf(ChartInput.Pie.class, explicitPie.plots().getFirst());
+    ChartPlotInput.Bar barPlot = assertInstanceOf(ChartPlotInput.Bar.class, bar.plots().getFirst());
+    ChartPlotInput.Line linePlot =
+        assertInstanceOf(ChartPlotInput.Line.class, line.plots().getFirst());
+    ChartPlotInput.Line defaultLinePlot =
+        assertInstanceOf(ChartPlotInput.Line.class, defaultLine.plots().getFirst());
+    ChartPlotInput.Pie piePlot = assertInstanceOf(ChartPlotInput.Pie.class, pie.plots().getFirst());
+    ChartPlotInput.Pie defaultPiePlot =
+        assertInstanceOf(ChartPlotInput.Pie.class, defaultPie.plots().getFirst());
+    ChartPlotInput.Pie explicitPiePlot =
+        assertInstanceOf(ChartPlotInput.Pie.class, explicitPie.plots().getFirst());
 
-    assertTrue(bar.title() instanceof ChartInput.Title.None);
-    assertEquals(new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
+    assertTrue(bar.title() instanceof ChartTitleInput.None);
+    assertEquals(new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, bar.displayBlanksAs());
     assertTrue(bar.plotOnlyVisibleCells());
     assertFalse(barPlot.varyColors());
     assertEquals(ExcelChartBarDirection.COLUMN, barPlot.barDirection());
-    assertEquals("B1", ((ChartInput.Title.Formula) barPlot.series().getFirst().title()).formula());
-    assertTrue(secondSeries.title() instanceof ChartInput.Title.None);
+    assertEquals("B1", ((ChartTitleInput.Formula) barPlot.series().getFirst().title()).formula());
+    assertTrue(secondSeries.title() instanceof ChartTitleInput.None);
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, line.displayBlanksAs());
     assertFalse(line.plotOnlyVisibleCells());
     assertTrue(linePlot.varyColors());
     assertEquals(180, piePlot.firstSliceAngle());
-    assertTrue(defaultLine.title() instanceof ChartInput.Title.None);
+    assertTrue(defaultLine.title() instanceof ChartTitleInput.None);
     assertEquals(
-        new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
+        new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultLine.displayBlanksAs());
     assertTrue(defaultLine.plotOnlyVisibleCells());
     assertFalse(defaultLinePlot.varyColors());
-    assertTrue(defaultPie.title() instanceof ChartInput.Title.None);
-    assertEquals(
-        new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
+    assertTrue(defaultPie.title() instanceof ChartTitleInput.None);
+    assertEquals(new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultPie.displayBlanksAs());
     assertTrue(defaultPie.plotOnlyVisibleCells());
     assertFalse(defaultPiePlot.varyColors());
     assertNull(defaultPiePlot.firstSliceAngle());
-    assertEquals(new ChartInput.Title.Text(text("Share")), explicitPie.title());
-    assertEquals(new ChartInput.Legend.Hidden(), explicitPie.legend());
+    assertEquals(new ChartTitleInput.Text(text("Share")), explicitPie.title());
+    assertEquals(new ChartLegendInput.Hidden(), explicitPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, explicitPie.displayBlanksAs());
     assertFalse(explicitPie.plotOnlyVisibleCells());
     assertTrue(explicitPiePlot.varyColors());
@@ -537,7 +559,13 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 null,
-                ChartInput.Bar.create(null, null, null, null, null, null, List.of(firstSeries))));
+                new ChartPlotInput.Bar(
+                    false,
+                    ExcelChartBarDirection.COLUMN,
+                    ExcelChartBarGrouping.CLUSTERED,
+                    null,
+                    null,
+                    List.of(firstSeries))));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -548,72 +576,89 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 null,
-                ChartInput.Line.create(null, null, null, List.of(firstSeries))));
+                new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(firstSeries))));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ChartInput.Pie.create(null, 361, List.of(firstSeries)));
+        () -> new ChartPlotInput.Pie(false, 361, List.of(firstSeries)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ChartInput.Pie.create(null, -1, List.of(firstSeries)));
-    assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Text(text(" ")));
-    assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Formula(" "));
-    assertThrows(NullPointerException.class, () -> new ChartInput.Legend.Visible(null));
-    assertThrows(IllegalArgumentException.class, () -> new ChartInput.DataSource.Reference(" "));
+        () -> new ChartPlotInput.Pie(false, -1, List.of(firstSeries)));
+    assertThrows(IllegalArgumentException.class, () -> new ChartTitleInput.Text(text(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new ChartTitleInput.Formula(" "));
+    assertThrows(NullPointerException.class, () -> new ChartLegendInput.Visible(null));
+    assertThrows(IllegalArgumentException.class, () -> new ChartDataSourceInput.Reference(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ChartInput.Bar.create(null, null, null, null, null, null, List.of()));
+        () ->
+            new ChartPlotInput.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> ChartInput.Line.create(null, null, null, List.of(firstSeries, null)));
+        () ->
+            new ChartPlotInput.Line(
+                false, ExcelChartGrouping.STANDARD, List.of(firstSeries, null)));
   }
 
   @Test
   void autofilterInputsNormalizeAndValidateAcrossAllCriterionFamilies() {
     AutofilterSortConditionInput colorSort =
-        new AutofilterSortConditionInput("B2:B9", true, ColorInput.rgb("#aabbcc"), null);
+        new AutofilterSortConditionInput.CellColor("B2:B9", true, ColorInput.rgb("#aabbcc"));
     AutofilterSortConditionInput iconSort =
-        new AutofilterSortConditionInput("C2:C9", false, "ICON", null, 2);
+        new AutofilterSortConditionInput.Icon("C2:C9", false, 2);
     AutofilterSortStateInput sortState =
-        new AutofilterSortStateInput("A1:F9", false, true, List.of(colorSort, iconSort));
+        AutofilterSortStateInput.withoutSortMethod(
+            "A1:F9", false, true, List.of(colorSort, iconSort));
     AutofilterSortStateInput sortStateWithMethod =
-        new AutofilterSortStateInput("A1:F9", true, false, "PINYIN", List.of(colorSort));
+        new AutofilterSortStateInput(
+            "A1:F9",
+            true,
+            false,
+            Optional.of(dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.PINYIN),
+            List.of(colorSort));
 
-    assertEquals("", colorSort.sortBy());
-    assertEquals("#AABBCC", assertInstanceOf(ColorInput.Rgb.class, colorSort.color()).rgb());
-    assertEquals("ICON", iconSort.sortBy());
-    assertEquals(2, iconSort.iconId());
+    AutofilterSortConditionInput.CellColor typedColorSort =
+        assertInstanceOf(AutofilterSortConditionInput.CellColor.class, colorSort);
+    AutofilterSortConditionInput.Icon typedIconSort =
+        assertInstanceOf(AutofilterSortConditionInput.Icon.class, iconSort);
+    assertEquals("#AABBCC", assertInstanceOf(ColorInput.Rgb.class, typedColorSort.color()).rgb());
+    assertEquals(2, typedIconSort.iconId());
     assertFalse(sortState.caseSensitive());
     assertTrue(sortState.columnSort());
-    assertEquals("", sortState.sortMethod());
+    assertEquals(Optional.empty(), sortState.sortMethod());
     assertEquals(List.of(colorSort, iconSort), sortState.conditions());
-    assertEquals("PINYIN", sortStateWithMethod.sortMethod());
+    assertEquals(
+        Optional.of(dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.PINYIN),
+        sortStateWithMethod.sortMethod());
     assertEquals(
         new AutofilterFilterCriterionInput.Dynamic("TODAY", Optional.empty(), Optional.empty()),
         new AutofilterFilterCriterionInput.Dynamic("TODAY", Optional.empty(), Optional.empty()));
     assertThrows(
-        NullPointerException.class,
-        () -> new AutofilterSortConditionInput(null, false, null, null));
+        NullPointerException.class, () -> new AutofilterSortConditionInput.Value(null, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortStateInput(" ", false, false, List.of(colorSort)));
+        () -> AutofilterSortStateInput.withoutSortMethod(" ", false, false, List.of(colorSort)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new AutofilterSortConditionInput.Value(" ", false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortConditionInput(" ", false, null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new AutofilterSortConditionInput("A1:A2", false, null, -1));
+        () -> new AutofilterSortConditionInput.Icon("A1:A2", false, -1));
     assertThrows(
         NullPointerException.class,
         () ->
-            new AutofilterSortStateInput(
+            AutofilterSortStateInput.withoutSortMethod(
                 "A1:F9", false, false, (List<AutofilterSortConditionInput>) null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new AutofilterSortStateInput("A1:F9", false, false, List.of()));
+        () -> AutofilterSortStateInput.withoutSortMethod("A1:F9", false, false, List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new AutofilterSortStateInput(
+            AutofilterSortStateInput.withoutSortMethod(
                 "A1:F9", false, false, List.of((AutofilterSortConditionInput) null)));
 
     AutofilterFilterCriterionInput.Values values =
@@ -629,7 +674,7 @@ class AdvancedMutationProtocolTypesTest {
         new AutofilterFilterCriterionInput.Color(false, ColorInput.theme(3, 0.25d));
     AutofilterFilterCriterionInput.Icon icon =
         new AutofilterFilterCriterionInput.Icon("3TrafficLights1", 2);
-    AutofilterFilterColumnInput column = new AutofilterFilterColumnInput(2L, values);
+    AutofilterFilterColumnInput column = AutofilterFilterColumnInput.visibleButton(2L, values);
 
     assertEquals(List.of("Queued", "Ready"), values.values());
     assertTrue(custom.and());
@@ -1052,17 +1097,15 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(-1),
                 List.of()));
 
-    TableColumnInput tableColumn = new TableColumnInput(0, null, null, " SUM ", null);
-    TableColumnInput blankTotalsFunction = new TableColumnInput(0, null, null, " ", null);
-    TableColumnInput nullTotalsFunction = new TableColumnInput(0, null, null, null, null);
+    TableColumnInput tableColumn = new TableColumnInput(0, "", "", " SUM ", "");
+    TableColumnInput blankTotalsFunction = new TableColumnInput(0, "", "", " ", "");
     assertEquals("", tableColumn.uniqueName());
     assertEquals("", tableColumn.totalsRowLabel());
     assertEquals("sum", tableColumn.totalsRowFunction());
     assertEquals("", tableColumn.calculatedColumnFormula());
     assertEquals("", blankTotalsFunction.totalsRowFunction());
-    assertEquals("", nullTotalsFunction.totalsRowFunction());
-    assertThrows(
-        IllegalArgumentException.class, () -> new TableColumnInput(-1, null, null, null, null));
+    assertThrows(IllegalArgumentException.class, () -> new TableColumnInput(-1, "", "", "", ""));
+    assertThrows(NullPointerException.class, () -> new TableColumnInput(0, null, "", "", ""));
 
     TableInput defaultedTable =
         new TableInput(
@@ -1115,9 +1158,9 @@ class AdvancedMutationProtocolTypesTest {
                 true,
                 new TableStyleInput.None(),
                 null,
-                null,
-                null,
-                null,
+                false,
+                false,
+                false,
                 null,
                 null,
                 null,
@@ -1129,7 +1172,7 @@ class AdvancedMutationProtocolTypesTest {
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             new SheetDisplayInput(false, false, true, true, true),
-            ColorInput.rgb("#112233"),
+            java.util.Optional.of(ColorInput.rgb("#112233")),
             new SheetOutlineSummaryInput(false, false),
             new SheetDefaultsInput(12, 18.5d),
             List.of(
@@ -1142,7 +1185,7 @@ class AdvancedMutationProtocolTypesTest {
 
     assertEquals(
         new SheetDisplayInput(false, false, true, true, true), explicitPresentation.display());
-    assertEquals(ColorInput.rgb("#112233"), explicitPresentation.tabColor());
+    assertEquals(java.util.Optional.of(ColorInput.rgb("#112233")), explicitPresentation.tabColor());
     assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
     assertEquals(new SheetDefaultsInput(12, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(SheetDisplayInput.defaults(), defaultedPresentation.display());
@@ -1160,10 +1203,10 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             SheetPresentationInput.create(
-                null,
-                null,
-                null,
-                null,
+                SheetDisplayInput.defaults(),
+                java.util.Optional.empty(),
+                SheetOutlineSummaryInput.defaults(),
+                SheetDefaultsInput.defaults(),
                 List.of(
                     new IgnoredErrorInput(
                         "B2:B12", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
@@ -1183,16 +1226,16 @@ class AdvancedMutationProtocolTypesTest {
             List.of("Owner"),
             List.of(
                 new PivotTableInput.DataField(
-                    "Amount", ExcelPivotDataConsolidateFunction.SUM, null, "#,##0.00")));
+                    "Amount", ExcelPivotDataConsolidateFunction.SUM, "Amount", "#,##0.00")));
     PivotTableInput tableSourceInput =
         new PivotTableInput(
             "Sales Table Pivot",
             "Report",
             new PivotTableInput.Source.Table("SalesTable2026"),
             new PivotTableInput.Anchor("D7"),
-            null,
-            null,
-            null,
+            List.of(),
+            List.of(),
+            List.of(),
             List.of(
                 new PivotTableInput.DataField(
                     "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null)));
@@ -1315,9 +1358,11 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(),
                 List.of(),
                 List.of()));
-    PivotTableInput.DataField blankDisplayField =
-        new PivotTableInput.DataField("Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null);
-    assertEquals("Amount", blankDisplayField.displayName());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput.DataField(
+                "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null));
     assertThrows(
         NullPointerException.class,
         () -> new PivotTableInput.DataField("Amount", null, "Total", null));
@@ -1378,27 +1423,27 @@ class AdvancedMutationProtocolTypesTest {
   private static ChartInput chartInput(
       String name,
       DrawingAnchorInput.TwoCell anchor,
-      ChartInput.Title title,
-      ChartInput.Legend legend,
+      ChartTitleInput title,
+      ChartLegendInput legend,
       ExcelChartDisplayBlanksAs displayBlanksAs,
       Boolean plotOnlyVisibleCells,
-      ChartInput.Plot plot) {
+      ChartPlotInput plot) {
     return new ChartInput(
         name,
         anchor,
-        title == null ? new ChartInput.Title.None() : title,
-        legend == null ? new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT) : legend,
+        title == null ? new ChartTitleInput.None() : title,
+        legend == null ? new ChartLegendInput.Visible(ExcelChartLegendPosition.RIGHT) : legend,
         displayBlanksAs == null ? ExcelChartDisplayBlanksAs.GAP : displayBlanksAs,
         plotOnlyVisibleCells == null ? Boolean.TRUE : plotOnlyVisibleCells,
         List.of(plot));
   }
 
-  private static ChartInput.Series chartSeries(
-      ChartInput.Title title, String categoriesFormula, String valuesFormula) {
-    return ChartInput.Series.create(
-        title,
-        new ChartInput.DataSource.Reference(categoriesFormula),
-        new ChartInput.DataSource.Reference(valuesFormula),
+  private static ChartSeriesInput chartSeries(
+      ChartTitleInput title, String categoriesFormula, String valuesFormula) {
+    return new ChartSeriesInput(
+        title == null ? new ChartTitleInput.None() : title,
+        new ChartDataSourceInput.Reference(categoriesFormula),
+        new ChartDataSourceInput.Reference(valuesFormula),
         null,
         null,
         null,

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER_DOCKER
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, docker, docker desktop, devcontainer, contributor container, docker smoke, check.sh, anonymous docker config, docker context, container]
   questions: ["how should i set up docker for gridgrind", "what is the difference between the gridgrind devcontainer and runtime container", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]

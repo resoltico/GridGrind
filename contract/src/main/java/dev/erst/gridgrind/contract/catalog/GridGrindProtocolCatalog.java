@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.action.MutationAction;
@@ -281,6 +282,7 @@ public final class GridGrindProtocolCatalog {
     requiredFields(recordType, optionalFields);
     Set<String> optionalFieldSet = Set.copyOf(optionalFields);
     return Arrays.stream(recordType.getRecordComponents())
+        .filter(GridGrindProtocolCatalog::isCatalogVisible)
         .gather(CatalogGatherers.expandFieldsWithMetadata(optionalFieldSet))
         .toList();
   }
@@ -341,27 +343,21 @@ public final class GridGrindProtocolCatalog {
             "Catalog optional field '%s' does not exist on %s"
                 .formatted(optionalField, recordType.getName()));
       }
-      RecordComponent component = componentNamed(recordType, optionalField);
-      if (component.getType().isPrimitive()) {
-        throw new IllegalStateException(
-            "Catalog optional field '%s' on %s uses primitive component type %s"
-                .formatted(
-                    optionalField, recordType.getName(), component.getType().getSimpleName()));
-      }
     }
     return recordFields.stream().filter(field -> !optionalFields.contains(field)).toList();
   }
 
   private static List<String> recordFields(Class<? extends Record> recordType) {
-    return Arrays.stream(recordType.getRecordComponents()).map(RecordComponent::getName).toList();
+    return Arrays.stream(recordType.getRecordComponents())
+        .filter(GridGrindProtocolCatalog::isCatalogVisible)
+        .map(RecordComponent::getName)
+        .toList();
   }
 
-  private static RecordComponent componentNamed(
-      Class<? extends Record> recordType, String fieldName) {
-    return Arrays.stream(recordType.getRecordComponents())
-        .filter(component -> component.getName().equals(fieldName))
-        .findFirst()
-        .orElseThrow();
+  private static boolean isCatalogVisible(RecordComponent component) {
+    return !component.isAnnotationPresent(CatalogIgnored.class)
+        && !component.getAccessor().isAnnotationPresent(CatalogIgnored.class)
+        && !component.getAccessor().isAnnotationPresent(JsonIgnore.class);
   }
 
   private static void validateCoverage(

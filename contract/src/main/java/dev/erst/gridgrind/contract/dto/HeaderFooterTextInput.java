@@ -10,10 +10,7 @@ public record HeaderFooterTextInput(
     TextSourceInput left, TextSourceInput center, TextSourceInput right) {
   /** Returns the default blank header or footer text payload. */
   public static HeaderFooterTextInput blank() {
-    return new HeaderFooterTextInput(
-        new TextSourceInput.Inline(""),
-        new TextSourceInput.Inline(""),
-        new TextSourceInput.Inline(""));
+    return new HeaderFooterTextInput(defaultSegment(), defaultSegment(), defaultSegment());
   }
 
   public HeaderFooterTextInput {
@@ -27,10 +24,10 @@ public record HeaderFooterTextInput(
       @JsonProperty("left") TextSourceInput left,
       @JsonProperty("center") TextSourceInput center,
       @JsonProperty("right") TextSourceInput right) {
-    HeaderFooterTextInput defaults = blank();
-    return new HeaderFooterTextInput(
-        left == null ? defaults.left() : left,
-        center == null ? defaults.center() : center,
-        right == null ? defaults.right() : right);
+    return new HeaderFooterTextInput(left, center, right);
+  }
+
+  private static TextSourceInput defaultSegment() {
+    return new TextSourceInput.Inline("");
   }
 }

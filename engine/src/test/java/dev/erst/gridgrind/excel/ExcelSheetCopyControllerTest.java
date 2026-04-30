@@ -43,7 +43,7 @@ class ExcelSheetCopyControllerTest {
 
       assertEquals(List.of("Source", "Replica"), workbook.sheetNames());
       assertEquals(
-          new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
       assertEquals(0, workbook.sheetSummary("Replica").physicalRowCount());
     }
@@ -94,7 +94,7 @@ class ExcelSheetCopyControllerTest {
       assertFalse(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-wrong"));
       assertEquals(
-          new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
     }
   }
@@ -375,7 +375,7 @@ class ExcelSheetCopyControllerTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
-      List<WorkbookReadResult.CellComment> sourceComments =
+      List<WorkbookSheetResult.CellComment> sourceComments =
           source.comments(new ExcelCellSelection.Selected(List.of("E2")));
 
       workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
@@ -426,16 +426,12 @@ class ExcelSheetCopyControllerTest {
                           "A1:F3",
                           true,
                           true,
-                          "stroke",
+                          java.util.Optional.of(
+                              dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.STROKE),
                           List.of(
-                              new ExcelAutofilterSortConditionSnapshot(
-                                  "A2:A3",
-                                  true,
-                                  "cellColor",
-                                  ExcelColorSnapshot.rgb("#102030"),
-                                  null),
-                              new ExcelAutofilterSortConditionSnapshot(
-                                  "B2:B3", false, "icon", null, 4)))))),
+                              new ExcelAutofilterSortConditionSnapshot.CellColor(
+                                  "A2:A3", true, ExcelColorSnapshot.rgb("#102030")),
+                              new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
       List<ExcelDataValidationSnapshot> replicaValidations =
           replica.dataValidations(new ExcelRangeSelection.All());
@@ -515,7 +511,7 @@ class ExcelSheetCopyControllerTest {
   void copySheetPreservesAdvancedCommentsAfterSaveAndReopen() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-comment-reopen-");
 
-    List<WorkbookReadResult.CellComment> sourceComments;
+    List<WorkbookSheetResult.CellComment> sourceComments;
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
       sourceComments = source.comments(new ExcelCellSelection.Selected(List.of("E2")));
@@ -1165,11 +1161,10 @@ class ExcelSheetCopyControllerTest {
         "A1:F3",
         true,
         true,
-        "stroke",
+        java.util.Optional.of(dev.erst.gridgrind.excel.foundation.ExcelAutofilterSortMethod.STROKE),
         List.of(
-            new ExcelAutofilterSortCondition(
-                "A2:A3", true, "cellColor", ExcelColor.rgb("#102030"), null),
-            new ExcelAutofilterSortCondition("B2:B3", false, "icon", null, 4)));
+            new ExcelAutofilterSortCondition.CellColor("A2:A3", true, ExcelColor.rgb("#102030")),
+            new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)));
   }
 
   private static ExcelDifferentialStyleSnapshot supportedStyle() {

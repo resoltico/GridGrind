@@ -9,11 +9,12 @@ final class ExcelSheetProtectionSupport {
   private ExcelSheetProtectionSupport() {}
 
   /** Returns the public protection snapshot for one sheet. */
-  static WorkbookReadResult.SheetProtection snapshot(XSSFSheet sheet) {
+  static WorkbookSheetResult.SheetProtection snapshot(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return settings(sheet)
-        .<WorkbookReadResult.SheetProtection>map(WorkbookReadResult.SheetProtection.Protected::new)
-        .orElseGet(WorkbookReadResult.SheetProtection.Unprotected::new);
+        .<WorkbookSheetResult.SheetProtection>map(
+            WorkbookSheetResult.SheetProtection.Protected::new)
+        .orElseGet(WorkbookSheetResult.SheetProtection.Unprotected::new);
   }
 
   /** Returns the supported protection settings when sheet protection is enabled. */

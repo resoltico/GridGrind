@@ -69,19 +69,19 @@ class ExcelCustomXmlControllerTest {
                   + "<CDL>Ops</CDL><DURATA>5</DURATA><ARGOMENTO>Audit</ARGOMENTO>"
                   + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
 
-      WorkbookReadResult.Window window = workbook.sheet("Foglio1").window("A1", 1, 3);
+      WorkbookSheetResult.Window window = workbook.sheet("Foglio1").window("A1", 1, 3);
       assertEquals("Grid", window.rows().getFirst().cells().get(0).displayValue());
       assertEquals("Grind", window.rows().getFirst().cells().get(1).displayValue());
       assertEquals("Agent", window.rows().getFirst().cells().get(2).displayValue());
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
-      WorkbookReadResult.CustomXmlMappingsResult mappings =
+      WorkbookCoreResult.CustomXmlMappingsResult mappings =
           assertInstanceOf(
-              WorkbookReadResult.CustomXmlMappingsResult.class,
+              WorkbookCoreResult.CustomXmlMappingsResult.class,
               introspector.execute(workbook, new WorkbookReadCommand.GetCustomXmlMappings("maps")));
-      WorkbookReadResult.CustomXmlExportResult exported =
+      WorkbookCoreResult.CustomXmlExportResult exported =
           assertInstanceOf(
-              WorkbookReadResult.CustomXmlExportResult.class,
+              WorkbookCoreResult.CustomXmlExportResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.ExportCustomXmlMapping(

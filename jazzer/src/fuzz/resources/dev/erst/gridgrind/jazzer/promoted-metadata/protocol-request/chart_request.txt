@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/chart_request.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 6220
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 5
-Assertion Count: 1
-Read Count: 1
-Assertion Kinds: EXPECT_CHART_PRESENT=1
-Read Kinds: GET_CHARTS=1
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'execution'
+Input Bytes: 6210
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_NAMED_RANGE=2, SET_CHART=1, SET_RANGE=1, ENSURE_SHEET=1
+Operation Kinds: (none)

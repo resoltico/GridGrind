@@ -1,6 +1,10 @@
 package dev.erst.gridgrind.contract.step;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -25,141 +29,195 @@ final class WorkbookStepValidation {
   private static final Map<Class<? extends MutationAction>, Class<? extends Selector>[]>
       MUTATION_TARGET_TYPES =
           Map.ofEntries(
-              Map.entry(MutationAction.EnsureSheet.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.RenameSheet.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.DeleteSheet.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.MoveSheet.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.CopySheet.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetActiveSheet.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.SetSelectedSheets.class, targetTypes(SheetSelector.ByNames.class)),
-              Map.entry(
-                  MutationAction.SetSheetVisibility.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.SetSheetProtection.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.ClearSheetProtection.class,
+                  WorkbookMutationAction.EnsureSheet.class,
                   targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetWorkbookProtection.class, targetTypes(WorkbookSelector.class)),
+                  WorkbookMutationAction.RenameSheet.class,
+                  targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.ClearWorkbookProtection.class,
+                  WorkbookMutationAction.DeleteSheet.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.MoveSheet.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.CopySheet.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetActiveSheet.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetSelectedSheets.class,
+                  targetTypes(SheetSelector.ByNames.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetSheetVisibility.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetSheetProtection.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.ClearSheetProtection.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetWorkbookProtection.class,
                   targetTypes(WorkbookSelector.class)),
-              Map.entry(MutationAction.MergeCells.class, targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
-                  MutationAction.UnmergeCells.class, targetTypes(RangeSelector.ByRange.class)),
+                  WorkbookMutationAction.ClearWorkbookProtection.class,
+                  targetTypes(WorkbookSelector.class)),
               Map.entry(
-                  MutationAction.SetColumnWidth.class, targetTypes(ColumnBandSelector.Span.class)),
-              Map.entry(MutationAction.SetRowHeight.class, targetTypes(RowBandSelector.Span.class)),
+                  WorkbookMutationAction.MergeCells.class,
+                  targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
-                  MutationAction.InsertRows.class, targetTypes(RowBandSelector.Insertion.class)),
-              Map.entry(MutationAction.DeleteRows.class, targetTypes(RowBandSelector.Span.class)),
-              Map.entry(MutationAction.ShiftRows.class, targetTypes(RowBandSelector.Span.class)),
+                  WorkbookMutationAction.UnmergeCells.class,
+                  targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
-                  MutationAction.InsertColumns.class,
+                  WorkbookMutationAction.SetColumnWidth.class,
+                  targetTypes(ColumnBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetRowHeight.class,
+                  targetTypes(RowBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.InsertRows.class,
+                  targetTypes(RowBandSelector.Insertion.class)),
+              Map.entry(
+                  WorkbookMutationAction.DeleteRows.class, targetTypes(RowBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.ShiftRows.class, targetTypes(RowBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.InsertColumns.class,
                   targetTypes(ColumnBandSelector.Insertion.class)),
               Map.entry(
-                  MutationAction.DeleteColumns.class, targetTypes(ColumnBandSelector.Span.class)),
-              Map.entry(
-                  MutationAction.ShiftColumns.class, targetTypes(ColumnBandSelector.Span.class)),
-              Map.entry(
-                  MutationAction.SetRowVisibility.class, targetTypes(RowBandSelector.Span.class)),
-              Map.entry(
-                  MutationAction.SetColumnVisibility.class,
+                  WorkbookMutationAction.DeleteColumns.class,
                   targetTypes(ColumnBandSelector.Span.class)),
-              Map.entry(MutationAction.GroupRows.class, targetTypes(RowBandSelector.Span.class)),
-              Map.entry(MutationAction.UngroupRows.class, targetTypes(RowBandSelector.Span.class)),
               Map.entry(
-                  MutationAction.GroupColumns.class, targetTypes(ColumnBandSelector.Span.class)),
+                  WorkbookMutationAction.ShiftColumns.class,
+                  targetTypes(ColumnBandSelector.Span.class)),
               Map.entry(
-                  MutationAction.UngroupColumns.class, targetTypes(ColumnBandSelector.Span.class)),
-              Map.entry(MutationAction.SetSheetPane.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.SetSheetZoom.class, targetTypes(SheetSelector.ByName.class)),
+                  WorkbookMutationAction.SetRowVisibility.class,
+                  targetTypes(RowBandSelector.Span.class)),
               Map.entry(
-                  MutationAction.SetSheetPresentation.class,
+                  WorkbookMutationAction.SetColumnVisibility.class,
+                  targetTypes(ColumnBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.GroupRows.class, targetTypes(RowBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.UngroupRows.class,
+                  targetTypes(RowBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.GroupColumns.class,
+                  targetTypes(ColumnBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.UngroupColumns.class,
+                  targetTypes(ColumnBandSelector.Span.class)),
+              Map.entry(
+                  WorkbookMutationAction.SetSheetPane.class,
                   targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetPrintLayout.class, targetTypes(SheetSelector.ByName.class)),
+                  WorkbookMutationAction.SetSheetZoom.class,
+                  targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.ClearPrintLayout.class, targetTypes(SheetSelector.ByName.class)),
+                  WorkbookMutationAction.SetSheetPresentation.class,
+                  targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetCell.class,
+                  WorkbookMutationAction.SetPrintLayout.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.ClearPrintLayout.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  CellMutationAction.SetCell.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
-              Map.entry(MutationAction.SetRange.class, targetTypes(RangeSelector.ByRange.class)),
-              Map.entry(MutationAction.ClearRange.class, targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
-                  MutationAction.SetArrayFormula.class, targetTypes(RangeSelector.ByRange.class)),
+                  CellMutationAction.SetRange.class, targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
-                  MutationAction.ClearArrayFormula.class,
+                  CellMutationAction.ClearRange.class, targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  CellMutationAction.SetArrayFormula.class,
+                  targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  CellMutationAction.ClearArrayFormula.class,
                   targetTypes(CellSelector.ByAddress.class)),
               Map.entry(
-                  MutationAction.ImportCustomXmlMapping.class, targetTypes(WorkbookSelector.class)),
+                  StructuredMutationAction.ImportCustomXmlMapping.class,
+                  targetTypes(WorkbookSelector.class)),
               Map.entry(
-                  MutationAction.SetHyperlink.class,
+                  CellMutationAction.SetHyperlink.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
               Map.entry(
-                  MutationAction.ClearHyperlink.class,
+                  CellMutationAction.ClearHyperlink.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
               Map.entry(
-                  MutationAction.SetComment.class,
+                  CellMutationAction.SetComment.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
               Map.entry(
-                  MutationAction.ClearComment.class,
+                  CellMutationAction.ClearComment.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
-              Map.entry(MutationAction.SetPicture.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetSignatureLine.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(MutationAction.SetChart.class, targetTypes(SheetSelector.ByName.class)),
+                  DrawingMutationAction.SetPicture.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetPivotTable.class,
-                  targetTypes(PivotTableSelector.ByNameOnSheet.class)),
-              Map.entry(MutationAction.SetShape.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.SetEmbeddedObject.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.SetDrawingObjectAnchor.class,
-                  targetTypes(DrawingObjectSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.DeleteDrawingObject.class,
-                  targetTypes(DrawingObjectSelector.ByName.class)),
-              Map.entry(MutationAction.ApplyStyle.class, targetTypes(RangeSelector.ByRange.class)),
-              Map.entry(
-                  MutationAction.SetDataValidation.class, targetTypes(RangeSelector.ByRange.class)),
-              Map.entry(
-                  MutationAction.ClearDataValidations.class, targetTypes(RangeSelector.class)),
-              Map.entry(
-                  MutationAction.SetConditionalFormatting.class,
+                  DrawingMutationAction.SetSignatureLine.class,
                   targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.ClearConditionalFormatting.class,
-                  targetTypes(RangeSelector.class)),
+                  DrawingMutationAction.SetChart.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetAutofilter.class, targetTypes(RangeSelector.ByRange.class)),
-              Map.entry(
-                  MutationAction.ClearAutofilter.class, targetTypes(SheetSelector.ByName.class)),
-              Map.entry(
-                  MutationAction.SetTable.class, targetTypes(TableSelector.ByNameOnSheet.class)),
-              Map.entry(
-                  MutationAction.DeleteTable.class, targetTypes(TableSelector.ByNameOnSheet.class)),
-              Map.entry(
-                  MutationAction.DeletePivotTable.class,
+                  StructuredMutationAction.SetPivotTable.class,
                   targetTypes(PivotTableSelector.ByNameOnSheet.class)),
               Map.entry(
-                  MutationAction.SetNamedRange.class,
+                  DrawingMutationAction.SetShape.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  DrawingMutationAction.SetEmbeddedObject.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  DrawingMutationAction.SetDrawingObjectAnchor.class,
+                  targetTypes(DrawingObjectSelector.ByName.class)),
+              Map.entry(
+                  DrawingMutationAction.DeleteDrawingObject.class,
+                  targetTypes(DrawingObjectSelector.ByName.class)),
+              Map.entry(
+                  CellMutationAction.ApplyStyle.class, targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  StructuredMutationAction.SetDataValidation.class,
+                  targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  StructuredMutationAction.ClearDataValidations.class,
+                  targetTypes(RangeSelector.class)),
+              Map.entry(
+                  StructuredMutationAction.SetConditionalFormatting.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  StructuredMutationAction.ClearConditionalFormatting.class,
+                  targetTypes(RangeSelector.class)),
+              Map.entry(
+                  StructuredMutationAction.SetAutofilter.class,
+                  targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  StructuredMutationAction.ClearAutofilter.class,
+                  targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  StructuredMutationAction.SetTable.class,
+                  targetTypes(TableSelector.ByNameOnSheet.class)),
+              Map.entry(
+                  StructuredMutationAction.DeleteTable.class,
+                  targetTypes(TableSelector.ByNameOnSheet.class)),
+              Map.entry(
+                  StructuredMutationAction.DeletePivotTable.class,
+                  targetTypes(PivotTableSelector.ByNameOnSheet.class)),
+              Map.entry(
+                  StructuredMutationAction.SetNamedRange.class,
                   targetTypes(
                       NamedRangeSelector.ByName.class,
                       NamedRangeSelector.WorkbookScope.class,
                       NamedRangeSelector.SheetScope.class)),
               Map.entry(
-                  MutationAction.DeleteNamedRange.class,
+                  StructuredMutationAction.DeleteNamedRange.class,
                   targetTypes(
                       NamedRangeSelector.ByName.class,
                       NamedRangeSelector.WorkbookScope.class,
                       NamedRangeSelector.SheetScope.class)),
-              Map.entry(MutationAction.AppendRow.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.AutoSizeColumns.class, targetTypes(SheetSelector.ByName.class)));
+                  CellMutationAction.AppendRow.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  WorkbookMutationAction.AutoSizeColumns.class,
+                  targetTypes(SheetSelector.ByName.class)));
 
   private static final Map<Class<? extends InspectionQuery>, Class<? extends Selector>[]>
       INSPECTION_TARGET_TYPES =

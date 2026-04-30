@@ -1,8 +1,8 @@
 [versions]
 kotlin = "2.4.0-Beta2"
-junit-jupiter = "6.0.3"
-junit-platform-launcher = "6.0.3"
-junit-bom = "6.0.3"
+junit-jupiter = "6.1.0-RC1"
+junit-platform-launcher = "6.1.0-RC1"
+junit-bom = "6.1.0-RC1"
 jackson-databind = "3.1.2"
 # Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
 jackson-annotations = "2.21"
@@ -15,9 +15,9 @@ slf4j = "2.0.17"
 errorprone = "2.49.0"
 errorprone-plugin = "5.1.0"
 google-java-format = "1.35.0"
-# Official JaCoCo trunk build 0.8.15.202604281210 currently publishes to Maven snapshots as the
+# Official JaCoCo trunk build 0.8.15.202604290352 currently publishes to Maven snapshots as the
 # exact artifact version below; keep the repository wiring aligned with this pin.
-jacoco = "0.8.15-20260428.121054-96"
+jacoco = "0.8.15-20260429.155228-97"
 pmd = "7.24.0"
 shadow = "9.4.0"
 spotless = "8.4.0"

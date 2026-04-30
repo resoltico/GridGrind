@@ -30,49 +30,51 @@ import org.junit.jupiter.api.Test;
 class SpreadsheetSurfaceEdgeCoverageTest {
   @Test
   void chartInputFamiliesNormalizeExtendedPlotBranches() {
-    ChartInput.Axis defaultVisibleAxis =
-        ChartInput.Axis.create(
+    ChartAxisInput defaultVisibleAxis =
+        ChartAxisInput.visible(
             ExcelChartAxisKind.CATEGORY,
             ExcelChartAxisPosition.BOTTOM,
-            ExcelChartAxisCrosses.AUTO_ZERO,
-            null);
-    ChartInput.Series series =
-        ChartInput.Series.create(
-            null,
-            new ChartInput.DataSource.StringLiteral(List.of("Jan", "Feb")),
-            new ChartInput.DataSource.NumericLiteral(List.of(10.0d, 18.0d)),
+            ExcelChartAxisCrosses.AUTO_ZERO);
+    ChartSeriesInput series =
+        ChartSeriesInput.untitled(
+            new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
+            new ChartDataSourceInput.NumericLiteral(List.of(10.0d, 18.0d)),
             true,
             ExcelChartMarkerStyle.DIAMOND,
             (short) 8,
             12L);
 
-    ChartInput.Area area = ChartInput.Area.create(null, null, null, List.of(series));
-    ChartInput.Area3D area3D = ChartInput.Area3D.create(null, null, 42, null, List.of(series));
-    ChartInput.Bar3D bar3D =
-        ChartInput.Bar3D.create(
-            null,
+    ChartPlotInput.Area area =
+        new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, List.of(series));
+    ChartPlotInput.Area3D area3D =
+        new ChartPlotInput.Area3D(false, ExcelChartGrouping.STANDARD, 42, List.of(series));
+    ChartPlotInput.Bar3D bar3D =
+        new ChartPlotInput.Bar3D(
+            false,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.PERCENT_STACKED,
             24,
             88,
             ExcelChartBarShape.CONE,
-            null,
             List.of(series));
-    ChartInput.Doughnut doughnut = ChartInput.Doughnut.create(null, 45, 40, List.of(series));
-    ChartInput.Line3D line3D = ChartInput.Line3D.create(null, null, 16, null, List.of(series));
-    ChartInput.Pie3D pie3D = ChartInput.Pie3D.create(null, List.of(series));
-    ChartInput.Radar radar = ChartInput.Radar.create(null, null, null, List.of(series));
-    ChartInput.Scatter scatter = ChartInput.Scatter.create(null, null, null, List.of(series));
-    ChartInput.Surface surface = ChartInput.Surface.create(null, null, null, List.of(series));
-    ChartInput.Surface3D surface3D = ChartInput.Surface3D.create(null, null, null, List.of(series));
+    ChartPlotInput.Doughnut doughnut = new ChartPlotInput.Doughnut(false, 45, 40, List.of(series));
+    ChartPlotInput.Line3D line3D =
+        new ChartPlotInput.Line3D(false, ExcelChartGrouping.STANDARD, 16, List.of(series));
+    ChartPlotInput.Pie3D pie3D = new ChartPlotInput.Pie3D(false, List.of(series));
+    ChartPlotInput.Radar radar =
+        new ChartPlotInput.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(series));
+    ChartPlotInput.Scatter scatter =
+        new ChartPlotInput.Scatter(false, ExcelChartScatterStyle.LINE_MARKER, List.of(series));
+    ChartPlotInput.Surface surface = new ChartPlotInput.Surface(false, false, List.of(series));
+    ChartPlotInput.Surface3D surface3D =
+        new ChartPlotInput.Surface3D(false, false, List.of(series));
 
     assertTrue(defaultVisibleAxis.visible());
-    assertTrue(series.title() instanceof ChartInput.Title.None);
+    assertTrue(series.title() instanceof ChartTitleInput.None);
     assertEquals(
-        List.of("Jan", "Feb"),
-        ((ChartInput.DataSource.StringLiteral) series.categories()).values());
+        List.of("Jan", "Feb"), ((ChartDataSourceInput.StringLiteral) series.categories()).values());
     assertEquals(
-        List.of(10.0d, 18.0d), ((ChartInput.DataSource.NumericLiteral) series.values()).values());
+        List.of(10.0d, 18.0d), ((ChartDataSourceInput.NumericLiteral) series.values()).values());
     assertFalse(area.varyColors());
     assertEquals(ExcelChartGrouping.STANDARD, area.grouping());
     assertEquals(2, area.axes().size());
@@ -101,10 +103,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Series.create(
-                null,
-                new ChartInput.DataSource.Reference("Categories"),
-                new ChartInput.DataSource.Reference("Values"),
+            ChartSeriesInput.untitled(
+                new ChartDataSourceInput.Reference("Categories"),
+                new ChartDataSourceInput.Reference("Values"),
                 null,
                 null,
                 (short) 1,
@@ -112,10 +113,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Series.create(
-                null,
-                new ChartInput.DataSource.Reference("Categories"),
-                new ChartInput.DataSource.Reference("Values"),
+            ChartSeriesInput.untitled(
+                new ChartDataSourceInput.Reference("Categories"),
+                new ChartDataSourceInput.Reference("Values"),
                 null,
                 null,
                 (short) 73,
@@ -123,26 +123,25 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Series.create(
-                null,
-                new ChartInput.DataSource.Reference("Categories"),
-                new ChartInput.DataSource.Reference("Values"),
+            ChartSeriesInput.untitled(
+                new ChartDataSourceInput.Reference("Categories"),
+                new ChartDataSourceInput.Reference("Values"),
                 null,
                 null,
                 null,
                 -1L));
     assertThrows(
         NullPointerException.class,
-        () -> new ChartInput.DataSource.StringLiteral(List.of("Jan", null)));
+        () -> new ChartDataSourceInput.StringLiteral(List.of("Jan", null)));
     assertThrows(
         NullPointerException.class,
-        () -> new ChartInput.DataSource.NumericLiteral(List.of(1.0d, null)));
+        () -> new ChartDataSourceInput.NumericLiteral(List.of(1.0d, null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ChartInput.Doughnut.create(false, 0, 9, List.of(series)));
+        () -> new ChartPlotInput.Doughnut(false, 0, 9, List.of(series)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ChartInput.Doughnut.create(false, 0, 91, List.of(series)));
+        () -> new ChartPlotInput.Doughnut(false, 0, 91, List.of(series)));
   }
 
   @Test
@@ -597,8 +596,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             java.util.Optional.of("invalid"),
             java.util.Optional.empty());
     InspectionQuery.ExportCustomXmlMapping export =
-        new InspectionQuery.ExportCustomXmlMapping(
-            new CustomXmlMappingLocator(1L, null), false, "UTF-8");
+        new InspectionQuery.ExportCustomXmlMapping(new CustomXmlMappingLocator(1L, null), false);
 
     assertTrue(captionOnly.allowComments());
     assertEquals("Please sign\nbefore release", captionOnly.caption().orElseThrow());
@@ -715,18 +713,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Bar.create(
-                null,
-                null,
-                null,
+            new ChartPlotInput.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
                 null,
                 101,
-                null,
                 List.of(
-                    ChartInput.Series.create(
-                        null,
-                        new ChartInput.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
+                    ChartSeriesInput.untitled(
+                        new ChartDataSourceInput.StringLiteral(List.of("Jan")),
+                        new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
                         null,
                         null,
                         null,
@@ -734,52 +730,47 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Bar.create(
-                null,
-                null,
-                null,
+            new ChartPlotInput.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
                 null,
                 -101,
-                null,
                 List.of(
-                    ChartInput.Series.create(
-                        null,
-                        new ChartInput.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
+                    ChartSeriesInput.untitled(
+                        new ChartDataSourceInput.StringLiteral(List.of("Jan")),
+                        new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
                         null,
                         null,
                         null,
                         null))));
     assertEquals(
         ExcelChartBarDirection.COLUMN,
-        ChartInput.Bar3D.create(
-                null,
-                null,
-                null,
-                null,
+        new ChartPlotInput.Bar3D(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
                 null,
                 null,
                 null,
                 List.of(
-                    ChartInput.Series.create(
-                        null,
-                        new ChartInput.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
+                    ChartSeriesInput.untitled(
+                        new ChartDataSourceInput.StringLiteral(List.of("Jan")),
+                        new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
                         null,
                         null,
                         null,
                         null)))
             .barDirection());
     assertNull(
-        ChartInput.Doughnut.create(
-                null,
+        new ChartPlotInput.Doughnut(
+                false,
                 0,
                 null,
                 List.of(
-                    ChartInput.Series.create(
-                        null,
-                        new ChartInput.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
+                    ChartSeriesInput.untitled(
+                        new ChartDataSourceInput.StringLiteral(List.of("Jan")),
+                        new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
                         null,
                         null,
                         null,
@@ -788,15 +779,14 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ChartInput.Doughnut.create(
-                null,
+            new ChartPlotInput.Doughnut(
+                false,
                 0,
                 91,
                 List.of(
-                    ChartInput.Series.create(
-                        null,
-                        new ChartInput.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartInput.DataSource.NumericLiteral(List.of(10.0d)),
+                    ChartSeriesInput.untitled(
+                        new ChartDataSourceInput.StringLiteral(List.of("Jan")),
+                        new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
                         null,
                         null,
                         null,
@@ -1075,7 +1065,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             true));
   }
 
-  private static List<ExcelChartAxisKind> kinds(List<? extends ChartInput.Axis> axes) {
-    return axes.stream().map(ChartInput.Axis::kind).toList();
+  private static List<ExcelChartAxisKind> kinds(List<? extends ChartAxisInput> axes) {
+    return axes.stream().map(ChartAxisInput::kind).toList();
   }
 }

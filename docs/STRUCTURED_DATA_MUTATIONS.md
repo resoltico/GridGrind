@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: STRUCTURED_DATA_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, autofilter, table, pivot table, append-row, auto-size, execution calculation, named range]
   questions: ["how do i manage tables in gridgrind", "how do i set pivot tables in gridgrind", "how do i use append row or calculation policies in gridgrind"]
@@ -52,12 +52,11 @@ metadata on the same autofilter.
       "range": "A2:C200",
       "caseSensitive": false,
       "columnSort": false,
-      "sortMethod": "",
       "conditions": [
         {
+          "type": "VALUE",
           "range": "C2:C200",
-          "descending": true,
-          "sortBy": ""
+          "descending": true
         }
       ]
     }

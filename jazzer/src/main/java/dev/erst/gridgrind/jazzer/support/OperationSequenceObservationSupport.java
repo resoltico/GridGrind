@@ -203,11 +203,12 @@ final class OperationSequenceObservationSupport {
                   null);
           default ->
               new Assertion.SheetStructureFacts(
-                  new dev.erst.gridgrind.contract.dto.GridGrindResponse.SheetSummaryReport(
+                  new dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports
+                      .SheetSummaryReport(
                       sheetName,
                       ExcelSheetVisibility.VISIBLE,
-                      new dev.erst.gridgrind.contract.dto.GridGrindResponse.SheetProtectionReport
-                          .Unprotected(),
+                      new dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports
+                          .SheetProtectionReport.Unprotected(),
                       0,
                       -1,
                       -1));

@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 5444
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 7
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'markRecalculateOnOpen'
+Input Bytes: 5434
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 6
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_NAMED_RANGES=1, GET_WINDOW=1, GET_CELLS=1, GET_NAMED_RANGE_SURFACE=1, GET_HYPERLINKS=1, GET_COMMENTS=1
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_HYPERLINK=2, SET_NAMED_RANGE=2, SET_COMMENT=1, ENSURE_SHEET=1, SET_RANGE=1
+Operation Kinds: (none)

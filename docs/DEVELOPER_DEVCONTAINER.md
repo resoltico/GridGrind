@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER_DEVCONTAINER
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, devcontainer, vscode, docker desktop, devcontainer cli, zulu26, contributor container, local repo mount, tooling agnostic]
   questions: ["what is the preferred contributor setup for gridgrind", "how do i use the gridgrind devcontainer", "does the repo stay on macos when i use the container", "why does gridgrind prefer a devcontainer over host java tooling", "is vscode mandatory for gridgrind", "how do i use the gridgrind devcontainer without vscode"]

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -132,7 +132,7 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202604281210`, because that line is where official Java 26
+  official JaCoCo trunk build `0.8.15.202604290352`, because that line is where official Java 26
   support landed before the next JaCoCo release
 - the shared build conventions therefore add JaCoCo's documented snapshot repository narrowly for
   `org.jacoco` artifacts instead of widening the whole build to general snapshot resolution

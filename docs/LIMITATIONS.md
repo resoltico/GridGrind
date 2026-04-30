@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: LIMITATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -433,7 +433,7 @@ product-owned `INVALID_REQUEST` message.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `zoomPercent must be between 10 and 400 inclusive: {n}` |
 | **Applies to** | `SET_SHEET_ZOOM` |
-| **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `GridGrindResponse.SheetLayoutReport` |
+| **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `GridGrindLayoutSurfaceReports.SheetLayoutReport` |
 | **UX** | `--help` Limits section; `SET_SHEET_ZOOM` catalog summary |
 
 Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up

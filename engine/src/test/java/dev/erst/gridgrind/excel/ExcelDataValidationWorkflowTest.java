@@ -35,16 +35,16 @@ class ExcelDataValidationWorkflowTest {
       budget.setDataValidation("A1:C3", definition);
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
-      WorkbookReadResult.DataValidationsResult beforeClear =
+      WorkbookRuleResult.DataValidationsResult beforeClear =
           cast(
-              WorkbookReadResult.DataValidationsResult.class,
+              WorkbookRuleResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
                       "all", "Budget", new ExcelRangeSelection.All())));
-      WorkbookReadResult.DataValidationsResult selected =
+      WorkbookRuleResult.DataValidationsResult selected =
           cast(
-              WorkbookReadResult.DataValidationsResult.class,
+              WorkbookRuleResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
@@ -60,9 +60,9 @@ class ExcelDataValidationWorkflowTest {
 
       budget.clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
 
-      WorkbookReadResult.DataValidationsResult afterClear =
+      WorkbookRuleResult.DataValidationsResult afterClear =
           cast(
-              WorkbookReadResult.DataValidationsResult.class,
+              WorkbookRuleResult.DataValidationsResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetDataValidations(
@@ -104,9 +104,9 @@ class ExcelDataValidationWorkflowTest {
 
       WorkbookAnalysis.DataValidationHealth health =
           analyzer.dataValidationHealth(workbook, new ExcelSheetSelection.All());
-      WorkbookReadResult.DataValidationHealthResult executed =
+      WorkbookAnalysisResult.DataValidationHealthResult executed =
           cast(
-              WorkbookReadResult.DataValidationHealthResult.class,
+              WorkbookAnalysisResult.DataValidationHealthResult.class,
               analyzer.execute(
                   workbook,
                   new WorkbookLocation.StoredWorkbook(workbookPath),

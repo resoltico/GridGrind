@@ -11,7 +11,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -118,17 +120,17 @@ class Phase8ExecutorCoverageTest {
     return mutations(
         mutate(
             new dev.erst.gridgrind.contract.selector.SheetSelector.ByName("Budget"),
-            new MutationAction.EnsureSheet()),
+            new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
-            new MutationAction.SetRange(
+            new CellMutationAction.SetRange(
                 List.of(
                     List.of(new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
                     List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(100.0)),
                     List.of(new CellInput.Text(text("Travel")), new CellInput.Numeric(50.0))))),
         mutate(
-            new MutationAction.SetTable(
-                new TableInput(
+            new StructuredMutationAction.SetTable(
+                TableInput.withDefaultMetadata(
                     "BudgetTable", "Budget", "A1:B3", false, new TableStyleInput.None()))));
   }
 
@@ -136,18 +138,18 @@ class Phase8ExecutorCoverageTest {
     return mutations(
         mutate(
             new dev.erst.gridgrind.contract.selector.SheetSelector.ByName("Budget"),
-            new MutationAction.EnsureSheet()),
+            new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B4"),
-            new MutationAction.SetRange(
+            new CellMutationAction.SetRange(
                 List.of(
                     List.of(new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
                     List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(100.0)),
                     List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(125.0)),
                     List.of(new CellInput.Text(text("Travel")), new CellInput.Numeric(50.0))))),
         mutate(
-            new MutationAction.SetTable(
-                new TableInput(
+            new StructuredMutationAction.SetTable(
+                TableInput.withDefaultMetadata(
                     "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()))));
   }
 

@@ -13,6 +13,8 @@ import java.lang.foreign.ValueLayout;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,73 @@ class NativeStandardInputProbeTest {
   }
 
   @Test
+  void libraryLookupSupplierReturnsLookupOnSuccess() {
+    SymbolLookup lookup = name -> Optional.empty();
+
+    assertEquals(
+        Optional.of(lookup), NativeStandardInputProbe.libraryLookupSupplier(() -> lookup).get());
+  }
+
+  @Test
+  void libraryLookupSupplierReturnsEmptyWhenLookupFails() {
+    assertTrue(
+        NativeStandardInputProbe.libraryLookupSupplier(
+                () -> {
+                  throw new UnsatisfiedLinkError("library not available");
+                })
+            .get()
+            .isEmpty());
+  }
+
+  @Test
+  void kernel32LibraryLookupReturnsAnOptionalWithoutThrowing() {
+    assertNotNull(NativeStandardInputProbe.kernel32LibraryLookup());
+  }
+
+  @Test
+  void kernel32LibraryLookupUsesInjectedFactoryForSuccessAndFailure() {
+    assertTrue(
+        NativeStandardInputProbe.kernel32LibraryLookup("Windows 11", "definitely-missing")
+            .isEmpty());
+    assertTrue(
+        NativeStandardInputProbe.kernel32LibraryLookup("Windows 11", "definitely-missing")
+            .isEmpty());
+    assertTrue(
+        NativeStandardInputProbe.kernel32LibraryLookup("Linux", "must-not-be-used").isEmpty());
+  }
+
+  @Test
+  void namedLibraryLookupReturnsEmptyForMissingLibraries() {
+    assertTrue(NativeStandardInputProbe.namedLibraryLookup("definitely-missing").isEmpty());
+  }
+
+  @Test
+  void namedLibraryLookupCanResolveOneKnownRuntimeLibraryForCurrentHost() {
+    String osName = System.getProperty("os.name", "");
+    Optional<SymbolLookup> lookup =
+        knownRuntimeLibraries(osName).stream()
+            .map(NativeStandardInputProbe::namedLibraryLookup)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst();
+
+    assertTrue(
+        lookup.isPresent(), "expected one known runtime library lookup to succeed for " + osName);
+  }
+
+  @Test
+  void downcallHandleProviderReturnsAProviderForTheSuppliedLinker() {
+    java.lang.foreign.Linker linker = java.lang.foreign.Linker.nativeLinker();
+    MemorySegment isattySymbol = linker.defaultLookup().find("isatty").orElseThrow();
+    MethodHandle handle =
+        NativeStandardInputProbe.downcallHandleProvider(linker)
+            .downcallHandle(
+                isattySymbol, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT));
+
+    assertNotNull(handle);
+  }
+
+  @Test
   void unixCurrentProcessFactoryReturnsAnInstanceForCurrentEnvironment() {
     NativeStandardInputProbe probe = NativeStandardInputProbe.unixCurrentProcess();
 
@@ -59,6 +128,19 @@ class NativeStandardInputProbeTest {
 
     assertNotNull(probe);
     probe.getAsBoolean();
+  }
+
+  @Test
+  void windowsCurrentProcessUsesLibraryLookupWhenAvailable() throws Throwable {
+    NativeStandardInputProbe probe =
+        NativeStandardInputProbe.windowsCurrentProcess(
+            () -> Optional.of(symbolLookup()),
+            (symbol, descriptor) ->
+                symbol.address() == 11L
+                    ? getStdHandleHandle(MemorySegment.ofAddress(99L))
+                    : getConsoleModeHandle(1));
+
+    assertTrue(probe.getAsBoolean());
   }
 
   @Test
@@ -288,6 +370,16 @@ class NativeStandardInputProbeTest {
           case "GetConsoleMode" -> Optional.of(MemorySegment.ofAddress(12L));
           default -> Optional.empty();
         };
+  }
+
+  private static List<String> knownRuntimeLibraries(String osName) {
+    if (NativeStandardInputProbe.isWindows(osName)) {
+      return List.of("Kernel32", "kernel32");
+    }
+    if (osName.toLowerCase(Locale.ROOT).contains("mac")) {
+      return List.of("libSystem.B.dylib", "System", "c");
+    }
+    return List.of("libc.so.6", "c");
   }
 
   private static MethodHandle isattyHandle(int result) {

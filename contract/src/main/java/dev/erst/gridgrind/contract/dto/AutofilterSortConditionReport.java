@@ -1,34 +1,69 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Objects;
 
-/** One factual sort condition stored inside an autofilter sort-state payload. */
-public record AutofilterSortConditionReport(
-    String range, boolean descending, String sortBy, CellColorReport color, Integer iconId) {
-  /** Creates a report condition with the implicit default sort-by mode. */
-  public AutofilterSortConditionReport(
-      String range, boolean descending, CellColorReport color, Integer iconId) {
-    this(range, descending, "", color, iconId);
-  }
+/** One factual autofilter sort condition reported from a workbook. */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = AutofilterSortConditionReport.Value.class, name = "VALUE"),
+  @JsonSubTypes.Type(value = AutofilterSortConditionReport.CellColor.class, name = "CELL_COLOR"),
+  @JsonSubTypes.Type(value = AutofilterSortConditionReport.FontColor.class, name = "FONT_COLOR"),
+  @JsonSubTypes.Type(value = AutofilterSortConditionReport.Icon.class, name = "ICON")
+})
+public sealed interface AutofilterSortConditionReport
+    permits AutofilterSortConditionReport.Value,
+        AutofilterSortConditionReport.CellColor,
+        AutofilterSortConditionReport.FontColor,
+        AutofilterSortConditionReport.Icon {
+  /** Worksheet-local range covered by this sort condition. */
+  String range();
 
-  public AutofilterSortConditionReport {
-    Objects.requireNonNull(range, "range must not be null");
-    Objects.requireNonNull(sortBy, "sortBy must not be null");
-    if (iconId != null && iconId < 0) {
-      throw new IllegalArgumentException("iconId must not be negative");
+  /** Whether the condition sorts descending instead of ascending. */
+  boolean descending();
+
+  /** Reports one ordinary value-based sort condition. */
+  record Value(String range, boolean descending) implements AutofilterSortConditionReport {
+    public Value {
+      range = requireRange(range);
     }
   }
 
-  @JsonCreator
-  static AutofilterSortConditionReport create(
-      @JsonProperty("range") String range,
-      @JsonProperty("descending") boolean descending,
-      @JsonProperty("sortBy") String sortBy,
-      @JsonProperty("color") CellColorReport color,
-      @JsonProperty("iconId") Integer iconId) {
-    return new AutofilterSortConditionReport(
-        range, descending, sortBy == null ? "" : sortBy, color, iconId);
+  /** Reports one cell-fill-color sort condition. */
+  record CellColor(String range, boolean descending, CellColorReport color)
+      implements AutofilterSortConditionReport {
+    public CellColor {
+      range = requireRange(range);
+      Objects.requireNonNull(color, "color must not be null");
+    }
+  }
+
+  /** Reports one font-color sort condition. */
+  record FontColor(String range, boolean descending, CellColorReport color)
+      implements AutofilterSortConditionReport {
+    public FontColor {
+      range = requireRange(range);
+      Objects.requireNonNull(color, "color must not be null");
+    }
+  }
+
+  /** Reports one icon-based sort condition. */
+  record Icon(String range, boolean descending, int iconId)
+      implements AutofilterSortConditionReport {
+    public Icon {
+      range = requireRange(range);
+      if (iconId < 0) {
+        throw new IllegalArgumentException("iconId must not be negative");
+      }
+    }
+  }
+
+  private static String requireRange(String range) {
+    Objects.requireNonNull(range, "range must not be null");
+    if (range.isBlank()) {
+      throw new IllegalArgumentException("range must not be blank");
+    }
+    return range;
   }
 }

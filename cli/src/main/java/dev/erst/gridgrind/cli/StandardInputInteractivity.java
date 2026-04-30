@@ -22,7 +22,7 @@ final class StandardInputInteractivity implements BooleanSupplier {
   static StandardInputInteractivity currentProcess() {
     return new StandardInputInteractivity(
         StandardInputInteractivity::consoleIsInteractive,
-        NativeStandardInputProbe.currentProcess());
+        new LazyBooleanSupplier(NativeStandardInputProbe::currentProcess));
   }
 
   static StandardInputInteractivity never() {

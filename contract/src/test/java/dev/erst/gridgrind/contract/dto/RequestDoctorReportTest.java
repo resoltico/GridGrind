@@ -17,11 +17,12 @@ class RequestDoctorReportTest {
             "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
     RequestWarning warning = new RequestWarning(0, "step-1", "SET_CELL", "warning");
     List<RequestWarning> mutableWarnings = new java.util.ArrayList<>(List.of(warning));
-    GridGrindResponse.Problem problem =
-        GridGrindResponse.Problem.of(
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
+            new ProblemContext.ValidateRequest(
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE")));
 
     RequestDoctorReport clean = RequestDoctorReport.clean(summary);
     RequestDoctorReport warnings = RequestDoctorReport.warnings(summary, mutableWarnings);
@@ -41,11 +42,12 @@ class RequestDoctorReportTest {
     RequestDoctorReport.Summary summary =
         new RequestDoctorReport.Summary(
             "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
-    GridGrindResponse.Problem problem =
-        GridGrindResponse.Problem.of(
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
+            new ProblemContext.ValidateRequest(
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE")));
 
     assertEquals(
         "summary must not be null for a valid doctor report",
@@ -201,11 +203,12 @@ class RequestDoctorReportTest {
 
   @Test
   void supportsExplicitProtocolVersionAndRejectsNullWarnings() {
-    GridGrindResponse.Problem problem =
-        GridGrindResponse.Problem.of(
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")));
+            new ProblemContext.ValidateRequest(
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE")));
     List<RequestWarning> warningsWithNull = new java.util.ArrayList<>();
     warningsWithNull.add(null);
 

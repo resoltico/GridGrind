@@ -28,7 +28,7 @@ class GridGrindResponseTest {
     inspections.add(
         new InspectionResult.WorkbookSummaryResult(
             "summary",
-            new GridGrindResponse.WorkbookSummary.WithSheets(
+            new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
     GridGrindResponse.Success success =
@@ -40,7 +40,8 @@ class GridGrindResponseTest {
     inspections.clear();
 
     assertEquals(GridGrindProtocolVersion.current(), success.protocolVersion());
-    assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertInstanceOf(
+        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
     assertEquals(java.util.Optional.empty(), success.journal().planId());
     assertEquals(java.util.Optional.empty(), success.journal().source().type());
     assertEquals(java.util.Optional.empty(), success.journal().persistence().type());
@@ -55,11 +56,12 @@ class GridGrindResponseTest {
     GridGrindResponse.Failure failure =
         GridGrindResponses.failure(
             null,
-            GridGrindResponse.Problem.of(
+            GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "boom",
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
-                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown())));
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                        .unknown())));
 
     assertEquals(java.util.Optional.empty(), failure.journal().planId());
     assertEquals(java.util.Optional.empty(), failure.journal().source().type());
@@ -106,16 +108,17 @@ class GridGrindResponseTest {
   void executeStepContextMergesTypedLocationsWithoutReintroducingNullPadding() {
     dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep base =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
                 "EXISTING", "SAVE_AS"),
-            new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+            new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
                 2, "formula-health", "INSPECTION", "ANALYZE_FORMULA_HEALTH"),
-            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.sheet("Summary"));
+            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation.sheet(
+                "Summary"));
 
     dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep enriched =
         base.withLocation(
-            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
-                "Ignored", "B4", "SUM(B2:B3)"));
+            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                .formulaCell("Ignored", "B4", "SUM(B2:B3)"));
 
     assertEquals(java.util.Optional.of("Summary"), enriched.sheetName());
     assertEquals(java.util.Optional.of("B4"), enriched.address());
@@ -128,16 +131,18 @@ class GridGrindResponseTest {
   void parseArgumentsAndProblemsExposeStepCentricContext() {
     dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments parseArguments =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-            dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument.named("--request"));
-    GridGrindResponse.Problem problem =
-        GridGrindResponse.Problem.of(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
+                "--request"));
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST_SHAPE,
             "Unknown field 'reads'",
             new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                    "NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
                     1, "cells", "INSPECTION", "GET_CELLS"),
-                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.cell(
+                dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
                     "Budget", "A1")));
     dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep executeStep =
         assertInstanceOf(
@@ -157,11 +162,11 @@ class GridGrindResponseTest {
 
   @Test
   void typedVariantsReplaceNullPaddingAndContextMergersPreserveExistingValues() {
-    GridGrindResponse.NamedRangeReport.FormulaReport formulaOnly =
-        new GridGrindResponse.NamedRangeReport.FormulaReport(
+    GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport formulaOnly =
+        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!A1:A3)");
-    GridGrindResponse.SheetProtectionReport.Unprotected unprotected =
-        new GridGrindResponse.SheetProtectionReport.Unprotected();
+    GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected unprotected =
+        new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected();
     dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
             "A1",
@@ -172,13 +177,15 @@ class GridGrindResponseTest {
             java.util.Optional.empty());
     dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest readRequest =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest(
-            dev.erst.gridgrind.contract.dto.ProblemContext.RequestInput.requestFile(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.requestFile(
                 "/tmp/request.json"),
-            dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located("steps[0]", 4, 12));
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.located(
+                "steps[0]", 4, 12));
 
     assertEquals("BudgetExpr", formulaOnly.name());
     assertEquals("SUM(Budget!A1:A3)", formulaOnly.refersToFormula());
-    assertInstanceOf(GridGrindResponse.SheetProtectionReport.Unprotected.class, unprotected);
+    assertInstanceOf(
+        GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected.class, unprotected);
     assertEquals("BLANK", blankCell.effectiveType());
     assertEquals(java.util.Optional.empty(), blankCell.hyperlink());
     assertEquals(java.util.Optional.empty(), blankCell.comment());
@@ -190,20 +197,23 @@ class GridGrindResponseTest {
 
     dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest mergedRead =
         readRequest.withJson(
-            dev.erst.gridgrind.contract.dto.ProblemContext.JsonLocation.located("ignored", 9, 22));
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation.located(
+                "ignored", 9, 22));
     assertEquals(java.util.Optional.of("steps[0]"), mergedRead.jsonPath());
     assertEquals(java.util.Optional.of(4), mergedRead.jsonLine());
     assertEquals(java.util.Optional.of(12), mergedRead.jsonColumn());
 
     dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep mergedExecute =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                    "NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
                     1, "cells", "INSPECTION", "GET_CELLS"),
-                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown())
+                dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                    .unknown())
             .withLocation(
-                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
-                    "Budget", "A1", "SUM(A1)"));
+                dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                    .formulaCell("Budget", "A1", "SUM(A1)"));
     assertEquals(java.util.Optional.of("Budget"), mergedExecute.sheetName());
     assertEquals(java.util.Optional.of("A1"), mergedExecute.address());
     assertEquals(java.util.Optional.empty(), mergedExecute.range());
@@ -214,8 +224,8 @@ class GridGrindResponseTest {
   @Test
   void cellReportDefaultAccessorsDispatchAcrossEverySubtype() {
     HyperlinkTarget hyperlink = new HyperlinkTarget.Url("https://example.com/budget");
-    GridGrindResponse.CommentReport comment =
-        new GridGrindResponse.CommentReport("Reviewed", "Alice", true);
+    GridGrindWorkbookSurfaceReports.CommentReport comment =
+        new GridGrindWorkbookSurfaceReports.CommentReport("Reviewed", "Alice", true);
     dev.erst.gridgrind.contract.dto.CellReport textCell =
         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
             "A1",
@@ -286,7 +296,7 @@ class GridGrindResponseTest {
   @Test
   void autofilterEntryDefaultSortStateDispatchesAcrossTableOwnedEntries() {
     AutofilterSortStateReport sortState =
-        new AutofilterSortStateReport("A1:B4", false, true, "none", List.of());
+        AutofilterSortStateReport.withoutSortMethod("A1:B4", false, true, List.of());
     AutofilterEntryReport entry =
         new AutofilterEntryReport.TableOwned("A1:B4", "BudgetTable", List.of(), sortState);
 
@@ -299,26 +309,32 @@ class GridGrindResponseTest {
         "requestedPath must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GridGrindResponse.PersistenceOutcome.SavedAs(" ", "/tmp/out.xlsx"))
+                () ->
+                    new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+                        " ", "/tmp/out.xlsx"))
             .getMessage());
     assertEquals(
         "executionPath must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GridGrindResponse.PersistenceOutcome.Overwritten("budget.xlsx", " "))
+                () ->
+                    new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+                        "budget.xlsx", " "))
             .getMessage());
     assertEquals(
         "sheetCount must be 0 for an empty workbook",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new GridGrindResponse.WorkbookSummary.Empty(1, List.of("Budget"), 0, false))
+                () ->
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
+                        1, List.of("Budget"), 0, false))
             .getMessage());
     assertEquals(
         "selectedSheetNames must only contain values present in sheetNames",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Ops"), 0, false))
             .getMessage());
     assertEquals(
@@ -326,7 +342,7 @@ class GridGrindResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponse.ProblemCause(
+                    new GridGrindProblemDetail.ProblemCause(
                         GridGrindProblemCode.INVALID_REQUEST, " ", "READ_REQUEST"))
             .getMessage());
     assertEquals(
@@ -334,12 +350,12 @@ class GridGrindResponseTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponse.ProblemCause(
+                    new GridGrindProblemDetail.ProblemCause(
                         GridGrindProblemCode.INVALID_REQUEST, "bad request", " "))
             .getMessage());
     assertEquals(
         List.of(),
-        new GridGrindResponse.Problem(
+        new GridGrindProblemDetail.Problem(
                 GridGrindProblemCode.INVALID_REQUEST,
                 GridGrindProblemCode.INVALID_REQUEST.category(),
                 GridGrindProblemCode.INVALID_REQUEST.recovery(),
@@ -347,8 +363,8 @@ class GridGrindResponseTest {
                 "bad request",
                 GridGrindProblemCode.INVALID_REQUEST.resolution(),
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
-                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                        "NEW", "NONE")),
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "NONE")),
                 java.util.Optional.empty(),
                 null)
             .causes());
@@ -366,7 +382,7 @@ class GridGrindResponseTest {
             List.of(
                 new InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     assertions.clear();
 
@@ -381,8 +397,8 @@ class GridGrindResponseTest {
             new dev.erst.gridgrind.contract.assertion.Assertion.CellValue(
                 new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.NumericValue(42.0d)),
             List.of());
-    GridGrindResponse.Problem problem =
-        new GridGrindResponse.Problem(
+    GridGrindProblemDetail.Problem problem =
+        new GridGrindProblemDetail.Problem(
             GridGrindProblemCode.ASSERTION_FAILED,
             GridGrindProblemCode.ASSERTION_FAILED.category(),
             GridGrindProblemCode.ASSERTION_FAILED.recovery(),
@@ -390,10 +406,11 @@ class GridGrindResponseTest {
             "assertion failed",
             GridGrindProblemCode.ASSERTION_FAILED.resolution(),
             new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
-                new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+                dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                    "NEW", "NONE"),
+                new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
                     0, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
-                dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.cell(
+                dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation.cell(
                     "Budget", "B4")),
             java.util.Optional.of(failure),
             List.of());
@@ -470,9 +487,9 @@ class GridGrindResponseTest {
             .getMessage());
   }
 
-  private static GridGrindResponse.CellStyleReport minimalStyle() {
+  private static GridGrindWorkbookSurfaceReports.CellStyleReport minimalStyle() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindResponse.CellStyleReport(
+    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),

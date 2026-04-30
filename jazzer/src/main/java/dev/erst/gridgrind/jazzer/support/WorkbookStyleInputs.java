@@ -16,6 +16,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Creates bounded protocol style patches for fuzz harnesses. */
 public final class WorkbookStyleInputs {
@@ -62,11 +63,15 @@ public final class WorkbookStyleInputs {
   private static CellAlignmentInput nextAlignmentInput(
       GridGrindFuzzData data, boolean includeDepth) {
     return new CellAlignmentInput(
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        nextHorizontalAlignment(data),
-        nextVerticalAlignment(data),
-        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 180) : null,
-        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 8) : null);
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        Optional.ofNullable(nextHorizontalAlignment(data)),
+        Optional.ofNullable(nextVerticalAlignment(data)),
+        includeDepth && data.consumeBoolean()
+            ? Optional.of(data.consumeInt(0, 180))
+            : Optional.empty(),
+        includeDepth && data.consumeBoolean()
+            ? Optional.of(data.consumeInt(0, 8))
+            : Optional.empty());
   }
 
   private static CellFontInput nextFontInput(GridGrindFuzzData data, boolean includeName) {

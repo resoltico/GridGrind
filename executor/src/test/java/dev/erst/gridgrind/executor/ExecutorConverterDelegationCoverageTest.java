@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellColorReport;
 import dev.erst.gridgrind.contract.dto.CellFillInput;
 import dev.erst.gridgrind.contract.dto.CellFillReport;
@@ -14,12 +17,13 @@ import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -33,7 +37,6 @@ import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -118,7 +121,7 @@ class ExecutorConverterDelegationCoverageTest {
                     CellFillInput.patternBackground(
                         ExcelFillPattern.BRICKS, ColorInput.indexed(10)))
                 .orElseThrow());
-    GridGrindResponse.CellStyleReport backgroundOnlyReport =
+    GridGrindWorkbookSurfaceReports.CellStyleReport backgroundOnlyReport =
         InspectionResultCellReportSupport.toCellStyleReport(
             new ExcelCellStyleSnapshot(
                 "General",
@@ -147,29 +150,30 @@ class ExecutorConverterDelegationCoverageTest {
 
   @Test
   void familyMutationConvertersHandleRepresentativeInFamilyActions() {
-    MutationAction.SetCell setCell = new MutationAction.SetCell(new CellInput.Blank());
+    CellMutationAction.SetCell setCell = new CellMutationAction.SetCell(new CellInput.Blank());
 
-    WorkbookCommand.CreateSheet createSheet =
+    WorkbookSheetCommand.CreateSheet createSheet =
         assertInstanceOf(
-            WorkbookCommand.CreateSheet.class,
+            WorkbookSheetCommand.CreateSheet.class,
             WorkbookCommandWorkbookMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()));
-    WorkbookCommand.SetCell convertedCell =
+                new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()));
+    WorkbookCellCommand.SetCell convertedCell =
         assertInstanceOf(
-            WorkbookCommand.SetCell.class,
+            WorkbookCellCommand.SetCell.class,
             WorkbookCommandCellMutationConverter.toCommand(
                 new CellSelector.ByAddress("Budget", "A1"), setCell));
-    WorkbookCommand.DeleteDrawingObject deleteDrawingObject =
+    WorkbookDrawingCommand.DeleteDrawingObject deleteDrawingObject =
         assertInstanceOf(
-            WorkbookCommand.DeleteDrawingObject.class,
+            WorkbookDrawingCommand.DeleteDrawingObject.class,
             WorkbookCommandDrawingMutationConverter.toCommand(
                 new DrawingObjectSelector.ByName("Budget", "Logo"),
-                new MutationAction.DeleteDrawingObject()));
-    WorkbookCommand.ClearAutofilter clearAutofilter =
+                new DrawingMutationAction.DeleteDrawingObject()));
+    WorkbookTabularCommand.ClearAutofilter clearAutofilter =
         assertInstanceOf(
-            WorkbookCommand.ClearAutofilter.class,
+            WorkbookTabularCommand.ClearAutofilter.class,
             WorkbookCommandStructuredMutationConverter.toCommand(
-                new SheetSelector.ByName("Budget"), new MutationAction.ClearAutofilter()));
+                new SheetSelector.ByName("Budget"),
+                new StructuredMutationAction.ClearAutofilter()));
 
     assertEquals("Budget", createSheet.sheetName());
     assertEquals("Budget", convertedCell.sheetName());

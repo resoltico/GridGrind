@@ -48,7 +48,11 @@ import org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 
-/** Package-owned translation seam between POI chart enums/classes and GridGrind chart types. */
+/**
+ * Package-owned translation seam between POI chart enums/classes and GridGrind chart types.
+ *
+ * <p>The import count is the direct shape of the supported POI chart enum surface.
+ */
 @SuppressWarnings("PMD.ExcessiveImports")
 final class ExcelChartPoiBridge {
   private ExcelChartPoiBridge() {}

@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -66,15 +68,18 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(InspectionQuery.GetWorkbookProtection.class, workbookProtection.query());
     assertInstanceOf(InspectionQuery.AnalyzeWorkbookFindings.class, workbookFindings.query());
 
-    Targets.SheetRef sheet = Targets.sheet("Budget");
+    SheetTarget sheet = Targets.sheet("Budget");
     assertInstanceOf(
-        MutationAction.EnsureSheet.class, sheet.ensureExists().toStep("ensure").action());
+        WorkbookMutationAction.EnsureSheet.class, sheet.ensureExists().toStep("ensure").action());
     assertInstanceOf(
-        MutationAction.RenameSheet.class, sheet.renameTo("Budget 2026").toStep("rename").action());
-    assertInstanceOf(MutationAction.DeleteSheet.class, sheet.delete().toStep("delete").action());
-    assertInstanceOf(MutationAction.SetSheetZoom.class, sheet.setZoom(125).toStep("zoom").action());
+        WorkbookMutationAction.RenameSheet.class,
+        sheet.renameTo("Budget 2026").toStep("rename").action());
     assertInstanceOf(
-        MutationAction.ClearPrintLayout.class,
+        WorkbookMutationAction.DeleteSheet.class, sheet.delete().toStep("delete").action());
+    assertInstanceOf(
+        WorkbookMutationAction.SetSheetZoom.class, sheet.setZoom(125).toStep("zoom").action());
+    assertInstanceOf(
+        WorkbookMutationAction.ClearPrintLayout.class,
         sheet.clearPrintLayout().toStep("clear-print").action());
     assertInstanceOf(
         InspectionQuery.GetSheetSummary.class, sheet.summary().toStep("summary").query());
@@ -96,19 +101,21 @@ class AuthoringTargetCoverageTest {
         InspectionQuery.AnalyzeFormulaHealth.class,
         sheet.formulaHealth().toStep("formula-health").query());
 
-    Targets.CellRef cell = Targets.cell("Budget", "A1");
+    CellTarget cell = Targets.cell("Budget", "A1");
     assertInstanceOf(
-        MutationAction.SetCell.class, cell.set(Values.text("Owner")).toStep("set").action());
+        CellMutationAction.SetCell.class, cell.set(Values.text("Owner")).toStep("set").action());
     assertInstanceOf(
-        MutationAction.SetHyperlink.class,
+        CellMutationAction.SetHyperlink.class,
         cell.setHyperlink(Links.url("https://example.com")).toStep("hyperlink").action());
     assertInstanceOf(
-        MutationAction.ClearHyperlink.class, cell.clearHyperlink().toStep("clear-link").action());
+        CellMutationAction.ClearHyperlink.class,
+        cell.clearHyperlink().toStep("clear-link").action());
     assertInstanceOf(
-        MutationAction.SetComment.class,
+        CellMutationAction.SetComment.class,
         cell.setComment(Values.comment("note", "Ada")).toStep("comment").action());
     assertInstanceOf(
-        MutationAction.ClearComment.class, cell.clearComment().toStep("clear-comment").action());
+        CellMutationAction.ClearComment.class,
+        cell.clearComment().toStep("clear-comment").action());
     assertInstanceOf(InspectionQuery.GetCells.class, cell.read().toStep("read").query());
     assertInstanceOf(
         InspectionQuery.GetHyperlinks.class, cell.hyperlinks().toStep("links").query());
@@ -123,15 +130,17 @@ class AuthoringTargetCoverageTest {
         Assertion.FormulaText.class,
         cell.formulaEquals("SUM(A1:A2)").toStep("formula").assertion());
 
-    Targets.RangeRef range = Targets.range("Budget", "A1:B2");
+    RangeTarget range = Targets.range("Budget", "A1:B2");
     MutationStep setRows =
         range
             .setRows(List.of(Values.row(Values.text("Owner"), Values.number(42.5))))
             .toStep("rows");
-    assertInstanceOf(MutationAction.SetRange.class, setRows.action());
-    assertInstanceOf(MutationAction.ClearRange.class, range.clear().toStep("clear").action());
-    assertInstanceOf(MutationAction.MergeCells.class, range.merge().toStep("merge").action());
-    assertInstanceOf(MutationAction.UnmergeCells.class, range.unmerge().toStep("unmerge").action());
+    assertInstanceOf(CellMutationAction.SetRange.class, setRows.action());
+    assertInstanceOf(CellMutationAction.ClearRange.class, range.clear().toStep("clear").action());
+    assertInstanceOf(
+        WorkbookMutationAction.MergeCells.class, range.merge().toStep("merge").action());
+    assertInstanceOf(
+        WorkbookMutationAction.UnmergeCells.class, range.unmerge().toStep("unmerge").action());
     assertInstanceOf(
         InspectionQuery.GetDataValidations.class,
         range.dataValidations().toStep("validations").query());
@@ -142,7 +151,7 @@ class AuthoringTargetCoverageTest {
         "rows must not be null",
         assertThrows(NullPointerException.class, () -> range.setRows(null)).getMessage());
 
-    Targets.WindowRef window = Targets.window("Budget", "A1", 5, 3);
+    WindowTarget window = Targets.window("Budget", "A1", 5, 3);
     assertInstanceOf(InspectionQuery.GetWindow.class, window.read().toStep("read").query());
     assertInstanceOf(
         InspectionQuery.GetSheetSchema.class, window.schema().toStep("schema").query());
@@ -150,8 +159,8 @@ class AuthoringTargetCoverageTest {
 
   @Test
   void tableNamedRangeChartAndPivotTargetsCoverTheirSurface() {
-    Targets.TableRef table = Targets.table("BudgetTable");
-    Targets.TableRef tableOnSheet = Targets.tableOnSheet("BudgetTable", "Budget");
+    TableTarget table = Targets.table("BudgetTable");
+    TableTarget tableOnSheet = Targets.tableOnSheet("BudgetTable", "Budget");
     assertInstanceOf(TableSelector.ByName.class, table.selector());
     assertInstanceOf(TableSelector.ByNameOnSheet.class, tableOnSheet.selector());
     assertInstanceOf(TableRowSelector.ByIndex.class, table.row(2).selector());
@@ -159,34 +168,36 @@ class AuthoringTargetCoverageTest {
         TableRowSelector.ByKeyCell.class,
         table.rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt"))).selector());
     assertInstanceOf(
-        MutationAction.SetTable.class,
+        StructuredMutationAction.SetTable.class,
         tableOnSheet
             .define(Tables.define("BudgetTable", "Budget", "A1:B3", false, Tables.noStyle()))
             .toStep("define")
             .action());
     assertInstanceOf(
-        MutationAction.DeleteTable.class, tableOnSheet.delete().toStep("delete").action());
+        StructuredMutationAction.DeleteTable.class,
+        tableOnSheet.delete().toStep("delete").action());
     assertInstanceOf(InspectionQuery.GetTables.class, table.inspect().toStep("inspect").query());
     assertInstanceOf(
         InspectionQuery.AnalyzeTableHealth.class, table.analyzeHealth().toStep("health").query());
     assertInstanceOf(Assertion.TablePresent.class, table.present().toStep("present").assertion());
     assertInstanceOf(Assertion.TableAbsent.class, table.absent().toStep("absent").assertion());
 
-    Targets.TableCellRef tableCell = table.row(1).cell("Amount");
+    TableCellTarget tableCell = table.row(1).cell("Amount");
     assertInstanceOf(TableCellSelector.ByColumnName.class, tableCell.selector());
     assertInstanceOf(
-        MutationAction.SetCell.class, tableCell.set(Values.number(125.0)).toStep("set").action());
+        CellMutationAction.SetCell.class,
+        tableCell.set(Values.number(125.0)).toStep("set").action());
     assertInstanceOf(
-        MutationAction.SetHyperlink.class,
+        CellMutationAction.SetHyperlink.class,
         tableCell.setHyperlink(Links.document("Budget!A1")).toStep("link").action());
     assertInstanceOf(
-        MutationAction.ClearHyperlink.class,
+        CellMutationAction.ClearHyperlink.class,
         tableCell.clearHyperlink().toStep("clear-link").action());
     assertInstanceOf(
-        MutationAction.SetComment.class,
+        CellMutationAction.SetComment.class,
         tableCell.setComment(Values.comment("raise", "Ada")).toStep("comment").action());
     assertInstanceOf(
-        MutationAction.ClearComment.class,
+        CellMutationAction.ClearComment.class,
         tableCell.clearComment().toStep("clear-comment").action());
     assertInstanceOf(InspectionQuery.GetCells.class, tableCell.read().toStep("read").query());
     assertInstanceOf(
@@ -203,14 +214,15 @@ class AuthoringTargetCoverageTest {
         Assertion.FormulaText.class,
         tableCell.formulaEquals("SUM(A1:A2)").toStep("formula").assertion());
 
-    Targets.NamedRangeRef namedRange = Targets.namedRange("BudgetRange");
-    Targets.NamedRangeRef namedRangeOnSheet = Targets.namedRangeOnSheet("BudgetRange", "Budget");
-    Targets.NamedRangeRef workbookNamedRange = Targets.workbookNamedRange("BudgetRange");
+    NamedRangeTarget namedRange = Targets.namedRange("BudgetRange");
+    NamedRangeTarget namedRangeOnSheet = Targets.namedRangeOnSheet("BudgetRange", "Budget");
+    NamedRangeTarget workbookNamedRange = Targets.workbookNamedRange("BudgetRange");
     assertInstanceOf(NamedRangeSelector.ByName.class, namedRange.selector());
     assertInstanceOf(NamedRangeSelector.SheetScope.class, namedRangeOnSheet.selector());
     assertInstanceOf(NamedRangeSelector.WorkbookScope.class, workbookNamedRange.selector());
     assertInstanceOf(
-        MutationAction.DeleteNamedRange.class, namedRange.delete().toStep("delete").action());
+        StructuredMutationAction.DeleteNamedRange.class,
+        namedRange.delete().toStep("delete").action());
     assertInstanceOf(
         InspectionQuery.GetNamedRanges.class, namedRange.inspect().toStep("inspect").query());
     assertInstanceOf(
@@ -223,9 +235,8 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         Assertion.NamedRangeAbsent.class, namedRange.absent().toStep("absent").assertion());
 
-    Targets.ChartRef chart = Targets.chart("Budget", "RevenueChart");
-    Targets.ChartRef allChartsOnSheet =
-        new Targets.ChartRef(new ChartSelector.AllOnSheet("Budget"));
+    ChartTarget chart = Targets.chart("Budget", "RevenueChart");
+    ChartTarget allChartsOnSheet = new ChartTarget(new ChartSelector.AllOnSheet("Budget"));
     InspectionStep namedChartInspection = chart.inspectOnSheet().toStep("named-chart");
     InspectionStep allChartsInspection = allChartsOnSheet.inspectOnSheet().toStep("all-charts");
     assertInstanceOf(SheetSelector.ByName.class, namedChartInspection.target());
@@ -235,12 +246,12 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(Assertion.ChartPresent.class, chart.present().toStep("present").assertion());
     assertInstanceOf(Assertion.ChartAbsent.class, chart.absent().toStep("absent").assertion());
 
-    Targets.PivotTableRef pivotTable = Targets.pivotTable("RevenuePivot");
-    Targets.PivotTableRef pivotTableOnSheet = Targets.pivotTableOnSheet("RevenuePivot", "Budget");
+    PivotTableTarget pivotTable = Targets.pivotTable("RevenuePivot");
+    PivotTableTarget pivotTableOnSheet = Targets.pivotTableOnSheet("RevenuePivot", "Budget");
     assertInstanceOf(PivotTableSelector.ByName.class, pivotTable.selector());
     assertInstanceOf(PivotTableSelector.ByNameOnSheet.class, pivotTableOnSheet.selector());
     assertInstanceOf(
-        MutationAction.DeletePivotTable.class,
+        StructuredMutationAction.DeletePivotTable.class,
         pivotTableOnSheet.delete().toStep("delete").action());
     assertInstanceOf(
         InspectionQuery.GetPivotTables.class, pivotTable.inspect().toStep("inspect").query());
@@ -257,39 +268,36 @@ class AuthoringTargetCoverageTest {
   void targetRefsRejectNullSelectorsImmediately() {
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.WorkbookRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new WorkbookTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.SheetRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new SheetTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.CellRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new CellTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.RangeRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new RangeTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.WindowRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new WindowTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.TableRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new TableTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.TableRowRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new TableRowTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.TableCellRef(null))
-            .getMessage());
+        assertThrows(NullPointerException.class, () -> new TableCellTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.NamedRangeRef(null))
-            .getMessage());
+        assertThrows(NullPointerException.class, () -> new NamedRangeTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.ChartRef(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new ChartTarget(null)).getMessage());
     assertEquals(
         "selector must not be null",
-        assertThrows(NullPointerException.class, () -> new Targets.PivotTableRef(null))
-            .getMessage());
+        assertThrows(NullPointerException.class, () -> new PivotTableTarget(null)).getMessage());
   }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.excel.*;
 import java.util.HashSet;
 
 /** Owns invariant checks for engine-native workbook, drawing, chart, and pivot-table snapshots. */
@@ -7,7 +8,7 @@ final class WorkbookInvariantEngineShapeChecks {
   private WorkbookInvariantEngineShapeChecks() {}
 
   static void requireEngineWorkbookSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary workbook) {
+      dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary workbook) {
     WorkbookInvariantChecks.require(workbook != null, "engine workbook summary must not be null");
     WorkbookInvariantChecks.require(
         workbook.sheetCount() >= 0, "engine sheetCount must not be negative");
@@ -26,13 +27,13 @@ final class WorkbookInvariantEngineShapeChecks {
         .forEach(
             sheetName -> WorkbookInvariantChecks.requireNonBlank(sheetName, "engine sheetName"));
     switch (workbook) {
-      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty empty -> {
+      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
             empty.sheetCount() == 0, "engine empty workbook summary must have sheetCount 0");
         WorkbookInvariantChecks.require(
             empty.sheetNames().isEmpty(), "engine empty workbook summary must have no sheet names");
       }
-      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets withSheets -> {
+      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets withSheets -> {
         WorkbookInvariantChecks.require(
             withSheets.sheetCount() > 0,
             "engine non-empty workbook summary must have positive sheetCount");
@@ -63,7 +64,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineSheetSummaryShape(
-      dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary sheet) {
+      dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary sheet) {
     WorkbookInvariantChecks.requireNonBlank(sheet.sheetName(), "engine sheetName");
     WorkbookInvariantChecks.require(
         sheet.visibility() != null, "engine visibility must not be null");
@@ -77,8 +78,8 @@ final class WorkbookInvariantEngineShapeChecks {
         sheet.lastColumnIndex() >= -1,
         "engine lastColumnIndex must be greater than or equal to -1");
     switch (sheet.protection()) {
-      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected _ -> {}
-      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected protectedSheet ->
+      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Unprotected _ -> {}
+      case dev.erst.gridgrind.excel.WorkbookSheetResult.SheetProtection.Protected protectedSheet ->
           WorkbookInvariantChecks.require(
               protectedSheet.settings() != null,
               "engine protected sheet settings must not be null");

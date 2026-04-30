@@ -16,7 +16,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Focused invocation-path tests for stdin discovery and execution behavior. */
-class GridGrindCliInvocationTest {
+class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   @Test
   void noArgInvocationWithEmptyStandardInputPrintsHelp() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -44,13 +44,7 @@ class GridGrindCliInvocationTest {
             .run(
                 new String[0],
                 new ByteArrayInputStream(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "steps": []
-                    }
-                    """
+                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 

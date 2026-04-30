@@ -36,23 +36,23 @@ public sealed interface CellReport {
   String displayValue();
 
   /** Style snapshot captured for this cell. */
-  GridGrindResponse.CellStyleReport style();
+  GridGrindWorkbookSurfaceReports.CellStyleReport style();
 
   /** Hyperlink metadata when the workbook stores a hyperlink for this cell. */
   Optional<HyperlinkTarget> hyperlink();
 
   /** Comment metadata when the workbook stores a comment for this cell. */
-  Optional<GridGrindResponse.CommentReport> comment();
+  Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment();
 
   /** CellReport for a cell with no value or formula. */
   record BlankReport(
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment)
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment)
       implements CellReport {
     public BlankReport {
       Objects.requireNonNull(address, "address must not be null");
@@ -75,10 +75,10 @@ public sealed interface CellReport {
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment,
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment,
       String stringValue,
       Optional<List<RichTextRunReport>> richText)
       implements CellReport {
@@ -109,10 +109,10 @@ public sealed interface CellReport {
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment,
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment,
       Double numberValue)
       implements CellReport {
     public NumberReport {
@@ -136,10 +136,10 @@ public sealed interface CellReport {
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment,
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment,
       Boolean booleanValue)
       implements CellReport {
     public BooleanReport {
@@ -163,10 +163,10 @@ public sealed interface CellReport {
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment,
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment,
       String errorValue)
       implements CellReport {
     public ErrorReport {
@@ -190,10 +190,10 @@ public sealed interface CellReport {
       String address,
       String declaredType,
       String displayValue,
-      GridGrindResponse.CellStyleReport style,
+      GridGrindWorkbookSurfaceReports.CellStyleReport style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT)
-          Optional<GridGrindResponse.CommentReport> comment,
+          Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment,
       String formula,
       CellReport evaluation)
       implements CellReport {

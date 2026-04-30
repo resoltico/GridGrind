@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -18,7 +18,8 @@ class TypeEntryTargetingSupportTest {
   @Test
   void resolvesOptionalTargetSurfaceAcrossSupportedRecordFamilies() {
     Optional<WorkbookStepTargeting.TargetSurface> mutationSurface =
-        TypeEntryTargetingSupport.optionalTargetSurfaceFor(MutationAction.EnsureSheet.class);
+        TypeEntryTargetingSupport.optionalTargetSurfaceFor(
+            WorkbookMutationAction.EnsureSheet.class);
     Optional<WorkbookStepTargeting.TargetSurface> assertionSurface =
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(Assertion.TablePresent.class);
     Optional<WorkbookStepTargeting.TargetSurface> querySurface =

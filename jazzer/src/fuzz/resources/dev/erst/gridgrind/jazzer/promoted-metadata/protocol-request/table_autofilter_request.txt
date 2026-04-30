@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/table_autofilter_request.json
 Harness: protocol-request
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'criteria'
 Input Bytes: 6063
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 6
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 4
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: ANALYZE_AUTOFILTER_HEALTH=1, ANALYZE_TABLE_HEALTH=1, GET_TABLES=1, GET_AUTOFILTERS=1
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_RANGE=2, SET_AUTOFILTER=2, SET_TABLE=1, ENSURE_SHEET=1
+Operation Kinds: (none)

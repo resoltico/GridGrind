@@ -3,8 +3,12 @@ package dev.erst.gridgrind.executor;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
+import dev.erst.gridgrind.contract.dto.GridGrindSchemaAndFormulaReports;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -47,16 +51,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B2"),
-                            new MutationAction.SetRange(
+                            new CellMutationAction.SetRange(
                                 List.of(
                                     List.of(textCell("Item"), textCell("Amount")),
                                     List.of(textCell("Hosting"), new CellInput.Numeric(49.0))))),
                         mutate(
-                            new MutationAction.SetTable(
-                                new TableInput(
+                            new StructuredMutationAction.SetTable(
+                                TableInput.withDefaultMetadata(
                                     "BudgetTable",
                                     "Budget",
                                     "A1:B2",
@@ -130,13 +135,14 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new MutationAction.SetCell(textCell("Memo"))),
+                            new CellMutationAction.SetCell(textCell("Memo"))),
                         mutate(
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new MutationAction.SetHyperlink(
+                            new CellMutationAction.SetHyperlink(
                                 new HyperlinkTarget.File(linkedFile.toString())))),
                     inspect(
                         "cells",
@@ -185,24 +191,25 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
                         mutate(
-                            new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.AppendRow(
+                            new CellMutationAction.AppendRow(
                                 List.of(textCell("Item"), textCell("Amount")))),
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.AppendRow(
+                            new CellMutationAction.AppendRow(
                                 List.of(textCell("Hosting"), new CellInput.Numeric(49.0)))),
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.AppendRow(
+                            new CellMutationAction.AppendRow(
                                 List.of(textCell("Domain"), new CellInput.Numeric(12.0)))),
                         mutate(
                             new CellSelector.ByAddress("Budget", "B4"),
-                            new MutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
+                            new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
                         mutate(
-                            new MutationAction.SetNamedRange(
+                            new StructuredMutationAction.SetNamedRange(
                                 "BudgetTotal",
                                 new NamedRangeScope.Workbook(),
                                 new NamedRangeTarget("Budget", "B4")))),
@@ -224,13 +231,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new InspectionQuery.AnalyzeFormulaHealth())));
 
     GridGrindResponse.Success success = success(response);
-    GridGrindResponse.FormulaSurfaceReport formula =
+    GridGrindSchemaAndFormulaReports.FormulaSurfaceReport formula =
         read(success, "formula", InspectionResult.FormulaSurfaceResult.class).analysis();
-    GridGrindResponse.SheetSchemaReport schema =
+    GridGrindSchemaAndFormulaReports.SheetSchemaReport schema =
         read(success, "schema", InspectionResult.SheetSchemaResult.class).analysis();
-    GridGrindResponse.NamedRangeSurfaceReport ranges =
+    GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport ranges =
         read(success, "ranges", InspectionResult.NamedRangeSurfaceResult.class).analysis();
-    GridGrindResponse.FormulaHealthReport formulaHealth =
+    GridGrindAnalysisReports.FormulaHealthReport formulaHealth =
         read(success, "formula-health", InspectionResult.FormulaHealthResult.class).analysis();
 
     assertEquals(1, formula.totalFormulaCellCount());
@@ -252,7 +259,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(0, ranges.formulaBackedCount());
     assertEquals("BudgetTotal", ranges.namedRanges().getFirst().name());
     assertEquals(
-        GridGrindResponse.NamedRangeBackingKind.RANGE, ranges.namedRanges().getFirst().kind());
+        GridGrindSchemaAndFormulaReports.NamedRangeBackingKind.RANGE,
+        ranges.namedRanges().getFirst().kind());
     assertEquals(1, formulaHealth.checkedFormulaCellCount());
     assertEquals(0, formulaHealth.summary().totalCount());
   }
@@ -269,7 +277,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Missing"),
-                                new MutationAction.MoveSheet(0))))));
+                                new WorkbookMutationAction.MoveSheet(0))))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -289,13 +297,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new SheetSelector.ByName("Summary"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.RenameSheet("Summary"))))));
+                                new WorkbookMutationAction.RenameSheet("Summary"))))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -317,10 +325,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.MoveSheet(1))))));
+                                new WorkbookMutationAction.MoveSheet(1))))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("MOVE_SHEET", executeStepContext(failure).stepType());
@@ -337,7 +345,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             IllegalArgumentException.class,
             () ->
                 mutate(
-                    new RangeSelector.ByRange("Budget", "A1:"), new MutationAction.MergeCells()));
+                    new RangeSelector.ByRange("Budget", "A1:"),
+                    new WorkbookMutationAction.MergeCells()));
 
     assertEquals("range address must not be blank", failure.getMessage());
   }
@@ -354,10 +363,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new RangeSelector.ByRange("Budget", "A1:B2"),
-                                new MutationAction.UnmergeCells())))));
+                                new WorkbookMutationAction.UnmergeCells())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("UNMERGE_CELLS", executeStepContext(failure).stepType());
@@ -378,7 +387,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Missing"),
-                                new MutationAction.SetSheetPane(
+                                new WorkbookMutationAction.SetSheetPane(
                                     new PaneInput.Frozen(1, 1, 1, 1)))))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
@@ -398,7 +407,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet())),
+                                new WorkbookMutationAction.EnsureSheet())),
                         inspect(
                             "ranges",
                             new dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf(
@@ -445,7 +454,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         mutations(
                             mutate(
                                 new CellSelector.ByAddress("Budget", "C3"),
-                                new MutationAction.SetCell(textCell("After")))),
+                                new CellMutationAction.SetCell(textCell("After")))),
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses("Budget", List.of("C3")),
@@ -499,7 +508,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.AutoSizeColumns())))));
+                                new WorkbookMutationAction.AutoSizeColumns())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -565,10 +574,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.DeleteSheet())))));
+                                new WorkbookMutationAction.DeleteSheet())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -589,15 +598,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Alpha"),
-                                new MutationAction.EnsureSheet()),
-                            mutate(
-                                new SheetSelector.ByName("Beta"), new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new SheetSelector.ByName("Beta"),
-                                new MutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN)),
+                                new WorkbookMutationAction.EnsureSheet()),
+                            mutate(
+                                new SheetSelector.ByName("Beta"),
+                                new WorkbookMutationAction.SetSheetVisibility(
+                                    ExcelSheetVisibility.HIDDEN)),
                             mutate(
                                 new SheetSelector.ByName("Alpha"),
-                                new MutationAction.DeleteSheet())))));
+                                new WorkbookMutationAction.DeleteSheet())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -622,7 +633,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet())))));
+                                new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
@@ -711,10 +722,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         null,
                         mutations(
                             mutate(
-                                new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                                new SheetSelector.ByName("Data"),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Data", "A1"),
-                                new MutationAction.SetCell(formulaCell("SUM(")))),
+                                new CellMutationAction.SetCell(formulaCell("SUM(")))),
                         inspections())));
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
@@ -738,10 +750,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         null,
                         mutations(
                             mutate(
-                                new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                                new SheetSelector.ByName("Data"),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Data", "A1"),
-                                new MutationAction.SetCell(formulaCell("[^owe_e`ffffff")))))));
+                                new CellMutationAction.SetCell(formulaCell("[^owe_e`ffffff")))))));
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
     assertEquals(GridGrindProblemCategory.FORMULA, failure.problem().category());
@@ -768,10 +781,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
-                        mutate(new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Data"),
+                            new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Data", "A1"),
-                            new MutationAction.SetCell(formulaCell("LAMBDA(x,x*2)(5)")))))));
+                            new CellMutationAction.SetCell(formulaCell("LAMBDA(x,x*2)(5)")))))));
     GridGrindResponse.Failure letFailure =
         failure(
             executor.execute(
@@ -779,10 +794,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
                     mutations(
-                        mutate(new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Data"),
+                            new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Data", "A1"),
-                            new MutationAction.SetCell(formulaCell("LET(x,5,x*2)")))))));
+                            new CellMutationAction.SetCell(formulaCell("LET(x,5,x*2)")))))));
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, lambdaFailure.problem().code());
     assertEquals("Invalid formula at Data!A1: LAMBDA(x,x*2)(5)", lambdaFailure.problem().message());
@@ -809,16 +826,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         null,
                         mutations(
                             mutate(
-                                new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                                new SheetSelector.ByName("Data"),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Data", "A1"),
-                                new MutationAction.SetCell(new CellInput.Numeric(1.0))),
+                                new CellMutationAction.SetCell(new CellInput.Numeric(1.0))),
                             mutate(
                                 new CellSelector.ByAddress("Data", "B1"),
-                                new MutationAction.SetCell(new CellInput.Numeric(2.0))),
+                                new CellMutationAction.SetCell(new CellInput.Numeric(2.0))),
                             mutate(
                                 new CellSelector.ByAddress("Data", "C1"),
-                                new MutationAction.SetCell(
+                                new CellMutationAction.SetCell(
                                     formulaCell("TEXTAFTER(\"a,b\",\",\")")))),
                         inspections())));
 
@@ -840,8 +858,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     Optional<String> failure =
         executor.calculationPolicyFailure(
-            new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+            WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 executionPolicy(calculateAll()),
@@ -850,7 +867,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new MutationStep(
                         "step-0",
                         new SheetSelector.ByName("Data"),
-                        new MutationAction.EnsureSheet()),
+                        new WorkbookMutationAction.EnsureSheet()),
                     new InspectionStep(
                         "summary",
                         new WorkbookSelector.Current(),
@@ -858,7 +875,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new MutationStep(
                         "step-2",
                         new CellSelector.ByAddress("Data", "A1"),
-                        new MutationAction.SetCell(new CellInput.Numeric(1.0))))));
+                        new CellMutationAction.SetCell(new CellInput.Numeric(1.0))))));
 
     assertTrue(failure.orElseThrow().contains("mutation-to-observation boundary"));
   }
@@ -895,7 +912,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         ExecutionModeInput.WriteMode.STREAMING_WRITE),
                     calculateAll()),
                 null,
-                List.of(mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                List.of(
+                    mutate(
+                        new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
                 List.of(),
                 List.of()));
 
@@ -916,10 +935,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         null,
                         mutations(
                             mutate(
-                                new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
+                                new SheetSelector.ByName("Data"),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Data", "C1"),
-                                new MutationAction.SetCell(
+                                new CellMutationAction.SetCell(
                                     formulaCell("TEXTAFTER(\"a,b\",\",\")")))),
                         inspect(
                             "summary",
@@ -958,7 +978,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.EnsureSheet())))));
+                            new WorkbookMutationAction.EnsureSheet())))));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
@@ -989,7 +1009,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.AutoSizeColumns())))));
+                            new WorkbookMutationAction.AutoSizeColumns())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -1002,12 +1022,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
-  void returnsStructuredFailureForNullRequests() {
-    GridGrindResponse.Failure failure =
-        failure(new DefaultGridGrindRequestExecutor().execute(null));
+  void rejectsNullRequestsAtTheBoundary() {
+    NullPointerException failure =
+        assertThrows(
+            NullPointerException.class, () -> new DefaultGridGrindRequestExecutor().execute(null));
 
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals("request must not be null", failure.getMessage());
   }
 
   @Test

@@ -14,7 +14,10 @@ import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
+import dev.erst.gridgrind.contract.dto.GridGrindLayoutSurfaceReports;
+import dev.erst.gridgrind.contract.dto.GridGrindSchemaAndFormulaReports;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
@@ -157,7 +160,8 @@ public sealed interface InspectionResult
           WorkbookFindingsResult {}
 
   /** Returns workbook-level summary facts. */
-  record WorkbookSummaryResult(String stepId, GridGrindResponse.WorkbookSummary workbook)
+  record WorkbookSummaryResult(
+      String stepId, GridGrindWorkbookSurfaceReports.WorkbookSummary workbook)
       implements Introspection {
     public WorkbookSummaryResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -202,7 +206,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns named ranges selected by the originating read operation. */
-  record NamedRangesResult(String stepId, List<GridGrindResponse.NamedRangeReport> namedRanges)
+  record NamedRangesResult(
+      String stepId, List<GridGrindWorkbookSurfaceReports.NamedRangeReport> namedRanges)
       implements Introspection {
     public NamedRangesResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -211,7 +216,7 @@ public sealed interface InspectionResult
   }
 
   /** Returns summary facts for one sheet. */
-  record SheetSummaryResult(String stepId, GridGrindResponse.SheetSummaryReport sheet)
+  record SheetSummaryResult(String stepId, GridGrindWorkbookSurfaceReports.SheetSummaryReport sheet)
       implements Introspection {
     public SheetSummaryResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -240,7 +245,7 @@ public sealed interface InspectionResult
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  record WindowResult(String stepId, GridGrindResponse.WindowReport window)
+  record WindowResult(String stepId, GridGrindLayoutSurfaceReports.WindowReport window)
       implements Introspection {
     public WindowResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -250,7 +255,9 @@ public sealed interface InspectionResult
 
   /** Returns every merged region present on one sheet. */
   record MergedRegionsResult(
-      String stepId, String sheetName, List<GridGrindResponse.MergedRegionReport> mergedRegions)
+      String stepId,
+      String sheetName,
+      List<GridGrindLayoutSurfaceReports.MergedRegionReport> mergedRegions)
       implements Introspection {
     public MergedRegionsResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -261,7 +268,9 @@ public sealed interface InspectionResult
 
   /** Returns hyperlink metadata for selected cells on one sheet. */
   record HyperlinksResult(
-      String stepId, String sheetName, List<GridGrindResponse.CellHyperlinkReport> hyperlinks)
+      String stepId,
+      String sheetName,
+      List<GridGrindLayoutSurfaceReports.CellHyperlinkReport> hyperlinks)
       implements Introspection {
     public HyperlinksResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -272,7 +281,9 @@ public sealed interface InspectionResult
 
   /** Returns comment metadata for selected cells on one sheet. */
   record CommentsResult(
-      String stepId, String sheetName, List<GridGrindResponse.CellCommentReport> comments)
+      String stepId,
+      String sheetName,
+      List<GridGrindLayoutSurfaceReports.CellCommentReport> comments)
       implements Introspection {
     public CommentsResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -323,7 +334,7 @@ public sealed interface InspectionResult
   }
 
   /** Returns layout facts such as pane state, zoom, and explicit sizing. */
-  record SheetLayoutResult(String stepId, GridGrindResponse.SheetLayoutReport layout)
+  record SheetLayoutResult(String stepId, GridGrindLayoutSurfaceReports.SheetLayoutReport layout)
       implements Introspection {
     public SheetLayoutResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -383,7 +394,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns grouped formula usage facts across one or more sheets. */
-  record FormulaSurfaceResult(String stepId, GridGrindResponse.FormulaSurfaceReport analysis)
+  record FormulaSurfaceResult(
+      String stepId, GridGrindSchemaAndFormulaReports.FormulaSurfaceReport analysis)
       implements Introspection {
     public FormulaSurfaceResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -392,7 +404,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns inferred schema facts for one sheet window. */
-  record SheetSchemaResult(String stepId, GridGrindResponse.SheetSchemaReport analysis)
+  record SheetSchemaResult(
+      String stepId, GridGrindSchemaAndFormulaReports.SheetSchemaReport analysis)
       implements Introspection {
     public SheetSchemaResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -401,7 +414,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns high-level characterization of named ranges. */
-  record NamedRangeSurfaceResult(String stepId, GridGrindResponse.NamedRangeSurfaceReport analysis)
+  record NamedRangeSurfaceResult(
+      String stepId, GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport analysis)
       implements Introspection {
     public NamedRangeSurfaceResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -410,7 +424,7 @@ public sealed interface InspectionResult
   }
 
   /** Returns formula-health findings. */
-  record FormulaHealthResult(String stepId, GridGrindResponse.FormulaHealthReport analysis)
+  record FormulaHealthResult(String stepId, GridGrindAnalysisReports.FormulaHealthReport analysis)
       implements Analysis {
     public FormulaHealthResult {
       stepId = requireNonBlank(stepId, "stepId");
@@ -463,8 +477,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns hyperlink-health findings. */
-  record HyperlinkHealthResult(String stepId, GridGrindResponse.HyperlinkHealthReport analysis)
-      implements Analysis {
+  record HyperlinkHealthResult(
+      String stepId, GridGrindAnalysisReports.HyperlinkHealthReport analysis) implements Analysis {
     public HyperlinkHealthResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -472,8 +486,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns named-range-health findings. */
-  record NamedRangeHealthResult(String stepId, GridGrindResponse.NamedRangeHealthReport analysis)
-      implements Analysis {
+  record NamedRangeHealthResult(
+      String stepId, GridGrindAnalysisReports.NamedRangeHealthReport analysis) implements Analysis {
     public NamedRangeHealthResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -481,8 +495,8 @@ public sealed interface InspectionResult
   }
 
   /** Returns aggregated workbook findings. */
-  record WorkbookFindingsResult(String stepId, GridGrindResponse.WorkbookFindingsReport analysis)
-      implements Analysis {
+  record WorkbookFindingsResult(
+      String stepId, GridGrindAnalysisReports.WorkbookFindingsReport analysis) implements Analysis {
     public WorkbookFindingsResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");

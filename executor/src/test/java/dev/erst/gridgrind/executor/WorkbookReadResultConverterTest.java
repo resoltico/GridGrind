@@ -4,6 +4,7 @@ import static dev.erst.gridgrind.executor.ProtocolStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
@@ -30,6 +31,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for converting advanced engine read results into protocol response shapes. */
@@ -40,7 +42,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.PackageSecurityResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.PackageSecurityResult(
+                new dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult(
                     "security",
                     new ExcelOoxmlPackageSecuritySnapshot(
                         new ExcelOoxmlEncryptionSnapshot(
@@ -71,7 +73,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.CustomXmlMappingsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.CustomXmlMappingsResult(
+                new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlMappingsResult(
                     "custom-xml-mappings",
                     List.of(
                         new ExcelCustomXmlMappingSnapshot(
@@ -98,7 +100,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.CustomXmlExportResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.CustomXmlExportResult(
+                new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlExportResult(
                     "custom-xml-export",
                     new ExcelCustomXmlExportSnapshot(
                         new ExcelCustomXmlMappingSnapshot(
@@ -136,7 +138,7 @@ class InspectionResultConverterTest {
   @Test
   void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
     assertTrue(InspectionResultCellReportSupport.toCommentReport((ExcelComment) null).isEmpty());
-    GridGrindResponse.CommentReport plainComment =
+    GridGrindWorkbookSurfaceReports.CommentReport plainComment =
         InspectionResultCellReportSupport.toCommentReport(
                 new ExcelComment("Review", "GridGrind", false))
             .orElseThrow();
@@ -168,7 +170,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.WorkbookProtectionResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookProtectionResult(
+                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
                     "workbook-protection",
                     new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
     assertTrue(protection.protection().structureLocked());
@@ -179,7 +181,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.CellsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
                     "cells", "Budget", List.of(advancedCell()))));
     dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
         assertInstanceOf(
@@ -204,11 +206,11 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.CommentsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.CommentsResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.CommentsResult(
                     "comments",
                     "Budget",
                     List.of(
-                        new dev.erst.gridgrind.excel.WorkbookReadResult.CellComment(
+                        new dev.erst.gridgrind.excel.WorkbookSheetResult.CellComment(
                             "C3", richComment())))));
     assertEquals(2, comments.comments().getFirst().comment().runs().orElseThrow().size());
     assertEquals(6, comments.comments().getFirst().comment().anchor().orElseThrow().lastRow());
@@ -219,18 +221,20 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.PrintLayoutResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.PrintLayoutResult(
                     "print-layout", "Budget", advancedPrintLayout())));
     InspectionResult.SheetLayoutResult sheetLayout =
         assertInstanceOf(
             InspectionResult.SheetLayoutResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayoutResult(
                     "sheet-layout", advancedSheetLayout())));
     assertFalse(sheetLayout.layout().presentation().display().displayGridlines());
     assertEquals(
         "#112233",
-        assertInstanceOf(CellColorReport.Rgb.class, sheetLayout.layout().presentation().tabColor())
+        assertInstanceOf(
+                CellColorReport.Rgb.class,
+                sheetLayout.layout().presentation().tabColor().orElseThrow())
             .rgb());
     assertEquals(12, sheetLayout.layout().presentation().sheetDefaults().defaultColumnWidth());
     assertEquals("B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range());
@@ -247,7 +251,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.AutofiltersResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult(
+                new dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult(
                     "autofilters", "Budget", advancedAutofilters())));
     AutofilterEntryReport.SheetOwned sheetOwned =
         assertInstanceOf(
@@ -266,6 +270,13 @@ class InspectionResultConverterTest {
     assertInstanceOf(
         AutofilterFilterCriterionReport.Icon.class, sheetOwned.filterColumns().get(5).criterion());
     assertEquals("A1:F5", sheetOwned.sortState().range());
+    assertEquals(3, sheetOwned.sortState().conditions().size());
+    assertInstanceOf(
+        AutofilterSortConditionReport.CellColor.class, sheetOwned.sortState().conditions().get(0));
+    assertInstanceOf(
+        AutofilterSortConditionReport.FontColor.class, sheetOwned.sortState().conditions().get(1));
+    assertInstanceOf(
+        AutofilterSortConditionReport.Icon.class, sheetOwned.sortState().conditions().get(2));
     assertInstanceOf(AutofilterEntryReport.TableOwned.class, autofilters.autofilters().get(1));
   }
 
@@ -274,10 +285,17 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.TablesResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult(
-                    "tables", List.of(advancedTable()))));
-    assertEquals("HeaderStyle", tables.tables().getFirst().headerRowCellStyle());
-    assertEquals("Total", tables.tables().getFirst().columns().get(1).totalsRowLabel());
+                new dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult(
+                    "tables", List.of(advancedTable(), normalizedOptionalTable()))));
+    assertEquals(Optional.of("HeaderStyle"), tables.tables().getFirst().headerRowCellStyle());
+    assertEquals(
+        Optional.of("Total"), tables.tables().getFirst().columns().get(1).totalsRowLabel());
+    assertEquals(Optional.empty(), tables.tables().get(1).comment());
+    assertEquals(Optional.empty(), tables.tables().get(1).headerRowCellStyle());
+    assertEquals(Optional.empty(), tables.tables().get(1).dataCellStyle());
+    assertEquals(Optional.empty(), tables.tables().get(1).totalsRowCellStyle());
+    assertEquals(Optional.empty(), tables.tables().get(1).columns().getFirst().uniqueName());
+    assertEquals(Optional.empty(), tables.tables().get(1).columns().getFirst().totalsRowLabel());
   }
 
   private static void assertConditionalFormattingResult() {
@@ -285,7 +303,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.ConditionalFormattingResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult(
+                new dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult(
                     "conditional-formatting",
                     "Budget",
                     List.of(
@@ -304,7 +322,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.DrawingObjectsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectsResult(
+                new dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult(
                     "drawing-objects",
                     "Budget",
                     List.of(
@@ -373,7 +391,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.DrawingObjectPayloadResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectPayloadResult(
+                new dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectPayloadResult(
                     "drawing-payload",
                     "Budget",
                     new ExcelDrawingObjectPayload.EmbeddedObject(
@@ -430,7 +448,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.PivotTablesResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult(
+                new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
                     "pivots",
                     List.of(
                         new ExcelPivotTableSnapshot.Supported(
@@ -458,7 +476,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.PivotTableHealthResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTableHealthResult(
+                new dev.erst.gridgrind.excel.WorkbookAnalysisResult.PivotTableHealthResult(
                     "pivot-health",
                     new WorkbookAnalysis.PivotTableHealth(
                         1,
@@ -493,7 +511,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.ArrayFormulasResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.ArrayFormulasResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.ArrayFormulasResult(
                     "array-formulas",
                     List.of(
                         new ExcelArrayFormulaSnapshot("Calc", "D2:D4", "D2", "B2:B4*C2:C4", false),
@@ -511,7 +529,7 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             InspectionResult.PivotTablesResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult(
+                new dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult(
                     "pivots",
                     List.of(
                         new ExcelPivotTableSnapshot.Supported(
@@ -703,8 +721,8 @@ class InspectionResultConverterTest {
     assertEquals("AREA", unsupportedPlot.plotTypeToken());
   }
 
-  private static dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult baseChartsResult() {
-    return new dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult(
+  private static dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult baseChartsResult() {
+    return new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
         "charts",
         "Budget",
         List.of(
@@ -744,8 +762,9 @@ class InspectionResultConverterTest {
                                 "ChartValues", null, List.of("10.0", "18.0", "15.0"))))))));
   }
 
-  private static dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult advancedChartsResult() {
-    return new dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult(
+  private static dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult
+      advancedChartsResult() {
+    return new dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult(
         "charts-advanced",
         "Budget",
         List.of(
@@ -926,8 +945,8 @@ class InspectionResultConverterTest {
             List.of(2, 4)));
   }
 
-  private static dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout advancedSheetLayout() {
-    return new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
+  private static dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout advancedSheetLayout() {
+    return new dev.erst.gridgrind.excel.WorkbookSheetResult.SheetLayout(
         "Budget",
         new ExcelSheetPane.Frozen(1, 1, 1, 1),
         125,
@@ -943,10 +962,10 @@ class InspectionResultConverterTest {
                         ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
                         ExcelIgnoredErrorType.FORMULA)))),
         List.of(
-            new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
+            new dev.erst.gridgrind.excel.WorkbookSheetResult.ColumnLayout(
                 0, 16.0d, false, 0, false)),
         List.of(
-            new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 20.0d, false, 0, false)));
+            new dev.erst.gridgrind.excel.WorkbookSheetResult.RowLayout(0, 20.0d, false, 0, false)));
   }
 
   private static List<ExcelAutofilterSnapshot> advancedAutofilters() {
@@ -955,10 +974,13 @@ class InspectionResultConverterTest {
             "A1:F5",
             true,
             false,
-            "",
+            java.util.Optional.empty(),
             List.of(
-                new ExcelAutofilterSortConditionSnapshot(
-                    "A2:A5", true, "", ExcelColorSnapshot.rgb("#AABBCC"), 1)));
+                new ExcelAutofilterSortConditionSnapshot.CellColor(
+                    "A2:A5", true, ExcelColorSnapshot.rgb("#AABBCC")),
+                new ExcelAutofilterSortConditionSnapshot.FontColor(
+                    "B2:B5", false, ExcelColorSnapshot.theme(4, 0.15d)),
+                new ExcelAutofilterSortConditionSnapshot.Icon("C2:C5", false, 2)));
     List<ExcelAutofilterFilterColumnSnapshot> filterColumns =
         List.of(
             new ExcelAutofilterFilterColumnSnapshot(
@@ -1014,6 +1036,26 @@ class InspectionResultConverterTest {
         "HeaderStyle",
         "DataStyle",
         "TotalsStyle");
+  }
+
+  private static ExcelTableSnapshot normalizedOptionalTable() {
+    return new ExcelTableSnapshot(
+        "OptionalTable",
+        "Budget",
+        "D1:E2",
+        1,
+        0,
+        List.of("Code"),
+        List.of(new ExcelTableColumnSnapshot(3L, "Code", null, " ", "", " ")),
+        new ExcelTableStyleSnapshot.None(),
+        false,
+        " ",
+        false,
+        false,
+        false,
+        "",
+        " ",
+        null);
   }
 
   private static ExcelDifferentialStyleSnapshot differentialStyle() {

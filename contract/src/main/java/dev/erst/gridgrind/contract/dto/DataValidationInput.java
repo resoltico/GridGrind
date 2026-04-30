@@ -7,27 +7,27 @@ import java.util.Objects;
 /** Complete protocol-facing definition of one supported data-validation rule. */
 public record DataValidationInput(
     DataValidationRuleInput rule,
-    Boolean allowBlank,
-    Boolean suppressDropDownArrow,
+    boolean allowBlank,
+    boolean suppressDropDownArrow,
     DataValidationPromptInput prompt,
     DataValidationErrorAlertInput errorAlert) {
   public DataValidationInput {
     Objects.requireNonNull(rule, "rule must not be null");
-    Objects.requireNonNull(allowBlank, "allowBlank must not be null");
-    Objects.requireNonNull(suppressDropDownArrow, "suppressDropDownArrow must not be null");
   }
 
+  /** Creates one authored data-validation definition with explicit wire booleans. */
   @JsonCreator
-  static DataValidationInput create(
+  public DataValidationInput(
       @JsonProperty("rule") DataValidationRuleInput rule,
       @JsonProperty("allowBlank") Boolean allowBlank,
       @JsonProperty("suppressDropDownArrow") Boolean suppressDropDownArrow,
       @JsonProperty("prompt") DataValidationPromptInput prompt,
       @JsonProperty("errorAlert") DataValidationErrorAlertInput errorAlert) {
-    return new DataValidationInput(
+    this(
         rule,
-        Boolean.TRUE.equals(allowBlank),
-        Boolean.TRUE.equals(suppressDropDownArrow),
+        Objects.requireNonNull(allowBlank, "allowBlank must not be null").booleanValue(),
+        Objects.requireNonNull(suppressDropDownArrow, "suppressDropDownArrow must not be null")
+            .booleanValue(),
         prompt,
         errorAlert);
   }

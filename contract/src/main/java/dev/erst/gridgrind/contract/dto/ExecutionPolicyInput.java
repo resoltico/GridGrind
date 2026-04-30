@@ -1,9 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
@@ -11,18 +8,7 @@ import java.util.Objects;
  * explicit calculation handling.
  */
 public record ExecutionPolicyInput(
-    @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionPolicyInput.ExecutionModeDefaultFilter.class)
-        ExecutionModeInput mode,
-    @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionPolicyInput.ExecutionJournalDefaultFilter.class)
-        ExecutionJournalInput journal,
-    @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionPolicyInput.CalculationPolicyDefaultFilter.class)
-        CalculationPolicyInput calculation) {
+    ExecutionModeInput mode, ExecutionJournalInput journal, CalculationPolicyInput calculation) {
   /** Returns the default execution policy for mode, journaling, and calculation handling. */
   public static ExecutionPolicyInput defaults() {
     return new ExecutionPolicyInput(
@@ -37,46 +23,40 @@ public record ExecutionPolicyInput(
         ExecutionModeInput.defaults(), ExecutionJournalInput.defaults(), calculation);
   }
 
+  /** Returns an execution policy that only sets the execution mode. */
+  public static ExecutionPolicyInput mode(ExecutionModeInput mode) {
+    return new ExecutionPolicyInput(
+        mode, ExecutionJournalInput.defaults(), CalculationPolicyInput.defaults());
+  }
+
+  /** Returns an execution policy that only customizes journal rendering. */
+  public static ExecutionPolicyInput journal(ExecutionJournalInput journal) {
+    return new ExecutionPolicyInput(
+        ExecutionModeInput.defaults(), journal, CalculationPolicyInput.defaults());
+  }
+
+  /**
+   * Returns an execution policy that customizes mode and journal while leaving calculation at the
+   * default.
+   */
+  public static ExecutionPolicyInput modeAndJournal(
+      ExecutionModeInput mode, ExecutionJournalInput journal) {
+    return new ExecutionPolicyInput(mode, journal, CalculationPolicyInput.defaults());
+  }
+
+  /**
+   * Returns an execution policy that customizes mode and calculation while leaving journaling at
+   * the default.
+   */
+  public static ExecutionPolicyInput modeAndCalculation(
+      ExecutionModeInput mode, CalculationPolicyInput calculation) {
+    return new ExecutionPolicyInput(mode, ExecutionJournalInput.defaults(), calculation);
+  }
+
   public ExecutionPolicyInput {
     Objects.requireNonNull(mode, "mode must not be null");
     Objects.requireNonNull(journal, "journal must not be null");
     Objects.requireNonNull(calculation, "calculation must not be null");
-  }
-
-  /** Creates an execution policy that only sets the read/write execution mode family. */
-  public ExecutionPolicyInput(ExecutionModeInput mode) {
-    this(mode, ExecutionJournalInput.defaults(), CalculationPolicyInput.defaults());
-  }
-
-  /** Creates an execution policy that only customizes journal rendering. */
-  public ExecutionPolicyInput(ExecutionJournalInput journal) {
-    this(ExecutionModeInput.defaults(), journal, CalculationPolicyInput.defaults());
-  }
-
-  /**
-   * Creates an execution policy that sets mode and journal settings but leaves calculation
-   * defaulted.
-   */
-  public ExecutionPolicyInput(ExecutionModeInput mode, ExecutionJournalInput journal) {
-    this(mode, journal, CalculationPolicyInput.defaults());
-  }
-
-  /**
-   * Creates an execution policy that sets mode and calculation while leaving journaling defaulted.
-   */
-  public ExecutionPolicyInput(ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    this(mode, ExecutionJournalInput.defaults(), calculation);
-  }
-
-  @JsonCreator
-  static ExecutionPolicyInput create(
-      @JsonProperty("mode") ExecutionModeInput mode,
-      @JsonProperty("journal") ExecutionJournalInput journal,
-      @JsonProperty("calculation") CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(
-        mode == null ? ExecutionModeInput.defaults() : mode,
-        journal == null ? ExecutionJournalInput.defaults() : journal,
-        calculation == null ? CalculationPolicyInput.defaults() : calculation);
   }
 
   /**
@@ -85,19 +65,6 @@ public record ExecutionPolicyInput(
   @JsonIgnore
   public boolean isDefault() {
     return mode.isDefault() && journal.isDefault() && calculation.isDefault();
-  }
-
-  /** Custom Jackson inclusion filter that omits the default execution-policy object. */
-  public static final class DefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof ExecutionPolicyInput input && input.isDefault());
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
   }
 
   /** Returns the effective execution mode after applying GridGrind defaults. */
@@ -116,44 +83,5 @@ public record ExecutionPolicyInput(
   @JsonIgnore
   public CalculationPolicyInput effectiveCalculation() {
     return calculation;
-  }
-
-  /** Custom Jackson inclusion filter that omits the default execution mode object. */
-  public static final class ExecutionModeDefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof ExecutionModeInput input && input.isDefault());
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-  }
-
-  /** Custom Jackson inclusion filter that omits the default execution journal object. */
-  public static final class ExecutionJournalDefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof ExecutionJournalInput input && input.isDefault());
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
-  }
-
-  /** Custom Jackson inclusion filter that omits the default calculation policy object. */
-  public static final class CalculationPolicyDefaultFilter {
-    @Override
-    public boolean equals(Object other) {
-      return other == null || (other instanceof CalculationPolicyInput input && input.isDefault());
-    }
-
-    @Override
-    public int hashCode() {
-      return 0;
-    }
   }
 }

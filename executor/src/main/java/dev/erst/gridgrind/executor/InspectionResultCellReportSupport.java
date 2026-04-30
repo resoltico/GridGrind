@@ -11,7 +11,7 @@ import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.RichTextRunReport;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
@@ -46,20 +46,23 @@ final class InspectionResultCellReportSupport {
         });
   }
 
-  static Optional<GridGrindResponse.CommentReport> toCommentReport(ExcelComment comment) {
+  static Optional<GridGrindWorkbookSurfaceReports.CommentReport> toCommentReport(
+      ExcelComment comment) {
     if (comment == null) {
       return Optional.empty();
     }
     return Optional.of(
-        new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible()));
+        new GridGrindWorkbookSurfaceReports.CommentReport(
+            comment.text(), comment.author(), comment.visible()));
   }
 
-  static Optional<GridGrindResponse.CommentReport> toCommentReport(ExcelCommentSnapshot comment) {
+  static Optional<GridGrindWorkbookSurfaceReports.CommentReport> toCommentReport(
+      ExcelCommentSnapshot comment) {
     if (comment == null) {
       return Optional.empty();
     }
     return Optional.of(
-        new GridGrindResponse.CommentReport(
+        new GridGrindWorkbookSurfaceReports.CommentReport(
             comment.text(),
             comment.author(),
             comment.visible(),
@@ -73,8 +76,9 @@ final class InspectionResultCellReportSupport {
         : new FontHeightReport(fontHeight.twips(), fontHeight.points());
   }
 
-  static GridGrindResponse.CellStyleReport toCellStyleReport(ExcelCellStyleSnapshot style) {
-    return new GridGrindResponse.CellStyleReport(
+  static GridGrindWorkbookSurfaceReports.CellStyleReport toCellStyleReport(
+      ExcelCellStyleSnapshot style) {
+    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
         style.numberFormat(),
         new CellAlignmentReport(
             style.alignment().wrapText(),
@@ -108,10 +112,10 @@ final class InspectionResultCellReportSupport {
   }
 
   static dev.erst.gridgrind.contract.dto.CellReport toCellReport(ExcelCellSnapshot snapshot) {
-    GridGrindResponse.CellStyleReport style = toCellStyleReport(snapshot.style());
+    GridGrindWorkbookSurfaceReports.CellStyleReport style = toCellStyleReport(snapshot.style());
     Optional<HyperlinkTarget> hyperlink =
         toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
-    Optional<GridGrindResponse.CommentReport> comment =
+    Optional<GridGrindWorkbookSurfaceReports.CommentReport> comment =
         toCommentReport(snapshot.metadata().comment().orElse(null));
 
     return switch (snapshot) {

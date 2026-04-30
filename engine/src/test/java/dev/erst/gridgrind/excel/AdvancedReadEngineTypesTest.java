@@ -295,8 +295,8 @@ class AdvancedReadEngineTypesTest {
         new ExcelWorkbookProtectionSnapshot(true, false, true, true, false);
     WorkbookReadCommand.GetWorkbookProtection read =
         new WorkbookReadCommand.GetWorkbookProtection("workbook-protection");
-    WorkbookReadResult.WorkbookProtectionResult result =
-        new WorkbookReadResult.WorkbookProtectionResult("workbook-protection", protection);
+    WorkbookCoreResult.WorkbookProtectionResult result =
+        new WorkbookCoreResult.WorkbookProtectionResult("workbook-protection", protection);
 
     assertTrue(protection.structureLocked());
     assertEquals("workbook-protection", read.stepId());
@@ -307,11 +307,11 @@ class AdvancedReadEngineTypesTest {
         IllegalArgumentException.class, () -> new WorkbookReadCommand.GetWorkbookProtection(" "));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.WorkbookProtectionResult("workbook-protection", null));
+        () -> new WorkbookCoreResult.WorkbookProtectionResult("workbook-protection", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookProtectionResult(
+            new WorkbookCoreResult.WorkbookProtectionResult(
                 " ", new ExcelWorkbookProtectionSnapshot(true, false, true, true, false)));
   }
 
@@ -332,9 +332,10 @@ class AdvancedReadEngineTypesTest {
     ExcelAutofilterFilterCriterionSnapshot.Icon icon =
         new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2);
     ExcelAutofilterSortConditionSnapshot sortCondition =
-        new ExcelAutofilterSortConditionSnapshot("A2:A5", true, null, rgb("#AABBCC"), 1);
+        new ExcelAutofilterSortConditionSnapshot.CellColor("A2:A5", true, rgb("#AABBCC"));
     ExcelAutofilterSortStateSnapshot sortState =
-        new ExcelAutofilterSortStateSnapshot("A1:F5", true, false, null, List.of(sortCondition));
+        new ExcelAutofilterSortStateSnapshot(
+            "A1:F5", true, false, java.util.Optional.empty(), List.of(sortCondition));
     ExcelAutofilterSnapshot.SheetOwned sheetOwned =
         new ExcelAutofilterSnapshot.SheetOwned(
             "A1:F5",
@@ -366,8 +367,8 @@ class AdvancedReadEngineTypesTest {
     assertEquals(List.of(), emptyValues.values());
     assertEquals(List.of(), defaultTableOwned.filterColumns());
     assertTrue(defaultTableOwned.sortState().isEmpty());
-    assertEquals("", sortCondition.sortBy());
-    assertEquals("", sortState.sortMethod());
+    assertInstanceOf(ExcelAutofilterSortConditionSnapshot.CellColor.class, sortCondition);
+    assertEquals(java.util.Optional.empty(), sortState.sortMethod());
 
     assertThrows(
         NullPointerException.class,
@@ -414,24 +415,29 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelAutofilterFilterColumnSnapshot(-1L, true, values));
-    assertEquals(
-        "CELL_COLOR",
-        new ExcelAutofilterSortConditionSnapshot("A2:A5", false, "CELL_COLOR", null, null)
-            .sortBy());
-    assertEquals(
-        " ", new ExcelAutofilterSortConditionSnapshot(" ", false, null, null, null).range());
+    assertInstanceOf(
+        ExcelAutofilterSortConditionSnapshot.CellColor.class,
+        new ExcelAutofilterSortConditionSnapshot.CellColor("A2:A5", false, rgb("#AABBCC")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortConditionSnapshot("A2:A5", true, null, rgb("#AABBCC"), -1));
-    assertEquals(
-        " ",
-        new ExcelAutofilterSortStateSnapshot(" ", true, false, null, List.of(sortCondition))
-            .range());
+        () -> new ExcelAutofilterSortConditionSnapshot.Icon("A2:A5", true, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelAutofilterSortConditionSnapshot.Value(" ", false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelAutofilterSortStateSnapshot(
+                " ", true, false, java.util.Optional.empty(), List.of(sortCondition)));
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelAutofilterSortStateSnapshot(
-                "A1:F5", true, false, null, Arrays.asList(sortCondition, null)));
+                "A1:F5",
+                true,
+                false,
+                java.util.Optional.empty(),
+                Arrays.asList(sortCondition, null)));
     assertThrows(
         NullPointerException.class,
         () ->

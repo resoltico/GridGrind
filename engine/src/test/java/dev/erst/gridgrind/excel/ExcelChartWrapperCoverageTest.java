@@ -91,8 +91,8 @@ class ExcelChartWrapperCoverageTest {
 
       assertEquals(
           List.of("cached-only"),
-          ExcelChartPlotSnapshotSupport.resolvedOrCachedReferenceValues(
-              controllerSheet, " ", new ReferenceDataSource(" ", List.of("cached-only"))));
+          ExcelChartSeriesSnapshotSupport.resolvedOrCachedReferenceValues(
+              controllerSheet, " ", new ReferenceDataSource(" ", List.of("cached-only")), null));
 
       XSSFSheet facadeSheet = workbook.createSheet("Facade");
       ExcelChartTestSupport.seedChartData(facadeSheet);

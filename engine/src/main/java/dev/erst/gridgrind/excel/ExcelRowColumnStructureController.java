@@ -3,22 +3,16 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Owns structural row and column editing plus layout normalization for one XSSF sheet. */
 final class ExcelRowColumnStructureController {
@@ -30,9 +24,12 @@ final class ExcelRowColumnStructureController {
     List<CTDataValidation> expectedValidations =
         ExcelDataValidationStructureSupport.expectedValidationsAfterInsertRows(
             sheet, rowIndex, rowCount);
-    rejectAffectedRowStructuresForInsert(sheet, rowIndex); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForInsert(
+        sheet, rowIndex); // LIM-016
     if (rowIndex <= lastRowIndex) {
       sheet.shiftRows(rowIndex, lastRowIndex, rowCount, true, false);
+      ExcelInsertedStructureFormattingSupport.copyAdjacentVisualFormattingIntoInsertedRows(
+          sheet, rowIndex, rowCount, lastRowIndex);
     }
     ExcelDataValidationStructureSupport.replaceDataValidations(sheet, expectedValidations);
   }
@@ -52,7 +49,8 @@ final class ExcelRowColumnStructureController {
               + "; requested "
               + ExcelIndexDisplay.describe("lastRowIndex", rows.lastRowIndex()));
     }
-    rejectAffectedRowStructuresForDelete(sheet, rows); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForDelete(
+        sheet, rows); // LIM-016
     if (rows.lastRowIndex() < lastRowIndex) {
       sheet.shiftRows(rows.lastRowIndex() + 1, lastRowIndex, -rows.count(), true, false);
     }
@@ -70,7 +68,8 @@ final class ExcelRowColumnStructureController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
     requireShiftedRowBounds(rows, delta);
-    rejectAffectedRowStructuresForShift(sheet, rows, delta); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForShift(
+        sheet, rows, delta); // LIM-016
     sheet.shiftRows(rows.firstRowIndex(), rows.lastRowIndex(), delta, true, false);
   }
 
@@ -78,10 +77,12 @@ final class ExcelRowColumnStructureController {
   void insertColumns(XSSFSheet sheet, int columnIndex, int columnCount) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireInsertColumnBounds(sheet, columnIndex, columnCount);
-    rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "INSERT_COLUMNS"); // LIM-017
-    normalizeColumnDefinitionContainer(sheet);
+    ExcelRowColumnStructureGuardSupport.rejectFormulaBearingWorkbookForColumnEdit(
+        sheet.getWorkbook(), "INSERT_COLUMNS"); // LIM-017
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
     int lastColumnIndex = lastColumnIndex(sheet);
-    var explicitColumns = snapshotColumnDefinitions(sheet);
+    Map<Integer, CTCol> explicitColumns =
+        ExcelRowColumnOutlineSupport.snapshotColumnDefinitions(sheet);
     List<CTDataValidation> expectedValidations =
         ExcelDataValidationStructureSupport.expectedValidationsAfterInsertColumns(
             sheet, columnIndex, columnCount);
@@ -92,12 +93,18 @@ final class ExcelRowColumnStructureController {
       expectedComments =
           commentRepairSupport.expectedCommentsAfterInsertColumns(columnIndex, columnCount);
     }
-    rejectAffectedColumnStructuresForInsert(sheet, columnIndex); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForInsert(
+        sheet, columnIndex); // LIM-016
+    Map<Integer, CTCol> shiftedExplicitColumns =
+        ExcelRowColumnOutlineSupport.mutableColumnDefinitionsCopy(
+            ExcelRowColumnOutlineSupport.shiftedForInsert(
+                explicitColumns, columnIndex, columnCount));
     if (columnIndex <= lastColumnIndex) {
       sheet.shiftColumns(columnIndex, lastColumnIndex, columnCount);
+      ExcelInsertedStructureFormattingSupport.copyAdjacentVisualFormattingIntoInsertedColumns(
+          sheet, shiftedExplicitColumns, columnIndex, columnCount, lastColumnIndex);
     }
-    ExcelColumnDefinitionSupport.rebuildColumnDefinitions(
-        sheet, shiftedForInsert(explicitColumns, columnIndex, columnCount));
+    ExcelColumnDefinitionSupport.rebuildColumnDefinitions(sheet, shiftedExplicitColumns);
     ExcelDataValidationStructureSupport.replaceDataValidations(sheet, expectedValidations);
     if (repairComments) {
       commentRepairSupport.replaceComments(expectedComments);
@@ -119,23 +126,26 @@ final class ExcelRowColumnStructureController {
               + "; requested "
               + ExcelIndexDisplay.describe("lastColumnIndex", columns.lastColumnIndex()));
     }
-    rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "DELETE_COLUMNS"); // LIM-017
-    normalizeColumnDefinitionContainer(sheet);
-    var explicitColumns = snapshotColumnDefinitions(sheet);
+    ExcelRowColumnStructureGuardSupport.rejectFormulaBearingWorkbookForColumnEdit(
+        sheet.getWorkbook(), "DELETE_COLUMNS"); // LIM-017
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
+    Map<Integer, CTCol> explicitColumns =
+        ExcelRowColumnOutlineSupport.snapshotColumnDefinitions(sheet);
     ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
     boolean repairComments = commentRepairSupport.hasPersistedComments();
     List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
     if (repairComments) {
       expectedComments = commentRepairSupport.expectedCommentsAfterDeleteColumns(columns);
     }
-    rejectAffectedColumnStructuresForDelete(sheet, columns); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForDelete(
+        sheet, columns); // LIM-016
     if (columns.lastColumnIndex() < lastColumnIndex) {
       sheet.shiftColumns(columns.lastColumnIndex() + 1, lastColumnIndex, -columns.count());
     }
     int clearStart = Math.max(columns.firstColumnIndex(), lastColumnIndex - columns.count() + 1);
-    clearTrailingCells(sheet, clearStart, lastColumnIndex);
+    ExcelRowColumnOutlineSupport.clearTrailingCells(sheet, clearStart, lastColumnIndex);
     ExcelColumnDefinitionSupport.rebuildColumnDefinitions(
-        sheet, shiftedForDelete(explicitColumns, columns));
+        sheet, ExcelRowColumnOutlineSupport.shiftedForDelete(explicitColumns, columns));
     if (repairComments) {
       commentRepairSupport.replaceComments(expectedComments);
     }
@@ -146,19 +156,22 @@ final class ExcelRowColumnStructureController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(columns, "columns must not be null");
     requireShiftedColumnBounds(columns, delta);
-    rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "SHIFT_COLUMNS"); // LIM-017
-    normalizeColumnDefinitionContainer(sheet);
-    var explicitColumns = snapshotColumnDefinitions(sheet);
+    ExcelRowColumnStructureGuardSupport.rejectFormulaBearingWorkbookForColumnEdit(
+        sheet.getWorkbook(), "SHIFT_COLUMNS"); // LIM-017
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
+    Map<Integer, CTCol> explicitColumns =
+        ExcelRowColumnOutlineSupport.snapshotColumnDefinitions(sheet);
     ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
     boolean repairComments = commentRepairSupport.hasPersistedComments();
     List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
     if (repairComments) {
       expectedComments = commentRepairSupport.expectedCommentsAfterShiftColumns(columns, delta);
     }
-    rejectAffectedColumnStructuresForShift(sheet, columns, delta); // LIM-016
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForShift(
+        sheet, columns, delta); // LIM-016
     sheet.shiftColumns(columns.firstColumnIndex(), columns.lastColumnIndex(), delta);
     ExcelColumnDefinitionSupport.rebuildColumnDefinitions(
-        sheet, shiftedForShift(explicitColumns, columns, delta));
+        sheet, ExcelRowColumnOutlineSupport.shiftedForShift(explicitColumns, columns, delta));
     if (repairComments) {
       commentRepairSupport.replaceComments(expectedComments);
     }
@@ -168,7 +181,7 @@ final class ExcelRowColumnStructureController {
   void setRowVisibility(XSSFSheet sheet, ExcelRowSpan rows, boolean hidden) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
-    ensureRowsExist(sheet, rows);
+    ExcelRowColumnOutlineSupport.ensureRowsExist(sheet, rows);
     for (int rowIndex = rows.firstRowIndex(); rowIndex <= rows.lastRowIndex(); rowIndex++) {
       sheet.getRow(rowIndex).setZeroHeight(hidden);
     }
@@ -178,7 +191,7 @@ final class ExcelRowColumnStructureController {
   void setColumnVisibility(XSSFSheet sheet, ExcelColumnSpan columns, boolean hidden) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(columns, "columns must not be null");
-    normalizeColumnDefinitionContainer(sheet);
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
     for (int columnIndex = columns.firstColumnIndex();
         columnIndex <= columns.lastColumnIndex();
         columnIndex++) {
@@ -191,28 +204,28 @@ final class ExcelRowColumnStructureController {
   void groupRows(XSSFSheet sheet, ExcelRowSpan rows, boolean collapsed) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
-    ensureRowsExist(sheet, rows);
+    ExcelRowColumnOutlineSupport.ensureRowsExist(sheet, rows);
     sheet.groupRow(rows.firstRowIndex(), rows.lastRowIndex());
     if (collapsed) {
-      collapseRows(sheet, rows);
+      ExcelRowColumnOutlineSupport.collapseRows(sheet, rows);
       return;
     }
-    if (isRowGroupCollapsed(sheet, rows)) {
-      expandRows(sheet, rows);
+    if (ExcelRowColumnOutlineSupport.isRowGroupCollapsed(sheet, rows)) {
+      ExcelRowColumnOutlineSupport.expandRows(sheet, rows);
       return;
     }
-    clearExpandedGroupControlRow(sheet, rows);
+    ExcelRowColumnOutlineSupport.clearExpandedGroupControlRow(sheet, rows);
   }
 
   /** Removes outline grouping from the requested inclusive zero-based row band. */
   void ungroupRows(XSSFSheet sheet, ExcelRowSpan rows) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
-    ensureRowsExist(sheet, rows);
-    if (isRowGroupCollapsed(sheet, rows)) {
-      expandRows(sheet, rows);
+    ExcelRowColumnOutlineSupport.ensureRowsExist(sheet, rows);
+    if (ExcelRowColumnOutlineSupport.isRowGroupCollapsed(sheet, rows)) {
+      ExcelRowColumnOutlineSupport.expandRows(sheet, rows);
     } else {
-      clearExpandedGroupControlRow(sheet, rows);
+      ExcelRowColumnOutlineSupport.clearExpandedGroupControlRow(sheet, rows);
     }
     sheet.ungroupRow(rows.firstRowIndex(), rows.lastRowIndex());
   }
@@ -221,14 +234,14 @@ final class ExcelRowColumnStructureController {
   void groupColumns(XSSFSheet sheet, ExcelColumnSpan columns, boolean collapsed) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(columns, "columns must not be null");
-    normalizeColumnDefinitionContainer(sheet);
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
     sheet.groupColumn(columns.firstColumnIndex(), columns.lastColumnIndex());
     if (collapsed) {
-      collapseColumns(sheet, columns);
+      ExcelRowColumnOutlineSupport.collapseColumns(sheet, columns);
       canonicalizeColumnDefinitions(sheet);
       return;
     }
-    clearExpandedGroupControlColumn(sheet, columns);
+    ExcelRowColumnOutlineSupport.clearExpandedGroupControlColumn(sheet, columns);
     canonicalizeColumnDefinitions(sheet);
   }
 
@@ -236,43 +249,26 @@ final class ExcelRowColumnStructureController {
   void ungroupColumns(XSSFSheet sheet, ExcelColumnSpan columns) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(columns, "columns must not be null");
-    normalizeColumnDefinitionContainer(sheet);
-    prepareColumnsForUngroup(sheet, columns);
+    ExcelRowColumnOutlineSupport.normalizeColumnDefinitionContainer(sheet);
+    ExcelRowColumnOutlineSupport.prepareColumnsForUngroup(sheet, columns);
     sheet.ungroupColumn(columns.firstColumnIndex(), columns.lastColumnIndex());
     canonicalizeColumnDefinitions(sheet);
   }
 
   /** Returns the last column index implied by cells or explicit column metadata. */
   static int lastColumnIndex(XSSFSheet sheet) {
-    return ExcelColumnDefinitionSupport.lastColumnIndex(sheet);
+    return ExcelRowColumnOutlineSupport.lastColumnIndex(sheet);
   }
 
   /** Returns the sheet column layouts including hidden, outline, and collapsed state. */
-  List<WorkbookReadResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
-    return ExcelColumnDefinitionSupport.columnLayouts(sheet);
+  List<WorkbookSheetResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
+    return ExcelRowColumnOutlineSupport.columnLayouts(sheet);
   }
 
   /** Returns the sheet row layouts including hidden, outline, and collapsed state. */
-  List<WorkbookReadResult.RowLayout> rowLayouts(XSSFSheet sheet) {
+  List<WorkbookSheetResult.RowLayout> rowLayouts(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    int lastRowIndex = sheet.getLastRowNum();
-    if (lastRowIndex < 0) {
-      return List.of();
-    }
-    List<WorkbookReadResult.RowLayout> rows = new ArrayList<>(lastRowIndex + 1);
-    for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
-      Row row = sheet.getRow(rowIndex);
-      double heightPoints =
-          row == null ? sheet.getDefaultRowHeight() / 20.0d : row.getHeight() / 20.0d;
-      rows.add(
-          new WorkbookReadResult.RowLayout(
-              rowIndex,
-              heightPoints,
-              row instanceof XSSFRow xssfRow && xssfRow.getZeroHeight(),
-              row == null ? 0 : Math.max(0, row.getOutlineLevel()),
-              row instanceof XSSFRow xssfRow && xssfRow.getCTRow().getCollapsed()));
-    }
-    return List.copyOf(rows);
+    return ExcelRowColumnOutlineSupport.rowLayouts(sheet);
   }
 
   private void requireInsertRowBounds(XSSFSheet sheet, int rowIndex, int rowCount) {
@@ -355,406 +351,94 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  void rejectAffectedRowStructuresForInsert(XSSFSheet sheet, int rowIndex) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (range.lastRow() >= rowIndex) {
-        throw unsupportedStructure(
-            "INSERT_ROWS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "row structural edits that would move tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastRow() >= rowIndex) {
-      throw unsupportedStructure(
-          "INSERT_ROWS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "row structural edits that would move sheet autofilters are not supported");
-    }
+  void rejectAffectedRowStructuresForInsert(XSSFSheet sheet, int rowIndex) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForInsert(sheet, rowIndex);
   }
 
-  void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (range.lastRow() >= rows.firstRowIndex()) {
-        throw unsupportedStructure(
-            "DELETE_ROWS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "row structural edits that would move or truncate tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastRow() >= rows.firstRowIndex()) {
-      throw unsupportedStructure(
-          "DELETE_ROWS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "row structural edits that would move or truncate sheet autofilters are not supported");
-    }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (range.lastRow() >= rows.firstRowIndex()) {
-        throw unsupportedStructure(
-            "DELETE_ROWS",
-            sheet,
-            "data validation " + validationRange,
-            "row structural edits that would move or truncate data validations are not supported");
-      }
-    }
-    rejectDestructiveNamedRangesForRowDelete(sheet.getWorkbook(), sheet, rows); // LIM-018
+  void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForDelete(sheet, rows);
   }
 
-  void rejectAffectedRowStructuresForShift(
-      XSSFSheet sheet, ExcelRowSpan rows, int delta) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (affectsRows(range, rows, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_ROWS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "row structural edits that would move tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && affectsRows(autofilter, rows, delta)) {
-      throw unsupportedStructure(
-          "SHIFT_ROWS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "row structural edits that would move sheet autofilters are not supported");
-    }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (affectsRows(range, rows, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_ROWS",
-            sheet,
-            "data validation " + validationRange,
-            "row structural edits that would move data validations are not supported");
-      }
-    }
-    rejectDestructiveNamedRangesForRowShift(sheet.getWorkbook(), sheet, rows, delta); // LIM-018
+  void rejectAffectedRowStructuresForShift(XSSFSheet sheet, ExcelRowSpan rows, int delta) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedRowStructuresForShift(sheet, rows, delta);
   }
 
-  void rejectAffectedColumnStructuresForInsert(XSSFSheet sheet, int columnIndex) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (range.lastColumn() >= columnIndex) {
-        throw unsupportedStructure(
-            "INSERT_COLUMNS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "column structural edits that would move tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastColumn() >= columnIndex) {
-      throw unsupportedStructure(
-          "INSERT_COLUMNS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "column structural edits that would move sheet autofilters are not supported");
-    }
+  void rejectAffectedColumnStructuresForInsert(XSSFSheet sheet, int columnIndex) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForInsert(sheet, columnIndex);
   }
 
-  void rejectAffectedColumnStructuresForDelete(
-      XSSFSheet sheet, ExcelColumnSpan columns) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (range.lastColumn() >= columns.firstColumnIndex()) {
-        throw unsupportedStructure(
-            "DELETE_COLUMNS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "column structural edits that would move or truncate tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastColumn() >= columns.firstColumnIndex()) {
-      throw unsupportedStructure(
-          "DELETE_COLUMNS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "column structural edits that would move or truncate sheet autofilters are not supported");
-    }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (range.lastColumn() >= columns.firstColumnIndex()) {
-        throw unsupportedStructure(
-            "DELETE_COLUMNS",
-            sheet,
-            "data validation " + validationRange,
-            "column structural edits that would move or truncate data validations are not supported");
-      }
-    }
-    rejectDestructiveNamedRangesForColumnDelete(sheet.getWorkbook(), sheet, columns); // LIM-018
+  void rejectAffectedColumnStructuresForDelete(XSSFSheet sheet, ExcelColumnSpan columns) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForDelete(sheet, columns);
   }
 
-  void rejectAffectedColumnStructuresForShift(
-      XSSFSheet sheet, ExcelColumnSpan columns, int delta) { // LIM-016
-    for (XSSFTable table : sheet.getTables()) {
-      ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
-      if (affectsColumns(range, columns, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_COLUMNS",
-            sheet,
-            "table '" + table.getName() + "'",
-            "column structural edits that would move tables are not supported");
-      }
-    }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && affectsColumns(autofilter, columns, delta)) {
-      throw unsupportedStructure(
-          "SHIFT_COLUMNS",
-          sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
-          "column structural edits that would move sheet autofilters are not supported");
-    }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (affectsColumns(range, columns, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_COLUMNS",
-            sheet,
-            "data validation " + validationRange,
-            "column structural edits that would move data validations are not supported");
-      }
-    }
-    rejectDestructiveNamedRangesForColumnShift(
-        sheet.getWorkbook(), sheet, columns, delta); // LIM-018
+  void rejectAffectedColumnStructuresForShift(XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
+    ExcelRowColumnStructureGuardSupport.rejectAffectedColumnStructuresForShift(
+        sheet, columns, delta);
   }
 
   void rejectDestructiveNamedRangesForRowDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows) {
-    for (ResolvedNamedRange namedRange :
-        resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
-      if (!namedRange.targetsSheet(sheet.getSheetName())) {
-        continue;
-      }
-      if (overlapsRows(namedRange.range(), rows)) {
-        throw unsupportedStructure(
-            "DELETE_ROWS",
-            sheet,
-            namedRange.label(),
-            "row structural edits that would truncate range-backed named ranges are not supported");
-      }
-    }
+    ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowDelete(
+        workbook, sheet, rows);
   }
 
   void rejectDestructiveNamedRangesForRowShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows, int delta) {
-    for (ResolvedNamedRange namedRange :
-        resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
-      if (!namedRange.targetsSheet(sheet.getSheetName())) {
-        continue;
-      }
-      if (shiftWouldCorruptRows(namedRange.range(), rows, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_ROWS",
-            sheet,
-            namedRange.label(),
-            "row structural edits that would overwrite or partially move range-backed named ranges"
-                + " are not supported");
-      }
-    }
+    ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowShift(
+        workbook, sheet, rows, delta);
   }
 
   void rejectDestructiveNamedRangesForColumnDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns) {
-    for (ResolvedNamedRange namedRange :
-        resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
-      if (!namedRange.targetsSheet(sheet.getSheetName())) {
-        continue;
-      }
-      if (overlapsColumns(namedRange.range(), columns)) {
-        throw unsupportedStructure(
-            "DELETE_COLUMNS",
-            sheet,
-            namedRange.label(),
-            "column structural edits that would truncate range-backed named ranges are not"
-                + " supported");
-      }
-    }
+    ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnDelete(
+        workbook, sheet, columns);
   }
 
   void rejectDestructiveNamedRangesForColumnShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
-    for (ResolvedNamedRange namedRange :
-        resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
-      if (!namedRange.targetsSheet(sheet.getSheetName())) {
-        continue;
-      }
-      if (shiftWouldCorruptColumns(namedRange.range(), columns, delta)) {
-        throw unsupportedStructure(
-            "SHIFT_COLUMNS",
-            sheet,
-            namedRange.label(),
-            "column structural edits that would overwrite or partially move range-backed named"
-                + " ranges are not supported");
-      }
-    }
+    ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnShift(
+        workbook, sheet, columns, delta);
   }
 
-  private void rejectFormulaBearingWorkbookForColumnEdit(
-      XSSFWorkbook workbook, String operationType) { // LIM-017
-    if (workbookContainsFormulas(workbook)) {
-      throw new IllegalArgumentException(
-          operationType
-              + " cannot run while workbook formulas are present; Apache POI leaves some column"
-              + " references stale during column structural edits");
-    }
-    if (workbookContainsFormulaDefinedNames(workbook)) {
-      throw new IllegalArgumentException(
-          operationType
-              + " cannot run while formula-defined names are present; Apache POI leaves some"
-              + " column references stale during column structural edits");
-    }
-  }
-
-  private static boolean workbookContainsFormulas(XSSFWorkbook workbook) {
-    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      for (Row row : workbook.getSheetAt(sheetIndex)) {
-        for (Cell cell : row) {
-          if (cell.getCellType() == CellType.FORMULA) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
-
-  private static boolean workbookContainsFormulaDefinedNames(XSSFWorkbook workbook) {
-    return workbookContainsFormulaDefinedNames(workbook, workbook.getAllNames());
-  }
-
-  /** Returns whether any provided defined name resolves to a non-range formula target. */
   static boolean workbookContainsFormulaDefinedNames(
       XSSFWorkbook workbook, Iterable<? extends Name> names) {
-    for (Name name : names) {
-      String refersToFormula = name.getRefersToFormula();
-      if (refersToFormula == null) {
-        continue;
-      }
-      if (refersToFormula.isBlank()) {
-        continue;
-      }
-      ExcelNamedRangeScope scope = scopeForName(workbook, name);
-      if (ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope).isEmpty()) {
-        return true;
-      }
-    }
-    return false;
+    return ExcelRowColumnStructureGuardSupport.workbookContainsFormulaDefinedNames(workbook, names);
   }
 
-  /**
-   * Returns the typed target of a range-backed defined name or empty when the name is blank, unset,
-   * or not backed by one contiguous range.
-   */
   static Optional<ExcelNamedRangeTarget> resolvedRangeBackedTarget(
       XSSFWorkbook workbook, Name name) {
-    String refersToFormula = name.getRefersToFormula();
-    if (refersToFormula == null) {
-      return Optional.empty();
-    }
-    if (refersToFormula.isBlank()) {
-      return Optional.empty();
-    }
-    return ExcelNamedRangeTargets.resolveTarget(refersToFormula, scopeForName(workbook, name));
+    return ExcelRowColumnStructureGuardSupport.resolvedRangeBackedTarget(workbook, name);
   }
 
-  /** Returns only the defined names that resolve to one contiguous range target. */
   static List<ResolvedNamedRange> resolvedRangeBackedNames(
       XSSFWorkbook workbook, Iterable<? extends Name> names) {
-    List<ResolvedNamedRange> resolved = new ArrayList<>();
-    for (Name name : names) {
-      resolvedRangeBackedTarget(workbook, name)
-          .ifPresent(
-              target ->
-                  resolved.add(
-                      new ResolvedNamedRange(
-                          name.getNameName(), target, ExcelRange.parse(target.range()))));
-    }
-    return List.copyOf(resolved);
+    return ExcelRowColumnStructureGuardSupport.resolvedRangeBackedNames(workbook, names).stream()
+        .map(result -> new ResolvedNamedRange(result.name(), result.target(), result.range()))
+        .toList();
   }
 
-  private static ExcelNamedRangeScope scopeForName(XSSFWorkbook workbook, Name name) {
-    if (name.getSheetIndex() < 0) {
-      return new ExcelNamedRangeScope.WorkbookScope();
-    }
-    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(name.getSheetIndex()));
-  }
-
-  private static IllegalArgumentException unsupportedStructure(
-      String operationType, XSSFSheet sheet, String structureLabel, String reason) {
-    return new IllegalArgumentException(
-        operationType
-            + " cannot move "
-            + structureLabel
-            + " on sheet '"
-            + sheet.getSheetName()
-            + "'; "
-            + reason);
-  }
-
-  /** Returns whether shifting the requested row span would overlap the provided range. */
   static boolean affectsRows(ExcelRange range, ExcelRowSpan rows, int delta) {
-    int affectedFirstRow = Math.min(rows.firstRowIndex(), rows.firstRowIndex() + delta);
-    int affectedLastRow = Math.max(rows.lastRowIndex(), rows.lastRowIndex() + delta);
-    return range.firstRow() <= affectedLastRow && range.lastRow() >= affectedFirstRow;
+    return ExcelRowColumnStructureGuardSupport.affectsRows(range, rows, delta);
   }
 
-  /** Returns whether shifting the requested column span would overlap the provided range. */
   static boolean affectsColumns(ExcelRange range, ExcelColumnSpan columns, int delta) {
-    int affectedFirstColumn =
-        Math.min(columns.firstColumnIndex(), columns.firstColumnIndex() + delta);
-    int affectedLastColumn = Math.max(columns.lastColumnIndex(), columns.lastColumnIndex() + delta);
-    return range.firstColumn() <= affectedLastColumn && range.lastColumn() >= affectedFirstColumn;
+    return ExcelRowColumnStructureGuardSupport.affectsColumns(range, columns, delta);
   }
 
-  private static boolean overlapsRows(ExcelRange range, ExcelRowSpan rows) {
-    return range.firstRow() <= rows.lastRowIndex() && range.lastRow() >= rows.firstRowIndex();
-  }
-
-  private static boolean overlapsColumns(ExcelRange range, ExcelColumnSpan columns) {
-    return range.firstColumn() <= columns.lastColumnIndex()
-        && range.lastColumn() >= columns.firstColumnIndex();
-  }
-
-  private static boolean fullyWithinRows(ExcelRange range, ExcelRowSpan rows) {
-    return range.firstRow() >= rows.firstRowIndex() && range.lastRow() <= rows.lastRowIndex();
-  }
-
-  private static boolean fullyWithinColumns(ExcelRange range, ExcelColumnSpan columns) {
-    return range.firstColumn() >= columns.firstColumnIndex()
-        && range.lastColumn() <= columns.lastColumnIndex();
-  }
-
-  /** Returns whether moving the requested row span would overwrite or partially move the range. */
   static boolean shiftWouldCorruptRows(ExcelRange range, ExcelRowSpan rows, int delta) {
-    if (fullyWithinRows(range, rows)) {
-      return false;
-    }
-    ExcelRowSpan destination =
-        new ExcelRowSpan(rows.firstRowIndex() + delta, rows.lastRowIndex() + delta);
-    return overlapsRows(range, rows) || overlapsRows(range, destination);
+    return ExcelRowColumnStructureGuardSupport.shiftWouldCorruptRows(range, rows, delta);
   }
 
-  /**
-   * Returns whether moving the requested column span would overwrite or partially move the range.
-   */
   static boolean shiftWouldCorruptColumns(ExcelRange range, ExcelColumnSpan columns, int delta) {
-    if (fullyWithinColumns(range, columns)) {
-      return false;
-    }
-    ExcelColumnSpan destination =
-        new ExcelColumnSpan(columns.firstColumnIndex() + delta, columns.lastColumnIndex() + delta);
-    return overlapsColumns(range, columns) || overlapsColumns(range, destination);
+    return ExcelRowColumnStructureGuardSupport.shiftWouldCorruptColumns(range, columns, delta);
+  }
+
+  static void setColumnCollapsed(XSSFSheet sheet, int columnIndex, boolean collapsed) {
+    ExcelRowColumnOutlineSupport.setColumnCollapsed(sheet, columnIndex, collapsed);
+  }
+
+  static void canonicalizeColumnDefinitions(XSSFSheet sheet) {
+    ExcelRowColumnOutlineSupport.canonicalizeColumnDefinitions(sheet);
   }
 
   /** Typed resolved view of a range-backed defined name for structural guard evaluation. */
@@ -764,169 +448,5 @@ final class ExcelRowColumnStructureController {
       Objects.requireNonNull(target, "target must not be null");
       Objects.requireNonNull(range, "range must not be null");
     }
-
-    private boolean targetsSheet(String sheetName) {
-      return target.sheetName().equals(sheetName);
-    }
-
-    private String label() {
-      return "named range '" + name + "'";
-    }
-  }
-
-  private static ExcelRange sheetAutofilterRange(XSSFSheet sheet) {
-    if (!sheet.getCTWorksheet().isSetAutoFilter()) {
-      return java.util.Optional.<ExcelRange>empty().orElse(null);
-    }
-    return parsedRange(
-        sheet.getCTWorksheet().getAutoFilter().getRef(),
-        "sheet autofilter",
-        sheet.getCTWorksheet().getAutoFilter().getRef());
-  }
-
-  private static List<String> dataValidationRanges(XSSFSheet sheet) {
-    CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
-    if (dataValidations == null) {
-      return List.of();
-    }
-    List<String> ranges = new ArrayList<>();
-    for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
-      ranges.addAll(ExcelSqrefSupport.normalizedSqref(validation.getSqref()));
-    }
-    return List.copyOf(ranges);
-  }
-
-  private static ExcelRange parsedRange(String rawRange, String structureType, String detail) {
-    ExcelRange range = ExcelSheetStructureSupport.parseRangeOrNull(rawRange);
-    if (range == null) {
-      throw new IllegalArgumentException(
-          "Stored " + structureType + " range is invalid and cannot be normalized: " + detail);
-    }
-    return range;
-  }
-
-  private static void ensureRowsExist(XSSFSheet sheet, ExcelRowSpan rows) {
-    for (int rowIndex = rows.firstRowIndex(); rowIndex <= rows.lastRowIndex(); rowIndex++) {
-      if (sheet.getRow(rowIndex) == null) {
-        sheet.createRow(rowIndex);
-      }
-    }
-  }
-
-  private static void expandRows(XSSFSheet sheet, ExcelRowSpan rows) {
-    for (int rowIndex = rows.firstRowIndex(); rowIndex <= rows.lastRowIndex(); rowIndex++) {
-      Row row = sheet.getRow(rowIndex);
-      row.setZeroHeight(false);
-    }
-    clearExpandedGroupControlRow(sheet, rows);
-  }
-
-  private static boolean isRowGroupCollapsed(XSSFSheet sheet, ExcelRowSpan rows) {
-    if (rows.lastRowIndex() >= ExcelRowSpan.MAX_ROW_INDEX) {
-      return false;
-    }
-    Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
-    return controlRow instanceof XSSFRow xssfRow && xssfRow.getCTRow().getCollapsed();
-  }
-
-  private static void clearExpandedGroupControlRow(XSSFSheet sheet, ExcelRowSpan rows) {
-    if (rows.lastRowIndex() < ExcelRowSpan.MAX_ROW_INDEX) {
-      Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
-      if (controlRow instanceof XSSFRow xssfRow) {
-        xssfRow.getCTRow().setCollapsed(false);
-      }
-    }
-  }
-
-  private static void collapseRows(XSSFSheet sheet, ExcelRowSpan rows) {
-    XSSFRow controlRow = null;
-    if (rows.lastRowIndex() < ExcelRowSpan.MAX_ROW_INDEX) {
-      Row existingControlRow = sheet.getRow(rows.lastRowIndex() + 1);
-      controlRow =
-          existingControlRow instanceof XSSFRow xssfRow
-              ? xssfRow
-              : (XSSFRow) sheet.createRow(rows.lastRowIndex() + 1);
-      controlRow.setZeroHeight(false);
-    }
-    sheet.setRowGroupCollapsed(rows.firstRowIndex(), true);
-    if (controlRow != null) {
-      controlRow.getCTRow().setCollapsed(true);
-    }
-  }
-
-  private static void prepareColumnsForUngroup(XSSFSheet sheet, ExcelColumnSpan columns) {
-    for (int columnIndex = columns.firstColumnIndex();
-        columnIndex <= columns.lastColumnIndex();
-        columnIndex++) {
-      sheet.setColumnHidden(columnIndex, false);
-    }
-    clearExpandedGroupControlColumn(sheet, columns);
-  }
-
-  private static void collapseColumns(XSSFSheet sheet, ExcelColumnSpan columns) {
-    sheet.setColumnGroupCollapsed(columns.firstColumnIndex(), true);
-  }
-
-  /**
-   * Clears only the control-column collapsed marker for one explicit group boundary.
-   *
-   * <p>Grouping columns with {@code collapsed=false} creates a new expanded outline level; it is
-   * not the same operation as expanding an already-collapsed group. Delegating that case to POI's
-   * {@code setColumnGroupCollapsed(..., false)} can walk and mutate overlapping descendant groups,
-   * which is both semantically broader than GridGrind's request and vulnerable to POI/XMLBeans
-   * crashes on split {@code CTCol} ranges. GridGrind therefore clears only the target group's own
-   * control marker here and leaves existing descendant collapsed state intact.
-   */
-  private static void clearExpandedGroupControlColumn(XSSFSheet sheet, ExcelColumnSpan columns) {
-    if (columns.lastColumnIndex() < ExcelColumnSpan.MAX_COLUMN_INDEX) {
-      setColumnCollapsed(sheet, columns.lastColumnIndex() + 1, false);
-    }
-  }
-
-  /** Applies a collapsed marker to the explicit column definition that owns the target index. */
-  static void setColumnCollapsed(XSSFSheet sheet, int columnIndex, boolean collapsed) {
-    ExcelColumnDefinitionSupport.setColumnCollapsed(sheet, columnIndex, collapsed);
-  }
-
-  private static void clearTrailingCells(
-      XSSFSheet sheet, int firstColumnIndex, int lastColumnIndex) {
-    for (Row row : sheet) {
-      for (int columnIndex = firstColumnIndex; columnIndex <= lastColumnIndex; columnIndex++) {
-        Cell cell = row.getCell(columnIndex);
-        if (cell == null) {
-          continue;
-        }
-        cell.removeHyperlink();
-        ExcelSheetAnnotationSupport.clearCellComment(cell);
-        row.removeCell(cell);
-      }
-    }
-  }
-
-  private static Map<Integer, CTCol> snapshotColumnDefinitions(XSSFSheet sheet) {
-    return ExcelColumnDefinitionSupport.snapshotColumnDefinitions(sheet);
-  }
-
-  private static Map<Integer, CTCol> shiftedForInsert(
-      Map<Integer, CTCol> explicitColumns, int columnIndex, int columnCount) {
-    return ExcelColumnDefinitionSupport.shiftedForInsert(explicitColumns, columnIndex, columnCount);
-  }
-
-  private static Map<Integer, CTCol> shiftedForDelete(
-      Map<Integer, CTCol> explicitColumns, ExcelColumnSpan columns) {
-    return ExcelColumnDefinitionSupport.shiftedForDelete(explicitColumns, columns);
-  }
-
-  private static Map<Integer, CTCol> shiftedForShift(
-      Map<Integer, CTCol> explicitColumns, ExcelColumnSpan columns, int delta) {
-    return ExcelColumnDefinitionSupport.shiftedForShift(explicitColumns, columns, delta);
-  }
-
-  private static void normalizeColumnDefinitionContainer(XSSFSheet sheet) {
-    ExcelColumnDefinitionSupport.normalizeColumnDefinitionContainer(sheet);
-  }
-
-  static void canonicalizeColumnDefinitions(XSSFSheet sheet) {
-    ExcelColumnDefinitionSupport.canonicalizeColumnDefinitions(sheet);
   }
 }

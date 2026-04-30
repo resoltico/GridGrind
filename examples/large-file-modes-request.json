@@ -6,12 +6,15 @@
   },
   "persistence" : {
     "type" : "SAVE_AS",
-    "path" : "../cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
+    "path" : "generated-workbooks/gridgrind-large-file-modes.xlsx"
   },
   "execution" : {
     "mode" : {
       "readMode" : "FULL_XSSF",
       "writeMode" : "STREAMING_WRITE"
+    },
+    "journal" : {
+      "level" : "NORMAL"
     },
     "calculation" : {
       "strategy" : {
@@ -19,6 +22,11 @@
       },
       "markRecalculateOnOpen" : true
     }
+  },
+  "formulaEnvironment" : {
+    "externalWorkbooks" : [ ],
+    "missingWorkbookPolicy" : "ERROR",
+    "udfToolpacks" : [ ]
   },
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -93,17 +93,19 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `protocolVersion` | No | Wire-contract version. Defaults to `V1`. Include it — future breaking revisions will be explicit. |
+| `protocolVersion` | Yes | Wire-contract version. The current public value is `V1`. |
 | `source` | Yes | Where the workbook comes from. |
-| `persistence` | No | Where and whether to save. Omit to run steps without saving. |
-| `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit for the default full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
-| `formulaEnvironment` | No | Request-scoped evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. |
-| `steps` | No | Ordered list of workbook mutations, assertions, and inspections. Every non-empty step needs a caller-defined `stepId`. |
+| `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
+| `execution` | Yes | Explicit execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Use the standard template or `ExecutionPolicyInput.defaults()` from Java authoring for the normal full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
+| `formulaEnvironment` | Yes | Explicit evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Use empty workbook and UDF lists with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended. |
+| `steps` | Yes | Ordered list of workbook mutations, assertions, and inspections. Send `[]` for a no-op plan. Every non-empty step needs a caller-defined `stepId`. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `action`, `query`, cell values, hyperlink targets, selectors, and named-range scopes.
 Every step object carries a caller-defined `stepId` plus exactly one of `action`, `assertion`, or
 `query`. Step kind is inferred from that field; request steps do not carry a separate `step.type`.
+`gridgrind --print-request-template` emits the canonical minimal valid request with the full
+top-level envelope shown above.
 
 When the CLI reads the request from `--request <path>`, relative request-owned paths inside the
 JSON follow the request file directory. That includes `source.path`, `persistence.path`,
@@ -113,9 +115,10 @@ and `--response` still resolve from the shell working directory.
 
 ### Formula Environment
 
-`formulaEnvironment` is optional. Omit it for the default evaluator. Supply it when server-side
-formula evaluation needs external workbook bindings, cached-value fallback for unresolved external
-references, or template-backed UDFs.
+`formulaEnvironment` is explicit on the wire. Use empty `externalWorkbooks` and `udfToolpacks`
+lists together with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended.
+Supply other values when server-side formula evaluation needs external workbook bindings,
+cached-value fallback for unresolved external references, or template-backed UDFs.
 
 ```json
 {
@@ -145,17 +148,18 @@ references, or template-backed UDFs.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `externalWorkbooks` | No | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. Each `path` follows the same request-owned path rule described above. |
-| `missingWorkbookPolicy` | No | `ERROR` or `USE_CACHED_VALUE`. Defaults to `ERROR`. |
-| `udfToolpacks` | No | Named collections of template-backed UDFs. |
+| `externalWorkbooks` | Yes | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. Each `path` follows the same request-owned path rule described above. Use `[]` when no external workbook bindings are needed. |
+| `missingWorkbookPolicy` | Yes | `ERROR` or `USE_CACHED_VALUE`. |
+| `udfToolpacks` | Yes | Named collections of template-backed UDFs. Use `[]` when no UDF toolpacks are needed. |
 
 For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 `minimumArgumentCount`. `formulaTemplate` may reference `ARG1`, `ARG2`, and higher placeholders.
 
 ### Execution Policy
 
-`execution` is optional. Omit it for the default `FULL_XSSF` request path with `NORMAL`
-journaling.
+`execution` is explicit on the wire. Use the standard request template or
+`ExecutionPolicyInput.defaults()` from Java authoring for the default `FULL_XSSF` request path
+with `NORMAL` journaling.
 
 ```json
 {
@@ -179,9 +183,9 @@ journaling.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `mode` | No | Optional low-memory read and write mode selection. Omit it for the default full-XSSF path. |
-| `journal` | No | Optional structured-journal policy. Omit it for `NORMAL` detail. |
-| `calculation` | No | Optional formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. |
+| `mode` | Yes | Explicit low-memory read and write mode selection. |
+| `journal` | Yes | Explicit structured-journal policy. |
+| `calculation` | Yes | Explicit formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. |
 
 - `execution.mode.readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
@@ -189,7 +193,9 @@ journaling.
   `source.type: NEW`, supports only `ENSURE_SHEET` and `APPEND_ROW`,
   requires `execution.calculation.strategy=DO_NOT_CALCULATE`,
   allows `markRecalculateOnOpen=true`, and
-  requires at least one `ENSURE_SHEET` mutation (`LIM-020`).
+  requires at least one `ENSURE_SHEET` mutation (`LIM-020`). GridGrind keeps shared strings
+  enabled in this mode so large repeated-text workbooks do not balloon into inline-string-heavy
+  OOXML packages.
 - `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
 - `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
   `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
@@ -335,11 +341,32 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 
 ```json
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "NEW"
   },
   "persistence": {
     "type": "NONE"
+  },
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
   },
   "steps": [
     {
@@ -426,7 +453,8 @@ Write the workbook to the given path, creating parent directories as needed.
   "path": "secured-output.xlsx",
   "security": {
     "encryption": {
-      "password": "GridGrind-2026"
+      "password": "GridGrind-2026",
+      "mode": "AGILE"
     },
     "signature": {
       "pkcs12Path": "signing-material.p12",
@@ -438,8 +466,8 @@ Write the workbook to the given path, creating parent directories as needed.
 }
 ```
 
-`security.encryption` applies OOXML package encryption to the persisted workbook. Omit
-`encryption.mode` to use the default `AGILE` mode.
+`security.encryption` applies OOXML package encryption to the persisted workbook. Supply both the
+password and the explicit package-encryption `mode`; `AGILE` is the normal choice.
 
 `security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
 `pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` plus

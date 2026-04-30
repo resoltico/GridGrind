@@ -13,7 +13,7 @@ final class ExcelColorSnapshotSupport {
   /** Returns one factual snapshot for the supplied workbook color, or null when absent. */
   static ExcelColorSnapshot snapshot(XSSFColor color) {
     if (color == null) {
-      return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
+      return null;
     }
     String rgb = color.isRGB() ? ExcelRgbColorSupport.toRgbHex(color).orElse(null) : null;
     Integer theme = color.isThemed() ? color.getTheme() : null;
@@ -23,16 +23,14 @@ final class ExcelColorSnapshotSupport {
         ? ExcelColorSnapshot.rgb(rgb, tint)
         : theme != null
             ? ExcelColorSnapshot.theme(theme, tint)
-            : indexed != null
-                ? ExcelColorSnapshot.indexed(indexed, tint)
-                : java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
+            : indexed != null ? ExcelColorSnapshot.indexed(indexed, tint) : null;
   }
 
   /** Returns one factual snapshot for the supplied raw workbook color XML, or null when absent. */
   static ExcelColorSnapshot snapshot(XSSFWorkbook workbook, CTColor color) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     if (color == null) {
-      return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
+      return null;
     }
     XSSFColor xssfColor = XSSFColor.from(color, workbook.getStylesSource().getIndexedColors());
     ThemesTable themes = workbook.getStylesSource().getTheme();

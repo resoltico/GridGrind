@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import java.util.List;
 import java.util.Map;
@@ -15,7 +17,7 @@ public final class GridGrindContractText {
   private static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
   private static final List<Class<? extends MutationAction>>
       STREAMING_WRITE_MUTATION_ACTION_CLASSES =
-          List.of(MutationAction.EnsureSheet.class, MutationAction.AppendRow.class);
+          List.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class);
   private static final List<Class<? extends InspectionQuery>> EVENT_READ_INSPECTION_QUERY_CLASSES =
       List.of(InspectionQuery.GetWorkbookSummary.class, InspectionQuery.GetSheetSummary.class);
   private static final List<String> WORKBOOK_ANALYSIS_FAMILIES =
@@ -128,8 +130,7 @@ public final class GridGrindContractText {
         GridGrindExecutionModeMetadata.streamingWrite();
     return "Execution-mode settings that select low-memory read and write"
         + " execution families."
-        + " readMode defaults to FULL_XSSF when omitted."
-        + " writeMode defaults to FULL_XSSF when omitted."
+        + " Supply explicit readMode and writeMode values."
         + " "
         + eventRead.mode().name()
         + " supports "
@@ -155,16 +156,16 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `ExecutionPolicyInput`. */
   public static String executionPolicyInputSummary() {
-    return "Optional request execution policy covering execution.mode, execution.journal,"
+    return "Explicit request execution policy covering execution.mode, execution.journal,"
         + " and execution.calculation."
-        + " Omit it to accept the default FULL_XSSF read/write path, NORMAL journal detail,"
-        + " and DO_NOT_CALCULATE calculation policy.";
+        + " Use ExecutionPolicyInput.defaults() when the standard FULL_XSSF / NORMAL /"
+        + " DO_NOT_CALCULATE policy is intended.";
   }
 
   /** One stable catalog summary for `ExecutionJournalInput`. */
   public static String executionJournalInputSummary() {
-    return "Optional execution-journal settings."
-        + " level defaults to NORMAL when omitted."
+    return "Explicit execution-journal settings."
+        + " Use ExecutionJournalInput.defaults() for NORMAL detail."
         + " SUMMARY returns compact target summaries,"
         + " NORMAL returns expanded target summaries,"
         + " and VERBOSE also enables fine-grained event emission for CLI stderr rendering.";
@@ -172,9 +173,9 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `CalculationPolicyInput`. */
   public static String calculationPolicyInputSummary() {
-    return "Optional explicit formula-calculation policy."
-        + " strategy defaults to DO_NOT_CALCULATE when omitted."
-        + " markRecalculateOnOpen defaults to false when omitted."
+    return "Explicit formula-calculation policy."
+        + " Use CalculationPolicyInput.defaults() for DO_NOT_CALCULATE with"
+        + " markRecalculateOnOpen=false."
         + " Use EVALUATE_ALL or EVALUATE_TARGETS for immediate server-side evaluation,"
         + " CLEAR_CACHES_ONLY to strip persisted caches,"
         + " or markRecalculateOnOpen=true when Excel-compatible clients should recalculate later.";

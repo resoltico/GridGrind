@@ -8,7 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
@@ -17,6 +18,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
@@ -86,8 +88,8 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new TableSelector.ByNameOnSheet("OtherTable", "Budget"),
-                    new MutationAction.SetTable(
-                        new TableInput(
+                    new StructuredMutationAction.SetTable(
+                        TableInput.withDefaultMetadata(
                             "BudgetTable", "Budget", "A1:B2", false, new TableStyleInput.None()))));
     assertEquals(
         "SET_TABLE target must match table.name and table.sheetName", tableMismatch.getMessage());
@@ -98,8 +100,8 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new TableSelector.ByNameOnSheet("BudgetTable", "Archive"),
-                    new MutationAction.SetTable(
-                        new TableInput(
+                    new StructuredMutationAction.SetTable(
+                        TableInput.withDefaultMetadata(
                             "BudgetTable", "Budget", "A1:B2", false, new TableStyleInput.None()))));
     assertEquals(
         "SET_TABLE target must match table.name and table.sheetName",
@@ -111,7 +113,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new PivotTableSelector.ByNameOnSheet("OtherPivot", "Budget"),
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "SalesPivot",
                             "Budget",
@@ -125,7 +127,7 @@ class ExecutorPhase3CoverageTest {
                                     "Amount",
                                     dev.erst.gridgrind.excel.foundation
                                         .ExcelPivotDataConsolidateFunction.SUM,
-                                    null,
+                                    "Amount",
                                     null))))));
     assertEquals(
         "SET_PIVOT_TABLE target must match pivotTable.name and pivotTable.sheetName",
@@ -137,7 +139,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new PivotTableSelector.ByNameOnSheet("SalesPivot", "Archive"),
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "SalesPivot",
                             "Budget",
@@ -151,7 +153,7 @@ class ExecutorPhase3CoverageTest {
                                     "Amount",
                                     dev.erst.gridgrind.excel.foundation
                                         .ExcelPivotDataConsolidateFunction.SUM,
-                                    null,
+                                    "Amount",
                                     null))))));
     assertEquals(
         "SET_PIVOT_TABLE target must match pivotTable.name and pivotTable.sheetName",
@@ -163,7 +165,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new NamedRangeSelector.SheetScope("BudgetTotal", "Archive"),
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet("Budget"),
                         new NamedRangeTarget("Budget", "B4"))));
@@ -176,7 +178,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new NamedRangeSelector.SheetScope("OtherTotal", "Budget"),
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet("Budget"),
                         new NamedRangeTarget("Budget", "B4"))));
@@ -190,7 +192,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "BudgetTotal",
                         new NamedRangeScope.Sheet("Budget"),
                         new NamedRangeTarget("Budget", "B4"))));
@@ -204,7 +206,7 @@ class ExecutorPhase3CoverageTest {
             () ->
                 WorkbookCommandConverter.toCommand(
                     new NamedRangeSelector.ByName("BudgetTotal"),
-                    new MutationAction.DeleteNamedRange()));
+                    new StructuredMutationAction.DeleteNamedRange()));
     assertEquals(
         "DELETE_NAMED_RANGE requires target type ScopedExact but got ByName",
         broadDelete.getMessage());
@@ -232,11 +234,12 @@ class ExecutorPhase3CoverageTest {
             dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
             GridGrindProblems.enrichContext(
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                        "NEW", "NONE"),
-                    new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
-                        0, "step", "INSPECTION", "GET_NAMED_RANGES"),
-                    dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "NONE"),
+                    new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                        .StepReference(0, "step", "INSPECTION", "GET_NAMED_RANGES"),
+                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                        .unknown()),
                 new NamedRangeNotFoundException(
                     "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
     assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
@@ -246,11 +249,12 @@ class ExecutorPhase3CoverageTest {
                 dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
                     new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                            "NEW", "NONE"),
-                        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
-                            1, "cell", "MUTATION", "SET_CELL"),
-                        dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                            .known("NEW", "NONE"),
+                        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                            .StepReference(1, "cell", "MUTATION", "SET_CELL"),
+                        dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                            .ProblemLocation.unknown()),
                     new CellNotFoundException("A1")))
             .address());
     assertEquals(
@@ -259,11 +263,12 @@ class ExecutorPhase3CoverageTest {
                 dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep.class,
                 GridGrindProblems.enrichContext(
                     new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                            "NEW", "NONE"),
-                        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
-                            2, "cell", "MUTATION", "SET_CELL"),
-                        dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown()),
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                            .known("NEW", "NONE"),
+                        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                            .StepReference(2, "cell", "MUTATION", "SET_CELL"),
+                        dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces
+                            .ProblemLocation.unknown()),
                     new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))))
             .address());
 
@@ -563,18 +568,18 @@ class ExecutorPhase3CoverageTest {
   private static void assertStreamingPersistenceBehaviors() throws IOException {
     ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
-    GridGrindResponse.PersistenceOutcome notSaved =
+    GridGrindResponsePersistence.PersistenceOutcome notSaved =
         workbookSupport.persistStreamingWorkbook(
             materialized,
             new WorkbookPlan.WorkbookPersistence.None(),
             new WorkbookPlan.WorkbookSource.New());
-    assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, notSaved);
+    assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, notSaved);
 
     Path saveAsRoot = Files.createTempDirectory("gridgrind-streaming-saveas-");
     Path saveAsPath = saveAsRoot.resolve("nested output").resolve("streaming save-as.xlsx");
-    GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
-            GridGrindResponse.PersistenceOutcome.SavedAs.class,
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class,
             workbookSupport.persistStreamingWorkbook(
                 materialized,
                 new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
@@ -584,9 +589,9 @@ class ExecutorPhase3CoverageTest {
 
     Path overwriteMaterialized = createWorkbookFile("gridgrind-streaming-overwrite-materialized-");
     Path overwriteSourcePath = createWorkbookFile("gridgrind-streaming-overwrite-source-");
-    GridGrindResponse.PersistenceOutcome.Overwritten overwritten =
+    GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten =
         assertInstanceOf(
-            GridGrindResponse.PersistenceOutcome.Overwritten.class,
+            GridGrindResponsePersistence.PersistenceOutcome.Overwritten.class,
             workbookSupport.persistStreamingWorkbook(
                 overwriteMaterialized,
                 new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
@@ -666,38 +671,40 @@ class ExecutorPhase3CoverageTest {
   }
 
   private static void assertActionDiagnostics() {
-    MutationAction.SetCell setBlank = new MutationAction.SetCell(new CellInput.Blank());
-    MutationAction.SetCell setText = new MutationAction.SetCell(textCell("plain text"));
-    MutationAction.SetCell setRichText =
-        new MutationAction.SetCell(new CellInput.RichText(List.of(richTextRun("rich"))));
-    MutationAction.SetCell setNumeric = new MutationAction.SetCell(new CellInput.Numeric(12.5));
-    MutationAction.SetCell setBoolean =
-        new MutationAction.SetCell(new CellInput.BooleanValue(true));
-    MutationAction.SetCell setDate =
-        new MutationAction.SetCell(new CellInput.Date(LocalDate.parse("2026-04-17")));
-    MutationAction.SetCell setDateTime =
-        new MutationAction.SetCell(
+    CellMutationAction.SetCell setBlank = new CellMutationAction.SetCell(new CellInput.Blank());
+    CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
+    CellMutationAction.SetCell setRichText =
+        new CellMutationAction.SetCell(new CellInput.RichText(List.of(richTextRun("rich"))));
+    CellMutationAction.SetCell setNumeric =
+        new CellMutationAction.SetCell(new CellInput.Numeric(12.5));
+    CellMutationAction.SetCell setBoolean =
+        new CellMutationAction.SetCell(new CellInput.BooleanValue(true));
+    CellMutationAction.SetCell setDate =
+        new CellMutationAction.SetCell(new CellInput.Date(LocalDate.parse("2026-04-17")));
+    CellMutationAction.SetCell setDateTime =
+        new CellMutationAction.SetCell(
             new CellInput.DateTime(LocalDateTime.parse("2026-04-17T09:10:11")));
-    MutationAction.SetCell setFormula = new MutationAction.SetCell(formulaCell("SUM(A1:A2)"));
-    MutationAction.SetPivotTable pivotFromRange =
+    CellMutationAction.SetCell setFormula =
+        new CellMutationAction.SetCell(formulaCell("SUM(A1:A2)"));
+    StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(new PivotTableInput.Source.Range("Budget", "A1:B5"));
-    MutationAction.SetPivotTable pivotFromNamedRange =
+    StructuredMutationAction.SetPivotTable pivotFromNamedRange =
         pivotTableAction(new PivotTableInput.Source.NamedRange("BudgetSource"));
-    MutationAction.SetPivotTable pivotFromTable =
+    StructuredMutationAction.SetPivotTable pivotFromTable =
         pivotTableAction(new PivotTableInput.Source.Table("BudgetTable"));
-    MutationAction.SetNamedRange sheetScopedNamedRange =
-        new MutationAction.SetNamedRange(
+    StructuredMutationAction.SetNamedRange sheetScopedNamedRange =
+        new StructuredMutationAction.SetNamedRange(
             "LocalTotal",
             new NamedRangeScope.Sheet("Budget"),
             new NamedRangeTarget("SUM(Budget!B2:B4)"));
-    MutationAction.SetNamedRange workbookScopedNamedRange =
-        new MutationAction.SetNamedRange(
+    StructuredMutationAction.SetNamedRange workbookScopedNamedRange =
+        new StructuredMutationAction.SetNamedRange(
             "BudgetTotal",
             new NamedRangeScope.Workbook(),
             new NamedRangeTarget("SUM(Budget!B2:B4)"));
-    MutationAction.SetConditionalFormatting singleRangeFormatting =
+    StructuredMutationAction.SetConditionalFormatting singleRangeFormatting =
         conditionalFormattingAction(List.of("B2:B5"));
-    MutationAction.SetConditionalFormatting multiRangeFormatting =
+    StructuredMutationAction.SetConditionalFormatting multiRangeFormatting =
         conditionalFormattingAction(List.of("B2:B5", "D2:D5"));
 
     assertEquals(
@@ -976,8 +983,8 @@ class ExecutorPhase3CoverageTest {
   }
 
   private static void assertExceptionAndStepDiagnostics() {
-    MutationAction.SetCell setText = new MutationAction.SetCell(textCell("plain text"));
-    MutationAction.SetPivotTable pivotFromRange =
+    CellMutationAction.SetCell setText = new CellMutationAction.SetCell(textCell("plain text"));
+    StructuredMutationAction.SetPivotTable pivotFromRange =
         pivotTableAction(new PivotTableInput.Source.Range("Budget", "A1:B5"));
     MutationStep pivotStep =
         new MutationStep(
@@ -1018,8 +1025,9 @@ class ExecutorPhase3CoverageTest {
         java.util.Optional.of("D4"), ExecutionDiagnosticFields.addressFor(addressedCellStep));
   }
 
-  private static MutationAction.SetPivotTable pivotTableAction(PivotTableInput.Source source) {
-    return new MutationAction.SetPivotTable(
+  private static StructuredMutationAction.SetPivotTable pivotTableAction(
+      PivotTableInput.Source source) {
+    return new StructuredMutationAction.SetPivotTable(
         new PivotTableInput(
             "SalesPivot",
             "Budget",
@@ -1032,13 +1040,13 @@ class ExecutorPhase3CoverageTest {
                 new PivotTableInput.DataField(
                     "Amount",
                     dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
-                    null,
+                    "Amount",
                     null))));
   }
 
-  private static MutationAction.SetConditionalFormatting conditionalFormattingAction(
+  private static StructuredMutationAction.SetConditionalFormatting conditionalFormattingAction(
       List<String> ranges) {
-    return new MutationAction.SetConditionalFormatting(
+    return new StructuredMutationAction.SetConditionalFormatting(
         new ConditionalFormattingBlockInput(
             ranges,
             List.of(

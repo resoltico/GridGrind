@@ -22,8 +22,8 @@ class ExcelEventWorkbookReaderTest {
   void matchesFullWorkbookAndSheetSummariesForSupportedReads() throws IOException {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-event-read-", ".xlsx");
 
-    WorkbookReadResult.WorkbookSummary expectedWorkbookSummary;
-    WorkbookReadResult.SheetSummary expectedSheetSummary;
+    WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary;
+    WorkbookSheetResult.SheetSummary expectedSheetSummary;
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.getOrCreateSheet("Archive");
@@ -45,7 +45,7 @@ class ExcelEventWorkbookReaderTest {
       workbook.save(workbookPath);
     }
 
-    List<WorkbookReadResult.Introspection> reads =
+    List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
             .apply(
                 workbookPath,
@@ -54,10 +54,10 @@ class ExcelEventWorkbookReaderTest {
                     new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
 
     assertEquals(
-        new WorkbookReadResult.WorkbookSummaryResult("workbook", expectedWorkbookSummary),
+        new WorkbookCoreResult.WorkbookSummaryResult("workbook", expectedWorkbookSummary),
         reads.get(0));
     assertEquals(
-        new WorkbookReadResult.SheetSummaryResult("sheet", expectedSheetSummary), reads.get(1));
+        new WorkbookSheetResult.SheetSummaryResult("sheet", expectedSheetSummary), reads.get(1));
   }
 
   @Test
@@ -110,14 +110,14 @@ class ExcelEventWorkbookReaderTest {
                 xml.replaceAll("(?s)<bookViews>.*?</bookViews>", "")
                     .replaceAll("(?s)<sheets>.*?</sheets>", ""));
 
-    List<WorkbookReadResult.Introspection> reads =
+    List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
             .apply(emptyWorkbook, List.of(new WorkbookReadCommand.GetWorkbookSummary("empty")));
 
     assertEquals(
         List.of(
-            new WorkbookReadResult.WorkbookSummaryResult(
-                "empty", new WorkbookReadResult.WorkbookSummary.Empty(0, List.of(), 0, false))),
+            new WorkbookCoreResult.WorkbookSummaryResult(
+                "empty", new WorkbookCoreResult.WorkbookSummary.Empty(0, List.of(), 0, false))),
         reads);
   }
 
@@ -152,7 +152,7 @@ class ExcelEventWorkbookReaderTest {
                 "xl/worksheets/sheet3.xml",
                 ExcelEventWorkbookReaderTest::clearTabSelectedAttributes));
 
-    List<WorkbookReadResult.Introspection> reads =
+    List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
             .apply(
                 mutatedWorkbook,
@@ -162,9 +162,9 @@ class ExcelEventWorkbookReaderTest {
                     new WorkbookReadCommand.GetSheetSummary("veryHidden", "VeryHidden")));
 
     assertEquals(
-        new WorkbookReadResult.WorkbookSummaryResult(
+        new WorkbookCoreResult.WorkbookSummaryResult(
             "workbook",
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 3,
                 List.of("Visible", "Hidden", "VeryHidden"),
                 "Visible",
@@ -173,23 +173,23 @@ class ExcelEventWorkbookReaderTest {
                 false)),
         reads.get(0));
     assertEquals(
-        new WorkbookReadResult.SheetSummaryResult(
+        new WorkbookSheetResult.SheetSummaryResult(
             "hidden",
-            new WorkbookReadResult.SheetSummary(
+            new WorkbookSheetResult.SheetSummary(
                 "Hidden",
                 ExcelSheetVisibility.HIDDEN,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
+                new WorkbookSheetResult.SheetProtection.Unprotected(),
                 0,
                 -1,
                 -1)),
         reads.get(1));
     assertEquals(
-        new WorkbookReadResult.SheetSummaryResult(
+        new WorkbookSheetResult.SheetSummaryResult(
             "veryHidden",
-            new WorkbookReadResult.SheetSummary(
+            new WorkbookSheetResult.SheetSummary(
                 "VeryHidden",
                 ExcelSheetVisibility.VERY_HIDDEN,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
+                new WorkbookSheetResult.SheetProtection.Unprotected(),
                 0,
                 -1,
                 -1)),
@@ -223,10 +223,10 @@ class ExcelEventWorkbookReaderTest {
                   : withNegativeActiveTab.replace("</workbook>", "<calcPr/></workbook>");
             });
 
-    WorkbookReadResult.WorkbookSummary.WithSheets summary =
+    WorkbookCoreResult.WorkbookSummary.WithSheets summary =
         assertInstanceOf(
-            WorkbookReadResult.WorkbookSummary.WithSheets.class,
-            ((WorkbookReadResult.WorkbookSummaryResult)
+            WorkbookCoreResult.WorkbookSummary.WithSheets.class,
+            ((WorkbookCoreResult.WorkbookSummaryResult)
                     new ExcelEventWorkbookReader()
                         .apply(
                             mutatedWorkbook,
@@ -274,7 +274,7 @@ class ExcelEventWorkbookReaderTest {
                 </worksheet>
                 """);
 
-    List<WorkbookReadResult.Introspection> reads =
+    List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
             .apply(
                 sparseWorkbook,
@@ -282,12 +282,12 @@ class ExcelEventWorkbookReaderTest {
 
     assertEquals(
         List.of(
-            new WorkbookReadResult.SheetSummaryResult(
+            new WorkbookSheetResult.SheetSummaryResult(
                 "sheet",
-                new WorkbookReadResult.SheetSummary(
+                new WorkbookSheetResult.SheetSummary(
                     "Sparse",
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookReadResult.SheetProtection.Unprotected(),
+                    new WorkbookSheetResult.SheetProtection.Unprotected(),
                     2,
                     3,
                     2))),
@@ -459,7 +459,7 @@ class ExcelEventWorkbookReaderTest {
 
     EventSheetSummary summary = handler.summary();
     assertTrue(summary.selected());
-    assertInstanceOf(WorkbookReadResult.SheetProtection.Protected.class, summary.protection());
+    assertInstanceOf(WorkbookSheetResult.SheetProtection.Protected.class, summary.protection());
   }
 
   private static String expectedReadType(WorkbookReadCommand.Introspection command) {
@@ -560,7 +560,7 @@ class ExcelEventWorkbookReaderTest {
                     </worksheet>
                     """));
 
-    List<WorkbookReadResult.Introspection> reads =
+    List<WorkbookReadIntrospectionResult> reads =
         new ExcelEventWorkbookReader()
             .apply(
                 edgeCaseWorkbook,
@@ -568,13 +568,13 @@ class ExcelEventWorkbookReaderTest {
                     new WorkbookReadCommand.GetWorkbookSummary("workbook"),
                     new WorkbookReadCommand.GetSheetSummary("sheet", "Visible")));
 
-    WorkbookReadResult.WorkbookSummary.WithSheets summary =
+    WorkbookCoreResult.WorkbookSummary.WithSheets summary =
         assertInstanceOf(
-            WorkbookReadResult.WorkbookSummary.WithSheets.class,
-            ((WorkbookReadResult.WorkbookSummaryResult) reads.get(0)).workbook());
+            WorkbookCoreResult.WorkbookSummary.WithSheets.class,
+            ((WorkbookCoreResult.WorkbookSummaryResult) reads.get(0)).workbook());
     assertFalse(summary.forceFormulaRecalculationOnOpen());
-    WorkbookReadResult.SheetSummary sheetSummary =
-        ((WorkbookReadResult.SheetSummaryResult) reads.get(1)).sheet();
+    WorkbookSheetResult.SheetSummary sheetSummary =
+        ((WorkbookSheetResult.SheetSummaryResult) reads.get(1)).sheet();
     assertEquals(ExcelSheetVisibility.VISIBLE, sheetSummary.visibility());
     assertEquals(1, sheetSummary.physicalRowCount());
     assertEquals(-1, sheetSummary.lastColumnIndex());

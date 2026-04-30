@@ -405,7 +405,7 @@ final class ExcelDrawingController {
   private LocatedShape optionalLocatedShape(XSSFSheet sheet, String objectName) {
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
-      return java.util.Optional.<LocatedShape>empty().orElse(null);
+      return null;
     }
     XSSFShape matchedShape = null;
     XmlObject matchedShapeXml = null;
@@ -425,7 +425,7 @@ final class ExcelDrawingController {
       matchedShapeXml = shapeXml(shape);
     }
     return matchedShape == null
-        ? java.util.Optional.<LocatedShape>empty().orElse(null)
+        ? null
         : new LocatedShape(drawing, matchedShape, matchedShapeXml, parentAnchor(matchedShapeXml));
   }
 

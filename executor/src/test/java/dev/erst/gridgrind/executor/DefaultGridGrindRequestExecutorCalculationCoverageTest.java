@@ -12,13 +12,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -44,8 +45,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
   @Test
   void executeRejectsMutationObservationOrderingAtValidationPhase() {
     WorkbookPlan request =
-        new WorkbookPlan(
-            GridGrindProtocolVersion.current(),
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy(calculateAll()),
@@ -54,7 +54,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 new MutationStep(
                     "step-01-ensure-sheet",
                     new SheetSelector.ByName("Ops"),
-                    new MutationAction.EnsureSheet()),
+                    new WorkbookMutationAction.EnsureSheet()),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
@@ -62,7 +62,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 new MutationStep(
                     "step-03-set-cell",
                     new CellSelector.ByAddress("Ops", "A1"),
-                    new MutationAction.SetCell(
+                    new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.contract.dto.CellInput.Numeric(1.0)))));
     GridGrindResponse.Failure failure =
         failure(new DefaultGridGrindRequestExecutor().execute(request));
@@ -122,7 +122,9 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                         markRecalculateOnOpen()),
                     null,
                     java.util.List.of(
-                        mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
                     java.util.List.of())));
 
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
@@ -159,7 +161,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               ExecutionJournalRecorder.start(preflightRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport preflightReport = preflightOutcome.report();
-      GridGrindResponse.Problem preflightFailure = preflightOutcome.failure().orElseThrow();
+      GridGrindProblemDetail.Problem preflightFailure = preflightOutcome.failure().orElseThrow();
       assertEquals(CalculationExecutionStatus.FAILED, preflightReport.execution().status());
       assertEquals(
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, preflightFailure.code());
@@ -193,7 +195,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
               ExecutionJournalRecorder.start(clearCachesRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport executionReport = executionOutcome.report();
-      GridGrindResponse.Problem executionFailure = executionOutcome.failure().orElseThrow();
+      GridGrindProblemDetail.Problem executionFailure = executionOutcome.failure().orElseThrow();
       assertEquals(CalculationExecutionStatus.FAILED, executionReport.execution().status());
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, executionFailure.code());
       assertEquals("CALCULATION_EXECUTION", executionFailure.context().stage());
@@ -240,7 +242,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             "SUM(",
             "invalid formula",
             null);
-    GridGrindResponse.Problem mappedCodeFailure =
+    GridGrindProblemDetail.Problem mappedCodeFailure =
         calculationSupport.calculationProblemFor(preflightRequest, codeFailure);
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, mappedCodeFailure.code());
     assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().stage());

@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 2688
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: NONE
-Operation Count: 6
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'margins'
+Input Bytes: 2711
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 4
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_SHEET_LAYOUT=2, GET_PRINT_LAYOUT=2
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=2, SET_SHEET_PANE=2, SET_PRINT_LAYOUT=1, CLEAR_PRINT_LAYOUT=1
+Operation Kinds: (none)

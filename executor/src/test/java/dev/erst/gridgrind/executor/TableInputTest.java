@@ -16,7 +16,7 @@ class TableInputTest {
   @Test
   void validatesAndConvertsToWorkbookDefinition() {
     TableInput input =
-        TableInput.create(
+        TableInput.withDefaultMetadata(
             "BudgetTable",
             "Budget",
             "A1:C4",
@@ -34,11 +34,13 @@ class TableInputTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new TableInput("BudgetTable", " ", "A1:C4", false, new TableStyleInput.None()));
+        () ->
+            TableInput.withDefaultMetadata(
+                "BudgetTable", " ", "A1:C4", false, new TableStyleInput.None()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new TableInput(
+            TableInput.withDefaultMetadata(
                 "BudgetTable",
                 "12345678901234567890123456789012",
                 "A1:C4",
@@ -46,16 +48,19 @@ class TableInputTest {
                 new TableStyleInput.None()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new TableInput("BudgetTable", "Budget", " ", false, new TableStyleInput.None()));
+        () ->
+            TableInput.withDefaultMetadata(
+                "BudgetTable", "Budget", " ", false, new TableStyleInput.None()));
     assertThrows(
         NullPointerException.class,
-        () -> new TableInput("BudgetTable", "Budget", "A1:C4", false, null));
+        () -> TableInput.withDefaultMetadata("BudgetTable", "Budget", "A1:C4", false, null));
   }
 
   @Test
-  void defaultsMissingTotalsRowFlagToFalse() {
+  void explicitDefaultMetadataPreservesTotalsRowFlagFalse() {
     TableInput input =
-        new TableInput("BudgetTable", "Budget", "A1:C4", false, new TableStyleInput.None());
+        TableInput.withDefaultMetadata(
+            "BudgetTable", "Budget", "A1:C4", false, new TableStyleInput.None());
 
     assertFalse(input.showTotalsRow());
     assertEquals(

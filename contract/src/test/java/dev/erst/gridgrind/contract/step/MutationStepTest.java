@@ -3,7 +3,8 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
@@ -18,17 +19,19 @@ class MutationStepTest {
   void acceptsCompatibleTargetAndActionPairs() {
     MutationStep ensureSheet =
         new MutationStep(
-            "ensure-budget", new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet());
+            "ensure-budget",
+            new SheetSelector.ByName("Budget"),
+            new WorkbookMutationAction.EnsureSheet());
     MutationStep setCell =
         new MutationStep(
             "set-owner",
             new CellSelector.ByAddress("Budget", "A1"),
-            new MutationAction.SetCell(new CellInput.Text(text("Owner"))));
+            new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))));
     MutationStep clearWorkbookProtection =
         new MutationStep(
             "clear-book-protection",
             new WorkbookSelector.Current(),
-            new MutationAction.ClearWorkbookProtection());
+            new WorkbookMutationAction.ClearWorkbookProtection());
 
     assertEquals("MUTATION", ensureSheet.stepKind());
     assertEquals("ENSURE_SHEET", ensureSheet.action().actionType());
@@ -42,7 +45,7 @@ class MutationStepTest {
         IllegalArgumentException.class,
         () ->
             new MutationStep(
-                " ", new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()));
+                " ", new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()));
     IllegalArgumentException incompatibleTargetFailure =
         assertThrows(
             IllegalArgumentException.class,
@@ -50,7 +53,7 @@ class MutationStepTest {
                 new MutationStep(
                     "bad-target",
                     new RangeSelector.ByRange("Budget", "A1:B2"),
-                    new MutationAction.SetCell(new CellInput.Text(text("Owner")))));
+                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
 
     assertEquals(
         "SET_CELL requires target type ByAddress or ByColumnName but got ByRange",

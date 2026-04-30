@@ -20,16 +20,11 @@ public record OoxmlSignatureInput(
       @JsonProperty("pkcs12Path") String pkcs12Path,
       @JsonProperty("keystorePassword") String keystorePassword,
       @JsonProperty("keyPassword") String keyPassword,
-      @JsonProperty("alias") String alias,
+      @JsonProperty("alias") Optional<String> alias,
       @JsonProperty("digestAlgorithm") ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
-      @JsonProperty("description") String description) {
+      @JsonProperty("description") Optional<String> description) {
     return new OoxmlSignatureInput(
-        pkcs12Path,
-        keystorePassword,
-        keyPassword == null ? keystorePassword : keyPassword,
-        Optional.ofNullable(alias),
-        digestAlgorithm == null ? ExcelOoxmlSignatureDigestAlgorithm.SHA256 : digestAlgorithm,
-        Optional.ofNullable(description));
+        pkcs12Path, keystorePassword, keyPassword, alias, digestAlgorithm, description);
   }
 
   public OoxmlSignatureInput {
@@ -41,6 +36,17 @@ public record OoxmlSignatureInput(
     description = normalizeOptional(description, "description");
   }
 
+  /** Creates one signature payload whose key password matches the keystore password. */
+  public static OoxmlSignatureInput sameKeyPassword(
+      String pkcs12Path,
+      String keystorePassword,
+      Optional<String> alias,
+      ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
+      Optional<String> description) {
+    return new OoxmlSignatureInput(
+        pkcs12Path, keystorePassword, keystorePassword, alias, digestAlgorithm, description);
+  }
+
   private static String normalizeRequired(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
@@ -50,7 +56,7 @@ public record OoxmlSignatureInput(
   }
 
   private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
-    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    Optional<String> normalized = Objects.requireNonNull(value, fieldName + " must not be null");
     if (normalized.isEmpty()) {
       return Optional.empty();
     }

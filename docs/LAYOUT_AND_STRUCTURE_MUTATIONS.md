@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: LAYOUT_STRUCTURE_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, layout mutations, merge-cells, rows, columns, pane, zoom, presentation, print-layout]
   questions: ["how do i change workbook layout in gridgrind", "how do i insert or delete rows in gridgrind", "how do i set panes or print layout in gridgrind"]
@@ -141,8 +141,11 @@ exists there.
 | `rowCount` | Yes | Positive number of blank rows to insert. |
 
 GridGrind preserves and retargets existing data validations across the insert so the moved cells
-keep their authored validation coverage. It still rejects the edit when Apache POI would leave a
-moved table or sheet-owned autofilter stale (`LIM-016`).
+keep their authored validation coverage. When the insert lands inside existing sheet rows,
+GridGrind also materializes the inserted blank rows with adjacent visual formatting so fonts,
+fills, wrap state, row height, and cell styles follow the surrounding authored sheet instead of
+dropping back to workbook defaults. It still rejects the edit when Apache POI would leave a moved
+table or sheet-owned autofilter stale (`LIM-016`).
 
 ---
 
@@ -229,7 +232,10 @@ GridGrind preserves and retargets existing data validations across the insert so
 keep their authored validation coverage. It still rejects the edit when Apache POI would leave a
 moved table or sheet-owned autofilter stale (`LIM-016`), and it also rejects the edit when the
 workbook contains any formula cells or formula-defined named ranges because Apache POI leaves some
-column references stale after column moves (`LIM-017`).
+column references stale after column moves (`LIM-017`). Inserted blank columns inside existing
+sheet content inherit adjacent visual formatting instead of materializing as workbook-default
+blanks, so column-width, default-column-style, font, fill, wrap, and cell-style facts follow the
+surrounding authored sheet after `INSERT_COLUMNS`.
 
 ---
 
@@ -342,8 +348,8 @@ Hide or unhide one inclusive zero-based column band.
 
 ### GROUP_ROWS
 
-Apply one outline group to one inclusive zero-based row band. When `collapsed` is omitted it
-defaults to `false`.
+Apply one outline group to one inclusive zero-based row band. `collapsed` is explicit on the
+wire; use `false` for an expanded group.
 
 ```json
 {
@@ -362,7 +368,7 @@ defaults to `false`.
 |:------|:---------|:------------|
 | `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
-| `collapsed` | No | When `true`, the newly grouped rows are collapsed immediately. Defaults to `false`. |
+| `collapsed` | Yes | When `true`, the newly grouped rows are collapsed immediately. Use `false` for an expanded group. |
 
 ---
 
@@ -392,8 +398,8 @@ so hidden rows are not left stranded in a collapsed state.
 
 ### GROUP_COLUMNS
 
-Apply one outline group to one inclusive zero-based column band. When `collapsed` is omitted it
-defaults to `false`.
+Apply one outline group to one inclusive zero-based column band. `collapsed` is explicit on the
+wire; use `false` for an expanded group.
 
 ```json
 {
@@ -412,7 +418,7 @@ defaults to `false`.
 |:------|:---------|:------------|
 | `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
-| `collapsed` | No | When `true`, the newly grouped columns are collapsed immediately. Defaults to `false`. |
+| `collapsed` | Yes | When `true`, the newly grouped columns are collapsed immediately. Use `false` for an expanded group. |
 
 ---
 
@@ -549,8 +555,8 @@ Set one explicit zoom percentage for a sheet.
 
 ### SET_SHEET_PRESENTATION
 
-Apply one authoritative supported sheet-presentation state to a sheet. Omitted nested fields
-normalize to defaults or clear state.
+Apply one authoritative supported sheet-presentation state to a sheet. Supply the complete
+supported presentation payload explicitly.
 
 ```json
 {
@@ -602,10 +608,10 @@ normalize to defaults or clear state.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `display` | No | Screen-view flags. Each nested field is optional and defaults to Excel's worksheet defaults. |
+| `display` | Yes | Screen-view flags. Supply all nested fields explicitly. |
 | `tabColor` | No | Tab color using the normal `ColorInput` contract. Omit to clear the tab color. |
-| `outlineSummary` | No | `rowSumsBelow` and `rowSumsRight`. Defaults to `true` for both. |
-| `sheetDefaults` | No | Sheet-wide fallback sizing for rows and columns without explicit overrides. |
+| `outlineSummary` | Yes | `rowSumsBelow` and `rowSumsRight`. Supply both values explicitly. |
+| `sheetDefaults` | Yes | Sheet-wide fallback sizing for rows and columns without explicit overrides. Supply both values explicitly. |
 | `ignoredErrors` | No | Authoritative list of ignored-error blocks. Omit or pass `[]` to clear all ignored-error suppression. |
 
 Nested constraints:
@@ -624,8 +630,8 @@ default row height, are reported as stored instead of being clamped back to auth
 
 ### SET_PRINT_LAYOUT
 
-Apply one authoritative supported print-layout state to a sheet. Omitted nested fields normalize
-to default or cleared state.
+Apply one authoritative supported print-layout state to a sheet. Supply the full supported
+print-layout payload explicitly.
 
 ```json
 {
@@ -724,14 +730,14 @@ to default or cleared state.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `printArea` | No | `NONE` or `RANGE`. Defaults to `NONE`. |
-| `orientation` | No | `PORTRAIT` or `LANDSCAPE`. Defaults to `PORTRAIT`. |
-| `scaling` | No | `AUTOMATIC` or `FIT`. Defaults to `AUTOMATIC`. |
-| `repeatingRows` | No | `NONE` or `BAND`. Defaults to `NONE`. |
-| `repeatingColumns` | No | `NONE` or `BAND`. Defaults to `NONE`. |
-| `header` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
-| `footer` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
-| `setup` | No | Advanced page-setup payload. Defaults to the supported Excel baseline for margins, print-gridline output, centering, copies, and page numbering. |
+| `printArea` | Yes | `NONE` or `RANGE`. |
+| `orientation` | Yes | `PORTRAIT` or `LANDSCAPE`. |
+| `scaling` | Yes | `AUTOMATIC` or `FIT`. |
+| `repeatingRows` | Yes | `NONE` or `BAND`. |
+| `repeatingColumns` | Yes | `NONE` or `BAND`. |
+| `header` | Yes | Plain `left`, `center`, and `right` text segments. Supply all three explicitly. |
+| `footer` | Yes | Plain `left`, `center`, and `right` text segments. Supply all three explicitly. |
+| `setup` | Yes | Advanced page-setup payload. Supply the full supported setup block explicitly. |
 
 Nested constraints:
 
@@ -747,17 +753,17 @@ Nested constraints:
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `margins` | No | `left`, `right`, `top`, `bottom`, `header`, and `footer` margins in inches. Each value must be finite and non-negative. |
-| `horizontallyCentered` | No | Center printed content horizontally on the page. Defaults to `false`. |
-| `verticallyCentered` | No | Center printed content vertically on the page. Defaults to `false`. |
-| `paperSize` | No | Excel paper-size code. Defaults to `0` when omitted. |
-| `draft` | No | Draft-print flag. Defaults to `false`. |
-| `blackAndWhite` | No | Black-and-white print flag. Defaults to `false`. |
-| `copies` | No | Explicit copy count. Defaults to `0` when omitted. |
-| `useFirstPageNumber` | No | Whether `firstPageNumber` is authoritative. Defaults to `false`. |
-| `firstPageNumber` | No | Explicit first page number. Defaults to `0` when omitted. |
-| `rowBreaks` | No | Ordered list of zero-based row indexes for explicit row breaks. Defaults to `[]`. |
-| `columnBreaks` | No | Ordered list of zero-based column indexes for explicit column breaks. Defaults to `[]`. |
+| `margins` | Yes | `left`, `right`, `top`, `bottom`, `header`, and `footer` margins in inches. Each value must be finite and non-negative. |
+| `horizontallyCentered` | Yes | Center printed content horizontally on the page. |
+| `verticallyCentered` | Yes | Center printed content vertically on the page. |
+| `paperSize` | Yes | Excel paper-size code. |
+| `draft` | Yes | Draft-print flag. |
+| `blackAndWhite` | Yes | Black-and-white print flag. |
+| `copies` | Yes | Explicit copy count. |
+| `useFirstPageNumber` | Yes | Whether `firstPageNumber` is authoritative. |
+| `firstPageNumber` | Yes | Explicit first page number. |
+| `rowBreaks` | Yes | Ordered list of zero-based row indexes for explicit row breaks. Use `[]` when none are needed. |
+| `columnBreaks` | Yes | Ordered list of zero-based column indexes for explicit column breaks. Use `[]` when none are needed. |
 
 ### CLEAR_PRINT_LAYOUT
 

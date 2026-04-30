@@ -12,17 +12,17 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
 /** Owns workbook-level active, selected, visibility, protection, and summary state. */
 final class ExcelSheetStateController {
   /** Returns workbook-level summary facts including active and selected sheet state. */
-  WorkbookReadResult.WorkbookSummary summarizeWorkbook(ExcelWorkbook workbook) {
+  WorkbookCoreResult.WorkbookSummary summarizeWorkbook(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
     if (workbook.sheetCount() == 0) {
-      return new WorkbookReadResult.WorkbookSummary.Empty(
+      return new WorkbookCoreResult.WorkbookSummary.Empty(
           0,
           List.of(),
           workbook.namedRangeCount(),
           workbook.forceFormulaRecalculationOnOpenEnabledInternal());
     }
-    return new WorkbookReadResult.WorkbookSummary.WithSheets(
+    return new WorkbookCoreResult.WorkbookSummary.WithSheets(
         workbook.sheetCount(),
         workbook.sheetNames(),
         ExcelWorkbookSheetSupport.activeSheetName(workbook.xssfWorkbook()),
@@ -32,13 +32,13 @@ final class ExcelSheetStateController {
   }
 
   /** Returns structural and state facts for one sheet. */
-  WorkbookReadResult.SheetSummary summarizeSheet(ExcelWorkbook workbook, String sheetName) {
+  WorkbookSheetResult.SheetSummary summarizeSheet(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
 
     XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
     ExcelSheet excelSheet = workbook.sheet(sheetName);
-    return new WorkbookReadResult.SheetSummary(
+    return new WorkbookSheetResult.SheetSummary(
         sheetName,
         ExcelSheetVisibilityPoiBridge.fromPoi(
             workbook

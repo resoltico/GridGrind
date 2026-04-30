@@ -25,7 +25,8 @@ import tools.jackson.databind.node.ObjectNode;
 final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep> {
   private static final Set<String> ALLOWED_FIELDS =
       Set.of("stepId", "target", "action", "assertion", "query");
-  private static final Set<String> LEGACY_GENERIC_TARGET_TYPE_IDS =
+  // These ids are used only to tailor the error message when a caller uses retired generic names.
+  private static final Set<String> RENAMED_SELECTOR_TYPE_HINTS =
       Set.of(
           "CURRENT",
           "ALL",
@@ -233,7 +234,7 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
 
   private static String unknownTargetTypeMessage(String authoredType, String allowedTargets) {
     String guidance =
-        LEGACY_GENERIC_TARGET_TYPE_IDS.contains(authoredType)
+        RENAMED_SELECTOR_TYPE_HINTS.contains(authoredType)
             ? "target selector ids are family-specific; "
             : "";
     return "Unknown target selector type '%s'; %sallowed targets: %s"

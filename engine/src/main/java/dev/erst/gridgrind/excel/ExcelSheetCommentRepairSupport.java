@@ -70,31 +70,31 @@ final class ExcelSheetCommentRepairSupport {
   }
 
   static List<CommentRewriteSnapshot> commentRewriteSnapshots(
-      List<WorkbookReadResult.CellComment> comments) {
+      List<WorkbookSheetResult.CellComment> comments) {
     Objects.requireNonNull(comments, "comments must not be null");
     List<CommentRewriteSnapshot> snapshots = new ArrayList<>(comments.size());
-    for (WorkbookReadResult.CellComment comment : comments) {
+    for (WorkbookSheetResult.CellComment comment : comments) {
       Objects.requireNonNull(comment, "comments must not contain nulls");
       snapshots.add(CommentRewriteSnapshot.from(comment));
     }
     return List.copyOf(snapshots);
   }
 
-  static List<WorkbookReadResult.CellComment> commentsAfterInsertColumns(
-      List<WorkbookReadResult.CellComment> comments, int columnIndex, int columnCount) {
+  static List<WorkbookSheetResult.CellComment> commentsAfterInsertColumns(
+      List<WorkbookSheetResult.CellComment> comments, int columnIndex, int columnCount) {
     return toReadComments(
         rewriteCommentsAfterInsertColumns(
             commentRewriteSnapshots(comments), columnIndex, columnCount));
   }
 
-  static List<WorkbookReadResult.CellComment> commentsAfterDeleteColumns(
-      List<WorkbookReadResult.CellComment> comments, ExcelColumnSpan columns) {
+  static List<WorkbookSheetResult.CellComment> commentsAfterDeleteColumns(
+      List<WorkbookSheetResult.CellComment> comments, ExcelColumnSpan columns) {
     return toReadComments(
         rewriteCommentsAfterDeleteColumns(commentRewriteSnapshots(comments), columns));
   }
 
-  static List<WorkbookReadResult.CellComment> commentsAfterShiftColumns(
-      List<WorkbookReadResult.CellComment> comments, ExcelColumnSpan columns, int delta) {
+  static List<WorkbookSheetResult.CellComment> commentsAfterShiftColumns(
+      List<WorkbookSheetResult.CellComment> comments, ExcelColumnSpan columns, int delta) {
     return toReadComments(
         rewriteCommentsAfterShiftColumns(commentRewriteSnapshots(comments), columns, delta));
   }
@@ -238,9 +238,9 @@ final class ExcelSheetCommentRepairSupport {
     return List.copyOf(shifted.values());
   }
 
-  private static List<WorkbookReadResult.CellComment> toReadComments(
+  private static List<WorkbookSheetResult.CellComment> toReadComments(
       List<CommentRewriteSnapshot> comments) {
-    List<WorkbookReadResult.CellComment> readComments = new ArrayList<>(comments.size());
+    List<WorkbookSheetResult.CellComment> readComments = new ArrayList<>(comments.size());
     for (CommentRewriteSnapshot comment : comments) {
       readComments.add(comment.toReadComment());
     }
@@ -342,7 +342,7 @@ final class ExcelSheetCommentRepairSupport {
       author = author == null ? "" : author;
     }
 
-    static CommentRewriteSnapshot from(WorkbookReadResult.CellComment comment) {
+    static CommentRewriteSnapshot from(WorkbookSheetResult.CellComment comment) {
       return new CommentRewriteSnapshot(
           comment.address(),
           comment.comment().text(),
@@ -399,8 +399,8 @@ final class ExcelSheetCommentRepairSupport {
                   anchor.firstColumn(), anchor.firstRow(), anchor.lastColumn(), anchor.lastRow()));
     }
 
-    WorkbookReadResult.CellComment toReadComment() {
-      return new WorkbookReadResult.CellComment(
+    WorkbookSheetResult.CellComment toReadComment() {
+      return new WorkbookSheetResult.CellComment(
           address, new ExcelCommentSnapshot(text, author, visible, runs, anchor));
     }
   }

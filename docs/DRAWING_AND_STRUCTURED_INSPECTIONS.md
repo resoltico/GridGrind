@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, inspections, get-drawing-objects, get-charts, get-tables, get-pivot-tables, get-sheet-schema]
   questions: ["how do i inspect drawings in gridgrind", "how do i inspect tables or pivots in gridgrind", "how do i inspect sheet layout or schema in gridgrind"]

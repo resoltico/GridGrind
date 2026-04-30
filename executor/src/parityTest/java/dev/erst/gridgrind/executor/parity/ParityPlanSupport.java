@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.executor.parity;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -40,18 +40,18 @@ final class ParityPlanSupport {
     return new PendingMutation(target, action);
   }
 
-  static PendingMutation mutate(MutationAction.SetTable action) {
+  static PendingMutation mutate(StructuredMutationAction.SetTable action) {
     TableInput table = action.table();
     return mutate(new TableSelector.ByNameOnSheet(table.name(), table.sheetName()), action);
   }
 
-  static PendingMutation mutate(MutationAction.SetPivotTable action) {
+  static PendingMutation mutate(StructuredMutationAction.SetPivotTable action) {
     PivotTableInput pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
   }
 
-  static PendingMutation mutate(MutationAction.SetNamedRange action) {
+  static PendingMutation mutate(StructuredMutationAction.SetNamedRange action) {
     return mutate(namedRangeSelector(action.name(), action.scope()), action);
   }
 
@@ -60,7 +60,7 @@ final class ParityPlanSupport {
   }
 
   static CalculationPolicyInput calculateAll() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll());
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll());
   }
 
   static CalculationPolicyInput calculateAllAndMarkRecalculateOnOpen() {
@@ -68,11 +68,12 @@ final class ParityPlanSupport {
   }
 
   static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
+    return CalculationPolicyInput.strategy(
+        new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
   }
 
   static CalculationPolicyInput clearFormulaCaches() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.ClearCachesOnly());
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.ClearCachesOnly());
   }
 
   static CalculationPolicyInput markRecalculateOnOpen() {
@@ -85,7 +86,7 @@ final class ParityPlanSupport {
 
   static ExecutionPolicyInput executionPolicy(
       dev.erst.gridgrind.contract.dto.ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(mode, calculation);
+    return ExecutionPolicyInput.modeAndCalculation(mode, calculation);
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -115,7 +116,12 @@ final class ParityPlanSupport {
       WorkbookPlan.WorkbookPersistence persistence,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(source, persistence, steps(mutations, inspections));
+    return WorkbookPlan.standard(
+        source,
+        persistence,
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -124,9 +130,10 @@ final class ParityPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
+        ExecutionPolicyInput.defaults(),
         Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
@@ -138,8 +145,7 @@ final class ParityPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
-        GridGrindProtocolVersion.current(),
+    return WorkbookPlan.standard(
         source,
         persistence,
         Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),

@@ -1,18 +1,8 @@
-# GridGrind Architectural Directives
+# GridGrind Directives
 
-## Non-Negotiable Policies
+## Preflight
 
-**NO EMOJI.** Not in source code, Javadoc, comments, commit messages, documentation, or this
-file. Zero tolerance. Remove any emoji encountered.
-
-**NO BACKWARDS COMPATIBILITY.** This is a greenfield project. Hard-break refactors are always
-correct. No migration shims, no deprecated bridges, no legacy fallbacks.
-
----
-
-You are operating within the GridGrind project workspace. This is a strict **Java 26** greenfield
-project. Every file you write or modify must embody modern Java 26 idioms precisely. Violations
-found in existing code are **primary refactoring targets**, not precedents to follow or work around.
+Do not read `AGENTS_KOTLIN24_GRADLE.md`. That file is not applicable to GridGrind project work. GridGrind is a Java project. Kotlin is used only as part of Gradle build tooling. Do not treat Kotlin as an application language, implementation target, or architectural basis for this project.
 
 ---
 

@@ -19,56 +19,61 @@ import org.junit.jupiter.api.Test;
 class MutationActionTest {
   @Test
   void exposesStableActionTypeNames() {
-    assertEquals("ENSURE_SHEET", new MutationAction.EnsureSheet().actionType());
-    assertEquals("SET_CELL", new MutationAction.SetCell(textCell("Owner")).actionType());
+    assertEquals("ENSURE_SHEET", new WorkbookMutationAction.EnsureSheet().actionType());
+    assertEquals("SET_CELL", new CellMutationAction.SetCell(textCell("Owner")).actionType());
     assertEquals(
-        "CLEAR_WORKBOOK_PROTECTION", new MutationAction.ClearWorkbookProtection().actionType());
+        "CLEAR_WORKBOOK_PROTECTION",
+        new WorkbookMutationAction.ClearWorkbookProtection().actionType());
   }
 
   @Test
   void copiesRectangularRowsAndValidatesAppendRows() {
     List<List<CellInput>> rows = new ArrayList<>();
     rows.add(new ArrayList<>(List.of(textCell("A"), new CellInput.Numeric(1.0d))));
-    MutationAction.SetRange setRange = new MutationAction.SetRange(rows);
+    CellMutationAction.SetRange setRange = new CellMutationAction.SetRange(rows);
 
     rows.clear();
 
     assertEquals(1, setRange.rows().size());
     assertEquals(text("A"), ((CellInput.Text) setRange.rows().getFirst().getFirst()).source());
     assertEquals(
-        2, new MutationAction.AppendRow(List.of(textCell("A"), textCell("B"))).values().size());
-    assertThrows(IllegalArgumentException.class, () -> new MutationAction.AppendRow(List.of()));
+        2, new CellMutationAction.AppendRow(List.of(textCell("A"), textCell("B"))).values().size());
+    assertThrows(IllegalArgumentException.class, () -> new CellMutationAction.AppendRow(List.of()));
   }
 
   @Test
   void validatesScalarActionArguments() {
-    assertEquals(125, new MutationAction.SetSheetZoom(125).zoomPercent());
-    assertFalse(new MutationAction.GroupRows().collapsed());
-    assertFalse(new MutationAction.GroupColumns().collapsed());
+    assertEquals(125, new WorkbookMutationAction.SetSheetZoom(125).zoomPercent());
+    assertFalse(WorkbookMutationAction.GroupRows.expanded().collapsed());
+    assertFalse(WorkbookMutationAction.GroupColumns.expanded().collapsed());
     assertEquals(
         new SheetCopyPosition.AppendAtEnd(),
-        new MutationAction.CopySheet("Budget Copy").position());
+        new WorkbookMutationAction.CopySheet("Budget Copy").position());
     assertEquals(
         "BudgetTotal",
-        new MutationAction.SetNamedRange(
+        new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"))
             .name());
 
-    assertThrows(IllegalArgumentException.class, () -> new MutationAction.SetSheetZoom(401));
-    assertThrows(IllegalArgumentException.class, () -> new MutationAction.RenameSheet(" "));
-    assertThrows(IllegalArgumentException.class, () -> new MutationAction.MoveSheet(-1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookMutationAction.SetSheetZoom(401));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookMutationAction.RenameSheet(" "));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookMutationAction.MoveSheet(-1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new MutationAction.SetNamedRange(
+            new StructuredMutationAction.SetNamedRange(
                 " ", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4")));
 
-    assertEquals(
-        new SheetCopyPosition.AppendAtEnd(),
-        MutationAction.CopySheet.create("Budget Copy", null).position());
-    assertFalse(MutationAction.GroupRows.create(null).collapsed());
-    assertFalse(MutationAction.GroupColumns.create(null).collapsed());
-    assertEquals(List.of(), MutationAction.SetAutofilter.create(null, null).criteria());
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookMutationAction.CopySheet("Budget Copy", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookMutationAction.GroupRows((Boolean) null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookMutationAction.GroupColumns((Boolean) null));
+    assertThrows(
+        NullPointerException.class, () -> new StructuredMutationAction.SetAutofilter(null, null));
   }
 
   @Test
@@ -242,20 +247,20 @@ class MutationActionTest {
 
   @Test
   void actionConstructorsCoverNullCollectionDefaulting() {
-    assertEquals(List.of(), new MutationAction.SetAutofilter().criteria());
+    assertEquals(List.of(), new StructuredMutationAction.SetAutofilter().criteria());
     assertEquals(
         "criteria must not contain null values",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new MutationAction.SetAutofilter(
+                    new StructuredMutationAction.SetAutofilter(
                         java.util.Arrays.asList(
                             (dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput) null),
                         null))
             .getMessage());
     assertEquals(
         "values must not be null",
-        assertThrows(NullPointerException.class, () -> new MutationAction.AppendRow(null))
+        assertThrows(NullPointerException.class, () -> new CellMutationAction.AppendRow(null))
             .getMessage());
   }
 

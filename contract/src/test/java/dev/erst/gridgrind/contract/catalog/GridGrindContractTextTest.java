@@ -4,7 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -19,12 +21,13 @@ class GridGrindContractTextTest {
   void resolvesCanonicalTypeNamesAndPhrases() {
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
-        GridGrindContractText.mutationActionTypeName(MutationAction.ClearWorkbookProtection.class));
+        GridGrindContractText.mutationActionTypeName(
+            WorkbookMutationAction.ClearWorkbookProtection.class));
     assertEquals(
         "GET_SHEET_SUMMARY",
         GridGrindContractText.inspectionQueryTypeName(InspectionQuery.GetSheetSummary.class));
     assertEquals(
-        Set.of(MutationAction.EnsureSheet.class, MutationAction.AppendRow.class),
+        Set.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class),
         GridGrindContractText.streamingWriteMutationActionClasses());
     assertEquals(
         Set.of(InspectionQuery.GetWorkbookSummary.class, InspectionQuery.GetSheetSummary.class),
@@ -80,7 +83,7 @@ class GridGrindContractTextTest {
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
         GridGrindContractText.typeNamesByClass(MutationAction.class)
-            .get(MutationAction.ClearWorkbookProtection.class));
+            .get(WorkbookMutationAction.ClearWorkbookProtection.class));
     assertEquals(
         "left, middle, and right",
         GridGrindContractText.humanJoin(List.of("left", "middle", "right")));

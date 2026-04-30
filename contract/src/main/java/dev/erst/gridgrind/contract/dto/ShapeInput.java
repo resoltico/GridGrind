@@ -18,18 +18,18 @@ public record ShapeInput(
     if (presetGeometryToken != null) {
       presetGeometryToken = presetGeometryToken.trim();
     }
-    presetGeometryToken = normalizePresetGeometryToken(kind, presetGeometryToken);
+    presetGeometryToken = requirePresetGeometryToken(kind, presetGeometryToken);
     validateConnectorConfiguration(kind, presetGeometryToken, text);
     if (text instanceof TextSourceInput.Inline inline && inline.text().isBlank()) {
       throw new IllegalArgumentException("text must not be blank");
     }
   }
 
-  private static String normalizePresetGeometryToken(
+  private static String requirePresetGeometryToken(
       ExcelAuthoredDrawingShapeKind kind, String presetGeometryToken) {
     if (kind == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
         && (presetGeometryToken == null || presetGeometryToken.isBlank())) {
-      return "rect";
+      throw new IllegalArgumentException("presetGeometryToken must not be blank");
     }
     return presetGeometryToken;
   }

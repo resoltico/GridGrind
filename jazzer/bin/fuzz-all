@@ -3,6 +3,22 @@ set -euo pipefail
 
 script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
+if [[ $# -ge 1 ]]; then
+  case "$1" in
+    --help|-h|help)
+      cat <<EOF
+Usage: jazzer/bin/fuzz-all [gradle-options...]
+Runs the four active fuzzing harnesses in sequence:
+  - protocol-request
+  - protocol-workflow
+  - engine-command-sequence
+  - xlsx-roundtrip
+EOF
+      exit 0
+      ;;
+  esac
+fi
+
 "${script_dir}/fuzz-protocol-request" "$@"
 "${script_dir}/fuzz-protocol-workflow" "$@"
 "${script_dir}/fuzz-engine-command-sequence" "$@"

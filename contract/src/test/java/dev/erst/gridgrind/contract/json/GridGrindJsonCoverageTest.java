@@ -15,8 +15,10 @@ import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
 import dev.erst.gridgrind.contract.catalog.TaskCatalog;
 import dev.erst.gridgrind.contract.catalog.TaskPlanTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -49,7 +51,8 @@ class GridGrindJsonCoverageTest {
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
+                        0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
     TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
@@ -231,7 +234,22 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.readRequest(
                         """
                         {
+                          "protocolVersion": "V1",
                           "source": { "type": "NEW" },
+                          "persistence": { "type": "NONE" },
+                          "execution": {
+                            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                            "journal": { "level": "NORMAL" },
+                            "calculation": {
+                              "strategy": { "type": "DO_NOT_CALCULATE" },
+                              "markRecalculateOnOpen": false
+                            }
+                          },
+                          "formulaEnvironment": {
+                            "externalWorkbooks": [],
+                            "missingWorkbookPolicy": "ERROR",
+                            "udfToolpacks": []
+                          },
                           "steps": [null]
                         }
                         """
@@ -248,7 +266,8 @@ class GridGrindJsonCoverageTest {
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
+                        0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
     TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
@@ -412,7 +431,7 @@ class GridGrindJsonCoverageTest {
                     GridGrindJson.writeResponse(
                         null,
                         GridGrindResponses.failure(
-                            new GridGrindResponse.Problem(
+                            new GridGrindProblemDetail.Problem(
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON,
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
                                     .category(),
@@ -424,8 +443,8 @@ class GridGrindJsonCoverageTest {
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON
                                     .resolution(),
                                 new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                                    dev.erst.gridgrind.contract.dto.ProblemContext.CliArgument
-                                        .named("--request")),
+                                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
+                                        .CliArgument.named("--request")),
                                 java.util.Optional.empty(),
                                 List.of()))))
             .getMessage());
@@ -634,10 +653,25 @@ class GridGrindJsonCoverageTest {
     WorkbookPlan request =
         GridGrindJson.readRequest(
             """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
                         {
+                          "protocolVersion": "V1",
+                          "source": { "type": "NEW" },
+                          "persistence": { "type": "NONE" },
+                          "execution": {
+                            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                            "journal": { "level": "NORMAL" },
+                            "calculation": {
+                              "strategy": { "type": "DO_NOT_CALCULATE" },
+                              "markRecalculateOnOpen": false
+                            }
+                          },
+                          "formulaEnvironment": {
+                            "externalWorkbooks": [],
+                            "missingWorkbookPolicy": "ERROR",
+                            "udfToolpacks": []
+                          },
+                          "steps": [
+                            {
                           "stepId": "set-owner",
                           "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                           "action": {
@@ -660,7 +694,8 @@ class GridGrindJsonCoverageTest {
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
+                        0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     assertStreamSerializationMatchesBytes(
         GridGrindJson.writeRequestBytes(request), out -> GridGrindJson.writeRequest(out, request));
@@ -698,7 +733,8 @@ class GridGrindJsonCoverageTest {
             List.of(
                 new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
+                        0, List.of(), 0, false))));
 
     String requestJson =
         new String(GridGrindJson.writeRequestBytes(request), StandardCharsets.UTF_8);

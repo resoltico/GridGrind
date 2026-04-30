@@ -36,15 +36,16 @@ class ExcelWorkbookTest {
       commandExecutor.apply(
           workbook,
           List.<WorkbookCommand>of(
-              new WorkbookCommand.CreateSheet("Budget"),
-              new WorkbookCommand.AppendRow(
+              new WorkbookSheetCommand.CreateSheet("Budget"),
+              new WorkbookCellCommand.AppendRow(
                   "Budget", List.of(ExcelCellValue.text("Item"), ExcelCellValue.text("Amount"))),
-              new WorkbookCommand.AppendRow(
+              new WorkbookCellCommand.AppendRow(
                   "Budget", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(49.0))),
-              new WorkbookCommand.AppendRow(
+              new WorkbookCellCommand.AppendRow(
                   "Budget", List.of(ExcelCellValue.text("Domain"), ExcelCellValue.number(12.0))),
-              new WorkbookCommand.SetCell("Budget", "A4", ExcelCellValue.text("Total")),
-              new WorkbookCommand.SetCell("Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
+              new WorkbookCellCommand.SetCell("Budget", "A4", ExcelCellValue.text("Total")),
+              new WorkbookCellCommand.SetCell(
+                  "Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
       workbook.formulas().evaluateAll();
       workbook.save(workbookPath);
     }
@@ -166,9 +167,9 @@ class ExcelWorkbookTest {
   @Test
   void workbookSummaryUsesExplicitEmptyAndWithSheetsStates() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      WorkbookReadResult.WorkbookSummary emptySummary = workbook.workbookSummary();
-      WorkbookReadResult.WorkbookSummary.Empty empty =
-          assertInstanceOf(WorkbookReadResult.WorkbookSummary.Empty.class, emptySummary);
+      WorkbookCoreResult.WorkbookSummary emptySummary = workbook.workbookSummary();
+      WorkbookCoreResult.WorkbookSummary.Empty empty =
+          assertInstanceOf(WorkbookCoreResult.WorkbookSummary.Empty.class, emptySummary);
       assertEquals(0, empty.sheetCount());
       assertEquals(List.of(), empty.sheetNames());
 
@@ -179,9 +180,9 @@ class ExcelWorkbookTest {
       workbook.setSelectedSheets(List.of("Gamma", "Alpha"));
       workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
 
-      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
       assertEquals(List.of("Alpha", "Beta", "Gamma"), summary.sheetNames());
       assertEquals("Gamma", summary.activeSheetName());
       assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
@@ -213,26 +214,26 @@ class ExcelWorkbookTest {
     assertEquals(
         ExcelSheetVisibility.VERY_HIDDEN, XlsxRoundTrip.sheetVisibility(workbookPath, "Replica"));
     assertEquals(
-        new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+        new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
       assertEquals("Gamma", summary.activeSheetName());
       assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
 
-      WorkbookReadResult.SheetSummary alphaSummary = workbook.sheetSummary("Alpha");
-      WorkbookReadResult.SheetSummary betaSummary = workbook.sheetSummary("Beta");
-      WorkbookReadResult.SheetSummary replicaSummary = workbook.sheetSummary("Replica");
+      WorkbookSheetResult.SheetSummary alphaSummary = workbook.sheetSummary("Alpha");
+      WorkbookSheetResult.SheetSummary betaSummary = workbook.sheetSummary("Beta");
+      WorkbookSheetResult.SheetSummary replicaSummary = workbook.sheetSummary("Replica");
       assertEquals(ExcelSheetVisibility.VISIBLE, alphaSummary.visibility());
       assertEquals(
-          new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+          new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
           alphaSummary.protection());
       assertEquals(ExcelSheetVisibility.HIDDEN, betaSummary.visibility());
       assertInstanceOf(
-          WorkbookReadResult.SheetProtection.Unprotected.class, betaSummary.protection());
+          WorkbookSheetResult.SheetProtection.Unprotected.class, betaSummary.protection());
       assertEquals(ExcelSheetVisibility.VERY_HIDDEN, replicaSummary.visibility());
     }
   }
@@ -250,7 +251,7 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       assertInstanceOf(
-          WorkbookReadResult.SheetProtection.Unprotected.class,
+          WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
     }
   }
@@ -267,12 +268,12 @@ class ExcelWorkbookTest {
     }
 
     assertEquals(
-        new WorkbookReadResult.SheetProtection.Unprotected(),
+        new WorkbookSheetResult.SheetProtection.Unprotected(),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       assertInstanceOf(
-          WorkbookReadResult.SheetProtection.Unprotected.class,
+          WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
     }
   }
@@ -385,7 +386,7 @@ class ExcelWorkbookTest {
       assertEquals(
           List.of("A1:B1"),
           workbook.sheet("Replica").mergedRegions().stream()
-              .map(WorkbookReadResult.MergedRegion::range)
+              .map(WorkbookSheetResult.MergedRegion::range)
               .toList());
       assertEquals(
           List.of("B2:B4"),

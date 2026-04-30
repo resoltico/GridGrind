@@ -1,10 +1,9 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
 import java.util.List;
+import java.util.Objects;
 
 /** Request-scoped formula-evaluation environment for external workbooks and UDFs. */
 public record FormulaEnvironmentInput(
@@ -18,13 +17,17 @@ public record FormulaEnvironmentInput(
 
   public FormulaEnvironmentInput {
     externalWorkbooks =
+        List.copyOf(
+            Objects.requireNonNull(externalWorkbooks, "externalWorkbooks must not be null"));
+    externalWorkbooks =
         FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
             externalWorkbooks,
             "externalWorkbooks",
             "externalWorkbooks must not contain duplicate workbookName values: ",
             FormulaExternalWorkbookInput::workbookName);
-    java.util.Objects.requireNonNull(
-        missingWorkbookPolicy, "missingWorkbookPolicy must not be null");
+    Objects.requireNonNull(missingWorkbookPolicy, "missingWorkbookPolicy must not be null");
+    udfToolpacks =
+        List.copyOf(Objects.requireNonNull(udfToolpacks, "udfToolpacks must not be null"));
     udfToolpacks =
         FormulaEnvironmentSupport.copyOptionalDistinctNamedValues(
             udfToolpacks,
@@ -36,17 +39,6 @@ public record FormulaEnvironmentInput(
         FormulaUdfToolpackInput::functions,
         FormulaUdfFunctionInput::name,
         "udfToolpacks must not define duplicate function names across toolpacks: ");
-  }
-
-  @JsonCreator
-  static FormulaEnvironmentInput create(
-      @JsonProperty("externalWorkbooks") List<FormulaExternalWorkbookInput> externalWorkbooks,
-      @JsonProperty("missingWorkbookPolicy") FormulaMissingWorkbookPolicy missingWorkbookPolicy,
-      @JsonProperty("udfToolpacks") List<FormulaUdfToolpackInput> udfToolpacks) {
-    return new FormulaEnvironmentInput(
-        externalWorkbooks == null ? List.of() : externalWorkbooks,
-        missingWorkbookPolicy == null ? FormulaMissingWorkbookPolicy.ERROR : missingWorkbookPolicy,
-        udfToolpacks == null ? List.of() : udfToolpacks);
   }
 
   /** Returns whether this environment carries any behavior beyond the default evaluator state. */
@@ -66,7 +58,7 @@ public record FormulaEnvironmentInput(
 
     @Override
     public int hashCode() {
-      return 0;
+      return EmptyFilter.class.hashCode();
     }
   }
 }

@@ -31,18 +31,18 @@ final class ExcelColumnDefinitionSupport {
   }
 
   /** Returns the sheet column layouts including hidden, outline, and collapsed state. */
-  static List<WorkbookReadResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
+  static List<WorkbookSheetResult.ColumnLayout> columnLayouts(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     int lastColumnIndex = lastColumnIndex(sheet);
     if (lastColumnIndex < 0) {
       return List.of();
     }
     Map<Integer, CTCol> effectiveColumns = effectiveColumnDefinitions(sheet);
-    List<WorkbookReadResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
+    List<WorkbookSheetResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
     for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
       CTCol columnDefinition = effectiveColumns.get(columnIndex);
       columns.add(
-          new WorkbookReadResult.ColumnLayout(
+          new WorkbookSheetResult.ColumnLayout(
               columnIndex,
               sheet.getColumnWidth(columnIndex) / 256.0d,
               columnDefinition != null && columnDefinition.getHidden(),
@@ -233,7 +233,7 @@ final class ExcelColumnDefinitionSupport {
       }
     }
     if (!hasMeaningfulColumnDefinition(baseDefinition, hidden, outlineLevel, collapsed)) {
-      return java.util.Optional.<CTCol>empty().orElse(null);
+      return null;
     }
     CTCol effectiveDefinition = copyOf(baseDefinition);
     effectiveDefinition.setMin(columnIndex + 1L);

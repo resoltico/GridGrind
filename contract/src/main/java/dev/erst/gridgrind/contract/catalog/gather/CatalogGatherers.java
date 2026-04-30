@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.catalog.gather;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.erst.gridgrind.contract.catalog.CatalogIgnored;
 import dev.erst.gridgrind.contract.catalog.FieldEntry;
 import java.lang.reflect.RecordComponent;
 import java.util.LinkedHashMap;
@@ -51,6 +53,11 @@ public final class CatalogGatherers {
     return Gatherer.ofSequential(
         () -> optionalFieldSet,
         (state, component, downstream) -> {
+          if (component.isAnnotationPresent(CatalogIgnored.class)
+              || component.getAccessor().isAnnotationPresent(CatalogIgnored.class)
+              || component.getAccessor().isAnnotationPresent(JsonIgnore.class)) {
+            return true;
+          }
           downstream.push(CatalogFieldMetadataSupport.fieldEntry(component, state));
           return true;
         });

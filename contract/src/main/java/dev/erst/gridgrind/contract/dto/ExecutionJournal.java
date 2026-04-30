@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +26,7 @@ public record ExecutionJournal(
     if (planId.isPresent()) {
       planId = Optional.of(WorkbookPlan.requireNonBlank(planId.orElseThrow(), "planId"));
     }
-    Objects.requireNonNull(level, "level must not be null");
+    level = Objects.requireNonNullElse(level, ExecutionJournalLevel.NORMAL);
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
     Objects.requireNonNull(validation, "validation must not be null");
@@ -37,28 +36,9 @@ public record ExecutionJournal(
     Objects.requireNonNull(persistencePhase, "persistencePhase must not be null");
     Objects.requireNonNull(close, "close must not be null");
     steps = copyValues(steps, "steps");
-    warnings = copyValues(warnings, "warnings");
+    warnings = copyValues(Objects.requireNonNullElseGet(warnings, List::of), "warnings");
     Objects.requireNonNull(outcome, "outcome must not be null");
-    events = copyValues(events, "events");
-  }
-
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  static ExecutionJournal create(ExecutionJournalJson json) {
-    return new ExecutionJournal(
-        json.planId(),
-        json.level() == null ? ExecutionJournalLevel.NORMAL : json.level(),
-        json.source(),
-        json.persistence(),
-        json.validation(),
-        json.inputResolution(),
-        json.open(),
-        json.calculation(),
-        json.persistencePhase(),
-        json.close(),
-        json.steps(),
-        json.warnings() == null ? List.of() : json.warnings(),
-        json.outcome(),
-        json.events() == null ? List.of() : json.events());
+    events = copyValues(Objects.requireNonNullElseGet(events, List::of), "events");
   }
 
   /** Summary of the authored workbook source for one execution. */
@@ -271,20 +251,4 @@ public record ExecutionJournal(
     }
     return Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
   }
-
-  private record ExecutionJournalJson(
-      Optional<String> planId,
-      ExecutionJournalLevel level,
-      SourceSummary source,
-      PersistenceSummary persistence,
-      Phase validation,
-      Phase inputResolution,
-      Phase open,
-      Calculation calculation,
-      Phase persistencePhase,
-      Phase close,
-      List<Step> steps,
-      List<RequestWarning> warnings,
-      Outcome outcome,
-      List<Event> events) {}
 }

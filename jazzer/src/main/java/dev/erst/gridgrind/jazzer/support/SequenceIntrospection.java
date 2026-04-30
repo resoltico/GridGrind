@@ -5,7 +5,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.excel.WorkbookCommand;
+import dev.erst.gridgrind.excel.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +54,8 @@ public final class SequenceIntrospection {
     mutations.forEach(
         mutation -> {
           if (mutation.action()
-              instanceof dev.erst.gridgrind.contract.action.MutationAction.ApplyStyle applyStyle) {
+              instanceof
+              dev.erst.gridgrind.contract.action.CellMutationAction.ApplyStyle applyStyle) {
             StyleKindIntrospection.styleKinds(applyStyle.style())
                 .forEach((key, value) -> counts.merge(key, value, Long::sum));
           }
@@ -68,7 +69,7 @@ public final class SequenceIntrospection {
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
     commands.forEach(
         command -> {
-          if (command instanceof WorkbookCommand.ApplyStyle applyStyle) {
+          if (command instanceof WorkbookFormattingCommand.ApplyStyle applyStyle) {
             StyleKindIntrospection.styleKinds(applyStyle.style())
                 .forEach((key, value) -> counts.merge(key, value, Long::sum));
           }
@@ -88,13 +89,13 @@ public final class SequenceIntrospection {
   /** Counts ordered inspection steps requested by one authored workflow. */
   public static int inspectionCount(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    return request.inspectionSteps().size();
+    return request.stepPartition().inspections().size();
   }
 
   /** Counts ordered assertion steps requested by one authored workflow. */
   public static int assertionCount(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    return request.assertionSteps().size();
+    return request.stepPartition().assertions().size();
   }
 
   /** Returns the stable workbook source-type label for one request. */
@@ -126,71 +127,71 @@ public final class SequenceIntrospection {
   static String commandKind(WorkbookCommand command) {
     Objects.requireNonNull(command, "command must not be null");
     return switch (command) {
-      case WorkbookCommand.CreateSheet _ -> "CREATE_SHEET";
-      case WorkbookCommand.RenameSheet _ -> "RENAME_SHEET";
-      case WorkbookCommand.DeleteSheet _ -> "DELETE_SHEET";
-      case WorkbookCommand.MoveSheet _ -> "MOVE_SHEET";
-      case WorkbookCommand.CopySheet _ -> "COPY_SHEET";
-      case WorkbookCommand.SetActiveSheet _ -> "SET_ACTIVE_SHEET";
-      case WorkbookCommand.SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
-      case WorkbookCommand.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
-      case WorkbookCommand.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
-      case WorkbookCommand.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
-      case WorkbookCommand.SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
-      case WorkbookCommand.ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
-      case WorkbookCommand.MergeCells _ -> "MERGE_CELLS";
-      case WorkbookCommand.UnmergeCells _ -> "UNMERGE_CELLS";
-      case WorkbookCommand.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
-      case WorkbookCommand.SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case WorkbookCommand.InsertRows _ -> "INSERT_ROWS";
-      case WorkbookCommand.DeleteRows _ -> "DELETE_ROWS";
-      case WorkbookCommand.ShiftRows _ -> "SHIFT_ROWS";
-      case WorkbookCommand.InsertColumns _ -> "INSERT_COLUMNS";
-      case WorkbookCommand.DeleteColumns _ -> "DELETE_COLUMNS";
-      case WorkbookCommand.ShiftColumns _ -> "SHIFT_COLUMNS";
-      case WorkbookCommand.SetRowVisibility _ -> "SET_ROW_VISIBILITY";
-      case WorkbookCommand.SetColumnVisibility _ -> "SET_COLUMN_VISIBILITY";
-      case WorkbookCommand.GroupRows _ -> "GROUP_ROWS";
-      case WorkbookCommand.UngroupRows _ -> "UNGROUP_ROWS";
-      case WorkbookCommand.GroupColumns _ -> "GROUP_COLUMNS";
-      case WorkbookCommand.UngroupColumns _ -> "UNGROUP_COLUMNS";
-      case WorkbookCommand.SetSheetPane _ -> "SET_SHEET_PANE";
-      case WorkbookCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
-      case WorkbookCommand.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
-      case WorkbookCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
-      case WorkbookCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
-      case WorkbookCommand.SetCell _ -> "SET_CELL";
-      case WorkbookCommand.SetRange _ -> "SET_RANGE";
-      case WorkbookCommand.ClearRange _ -> "CLEAR_RANGE";
-      case WorkbookCommand.SetArrayFormula _ -> "SET_ARRAY_FORMULA";
-      case WorkbookCommand.ClearArrayFormula _ -> "CLEAR_ARRAY_FORMULA";
-      case WorkbookCommand.ImportCustomXmlMapping _ -> "IMPORT_CUSTOM_XML_MAPPING";
-      case WorkbookCommand.SetHyperlink _ -> "SET_HYPERLINK";
-      case WorkbookCommand.ClearHyperlink _ -> "CLEAR_HYPERLINK";
-      case WorkbookCommand.SetComment _ -> "SET_COMMENT";
-      case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
-      case WorkbookCommand.SetPicture _ -> "SET_PICTURE";
-      case WorkbookCommand.SetSignatureLine _ -> "SET_SIGNATURE_LINE";
-      case WorkbookCommand.SetChart _ -> "SET_CHART";
-      case WorkbookCommand.SetPivotTable _ -> "SET_PIVOT_TABLE";
-      case WorkbookCommand.SetShape _ -> "SET_SHAPE";
-      case WorkbookCommand.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
-      case WorkbookCommand.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
-      case WorkbookCommand.DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
-      case WorkbookCommand.ApplyStyle _ -> "APPLY_STYLE";
-      case WorkbookCommand.SetDataValidation _ -> "SET_DATA_VALIDATION";
-      case WorkbookCommand.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
-      case WorkbookCommand.SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
-      case WorkbookCommand.ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
-      case WorkbookCommand.SetAutofilter _ -> "SET_AUTOFILTER";
-      case WorkbookCommand.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
-      case WorkbookCommand.SetTable _ -> "SET_TABLE";
-      case WorkbookCommand.DeleteTable _ -> "DELETE_TABLE";
-      case WorkbookCommand.DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
-      case WorkbookCommand.SetNamedRange _ -> "SET_NAMED_RANGE";
-      case WorkbookCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
-      case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
-      case WorkbookCommand.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
+      case WorkbookSheetCommand.CreateSheet _ -> "CREATE_SHEET";
+      case WorkbookSheetCommand.RenameSheet _ -> "RENAME_SHEET";
+      case WorkbookSheetCommand.DeleteSheet _ -> "DELETE_SHEET";
+      case WorkbookSheetCommand.MoveSheet _ -> "MOVE_SHEET";
+      case WorkbookSheetCommand.CopySheet _ -> "COPY_SHEET";
+      case WorkbookSheetCommand.SetActiveSheet _ -> "SET_ACTIVE_SHEET";
+      case WorkbookSheetCommand.SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
+      case WorkbookSheetCommand.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
+      case WorkbookSheetCommand.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
+      case WorkbookSheetCommand.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
+      case WorkbookSheetCommand.SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
+      case WorkbookSheetCommand.ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
+      case WorkbookStructureCommand.MergeCells _ -> "MERGE_CELLS";
+      case WorkbookStructureCommand.UnmergeCells _ -> "UNMERGE_CELLS";
+      case WorkbookStructureCommand.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
+      case WorkbookStructureCommand.SetRowHeight _ -> "SET_ROW_HEIGHT";
+      case WorkbookStructureCommand.InsertRows _ -> "INSERT_ROWS";
+      case WorkbookStructureCommand.DeleteRows _ -> "DELETE_ROWS";
+      case WorkbookStructureCommand.ShiftRows _ -> "SHIFT_ROWS";
+      case WorkbookStructureCommand.InsertColumns _ -> "INSERT_COLUMNS";
+      case WorkbookStructureCommand.DeleteColumns _ -> "DELETE_COLUMNS";
+      case WorkbookStructureCommand.ShiftColumns _ -> "SHIFT_COLUMNS";
+      case WorkbookStructureCommand.SetRowVisibility _ -> "SET_ROW_VISIBILITY";
+      case WorkbookStructureCommand.SetColumnVisibility _ -> "SET_COLUMN_VISIBILITY";
+      case WorkbookStructureCommand.GroupRows _ -> "GROUP_ROWS";
+      case WorkbookStructureCommand.UngroupRows _ -> "UNGROUP_ROWS";
+      case WorkbookStructureCommand.GroupColumns _ -> "GROUP_COLUMNS";
+      case WorkbookStructureCommand.UngroupColumns _ -> "UNGROUP_COLUMNS";
+      case WorkbookLayoutCommand.SetSheetPane _ -> "SET_SHEET_PANE";
+      case WorkbookLayoutCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookLayoutCommand.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
+      case WorkbookLayoutCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
+      case WorkbookLayoutCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
+      case WorkbookCellCommand.SetCell _ -> "SET_CELL";
+      case WorkbookCellCommand.SetRange _ -> "SET_RANGE";
+      case WorkbookCellCommand.ClearRange _ -> "CLEAR_RANGE";
+      case WorkbookCellCommand.SetArrayFormula _ -> "SET_ARRAY_FORMULA";
+      case WorkbookCellCommand.ClearArrayFormula _ -> "CLEAR_ARRAY_FORMULA";
+      case WorkbookMetadataCommand.ImportCustomXmlMapping _ -> "IMPORT_CUSTOM_XML_MAPPING";
+      case WorkbookAnnotationCommand.SetHyperlink _ -> "SET_HYPERLINK";
+      case WorkbookAnnotationCommand.ClearHyperlink _ -> "CLEAR_HYPERLINK";
+      case WorkbookAnnotationCommand.SetComment _ -> "SET_COMMENT";
+      case WorkbookAnnotationCommand.ClearComment _ -> "CLEAR_COMMENT";
+      case WorkbookDrawingCommand.SetPicture _ -> "SET_PICTURE";
+      case WorkbookDrawingCommand.SetSignatureLine _ -> "SET_SIGNATURE_LINE";
+      case WorkbookDrawingCommand.SetChart _ -> "SET_CHART";
+      case WorkbookTabularCommand.SetPivotTable _ -> "SET_PIVOT_TABLE";
+      case WorkbookDrawingCommand.SetShape _ -> "SET_SHAPE";
+      case WorkbookDrawingCommand.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
+      case WorkbookDrawingCommand.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
+      case WorkbookDrawingCommand.DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
+      case WorkbookFormattingCommand.ApplyStyle _ -> "APPLY_STYLE";
+      case WorkbookFormattingCommand.SetDataValidation _ -> "SET_DATA_VALIDATION";
+      case WorkbookFormattingCommand.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case WorkbookFormattingCommand.SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
+      case WorkbookFormattingCommand.ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
+      case WorkbookTabularCommand.SetAutofilter _ -> "SET_AUTOFILTER";
+      case WorkbookTabularCommand.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
+      case WorkbookTabularCommand.SetTable _ -> "SET_TABLE";
+      case WorkbookTabularCommand.DeleteTable _ -> "DELETE_TABLE";
+      case WorkbookTabularCommand.DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
+      case WorkbookMetadataCommand.SetNamedRange _ -> "SET_NAMED_RANGE";
+      case WorkbookMetadataCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
+      case WorkbookCellCommand.AppendRow _ -> "APPEND_ROW";
+      case WorkbookLayoutCommand.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
     };
   }
 

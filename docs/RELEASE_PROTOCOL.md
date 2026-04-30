@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -170,10 +170,11 @@ gh pr list --state open \
   --json number,title,url,headRefName,mergeStateStatus,isDraft,author,statusCheckRollup
 ```
 
-If any open PR is authored by `dependabot[bot]`, decide up front whether it changes release
-machinery or release-critical dependencies. If it does, land or reject it before cutting the
-release branch. If it does not, carry that decision forward and complete Step 10 before ending
-the release session.
+If any open PR is authored by Dependabot — for example `dependabot[bot]` or GitHub App-backed
+identities such as `app/dependabot` — decide up front whether it changes release machinery or
+release-critical dependencies. If it does, land or reject it before cutting the release branch.
+If it does not, carry that decision forward and complete Step 10 before ending the release
+session.
 
 ### Step 2 — Commit on a release branch
 
@@ -517,9 +518,10 @@ gh pr list --state open \
   --json number,title,url,headRefName,mergeStateStatus,isDraft,author,statusCheckRollup
 ```
 
-Treat any PR whose `author.login` is `dependabot[bot]` as in scope for this step, even if it was
-already reviewed during Step 1. Step 1 creates the release-time decision; Step 10 closes the loop
-before the release session is allowed to end.
+Treat any PR whose `author.login` identifies Dependabot — including `dependabot[bot]` and
+GitHub App-backed identities such as `app/dependabot` — as in scope for this step, even if it
+was already reviewed during Step 1. Step 1 creates the release-time decision; Step 10 closes the
+loop before the release session is allowed to end.
 
 For each open Dependabot PR, inspect the exact payload and its current gate status:
 

@@ -3,11 +3,12 @@ package dev.erst.gridgrind.contract.dto;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Factual sheet-presentation state reported for one worksheet. */
 public record SheetPresentationReport(
     SheetDisplayReport display,
-    CellColorReport tabColor,
+    Optional<CellColorReport> tabColor,
     SheetOutlineSummaryReport outlineSummary,
     SheetDefaultsReport sheetDefaults,
     List<IgnoredErrorReport> ignoredErrors) {
@@ -15,7 +16,7 @@ public record SheetPresentationReport(
   public static SheetPresentationReport defaults() {
     return new SheetPresentationReport(
         SheetDisplayReport.defaults(),
-        null,
+        Optional.empty(),
         SheetOutlineSummaryReport.defaults(),
         SheetDefaultsReport.defaults(),
         List.of());
@@ -23,6 +24,7 @@ public record SheetPresentationReport(
 
   public SheetPresentationReport {
     Objects.requireNonNull(display, "display must not be null");
+    Objects.requireNonNull(tabColor, "tabColor must not be null");
     Objects.requireNonNull(outlineSummary, "outlineSummary must not be null");
     Objects.requireNonNull(sheetDefaults, "sheetDefaults must not be null");
     ignoredErrors =

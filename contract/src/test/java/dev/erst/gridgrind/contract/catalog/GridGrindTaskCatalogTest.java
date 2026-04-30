@@ -75,7 +75,10 @@ class GridGrindTaskCatalogTest {
     IllegalStateException duplicateTasks =
         assertThrows(
             IllegalStateException.class,
-            () -> new TaskCatalog(null, java.util.List.of(left, right)));
+            () ->
+                new TaskCatalog(
+                    dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+                    java.util.List.of(left, right)));
     assertTrue(duplicateTasks.getMessage().contains("Duplicate tasks detected"));
 
     IllegalStateException duplicateCapabilities =
@@ -120,7 +123,7 @@ class GridGrindTaskCatalogTest {
             () ->
                 GridGrindTaskCatalog.validateCapabilityReferences(
                     new TaskCatalog(
-                        null,
+                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
                         java.util.List.of(
                             new TaskEntry(
                                 "BROKEN",
@@ -142,6 +145,11 @@ class GridGrindTaskCatalogTest {
         danglingReference
             .getMessage()
             .contains("Task BROKEN references unknown protocol capability"));
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class, () -> new TaskCatalog(null, java.util.List.of(left)))
+            .getMessage());
   }
 
   @Test

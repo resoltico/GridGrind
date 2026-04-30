@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -23,43 +24,35 @@ class GridGrindRequestDoctorTest {
   @Test
   void diagnosesCleanRequestsAndSummarizesStandardInputRequirements() throws IOException {
     WorkbookPlan cleanRequest =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              }
+            ]
+            """);
     WorkbookPlan standardInputRequest =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
-                  }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
 
     RequestDoctorReport cleanReport = new GridGrindRequestDoctor().diagnose(cleanRequest);
     RequestDoctorReport standardInputReport =
@@ -79,35 +72,33 @@ class GridGrindRequestDoctorTest {
   @Test
   void diagnosesWarningsAndBlockingValidationFailures() throws IOException {
     WorkbookPlan warningRequest =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget Sheet" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-formula",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget Sheet", "address": "B2" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "FORMULA",
-                      "source": { "type": "INLINE", "text": "Budget Sheet!A1" }
-                    }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget Sheet" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-formula",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget Sheet", "address": "B2" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "FORMULA",
+                    "source": { "type": "INLINE", "text": "Budget Sheet!A1" }
                   }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
     WorkbookPlan invalidRequest =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             java.util.List.of());
 
     RequestDoctorReport warningReport = new GridGrindRequestDoctor().diagnose(warningRequest);
@@ -128,33 +119,29 @@ class GridGrindRequestDoctorTest {
   @Test
   void diagnoseUsesDelegatingConstructorsAndCountsStepKindsWithoutBindings() throws IOException {
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "assert-budget",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "assertion": {
-                    "type": "EXPECT_CELL_VALUE",
-                    "expectedValue": { "type": "BLANK" }
-                  }
-                },
-                {
-                  "stepId": "read-budget",
-                  "target": { "type": "WORKBOOK_CURRENT" },
-                  "query": { "type": "GET_WORKBOOK_SUMMARY" }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "assert-budget",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "assertion": {
+                  "type": "EXPECT_CELL_VALUE",
+                  "expectedValue": { "type": "BLANK" }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              },
+              {
+                "stepId": "read-budget",
+                "target": { "type": "WORKBOOK_CURRENT" },
+                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(request);
@@ -168,37 +155,27 @@ class GridGrindRequestDoctorTest {
 
   @Test
   void productionConstructorsInstantiateConcreteWorkbookSupport() {
-    assertTrue(
-        new GridGrindRequestDoctor()
-            .diagnose(null)
-            .problem()
-            .orElseThrow()
-            .message()
-            .contains("request"));
-    assertTrue(
-        new GridGrindRequestDoctor(new ExecutionValidationSupport())
-            .diagnose(null)
-            .problem()
-            .orElseThrow()
-            .message()
-            .contains("request"));
-    assertTrue(
-        new GridGrindRequestDoctor(
-                new ExecutionValidationSupport(),
-                new ExecutionWorkbookSupport(Files::createTempFile))
-            .diagnose(null)
-            .problem()
-            .orElseThrow()
-            .message()
-            .contains("request"));
+    assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindRequestDoctor(
+                    new ExecutionValidationSupport(),
+                    new ExecutionWorkbookSupport(Files::createTempFile))
+                .diagnose(null));
     assertThrows(
         NullPointerException.class,
         () ->
             new GridGrindRequestDoctor()
                 .diagnose(
-                    new WorkbookPlan(
+                    WorkbookPlan.standard(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
+                        dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+                        dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
                         java.util.List.of()),
                     null));
   }
@@ -208,31 +185,27 @@ class GridGrindRequestDoctorTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-bindings-");
     Files.writeString(workingDirectory.resolve("title.txt"), "Quarterly Budget");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "TEXT",
-                      "source": { "type": "UTF8_FILE", "path": "title.txt" }
-                    }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
                   }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -247,31 +220,27 @@ class GridGrindRequestDoctorTest {
   void diagnoseWithBindingsRecordsInputKindWhenStandardInputBindingIsMissing() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-stdin-");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "TEXT",
-                      "source": { "type": "STANDARD_INPUT" }
-                    }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "STANDARD_INPUT" }
                   }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -288,31 +257,27 @@ class GridGrindRequestDoctorTest {
   @Test
   void diagnoseWithBindingsRejectsBlankResolvedCellText() throws IOException {
     WorkbookPlan invalidRequest =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "TEXT",
-                      "source": { "type": "INLINE", "text": "" }
-                    }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "INLINE", "text": "" }
                   }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -329,31 +294,27 @@ class GridGrindRequestDoctorTest {
   void diagnoseWithBindingsCapturesInputSourceContextWhenFilesAreMissing() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-missing-");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readNewRequest(
             """
-            {
-              "source": { "type": "NEW" },
-              "steps": [
-                {
-                  "stepId": "ensure-budget",
-                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
-                  "action": { "type": "ENSURE_SHEET" }
-                },
-                {
-                  "stepId": "set-title",
-                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-                  "action": {
-                    "type": "SET_CELL",
-                    "value": {
-                      "type": "TEXT",
-                      "source": { "type": "UTF8_FILE", "path": "missing.txt" }
-                    }
+            [
+              {
+                "stepId": "ensure-budget",
+                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                "action": { "type": "ENSURE_SHEET" }
+              },
+              {
+                "stepId": "set-title",
+                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": {
+                    "type": "TEXT",
+                    "source": { "type": "UTF8_FILE", "path": "missing.txt" }
                   }
                 }
-              ]
-            }
-            """
-                .getBytes(StandardCharsets.UTF_8));
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -378,20 +339,19 @@ class GridGrindRequestDoctorTest {
   void diagnoseWithBindingsPreflightsExistingWorkbookSources() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-workbook-");
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readRequestWithSource(
             """
-            {
-              "source": { "type": "EXISTING", "path": "missing-workbook.xlsx" },
-              "steps": [
-                {
-                  "stepId": "summary",
-                  "target": { "type": "WORKBOOK_CURRENT" },
-                  "query": { "type": "GET_WORKBOOK_SUMMARY" }
-                }
-              ]
-            }
+            { "type": "EXISTING", "path": "missing-workbook.xlsx" }
+            """,
             """
-                .getBytes(StandardCharsets.UTF_8));
+            [
+              {
+                "stepId": "summary",
+                "target": { "type": "WORKBOOK_CURRENT" },
+                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -418,20 +378,19 @@ class GridGrindRequestDoctorTest {
       workbook.save(workbookPath);
     }
     WorkbookPlan request =
-        GridGrindJson.readRequest(
+        readRequestWithSource(
             """
-            {
-              "source": { "type": "EXISTING", "path": "existing.xlsx" },
-              "steps": [
-                {
-                  "stepId": "summary",
-                  "target": { "type": "WORKBOOK_CURRENT" },
-                  "query": { "type": "GET_WORKBOOK_SUMMARY" }
-                }
-              ]
-            }
+            { "type": "EXISTING", "path": "existing.xlsx" }
+            """,
             """
-                .getBytes(StandardCharsets.UTF_8));
+            [
+              {
+                "stepId": "summary",
+                "target": { "type": "WORKBOOK_CURRENT" },
+                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+              }
+            ]
+            """);
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
@@ -443,12 +402,53 @@ class GridGrindRequestDoctorTest {
   }
 
   @Test
-  void diagnosesNullRequestsAsInvalid() {
-    RequestDoctorReport report = new GridGrindRequestDoctor().diagnose(null);
+  void rejectsNullRequestsAtTheBoundary() {
+    NullPointerException failure =
+        assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
 
-    assertFalse(report.valid());
-    assertEquals(AnalysisSeverity.ERROR, report.severity());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
-    assertEquals("request must not be null", report.problem().orElseThrow().message());
+    assertEquals("request must not be null", failure.getMessage());
+  }
+
+  private static WorkbookPlan readNewRequest(String stepsJson) throws IOException {
+    return readRequestWithSource(
+        """
+        { "type": "NEW" }
+        """,
+        stepsJson);
+  }
+
+  private static WorkbookPlan readRequestWithSource(String sourceJson, String stepsJson)
+      throws IOException {
+    return GridGrindJson.readRequest(
+        """
+        {
+          "protocolVersion": "%s",
+          "source": %s,
+          "persistence": { "type": "NONE" },
+          "execution": {
+            "mode": {
+              "readMode": "FULL_XSSF",
+              "writeMode": "FULL_XSSF"
+            },
+            "journal": {
+              "level": "NORMAL"
+            },
+            "calculation": {
+              "strategy": {
+                "type": "DO_NOT_CALCULATE"
+              },
+              "markRecalculateOnOpen": false
+            }
+          },
+          "formulaEnvironment": {
+            "externalWorkbooks": [],
+            "missingWorkbookPolicy": "ERROR",
+            "udfToolpacks": []
+          },
+          "steps": %s
+        }
+        """
+            .formatted(GridGrindProtocolVersion.current(), sourceJson.strip(), stepsJson.strip())
+            .getBytes(StandardCharsets.UTF_8));
   }
 }

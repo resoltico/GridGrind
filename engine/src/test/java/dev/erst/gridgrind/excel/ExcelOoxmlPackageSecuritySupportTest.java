@@ -39,9 +39,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   workbook.sheet("Encrypted").snapshotCell("A1"))
               .stringValue());
 
-      WorkbookReadResult.PackageSecurityResult securityResult =
+      WorkbookCoreResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookReadResult.PackageSecurityResult.class,
+              WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
@@ -79,7 +79,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
       new WorkbookCommandExecutor()
           .apply(
               workbook,
-              new WorkbookCommand.SetCell("Encrypted", "B2", ExcelCellValue.text("Mutated")));
+              new WorkbookCellCommand.SetCell("Encrypted", "B2", ExcelCellValue.text("Mutated")));
       workbook.save(mutatedCopy);
     }
 
@@ -98,9 +98,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
         signedWorkbook.workbookPath().getParent().resolve("signed-resigned-output.xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(signedWorkbook.workbookPath())) {
-      WorkbookReadResult.PackageSecurityResult beforeMutation =
+      WorkbookCoreResult.PackageSecurityResult beforeMutation =
           assertInstanceOf(
-              WorkbookReadResult.PackageSecurityResult.class,
+              WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
@@ -111,11 +111,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
       new WorkbookCommandExecutor()
           .apply(
-              workbook, new WorkbookCommand.SetCell("Signed", "C1", ExcelCellValue.text("Touch")));
+              workbook,
+              new WorkbookCellCommand.SetCell("Signed", "C1", ExcelCellValue.text("Touch")));
 
-      WorkbookReadResult.PackageSecurityResult afterMutation =
+      WorkbookCoreResult.PackageSecurityResult afterMutation =
           assertInstanceOf(
-              WorkbookReadResult.PackageSecurityResult.class,
+              WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
@@ -142,9 +143,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));
     try (ExcelWorkbook reopened = ExcelWorkbook.open(resignedOutput)) {
-      WorkbookReadResult.PackageSecurityResult resignedSecurity =
+      WorkbookCoreResult.PackageSecurityResult resignedSecurity =
           assertInstanceOf(
-              WorkbookReadResult.PackageSecurityResult.class,
+              WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(reopened, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
@@ -166,9 +167,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
     assertFalse(OoxmlSecurityTestSupport.signatureValid(tamperedWorkbook));
     try (ExcelWorkbook workbook = ExcelWorkbook.open(tamperedWorkbook)) {
-      WorkbookReadResult.PackageSecurityResult securityResult =
+      WorkbookCoreResult.PackageSecurityResult securityResult =
           assertInstanceOf(
-              WorkbookReadResult.PackageSecurityResult.class,
+              WorkbookCoreResult.PackageSecurityResult.class,
               new WorkbookReadExecutor()
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());

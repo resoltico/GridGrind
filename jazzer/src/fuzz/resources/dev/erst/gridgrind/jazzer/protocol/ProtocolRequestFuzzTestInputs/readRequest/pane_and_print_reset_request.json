@@ -62,7 +62,8 @@
           },
           "repeatingColumns": {
             "type": "NONE"
-          }
+          },
+          "setup": {}
         }
       },
       "target": {

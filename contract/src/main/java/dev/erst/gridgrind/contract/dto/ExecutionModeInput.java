@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /** Optional top-level request settings that select low-memory execution families. */
@@ -15,22 +13,14 @@ public record ExecutionModeInput(ReadMode readMode, WriteMode writeMode) {
     return new ExecutionModeInput(DEFAULT_READ_MODE, DEFAULT_WRITE_MODE);
   }
 
+  /** Returns an execution mode that customizes only the write family. */
+  public static ExecutionModeInput writeMode(WriteMode writeMode) {
+    return new ExecutionModeInput(DEFAULT_READ_MODE, writeMode);
+  }
+
   public ExecutionModeInput {
     Objects.requireNonNull(readMode, "readMode must not be null");
     Objects.requireNonNull(writeMode, "writeMode must not be null");
-  }
-
-  /** Creates an execution mode that keeps reads on the default family. */
-  public ExecutionModeInput(WriteMode writeMode) {
-    this(DEFAULT_READ_MODE, writeMode);
-  }
-
-  @JsonCreator
-  static ExecutionModeInput create(
-      @JsonProperty("readMode") ReadMode readMode, @JsonProperty("writeMode") WriteMode writeMode) {
-    return new ExecutionModeInput(
-        readMode == null ? DEFAULT_READ_MODE : readMode,
-        writeMode == null ? DEFAULT_WRITE_MODE : writeMode);
   }
 
   /** Returns whether this execution-mode object leaves both reads and writes on full XSSF. */

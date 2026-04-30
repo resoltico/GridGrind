@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Closes remaining constructor and validation branches for standalone DTO families. */
@@ -42,19 +44,25 @@ class DtoEdgeCoverageTest {
         "widthEmu must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.OneCell(marker, 0L, 1L, null))
+                () ->
+                    new DrawingAnchorReport.OneCell(
+                        marker, 0L, 1L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))
             .getMessage());
     assertEquals(
         "heightEmu must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.OneCell(marker, 1L, 0L, null))
+                () ->
+                    new DrawingAnchorReport.OneCell(
+                        marker, 1L, 0L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))
             .getMessage());
     assertEquals(
         "xEmu must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new DrawingAnchorReport.Absolute(-1L, 0L, 1L, 1L, null))
+                () ->
+                    new DrawingAnchorReport.Absolute(
+                        -1L, 0L, 1L, 1L, ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE))
             .getMessage());
     assertEquals(
         "yEmu must not be negative",
@@ -666,19 +674,15 @@ class DtoEdgeCoverageTest {
         "iconId must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> AutofilterSortConditionReport.create("A1:A2", false, null, null, -1))
+                () -> new AutofilterSortConditionReport.Icon("A1:A2", false, -1))
             .getMessage());
     assertEquals(
         "conditions must not contain null values",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    AutofilterSortStateReport.create(
-                        "A1:B2",
-                        false,
-                        false,
-                        null,
-                        Arrays.asList((AutofilterSortConditionReport) null)))
+                    AutofilterSortStateReport.withoutSortMethod(
+                        "A1:B2", false, false, Arrays.asList((AutofilterSortConditionReport) null)))
             .getMessage());
 
     TableEntryReport table =
@@ -689,20 +693,27 @@ class DtoEdgeCoverageTest {
             1,
             0,
             List.of("Owner"),
-            List.of(TableColumnReport.create(1L, "Owner", null, null, null, null)),
+            List.of(
+                TableColumnReport.create(
+                    1L,
+                    "Owner",
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())),
             new TableStyleReport.Named("TableStyleMedium2", true, false, false, false),
             true,
-            "",
+            Optional.empty(),
             false,
             false,
             false,
-            "",
-            "",
-            "");
-    assertEquals("", table.comment());
-    assertEquals("", table.headerRowCellStyle());
-    assertEquals("", table.dataCellStyle());
-    assertEquals("", table.totalsRowCellStyle());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(Optional.empty(), table.comment());
+    assertEquals(Optional.empty(), table.headerRowCellStyle());
+    assertEquals(Optional.empty(), table.dataCellStyle());
+    assertEquals(Optional.empty(), table.totalsRowCellStyle());
     assertEquals(
         "columnNames must not contain nulls",
         assertThrows(
@@ -718,13 +729,13 @@ class DtoEdgeCoverageTest {
                         List.of(),
                         new TableStyleReport.None(),
                         false,
-                        "",
+                        Optional.empty(),
                         false,
                         false,
                         false,
-                        "",
-                        "",
-                        ""))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "columns must not contain nulls",
@@ -741,13 +752,13 @@ class DtoEdgeCoverageTest {
                         Arrays.asList((TableColumnReport) null),
                         new TableStyleReport.None(),
                         false,
-                        "",
+                        Optional.empty(),
                         false,
                         false,
                         false,
-                        "",
-                        "",
-                        ""))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
 
     assertEquals(
@@ -794,7 +805,9 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new DataValidationHealthReport(
-                        -1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))
+                        -1,
+                        new GridGrindAnalysisReports.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))
             .getMessage());
     assertEquals(
         "checkedPivotTableCount must not be negative",
@@ -802,11 +815,13 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new PivotTableHealthReport(
-                        -1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))
+                        -1,
+                        new GridGrindAnalysisReports.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))
             .getMessage());
     assertInstanceOf(
-        GridGrindResponse.NamedRangeReport.FormulaReport.class,
-        new GridGrindResponse.NamedRangeReport.FormulaReport(
+        GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport.class,
+        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
             "Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
     assertEquals(
         "color must not be null",

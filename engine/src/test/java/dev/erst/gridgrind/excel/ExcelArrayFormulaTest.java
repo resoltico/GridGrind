@@ -73,9 +73,9 @@ class ExcelArrayFormulaTest {
       seedSourceData(sheet);
       sheet.setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
 
-      WorkbookReadResult.ArrayFormulasResult result =
+      WorkbookSheetResult.ArrayFormulasResult result =
           assertInstanceOf(
-              WorkbookReadResult.ArrayFormulasResult.class,
+              WorkbookSheetResult.ArrayFormulasResult.class,
               introspector.execute(
                   workbook,
                   new WorkbookReadCommand.GetArrayFormulas(

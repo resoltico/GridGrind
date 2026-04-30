@@ -13,20 +13,20 @@ final class ExcelSheetIntrospector {
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  WorkbookReadResult.Window window(
+  WorkbookSheetResult.Window window(
       ExcelSheet sheet, String topLeftAddress, int rowCount, int columnCount) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.window(topLeftAddress, rowCount, columnCount);
   }
 
   /** Returns every merged region currently defined on the sheet. */
-  List<WorkbookReadResult.MergedRegion> mergedRegions(ExcelSheet sheet) {
+  List<WorkbookSheetResult.MergedRegion> mergedRegions(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.mergedRegions();
   }
 
   /** Returns hyperlink metadata for the selected cells on one sheet. */
-  List<WorkbookReadResult.CellHyperlink> hyperlinks(
+  List<WorkbookSheetResult.CellHyperlink> hyperlinks(
       ExcelSheet sheet, ExcelCellSelection selection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -34,14 +34,14 @@ final class ExcelSheetIntrospector {
   }
 
   /** Returns comment metadata for the selected cells on one sheet. */
-  List<WorkbookReadResult.CellComment> comments(ExcelSheet sheet, ExcelCellSelection selection) {
+  List<WorkbookSheetResult.CellComment> comments(ExcelSheet sheet, ExcelCellSelection selection) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return sheet.comments(selection);
   }
 
   /** Returns layout metadata such as pane state, zoom, and visible sizing. */
-  WorkbookReadResult.SheetLayout layout(ExcelSheet sheet) {
+  WorkbookSheetResult.SheetLayout layout(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.layout();
   }

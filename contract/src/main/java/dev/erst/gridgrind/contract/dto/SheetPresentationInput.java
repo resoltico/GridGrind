@@ -5,11 +5,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authoritative sheet-presentation payload for display flags, defaults, and ignored errors. */
 public record SheetPresentationInput(
     SheetDisplayInput display,
-    ColorInput tabColor,
+    Optional<ColorInput> tabColor,
     SheetOutlineSummaryInput outlineSummary,
     SheetDefaultsInput sheetDefaults,
     List<IgnoredErrorInput> ignoredErrors) {
@@ -17,7 +18,7 @@ public record SheetPresentationInput(
   public static SheetPresentationInput defaults() {
     return new SheetPresentationInput(
         SheetDisplayInput.defaults(),
-        null,
+        Optional.empty(),
         SheetOutlineSummaryInput.defaults(),
         SheetDefaultsInput.defaults(),
         List.of());
@@ -25,6 +26,7 @@ public record SheetPresentationInput(
 
   public SheetPresentationInput {
     Objects.requireNonNull(display, "display must not be null");
+    Objects.requireNonNull(tabColor, "tabColor must not be null");
     Objects.requireNonNull(outlineSummary, "outlineSummary must not be null");
     Objects.requireNonNull(sheetDefaults, "sheetDefaults must not be null");
     ignoredErrors =
@@ -38,16 +40,11 @@ public record SheetPresentationInput(
   @JsonCreator
   static SheetPresentationInput create(
       @JsonProperty("display") SheetDisplayInput display,
-      @JsonProperty("tabColor") ColorInput tabColor,
+      @JsonProperty("tabColor") Optional<ColorInput> tabColor,
       @JsonProperty("outlineSummary") SheetOutlineSummaryInput outlineSummary,
       @JsonProperty("sheetDefaults") SheetDefaultsInput sheetDefaults,
       @JsonProperty("ignoredErrors") List<IgnoredErrorInput> ignoredErrors) {
-    SheetPresentationInput defaults = defaults();
     return new SheetPresentationInput(
-        display == null ? defaults.display() : display,
-        tabColor,
-        outlineSummary == null ? defaults.outlineSummary() : outlineSummary,
-        sheetDefaults == null ? defaults.sheetDefaults() : sheetDefaults,
-        ignoredErrors == null ? List.of() : ignoredErrors);
+        display, tabColor, outlineSummary, sheetDefaults, ignoredErrors);
   }
 }

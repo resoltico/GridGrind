@@ -91,6 +91,23 @@ class CliArgumentsTest {
   }
 
   @Test
+  void printProtocolCatalogRejectsBlankSearchAndOperationValues() {
+    CliArgumentsException blankSearch =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-protocol-catalog", "--search", ""}));
+    assertEquals("--search", blankSearch.argument());
+    assertEquals("search query must not be blank", blankSearch.getMessage());
+
+    CliArgumentsException blankOperation =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-protocol-catalog", "--operation", ""}));
+    assertEquals("--operation", blankOperation.argument());
+    assertEquals("protocol catalog lookup id must not be blank", blankOperation.getMessage());
+  }
+
+  @Test
   void printProtocolCatalogRejectsOperationAndSearchTogether() {
     CliArgumentsException exception =
         assertThrows(
@@ -147,6 +164,31 @@ class CliArgumentsTest {
             CliArguments.parse(new String[] {"--help", "--response", "help.txt"}));
 
     assertEquals("help.txt", command.responsePath().toString());
+  }
+
+  @Test
+  void immediateCommandsAcceptResponsePathBeforeTheCommandFlag() {
+    CliCommand.Help helpCommand =
+        assertInstanceOf(
+            CliCommand.Help.class,
+            CliArguments.parse(new String[] {"--response", "help.txt", "--help"}));
+    assertEquals("help.txt", helpCommand.responsePath().toString());
+
+    CliCommand.Version versionCommand =
+        assertInstanceOf(
+            CliCommand.Version.class,
+            CliArguments.parse(new String[] {"--response", "version.json", "--version"}));
+    assertEquals("version.json", versionCommand.responsePath().toString());
+
+    CliCommand.PrintProtocolCatalogSearch searchCommand =
+        assertInstanceOf(
+            CliCommand.PrintProtocolCatalogSearch.class,
+            CliArguments.parse(
+                new String[] {
+                  "--response", "catalog.json", "--print-protocol-catalog", "--search", "sheet"
+                }));
+    assertEquals("catalog.json", searchCommand.responsePath().toString());
+    assertEquals("sheet", searchCommand.searchQuery());
   }
 
   @Test
@@ -220,6 +262,59 @@ class CliArgumentsTest {
 
     assertEquals("--response", exception.argument());
     assertEquals("Duplicate argument: --response", exception.getMessage());
+  }
+
+  @Test
+  void printTaskAndImmediateCatalogCommandsRejectBlankValues() {
+    CliArgumentsException blankTask =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-task-catalog", "--task", ""}));
+    assertEquals("--task", blankTask.argument());
+    assertEquals("task id must not be blank", blankTask.getMessage());
+
+    CliArgumentsException blankTaskPlan =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-task-plan", ""}));
+    assertEquals("--print-task-plan", blankTaskPlan.argument());
+    assertEquals("task id must not be blank", blankTaskPlan.getMessage());
+
+    CliArgumentsException blankExample =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-example", ""}));
+    assertEquals("--print-example", blankExample.argument());
+    assertEquals("example id must not be blank", blankExample.getMessage());
+  }
+
+  @Test
+  void dependentFlagsExplainTheirRequiredParentCommand() {
+    CliArgumentsException taskException =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--task", "BUDGET"}));
+    assertEquals("--task", taskException.argument());
+    assertEquals(
+        "--task requires --print-task-catalog and one task id value", taskException.getMessage());
+
+    CliArgumentsException operationException =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--operation", "SET_CELL"}));
+    assertEquals("--operation", operationException.argument());
+    assertEquals(
+        "--operation requires --print-protocol-catalog and one lookup id value",
+        operationException.getMessage());
+
+    CliArgumentsException searchException =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--search", "layout"}));
+    assertEquals("--search", searchException.argument());
+    assertEquals(
+        "--search requires --print-protocol-catalog and one search text value",
+        searchException.getMessage());
   }
 
   @Test
