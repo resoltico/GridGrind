@@ -240,7 +240,7 @@ public final class Values {
 
   static CommentInput toCommentInput(Comment comment) {
     Comment nonNullComment = Objects.requireNonNull(comment, "comment must not be null");
-    return new CommentInput(
+    return CommentInput.plain(
         toTextSourceInput(nonNullComment.source()),
         nonNullComment.author(),
         nonNullComment.visible());

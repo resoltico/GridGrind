@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
@@ -132,7 +132,7 @@ public sealed interface Assertion
   }
 
   /** Expects every selected cell to have the exact style snapshot. */
-  record CellStyle(GridGrindResponse.CellStyleReport style) implements Assertion {
+  record CellStyle(GridGrindWorkbookSurfaceReports.CellStyleReport style) implements Assertion {
     public CellStyle {
       Objects.requireNonNull(style, "style must not be null");
     }
@@ -146,14 +146,15 @@ public sealed interface Assertion
   }
 
   /** Expects the selected sheet summary facts to match exactly. */
-  record SheetStructureFacts(GridGrindResponse.SheetSummaryReport sheet) implements Assertion {
+  record SheetStructureFacts(GridGrindWorkbookSurfaceReports.SheetSummaryReport sheet)
+      implements Assertion {
     public SheetStructureFacts {
       Objects.requireNonNull(sheet, "sheet must not be null");
     }
   }
 
   /** Expects the selected named-range facts to match exactly and in order. */
-  record NamedRangeFacts(List<GridGrindResponse.NamedRangeReport> namedRanges)
+  record NamedRangeFacts(List<GridGrindWorkbookSurfaceReports.NamedRangeReport> namedRanges)
       implements Assertion {
     public NamedRangeFacts {
       namedRanges = AssertionSupport.copyNamedRanges(namedRanges, "namedRanges");

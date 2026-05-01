@@ -78,62 +78,64 @@ final class WorkbookSampleFixtures {
             ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
 
     return List.of(
-        new WorkbookCommand.CreateSheet("Budget"),
-        new WorkbookCommand.RenameSheet("Budget", "Summary"),
-        new WorkbookCommand.DeleteSheet("Archive"),
-        new WorkbookCommand.MoveSheet("Budget", 1),
-        new WorkbookCommand.CopySheet(
+        new WorkbookSheetCommand.CreateSheet("Budget"),
+        new WorkbookSheetCommand.RenameSheet("Budget", "Summary"),
+        new WorkbookSheetCommand.DeleteSheet("Archive"),
+        new WorkbookSheetCommand.MoveSheet("Budget", 1),
+        new WorkbookSheetCommand.CopySheet(
             "Budget", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()),
-        new WorkbookCommand.SetActiveSheet("Budget"),
-        new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Summary")),
-        new WorkbookCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.VERY_HIDDEN),
-        new WorkbookCommand.SetSheetProtection("Budget", protectionSettings()),
-        new WorkbookCommand.ClearSheetProtection("Budget"),
-        new WorkbookCommand.SetWorkbookProtection(
+        new WorkbookSheetCommand.SetActiveSheet("Budget"),
+        new WorkbookSheetCommand.SetSelectedSheets(List.of("Budget", "Summary")),
+        new WorkbookSheetCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.VERY_HIDDEN),
+        new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings()),
+        new WorkbookSheetCommand.ClearSheetProtection("Budget"),
+        new WorkbookSheetCommand.SetWorkbookProtection(
             new ExcelWorkbookProtectionSettings(true, false, true, "book", "review")),
-        new WorkbookCommand.ClearWorkbookProtection(),
-        new WorkbookCommand.MergeCells("Budget", "A1:B2"),
-        new WorkbookCommand.UnmergeCells("Budget", "A1:B2"),
-        new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0d),
-        new WorkbookCommand.SetRowHeight("Budget", 0, 2, 28.5d),
-        new WorkbookCommand.InsertRows("Budget", 2, 3),
-        new WorkbookCommand.DeleteRows("Budget", new ExcelRowSpan(4, 6)),
-        new WorkbookCommand.ShiftRows("Budget", new ExcelRowSpan(1, 3), 2),
-        new WorkbookCommand.InsertColumns("Budget", 1, 2),
-        new WorkbookCommand.DeleteColumns("Budget", new ExcelColumnSpan(3, 4)),
-        new WorkbookCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 1), -1),
-        new WorkbookCommand.SetRowVisibility("Budget", new ExcelRowSpan(5, 7), true),
-        new WorkbookCommand.SetColumnVisibility("Budget", new ExcelColumnSpan(2, 3), false),
-        new WorkbookCommand.GroupRows("Budget", new ExcelRowSpan(8, 10), false),
-        new WorkbookCommand.UngroupRows("Budget", new ExcelRowSpan(8, 10)),
-        new WorkbookCommand.GroupColumns("Budget", new ExcelColumnSpan(4, 6), true),
-        new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(4, 6)),
-        new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 2, 1, 2)),
-        new WorkbookCommand.SetSheetZoom("Budget", 135),
-        new WorkbookCommand.SetPrintLayout("Budget", defaultPrintLayout()),
-        new WorkbookCommand.ClearPrintLayout("Budget"),
-        new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
-        new WorkbookCommand.SetArrayFormula(
+        new WorkbookSheetCommand.ClearWorkbookProtection(),
+        new WorkbookStructureCommand.MergeCells("Budget", "A1:B2"),
+        new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B2"),
+        new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 1, 16.0d),
+        new WorkbookStructureCommand.SetRowHeight("Budget", 0, 2, 28.5d),
+        new WorkbookStructureCommand.InsertRows("Budget", 2, 3),
+        new WorkbookStructureCommand.DeleteRows("Budget", new ExcelRowSpan(4, 6)),
+        new WorkbookStructureCommand.ShiftRows("Budget", new ExcelRowSpan(1, 3), 2),
+        new WorkbookStructureCommand.InsertColumns("Budget", 1, 2),
+        new WorkbookStructureCommand.DeleteColumns("Budget", new ExcelColumnSpan(3, 4)),
+        new WorkbookStructureCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 1), -1),
+        new WorkbookStructureCommand.SetRowVisibility("Budget", new ExcelRowSpan(5, 7), true),
+        new WorkbookStructureCommand.SetColumnVisibility(
+            "Budget", new ExcelColumnSpan(2, 3), false),
+        new WorkbookStructureCommand.GroupRows("Budget", new ExcelRowSpan(8, 10), false),
+        new WorkbookStructureCommand.UngroupRows("Budget", new ExcelRowSpan(8, 10)),
+        new WorkbookStructureCommand.GroupColumns("Budget", new ExcelColumnSpan(4, 6), true),
+        new WorkbookStructureCommand.UngroupColumns("Budget", new ExcelColumnSpan(4, 6)),
+        new WorkbookLayoutCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 2, 1, 2)),
+        new WorkbookLayoutCommand.SetSheetZoom("Budget", 135),
+        new WorkbookLayoutCommand.SetPrintLayout("Budget", defaultPrintLayout()),
+        new WorkbookLayoutCommand.ClearPrintLayout("Budget"),
+        new WorkbookCellCommand.SetCell(
+            "Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+        new WorkbookCellCommand.SetArrayFormula(
             "Budget", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")),
-        new WorkbookCommand.ClearArrayFormula("Budget", "D2"),
-        new WorkbookCommand.ImportCustomXmlMapping(
+        new WorkbookCellCommand.ClearArrayFormula("Budget", "D2"),
+        new WorkbookMetadataCommand.ImportCustomXmlMapping(
             new ExcelCustomXmlImportDefinition(
                 new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
                 "<CORSO><NOME>Ops</NOME></CORSO>")),
-        new WorkbookCommand.SetRange(
+        new WorkbookCellCommand.SetRange(
             "Budget",
             "A1:B2",
             List.of(
                 List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0d)),
                 List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(10.0d)))),
-        new WorkbookCommand.ClearRange("Budget", "C1:C2"),
-        new WorkbookCommand.SetHyperlink(
+        new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
+        new WorkbookAnnotationCommand.SetHyperlink(
             "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
-        new WorkbookCommand.ClearHyperlink("Budget", "A1"),
-        new WorkbookCommand.SetComment(
+        new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
+        new WorkbookAnnotationCommand.SetComment(
             "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
-        new WorkbookCommand.ClearComment("Budget", "A1"),
-        new WorkbookCommand.SetPicture(
+        new WorkbookAnnotationCommand.ClearComment("Budget", "A1"),
+        new WorkbookDrawingCommand.SetPicture(
             "Budget",
             new ExcelPictureDefinition(
                 "BudgetPicture",
@@ -141,7 +143,7 @@ final class WorkbookSampleFixtures {
                 ExcelPictureFormat.PNG,
                 firstAnchor,
                 "Queue preview")),
-        new WorkbookCommand.SetSignatureLine(
+        new WorkbookDrawingCommand.SetSignatureLine(
             "Budget",
             new ExcelSignatureLineDefinition(
                 "BudgetSignature",
@@ -155,8 +157,8 @@ final class WorkbookSampleFixtures {
                 "invalid",
                 ExcelPictureFormat.PNG,
                 new ExcelBinaryData(PNG_PIXEL_BYTES))),
-        new WorkbookCommand.SetChart("Budget", chartDefinition(firstAnchor)),
-        new WorkbookCommand.SetPivotTable(
+        new WorkbookDrawingCommand.SetChart("Budget", chartDefinition(firstAnchor)),
+        new WorkbookTabularCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
                 "Budget Pivot",
                 "Budget",
@@ -168,7 +170,7 @@ final class WorkbookSampleFixtures {
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
                         "Tax", ExcelPivotDataConsolidateFunction.SUM, "Total Tax", "#,##0.00")))),
-        new WorkbookCommand.SetShape(
+        new WorkbookDrawingCommand.SetShape(
             "Budget",
             new ExcelShapeDefinition(
                 "BudgetShape",
@@ -176,7 +178,7 @@ final class WorkbookSampleFixtures {
                 firstAnchor,
                 "rect",
                 "Queue")),
-        new WorkbookCommand.SetEmbeddedObject(
+        new WorkbookDrawingCommand.SetEmbeddedObject(
             "Budget",
             new ExcelEmbeddedObjectDefinition(
                 "BudgetEmbed",
@@ -187,13 +189,13 @@ final class WorkbookSampleFixtures {
                 ExcelPictureFormat.PNG,
                 new ExcelBinaryData(PNG_PIXEL_BYTES),
                 firstAnchor)),
-        new WorkbookCommand.SetDrawingObjectAnchor("Budget", "BudgetShape", movedAnchor),
-        new WorkbookCommand.DeleteDrawingObject("Budget", "BudgetPicture"),
-        new WorkbookCommand.ApplyStyle("Budget", "A1:B1", defaultStyle()),
-        new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
-        new WorkbookCommand.ClearDataValidations(
+        new WorkbookDrawingCommand.SetDrawingObjectAnchor("Budget", "BudgetShape", movedAnchor),
+        new WorkbookDrawingCommand.DeleteDrawingObject("Budget", "BudgetPicture"),
+        new WorkbookFormattingCommand.ApplyStyle("Budget", "A1:B1", defaultStyle()),
+        new WorkbookFormattingCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
+        new WorkbookFormattingCommand.ClearDataValidations(
             "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
-        new WorkbookCommand.SetConditionalFormatting(
+        new WorkbookFormattingCommand.SetConditionalFormatting(
             "Budget",
             new ExcelConditionalFormattingBlockDefinition(
                 List.of("A2:A5"),
@@ -203,9 +205,9 @@ final class WorkbookSampleFixtures {
                         true,
                         new ExcelDifferentialStyle(
                             "0.00", null, null, null, null, null, null, null, null))))),
-        new WorkbookCommand.ClearConditionalFormatting(
+        new WorkbookFormattingCommand.ClearConditionalFormatting(
             "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
-        new WorkbookCommand.SetAutofilter(
+        new WorkbookTabularCommand.SetAutofilter(
             "Budget",
             "A1:C4",
             List.of(
@@ -215,27 +217,27 @@ final class WorkbookSampleFixtures {
                 "A1:C4",
                 true,
                 false,
-                "",
-                List.of(new ExcelAutofilterSortCondition("A2:A4", false, "", null, null)))),
-        new WorkbookCommand.ClearAutofilter("Budget"),
-        new WorkbookCommand.SetTable(
+                java.util.Optional.empty(),
+                List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false)))),
+        new WorkbookTabularCommand.ClearAutofilter("Budget"),
+        new WorkbookTabularCommand.SetTable(
             new ExcelTableDefinition(
                 "BudgetTable",
                 "Budget",
                 "A1:C4",
                 true,
                 new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
-        new WorkbookCommand.DeleteTable("BudgetTable", "Budget"),
-        new WorkbookCommand.DeletePivotTable("Budget Pivot", "Budget"),
-        new WorkbookCommand.SetNamedRange(
+        new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
+        new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
+        new WorkbookMetadataCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 new ExcelNamedRangeTarget("Budget", "B4"))),
-        new WorkbookCommand.DeleteNamedRange(
+        new WorkbookMetadataCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
-        new WorkbookCommand.AppendRow("Budget", List.of(ExcelCellValue.text("Item"))),
-        new WorkbookCommand.AutoSizeColumns("Budget"));
+        new WorkbookCellCommand.AppendRow("Budget", List.of(ExcelCellValue.text("Item"))),
+        new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
 
   static ExcelDrawingAnchor.TwoCell anchor(int fromRow, int fromColumn, int toRow, int toColumn) {

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.contract.catalog;
 
 /** Path layout policy for generated example requests. */
 enum ExamplePathLayout {
-  BUILT_IN("cli/build/generated-workbooks/", "examples/"),
-  REPOSITORY("../cli/build/generated-workbooks/", "");
+  BUILT_IN("generated-workbooks/", "examples/"),
+  REPOSITORY("generated-workbooks/", "");
 
   private final String generatedWorkbookPrefix;
   private final String assetPrefix;

@@ -128,6 +128,70 @@ class GridGrindPublicSurfaceLintTest {
     assertTrue(unknown.isEmpty(), () -> "unexpected lint matches: " + unknown);
   }
 
+  @Test
+  void publicSurfacesDoNotAdvertiseRemovedOmissionDefaultingContracts() throws IOException {
+    record SurfaceText(String name, String text) {}
+
+    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
+    List<SurfaceText> surfaces =
+        List.of(
+            new SurfaceText("catalogSummaries", catalogSummaries()),
+            new SurfaceText(
+                "cliHelp",
+                GridGrindCliHelp.helpText(
+                    "dev",
+                    "Contract lint surface",
+                    "https://example.invalid/gridgrind",
+                    "gridgrind:test")),
+            new SurfaceText(
+                "requestAndExecutionReference",
+                Files.readString(
+                    repositoryRoot.resolve("docs/REQUEST_AND_EXECUTION_REFERENCE.md"))),
+            new SurfaceText(
+                "layoutAndStructureMutations",
+                Files.readString(repositoryRoot.resolve("docs/LAYOUT_AND_STRUCTURE_MUTATIONS.md"))),
+            new SurfaceText(
+                "drawingMutations",
+                Files.readString(repositoryRoot.resolve("docs/DRAWING_MUTATIONS.md"))),
+            new SurfaceText(
+                "linkAndCommentMutations",
+                Files.readString(repositoryRoot.resolve("docs/LINK_AND_COMMENT_MUTATIONS.md"))),
+            new SurfaceText(
+                "quickStart", Files.readString(repositoryRoot.resolve("docs/QUICK_START.md"))),
+            new SurfaceText(
+                "operations", Files.readString(repositoryRoot.resolve("docs/OPERATIONS.md"))));
+
+    List<String> forbiddenPhrases =
+        List.of(
+            "execution is optional; omit it",
+            "formulaEnvironment is optional; omit it",
+            "Null fields default to empty string.",
+            "All fields are optional and normalize to defaults when omitted.",
+            "Omitted nested fields normalize to defaults or clear state.",
+            "Omitted nested fields normalize to default or clear state.",
+            "comment.visible defaults to `false` when omitted.",
+            "When `collapsed` is omitted it defaults to `false`.",
+            "defaults to `MOVE_AND_RESIZE` when omitted.",
+            "Defaults to `rect` when omitted.",
+            "GridGrind writes the default axis set for that plot family.",
+            "Generated example JSON omits absent optional sections",
+            "optional request-level `execution` block");
+
+    List<String> violations = new ArrayList<>();
+    for (SurfaceText surface : surfaces) {
+      for (String forbiddenPhrase : forbiddenPhrases) {
+        if (surface.text().contains(forbiddenPhrase)) {
+          violations.add(surface.name() + " -> " + forbiddenPhrase);
+        }
+      }
+    }
+
+    assertTrue(
+        violations.isEmpty(),
+        () ->
+            "Removed omission-defaulting contract text leaked into public surfaces: " + violations);
+  }
+
   private static void collectUnknown(
       Map<String, Set<String>> unknownBySurface,
       Path path,

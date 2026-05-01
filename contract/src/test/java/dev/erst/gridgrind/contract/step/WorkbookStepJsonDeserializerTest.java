@@ -113,8 +113,8 @@ class WorkbookStepJsonDeserializerTest {
                     }
                     """)));
 
-    assertEquals(1, request.assertionSteps().size());
-    assertEquals("assert-owner", request.assertionSteps().getFirst().stepId());
+    assertEquals(1, request.stepPartition().assertions().size());
+    assertEquals("assert-owner", request.stepPartition().assertions().getFirst().stepId());
   }
 
   @Test
@@ -258,9 +258,9 @@ class WorkbookStepJsonDeserializerTest {
 
   @Test
   void reportsWrongShapeWithinOneSelectorFamilyAgainstTheTargetField() {
-    InvalidRequestShapeException wrongShapeByName =
+    InvalidRequestException wrongShapeByName =
         assertThrows(
-            InvalidRequestShapeException.class,
+            InvalidRequestException.class,
             () ->
                 GridGrindJson.readRequest(
                     requestWithStepBody(
@@ -305,7 +305,22 @@ class WorkbookStepJsonDeserializerTest {
   private static byte[] requestWithStepBody(String stepBody) {
     return ("""
         {
+          "protocolVersion": "V1",
           "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "execution": {
+            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+            "journal": { "level": "NORMAL" },
+            "calculation": {
+              "strategy": { "type": "DO_NOT_CALCULATE" },
+              "markRecalculateOnOpen": false
+            }
+          },
+          "formulaEnvironment": {
+            "externalWorkbooks": [],
+            "missingWorkbookPolicy": "ERROR",
+            "udfToolpacks": []
+          },
           "steps": [
             {
         """

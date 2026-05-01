@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: ANALYSIS_QUERIES
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, analysis queries, workbook health, formula health, hyperlink health, named-range health]
   questions: ["what analysis queries does gridgrind support", "how do i run workbook health checks in gridgrind", "how do i inspect findings in gridgrind"]

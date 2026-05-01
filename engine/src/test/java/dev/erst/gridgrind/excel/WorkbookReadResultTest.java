@@ -31,61 +31,61 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 -1, List.of("Budget"), "Budget", List.of("Budget"), 0, true));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), -1, true));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, null, "Budget", List.of("Budget"), 0, true));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadResult.NamedRangesResult("ranges", null));
+        NullPointerException.class, () -> new WorkbookCoreResult.NamedRangesResult("ranges", null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookReadResult.NamedRangesResult(
+            new WorkbookCoreResult.NamedRangesResult(
                 "ranges", List.of((ExcelNamedRangeSnapshot) null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.SheetSummary(
+            new WorkbookSheetResult.SheetSummary(
                 "Budget",
                 ExcelSheetVisibility.VISIBLE,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
+                new WorkbookSheetResult.SheetProtection.Unprotected(),
                 -1,
                 0,
                 0));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.CellsResult("cells", "Budget", null));
+        () -> new WorkbookSheetResult.CellsResult("cells", "Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.Window("Budget", "A1", 0, 1, List.of()));
+        () -> new WorkbookSheetResult.Window("Budget", "A1", 0, 1, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.Window("Budget", "A1", 1, 0, List.of()));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.MergedRegion(" "));
+        () -> new WorkbookSheetResult.Window("Budget", "A1", 1, 0, List.of()));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookSheetResult.MergedRegion(" "));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadResult.CellHyperlink("A1", null));
-    assertThrows(NullPointerException.class, () -> new WorkbookReadResult.CellComment("A1", null));
+        NullPointerException.class, () -> new WorkbookSheetResult.CellHyperlink("A1", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookSheetResult.CellComment("A1", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.DataValidationsResult("validations", "Budget", null));
+        () -> new WorkbookRuleResult.DataValidationsResult("validations", "Budget", null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookReadResult.ConditionalFormattingHealthResult(
+            new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
                 "conditionalFormattingHealth", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", null));
+        () -> new WorkbookRuleResult.AutofiltersResult("autofilters", "Budget", null));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadResult.TablesResult("tables", null));
+        NullPointerException.class, () -> new WorkbookRuleResult.TablesResult("tables", null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(-1, 0, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, -1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, -1, 0));
@@ -93,7 +93,7 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.SheetLayout(
+            new WorkbookSheetResult.SheetLayout(
                 "Budget",
                 new ExcelSheetPane.None(),
                 9,
@@ -103,112 +103,113 @@ class WorkbookReadResultTest {
     assertInstanceOf(ExcelSheetPane.None.class, new ExcelSheetPane.None());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.PrintLayoutResult("print", "Budget", null));
+        () -> new WorkbookSheetResult.PrintLayoutResult("print", "Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.ColumnLayout(-1, 1.0, false, 0, false));
+        () -> new WorkbookSheetResult.ColumnLayout(-1, 1.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.ColumnLayout(0, 0.0, false, 0, false));
+        () -> new WorkbookSheetResult.ColumnLayout(0, 0.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.ColumnLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
+        () -> new WorkbookSheetResult.ColumnLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.ColumnLayout(0, 1.0, false, -1, false));
+        () -> new WorkbookSheetResult.ColumnLayout(0, 1.0, false, -1, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.RowLayout(-1, 1.0, false, 0, false));
+        () -> new WorkbookSheetResult.RowLayout(-1, 1.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.RowLayout(0, 0.0, false, 0, false));
+        () -> new WorkbookSheetResult.RowLayout(0, 0.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.RowLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
+        () -> new WorkbookSheetResult.RowLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.RowLayout(0, 1.0, false, -1, false));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadResult.FormulaSurface(-1, List.of()));
+        () -> new WorkbookSheetResult.RowLayout(0, 1.0, false, -1, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetFormulaSurface("Budget", -1, 0, List.of()));
+        () -> new WorkbookSurfaceResult.FormulaSurface(-1, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetFormulaSurface("Budget", 0, -1, List.of()));
+        () -> new WorkbookSurfaceResult.SheetFormulaSurface("Budget", -1, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 0, List.of("B4")));
+        () -> new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 0, -1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 0, List.of("B4")));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 1, null));
+        () -> new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 1, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSchema("Budget", "A1", 0, 1, 0, List.of()));
+        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 0, 1, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSchema("Budget", "A1", 1, 0, 0, List.of()));
+        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 1, 0, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSchema("Budget", "A1", 1, 1, -1, List.of()));
+        () -> new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 1, 1, -1, List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.SchemaColumn(
+            new WorkbookSurfaceResult.SchemaColumn(
                 -1,
                 "A1",
                 "Item",
                 0,
                 0,
-                List.of(new WorkbookReadResult.TypeCount("STRING", 1)),
+                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
                 "STRING"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.SchemaColumn(
+            new WorkbookSurfaceResult.SchemaColumn(
                 0,
                 "A1",
                 "Item",
                 -1,
                 0,
-                List.of(new WorkbookReadResult.TypeCount("STRING", 1)),
+                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
                 "STRING"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.SchemaColumn(
+            new WorkbookSurfaceResult.SchemaColumn(
                 0,
                 "A1",
                 "Item",
                 0,
                 -1,
-                List.of(new WorkbookReadResult.TypeCount("STRING", 1)),
+                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
                 "STRING"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadResult.TypeCount("STRING", 0));
+        IllegalArgumentException.class, () -> new WorkbookSurfaceResult.TypeCount("STRING", 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.NamedRangeSurface(-1, 0, 0, 0, List.of()));
+        () -> new WorkbookSurfaceResult.NamedRangeSurface(-1, 0, 0, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.NamedRangeSurface(0, -1, 0, 0, List.of()));
+        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, -1, 0, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.NamedRangeSurface(0, 0, -1, 0, List.of()));
+        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, -1, 0, List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.NamedRangeSurface(0, 0, 0, -1, List.of()));
+        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, 0, -1, List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.NamedRangeSurface(0, 0, 0, 0, null));
+        () -> new WorkbookSurfaceResult.NamedRangeSurface(0, 0, 0, 0, null));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookReadResult.NamedRangeSurfaceEntry(
+            new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
                 "BudgetTotal",
                 null,
                 "Budget!$B$4",
-                WorkbookReadResult.NamedRangeBackingKind.RANGE));
+                WorkbookSurfaceResult.NamedRangeBackingKind.RANGE));
   }
 
   @Test
@@ -242,18 +243,19 @@ class WorkbookReadResultTest {
         new WorkbookAnalysis.PivotTableHealth(
             1, new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0), List.of(finding));
 
-    WorkbookReadResult.PivotTablesResult pivotTables =
-        new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivot));
-    WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
-        new WorkbookReadResult.PivotTableHealthResult("pivot-health", health);
+    WorkbookDrawingResult.PivotTablesResult pivotTables =
+        new WorkbookDrawingResult.PivotTablesResult("pivots", List.of(pivot));
+    WorkbookAnalysisResult.PivotTableHealthResult pivotTableHealth =
+        new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", health);
 
     assertEquals("Budget Pivot", pivotTables.pivotTables().getFirst().name());
     assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadResult.PivotTablesResult("pivots", null));
+        NullPointerException.class,
+        () -> new WorkbookDrawingResult.PivotTablesResult("pivots", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadResult.PivotTableHealthResult("pivot-health", null));
+        () -> new WorkbookAnalysisResult.PivotTableHealthResult("pivot-health", null));
   }
 
   @Test
@@ -265,21 +267,21 @@ class WorkbookReadResultTest {
     IllegalArgumentException windowRowFailure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new WorkbookReadResult.WindowRow(-1, List.of(blank)));
+            () -> new WorkbookSheetResult.WindowRow(-1, List.of(blank)));
     assertTrue(windowRowFailure.getMessage().contains("rowIndex -1"));
     assertTrue(windowRowFailure.getMessage().contains("Excel row 1"));
 
     IllegalArgumentException columnLayoutFailure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new WorkbookReadResult.ColumnLayout(-1, 1.0, false, 0, false));
+            () -> new WorkbookSheetResult.ColumnLayout(-1, 1.0, false, 0, false));
     assertTrue(columnLayoutFailure.getMessage().contains("columnIndex -1"));
     assertTrue(columnLayoutFailure.getMessage().contains("Excel column A"));
 
     IllegalArgumentException rowLayoutFailure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> new WorkbookReadResult.RowLayout(-1, 1.0, false, 0, false));
+            () -> new WorkbookSheetResult.RowLayout(-1, 1.0, false, 0, false));
     assertTrue(rowLayoutFailure.getMessage().contains("rowIndex -1"));
     assertTrue(rowLayoutFailure.getMessage().contains("Excel row 1"));
 
@@ -287,13 +289,13 @@ class WorkbookReadResultTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookReadResult.SchemaColumn(
+                new WorkbookSurfaceResult.SchemaColumn(
                     -1,
                     "A1",
                     "Item",
                     0,
                     0,
-                    List.of(new WorkbookReadResult.TypeCount("STRING", 1)),
+                    List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
                     "STRING"));
     assertTrue(schemaColumnFailure.getMessage().contains("columnIndex -1"));
     assertTrue(schemaColumnFailure.getMessage().contains("Excel column A"));
@@ -302,10 +304,10 @@ class WorkbookReadResultTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookReadResult.SheetSummary(
+                new WorkbookSheetResult.SheetSummary(
                     "Budget",
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookReadResult.SheetProtection.Unprotected(),
+                    new WorkbookSheetResult.SheetProtection.Unprotected(),
                     0,
                     -2,
                     0));
@@ -316,10 +318,10 @@ class WorkbookReadResultTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookReadResult.SheetSummary(
+                new WorkbookSheetResult.SheetSummary(
                     "Budget",
                     ExcelSheetVisibility.VISIBLE,
-                    new WorkbookReadResult.SheetProtection.Unprotected(),
+                    new WorkbookSheetResult.SheetProtection.Unprotected(),
                     0,
                     0,
                     -2));
@@ -331,51 +333,51 @@ class WorkbookReadResultTest {
   void validatesWorkbookSummaryStateSpecificInvariants() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.WorkbookSummary.Empty(1, List.of("Budget"), 0, false));
+        () -> new WorkbookCoreResult.WorkbookSummary.Empty(1, List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 2, List.of("Budget"), "Budget", List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 0, List.of(), "Budget", List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), -1, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Missing", List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of(), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Missing"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 2, List.of("Budget", "Budget"), "Budget", List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of(" "), " ", List.of("Budget"), 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget", "Budget"), 0, false));
   }
 
@@ -415,24 +417,24 @@ class WorkbookReadResultTest {
                     "Budget!$B$4",
                     new ExcelNamedRangeTarget("Budget", "B4"))));
     List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
-    List<WorkbookReadResult.WindowRow> rows =
-        new ArrayList<>(List.of(new WorkbookReadResult.WindowRow(0, List.of(blank))));
-    List<WorkbookReadResult.MergedRegion> mergedRegions =
-        new ArrayList<>(List.of(new WorkbookReadResult.MergedRegion("A1:B2")));
-    List<WorkbookReadResult.CellHyperlink> hyperlinks =
+    List<WorkbookSheetResult.WindowRow> rows =
+        new ArrayList<>(List.of(new WorkbookSheetResult.WindowRow(0, List.of(blank))));
+    List<WorkbookSheetResult.MergedRegion> mergedRegions =
+        new ArrayList<>(List.of(new WorkbookSheetResult.MergedRegion("A1:B2")));
+    List<WorkbookSheetResult.CellHyperlink> hyperlinks =
         new ArrayList<>(
             List.of(
-                new WorkbookReadResult.CellHyperlink(
+                new WorkbookSheetResult.CellHyperlink(
                     "A1", new ExcelHyperlink.Url("https://example.com/report"))));
-    List<WorkbookReadResult.CellComment> comments =
+    List<WorkbookSheetResult.CellComment> comments =
         new ArrayList<>(
             List.of(
-                new WorkbookReadResult.CellComment(
+                new WorkbookSheetResult.CellComment(
                     "A1", new ExcelCommentSnapshot("Review", "GridGrind", false, null, null))));
-    List<WorkbookReadResult.ColumnLayout> columns =
-        new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5, false, 0, false)));
-    List<WorkbookReadResult.RowLayout> resultRows =
-        new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0, false, 0, false)));
+    List<WorkbookSheetResult.ColumnLayout> columns =
+        new ArrayList<>(List.of(new WorkbookSheetResult.ColumnLayout(0, 12.5, false, 0, false)));
+    List<WorkbookSheetResult.RowLayout> resultRows =
+        new ArrayList<>(List.of(new WorkbookSheetResult.RowLayout(0, 18.0, false, 0, false)));
     List<ExcelDataValidationSnapshot> validations =
         new ArrayList<>(
             List.of(
@@ -464,28 +466,28 @@ class WorkbookReadResultTest {
                     new ExcelTableStyleSnapshot.Named(
                         "TableStyleMedium2", false, false, true, false),
                     true)));
-    List<WorkbookReadResult.FormulaPattern> formulas =
+    List<WorkbookSurfaceResult.FormulaPattern> formulas =
         new ArrayList<>(
-            List.of(new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
-    List<WorkbookReadResult.SchemaColumn> schemaColumns =
+            List.of(new WorkbookSurfaceResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
+    List<WorkbookSurfaceResult.SchemaColumn> schemaColumns =
         new ArrayList<>(
             List.of(
-                new WorkbookReadResult.SchemaColumn(
+                new WorkbookSurfaceResult.SchemaColumn(
                     0,
                     "A1",
                     "Item",
                     2,
                     0,
-                    List.of(new WorkbookReadResult.TypeCount("STRING", 2)),
+                    List.of(new WorkbookSurfaceResult.TypeCount("STRING", 2)),
                     "STRING")));
-    List<WorkbookReadResult.NamedRangeSurfaceEntry> namedRangeEntries =
+    List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries =
         new ArrayList<>(
             List.of(
-                new WorkbookReadResult.NamedRangeSurfaceEntry(
+                new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
                     "BudgetTotal",
                     new ExcelNamedRangeScope.WorkbookScope(),
                     "Budget!$B$4",
-                    WorkbookReadResult.NamedRangeBackingKind.RANGE)));
+                    WorkbookSurfaceResult.NamedRangeBackingKind.RANGE)));
 
     return new ReadResultFixture(
         sheetNames,
@@ -503,51 +505,53 @@ class WorkbookReadResultTest {
         formulas,
         schemaColumns,
         namedRangeEntries,
-        new WorkbookReadResult.WorkbookSummaryResult(
+        new WorkbookCoreResult.WorkbookSummaryResult(
             "workbook",
-            new WorkbookReadResult.WorkbookSummary.WithSheets(
+            new WorkbookCoreResult.WorkbookSummary.WithSheets(
                 1, sheetNames, "Budget", List.of("Budget"), 1, true)),
-        new WorkbookReadResult.NamedRangesResult("ranges", namedRanges),
-        new WorkbookReadResult.SheetSummaryResult(
+        new WorkbookCoreResult.NamedRangesResult("ranges", namedRanges),
+        new WorkbookSheetResult.SheetSummaryResult(
             "sheet",
-            new WorkbookReadResult.SheetSummary(
+            new WorkbookSheetResult.SheetSummary(
                 "Budget",
                 ExcelSheetVisibility.VISIBLE,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
+                new WorkbookSheetResult.SheetProtection.Unprotected(),
                 4,
                 3,
                 2)),
-        new WorkbookReadResult.CellsResult("cells", "Budget", cells),
-        new WorkbookReadResult.WindowResult(
-            "window", new WorkbookReadResult.Window("Budget", "A1", 1, 1, rows)),
-        new WorkbookReadResult.MergedRegionsResult("merged", "Budget", mergedRegions),
-        new WorkbookReadResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks),
-        new WorkbookReadResult.CommentsResult("comments", "Budget", comments),
-        new WorkbookReadResult.SheetLayoutResult(
+        new WorkbookSheetResult.CellsResult("cells", "Budget", cells),
+        new WorkbookSheetResult.WindowResult(
+            "window", new WorkbookSheetResult.Window("Budget", "A1", 1, 1, rows)),
+        new WorkbookSheetResult.MergedRegionsResult("merged", "Budget", mergedRegions),
+        new WorkbookSheetResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks),
+        new WorkbookSheetResult.CommentsResult("comments", "Budget", comments),
+        new WorkbookSheetResult.SheetLayoutResult(
             "layout",
-            new WorkbookReadResult.SheetLayout(
+            new WorkbookSheetResult.SheetLayout(
                 "Budget",
                 new ExcelSheetPane.Frozen(1, 1, 1, 1),
                 125,
                 defaultSheetPresentationSnapshot(),
                 columns,
                 resultRows)),
-        new WorkbookReadResult.PrintLayoutResult("print", "Budget", defaultPrintLayoutSnapshot()),
-        new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
-        new WorkbookReadResult.ConditionalFormattingHealthResult(
+        new WorkbookSheetResult.PrintLayoutResult("print", "Budget", defaultPrintLayoutSnapshot()),
+        new WorkbookRuleResult.DataValidationsResult("validations", "Budget", validations),
+        new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
             "conditionalFormattingHealth",
             new WorkbookAnalysis.ConditionalFormattingHealth(
                 1, new WorkbookAnalysis.AnalysisSummary(0, 0, 0, 0), List.of())),
-        new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", autofilters),
-        new WorkbookReadResult.TablesResult("tables", tables),
-        new WorkbookReadResult.FormulaSurfaceResult(
+        new WorkbookRuleResult.AutofiltersResult("autofilters", "Budget", autofilters),
+        new WorkbookRuleResult.TablesResult("tables", tables),
+        new WorkbookSurfaceResult.FormulaSurfaceResult(
             "formula",
-            new WorkbookReadResult.FormulaSurface(
-                1, List.of(new WorkbookReadResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
-        new WorkbookReadResult.SheetSchemaResult(
-            "schema", new WorkbookReadResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
-        new WorkbookReadResult.NamedRangeSurfaceResult(
-            "surface", new WorkbookReadResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
+            new WorkbookSurfaceResult.FormulaSurface(
+                1,
+                List.of(new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
+        new WorkbookSurfaceResult.SheetSchemaResult(
+            "schema",
+            new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
+        new WorkbookSurfaceResult.NamedRangeSurfaceResult(
+            "surface", new WorkbookSurfaceResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
   }
 
   private void assertCopiedFixture(ReadResultFixture fixture) {
@@ -575,7 +579,7 @@ class WorkbookReadResultTest {
     assertEquals(
         "STRING", fixture.sheetSchemaResult().analysis().columns().getFirst().dominantType());
     assertEquals(
-        WorkbookReadResult.NamedRangeBackingKind.RANGE,
+        WorkbookSurfaceResult.NamedRangeBackingKind.RANGE,
         fixture.namedRangeSurfaceResult().analysis().namedRanges().getFirst().kind());
   }
 
@@ -583,35 +587,35 @@ class WorkbookReadResultTest {
       List<String> sheetNames,
       List<ExcelNamedRangeSnapshot> namedRanges,
       List<ExcelCellSnapshot> cells,
-      List<WorkbookReadResult.WindowRow> rows,
-      List<WorkbookReadResult.MergedRegion> mergedRegions,
-      List<WorkbookReadResult.CellHyperlink> hyperlinks,
-      List<WorkbookReadResult.CellComment> comments,
-      List<WorkbookReadResult.ColumnLayout> columns,
-      List<WorkbookReadResult.RowLayout> resultRows,
+      List<WorkbookSheetResult.WindowRow> rows,
+      List<WorkbookSheetResult.MergedRegion> mergedRegions,
+      List<WorkbookSheetResult.CellHyperlink> hyperlinks,
+      List<WorkbookSheetResult.CellComment> comments,
+      List<WorkbookSheetResult.ColumnLayout> columns,
+      List<WorkbookSheetResult.RowLayout> resultRows,
       List<ExcelDataValidationSnapshot> validations,
       List<ExcelAutofilterSnapshot> autofilters,
       List<ExcelTableSnapshot> tables,
-      List<WorkbookReadResult.FormulaPattern> formulas,
-      List<WorkbookReadResult.SchemaColumn> schemaColumns,
-      List<WorkbookReadResult.NamedRangeSurfaceEntry> namedRangeEntries,
-      WorkbookReadResult.WorkbookSummaryResult workbookSummary,
-      WorkbookReadResult.NamedRangesResult namedRangesResult,
-      WorkbookReadResult.SheetSummaryResult sheetSummary,
-      WorkbookReadResult.CellsResult cellsResult,
-      WorkbookReadResult.WindowResult windowResult,
-      WorkbookReadResult.MergedRegionsResult mergedRegionsResult,
-      WorkbookReadResult.HyperlinksResult hyperlinksResult,
-      WorkbookReadResult.CommentsResult commentsResult,
-      WorkbookReadResult.SheetLayoutResult layoutResult,
-      WorkbookReadResult.PrintLayoutResult printLayoutResult,
-      WorkbookReadResult.DataValidationsResult dataValidationsResult,
-      WorkbookReadResult.ConditionalFormattingHealthResult conditionalFormattingHealthResult,
-      WorkbookReadResult.AutofiltersResult autofiltersResult,
-      WorkbookReadResult.TablesResult tablesResult,
-      WorkbookReadResult.FormulaSurfaceResult formulaSurfaceResult,
-      WorkbookReadResult.SheetSchemaResult sheetSchemaResult,
-      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurfaceResult) {
+      List<WorkbookSurfaceResult.FormulaPattern> formulas,
+      List<WorkbookSurfaceResult.SchemaColumn> schemaColumns,
+      List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries,
+      WorkbookCoreResult.WorkbookSummaryResult workbookSummary,
+      WorkbookCoreResult.NamedRangesResult namedRangesResult,
+      WorkbookSheetResult.SheetSummaryResult sheetSummary,
+      WorkbookSheetResult.CellsResult cellsResult,
+      WorkbookSheetResult.WindowResult windowResult,
+      WorkbookSheetResult.MergedRegionsResult mergedRegionsResult,
+      WorkbookSheetResult.HyperlinksResult hyperlinksResult,
+      WorkbookSheetResult.CommentsResult commentsResult,
+      WorkbookSheetResult.SheetLayoutResult layoutResult,
+      WorkbookSheetResult.PrintLayoutResult printLayoutResult,
+      WorkbookRuleResult.DataValidationsResult dataValidationsResult,
+      WorkbookAnalysisResult.ConditionalFormattingHealthResult conditionalFormattingHealthResult,
+      WorkbookRuleResult.AutofiltersResult autofiltersResult,
+      WorkbookRuleResult.TablesResult tablesResult,
+      WorkbookSurfaceResult.FormulaSurfaceResult formulaSurfaceResult,
+      WorkbookSurfaceResult.SheetSchemaResult sheetSchemaResult,
+      WorkbookSurfaceResult.NamedRangeSurfaceResult namedRangeSurfaceResult) {
     private void clearSources() {
       sheetNames.clear();
       namedRanges.clear();

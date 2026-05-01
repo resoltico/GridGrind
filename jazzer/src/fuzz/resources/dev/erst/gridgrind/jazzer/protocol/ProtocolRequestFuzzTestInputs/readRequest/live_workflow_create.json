@@ -5,7 +5,7 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/live-finance-workbook.xlsx"
+    "path": "generated-workbooks/live-finance-workbook.xlsx"
   },
   "steps": [
     {

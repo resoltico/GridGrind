@@ -18,7 +18,8 @@ class GridGrindRequestExecutorTest {
                     GridGrindProblemCode.INVALID_REQUEST,
                     "boom",
                     new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
-                        dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown()),
+                        dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                            .unknown()),
                     (Throwable) null));
 
     assertSame(executor, GridGrindRequestExecutor.requireNonNull(executor));

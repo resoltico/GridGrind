@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
@@ -24,6 +26,7 @@ import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.List;
+import java.util.Optional;
 
 /** Workflow-centric generated examples that focus on mutation, analysis, and verification. */
 final class WorkbookWorkflowExamples {
@@ -34,19 +37,18 @@ final class WorkbookWorkflowExamples {
         "BUDGET",
         "budget-request.json",
         "Selector-first budget sheet with styling, formula totals, readback, and schema inspection.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "budget-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-budget.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Budget"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-range",
                 ExamplePlanSupport.range("Budget", "A1:C3"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Item"),
@@ -63,15 +65,15 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-03-apply-header-style",
                 ExamplePlanSupport.range("Budget", "A1:C1"),
-                new MutationAction.ApplyStyle(
+                new CellMutationAction.ApplyStyle(
                     new CellStyleInput(
                         null,
                         new CellAlignmentInput(
-                            true,
-                            ExcelHorizontalAlignment.CENTER,
-                            ExcelVerticalAlignment.CENTER,
-                            null,
-                            null),
+                            Optional.of(true),
+                            Optional.of(ExcelHorizontalAlignment.CENTER),
+                            Optional.of(ExcelVerticalAlignment.CENTER),
+                            Optional.empty(),
+                            Optional.empty()),
                         new dev.erst.gridgrind.contract.dto.CellFontInput(
                             true, null, null, null, null, null, null),
                         null,
@@ -80,11 +82,15 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-04-apply-number-style",
                 ExamplePlanSupport.range("Budget", "B2:B4"),
-                new MutationAction.ApplyStyle(
+                new CellMutationAction.ApplyStyle(
                     new CellStyleInput(
                         "#,##0.00",
                         new CellAlignmentInput(
-                            null, ExcelHorizontalAlignment.RIGHT, null, null, null),
+                            Optional.empty(),
+                            Optional.of(ExcelHorizontalAlignment.RIGHT),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty()),
                         null,
                         null,
                         null,
@@ -92,15 +98,15 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-05-set-total-label",
                 ExamplePlanSupport.cell("Budget", "A4"),
-                new MutationAction.SetCell(ExamplePlanSupport.text("Total"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.text("Total"))),
             ExamplePlanSupport.step(
                 "step-06-set-total-formula",
                 ExamplePlanSupport.cell("Budget", "B4"),
-                new MutationAction.SetCell(ExamplePlanSupport.formula("SUM(B2:B3)"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.formula("SUM(B2:B3)"))),
             ExamplePlanSupport.step(
                 "step-07-auto-size",
                 ExamplePlanSupport.sheet("Budget"),
-                new MutationAction.AutoSizeColumns()),
+                new WorkbookMutationAction.AutoSizeColumns()),
             ExamplePlanSupport.read(
                 "workbook",
                 ExamplePlanSupport.workbook(),
@@ -128,31 +134,30 @@ final class WorkbookWorkflowExamples {
         "WORKBOOK_HEALTH",
         "workbook-health-request.json",
         "Compact no-save workbook-health pass with targeted formula and aggregate findings.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "workbook-health-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-budget-review",
                 ExamplePlanSupport.sheet("Budget Review"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-ensure-summary",
                 ExamplePlanSupport.sheet("Summary"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-03-set-budget-header",
                 ExamplePlanSupport.cell("Budget Review", "A1"),
-                new MutationAction.SetCell(ExamplePlanSupport.text("Amount"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.text("Amount"))),
             ExamplePlanSupport.step(
                 "step-04-set-budget-value",
                 ExamplePlanSupport.cell("Budget Review", "B1"),
-                new MutationAction.SetCell(ExamplePlanSupport.number(1200.0d))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.number(1200.0d))),
             ExamplePlanSupport.step(
                 "step-05-set-summary-formula",
                 ExamplePlanSupport.cell("Summary", "A1"),
-                new MutationAction.SetCell(ExamplePlanSupport.formula("'Budget Review'!B1"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.formula("'Budget Review'!B1"))),
             ExamplePlanSupport.read(
                 "summary-sheet",
                 ExamplePlanSupport.sheet("Summary"),
@@ -176,19 +181,18 @@ final class WorkbookWorkflowExamples {
         "SHEET_MAINTENANCE",
         "sheet-maintenance-request.json",
         "Copy-sheet maintenance walkthrough with comment reread and workbook findings.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "sheet-maintenance-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-sheet-maintenance.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-template",
                 ExamplePlanSupport.sheet("Template"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-range",
                 ExamplePlanSupport.range("Template", "A1:B3"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Owner"), ExamplePlanSupport.text("Status")),
@@ -199,13 +203,13 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-03-set-comment",
                 ExamplePlanSupport.cell("Template", "A1"),
-                new MutationAction.SetComment(
-                    new CommentInput(
+                new CellMutationAction.SetComment(
+                    CommentInput.plain(
                         TextSourceInput.inline("Template owner column"), "GridGrind", false))),
             ExamplePlanSupport.step(
                 "step-04-copy-sheet",
                 ExamplePlanSupport.sheet("Template"),
-                new MutationAction.CopySheet("Template Copy")),
+                new WorkbookMutationAction.CopySheet("Template Copy")),
             ExamplePlanSupport.read(
                 "step-05-read-comments",
                 new CellSelector.AllUsedInSheet("Template Copy"),
@@ -225,19 +229,19 @@ final class WorkbookWorkflowExamples {
             "assertion-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+            ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
             ExamplePlanSupport.step(
                 "ensure-budget",
                 ExamplePlanSupport.sheet("Budget"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "set-title",
                 ExamplePlanSupport.cell("Budget", "A1"),
-                new MutationAction.SetCell(ExamplePlanSupport.text("Quarterly Budget"))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.text("Quarterly Budget"))),
             ExamplePlanSupport.step(
                 "set-total",
                 ExamplePlanSupport.cell("Budget", "B2"),
-                new MutationAction.SetCell(ExamplePlanSupport.number(1200.0d))),
+                new CellMutationAction.SetCell(ExamplePlanSupport.number(1200.0d))),
             ExamplePlanSupport.assertStep(
                 "assert-title",
                 ExamplePlanSupport.cell("Budget", "A1"),
@@ -267,17 +271,17 @@ final class WorkbookWorkflowExamples {
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
             new ExecutionPolicyInput(
-                new ExecutionModeInput(ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                ExecutionModeInput.writeMode(ExecutionModeInput.WriteMode.STREAMING_WRITE),
                 ExecutionJournalInput.defaults(),
                 new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Ledger"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-append-header",
                 ExamplePlanSupport.sheet("Ledger"),
-                new MutationAction.AppendRow(
+                new CellMutationAction.AppendRow(
                     List.of(
                         ExamplePlanSupport.text("Team"),
                         ExamplePlanSupport.text("Task"),
@@ -285,7 +289,7 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-03-append-ops",
                 ExamplePlanSupport.sheet("Ledger"),
-                new MutationAction.AppendRow(
+                new CellMutationAction.AppendRow(
                     List.of(
                         ExamplePlanSupport.text("Ops"),
                         ExamplePlanSupport.text("Badge prep"),
@@ -293,7 +297,7 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-04-append-facilities",
                 ExamplePlanSupport.sheet("Ledger"),
-                new MutationAction.AppendRow(
+                new CellMutationAction.AppendRow(
                     List.of(
                         ExamplePlanSupport.text("Facilities"),
                         ExamplePlanSupport.text("Desk setup"),
@@ -314,20 +318,19 @@ final class WorkbookWorkflowExamples {
         "FILE_HYPERLINK_HEALTH",
         "file-hyperlink-health-request.json",
         "File and document hyperlink authoring with explicit hyperlink-health analysis.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "file-hyperlink-health-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(
                 paths.generatedWorkbook("gridgrind-file-hyperlink-health.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Links"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-range",
                 ExamplePlanSupport.range("Links", "A1:B4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Label"),
@@ -345,17 +348,17 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-03-relative-file-link",
                 ExamplePlanSupport.cell("Links", "A2"),
-                new MutationAction.SetHyperlink(
+                new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.File("support/expense policy 2026.pdf"))),
             ExamplePlanSupport.step(
                 "step-04-absolute-file-link",
                 ExamplePlanSupport.cell("Links", "A3"),
-                new MutationAction.SetHyperlink(
+                new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.File("file:///tmp/quarterly%20close/checklist.xlsx"))),
             ExamplePlanSupport.step(
                 "step-05-document-link",
                 ExamplePlanSupport.cell("Links", "A4"),
-                new MutationAction.SetHyperlink(new HyperlinkTarget.Document("Links!B2"))),
+                new CellMutationAction.SetHyperlink(new HyperlinkTarget.Document("Links!B2"))),
             ExamplePlanSupport.read(
                 "hyperlinks",
                 ExamplePlanSupport.cells("Links", "A2", "A3", "A4"),
@@ -372,20 +375,19 @@ final class WorkbookWorkflowExamples {
         "INTROSPECTION_ANALYSIS",
         "introspection-analysis-request.json",
         "Batch factual reads plus formula, hyperlink, named-range, and aggregate workbook analysis.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "introspection-analysis-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(
                 paths.generatedWorkbook("gridgrind-introspection-analysis.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Dashboard"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-range",
                 ExamplePlanSupport.range("Dashboard", "A1:C4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Metric"),
@@ -406,20 +408,20 @@ final class WorkbookWorkflowExamples {
             ExamplePlanSupport.step(
                 "step-03-set-hyperlink",
                 ExamplePlanSupport.cell("Dashboard", "A1"),
-                new MutationAction.SetHyperlink(
+                new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/dashboard-handbook"))),
             ExamplePlanSupport.step(
                 "step-04-set-comment",
                 ExamplePlanSupport.cell("Dashboard", "B4"),
-                new MutationAction.SetComment(
-                    new CommentInput(
+                new CellMutationAction.SetComment(
+                    CommentInput.plain(
                         TextSourceInput.inline("Forecast uses the revenue and margin rows above."),
                         "GridGrind",
                         true))),
             ExamplePlanSupport.step(
                 "step-05-set-named-range",
                 new NamedRangeSelector.WorkbookScope("ForecastValue"),
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "ForecastValue",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Dashboard", "B4"))),

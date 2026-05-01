@@ -31,18 +31,14 @@ public sealed interface ExpectedCellValue
   }
 
   /** Expects the effective cell value to be an exact finite number. */
-  record NumericValue(Double number) implements ExpectedCellValue {
+  record NumericValue(double number) implements ExpectedCellValue {
     public NumericValue {
       number = AssertionSupport.requireFiniteNumber(number, "number");
     }
   }
 
   /** Expects the effective cell value to be a boolean. */
-  record BooleanValue(Boolean value) implements ExpectedCellValue {
-    public BooleanValue {
-      Objects.requireNonNull(value, "value must not be null");
-    }
-  }
+  record BooleanValue(boolean value) implements ExpectedCellValue {}
 
   /** Expects the effective cell value to be an exact Excel error string such as #REF!. */
   record ErrorValue(String error) implements ExpectedCellValue {

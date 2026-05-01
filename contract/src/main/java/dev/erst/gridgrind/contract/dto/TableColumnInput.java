@@ -13,23 +13,18 @@ public record TableColumnInput(
     if (columnIndex < 0) {
       throw new IllegalArgumentException("columnIndex must not be negative");
     }
-    uniqueName = normalize(uniqueName);
-    totalsRowLabel = normalize(totalsRowLabel);
-    totalsRowFunction = normalizeTotalsRowFunction(totalsRowFunction);
-    calculatedColumnFormula = normalize(calculatedColumnFormula);
+    uniqueName = requireNonNull(uniqueName, "uniqueName");
+    totalsRowLabel = requireNonNull(totalsRowLabel, "totalsRowLabel");
+    totalsRowFunction =
+        normalizeTotalsRowFunction(requireNonNull(totalsRowFunction, "totalsRowFunction"));
+    calculatedColumnFormula = requireNonNull(calculatedColumnFormula, "calculatedColumnFormula");
   }
 
-  private static String normalize(String value) {
-    if (value == null) {
-      return "";
-    }
-    return value;
+  private static String requireNonNull(String value, String fieldName) {
+    return java.util.Objects.requireNonNull(value, fieldName + " must not be null");
   }
 
   private static String normalizeTotalsRowFunction(String value) {
-    if (value == null) {
-      return "";
-    }
     String normalized = value.trim();
     return normalized.isEmpty() ? "" : normalized.toLowerCase(Locale.ROOT);
   }

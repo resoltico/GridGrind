@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 /** Tests for machine-readable goal-to-task planning reports. */
 class GoalPlanReportTest {
   @Test
-  void reportConstructorCopiesCandidatesAndDefaultsProtocolVersion() {
+  void reportConstructorCopiesCandidatesAndRequiresExplicitProtocolVersion() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
     TaskPlanTemplate starterTemplate = GridGrindTaskPlanner.planFor(task);
     GoalPlanReport.Candidate candidate =
@@ -21,7 +21,7 @@ class GoalPlanReportTest {
             starterTemplate);
     GoalPlanReport report =
         new GoalPlanReport(
-            null,
+            dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
             "monthly dashboard with charts",
             List.of("monthly", "dashboard", "chart"),
             List.of("monthly"),
@@ -29,8 +29,23 @@ class GoalPlanReportTest {
             new java.util.ArrayList<>(List.of(candidate)));
 
     assertEquals(task.id(), report.candidates().getFirst().task().id());
-    assertEquals("V1", report.protocolVersion().name());
+    assertEquals(
+        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+        report.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> report.candidates().add(candidate));
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new GoalPlanReport(
+                        null,
+                        "monthly dashboard with charts",
+                        List.of("monthly", "dashboard", "chart"),
+                        List.of("monthly"),
+                        List.of("dashboard", "audit"),
+                        List.of(candidate)))
+            .getMessage());
   }
 
   @Test
@@ -44,7 +59,7 @@ class GoalPlanReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new GoalPlanReport(
-                        null,
+                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
                         " ",
                         List.of("dashboard"),
                         List.of(),
@@ -57,7 +72,7 @@ class GoalPlanReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new GoalPlanReport(
-                        null,
+                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
                         "dashboard",
                         List.of("dashboard"),
                         List.of(),

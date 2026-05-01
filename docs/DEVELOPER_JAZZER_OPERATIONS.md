@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-29"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -41,8 +41,9 @@ command runs at a time.
 
 These scripts are thin shell wrappers, not a separate argument parser. They forward Gradle
 properties and options to the nested Jazzer build, so flags such as `-PjazzerMaxDuration=5m` and
-`--console=plain` are expected here. The flip side is that `--help` shows Gradle help, not a
-wrapper-specific usage screen.
+`--console=plain` are expected here. Public `--help` output and invalid-target rejection are owned
+by the wrapper surface itself, so first-contact users and agents do not fall through to generic
+Gradle help just to learn the command shape.
 
 ---
 
@@ -252,20 +253,21 @@ After you exit:
 If you later want to fuzz all four active harnesses instead of just one, use:
 
 ```bash
-./jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
+./jazzer/bin/fuzz-all -PjazzerMaxDuration=30s --console=plain
 ```
 
-Run that from inside the container shell too. The `5m` duration applies per harness, not total, so
-expect roughly twenty minutes of fuzzing before setup overhead.
+Run that from inside the container shell too. The `30s` duration applies per harness, not total,
+so expect roughly two minutes of live fuzzing before setup overhead. Scale the duration up once
+the wrapper, corpus, and artifact paths look healthy.
 
 ### Run One Harness
 
 ```bash
-jazzer/bin/fuzz-protocol-workflow -PjazzerMaxDuration=30m --console=plain
+jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=15s --console=plain
 ```
 
 What this produces:
-- active fuzzing in `jazzer/.local/runs/protocol-workflow/`
+- active fuzzing in `jazzer/.local/runs/protocol-request/`
 - `latest.log`
 - `latest-summary.json`
 - `latest-summary.txt`
@@ -281,7 +283,7 @@ macOS shell that contributors use by default.
 ### Run All Active Harnesses
 
 ```bash
-jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
+jazzer/bin/fuzz-all -PjazzerMaxDuration=30s --console=plain
 ```
 
 `fuzz-all` is intentionally sequential. It calls the four per-harness scripts one by one so each

@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: OPERATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -28,7 +28,7 @@ gridgrind --print-protocol-catalog --search chart --response chart-search.json
 gridgrind --print-protocol-catalog --operation mutationActionTypes:SET_CELL
 gridgrind --print-example BUDGET --response budget-request.json
 gridgrind --print-example ASSERTION --response assertion-request.json
-printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
+gridgrind --print-request-template | gridgrind --doctor-request
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
@@ -37,11 +37,10 @@ current request model, every mutation action, every assertion type, every inspec
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
 fields. Use `--search` when you only know part of the name or summary, then switch to
 `--operation <group>:<id>` for the exact entry once you have the stable qualified id. Discovery,
-printed example requests, doctor reports, and normal execution responses all omit absent optional
+printed example requests, doctor reports, and normal execution responses omit absent optional
 fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
-placeholders.
-fields instead of publishing explicit JSON `null` placeholders, so the machine-readable surface is
-easier for agents and shell tooling to consume directly.
+placeholders, so the machine-readable surface is easier for agents and shell tooling to consume
+directly.
 Task discovery is layered on top of that same catalog surface:
 `--print-task-catalog --response tasks.json`, `--print-task-plan <id> --response task-plan.json`,
 and `--print-goal-plan "<goal>" --response goal-plan.json` now emit
@@ -59,7 +58,7 @@ outputs can be written directly to files during artifact, shell, or Docker workf
 - **Inspection query**: a `steps[]` entry carrying `query`.
 - **Source-backed authored input**: request text or binary content loaded from `INLINE`,
   `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` rather than embedded directly in the JSON request body.
-- **Execution policy**: the optional request-level `execution` block that controls low-memory modes,
+- **Execution policy**: the required request-level `execution` block that controls low-memory modes,
   journaling, and formula handling.
 
 ## Reference Map

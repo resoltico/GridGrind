@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.buildlogic
 
 import java.math.BigDecimal
+import javax.inject.Inject
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
@@ -8,14 +9,19 @@ import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.plugins.quality.Pmd
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.JavaExec
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.register
+import org.gradle.process.CommandLineArgumentProvider
 import org.gradle.process.JavaForkOptions
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
@@ -145,25 +151,16 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 enableNativeAccess()
             }
 
-            fun requiredGradleProperty(name: String): String =
-                providers.gradleProperty(name).orNull
-                    ?: throw IllegalArgumentException("Missing Gradle property: $name")
-
-            fun registerToolTask(
-                name: String,
-                descriptionText: String,
-                argumentsProvider: () -> List<String>,
-            ) = tasks.register<JavaExec>(name) {
-                description = descriptionText
-                group = "verification"
-                configureMainSourceSet()
-                notCompatibleWithConfigurationCache(
-                    "Local-only Jazzer tool tasks assemble command arguments at execution time.",
-                )
-                doFirst {
-                    setArgs(argumentsProvider())
+            fun jazzerToolArgumentsProvider(
+                operationName: String,
+                configuration: JazzerToolArgumentsProvider.() -> Unit = {},
+            ): JazzerToolArgumentsProvider =
+                objects.newInstance<JazzerToolArgumentsProvider>().apply {
+                    operation.set(operationName)
+                    projectDirectoryPath.set(layout.projectDirectory.asFile.absolutePath)
+                    jsonOutput.convention(false)
+                    configuration()
                 }
-            }
 
             fun registerFuzzTask(
                 target: JazzerRunTargetSpec,
@@ -324,125 +321,106 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 runsDirectory.set(layout.projectDirectory.dir(".local/runs"))
             }
 
-            registerToolTask(
-                "jazzerSummarizeRun",
-                "Builds the latest summary artifacts for one completed Jazzer run.",
-            ) {
-                listOf(
-                    "summarize-run",
-                    "--project-dir",
-                    layout.projectDirectory.asFile.absolutePath,
-                    "--target",
-                    requiredGradleProperty("jazzerTarget"),
-                    "--task",
-                    requiredGradleProperty("jazzerTaskName"),
-                    "--log",
-                    requiredGradleProperty("jazzerLogPath"),
-                    "--history",
-                    requiredGradleProperty("jazzerHistoryDirectory"),
-                    "--started-at",
-                    requiredGradleProperty("jazzerStartedAt"),
-                    "--finished-at",
-                    requiredGradleProperty("jazzerFinishedAt"),
-                    "--exit-code",
-                    requiredGradleProperty("jazzerExitCode"),
-                    "--corpus-before-files",
-                    requiredGradleProperty("jazzerCorpusBeforeFiles"),
-                    "--corpus-before-bytes",
-                    requiredGradleProperty("jazzerCorpusBeforeBytes"),
+            tasks.register<JavaExec>("jazzerSummarizeRun") {
+                description = "Builds the latest summary artifacts for one completed Jazzer run."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("summarize-run") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                        summarizedTaskName.set(providers.gradleProperty("jazzerTaskName"))
+                        logPath.set(providers.gradleProperty("jazzerLogPath"))
+                        historyDirectory.set(providers.gradleProperty("jazzerHistoryDirectory"))
+                        startedAt.set(providers.gradleProperty("jazzerStartedAt"))
+                        finishedAt.set(providers.gradleProperty("jazzerFinishedAt"))
+                        exitCode.set(providers.gradleProperty("jazzerExitCode"))
+                        corpusBeforeFiles.set(providers.gradleProperty("jazzerCorpusBeforeFiles"))
+                        corpusBeforeBytes.set(providers.gradleProperty("jazzerCorpusBeforeBytes"))
+                    },
                 )
             }
 
-            registerToolTask("jazzerStatus", "Shows a concise latest-summary view across Jazzer targets.") {
-                buildList {
-                    add("status")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    providers.gradleProperty("jazzerTarget").orNull?.let {
-                        add("--target")
-                        add(it)
-                    }
-                }
-            }
-
-            registerToolTask("jazzerReport", "Shows the detailed latest-summary report for Jazzer targets.") {
-                buildList {
-                    add("report")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    providers.gradleProperty("jazzerTarget").orNull?.let {
-                        add("--target")
-                        add(it)
-                    }
-                }
-            }
-
-            registerToolTask("jazzerListFindings", "Lists replayed local finding artifacts.") {
-                buildList {
-                    add("list-findings")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    providers.gradleProperty("jazzerTarget").orNull?.let {
-                        add("--target")
-                        add(it)
-                    }
-                }
-            }
-
-            registerToolTask("jazzerListCorpus", "Lists local corpus state and promoted inputs.") {
-                buildList {
-                    add("list-corpus")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    providers.gradleProperty("jazzerTarget").orNull?.let {
-                        add("--target")
-                        add(it)
-                    }
-                }
-            }
-
-            registerToolTask("jazzerReplay", "Replays one local input against a single Jazzer harness.") {
-                buildList {
-                    add("replay")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    add("--target")
-                    add(requiredGradleProperty("jazzerTarget"))
-                    add("--input")
-                    add(requiredGradleProperty("jazzerInput"))
-                    if (providers.gradleProperty("jazzerJsonOutput").orNull == "true") {
-                        add("--json")
-                    }
-                }
-            }
-
-            registerToolTask("jazzerPromote", "Promotes one local input into committed Jazzer regression resources.") {
-                listOf(
-                    "promote",
-                    "--project-dir",
-                    layout.projectDirectory.asFile.absolutePath,
-                    "--target",
-                    requiredGradleProperty("jazzerTarget"),
-                    "--input",
-                    requiredGradleProperty("jazzerInput"),
-                    "--name",
-                    requiredGradleProperty("jazzerName"),
+            tasks.register<JavaExec>("jazzerStatus") {
+                description = "Shows a concise latest-summary view across Jazzer targets."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("status") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                    },
                 )
             }
 
-            registerToolTask(
-                "jazzerRefreshPromotedMetadata",
-                "Refreshes promoted Jazzer metadata and replay text from the current replay contract.",
-            ) {
-                buildList {
-                    add("refresh-promoted-metadata")
-                    add("--project-dir")
-                    add(layout.projectDirectory.asFile.absolutePath)
-                    providers.gradleProperty("jazzerTarget").orNull?.let {
-                        add("--target")
-                        add(it)
-                    }
-                }
+            tasks.register<JavaExec>("jazzerReport") {
+                description = "Shows the detailed latest-summary report for Jazzer targets."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("report") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                    },
+                )
+            }
+
+            tasks.register<JavaExec>("jazzerListFindings") {
+                description = "Lists replayed local finding artifacts."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("list-findings") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                    },
+                )
+            }
+
+            tasks.register<JavaExec>("jazzerListCorpus") {
+                description = "Lists local corpus state and promoted inputs."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("list-corpus") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                    },
+                )
+            }
+
+            tasks.register<JavaExec>("jazzerReplay") {
+                description = "Replays one local input against a single Jazzer harness."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("replay") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                        inputPath.set(providers.gradleProperty("jazzerInput"))
+                        jsonOutput.set(
+                            providers.gradleProperty("jazzerJsonOutput").map { it == "true" }.orElse(false),
+                        )
+                    },
+                )
+            }
+
+            tasks.register<JavaExec>("jazzerPromote") {
+                description = "Promotes one local input into committed Jazzer regression resources."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("promote") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                        inputPath.set(providers.gradleProperty("jazzerInput"))
+                        promotedName.set(providers.gradleProperty("jazzerName"))
+                    },
+                )
+            }
+
+            tasks.register<JavaExec>("jazzerRefreshPromotedMetadata") {
+                description = "Refreshes promoted Jazzer metadata and replay text from the current replay contract."
+                group = "verification"
+                configureMainSourceSet()
+                argumentProviders.add(
+                    jazzerToolArgumentsProvider("refresh-promoted-metadata") {
+                        target.set(providers.gradleProperty("jazzerTarget"))
+                    },
+                )
             }
         }
     }
@@ -479,4 +457,78 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 "dev/erst/gridgrind/jazzer/tool/RunMetrics*.class",
             )
     }
+
+    abstract class JazzerToolArgumentsProvider
+        @Inject
+        constructor() : CommandLineArgumentProvider {
+            @get:Input abstract val operation: Property<String>
+            @get:Input abstract val projectDirectoryPath: Property<String>
+            @get:Optional @get:Input abstract val target: Property<String>
+            @get:Optional @get:Input abstract val inputPath: Property<String>
+            @get:Optional @get:Input abstract val promotedName: Property<String>
+            @get:Optional @get:Input abstract val summarizedTaskName: Property<String>
+            @get:Optional @get:Input abstract val logPath: Property<String>
+            @get:Optional @get:Input abstract val historyDirectory: Property<String>
+            @get:Optional @get:Input abstract val startedAt: Property<String>
+            @get:Optional @get:Input abstract val finishedAt: Property<String>
+            @get:Optional @get:Input abstract val exitCode: Property<String>
+            @get:Optional @get:Input abstract val corpusBeforeFiles: Property<String>
+            @get:Optional @get:Input abstract val corpusBeforeBytes: Property<String>
+            @get:Input abstract val jsonOutput: Property<Boolean>
+
+            override fun asArguments(): Iterable<String> =
+                buildList {
+                    add(operation.get())
+                    add("--project-dir")
+                    add(projectDirectoryPath.get())
+                    when (operation.get()) {
+                        "status", "report", "list-findings", "list-corpus", "refresh-promoted-metadata" -> {
+                            if (target.isPresent) {
+                                add("--target")
+                                add(target.get())
+                            }
+                        }
+
+                        "replay" -> {
+                            add("--target")
+                            add(target.get())
+                            add("--input")
+                            add(inputPath.get())
+                            if (jsonOutput.get()) {
+                                add("--json")
+                            }
+                        }
+
+                        "promote" -> {
+                            add("--target")
+                            add(target.get())
+                            add("--input")
+                            add(inputPath.get())
+                            add("--name")
+                            add(promotedName.get())
+                        }
+
+                        "summarize-run" -> {
+                            add("--target")
+                            add(target.get())
+                            add("--task")
+                            add(summarizedTaskName.get())
+                            add("--log")
+                            add(logPath.get())
+                            add("--history")
+                            add(historyDirectory.get())
+                            add("--started-at")
+                            add(startedAt.get())
+                            add("--finished-at")
+                            add(finishedAt.get())
+                            add("--exit-code")
+                            add(exitCode.get())
+                            add("--corpus-before-files")
+                            add(corpusBeforeFiles.get())
+                            add("--corpus-before-bytes")
+                            add(corpusBeforeBytes.get())
+                        }
+                    }
+                }
+        }
 }

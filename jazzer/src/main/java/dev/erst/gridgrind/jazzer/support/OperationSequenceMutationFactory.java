@@ -4,7 +4,10 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.mutate;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
@@ -46,42 +49,49 @@ final class OperationSequenceMutationFactory {
       case 0x0 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.EnsureSheet());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.EnsureSheet());
             case 0x1 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.RenameSheet(primarySheet + "Renamed"));
+                    new WorkbookMutationAction.RenameSheet(primarySheet + "Renamed"));
             case 0x2 ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.DeleteSheet());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.DeleteSheet());
             case 0x3 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.MoveSheet(data.consumeInt(0, 2)));
+                    new WorkbookMutationAction.MoveSheet(data.consumeInt(0, 2)));
             case 0x4 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.CopySheet(
+                    new WorkbookMutationAction.CopySheet(
                         nextCopySheetName(targetSheet), nextSheetCopyPosition(data)));
             case 0x5 ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.SetActiveSheet());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.SetActiveSheet());
             case 0x6 ->
                 mutate(
                     new SheetSelector.ByNames(
                         nextSelectedSheetNames(data, primarySheet, secondarySheet)),
-                    new MutationAction.SetSelectedSheets());
+                    new WorkbookMutationAction.SetSelectedSheets());
             case 0x7 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetSheetVisibility(nextProtocolSheetVisibility(data)));
+                    new WorkbookMutationAction.SetSheetVisibility(
+                        nextProtocolSheetVisibility(data)));
             case 0x8 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetSheetProtection(
+                    new WorkbookMutationAction.SetSheetProtection(
                         nextProtocolSheetProtectionSettings(data)));
             default ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.ClearSheetProtection());
+                    new WorkbookMutationAction.ClearSheetProtection());
           };
       case 0x1 ->
           switch (selectorSlot(selector)) {
@@ -89,35 +99,38 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new RangeSelector.ByRange(
                         targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange)),
-                    new MutationAction.MergeCells());
+                    new WorkbookMutationAction.MergeCells());
             case 0x1 ->
                 mutate(
                     new RangeSelector.ByRange(
                         targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange)),
-                    new MutationAction.UnmergeCells());
+                    new WorkbookMutationAction.UnmergeCells());
             case 0x2 ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.SetColumnWidth(data.consumeRegularDouble(1.0d, 20.0d)));
+                    new WorkbookMutationAction.SetColumnWidth(
+                        data.consumeRegularDouble(1.0d, 20.0d)));
             case 0x3 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.SetRowHeight(data.consumeRegularDouble(5.0d, 40.0d)));
+                    new WorkbookMutationAction.SetRowHeight(
+                        data.consumeRegularDouble(5.0d, 40.0d)));
             case 0x4 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetSheetPane(nextPaneInput(data)));
+                    new WorkbookMutationAction.SetSheetPane(nextPaneInput(data)));
             case 0x5 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetSheetZoom(data.consumeInt(10, 400)));
+                    new WorkbookMutationAction.SetSheetZoom(data.consumeInt(10, 400)));
             case 0x6 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetPrintLayout(nextPrintLayoutInput(data)));
+                    new WorkbookMutationAction.SetPrintLayout(nextPrintLayoutInput(data)));
             default ->
                 mutate(
-                    new SheetSelector.ByName(targetSheet), new MutationAction.ClearPrintLayout());
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.ClearPrintLayout());
           };
       case 0x2 ->
           switch (selectorSlot(selector)) {
@@ -125,22 +138,22 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new CellSelector.ByAddress(
                         targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
-                    new MutationAction.SetCell(FuzzDataDecoders.nextCellInput(data)));
+                    new CellMutationAction.SetCell(FuzzDataDecoders.nextCellInput(data)));
             case 0x1 -> {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
               yield mutate(
                   new RangeSelector.ByRange(targetSheet, range),
-                  new MutationAction.SetRange(FuzzDataDecoders.nextProtocolMatrix(data, 2, 2)));
+                  new CellMutationAction.SetRange(FuzzDataDecoders.nextProtocolMatrix(data, 2, 2)));
             }
             case 0x2 ->
                 mutate(
                     new RangeSelector.ByRange(
                         targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange)),
-                    new MutationAction.ClearRange());
+                    new CellMutationAction.ClearRange());
             default ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.AppendRow(
+                    new CellMutationAction.AppendRow(
                         List.of(
                             FuzzDataDecoders.nextCellInput(data),
                             FuzzDataDecoders.nextCellInput(data))));
@@ -151,52 +164,52 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new CellSelector.ByAddress(
                         targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
-                    new MutationAction.SetHyperlink(nextHyperlinkTarget(data)));
+                    new CellMutationAction.SetHyperlink(nextHyperlinkTarget(data)));
             case 0x1 ->
                 mutate(
                     new CellSelector.ByAddress(
                         targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
-                    new MutationAction.ClearHyperlink());
+                    new CellMutationAction.ClearHyperlink());
             case 0x2 ->
                 mutate(
                     new CellSelector.ByAddress(
                         targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
-                    new MutationAction.SetComment(nextCommentInput(data)));
+                    new CellMutationAction.SetComment(nextCommentInput(data)));
             case 0x3 ->
                 mutate(
                     new CellSelector.ByAddress(
                         targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress)),
-                    new MutationAction.ClearComment());
+                    new CellMutationAction.ClearComment());
             case 0x4 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetPicture(nextPictureInput(data)));
+                    new DrawingMutationAction.SetPicture(nextPictureInput(data)));
             case 0x5 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetChart(nextChartInput(data)));
+                    new DrawingMutationAction.SetChart(nextChartInput(data)));
             case 0x6 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetShape(nextShapeInput(data)));
+                    new DrawingMutationAction.SetShape(nextShapeInput(data)));
             case 0x7 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetEmbeddedObject(nextEmbeddedObjectInput(data)));
+                    new DrawingMutationAction.SetEmbeddedObject(nextEmbeddedObjectInput(data)));
             case 0x8 ->
                 mutate(
                     new DrawingObjectSelector.ByName(targetSheet, nextDrawingObjectName(data)),
-                    new MutationAction.SetDrawingObjectAnchor(nextDrawingAnchorInput(data)));
+                    new DrawingMutationAction.SetDrawingObjectAnchor(nextDrawingAnchorInput(data)));
             case 0x9 ->
                 mutate(
                     new DrawingObjectSelector.ByName(targetSheet, nextDrawingObjectName(data)),
-                    new MutationAction.DeleteDrawingObject());
+                    new DrawingMutationAction.DeleteDrawingObject());
             default ->
                 mutate(
                     new RangeSelector.ByRange(
                         targetSheet,
                         validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false)),
-                    new MutationAction.ApplyStyle(WorkbookStyleInputs.nextStyleInput(data)));
+                    new CellMutationAction.ApplyStyle(WorkbookStyleInputs.nextStyleInput(data)));
           };
       case 0x4 ->
           switch (selectorSlot(selector)) {
@@ -205,40 +218,42 @@ final class OperationSequenceMutationFactory {
                     new RangeSelector.ByRange(
                         targetSheet,
                         validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
-                    new MutationAction.SetDataValidation(nextDataValidationInput(data)));
+                    new StructuredMutationAction.SetDataValidation(nextDataValidationInput(data)));
             case 0x1 ->
                 mutate(
                     nextRangeSelector(data, targetSheet, validRange),
-                    new MutationAction.ClearDataValidations());
+                    new StructuredMutationAction.ClearDataValidations());
             case 0x2 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetConditionalFormatting(
+                    new StructuredMutationAction.SetConditionalFormatting(
                         nextConditionalFormattingInput(data, validRange)));
             default ->
                 mutate(
                     nextRangeSelector(data, targetSheet, validRange),
-                    new MutationAction.ClearConditionalFormatting());
+                    new StructuredMutationAction.ClearConditionalFormatting());
           };
       case 0x5 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
                 mutate(
                     new RangeSelector.ByRange(targetSheet, nextAutofilterRange(validRange)),
-                    new MutationAction.SetAutofilter());
+                    new StructuredMutationAction.SetAutofilter());
             case 0x1 ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.ClearAutofilter());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new StructuredMutationAction.ClearAutofilter());
             case 0x2 ->
                 mutate(
-                    new MutationAction.SetTable(
+                    new StructuredMutationAction.SetTable(
                         nextTableInput(data, targetSheet, tableName, validRange)));
             case 0x3 ->
                 mutate(
                     new TableSelector.ByNameOnSheet(tableName, targetSheet),
-                    new MutationAction.DeleteTable());
+                    new StructuredMutationAction.DeleteTable());
             case 0x4 ->
                 mutate(
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         nextPivotTableInput(
                             data,
                             targetSheet,
@@ -251,13 +266,13 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new PivotTableSelector.ByNameOnSheet(
                         validName ? pivotTableName : nextPivotTableName(data, false), targetSheet),
-                    new MutationAction.DeletePivotTable());
+                    new StructuredMutationAction.DeletePivotTable());
           };
       case 0x6 ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
                 mutate(
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         validName ? namedRangeName : nextNamedRangeName(data, false),
                         data.consumeBoolean()
                             ? new NamedRangeScope.Workbook()
@@ -275,7 +290,7 @@ final class OperationSequenceMutationFactory {
                         : new NamedRangeSelector.SheetScope(
                             validName ? namedRangeName : nextNamedRangeName(data, false),
                             targetSheet),
-                    new MutationAction.DeleteNamedRange());
+                    new StructuredMutationAction.DeleteNamedRange());
           };
       case 0x7 ->
           switch (selectorSlot(selector)) {
@@ -283,73 +298,79 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new RowBandSelector.Insertion(
                         targetSheet, rowSpan.first(), rowSpan.last() - rowSpan.first() + 1),
-                    new MutationAction.InsertRows());
+                    new WorkbookMutationAction.InsertRows());
             case 0x1 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.DeleteRows());
+                    new WorkbookMutationAction.DeleteRows());
             case 0x2 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.ShiftRows(nextNonZeroDelta(data, 2)));
+                    new WorkbookMutationAction.ShiftRows(nextNonZeroDelta(data, 2)));
             case 0x3 ->
                 mutate(
                     new ColumnBandSelector.Insertion(
                         targetSheet,
                         columnSpan.first(),
                         columnSpan.last() - columnSpan.first() + 1),
-                    new MutationAction.InsertColumns());
+                    new WorkbookMutationAction.InsertColumns());
             case 0x4 ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.DeleteColumns());
+                    new WorkbookMutationAction.DeleteColumns());
             case 0x5 ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.ShiftColumns(nextNonZeroDelta(data, 2)));
+                    new WorkbookMutationAction.ShiftColumns(nextNonZeroDelta(data, 2)));
             case 0x6 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.SetRowVisibility(data.consumeBoolean()));
+                    new WorkbookMutationAction.SetRowVisibility(data.consumeBoolean()));
             case 0x7 ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.SetColumnVisibility(data.consumeBoolean()));
+                    new WorkbookMutationAction.SetColumnVisibility(data.consumeBoolean()));
             case 0x8 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.GroupRows(data.consumeBoolean()));
+                    new WorkbookMutationAction.GroupRows(data.consumeBoolean()));
             case 0x9 ->
                 mutate(
                     new RowBandSelector.Span(targetSheet, rowSpan.first(), rowSpan.last()),
-                    new MutationAction.UngroupRows());
+                    new WorkbookMutationAction.UngroupRows());
             case 0xA ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.GroupColumns(data.consumeBoolean()));
+                    new WorkbookMutationAction.GroupColumns(data.consumeBoolean()));
             default ->
                 mutate(
                     new ColumnBandSelector.Span(targetSheet, columnSpan.first(), columnSpan.last()),
-                    new MutationAction.UngroupColumns());
+                    new WorkbookMutationAction.UngroupColumns());
           };
       default ->
           switch (selectorSlot(selector)) {
             case 0x0 ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.AutoSizeColumns());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.AutoSizeColumns());
             case 0x1 ->
                 mutate(
                     new WorkbookSelector.Current(),
-                    new MutationAction.SetWorkbookProtection(
+                    new WorkbookMutationAction.SetWorkbookProtection(
                         new WorkbookProtectionInput(true, false, false, null, null)));
             case 0x2 ->
                 mutate(
-                    new WorkbookSelector.Current(), new MutationAction.ClearWorkbookProtection());
+                    new WorkbookSelector.Current(),
+                    new WorkbookMutationAction.ClearWorkbookProtection());
             case 0x3 ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new MutationAction.SetSheetPresentation(SheetPresentationInput.defaults()));
+                    new WorkbookMutationAction.SetSheetPresentation(
+                        SheetPresentationInput.defaults()));
             default ->
-                mutate(new SheetSelector.ByName(targetSheet), new MutationAction.AutoSizeColumns());
+                mutate(
+                    new SheetSelector.ByName(targetSheet),
+                    new WorkbookMutationAction.AutoSizeColumns());
           };
     };
   }

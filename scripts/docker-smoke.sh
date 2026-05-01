@@ -203,9 +203,90 @@ readonly existing_stderr_path="${smoke_root}/stderr reopen [docker #smoke].log"
 readonly signature_stderr_path="${smoke_root}/stderr signature [docker #smoke].log"
 readonly streaming_stderr_path="${smoke_root}/stderr streaming [docker #smoke].log"
 readonly streaming_read_stderr_path="${smoke_root}/stderr streaming readback [docker #smoke].log"
+readonly default_formula_environment_block="$(cat <<'JSON'
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+JSON
+)"
+readonly default_execution_block="$(cat <<'JSON'
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+JSON
+)"
+readonly verbose_execution_block="$(cat <<'JSON'
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "VERBOSE"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+JSON
+)"
+readonly streaming_execution_block="$(cat <<'JSON'
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "STREAMING_WRITE"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+JSON
+)"
+readonly event_read_execution_block="$(cat <<'JSON'
+  "execution": {
+    "mode": {
+      "readMode": "EVENT_READ",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+JSON
+)"
 
 cat > "${request_path}" <<JSON
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "NEW"
   },
@@ -213,11 +294,8 @@ cat > "${request_path}" <<JSON
     "type": "SAVE_AS",
     "path": "${workbook_rel}"
   },
-  "execution": {
-    "journal": {
-      "level": "VERBOSE"
-    }
-  },
+${verbose_execution_block}
+${default_formula_environment_block}
   "steps": [
     {
       "stepId": "ensure-smoke",
@@ -244,6 +322,7 @@ JSON
 
 cat > "${existing_request_path}" <<JSON
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "EXISTING",
     "path": "${workbook_rel}"
@@ -251,6 +330,8 @@ cat > "${existing_request_path}" <<JSON
   "persistence": {
     "type": "NONE"
   },
+${default_execution_block}
+${default_formula_environment_block}
   "steps": [
     {
       "stepId": "existing-workbook",
@@ -267,6 +348,7 @@ JSON
 
 cat > "${signature_request_path}" <<JSON
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "NEW"
   },
@@ -274,6 +356,8 @@ cat > "${signature_request_path}" <<JSON
     "type": "SAVE_AS",
     "path": "${signature_workbook_rel}"
   },
+${default_execution_block}
+${default_formula_environment_block}
   "steps": [
     {
       "stepId": "ensure-approvals",
@@ -343,6 +427,7 @@ JSON
 
 cat > "${streaming_request_path}" <<JSON
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "NEW"
   },
@@ -350,11 +435,8 @@ cat > "${streaming_request_path}" <<JSON
     "type": "SAVE_AS",
     "path": "${streaming_workbook_rel}"
   },
-  "execution": {
-    "mode": {
-      "writeMode": "STREAMING_WRITE"
-    }
-  },
+${streaming_execution_block}
+${default_formula_environment_block}
   "steps": [
     {
       "stepId": "ensure-ledger",
@@ -435,6 +517,7 @@ JSON
 
 cat > "${streaming_read_request_path}" <<JSON
 {
+  "protocolVersion": "V1",
   "source": {
     "type": "EXISTING",
     "path": "${streaming_workbook_rel}"
@@ -442,11 +525,8 @@ cat > "${streaming_read_request_path}" <<JSON
   "persistence": {
     "type": "NONE"
   },
-  "execution": {
-    "mode": {
-      "readMode": "EVENT_READ"
-    }
-  },
+${event_read_execution_block}
+${default_formula_environment_block}
   "steps": [
     {
       "stepId": "streaming-workbook",

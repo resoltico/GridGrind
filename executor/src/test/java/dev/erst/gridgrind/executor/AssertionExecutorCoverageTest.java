@@ -8,7 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
@@ -20,10 +22,12 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports.AnalysisFindingReport;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports.AnalysisLocationReport;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports.AnalysisSummaryReport;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse.AnalysisFindingReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse.AnalysisLocationReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse.AnalysisSummaryReport;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -76,42 +80,44 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
                 List.of(
-                    mutate(new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
-                        new MutationAction.SetCell(textCell("Owner"))),
+                        new CellMutationAction.SetCell(textCell("Owner"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B1"),
-                        new MutationAction.SetCell(textCell("Amount"))),
+                        new CellMutationAction.SetCell(textCell("Amount"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A2"),
-                        new MutationAction.SetCell(textCell("Ada"))),
+                        new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B2"),
-                        new MutationAction.SetCell(new CellInput.Numeric(42.0d))),
+                        new CellMutationAction.SetCell(new CellInput.Numeric(42.0d))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "C2"),
-                        new MutationAction.SetCell(new CellInput.BooleanValue(true))),
+                        new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "E2"),
-                        new MutationAction.SetCell(formulaCell("1/0"))),
+                        new CellMutationAction.SetCell(formulaCell("1/0"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "F2"),
-                        new MutationAction.SetCell(formulaCell("2+3"))),
+                        new CellMutationAction.SetCell(formulaCell("2+3"))),
                     mutate(
                         new WorkbookSelector.Current(),
-                        new MutationAction.SetWorkbookProtection(
+                        new WorkbookMutationAction.SetWorkbookProtection(
                             new WorkbookProtectionInput(true, false, false, null, null))),
                     mutate(
                         new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                        new MutationAction.SetNamedRange(
+                        new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             new NamedRangeTarget("Budget", "F2"))),
                     mutate(
                         new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
-                        new MutationAction.SetTable(
-                            new TableInput(
+                        new StructuredMutationAction.SetTable(
+                            TableInput.withDefaultMetadata(
                                 "BudgetTable",
                                 "Budget",
                                 "A1:B2",
@@ -373,39 +379,41 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
                 List.of(
-                    mutate(new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
-                        new MutationAction.SetCell(textCell("Owner"))),
+                        new CellMutationAction.SetCell(textCell("Owner"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B1"),
-                        new MutationAction.SetCell(textCell("Amount"))),
+                        new CellMutationAction.SetCell(textCell("Amount"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A2"),
-                        new MutationAction.SetCell(textCell("Ada"))),
+                        new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B2"),
-                        new MutationAction.SetCell(new CellInput.Numeric(42.0d))),
+                        new CellMutationAction.SetCell(new CellInput.Numeric(42.0d))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "E2"),
-                        new MutationAction.SetCell(formulaCell("1/0"))),
+                        new CellMutationAction.SetCell(formulaCell("1/0"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "F2"),
-                        new MutationAction.SetCell(formulaCell("2+3"))),
+                        new CellMutationAction.SetCell(formulaCell("2+3"))),
                     mutate(
                         new WorkbookSelector.Current(),
-                        new MutationAction.SetWorkbookProtection(
+                        new WorkbookMutationAction.SetWorkbookProtection(
                             new WorkbookProtectionInput(true, false, false, null, null))),
                     mutate(
                         new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                        new MutationAction.SetNamedRange(
+                        new StructuredMutationAction.SetNamedRange(
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             new NamedRangeTarget("Budget", "F2"))),
                     mutate(
                         new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
-                        new MutationAction.SetTable(
-                            new TableInput(
+                        new StructuredMutationAction.SetTable(
+                            TableInput.withDefaultMetadata(
                                 "BudgetTable",
                                 "Budget",
                                 "A1:B2",
@@ -496,7 +504,7 @@ class AssertionExecutorCoverageTest {
             "style-mismatch",
             new CellSelector.ByAddress("Budget", "A2"),
             new Assertion.CellStyle(
-                new GridGrindResponse.CellStyleReport(
+                new GridGrindWorkbookSurfaceReports.CellStyleReport(
                     "0",
                     owner.style().alignment(),
                     owner.style().font(),
@@ -530,7 +538,7 @@ class AssertionExecutorCoverageTest {
                     expectedProtection.revisionsPasswordHashPresent())));
     assertTrue(protectionMismatch.problem().message().contains("EXPECT_WORKBOOK_PROTECTION"));
 
-    GridGrindResponse.SheetSummaryReport expectedSheet = sheet.sheet();
+    GridGrindWorkbookSurfaceReports.SheetSummaryReport expectedSheet = sheet.sheet();
     GridGrindResponse.Failure sheetMismatch =
         assertionFailure(
             executor,
@@ -538,7 +546,7 @@ class AssertionExecutorCoverageTest {
             "sheet-structure-mismatch",
             new SheetSelector.ByName("Budget"),
             new Assertion.SheetStructureFacts(
-                new GridGrindResponse.SheetSummaryReport(
+                new GridGrindWorkbookSurfaceReports.SheetSummaryReport(
                     expectedSheet.sheetName(),
                     expectedSheet.visibility(),
                     expectedSheet.protection(),
@@ -631,10 +639,12 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
                 List.of(
-                    mutate(new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
-                        new MutationAction.SetCell(textCell("Owner")))),
+                        new CellMutationAction.SetCell(textCell("Owner")))),
                 List.of(),
                 List.of())));
 
@@ -923,7 +933,7 @@ class AssertionExecutorCoverageTest {
                 AssertionExecutor.observedCount(
                     new InspectionResult.WorkbookSummaryResult(
                         "summary",
-                        new GridGrindResponse.WorkbookSummary.WithSheets(
+                        new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                             1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     assertTrue(
         unsupportedObservedCount.getMessage().contains("Unsupported presence observation result"));
@@ -981,7 +991,8 @@ class AssertionExecutorCoverageTest {
     List<InspectionResult.Analysis> analyses =
         List.of(
             new InspectionResult.FormulaHealthResult(
-                "formula", new GridGrindResponse.FormulaHealthReport(1, summary, List.of(finding))),
+                "formula",
+                new GridGrindAnalysisReports.FormulaHealthReport(1, summary, List.of(finding))),
             new InspectionResult.DataValidationHealthResult(
                 "validation",
                 new dev.erst.gridgrind.contract.dto.DataValidationHealthReport(
@@ -1004,13 +1015,13 @@ class AssertionExecutorCoverageTest {
                     1, summary, List.of(finding))),
             new InspectionResult.HyperlinkHealthResult(
                 "hyperlink",
-                new GridGrindResponse.HyperlinkHealthReport(1, summary, List.of(finding))),
+                new GridGrindAnalysisReports.HyperlinkHealthReport(1, summary, List.of(finding))),
             new InspectionResult.NamedRangeHealthResult(
                 "namedRange",
-                new GridGrindResponse.NamedRangeHealthReport(1, summary, List.of(finding))),
+                new GridGrindAnalysisReports.NamedRangeHealthReport(1, summary, List.of(finding))),
             new InspectionResult.WorkbookFindingsResult(
                 "workbook",
-                new GridGrindResponse.WorkbookFindingsReport(summary, List.of(finding))));
+                new GridGrindAnalysisReports.WorkbookFindingsReport(summary, List.of(finding))));
 
     for (InspectionResult.Analysis analysis : analyses) {
       assertEquals(summary, AssertionExecutor.analysisSummary(analysis));
@@ -1030,24 +1041,24 @@ class AssertionExecutorCoverageTest {
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "warning",
-                new GridGrindResponse.FormulaHealthReport(
+                new GridGrindAnalysisReports.FormulaHealthReport(
                     1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
         java.util.Optional.of(AnalysisSeverity.INFO),
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "info",
-                new GridGrindResponse.FormulaHealthReport(
+                new GridGrindAnalysisReports.FormulaHealthReport(
                     1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
         java.util.Optional.empty(),
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "clean",
-                new GridGrindResponse.FormulaHealthReport(
+                new GridGrindAnalysisReports.FormulaHealthReport(
                     1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
-    GridGrindResponse.CellStyleReport style = style();
+    GridGrindWorkbookSurfaceReports.CellStyleReport style = style();
     dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
             "A1", "BLANK", "", style, java.util.Optional.empty(), java.util.Optional.empty());
@@ -1158,10 +1169,12 @@ class AssertionExecutorCoverageTest {
                         ExecutionModeInput.WriteMode.STREAMING_WRITE),
                     null,
                     List.of(
-                        mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet()),
                         mutate(
                             new SheetSelector.ByName("Ops"),
-                            new MutationAction.AppendRow(
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new CellMutationAction.AppendRow(
                                 List.of(textCell("Owner"), textCell("Ada"))))),
                     List.of(
                         assertThat(
@@ -1256,7 +1269,9 @@ class AssertionExecutorCoverageTest {
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                List.of(mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                List.of(
+                    mutate(
+                        new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
                 List.of()),
             new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
@@ -1319,10 +1334,10 @@ class AssertionExecutorCoverageTest {
   }
 
   private static WorkbookPlan rewritePersistence(WorkbookPlan plan, Path workbookPath) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         plan.source(),
         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-        plan.executionMode(),
+        plan.execution(),
         plan.formulaEnvironment(),
         plan.steps());
   }
@@ -1356,9 +1371,9 @@ class AssertionExecutorCoverageTest {
     return null;
   }
 
-  private static GridGrindResponse.CellStyleReport style() {
+  private static GridGrindWorkbookSurfaceReports.CellStyleReport style() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindResponse.CellStyleReport(
+    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
@@ -1384,18 +1399,47 @@ class AssertionExecutorCoverageTest {
 
   private static List<ExecutorTestPlanSupport.PendingMutation> budgetTableMutations() {
     return mutations(
-        mutate(new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()),
+        mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet()),
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
-            new MutationAction.SetRange(
+            new CellMutationAction.SetRange(
                 List.of(
                     List.of(textCell("Item"), textCell("Amount")),
                     List.of(textCell("Hosting"), new CellInput.Numeric(100.0)),
                     List.of(textCell("Travel"), new CellInput.Numeric(50.0))))),
         mutate(
-            new MutationAction.SetTable(
-                new TableInput(
+            new StructuredMutationAction.SetTable(
+                TableInput.withDefaultMetadata(
                     "BudgetTable", "Budget", "A1:B3", false, new TableStyleInput.None()))));
+  }
+
+  @Test
+  void directAssertionObservationHelpersExposePresenceAndChartReads() throws IOException {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
+    AssertionExecutor assertionExecutor = new AssertionExecutor(readExecutor, selectorResolver);
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+
+      InspectionResult presence =
+          assertionExecutor.presenceObservation(
+              "named-range-present",
+              new NamedRangeSelector.WorkbookScope("MissingBudgetTotal"),
+              workbook,
+              new WorkbookLocation.UnsavedWorkbook());
+      InspectionResult.ChartsResult charts =
+          assertionExecutor.chartsObservation(
+              "charts",
+              new ChartSelector.AllOnSheet("Budget"),
+              workbook,
+              new WorkbookLocation.UnsavedWorkbook());
+
+      assertInstanceOf(InspectionResult.NamedRangesResult.class, presence);
+      assertTrue(charts.charts().isEmpty());
+      assertEquals(0, AssertionExecutor.observedCount(presence));
+      assertEquals(0, AssertionExecutor.observedCount(charts));
+    }
   }
 
   private static GridGrindResponse.Success success(GridGrindResponse response) {

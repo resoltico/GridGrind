@@ -87,11 +87,14 @@ class ExcelChartValueObjectTest {
                 false,
                 List.of()));
 
-    WorkbookCommand.SetChart setChart = new WorkbookCommand.SetChart("Charts", pieDefinition);
+    WorkbookDrawingCommand.SetChart setChart =
+        new WorkbookDrawingCommand.SetChart("Charts", pieDefinition);
     assertEquals("Charts", setChart.sheetName());
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetChart(" ", pieDefinition));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetChart("Charts", null));
+        IllegalArgumentException.class,
+        () -> new WorkbookDrawingCommand.SetChart(" ", pieDefinition));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookDrawingCommand.SetChart("Charts", null));
 
     WorkbookReadCommand.GetCharts getCharts = new WorkbookReadCommand.GetCharts("charts", "Charts");
     assertEquals("charts", getCharts.stepId());
@@ -159,8 +162,8 @@ class ExcelChartValueObjectTest {
             .plotTypeToken());
 
     List<ExcelChartSnapshot> chartSnapshots = new ArrayList<>(List.of(lineSnapshot, unsupported));
-    WorkbookReadResult.ChartsResult chartsResult =
-        new WorkbookReadResult.ChartsResult("charts", "Charts", chartSnapshots);
+    WorkbookDrawingResult.ChartsResult chartsResult =
+        new WorkbookDrawingResult.ChartsResult("charts", "Charts", chartSnapshots);
     chartSnapshots.clear();
     assertEquals(2, chartsResult.charts().size());
 

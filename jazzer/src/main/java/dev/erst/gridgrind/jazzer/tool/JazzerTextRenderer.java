@@ -90,6 +90,10 @@ public final class JazzerTextRenderer {
     Objects.requireNonNull(summaries, "summaries must not be null");
     StringBuilder builder = new StringBuilder();
     builder.append("Jazzer Status").append(System.lineSeparator());
+    if (summaries.isEmpty()) {
+      builder.append("(no summaries recorded)").append(System.lineSeparator());
+      return builder.toString().trim();
+    }
     for (LocalRunSummary summary : summaries) {
       builder
           .append("- ")

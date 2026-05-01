@@ -157,6 +157,7 @@ final class WorkbookStyleRegistry {
   }
 
   private XSSFCellStyle createMergedStyle(XSSFCellStyle baseStyle, ExcelCellStyle stylePatch) {
+    ExcelWorkbookStyleLimits.requireCellStyleCapacity(workbook); // LIM-011
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     cellStyle.cloneStyleFrom(baseStyle);
 
@@ -407,7 +408,7 @@ final class WorkbookStyleRegistry {
 
   private ExcelBorderSide effectiveBorderSide(ExcelBorderStyle style, ExcelColor color) {
     if (style == null && color == null) {
-      return java.util.Optional.<ExcelBorderSide>empty().orElse(null);
+      return null;
     }
     if (color != null && (style == null || style == ExcelBorderStyle.NONE)) {
       throw new IllegalArgumentException("border side color requires an effective border style");

@@ -62,7 +62,7 @@ public final class Tables {
   static TableInput toTableInput(Definition definition) {
     Definition nonNullDefinition =
         Objects.requireNonNull(definition, "definition must not be null");
-    return new TableInput(
+    return TableInput.withDefaultMetadata(
         nonNullDefinition.name(),
         nonNullDefinition.sheetName(),
         nonNullDefinition.range(),

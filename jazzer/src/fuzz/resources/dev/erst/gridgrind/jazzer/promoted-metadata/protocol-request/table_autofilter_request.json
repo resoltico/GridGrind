@@ -2,32 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/table_autofilter_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/table_autofilter_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
       "inputBytes" : 6063,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 6,
-      "operationKinds" : {
-        "SET_TABLE" : 1,
-        "SET_RANGE" : 2,
-        "ENSURE_SHEET" : 1,
-        "SET_AUTOFILTER" : 2
-      },
+      "decodeOutcome" : "INVALID_REQUEST",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 4,
-      "readKinds" : {
-        "ANALYZE_AUTOFILTER_HEALTH" : 1,
-        "ANALYZE_TABLE_HEALTH" : 1,
-        "GET_TABLES" : 1,
-        "GET_AUTOFILTERS" : 1
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-04-01T04:57:21.641736Z",

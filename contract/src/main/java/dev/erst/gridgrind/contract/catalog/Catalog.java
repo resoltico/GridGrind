@@ -20,8 +20,7 @@ public record Catalog(
     List<NestedTypeGroup> nestedTypes,
     List<PlainTypeGroup> plainTypes) {
   public Catalog {
-    protocolVersion =
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     discriminatorField =
         CatalogRecordValidation.requireNonBlank(discriminatorField, "discriminatorField");
     Objects.requireNonNull(requestType, "requestType must not be null");

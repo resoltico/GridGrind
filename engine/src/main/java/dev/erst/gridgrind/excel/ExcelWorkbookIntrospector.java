@@ -27,47 +27,47 @@ final class ExcelWorkbookIntrospector {
   }
 
   /** Executes one fact-only read command against the workbook. */
-  WorkbookReadResult.Introspection execute(
+  WorkbookReadIntrospectionResult execute(
       ExcelWorkbook workbook, WorkbookReadCommand.Introspection command) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(command, "command must not be null");
 
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
-          new WorkbookReadResult.WorkbookSummaryResult(
+          new WorkbookCoreResult.WorkbookSummaryResult(
               getWorkbookSummary.stepId(), workbook.workbookSummary());
       case WorkbookReadCommand.GetPackageSecurity getPackageSecurity ->
-          new WorkbookReadResult.PackageSecurityResult(
+          new WorkbookCoreResult.PackageSecurityResult(
               getPackageSecurity.stepId(), workbook.packageSecurity());
       case WorkbookReadCommand.GetWorkbookProtection getWorkbookProtection ->
-          new WorkbookReadResult.WorkbookProtectionResult(
+          new WorkbookCoreResult.WorkbookProtectionResult(
               getWorkbookProtection.stepId(), workbook.workbookProtection());
       case WorkbookReadCommand.GetCustomXmlMappings getCustomXmlMappings ->
-          new WorkbookReadResult.CustomXmlMappingsResult(
+          new WorkbookCoreResult.CustomXmlMappingsResult(
               getCustomXmlMappings.stepId(), workbook.customXmlMappings());
       case WorkbookReadCommand.ExportCustomXmlMapping exportCustomXmlMapping ->
-          new WorkbookReadResult.CustomXmlExportResult(
+          new WorkbookCoreResult.CustomXmlExportResult(
               exportCustomXmlMapping.stepId(),
               workbook.exportCustomXmlMapping(
                   exportCustomXmlMapping.mapping(),
                   exportCustomXmlMapping.validateSchema(),
                   exportCustomXmlMapping.encoding()));
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
-          new WorkbookReadResult.NamedRangesResult(
+          new WorkbookCoreResult.NamedRangesResult(
               getNamedRanges.stepId(), selectNamedRanges(workbook, getNamedRanges.selection()));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
-          new WorkbookReadResult.SheetSummaryResult(
+          new WorkbookSheetResult.SheetSummaryResult(
               getSheetSummary.stepId(), workbook.sheetSummary(getSheetSummary.sheetName()));
       case WorkbookReadCommand.GetArrayFormulas getArrayFormulas ->
-          new WorkbookReadResult.ArrayFormulasResult(
+          new WorkbookSheetResult.ArrayFormulasResult(
               getArrayFormulas.stepId(), arrayFormulas(workbook, getArrayFormulas.selection()));
       case WorkbookReadCommand.GetCells getCells ->
-          new WorkbookReadResult.CellsResult(
+          new WorkbookSheetResult.CellsResult(
               getCells.stepId(),
               getCells.sheetName(),
               sheetIntrospector.cells(workbook.sheet(getCells.sheetName()), getCells.addresses()));
       case WorkbookReadCommand.GetWindow getWindow ->
-          new WorkbookReadResult.WindowResult(
+          new WorkbookSheetResult.WindowResult(
               getWindow.stepId(),
               sheetIntrospector.window(
                   workbook.sheet(getWindow.sheetName()),
@@ -75,38 +75,38 @@ final class ExcelWorkbookIntrospector {
                   getWindow.rowCount(),
                   getWindow.columnCount()));
       case WorkbookReadCommand.GetMergedRegions getMergedRegions ->
-          new WorkbookReadResult.MergedRegionsResult(
+          new WorkbookSheetResult.MergedRegionsResult(
               getMergedRegions.stepId(),
               getMergedRegions.sheetName(),
               sheetIntrospector.mergedRegions(workbook.sheet(getMergedRegions.sheetName())));
       case WorkbookReadCommand.GetHyperlinks getHyperlinks ->
-          new WorkbookReadResult.HyperlinksResult(
+          new WorkbookSheetResult.HyperlinksResult(
               getHyperlinks.stepId(),
               getHyperlinks.sheetName(),
               sheetIntrospector.hyperlinks(
                   workbook.sheet(getHyperlinks.sheetName()), getHyperlinks.selection()));
       case WorkbookReadCommand.GetComments getComments ->
-          new WorkbookReadResult.CommentsResult(
+          new WorkbookSheetResult.CommentsResult(
               getComments.stepId(),
               getComments.sheetName(),
               sheetIntrospector.comments(
                   workbook.sheet(getComments.sheetName()), getComments.selection()));
       case WorkbookReadCommand.GetDrawingObjects getDrawingObjects ->
-          new WorkbookReadResult.DrawingObjectsResult(
+          new WorkbookDrawingResult.DrawingObjectsResult(
               getDrawingObjects.stepId(),
               getDrawingObjects.sheetName(),
               documentIntrospector.drawingObjects(workbook, getDrawingObjects.sheetName()));
       case WorkbookReadCommand.GetCharts getCharts ->
-          new WorkbookReadResult.ChartsResult(
+          new WorkbookDrawingResult.ChartsResult(
               getCharts.stepId(),
               getCharts.sheetName(),
               documentIntrospector.charts(workbook, getCharts.sheetName()));
       case WorkbookReadCommand.GetPivotTables getPivotTables ->
-          new WorkbookReadResult.PivotTablesResult(
+          new WorkbookDrawingResult.PivotTablesResult(
               getPivotTables.stepId(),
               documentIntrospector.pivotTables(workbook, getPivotTables.selection()));
       case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
-          new WorkbookReadResult.DrawingObjectPayloadResult(
+          new WorkbookDrawingResult.DrawingObjectPayloadResult(
               getDrawingObjectPayload.stepId(),
               getDrawingObjectPayload.sheetName(),
               documentIntrospector.drawingObjectPayload(
@@ -114,40 +114,40 @@ final class ExcelWorkbookIntrospector {
                   getDrawingObjectPayload.sheetName(),
                   getDrawingObjectPayload.objectName()));
       case WorkbookReadCommand.GetSheetLayout getSheetLayout ->
-          new WorkbookReadResult.SheetLayoutResult(
+          new WorkbookSheetResult.SheetLayoutResult(
               getSheetLayout.stepId(),
               sheetIntrospector.layout(workbook.sheet(getSheetLayout.sheetName())));
       case WorkbookReadCommand.GetPrintLayout getPrintLayout ->
-          new WorkbookReadResult.PrintLayoutResult(
+          new WorkbookSheetResult.PrintLayoutResult(
               getPrintLayout.stepId(),
               getPrintLayout.sheetName(),
               sheetIntrospector.printLayout(workbook.sheet(getPrintLayout.sheetName())));
       case WorkbookReadCommand.GetDataValidations getDataValidations ->
-          new WorkbookReadResult.DataValidationsResult(
+          new WorkbookRuleResult.DataValidationsResult(
               getDataValidations.stepId(),
               getDataValidations.sheetName(),
               documentIntrospector.dataValidations(
                   workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
       case WorkbookReadCommand.GetConditionalFormatting getConditionalFormatting ->
-          new WorkbookReadResult.ConditionalFormattingResult(
+          new WorkbookRuleResult.ConditionalFormattingResult(
               getConditionalFormatting.stepId(),
               getConditionalFormatting.sheetName(),
               documentIntrospector.conditionalFormatting(
                   workbook.sheet(getConditionalFormatting.sheetName()),
                   getConditionalFormatting.selection()));
       case WorkbookReadCommand.GetAutofilters getAutofilters ->
-          new WorkbookReadResult.AutofiltersResult(
+          new WorkbookRuleResult.AutofiltersResult(
               getAutofilters.stepId(),
               getAutofilters.sheetName(),
               documentIntrospector.autofilters(workbook, getAutofilters.sheetName()));
       case WorkbookReadCommand.GetTables getTables ->
-          new WorkbookReadResult.TablesResult(
+          new WorkbookRuleResult.TablesResult(
               getTables.stepId(), documentIntrospector.tables(workbook, getTables.selection()));
       case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
-          new WorkbookReadResult.FormulaSurfaceResult(
+          new WorkbookSurfaceResult.FormulaSurfaceResult(
               getFormulaSurface.stepId(), formulaSurface(workbook, getFormulaSurface.selection()));
       case WorkbookReadCommand.GetSheetSchema getSheetSchema ->
-          new WorkbookReadResult.SheetSchemaResult(
+          new WorkbookSurfaceResult.SheetSchemaResult(
               getSheetSchema.stepId(),
               sheetSchema(
                   workbook,
@@ -156,7 +156,7 @@ final class ExcelWorkbookIntrospector {
                   getSheetSchema.rowCount(),
                   getSheetSchema.columnCount()));
       case WorkbookReadCommand.GetNamedRangeSurface getNamedRangeSurface ->
-          new WorkbookReadResult.NamedRangeSurfaceResult(
+          new WorkbookSurfaceResult.NamedRangeSurfaceResult(
               getNamedRangeSurface.stepId(),
               namedRangeSurface(workbook, getNamedRangeSurface.selection()));
     };
@@ -236,13 +236,13 @@ final class ExcelWorkbookIntrospector {
 
   /** Groups formulas by exact expression across the selected sheets. */
   @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
-  WorkbookReadResult.FormulaSurface formulaSurface(
+  WorkbookSurfaceResult.FormulaSurface formulaSurface(
       ExcelWorkbook workbook, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     List<String> sheetNames = selectSheets(workbook, selection);
-    List<WorkbookReadResult.SheetFormulaSurface> sheets = new ArrayList<>(sheetNames.size());
+    List<WorkbookSurfaceResult.SheetFormulaSurface> sheets = new ArrayList<>(sheetNames.size());
     int totalFormulaCellCount = 0;
     for (String sheetName : sheetNames) {
       ExcelSheet sheet = workbook.sheet(sheetName);
@@ -253,18 +253,18 @@ final class ExcelWorkbookIntrospector {
             .computeIfAbsent(formulaCell.formula(), _ -> new ArrayList<>())
             .add(formulaCell.address());
       }
-      List<WorkbookReadResult.FormulaPattern> patterns = new ArrayList<>(formulas.size());
+      List<WorkbookSurfaceResult.FormulaPattern> patterns = new ArrayList<>(formulas.size());
       for (Map.Entry<String, List<String>> entry : formulas.entrySet()) {
         patterns.add(
-            new WorkbookReadResult.FormulaPattern(
+            new WorkbookSurfaceResult.FormulaPattern(
                 entry.getKey(), entry.getValue().size(), List.copyOf(entry.getValue())));
       }
       totalFormulaCellCount += formulaCells.size();
       sheets.add(
-          new WorkbookReadResult.SheetFormulaSurface(
+          new WorkbookSurfaceResult.SheetFormulaSurface(
               sheetName, formulaCells.size(), patterns.size(), List.copyOf(patterns)));
     }
-    return new WorkbookReadResult.FormulaSurface(totalFormulaCellCount, List.copyOf(sheets));
+    return new WorkbookSurfaceResult.FormulaSurface(totalFormulaCellCount, List.copyOf(sheets));
   }
 
   private List<ExcelArrayFormulaSnapshot> arrayFormulas(
@@ -282,7 +282,7 @@ final class ExcelWorkbookIntrospector {
 
   /** Infers a simple schema from the provided sheet window. */
   @SuppressWarnings({"PMD.AvoidInstantiatingObjectsInLoops", "PMD.UseConcurrentHashMap"})
-  WorkbookReadResult.SheetSchema sheetSchema(
+  WorkbookSurfaceResult.SheetSchema sheetSchema(
       ExcelWorkbook workbook,
       String sheetName,
       String topLeftAddress,
@@ -290,7 +290,7 @@ final class ExcelWorkbookIntrospector {
       int columnCount) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelSheet sheet = workbook.sheet(sheetName);
-    WorkbookReadResult.Window window =
+    WorkbookSheetResult.Window window =
         sheetIntrospector.window(sheet, topLeftAddress, rowCount, columnCount);
     int topLeftColumn = new CellReference(topLeftAddress).getCol();
     boolean headerRowIsBlank =
@@ -298,7 +298,7 @@ final class ExcelWorkbookIntrospector {
             .allMatch(cell -> "BLANK".equals(cell.effectiveType()));
     int dataRowCount = headerRowIsBlank ? 0 : Math.max(0, rowCount - 1);
 
-    List<WorkbookReadResult.SchemaColumn> columns = new ArrayList<>(columnCount);
+    List<WorkbookSurfaceResult.SchemaColumn> columns = new ArrayList<>(columnCount);
     for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
       ExcelCellSnapshot headerCell = window.rows().getFirst().cells().get(columnOffset);
       Map<String, Integer> typeCounts = new LinkedHashMap<>();
@@ -331,13 +331,13 @@ final class ExcelWorkbookIntrospector {
         }
       }
 
-      List<WorkbookReadResult.TypeCount> observedTypes = new ArrayList<>(typeCounts.size());
+      List<WorkbookSurfaceResult.TypeCount> observedTypes = new ArrayList<>(typeCounts.size());
       for (Map.Entry<String, Integer> entry : typeCounts.entrySet()) {
-        observedTypes.add(new WorkbookReadResult.TypeCount(entry.getKey(), entry.getValue()));
+        observedTypes.add(new WorkbookSurfaceResult.TypeCount(entry.getKey(), entry.getValue()));
       }
 
       columns.add(
-          new WorkbookReadResult.SchemaColumn(
+          new WorkbookSurfaceResult.SchemaColumn(
               topLeftColumn + columnOffset,
               new CellReference(
                       new CellReference(topLeftAddress).getRow(), topLeftColumn + columnOffset)
@@ -349,12 +349,12 @@ final class ExcelWorkbookIntrospector {
               dominantType(typeCounts)));
     }
 
-    return new WorkbookReadResult.SheetSchema(
+    return new WorkbookSurfaceResult.SheetSchema(
         sheetName, topLeftAddress, rowCount, columnCount, dataRowCount, List.copyOf(columns));
   }
 
   /** Summarizes the scope and backing kind of selected named ranges. */
-  WorkbookReadResult.NamedRangeSurface namedRangeSurface(
+  WorkbookSurfaceResult.NamedRangeSurface namedRangeSurface(
       ExcelWorkbook workbook, ExcelNamedRangeSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
@@ -364,16 +364,17 @@ final class ExcelWorkbookIntrospector {
     int sheetScopedCount = 0;
     int rangeBackedCount = 0;
     int formulaBackedCount = 0;
-    List<WorkbookReadResult.NamedRangeSurfaceEntry> entries = new ArrayList<>(namedRanges.size());
+    List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> entries =
+        new ArrayList<>(namedRanges.size());
     for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-      WorkbookReadResult.NamedRangeBackingKind kind;
+      WorkbookSurfaceResult.NamedRangeBackingKind kind;
       switch (namedRange) {
         case ExcelNamedRangeSnapshot.RangeSnapshot _ -> {
-          kind = WorkbookReadResult.NamedRangeBackingKind.RANGE;
+          kind = WorkbookSurfaceResult.NamedRangeBackingKind.RANGE;
           rangeBackedCount++;
         }
         case ExcelNamedRangeSnapshot.FormulaSnapshot _ -> {
-          kind = WorkbookReadResult.NamedRangeBackingKind.FORMULA;
+          kind = WorkbookSurfaceResult.NamedRangeBackingKind.FORMULA;
           formulaBackedCount++;
         }
       }
@@ -382,10 +383,10 @@ final class ExcelWorkbookIntrospector {
         case ExcelNamedRangeScope.SheetScope _ -> sheetScopedCount++;
       }
       entries.add(
-          new WorkbookReadResult.NamedRangeSurfaceEntry(
+          new WorkbookSurfaceResult.NamedRangeSurfaceEntry(
               namedRange.name(), namedRange.scope(), namedRange.refersToFormula(), kind));
     }
-    return new WorkbookReadResult.NamedRangeSurface(
+    return new WorkbookSurfaceResult.NamedRangeSurface(
         workbookScopedCount,
         sheetScopedCount,
         rangeBackedCount,

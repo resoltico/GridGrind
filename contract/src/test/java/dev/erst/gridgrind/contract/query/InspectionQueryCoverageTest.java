@@ -13,10 +13,9 @@ class InspectionQueryCoverageTest {
   @Test
   void exportCustomXmlMappingCreatorSuppliesDefaultsAndPreservesExplicitValues() {
     InspectionQuery.ExportCustomXmlMapping defaulted =
-        InspectionQuery.ExportCustomXmlMapping.create(
-            new CustomXmlMappingLocator(1L, null), null, null);
+        new InspectionQuery.ExportCustomXmlMapping(new CustomXmlMappingLocator(1L, null), false);
     InspectionQuery.ExportCustomXmlMapping explicit =
-        InspectionQuery.ExportCustomXmlMapping.create(
+        new InspectionQuery.ExportCustomXmlMapping(
             new CustomXmlMappingLocator(null, "BudgetMapping"), true, "UTF-16");
 
     assertFalse(defaulted.validateSchema());

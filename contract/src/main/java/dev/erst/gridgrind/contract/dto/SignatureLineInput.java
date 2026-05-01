@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -8,7 +9,7 @@ import java.util.Optional;
 public record SignatureLineInput(
     String name,
     DrawingAnchorInput anchor,
-    Boolean allowComments,
+    boolean allowComments,
     Optional<String> signingInstructions,
     Optional<String> suggestedSigner,
     Optional<String> suggestedSigner2,
@@ -16,32 +17,43 @@ public record SignatureLineInput(
     Optional<String> caption,
     Optional<String> invalidStamp,
     Optional<PictureDataInput> plainSignature) {
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  static SignatureLineInput create(SignatureLineJson json) {
-    return new SignatureLineInput(
-        json.name(),
-        json.anchor(),
-        json.allowComments() == null ? Boolean.TRUE : json.allowComments(),
-        json.signingInstructions(),
-        json.suggestedSigner(),
-        json.suggestedSigner2(),
-        json.suggestedSignerEmail(),
-        json.caption(),
-        json.invalidStamp(),
-        json.plainSignature());
+  /** Creates a signature-line payload from the authored wire shape. */
+  @JsonCreator
+  @SuppressWarnings("PMD.ExcessiveParameterList")
+  public SignatureLineInput(
+      @JsonProperty("name") String name,
+      @JsonProperty("anchor") DrawingAnchorInput anchor,
+      @JsonProperty("allowComments") Boolean allowComments,
+      @JsonProperty("signingInstructions") Optional<String> signingInstructions,
+      @JsonProperty("suggestedSigner") Optional<String> suggestedSigner,
+      @JsonProperty("suggestedSigner2") Optional<String> suggestedSigner2,
+      @JsonProperty("suggestedSignerEmail") Optional<String> suggestedSignerEmail,
+      @JsonProperty("caption") Optional<String> caption,
+      @JsonProperty("invalidStamp") Optional<String> invalidStamp,
+      @JsonProperty("plainSignature") Optional<PictureDataInput> plainSignature) {
+    this(
+        name,
+        anchor,
+        Objects.requireNonNull(allowComments, "allowComments must not be null").booleanValue(),
+        Objects.requireNonNull(signingInstructions, "signingInstructions must not be null"),
+        Objects.requireNonNull(suggestedSigner, "suggestedSigner must not be null"),
+        Objects.requireNonNull(suggestedSigner2, "suggestedSigner2 must not be null"),
+        Objects.requireNonNull(suggestedSignerEmail, "suggestedSignerEmail must not be null"),
+        Objects.requireNonNull(caption, "caption must not be null"),
+        Objects.requireNonNull(invalidStamp, "invalidStamp must not be null"),
+        Objects.requireNonNull(plainSignature, "plainSignature must not be null"));
   }
 
   public SignatureLineInput {
     requireNonBlank(name, "name");
     anchor = requireTwoCellAnchor(anchor);
-    Objects.requireNonNull(allowComments, "allowComments must not be null");
     signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
     suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
     suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2");
     suggestedSignerEmail = normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail");
     caption = normalizeOptional(caption, "caption");
     invalidStamp = normalizeOptional(invalidStamp, "invalidStamp");
-    plainSignature = Objects.requireNonNullElseGet(plainSignature, Optional::empty);
+    Objects.requireNonNull(plainSignature, "plainSignature must not be null");
     if (caption.isPresent() && caption.orElseThrow().lines().count() > 3L) {
       throw new IllegalArgumentException("caption must contain at most three lines");
     }
@@ -63,7 +75,7 @@ public record SignatureLineInput(
   }
 
   private static Optional<String> normalizeOptional(Optional<String> value, String fieldName) {
-    Optional<String> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    Optional<String> normalized = Objects.requireNonNull(value, fieldName + " must not be null");
     if (normalized.isEmpty()) {
       return Optional.empty();
     }
@@ -80,16 +92,4 @@ public record SignatureLineInput(
       case DrawingAnchorInput.TwoCell twoCell -> twoCell;
     };
   }
-
-  private record SignatureLineJson(
-      String name,
-      DrawingAnchorInput anchor,
-      Boolean allowComments,
-      Optional<String> signingInstructions,
-      Optional<String> suggestedSigner,
-      Optional<String> suggestedSigner2,
-      Optional<String> suggestedSignerEmail,
-      Optional<String> caption,
-      Optional<String> invalidStamp,
-      Optional<PictureDataInput> plainSignature) {}
 }

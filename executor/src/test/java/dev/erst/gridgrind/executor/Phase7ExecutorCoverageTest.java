@@ -12,11 +12,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
@@ -39,14 +45,16 @@ class Phase7ExecutorCoverageTest {
   @Test
   void defaultExecutorMethodsForwardAndRejectNullInputs() {
     WorkbookPlan request =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             java.util.List.of());
     GridGrindResponse.Success expected =
         GridGrindResponses.success(
             null,
-            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             java.util.List.of(),
             java.util.List.of(),
             java.util.List.of());
@@ -155,7 +163,7 @@ class Phase7ExecutorCoverageTest {
             mutations(
                 mutate(
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new MutationAction.SetCell(
+                    new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.standardInput())))));
 
     GridGrindResponse.Failure unavailableFailure =
@@ -178,7 +186,7 @@ class Phase7ExecutorCoverageTest {
             mutations(
                 mutate(
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new MutationAction.SetCell(
+                    new CellMutationAction.SetCell(
                         new CellInput.Text(TextSourceInput.utf8File("blank.txt"))))));
     GridGrindResponse.Failure blankFailure =
         assertInstanceOf(
@@ -198,10 +206,11 @@ class Phase7ExecutorCoverageTest {
 
   @Test
   void formulaDiagnosticsExposeInlineFormulasOnly() {
-    MutationAction.SetCell fileBackedFormula =
-        new MutationAction.SetCell(new CellInput.Formula(TextSourceInput.utf8File("formula.txt")));
-    MutationAction.SetCell inlineFormula =
-        new MutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
+    CellMutationAction.SetCell fileBackedFormula =
+        new CellMutationAction.SetCell(
+            new CellInput.Formula(TextSourceInput.utf8File("formula.txt")));
+    CellMutationAction.SetCell inlineFormula =
+        new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
 
     assertEquals(
         java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(fileBackedFormula));
@@ -223,24 +232,24 @@ class Phase7ExecutorCoverageTest {
         new dev.erst.gridgrind.contract.dto.ChartInput(
             "Revenue",
             drawingAnchor,
-            new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
-            new dev.erst.gridgrind.contract.dto.ChartInput.Legend.Visible(
+            new dev.erst.gridgrind.contract.dto.ChartTitleInput.None(),
+            new dev.erst.gridgrind.contract.dto.ChartLegendInput.Visible(
                 dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition.RIGHT),
             dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs.GAP,
             true,
             java.util.List.of(
-                new dev.erst.gridgrind.contract.dto.ChartInput.Bar(
+                new dev.erst.gridgrind.contract.dto.ChartPlotInput.Bar(
                     false,
                     dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
                     null,
                     null,
                     java.util.List.of(
-                        new dev.erst.gridgrind.contract.dto.ChartInput.Series(
-                            new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
-                            new dev.erst.gridgrind.contract.dto.ChartInput.DataSource.Reference(
+                        new dev.erst.gridgrind.contract.dto.ChartSeriesInput(
+                            new dev.erst.gridgrind.contract.dto.ChartTitleInput.None(),
+                            new dev.erst.gridgrind.contract.dto.ChartDataSourceInput.Reference(
                                 "Budget!$A$1:$A$2"),
-                            new dev.erst.gridgrind.contract.dto.ChartInput.DataSource.Reference(
+                            new dev.erst.gridgrind.contract.dto.ChartDataSourceInput.Reference(
                                 "Budget!$B$1:$B$2"),
                             null,
                             null,
@@ -249,71 +258,71 @@ class Phase7ExecutorCoverageTest {
 
     for (MutationAction action :
         java.util.List.of(
-            new MutationAction.EnsureSheet(),
-            new MutationAction.RenameSheet("Budget Copy"),
-            new MutationAction.DeleteSheet(),
-            new MutationAction.MoveSheet(0),
-            new MutationAction.CopySheet(
+            new WorkbookMutationAction.EnsureSheet(),
+            new WorkbookMutationAction.RenameSheet("Budget Copy"),
+            new WorkbookMutationAction.DeleteSheet(),
+            new WorkbookMutationAction.MoveSheet(0),
+            new WorkbookMutationAction.CopySheet(
                 "Budget Copy", new dev.erst.gridgrind.contract.dto.SheetCopyPosition.AppendAtEnd()),
-            new MutationAction.SetActiveSheet(),
-            new MutationAction.SetSelectedSheets(),
-            new MutationAction.SetSheetVisibility(
+            new WorkbookMutationAction.SetActiveSheet(),
+            new WorkbookMutationAction.SetSelectedSheets(),
+            new WorkbookMutationAction.SetSheetVisibility(
                 dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.HIDDEN),
-            new MutationAction.SetSheetProtection(
+            new WorkbookMutationAction.SetSheetProtection(
                 new dev.erst.gridgrind.contract.dto.SheetProtectionSettings(
                     false, false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false)),
-            new MutationAction.ClearSheetProtection(),
-            new MutationAction.SetWorkbookProtection(
+            new WorkbookMutationAction.ClearSheetProtection(),
+            new WorkbookMutationAction.SetWorkbookProtection(
                 new dev.erst.gridgrind.contract.dto.WorkbookProtectionInput(
-                    Boolean.TRUE, Boolean.FALSE, Boolean.FALSE, null, null)),
-            new MutationAction.ClearWorkbookProtection(),
-            new MutationAction.MergeCells(),
-            new MutationAction.UnmergeCells(),
-            new MutationAction.SetColumnWidth(8.5d),
-            new MutationAction.SetRowHeight(12.0d),
-            new MutationAction.InsertRows(),
-            new MutationAction.DeleteRows(),
-            new MutationAction.ShiftRows(1),
-            new MutationAction.InsertColumns(),
-            new MutationAction.DeleteColumns(),
-            new MutationAction.ShiftColumns(1),
-            new MutationAction.SetRowVisibility(Boolean.TRUE),
-            new MutationAction.SetColumnVisibility(Boolean.TRUE),
-            new MutationAction.GroupRows(Boolean.TRUE),
-            new MutationAction.UngroupRows(),
-            new MutationAction.GroupColumns(Boolean.TRUE),
-            new MutationAction.UngroupColumns(),
-            new MutationAction.SetSheetPane(
+                    true, false, false, null, null)),
+            new WorkbookMutationAction.ClearWorkbookProtection(),
+            new WorkbookMutationAction.MergeCells(),
+            new WorkbookMutationAction.UnmergeCells(),
+            new WorkbookMutationAction.SetColumnWidth(8.5d),
+            new WorkbookMutationAction.SetRowHeight(12.0d),
+            new WorkbookMutationAction.InsertRows(),
+            new WorkbookMutationAction.DeleteRows(),
+            new WorkbookMutationAction.ShiftRows(1),
+            new WorkbookMutationAction.InsertColumns(),
+            new WorkbookMutationAction.DeleteColumns(),
+            new WorkbookMutationAction.ShiftColumns(1),
+            new WorkbookMutationAction.SetRowVisibility(true),
+            new WorkbookMutationAction.SetColumnVisibility(true),
+            new WorkbookMutationAction.GroupRows(true),
+            new WorkbookMutationAction.UngroupRows(),
+            new WorkbookMutationAction.GroupColumns(true),
+            new WorkbookMutationAction.UngroupColumns(),
+            new WorkbookMutationAction.SetSheetPane(
                 new dev.erst.gridgrind.contract.dto.PaneInput.Frozen(1, 1, 1, 1)),
-            new MutationAction.SetSheetZoom(125),
-            new MutationAction.SetSheetPresentation(
+            new WorkbookMutationAction.SetSheetZoom(125),
+            new WorkbookMutationAction.SetSheetPresentation(
                 dev.erst.gridgrind.contract.dto.SheetPresentationInput.defaults()),
-            new MutationAction.SetPrintLayout(
+            new WorkbookMutationAction.SetPrintLayout(
                 dev.erst.gridgrind.contract.dto.PrintLayoutInput.defaults()),
-            new MutationAction.SetRange(
+            new CellMutationAction.SetRange(
                 java.util.List.of(
                     java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),
-            new MutationAction.ClearRange(),
-            new MutationAction.SetHyperlink(
+            new CellMutationAction.ClearRange(),
+            new CellMutationAction.SetHyperlink(
                 new dev.erst.gridgrind.contract.dto.HyperlinkTarget.Url("https://example.com")),
-            new MutationAction.ClearHyperlink(),
-            new MutationAction.SetComment(
-                new dev.erst.gridgrind.contract.dto.CommentInput(
+            new CellMutationAction.ClearHyperlink(),
+            new CellMutationAction.SetComment(
+                dev.erst.gridgrind.contract.dto.CommentInput.plain(
                     TextSourceInput.inline("Reviewed"), "GridGrind", true)),
-            new MutationAction.ClearComment(),
-            new MutationAction.SetPicture(
+            new CellMutationAction.ClearComment(),
+            new DrawingMutationAction.SetPicture(
                 new PictureInput(
                     "Logo", imageData, drawingAnchor, TextSourceInput.inline("Budget logo"))),
-            new MutationAction.SetChart(simpleChart),
-            new MutationAction.SetShape(
+            new DrawingMutationAction.SetChart(simpleChart),
+            new DrawingMutationAction.SetShape(
                 new dev.erst.gridgrind.contract.dto.ShapeInput(
                     "BudgetBox",
                     dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
                     drawingAnchor,
                     "rect",
                     TextSourceInput.inline("Budget"))),
-            new MutationAction.SetEmbeddedObject(
+            new DrawingMutationAction.SetEmbeddedObject(
                 new dev.erst.gridgrind.contract.dto.EmbeddedObjectInput(
                     "Attachment",
                     "Attachment",
@@ -322,44 +331,44 @@ class Phase7ExecutorCoverageTest {
                     BinarySourceInput.inlineBase64("AQ=="),
                     imageData,
                     drawingAnchor)),
-            new MutationAction.SetDrawingObjectAnchor(drawingAnchor),
-            new MutationAction.DeleteDrawingObject(),
-            new MutationAction.ApplyStyle(
+            new DrawingMutationAction.SetDrawingObjectAnchor(drawingAnchor),
+            new DrawingMutationAction.DeleteDrawingObject(),
+            new CellMutationAction.ApplyStyle(
                 new dev.erst.gridgrind.contract.dto.CellStyleInput(
                     "0.00", null, null, null, null, null)),
-            new MutationAction.SetDataValidation(
+            new StructuredMutationAction.SetDataValidation(
                 new dev.erst.gridgrind.contract.dto.DataValidationInput(
                     new dev.erst.gridgrind.contract.dto.DataValidationRuleInput.ExplicitList(
                         java.util.List.of("Open", "Closed")),
-                    Boolean.TRUE,
-                    Boolean.FALSE,
+                    true,
+                    false,
                     null,
                     null)),
-            new MutationAction.SetConditionalFormatting(
+            new StructuredMutationAction.SetConditionalFormatting(
                 new dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput(
                     java.util.List.of("A1:A2", "C1:C2"),
                     java.util.List.of(
                         new dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput
                             .FormulaRule("A1>0", false, null)))),
-            new MutationAction.SetAutofilter(),
-            new MutationAction.ClearPrintLayout(),
-            new MutationAction.ClearConditionalFormatting(),
-            new MutationAction.ClearDataValidations(),
-            new MutationAction.ClearAutofilter(),
-            new MutationAction.DeleteTable(),
-            new MutationAction.DeletePivotTable(),
-            new MutationAction.DeleteNamedRange(),
-            new MutationAction.AppendRow(
+            new StructuredMutationAction.SetAutofilter(),
+            new WorkbookMutationAction.ClearPrintLayout(),
+            new StructuredMutationAction.ClearConditionalFormatting(),
+            new StructuredMutationAction.ClearDataValidations(),
+            new StructuredMutationAction.ClearAutofilter(),
+            new StructuredMutationAction.DeleteTable(),
+            new StructuredMutationAction.DeletePivotTable(),
+            new StructuredMutationAction.DeleteNamedRange(),
+            new CellMutationAction.AppendRow(
                 java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))),
-            new MutationAction.AutoSizeColumns())) {
+            new WorkbookMutationAction.AutoSizeColumns())) {
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.sheetNameFor(action));
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.rangeFor(action));
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(action));
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.namedRangeNameFor(action));
     }
 
-    MutationAction.SetNamedRange rangeDefinedNamedRange =
-        new MutationAction.SetNamedRange(
+    StructuredMutationAction.SetNamedRange rangeDefinedNamedRange =
+        new StructuredMutationAction.SetNamedRange(
             "BudgetWindow",
             new dev.erst.gridgrind.contract.dto.NamedRangeScope.Sheet("Budget"),
             new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "A1:B2"));
@@ -374,13 +383,13 @@ class Phase7ExecutorCoverageTest {
         Optional.of("BudgetWindow"),
         ExecutionActionDiagnosticFields.namedRangeNameFor(rangeDefinedNamedRange));
 
-    MutationAction.SetTable setTable =
-        new MutationAction.SetTable(
-            new dev.erst.gridgrind.contract.dto.TableInput(
+    StructuredMutationAction.SetTable setTable =
+        new StructuredMutationAction.SetTable(
+            dev.erst.gridgrind.contract.dto.TableInput.withDefaultMetadata(
                 "BudgetTable",
                 "Budget",
                 "A1:B5",
-                Boolean.FALSE,
+                false,
                 new dev.erst.gridgrind.contract.dto.TableStyleInput.None()));
     assertEquals(Optional.of("Budget"), ExecutionActionDiagnosticFields.sheetNameFor(setTable));
     assertEquals(Optional.of("A1:B5"), ExecutionActionDiagnosticFields.rangeFor(setTable));
@@ -411,10 +420,11 @@ class Phase7ExecutorCoverageTest {
 
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
-            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
-            dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                "NEW", "NONE"),
+            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference.path(
                 "cell text", "/tmp/cell.txt"));
-    GridGrindResponse.Problem problem =
+    GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             new InputSourceReadException("io failed", "cell text", "/tmp/cell.txt", null), context);
     assertSame(context, problem.context());

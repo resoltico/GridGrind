@@ -2,30 +2,22 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2688,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "NONE",
-      "operationCount" : 6,
-      "operationKinds" : {
-        "SET_PRINT_LAYOUT" : 1,
-        "CLEAR_PRINT_LAYOUT" : 1,
-        "ENSURE_SHEET" : 2,
-        "SET_SHEET_PANE" : 2
-      },
+      "inputBytes" : 2711,
+      "decodeOutcome" : "INVALID_REQUEST",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
-      "readCount" : 4,
-      "readKinds" : {
-        "GET_SHEET_LAYOUT" : 2,
-        "GET_PRINT_LAYOUT" : 2
-      }
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-04-04T00:00:00.000000Z",

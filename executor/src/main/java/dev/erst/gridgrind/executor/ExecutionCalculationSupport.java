@@ -4,7 +4,7 @@ import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -45,7 +45,7 @@ final class ExecutionCalculationSupport {
       evaluationTargetCount = preflight.evaluationTargetCount();
       if (preflight.failure().isPresent()) {
         CalculationPolicyExecutor.FailureDetail failure = preflight.failure().orElseThrow();
-        GridGrindResponse.Problem problem = calculationProblemFor(request, failure);
+        GridGrindProblemDetail.Problem problem = calculationProblemFor(request, failure);
         preflightPhase.fail("failed (" + problem.code() + ")");
         return new CalculationExecutionOutcome(
             CalculationPolicyExecutor.report(
@@ -68,7 +68,7 @@ final class ExecutionCalculationSupport {
     CalculationReport report =
         CalculationPolicyExecutor.report(effectivePolicy, preflightReport, execution.report());
     if (execution.failure().isPresent()) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           calculationProblemFor(request, execution.failure().orElseThrow());
       executionPhase.fail("failed (" + problem.code() + ")");
       return new CalculationExecutionOutcome(report, Optional.of(problem));
@@ -100,7 +100,7 @@ final class ExecutionCalculationSupport {
                   CalculationExecutionStatus.SUCCEEDED, 0, false, true)),
           Optional.empty());
     } catch (RuntimeException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           GridGrindProblems.fromException(
               exception,
               calculationContextFor(request, CalculationPolicyExecutor.Phase.EXECUTION, null));
@@ -119,7 +119,7 @@ final class ExecutionCalculationSupport {
     }
   }
 
-  GridGrindResponse.Problem calculationProblemFor(
+  GridGrindProblemDetail.Problem calculationProblemFor(
       WorkbookPlan request, CalculationPolicyExecutor.FailureDetail failure) {
     if (failure.exception() != null) {
       return GridGrindProblems.fromException(
@@ -146,20 +146,21 @@ final class ExecutionCalculationSupport {
     };
   }
 
-  private static dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation failureLocation(
-      CalculationPolicyExecutor.FailureDetail failure) {
+  private static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+      failureLocation(CalculationPolicyExecutor.FailureDetail failure) {
     if (failure == null
         || failure.sheetName() == null
         || failure.address() == null
         || failure.formula() == null) {
-      return dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown();
+      return dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+          .unknown();
     }
-    return dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
-        failure.sheetName(), failure.address(), failure.formula());
+    return dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+        .formulaCell(failure.sheetName(), failure.address(), failure.formula());
   }
 
   record CalculationExecutionOutcome(
-      CalculationReport report, Optional<GridGrindResponse.Problem> failure) {
+      CalculationReport report, Optional<GridGrindProblemDetail.Problem> failure) {
     CalculationExecutionOutcome {
       Objects.requireNonNull(report, "report must not be null");
       failure = Objects.requireNonNullElseGet(failure, Optional::empty);

@@ -49,18 +49,19 @@ class ExcelResidualValidationCoverageTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetArrayFormula(" ", "A1:A2", arrayFormula));
+        () -> new WorkbookCellCommand.SetArrayFormula(" ", "A1:A2", arrayFormula));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetArrayFormula("Ops", " ", arrayFormula));
+        () -> new WorkbookCellCommand.SetArrayFormula("Ops", " ", arrayFormula));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearArrayFormula(" ", "A1"));
+        IllegalArgumentException.class, () -> new WorkbookCellCommand.ClearArrayFormula(" ", "A1"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearArrayFormula("Ops", " "));
+        IllegalArgumentException.class,
+        () -> new WorkbookCellCommand.ClearArrayFormula("Ops", " "));
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSignatureLine(" ", signatureDefinition(anchor)));
+        () -> new WorkbookDrawingCommand.SetSignatureLine(" ", signatureDefinition(anchor)));
 
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelCustomXmlImportDefinition(locator, " "));

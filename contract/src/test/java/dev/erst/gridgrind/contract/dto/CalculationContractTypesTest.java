@@ -51,7 +51,7 @@ class CalculationContractTypesTest {
     CalculationPolicyInput defaultPolicy = CalculationPolicyInput.defaults();
     CalculationPolicyInput markedPolicy =
         new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true);
-    CalculationPolicyInput targetedPolicy = new CalculationPolicyInput(evaluateTargets);
+    CalculationPolicyInput targetedPolicy = CalculationPolicyInput.strategy(evaluateTargets);
 
     assertTrue(defaultPolicy.isDefault());
     assertEquals("DO_NOT_CALCULATE", defaultPolicy.effectiveStrategy().strategyType());
@@ -79,14 +79,7 @@ class CalculationContractTypesTest {
   }
 
   @Test
-  void executionPolicyFiltersAndNormalizedExecutionDefaultsBehavePrecisely() {
-    ExecutionPolicyInput.DefaultFilter policyFilter = new ExecutionPolicyInput.DefaultFilter();
-    ExecutionPolicyInput.ExecutionModeDefaultFilter modeFilter =
-        new ExecutionPolicyInput.ExecutionModeDefaultFilter();
-    ExecutionPolicyInput.ExecutionJournalDefaultFilter journalFilter =
-        new ExecutionPolicyInput.ExecutionJournalDefaultFilter();
-    ExecutionPolicyInput.CalculationPolicyDefaultFilter calculationFilter =
-        new ExecutionPolicyInput.CalculationPolicyDefaultFilter();
+  void executionPolicyFactoriesAndNullRejectionBehavePrecisely() {
     ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
     ExecutionPolicyInput customPolicy =
         new ExecutionPolicyInput(
@@ -105,35 +98,29 @@ class CalculationContractTypesTest {
     CalculationPolicyInput customCalculation =
         new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
 
-    assertTrue(filterMatches(policyFilter, null));
-    assertTrue(filterMatches(policyFilter, defaultPolicy));
-    assertFalse(filterMatches(policyFilter, customPolicy));
-    assertFalse(filterMatches(policyFilter, "policy"));
-    assertEquals(0, policyFilter.hashCode());
-
-    assertTrue(filterMatches(modeFilter, null));
-    assertTrue(filterMatches(modeFilter, defaultMode));
-    assertFalse(filterMatches(modeFilter, customMode));
-    assertFalse(filterMatches(modeFilter, "mode"));
-    assertEquals(0, modeFilter.hashCode());
-
-    assertTrue(filterMatches(journalFilter, null));
-    assertTrue(filterMatches(journalFilter, defaultJournal));
-    assertFalse(filterMatches(journalFilter, customJournal));
-    assertFalse(filterMatches(journalFilter, "journal"));
-    assertEquals(0, journalFilter.hashCode());
-
-    assertTrue(filterMatches(calculationFilter, null));
-    assertTrue(filterMatches(calculationFilter, defaultCalculation));
-    assertFalse(filterMatches(calculationFilter, customCalculation));
-    assertFalse(filterMatches(calculationFilter, "calculation"));
-    assertEquals(0, calculationFilter.hashCode());
-
+    assertEquals(defaultPolicy, ExecutionPolicyInput.mode(defaultMode));
+    assertEquals(defaultPolicy, ExecutionPolicyInput.journal(defaultJournal));
+    assertEquals(defaultPolicy, ExecutionPolicyInput.calculation(defaultCalculation));
+    assertEquals(
+        new ExecutionPolicyInput(customMode, defaultJournal, defaultCalculation),
+        ExecutionPolicyInput.mode(customMode));
+    assertEquals(
+        new ExecutionPolicyInput(defaultMode, customJournal, defaultCalculation),
+        ExecutionPolicyInput.journal(customJournal));
+    assertEquals(
+        new ExecutionPolicyInput(customMode, customJournal, defaultCalculation),
+        ExecutionPolicyInput.modeAndJournal(customMode, customJournal));
+    assertEquals(
+        new ExecutionPolicyInput(customMode, defaultJournal, customCalculation),
+        ExecutionPolicyInput.modeAndCalculation(customMode, customCalculation));
+    assertFalse(customPolicy.isDefault());
     assertTrue(defaultMode.isDefault());
     assertFalse(customMode.isDefault());
     assertTrue(defaultJournal.isDefault());
     assertFalse(customJournal.isDefault());
-    assertEquals(ExecutionJournalLevel.NORMAL, ExecutionJournalInput.effectiveLevel(null));
+    assertEquals(
+        ExecutionJournalLevel.NORMAL, ExecutionJournalInput.effectiveLevel(defaultJournal));
+    assertThrows(NullPointerException.class, () -> ExecutionJournalInput.effectiveLevel(null));
   }
 
   @Test
@@ -168,7 +155,16 @@ class CalculationContractTypesTest {
 
     assertTrue(CalculationReport.notRequested().policy().isDefault());
     assertTrue(
-        CalculationReport.create(null, java.util.Optional.empty(), execution).policy().isDefault());
+        CalculationReport.create(
+                CalculationPolicyInput.defaults(), java.util.Optional.empty(), execution)
+            .policy()
+            .isDefault());
+    assertEquals(
+        "policy must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> CalculationReport.create(null, java.util.Optional.empty(), execution))
+            .getMessage());
     assertEquals(2, report.preflight().orElseThrow().checkedFormulaCount());
     assertTrue(report.execution().markRecalculateOnOpenApplied());
     assertEquals(
@@ -269,17 +265,20 @@ class CalculationContractTypesTest {
   void executeCalculationContextMergesTypedLocationsWithoutCrossShapePadding() {
     ProblemContext.ExecuteCalculation base =
         new ProblemContext.ExecuteCalculation.Preflight(
-            ProblemContext.RequestShape.known("EXISTING", "SAVE_AS"),
-            ProblemContext.ProblemLocation.unknown());
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.unknown());
     ProblemContext.ExecuteCalculation enriched =
         base.withLocation(
-            ProblemContext.ProblemLocation.formulaCell("Budget", "B1", "APP.TITLE()"));
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Budget", "B1", "APP.TITLE()"));
     ProblemContext.ExecuteCalculation preserved =
         new ProblemContext.ExecuteCalculation.Execution(
-                ProblemContext.RequestShape.known("EXISTING", "SAVE_AS"),
-                ProblemContext.ProblemLocation.formulaCell("Ops", "C4", "SUM(A1:A3)"))
+                ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS"),
+                ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                    "Ops", "C4", "SUM(A1:A3)"))
             .withLocation(
-                ProblemContext.ProblemLocation.formulaCell("Ignored", "Ignored", "Ignored"));
+                ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                    "Ignored", "Ignored", "Ignored"));
 
     assertEquals("CALCULATION_PREFLIGHT", enriched.stage());
     assertEquals(java.util.Optional.of("Budget"), enriched.sheetName());
@@ -288,9 +287,5 @@ class CalculationContractTypesTest {
     assertEquals(java.util.Optional.of("Ops"), preserved.sheetName());
     assertEquals(java.util.Optional.of("C4"), preserved.address());
     assertEquals(java.util.Optional.of("SUM(A1:A3)"), preserved.formula());
-  }
-
-  private static boolean filterMatches(Object filter, Object candidate) {
-    return filter.equals(candidate);
   }
 }

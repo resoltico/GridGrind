@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DRAWING_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, drawing mutations, picture, shape, embedded-object, chart, signature-line, anchor]
   questions: ["how do i author drawings in gridgrind", "how do i create charts in gridgrind", "how do i move a drawing object in gridgrind"]
@@ -100,7 +100,7 @@ or `WPG`.
 
 `from` and `to` markers use zero-based cell indexes plus non-negative raw cell-relative offsets in
 `dx` and `dy`. `behavior` accepts `MOVE_AND_RESIZE`, `MOVE_DONT_RESIZE`, or
-`DONT_MOVE_AND_RESIZE` and defaults to `MOVE_AND_RESIZE` when omitted.
+`DONT_MOVE_AND_RESIZE` and is explicit on the wire.
 
 ---
 
@@ -160,7 +160,8 @@ Create or replace one named simple shape or connector on one sheet.
         "rowIndex": 9,
         "dx": 0,
         "dy": 0
-      }
+      },
+      "behavior": "MOVE_AND_RESIZE"
     }
   }
 }
@@ -178,7 +179,7 @@ Create or replace one named simple shape or connector on one sheet.
 | `name` | Yes | Nonblank sheet-local drawing-object name. |
 | `kind` | Yes | `SIMPLE_SHAPE` or `CONNECTOR`. |
 | `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
-| `presetGeometryToken` | No | Optional preset geometry token for `SIMPLE_SHAPE`. Defaults to `rect` when omitted. Not allowed for `CONNECTOR`. |
+| `presetGeometryToken` | Conditional | Required nonblank preset geometry token for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
 | `text` | No | Optional nonblank text for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
 
 Validation failures are non-mutating. If `presetGeometryToken` is unsupported, GridGrind rejects
@@ -353,10 +354,10 @@ authoritative mutation.
 |:------|:---------|:------------|
 | `name` | Yes | Nonblank sheet-local chart name. Reuses the existing chart when the name already exists. |
 | `anchor` | Yes | Authored chart-frame anchor. Currently only `TWO_CELL` is supported. |
-| `title` | No | `NONE`, `TEXT`, or `FORMULA`. Defaults to `NONE`. |
-| `legend` | No | `HIDDEN` or `VISIBLE`. `VISIBLE.position` defaults to `RIGHT` when omitted. |
-| `displayBlanksAs` | No | `GAP`, `SPAN`, or `ZERO`. Defaults to `GAP`. |
-| `plotOnlyVisibleCells` | No | Whether hidden cells are ignored. Defaults to `true`. |
+| `title` | Yes | `NONE`, `TEXT`, or `FORMULA`. Use `NONE` for an untitled chart. |
+| `legend` | Yes | `HIDDEN` or `VISIBLE`. Supply `VISIBLE.position` explicitly. |
+| `displayBlanksAs` | Yes | `GAP`, `SPAN`, or `ZERO`. |
+| `plotOnlyVisibleCells` | Yes | Whether hidden cells are ignored. |
 | `plots` | Yes | Ordered non-empty plot list. Use one plot for a simple chart or multiple plots for a combo chart. |
 
 `plot` common fields:
@@ -368,14 +369,14 @@ authoritative mutation.
 | `series` | Yes | Ordered non-empty series list. |
 
 Axis-backed plot families (`AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `LINE`, `LINE_3D`, `RADAR`,
-`SCATTER`, `SURFACE`, `SURFACE_3D`) may also provide explicit ordered `axes`. When omitted,
-GridGrind writes the default axis set for that plot family.
+`SCATTER`, `SURFACE`, `SURFACE_3D`) require explicit ordered `axes` on the wire. The Java
+authoring surface exposes convenience constructors for the standard axis sets.
 
 `series` fields:
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `title` | No | `NONE`, `TEXT`, or `FORMULA`. Defaults to `NONE`. |
+| `title` | Yes | `NONE`, `TEXT`, or `FORMULA`. Use `NONE` for an untitled series. |
 | `categories` | Yes | `REFERENCE`, `STRING_LITERAL`, or `NUMERIC_LITERAL` data source for the category axis. |
 | `values` | Yes | `REFERENCE`, `STRING_LITERAL`, or `NUMERIC_LITERAL` data source for the value axis. |
 | `smooth` | No | Line and scatter smoothing flag when the target plot family supports it. |
@@ -387,16 +388,16 @@ Variant-specific fields:
 
 | Chart type | Field | Required | Description |
 |:-----------|:------|:---------|:------------|
-| `AREA`, `AREA_3D`, `LINE`, `LINE_3D` | `grouping` | No | Plot grouping. Defaults to `STANDARD`. |
+| `AREA`, `AREA_3D`, `LINE`, `LINE_3D` | `grouping` | Yes | Plot grouping. |
 | `AREA_3D`, `LINE_3D`, `BAR_3D` | `gapDepth` | No | Optional 3D gap depth. |
-| `BAR`, `BAR_3D` | `barDirection` | No | `COLUMN` or `BAR`. Defaults to `COLUMN`. |
-| `BAR`, `BAR_3D` | `grouping` | No | Bar grouping. Defaults to `CLUSTERED`. |
+| `BAR`, `BAR_3D` | `barDirection` | Yes | `COLUMN` or `BAR`. |
+| `BAR`, `BAR_3D` | `grouping` | Yes | Bar grouping. |
 | `BAR` | `gapWidth`, `overlap` | No | Optional bar spacing overrides. `overlap` must be between `-100` and `100`. |
 | `BAR_3D` | `gapWidth`, `shape` | No | Optional bar spacing and 3D bar shape overrides. |
 | `DOUGHNUT` | `firstSliceAngle`, `holeSize` | No | `firstSliceAngle` must be between `0` and `360`; `holeSize` must be between `10` and `90`. |
 | `PIE` | `firstSliceAngle` | No | Integer between `0` and `360`. |
-| `RADAR` | `style` | No | Radar style. Defaults to `STANDARD`. |
-| `SCATTER` | `style` | No | Scatter style. Defaults to `LINE_MARKER`. |
+| `RADAR` | `style` | Yes | Radar style. |
+| `SCATTER` | `style` | Yes | Scatter style. |
 | `SURFACE`, `SURFACE_3D` | `wireframe` | No | Whether the surface plot is written as wireframe. Defaults to `false`. |
 
 Reference-backed `categories` and `values` accept either contiguous A1-style references such as
@@ -464,7 +465,7 @@ optional plain-signature preview image.
 |:------|:---------|:------------|
 | `name` | Yes | Nonblank sheet-local drawing-object name. Replaces any existing signature line of the same name. |
 | `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
-| `allowComments` | No | Whether Excel allows comments alongside the signature line. Defaults to `true`. |
+| `allowComments` | Yes | Whether Excel allows comments alongside the signature line. |
 | `signingInstructions` | No | Optional nonblank instruction text shown in Excel's signing UI. |
 | `suggestedSigner` | No | Optional nonblank signer name. |
 | `suggestedSigner2` | No | Optional nonblank second signer line, often used for a title or department. |
@@ -509,7 +510,8 @@ supported charts.
         "rowIndex": 9,
         "dx": 0,
         "dy": 0
-      }
+      },
+      "behavior": "MOVE_AND_RESIZE"
     }
   }
 }

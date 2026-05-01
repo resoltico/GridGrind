@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Missing required field 'kind'
+Message: Invalid type definition for type `dev.erst.gridgrind.contract.dto.SheetDisplayInput`: More than one argument (#0 and #1) left as delegating for Creator [constructor for `dev.erst.gridgrind.contract.dto.SheetDisplayInput` (5 args), annotations: {interface com.fasterxml.jackson.annotation.JsonCreator=@com.fasterxml.jackson.annotation.JsonCreator(mode=DEFAULT)}: only one allowed
 Input Bytes: 6259
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED

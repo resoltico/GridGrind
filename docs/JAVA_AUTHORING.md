@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: JAVA_AUTHORING
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, java, authoring, gridgrindplan, targets, values, tables, links, workbookplan, executioninputbindings]
   questions: ["can i use gridgrind from java", "how do i author gridgrind workflows in java", "what is gridgrindplan", "how do i execute a java-authored plan in process", "how do source-backed inputs work from java"]
@@ -42,7 +42,9 @@ only want to emit plan JSON do not inherit the in-process runtime graph.
 
 `Checks` and `Queries` still exist internally, but they are not part of the public authoring API.
 The public Java surface stays selector-first and hides raw request/response DTO plumbing such as
-`TableInput`, `HyperlinkTarget`, and `GridGrindResponse.*Report`.
+`TableInput`, `HyperlinkTarget`, and the report namespaces under
+`GridGrindWorkbookSurfaceReports`, `GridGrindLayoutSurfaceReports`,
+`GridGrindSchemaAndFormulaReports`, and `GridGrindAnalysisReports`.
 
 ## Optional Explicit Execution Types
 
@@ -127,7 +129,7 @@ GridGrindResponse response =
     new DefaultGridGrindRequestExecutor()
         .execute(
             plan.toPlan(),
-            new ExecutionInputBindings(workspace, (byte[]) null),
+            new ExecutionInputBindings(workspace),
             ExecutionJournalSink.NOOP);
 ```
 

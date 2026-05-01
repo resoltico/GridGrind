@@ -14,7 +14,12 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
-/** High-level sheet wrapper for typed reads, writes, and previews. */
+/**
+ * High-level sheet wrapper for typed reads, writes, and previews.
+ *
+ * <p>This facade intentionally owns the public sheet API while delegating behavior into narrower
+ * support classes; the public-method count reflects that single boundary.
+ */
 @SuppressWarnings("PMD.ExcessivePublicCount")
 public final class ExcelSheet {
   private final Sheet sheet;
@@ -374,27 +379,27 @@ public final class ExcelSheet {
   }
 
   /** Returns an exact rectangular window of cell snapshots anchored at one top-left address. */
-  public WorkbookReadResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+  public WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
     return readSupport.window(topLeftAddress, rowCount, columnCount);
   }
 
   /** Returns every merged region currently defined on the sheet. */
-  public List<WorkbookReadResult.MergedRegion> mergedRegions() {
+  public List<WorkbookSheetResult.MergedRegion> mergedRegions() {
     return structureSupport.mergedRegions();
   }
 
   /** Returns hyperlink metadata for the selected cells on this sheet. */
-  public List<WorkbookReadResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+  public List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
     return annotationSupport.hyperlinks(selection);
   }
 
   /** Returns comment metadata for the selected cells on this sheet. */
-  public List<WorkbookReadResult.CellComment> comments(ExcelCellSelection selection) {
+  public List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
     return annotationSupport.comments(selection);
   }
 
   /** Returns layout metadata such as panes, zoom, and visible sizing. */
-  public WorkbookReadResult.SheetLayout layout() {
+  public WorkbookSheetResult.SheetLayout layout() {
     return structureSupport.layout(name());
   }
 

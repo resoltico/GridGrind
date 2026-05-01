@@ -6,8 +6,8 @@ import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -105,7 +105,7 @@ final class XlsxParityGridGrind {
         sourceSecurity,
         executionMode == null
             ? ExecutionPolicyInput.defaults()
-            : new ExecutionPolicyInput(executionMode),
+            : ExecutionPolicyInput.mode(executionMode),
         formulaEnvironment,
         inspections);
   }
@@ -117,11 +117,10 @@ final class XlsxParityGridGrind {
       FormulaEnvironmentInput formulaEnvironment,
       InspectionStep... inspections) {
     return execute(
-        new WorkbookPlan(
-            GridGrindProtocolVersion.current(),
+        WorkbookPlan.standard(
             existingWorkbookSource(workbookPath, sourceSecurity),
             new WorkbookPlan.WorkbookPersistence.None(),
-            execution,
+            execution == null ? ExecutionPolicyInput.defaults() : execution,
             formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
             List.of(inspections)));
   }
@@ -317,7 +316,7 @@ final class XlsxParityGridGrind {
         persistenceSecurity,
         executionMode == null
             ? ExecutionPolicyInput.defaults()
-            : new ExecutionPolicyInput(executionMode),
+            : ExecutionPolicyInput.mode(executionMode),
         mutations,
         inspections);
   }
@@ -330,8 +329,7 @@ final class XlsxParityGridGrind {
       InspectionStep... inspections) {
     return success(
         execute(
-            new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
+            WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 saveAsPersistence(saveAsPath, persistenceSecurity),
                 execution,
@@ -417,10 +415,11 @@ final class XlsxParityGridGrind {
 
   static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
-      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
-      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten ->
+      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
+          savedAs.executionPath();
+      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
           overwritten.executionPath();
-      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("Expected the workbook to be persisted");
     };
   }

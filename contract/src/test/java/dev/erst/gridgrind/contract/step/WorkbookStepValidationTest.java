@@ -3,7 +3,11 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -65,11 +69,11 @@ class WorkbookStepValidationTest {
   @Test
   void validatesCompatibleMutationTargetsAcrossSingleAndUnionTargetFamilies() {
     Selector setCellTarget = new CellSelector.ByAddress("Budget", "A1");
-    MutationAction setCell = new MutationAction.SetCell(new CellInput.Text(text("Owner")));
+    MutationAction setCell = new CellMutationAction.SetCell(new CellInput.Text(text("Owner")));
     assertEquals(setCell, WorkbookStepValidation.requireCompatible(setCellTarget, setCell));
 
     Selector tableTarget = new TableSelector.ByNameOnSheet("BudgetTable", "Budget");
-    MutationAction deleteTable = new MutationAction.DeleteTable();
+    MutationAction deleteTable = new StructuredMutationAction.DeleteTable();
     assertEquals(deleteTable, WorkbookStepValidation.requireCompatible(tableTarget, deleteTable));
 
     IllegalArgumentException wrongTarget =
@@ -170,10 +174,12 @@ class WorkbookStepValidationTest {
   void exposesAllowedSelectorTypeFamiliesForStepQueriesAndActions() {
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.EnsureSheet())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.EnsureSheet())));
     assertEquals(
         List.of(TableSelector.ByNameOnSheet.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteTable())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new StructuredMutationAction.DeleteTable())));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
@@ -182,7 +188,7 @@ class WorkbookStepValidationTest {
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.ImportCustomXmlMapping(
+                new StructuredMutationAction.ImportCustomXmlMapping(
                     new dev.erst.gridgrind.contract.dto.CustomXmlImportInput(
                         new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(1L, "Map"),
                         new TextSourceInput.Inline("<root/>"))))));
@@ -254,23 +260,32 @@ class WorkbookStepValidationTest {
   void exposesEveryRemainingSelectorFamilyBranchAcrossActionsAndQueries() {
     assertEquals(
         List.of(RowBandSelector.Insertion.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.InsertRows())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.InsertRows())));
     assertEquals(
         List.of(RowBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupRows())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                WorkbookMutationAction.GroupRows.expanded())));
     assertEquals(
         List.of(ColumnBandSelector.Insertion.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.InsertColumns())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.InsertColumns())));
     assertEquals(
         List.of(ColumnBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.GroupColumns())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                WorkbookMutationAction.GroupColumns.expanded())));
     assertEquals(
         List.of(DrawingObjectSelector.ByName.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteDrawingObject())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new DrawingMutationAction.DeleteDrawingObject())));
     assertEquals(
         List.of(PivotTableSelector.ByNameOnSheet.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeletePivotTable())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new StructuredMutationAction.DeletePivotTable())));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
@@ -317,7 +332,7 @@ class WorkbookStepValidationTest {
         List.of(SheetSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetPicture(
+                new DrawingMutationAction.SetPicture(
                     new dev.erst.gridgrind.contract.dto.PictureInput(
                         "Logo",
                         new dev.erst.gridgrind.contract.dto.PictureDataInput(
@@ -326,19 +341,21 @@ class WorkbookStepValidationTest {
                         new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
-                            null),
+                            dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior
+                                .MOVE_AND_RESIZE),
                         null)))));
     assertEquals(
         List.of(SheetSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetSignatureLine(
+                new DrawingMutationAction.SetSignatureLine(
                     new dev.erst.gridgrind.contract.dto.SignatureLineInput(
                         "Signer",
                         new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
-                            null),
+                            dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior
+                                .MOVE_AND_RESIZE),
                         false,
                         java.util.Optional.of("Review before signing."),
                         java.util.Optional.of("Ada Lovelace"),
@@ -354,41 +371,48 @@ class WorkbookStepValidationTest {
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetWorkbookProtection(
+                new WorkbookMutationAction.SetWorkbookProtection(
                     new dev.erst.gridgrind.contract.dto.WorkbookProtectionInput(
                         true, false, false, null, null)))));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.MergeCells())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.MergeCells())));
     assertEquals(
         List.of(RangeSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new MutationAction.ClearDataValidations())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new StructuredMutationAction.ClearDataValidations())));
     assertEquals(
         List.of(ColumnBandSelector.Span.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new MutationAction.SetColumnWidth(8.43d))));
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookMutationAction.SetColumnWidth(8.43d))));
     assertEquals(
         List.of(RowBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.SetRowHeight(15.0d))));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookMutationAction.SetRowHeight(15.0d))));
     assertEquals(
         List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.ClearHyperlink())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new CellMutationAction.ClearHyperlink())));
     assertEquals(
         List.of(DrawingObjectSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetDrawingObjectAnchor(
+                new DrawingMutationAction.SetDrawingObjectAnchor(
                     new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
                         new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
                         new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
-                        null)))));
+                        dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior
+                            .MOVE_AND_RESIZE)))));
     assertEquals(
         List.of(TableSelector.ByNameOnSheet.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetTable(
-                    new dev.erst.gridgrind.contract.dto.TableInput(
+                new StructuredMutationAction.SetTable(
+                    dev.erst.gridgrind.contract.dto.TableInput.withDefaultMetadata(
                         "BudgetTable",
                         "Budget",
                         "A1:B2",
@@ -398,7 +422,7 @@ class WorkbookStepValidationTest {
         List.of(PivotTableSelector.ByNameOnSheet.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetPivotTable(
+                new StructuredMutationAction.SetPivotTable(
                     new dev.erst.gridgrind.contract.dto.PivotTableInput(
                         "Pivot",
                         "Report",
@@ -422,7 +446,7 @@ class WorkbookStepValidationTest {
             NamedRangeSelector.SheetScope.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new dev.erst.gridgrind.contract.dto.NamedRangeScope.Workbook(),
                     new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "A1")))));
@@ -467,75 +491,89 @@ class WorkbookStepValidationTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookStepValidation.requireCompatible(
-                    new WorkbookSelector.Current(), new MutationAction.DeleteNamedRange()));
+                    new WorkbookSelector.Current(),
+                    new StructuredMutationAction.DeleteNamedRange()));
     assertEquals(
         "DELETE_NAMED_RANGE requires target type ByName, WorkbookScope or SheetScope but got Current",
         threeWayUnionFailure.getMessage());
 
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.AutoSizeColumns())));
-    assertEquals(
-        List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.ClearAutofilter())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookMutationAction.AutoSizeColumns())));
     assertEquals(
         List.of(SheetSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.AppendRow(List.of(new CellInput.Text(text("A")))))));
+                new StructuredMutationAction.ClearAutofilter())));
+    assertEquals(
+        List.of(SheetSelector.ByName.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new CellMutationAction.AppendRow(List.of(new CellInput.Text(text("A")))))));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.ClearWorkbookProtection())));
+                new WorkbookMutationAction.ClearWorkbookProtection())));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetRange(List.of(List.of(new CellInput.Text(text("A"))))))));
+                new CellMutationAction.SetRange(List.of(List.of(new CellInput.Text(text("A"))))))));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.UnmergeCells())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.UnmergeCells())));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.ClearRange())));
+        List.of(WorkbookStepValidation.allowedTargetTypes(new CellMutationAction.ClearRange())));
     assertEquals(
         List.of(RangeSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.ClearConditionalFormatting())));
+                new StructuredMutationAction.ClearConditionalFormatting())));
     assertEquals(
         List.of(ColumnBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteColumns())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.DeleteColumns())));
     assertEquals(
         List.of(RowBandSelector.Span.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteRows())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new WorkbookMutationAction.DeleteRows())));
     assertEquals(
         List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.ClearComment())));
+        List.of(WorkbookStepValidation.allowedTargetTypes(new CellMutationAction.ClearComment())));
     assertEquals(
         List.of(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new MutationAction.SetHyperlink(
+                new CellMutationAction.SetHyperlink(
                     new dev.erst.gridgrind.contract.dto.HyperlinkTarget.Url(
                         "https://example.com")))));
     assertEquals(
         List.of(DrawingObjectSelector.ByName.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteDrawingObject())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new DrawingMutationAction.DeleteDrawingObject())));
     assertEquals(
         List.of(TableSelector.ByNameOnSheet.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteTable())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new StructuredMutationAction.DeleteTable())));
     assertEquals(
         List.of(PivotTableSelector.ByNameOnSheet.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeletePivotTable())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new StructuredMutationAction.DeletePivotTable())));
     assertEquals(
         List.of(
             NamedRangeSelector.ByName.class,
             NamedRangeSelector.WorkbookScope.class,
             NamedRangeSelector.SheetScope.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteNamedRange())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new StructuredMutationAction.DeleteNamedRange())));
 
     assertEquals(
         List.of(WorkbookSelector.class),
@@ -627,9 +665,9 @@ class WorkbookStepValidationTest {
             "Amount");
 
     assertEquals(
-        new MutationAction.SetCell(new CellInput.Numeric(125.0)),
+        new CellMutationAction.SetCell(new CellInput.Numeric(125.0)),
         WorkbookStepValidation.requireCompatible(
-            tableCell, new MutationAction.SetCell(new CellInput.Numeric(125.0))));
+            tableCell, new CellMutationAction.SetCell(new CellInput.Numeric(125.0))));
     assertEquals(
         new InspectionQuery.GetCells(),
         WorkbookStepValidation.requireCompatible(tableCell, new InspectionQuery.GetCells()));

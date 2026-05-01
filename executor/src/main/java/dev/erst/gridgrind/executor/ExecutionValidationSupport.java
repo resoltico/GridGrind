@@ -1,13 +1,13 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.Optional;
 
 /** Cross-field request validation that sits above record-level contract checks. */
 final class ExecutionValidationSupport {
-  Optional<GridGrindResponse.Problem> validateRequest(WorkbookPlan request) {
+  Optional<GridGrindProblemDetail.Problem> validateRequest(WorkbookPlan request) {
     Optional<String> calculationPolicyFailure =
         ExecutionModeRules.calculationPolicyFailure(request);
     if (calculationPolicyFailure.isPresent()) {

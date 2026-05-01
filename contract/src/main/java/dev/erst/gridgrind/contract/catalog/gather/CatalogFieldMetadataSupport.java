@@ -35,8 +35,14 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.ChartAxisInput;
+import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartLegendInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
 import dev.erst.gridgrind.contract.dto.ChartReport;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.CommentAnchorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
@@ -72,7 +78,7 @@ import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.IgnoredErrorInput;
@@ -194,10 +200,10 @@ public final class CatalogFieldMetadataSupport {
               "namedRangeSelectorTypes"),
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(DrawingAnchorInput.class, "drawingAnchorInputTypes"),
-          Map.entry(ChartInput.Title.class, "chartTitleInputTypes"),
-          Map.entry(ChartInput.Legend.class, "chartLegendInputTypes"),
-          Map.entry(ChartInput.DataSource.class, "chartDataSourceInputTypes"),
-          Map.entry(ChartInput.Plot.class, "chartPlotInputTypes"),
+          Map.entry(ChartTitleInput.class, "chartTitleInputTypes"),
+          Map.entry(ChartLegendInput.class, "chartLegendInputTypes"),
+          Map.entry(ChartDataSourceInput.class, "chartDataSourceInputTypes"),
+          Map.entry(ChartPlotInput.class, "chartPlotInputTypes"),
           Map.entry(PivotTableInput.Source.class, "pivotTableSourceTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
           Map.entry(AutofilterFilterCriterionInput.class, "autofilterFilterCriterionTypes"),
@@ -212,10 +218,14 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(BinarySourceInput.class, "binarySourceTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"),
           Map.entry(ColorInput.class, "colorInputTypes"),
+          Map.entry(AutofilterSortConditionInput.class, "autofilterSortConditionInputTypes"),
           Map.entry(CellGradientFillInput.class, "cellGradientFillInputTypes"),
           Map.entry(CellFillInput.class, "cellFillInputTypes"),
-          Map.entry(GridGrindResponse.NamedRangeReport.class, "namedRangeReportTypes"),
-          Map.entry(GridGrindResponse.SheetProtectionReport.class, "sheetProtectionReportTypes"),
+          Map.entry(
+              GridGrindWorkbookSurfaceReports.NamedRangeReport.class, "namedRangeReportTypes"),
+          Map.entry(
+              GridGrindWorkbookSurfaceReports.SheetProtectionReport.class,
+              "sheetProtectionReportTypes"),
           Map.entry(CellColorReport.class, "cellColorReportTypes"),
           Map.entry(CellGradientFillReport.class, "cellGradientFillReportTypes"),
           Map.entry(CellFillReport.class, "cellFillReportTypes"),
@@ -297,8 +307,8 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(CustomXmlMappingLocator.class, "customXmlMappingLocatorType"),
           Map.entry(CustomXmlImportInput.class, "customXmlImportInputType"),
           Map.entry(ChartInput.class, "chartInputType"),
-          Map.entry(ChartInput.Axis.class, "chartAxisInputType"),
-          Map.entry(ChartInput.Series.class, "chartSeriesInputType"),
+          Map.entry(ChartAxisInput.class, "chartAxisInputType"),
+          Map.entry(ChartSeriesInput.class, "chartSeriesInputType"),
           Map.entry(ChartReport.class, "chartReportType"),
           Map.entry(PictureDataInput.class, "pictureDataInputType"),
           Map.entry(PictureInput.class, "pictureInputType"),
@@ -323,7 +333,6 @@ public final class CatalogFieldMetadataSupport {
               AutofilterFilterCriterionInput.CustomConditionInput.class,
               "autofilterCustomConditionInputType"),
           Map.entry(AutofilterFilterColumnInput.class, "autofilterFilterColumnInputType"),
-          Map.entry(AutofilterSortConditionInput.class, "autofilterSortConditionInputType"),
           Map.entry(AutofilterSortStateInput.class, "autofilterSortStateInputType"),
           Map.entry(ConditionalFormattingBlockInput.class, "conditionalFormattingBlockInputType"),
           Map.entry(
@@ -347,8 +356,9 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(TableInput.class, "tableInputType"),
           Map.entry(WorkbookProtectionInput.class, "workbookProtectionInputType"),
           Map.entry(WorkbookProtectionReport.class, "workbookProtectionReportType"),
-          Map.entry(GridGrindResponse.SheetSummaryReport.class, "sheetSummaryReportType"),
-          Map.entry(GridGrindResponse.CellStyleReport.class, "cellStyleReportType"),
+          Map.entry(
+              GridGrindWorkbookSurfaceReports.SheetSummaryReport.class, "sheetSummaryReportType"),
+          Map.entry(GridGrindWorkbookSurfaceReports.CellStyleReport.class, "cellStyleReportType"),
           Map.entry(CellAlignmentReport.class, "cellAlignmentReportType"),
           Map.entry(CellFontReport.class, "cellFontReportType"),
           Map.entry(CellBorderReport.class, "cellBorderReportType"),
@@ -459,46 +469,55 @@ public final class CatalogFieldMetadataSupport {
   }
 
   static String lookupAssignableGroup(Map<Class<?>, String> groups, Class<?> classType) {
-    String resolvedGroup = null;
-    Class<?> resolvedBase = null;
-    for (Map.Entry<Class<?>, String> entry : groups.entrySet()) {
-      Class<?> candidateBase = entry.getKey();
-      if (!candidateBase.isAssignableFrom(classType) || candidateBase.equals(classType)) {
-        continue;
-      }
-      if (resolvedBase == null || resolvedBase.isAssignableFrom(candidateBase)) {
-        resolvedBase = candidateBase;
-        resolvedGroup = entry.getValue();
-        continue;
-      }
-      if (!candidateBase.isAssignableFrom(resolvedBase)) {
-        throw new IllegalStateException(
-            "Ambiguous catalog field group mapping for "
-                + classType.getName()
-                + ": "
-                + resolvedBase.getName()
-                + " and "
-                + candidateBase.getName());
-      }
-    }
-    return resolvedGroup;
+    return groups.entrySet().stream()
+        .filter(
+            entry ->
+                entry.getKey().isAssignableFrom(classType) && !entry.getKey().equals(classType))
+        .reduce(
+            (resolved, candidate) ->
+                selectMoreSpecificGroup(
+                    classType, resolved, candidate, "Ambiguous catalog field group mapping for "))
+        .map(Map.Entry::getValue)
+        .orElse(null);
   }
 
   static List<String> lookupAssignableGroupList(
       Map<Class<?>, List<String>> groups, Class<?> classType) {
-    List<String> resolvedGroup = null;
-    Class<?> resolvedBase = null;
-    for (Map.Entry<Class<?>, List<String>> entry : groups.entrySet()) {
-      Class<?> candidateBase = entry.getKey();
-      if (!candidateBase.isAssignableFrom(classType) || candidateBase.equals(classType)) {
-        continue;
-      }
-      if (resolvedBase == null || resolvedBase.isAssignableFrom(candidateBase)) {
-        resolvedBase = candidateBase;
-        resolvedGroup = entry.getValue();
-      }
+    return groups.entrySet().stream()
+        .filter(
+            entry ->
+                entry.getKey().isAssignableFrom(classType) && !entry.getKey().equals(classType))
+        .reduce(
+            (resolved, candidate) ->
+                selectMoreSpecificGroup(
+                    classType,
+                    resolved,
+                    candidate,
+                    "Ambiguous catalog field group-list mapping for "))
+        .map(Map.Entry::getValue)
+        .orElse(null);
+  }
+
+  private static <T> Map.Entry<Class<?>, T> selectMoreSpecificGroup(
+      Class<?> classType,
+      Map.Entry<Class<?>, T> resolved,
+      Map.Entry<Class<?>, T> candidate,
+      String errorPrefix) {
+    Class<?> resolvedBase = resolved.getKey();
+    Class<?> candidateBase = candidate.getKey();
+    if (resolvedBase.isAssignableFrom(candidateBase)) {
+      return candidate;
     }
-    return resolvedGroup;
+    if (candidateBase.isAssignableFrom(resolvedBase)) {
+      return resolved;
+    }
+    throw new IllegalStateException(
+        errorPrefix
+            + classType.getName()
+            + ": "
+            + resolvedBase.getName()
+            + " and "
+            + candidateBase.getName());
   }
 
   /** Returns whether one non-parameterized record component type is represented as JSON NUMBER. */

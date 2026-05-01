@@ -28,7 +28,7 @@ final class WorkbookAnalyzer {
   }
 
   /** Executes one derived analysis command against the workbook. */
-  WorkbookReadResult.Analysis execute(
+  WorkbookReadAnalysisResult execute(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       WorkbookReadCommand.Analysis command) {
@@ -38,40 +38,40 @@ final class WorkbookAnalyzer {
 
     return switch (command) {
       case WorkbookReadCommand.AnalyzeFormulaHealth analyzeFormulaHealth ->
-          new WorkbookReadResult.FormulaHealthResult(
+          new WorkbookAnalysisResult.FormulaHealthResult(
               analyzeFormulaHealth.stepId(),
               formulaHealth(workbook, analyzeFormulaHealth.selection()));
       case WorkbookReadCommand.AnalyzeDataValidationHealth analyzeDataValidationHealth ->
-          new WorkbookReadResult.DataValidationHealthResult(
+          new WorkbookAnalysisResult.DataValidationHealthResult(
               analyzeDataValidationHealth.stepId(),
               dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
       case WorkbookReadCommand.AnalyzeConditionalFormattingHealth
               analyzeConditionalFormattingHealth ->
-          new WorkbookReadResult.ConditionalFormattingHealthResult(
+          new WorkbookAnalysisResult.ConditionalFormattingHealthResult(
               analyzeConditionalFormattingHealth.stepId(),
               conditionalFormattingHealth(
                   workbook, analyzeConditionalFormattingHealth.selection()));
       case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
-          new WorkbookReadResult.AutofilterHealthResult(
+          new WorkbookAnalysisResult.AutofilterHealthResult(
               analyzeAutofilterHealth.stepId(),
               autofilterHealth(workbook, analyzeAutofilterHealth.selection()));
       case WorkbookReadCommand.AnalyzeTableHealth analyzeTableHealth ->
-          new WorkbookReadResult.TableHealthResult(
+          new WorkbookAnalysisResult.TableHealthResult(
               analyzeTableHealth.stepId(), tableHealth(workbook, analyzeTableHealth.selection()));
       case WorkbookReadCommand.AnalyzePivotTableHealth analyzePivotTableHealth ->
-          new WorkbookReadResult.PivotTableHealthResult(
+          new WorkbookAnalysisResult.PivotTableHealthResult(
               analyzePivotTableHealth.stepId(),
               pivotTableHealth(workbook, analyzePivotTableHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
-          new WorkbookReadResult.HyperlinkHealthResult(
+          new WorkbookAnalysisResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.stepId(),
               hyperlinkHealth(workbook, workbookLocation, analyzeHyperlinkHealth.selection()));
       case WorkbookReadCommand.AnalyzeNamedRangeHealth analyzeNamedRangeHealth ->
-          new WorkbookReadResult.NamedRangeHealthResult(
+          new WorkbookAnalysisResult.NamedRangeHealthResult(
               analyzeNamedRangeHealth.stepId(),
               namedRangeHealth(workbook, analyzeNamedRangeHealth.selection()));
       case WorkbookReadCommand.AnalyzeWorkbookFindings analyzeWorkbookFindings ->
-          new WorkbookReadResult.WorkbookFindingsResult(
+          new WorkbookAnalysisResult.WorkbookFindingsResult(
               analyzeWorkbookFindings.stepId(), workbookFindings(workbook, workbookLocation));
     };
   }

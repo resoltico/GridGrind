@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 /** Tests for CommentInput record construction and engine conversion. */
 class CommentInputTest {
   @Test
-  void defaultsVisibilityAndConvertsToEngineComment() {
-    CommentInput comment = new CommentInput(text("Review"), "GridGrind");
+  void hiddenCommentFactoryConvertsToEngineComment() {
+    CommentInput comment = CommentInput.hidden(text("Review"), "GridGrind");
 
     assertFalse(comment.visible());
     assertEquals(
@@ -21,10 +21,11 @@ class CommentInputTest {
 
   @Test
   void validatesCommentInputs() {
-    assertThrows(NullPointerException.class, () -> new CommentInput(null, "GridGrind", true));
+    assertThrows(NullPointerException.class, () -> CommentInput.plain(null, "GridGrind", true));
     assertThrows(
-        IllegalArgumentException.class, () -> new CommentInput(text(" "), "GridGrind", true));
-    assertThrows(NullPointerException.class, () -> new CommentInput(text("Review"), null, true));
-    assertThrows(IllegalArgumentException.class, () -> new CommentInput(text("Review"), " ", true));
+        IllegalArgumentException.class, () -> CommentInput.plain(text(" "), "GridGrind", true));
+    assertThrows(NullPointerException.class, () -> CommentInput.plain(text("Review"), null, true));
+    assertThrows(
+        IllegalArgumentException.class, () -> CommentInput.plain(text("Review"), " ", true));
   }
 }

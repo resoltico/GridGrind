@@ -46,9 +46,30 @@ cat > "${request_path}" <<EOF
     "path": "${asset_path}",
     "security": {
       "encryption": {
-        "password": "GridGrind-2026"
+        "password": "GridGrind-2026",
+        "mode": "AGILE"
       }
     }
+  },
+  "execution": {
+    "mode": {
+      "readMode": "FULL_XSSF",
+      "writeMode": "FULL_XSSF"
+    },
+    "journal": {
+      "level": "NORMAL"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
   },
   "steps": [
     {

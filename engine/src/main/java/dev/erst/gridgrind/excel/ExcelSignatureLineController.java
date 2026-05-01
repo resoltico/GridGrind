@@ -142,7 +142,7 @@ final class ExcelSignatureLineController {
   private LocatedSignatureLine find(XSSFSheet sheet, String objectName) {
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
-      return java.util.Optional.<LocatedSignatureLine>empty().orElse(null);
+      return null;
     }
 
     CTShape matchedShape = null;

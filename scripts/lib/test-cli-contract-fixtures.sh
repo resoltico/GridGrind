@@ -36,6 +36,30 @@ ensure_cli_shadow_jar() {
     printf '%s\n' "${jar_path}"
 }
 
+print_cli_contract_minimal_request() {
+    cat <<'JSON'
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "execution": {
+    "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+    "journal": { "level": "NORMAL" },
+    "calculation": {
+      "strategy": { "type": "DO_NOT_CALCULATE" },
+      "markRecalculateOnOpen": false
+    }
+  },
+  "formulaEnvironment": {
+    "externalWorkbooks": [],
+    "missingWorkbookPolicy": "ERROR",
+    "udfToolpacks": []
+  },
+  "steps": []
+}
+JSON
+}
+
 load_test_cli_contract_fixtures() {
     local jar_path
     jar_path="$(ensure_cli_shadow_jar)"
@@ -56,7 +80,6 @@ load_test_cli_contract_fixtures() {
         java -jar "${jar_path}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r'
     )"
     success_doctor_report="$(
-        printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' \
-            | java -jar "${jar_path}" --doctor-request | tr -d '\r'
+        print_cli_contract_minimal_request | java -jar "${jar_path}" --doctor-request | tr -d '\r'
     )"
 }

@@ -5,7 +5,7 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/gridgrind-advanced-readback.xlsx"
+    "path": "generated-workbooks/gridgrind-advanced-readback.xlsx"
   },
   "steps": [
     {
@@ -649,6 +649,7 @@
             ]
           },
           "allowBlank": false,
+          "suppressDropDownArrow": false,
           "prompt": {
             "title": {
               "type": "INLINE",
@@ -739,12 +740,11 @@
           "range": "E2:G5",
           "caseSensitive": false,
           "columnSort": false,
-          "sortMethod": "",
           "conditions": [
             {
+              "type": "VALUE",
               "range": "G2:G5",
-              "descending": true,
-              "sortBy": ""
+              "descending": true
             }
           ]
         }

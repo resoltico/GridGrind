@@ -5,7 +5,7 @@ import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import java.util.HashSet;
 
@@ -15,7 +15,8 @@ import java.util.HashSet;
 final class WorkbookInvariantWorkbookSurfaceChecks {
   private WorkbookInvariantWorkbookSurfaceChecks() {}
 
-  static void requireWorkbookSummaryShape(GridGrindResponse.WorkbookSummary workbook) {
+  static void requireWorkbookSummaryShape(
+      GridGrindWorkbookSurfaceReports.WorkbookSummary workbook) {
     WorkbookInvariantChecks.require(workbook != null, "workbook summary must not be null");
     WorkbookInvariantChecks.require(workbook.sheetCount() >= 0, "sheetCount must not be negative");
     WorkbookInvariantChecks.require(
@@ -31,13 +32,13 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
                 WorkbookInvariantChecks.require(
                     sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
     switch (workbook) {
-      case GridGrindResponse.WorkbookSummary.Empty empty -> {
+      case GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
             empty.sheetCount() == 0, "empty workbook summary must have sheetCount 0");
         WorkbookInvariantChecks.require(
             empty.sheetNames().isEmpty(), "empty workbook summary must have no sheet names");
       }
-      case GridGrindResponse.WorkbookSummary.WithSheets withSheets -> {
+      case GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets withSheets -> {
         WorkbookInvariantChecks.require(
             withSheets.sheetCount() > 0,
             "non-empty workbook summary must have positive sheetCount");
@@ -66,7 +67,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     }
   }
 
-  static void requireSheetSummaryShape(GridGrindResponse.SheetSummaryReport sheet) {
+  static void requireSheetSummaryShape(GridGrindWorkbookSurfaceReports.SheetSummaryReport sheet) {
     WorkbookInvariantChecks.require(sheet.sheetName() != null, "sheetName must not be null");
     WorkbookInvariantChecks.require(!sheet.sheetName().isBlank(), "sheetName must not be blank");
     WorkbookInvariantChecks.require(sheet.visibility() != null, "visibility must not be null");
@@ -78,8 +79,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(
         sheet.lastColumnIndex() >= -1, "lastColumnIndex must be greater than or equal to -1");
     switch (sheet.protection()) {
-      case GridGrindResponse.SheetProtectionReport.Unprotected _ -> {}
-      case GridGrindResponse.SheetProtectionReport.Protected protectedReport ->
+      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected _ -> {}
+      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected protectedReport ->
           WorkbookInvariantChecks.require(
               protectedReport.settings() != null, "protected sheet settings must not be null");
     }

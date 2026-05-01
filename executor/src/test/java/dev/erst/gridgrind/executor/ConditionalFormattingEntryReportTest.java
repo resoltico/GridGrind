@@ -3,6 +3,7 @@ package dev.erst.gridgrind.executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -71,14 +72,14 @@ class ConditionalFormattingEntryReportTest {
     ConditionalFormattingHealthReport report =
         new ConditionalFormattingHealthReport(
             3,
-            new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0),
+            new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0),
             List.of(
-                new GridGrindResponse.AnalysisFindingReport(
+                new GridGrindAnalysisReports.AnalysisFindingReport(
                     AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
                     AnalysisSeverity.WARNING,
                     "Priority collision",
                     "Conditional-formatting priorities collide.",
-                    new GridGrindResponse.AnalysisLocationReport.Sheet("Ops"),
+                    new GridGrindAnalysisReports.AnalysisLocationReport.Sheet("Ops"),
                     List.of("FORMULA_RULE@Ops!A1:A3"))));
 
     assertEquals(3, report.checkedConditionalFormattingBlockCount());
@@ -94,6 +95,6 @@ class ConditionalFormattingEntryReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingHealthReport(
-                -1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()));
+                -1, new GridGrindAnalysisReports.AnalysisSummaryReport(0, 0, 0, 0), List.of()));
   }
 }

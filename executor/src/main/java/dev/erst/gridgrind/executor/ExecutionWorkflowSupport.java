@@ -2,8 +2,10 @@ package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -71,7 +73,7 @@ final class ExecutionWorkflowSupport {
         calculation = calculationOutcome.report();
         calculationExecuted = true;
         if (calculationOutcome.failure().isPresent()) {
-          GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
+          GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
           return responseSupport.closeWorkbook(
               workbook,
               ExecutionResponseSupport.failureResponse(
@@ -105,7 +107,7 @@ final class ExecutionWorkflowSupport {
         }
         stepHandle.succeed();
       } catch (Exception exception) {
-        GridGrindResponse.Problem problem =
+        GridGrindProblemDetail.Problem problem =
             ExecutionResponseSupport.problemFor(
                 exception, stepSupport.executeStepContext(request, stepIndex, step, exception));
         stepHandle.fail(
@@ -133,7 +135,7 @@ final class ExecutionWorkflowSupport {
           calculationSupport.executeCalculationPolicy(workbook, request, journal);
       calculation = calculationOutcome.report();
       if (calculationOutcome.failure().isPresent()) {
-        GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
+        GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponse(
@@ -147,13 +149,13 @@ final class ExecutionWorkflowSupport {
     }
 
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
-    GridGrindResponse.PersistenceOutcome persistence;
+    GridGrindResponsePersistence.PersistenceOutcome persistence;
     try {
       persistence =
           workbookSupport.persistWorkbook(
               workbook, request.source(), request.persistence(), workingDirectory);
     } catch (Exception exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(
@@ -209,7 +211,7 @@ final class ExecutionWorkflowSupport {
               OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security().orElse(null)),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
@@ -236,7 +238,7 @@ final class ExecutionWorkflowSupport {
             stepSupport.executeEventInspection(materialized.workbookPath(), inspectionStep));
         stepHandle.succeed();
       } catch (Exception exception) {
-        GridGrindResponse.Problem problem =
+        GridGrindProblemDetail.Problem problem =
             ExecutionResponseSupport.problemFor(
                 exception,
                 stepSupport.executeStepContext(request, stepIndex, inspectionStep, exception));
@@ -266,7 +268,7 @@ final class ExecutionWorkflowSupport {
             protocolVersion,
             journal.buildSuccess(request.steps().size()),
             calculation,
-            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             warnings,
             List.of(),
             List.copyOf(inspections)),
@@ -316,7 +318,7 @@ final class ExecutionWorkflowSupport {
           stepHandle.succeed();
         } catch (Exception exception) {
           ExecutionWorkbookSupport.deleteIfExists(materializedPath);
-          GridGrindResponse.Problem problem =
+          GridGrindProblemDetail.Problem problem =
               ExecutionResponseSupport.problemFor(
                   exception, stepSupport.executeStepContext(request, stepIndex, step, exception));
           stepHandle.fail(
@@ -337,7 +339,7 @@ final class ExecutionWorkflowSupport {
       calculation = calculationOutcome.report();
       if (calculationOutcome.failure().isPresent()) {
         ExecutionWorkbookSupport.deleteIfExists(materializedPath);
-        GridGrindResponse.Problem problem = calculationOutcome.failure().orElseThrow();
+        GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return ExecutionResponseSupport.failureResponse(
             protocolVersion, journal, request.steps().size(), calculation, problem, null, null);
       }
@@ -346,7 +348,7 @@ final class ExecutionWorkflowSupport {
       writer.save(materializedPath);
     } catch (IOException exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
@@ -356,16 +358,16 @@ final class ExecutionWorkflowSupport {
     }
 
     ExecutionJournalRecorder.PhaseHandle persistencePhase = journal.beginPersistence();
-    GridGrindResponse.PersistenceOutcome persistence;
+    GridGrindResponsePersistence.PersistenceOutcome persistence;
     try {
       persistence =
           workbookSupport.persistStreamingWorkbook(
               materializedPath, request.persistence(), request.source(), workingDirectory);
       movedToPersistenceTarget =
-          !(persistence instanceof GridGrindResponse.PersistenceOutcome.NotSaved);
+          !(persistence instanceof GridGrindResponsePersistence.PersistenceOutcome.NotSaved);
     } catch (Exception exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.PersistWorkbook(

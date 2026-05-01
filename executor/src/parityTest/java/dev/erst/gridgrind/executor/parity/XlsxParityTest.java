@@ -213,7 +213,8 @@ final class XlsxParityTest {
                           scenario.workbookPath().toString()),
                       new WorkbookPlan.WorkbookPersistence.SaveAs(outputPath.toString()),
                       ExecutionPolicyInput.calculation(
-                          new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll())),
+                          CalculationPolicyInput.strategy(
+                              new CalculationStrategyInput.EvaluateAll())),
                       new FormulaEnvironmentInput(
                           List.of(
                               new FormulaExternalWorkbookInput(

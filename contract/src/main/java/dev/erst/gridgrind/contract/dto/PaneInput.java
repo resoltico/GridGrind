@@ -17,13 +17,9 @@ public sealed interface PaneInput permits PaneInput.None, PaneInput.Frozen, Pane
   record None() implements PaneInput {}
 
   /** Sheet is frozen at the provided split and visible-origin coordinates. */
-  record Frozen(Integer splitColumn, Integer splitRow, Integer leftmostColumn, Integer topRow)
+  record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
       implements PaneInput {
     public Frozen {
-      Objects.requireNonNull(splitColumn, "splitColumn must not be null");
-      Objects.requireNonNull(splitRow, "splitRow must not be null");
-      Objects.requireNonNull(leftmostColumn, "leftmostColumn must not be null");
-      Objects.requireNonNull(topRow, "topRow must not be null");
       Validation.requireNonNegative(splitColumn, "splitColumn");
       Validation.requireNonNegative(splitRow, "splitRow");
       Validation.requireNonNegative(leftmostColumn, "leftmostColumn");
@@ -48,17 +44,13 @@ public sealed interface PaneInput permits PaneInput.None, PaneInput.Frozen, Pane
 
   /** Sheet uses split panes with explicit split offsets, visible origin, and active pane. */
   record Split(
-      Integer xSplitPosition,
-      Integer ySplitPosition,
-      Integer leftmostColumn,
-      Integer topRow,
+      int xSplitPosition,
+      int ySplitPosition,
+      int leftmostColumn,
+      int topRow,
       ExcelPaneRegion activePane)
       implements PaneInput {
     public Split {
-      Objects.requireNonNull(xSplitPosition, "xSplitPosition must not be null");
-      Objects.requireNonNull(ySplitPosition, "ySplitPosition must not be null");
-      Objects.requireNonNull(leftmostColumn, "leftmostColumn must not be null");
-      Objects.requireNonNull(topRow, "topRow must not be null");
       Objects.requireNonNull(activePane, "activePane must not be null");
       Validation.requireNonNegative(xSplitPosition, "xSplitPosition");
       Validation.requireNonNegative(ySplitPosition, "ySplitPosition");

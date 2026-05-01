@@ -17,6 +17,8 @@ final class ExcelFormulaWriteSupport {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     try {
+      ExcelFormulaLimits.requireSupportedFormula(
+          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(formulaRuntime, sheetName, address, formula, exception);
@@ -29,6 +31,8 @@ final class ExcelFormulaWriteSupport {
     String sheetName = cell.getSheet().getSheetName();
     String address = cell.getAddress().formatAsString();
     try {
+      ExcelFormulaLimits.requireSupportedFormula(
+          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(sheetName, address, formula, exception);
@@ -40,6 +44,8 @@ final class ExcelFormulaWriteSupport {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(operation, "operation must not be null");
     try {
+      ExcelFormulaLimits.requireSupportedFormula(
+          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw new IllegalStateException(
@@ -59,10 +65,18 @@ final class ExcelFormulaWriteSupport {
     Objects.requireNonNull(formula, "formula must not be null");
     Objects.requireNonNull(operation, "operation must not be null");
     try {
+      ExcelFormulaLimits.requireSupportedFormula(
+          cellContext(cell), formula); // LIM-013, LIM-014, LIM-015
       cell.setCellFormula(formula);
     } catch (RuntimeException exception) {
       throw new IllegalArgumentException(
           "Invalid scratch formula for " + operation + ": " + formula, exception);
     }
+  }
+
+  private static ExcelFormulaLimits.CellContext cellContext(Cell cell) {
+    return new ExcelFormulaLimits.CellContext(
+        cell.getSheet().getWorkbook(),
+        cell.getSheet().getWorkbook().getSheetIndex(cell.getSheet()));
   }
 }

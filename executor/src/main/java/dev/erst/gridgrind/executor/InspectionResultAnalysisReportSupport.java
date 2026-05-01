@@ -3,7 +3,8 @@ package dev.erst.gridgrind.executor;
 import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
+import dev.erst.gridgrind.contract.dto.GridGrindSchemaAndFormulaReports;
 import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
 import dev.erst.gridgrind.contract.dto.TableHealthReport;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
@@ -12,21 +13,21 @@ import dev.erst.gridgrind.excel.WorkbookAnalysis;
 final class InspectionResultAnalysisReportSupport {
   private InspectionResultAnalysisReportSupport() {}
 
-  static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurface analysis) {
-    return new GridGrindResponse.FormulaSurfaceReport(
+  static GridGrindSchemaAndFormulaReports.FormulaSurfaceReport toFormulaSurfaceReport(
+      dev.erst.gridgrind.excel.WorkbookSurfaceResult.FormulaSurface analysis) {
+    return new GridGrindSchemaAndFormulaReports.FormulaSurfaceReport(
         analysis.totalFormulaCellCount(),
         analysis.sheets().stream()
             .map(
                 sheet ->
-                    new GridGrindResponse.SheetFormulaSurfaceReport(
+                    new GridGrindSchemaAndFormulaReports.SheetFormulaSurfaceReport(
                         sheet.sheetName(),
                         sheet.formulaCellCount(),
                         sheet.distinctFormulaCount(),
                         sheet.formulas().stream()
                             .map(
                                 formula ->
-                                    new GridGrindResponse.FormulaPatternReport(
+                                    new GridGrindSchemaAndFormulaReports.FormulaPatternReport(
                                         formula.formula(),
                                         formula.occurrenceCount(),
                                         formula.addresses()))
@@ -34,9 +35,9 @@ final class InspectionResultAnalysisReportSupport {
             .toList());
   }
 
-  static GridGrindResponse.SheetSchemaReport toSheetSchemaReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.SheetSchema analysis) {
-    return new GridGrindResponse.SheetSchemaReport(
+  static GridGrindSchemaAndFormulaReports.SheetSchemaReport toSheetSchemaReport(
+      dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema analysis) {
+    return new GridGrindSchemaAndFormulaReports.SheetSchemaReport(
         analysis.sheetName(),
         analysis.topLeftAddress(),
         analysis.rowCount(),
@@ -45,7 +46,7 @@ final class InspectionResultAnalysisReportSupport {
         analysis.columns().stream()
             .map(
                 column ->
-                    new GridGrindResponse.SchemaColumnReport(
+                    new GridGrindSchemaAndFormulaReports.SchemaColumnReport(
                         column.columnIndex(),
                         column.columnAddress(),
                         column.headerDisplayValue(),
@@ -54,16 +55,16 @@ final class InspectionResultAnalysisReportSupport {
                         column.observedTypes().stream()
                             .map(
                                 typeCount ->
-                                    new GridGrindResponse.TypeCountReport(
+                                    new GridGrindSchemaAndFormulaReports.TypeCountReport(
                                         typeCount.type(), typeCount.count()))
                             .toList(),
                         column.dominantType()))
             .toList());
   }
 
-  static GridGrindResponse.NamedRangeSurfaceReport toNamedRangeSurfaceReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeSurface analysis) {
-    return new GridGrindResponse.NamedRangeSurfaceReport(
+  static GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport toNamedRangeSurfaceReport(
+      dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurface analysis) {
+    return new GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport(
         analysis.workbookScopedCount(),
         analysis.sheetScopedCount(),
         analysis.rangeBackedCount(),
@@ -71,20 +72,22 @@ final class InspectionResultAnalysisReportSupport {
         analysis.namedRanges().stream()
             .map(
                 entry ->
-                    new GridGrindResponse.NamedRangeSurfaceEntryReport(
+                    new GridGrindSchemaAndFormulaReports.NamedRangeSurfaceEntryReport(
                         entry.name(),
                         InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(entry.scope()),
                         entry.refersToFormula(),
                         switch (entry.kind()) {
-                          case RANGE -> GridGrindResponse.NamedRangeBackingKind.RANGE;
-                          case FORMULA -> GridGrindResponse.NamedRangeBackingKind.FORMULA;
+                          case RANGE ->
+                              GridGrindSchemaAndFormulaReports.NamedRangeBackingKind.RANGE;
+                          case FORMULA ->
+                              GridGrindSchemaAndFormulaReports.NamedRangeBackingKind.FORMULA;
                         }))
             .toList());
   }
 
-  static GridGrindResponse.FormulaHealthReport toFormulaHealthReport(
+  static GridGrindAnalysisReports.FormulaHealthReport toFormulaHealthReport(
       WorkbookAnalysis.FormulaHealth analysis) {
-    return new GridGrindResponse.FormulaHealthReport(
+    return new GridGrindAnalysisReports.FormulaHealthReport(
         analysis.checkedFormulaCellCount(),
         toAnalysisSummaryReport(analysis.summary()),
         analysis.findings().stream()
@@ -141,9 +144,9 @@ final class InspectionResultAnalysisReportSupport {
             .toList());
   }
 
-  static GridGrindResponse.HyperlinkHealthReport toHyperlinkHealthReport(
+  static GridGrindAnalysisReports.HyperlinkHealthReport toHyperlinkHealthReport(
       WorkbookAnalysis.HyperlinkHealth analysis) {
-    return new GridGrindResponse.HyperlinkHealthReport(
+    return new GridGrindAnalysisReports.HyperlinkHealthReport(
         analysis.checkedHyperlinkCount(),
         toAnalysisSummaryReport(analysis.summary()),
         analysis.findings().stream()
@@ -151,9 +154,9 @@ final class InspectionResultAnalysisReportSupport {
             .toList());
   }
 
-  static GridGrindResponse.NamedRangeHealthReport toNamedRangeHealthReport(
+  static GridGrindAnalysisReports.NamedRangeHealthReport toNamedRangeHealthReport(
       WorkbookAnalysis.NamedRangeHealth analysis) {
-    return new GridGrindResponse.NamedRangeHealthReport(
+    return new GridGrindAnalysisReports.NamedRangeHealthReport(
         analysis.checkedNamedRangeCount(),
         toAnalysisSummaryReport(analysis.summary()),
         analysis.findings().stream()
@@ -161,24 +164,24 @@ final class InspectionResultAnalysisReportSupport {
             .toList());
   }
 
-  static GridGrindResponse.WorkbookFindingsReport toWorkbookFindingsReport(
+  static GridGrindAnalysisReports.WorkbookFindingsReport toWorkbookFindingsReport(
       WorkbookAnalysis.WorkbookFindings analysis) {
-    return new GridGrindResponse.WorkbookFindingsReport(
+    return new GridGrindAnalysisReports.WorkbookFindingsReport(
         toAnalysisSummaryReport(analysis.summary()),
         analysis.findings().stream()
             .map(InspectionResultAnalysisReportSupport::toAnalysisFindingReport)
             .toList());
   }
 
-  private static GridGrindResponse.AnalysisSummaryReport toAnalysisSummaryReport(
+  private static GridGrindAnalysisReports.AnalysisSummaryReport toAnalysisSummaryReport(
       WorkbookAnalysis.AnalysisSummary summary) {
-    return new GridGrindResponse.AnalysisSummaryReport(
+    return new GridGrindAnalysisReports.AnalysisSummaryReport(
         summary.totalCount(), summary.errorCount(), summary.warningCount(), summary.infoCount());
   }
 
-  private static GridGrindResponse.AnalysisFindingReport toAnalysisFindingReport(
+  private static GridGrindAnalysisReports.AnalysisFindingReport toAnalysisFindingReport(
       WorkbookAnalysis.AnalysisFinding finding) {
-    return new GridGrindResponse.AnalysisFindingReport(
+    return new GridGrindAnalysisReports.AnalysisFindingReport(
         finding.code(),
         finding.severity(),
         finding.title(),
@@ -187,19 +190,21 @@ final class InspectionResultAnalysisReportSupport {
         finding.evidence());
   }
 
-  private static GridGrindResponse.AnalysisLocationReport toAnalysisLocationReport(
+  private static GridGrindAnalysisReports.AnalysisLocationReport toAnalysisLocationReport(
       WorkbookAnalysis.AnalysisLocation location) {
     return switch (location) {
       case WorkbookAnalysis.AnalysisLocation.Workbook _ ->
-          new GridGrindResponse.AnalysisLocationReport.Workbook();
+          new GridGrindAnalysisReports.AnalysisLocationReport.Workbook();
       case WorkbookAnalysis.AnalysisLocation.Sheet sheet ->
-          new GridGrindResponse.AnalysisLocationReport.Sheet(sheet.sheetName());
+          new GridGrindAnalysisReports.AnalysisLocationReport.Sheet(sheet.sheetName());
       case WorkbookAnalysis.AnalysisLocation.Cell cell ->
-          new GridGrindResponse.AnalysisLocationReport.Cell(cell.sheetName(), cell.address());
+          new GridGrindAnalysisReports.AnalysisLocationReport.Cell(
+              cell.sheetName(), cell.address());
       case WorkbookAnalysis.AnalysisLocation.Range range ->
-          new GridGrindResponse.AnalysisLocationReport.Range(range.sheetName(), range.range());
+          new GridGrindAnalysisReports.AnalysisLocationReport.Range(
+              range.sheetName(), range.range());
       case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
-          new GridGrindResponse.AnalysisLocationReport.NamedRange(
+          new GridGrindAnalysisReports.AnalysisLocationReport.NamedRange(
               namedRange.name(),
               InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(namedRange.scope()));
     };

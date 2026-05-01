@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: EXAMPLES
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -22,7 +22,7 @@ GridGrind ships the same example workflows in two forms:
 
 - **Built-in artifact examples** from `gridgrind --print-example <ID> --response request.json`.
   These are designed to run from an artifact working directory and use artifact-rooted paths such
-  as `examples/...` or `cli/build/generated-workbooks/...`. They are not all equally portable:
+  as `examples/...` or `generated-workbooks/...`. They are not all equally portable:
   most are self-contained in a blank working directory, while a few are intentionally
   repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
@@ -36,9 +36,9 @@ GridGrind ships the same example workflows in two forms:
 - Self-contained built-ins can run from a blank artifact workspace after you print the request.
 - Repo-asset-backed built-ins require the matching `examples/` asset directories to exist in the
   working directory before you run them.
-- Checked-in `examples/*.json` are checkout-rooted fixtures. Persisted outputs intentionally use
-  `../cli/build/generated-workbooks/...` because the request files themselves live under
-  `examples/`.
+- Any example that saves a workbook writes under `generated-workbooks/` beside the request file.
+- Checked-in `examples/*.json` therefore persist into `examples/generated-workbooks/` because the
+  request files themselves live under `examples/`.
 - Asset-backed checked-in examples keep sibling assets beside the requests:
   - [`../examples/custom-xml-assets/`](../examples/custom-xml-assets/)
   - [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/)

@@ -1,10 +1,18 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartLegendInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
@@ -31,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Generated examples that focus on charts, pivots, packages, and binary payload handling. */
+@SuppressWarnings("PMD.ExcessiveImports")
 final class WorkbookAssetExamples {
   private static final String ONE_PIXEL_PNG_BASE64 =
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
@@ -42,19 +51,18 @@ final class WorkbookAssetExamples {
         "ARRAY_FORMULA",
         "array-formula-request.json",
         "Array-formula authoring with factual group readback and group clearing.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "array-formula-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.step(
                 "ensure-calc-sheet",
                 ExamplePlanSupport.sheet("Calc"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "seed-source-data",
                 ExamplePlanSupport.range("Calc", "A1:C4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Month"),
@@ -75,7 +83,7 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "author-array-group",
                 ExamplePlanSupport.range("Calc", "D2:D4"),
-                new MutationAction.SetArrayFormula(
+                new CellMutationAction.SetArrayFormula(
                     new ArrayFormulaInput(TextSourceInput.inline("{=B2:B4*C2:C4}")))),
             ExamplePlanSupport.read(
                 "read-array-groups",
@@ -84,7 +92,7 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "clear-array-group",
                 ExamplePlanSupport.cell("Calc", "D3"),
-                new MutationAction.ClearArrayFormula()),
+                new CellMutationAction.ClearArrayFormula()),
             ExamplePlanSupport.read(
                 "read-array-groups-after-clear",
                 ExamplePlanSupport.sheet("Calc"),
@@ -96,40 +104,39 @@ final class WorkbookAssetExamples {
         "SOURCE_BACKED_INPUT",
         "source-backed-input-request.json",
         "Repo-asset-backed file text, formula, and binary payload authoring without large inline literals.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "source-backed-input-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.step(
                 "ensure-inputs",
                 ExamplePlanSupport.sheet("Inputs"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "seed-values",
                 ExamplePlanSupport.range("Inputs", "B2:B3"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(ExamplePlanSupport.number(12.0d)),
                         ExamplePlanSupport.row(ExamplePlanSupport.number(18.0d))))),
             ExamplePlanSupport.step(
                 "set-title-from-file",
                 ExamplePlanSupport.cell("Inputs", "A1"),
-                new MutationAction.SetCell(
+                new CellMutationAction.SetCell(
                     new CellInput.Text(
                         TextSourceInput.utf8File(
                             paths.asset("source-backed-input-assets/title.txt"))))),
             ExamplePlanSupport.step(
                 "set-total-formula-from-file",
                 ExamplePlanSupport.cell("Inputs", "B4"),
-                new MutationAction.SetCell(
+                new CellMutationAction.SetCell(
                     new CellInput.Formula(
                         TextSourceInput.utf8File(
                             paths.asset("source-backed-input-assets/total-formula.txt"))))),
             ExamplePlanSupport.step(
                 "attach-payload-from-file",
                 ExamplePlanSupport.sheet("Inputs"),
-                new MutationAction.SetEmbeddedObject(
+                new DrawingMutationAction.SetEmbeddedObject(
                     new EmbeddedObjectInput(
                         "InputsPayload",
                         "Inputs payload",
@@ -156,19 +163,18 @@ final class WorkbookAssetExamples {
         "SIGNATURE_LINE",
         "signature-line-request.json",
         "Signature-line authoring with drawing-object readback and authored anchor replacement.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "signature-line-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-signature-line.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Approvals"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-signature-line",
                 ExamplePlanSupport.sheet("Approvals"),
-                new MutationAction.SetSignatureLine(
+                new DrawingMutationAction.SetSignatureLine(
                     new SignatureLineInput(
                         "BudgetSignature",
                         ExamplePlanSupport.anchor(1, 1, 4, 6),
@@ -190,7 +196,8 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "step-04-move-signature-line",
                 new DrawingObjectSelector.ByName("Approvals", "BudgetSignature"),
-                new MutationAction.SetDrawingObjectAnchor(ExamplePlanSupport.anchor(5, 1, 8, 6))),
+                new DrawingMutationAction.SetDrawingObjectAnchor(
+                    ExamplePlanSupport.anchor(5, 1, 8, 6))),
             ExamplePlanSupport.read(
                 "step-05-read-drawing-objects-after-move",
                 new DrawingObjectSelector.AllOnSheet("Approvals"),
@@ -202,12 +209,11 @@ final class WorkbookAssetExamples {
         "CUSTOM_XML",
         "custom-xml-request.json",
         "Repo-asset-backed existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "custom-xml-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 paths.asset("custom-xml-assets/custom-xml-mapping.xlsx")),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.read(
                 "read-custom-xml-mappings",
                 ExamplePlanSupport.workbook(),
@@ -220,7 +226,7 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "import-custom-xml",
                 ExamplePlanSupport.workbook(),
-                new MutationAction.ImportCustomXmlMapping(
+                new StructuredMutationAction.ImportCustomXmlMapping(
                     new CustomXmlImportInput(
                         new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                         TextSourceInput.utf8File(
@@ -241,19 +247,18 @@ final class WorkbookAssetExamples {
         "CHART",
         "chart-request.json",
         "Supported chart authoring with named-range-backed series and factual chart readback.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "chart-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-chart.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
                 ExamplePlanSupport.sheet("Ops"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-set-range",
                 ExamplePlanSupport.range("Ops", "A1:C4"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Month"),
@@ -274,48 +279,48 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "step-03-set-categories",
                 new NamedRangeSelector.WorkbookScope("ChartCategories"),
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "ChartCategories",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Ops", "A2:A4"))),
             ExamplePlanSupport.step(
                 "step-04-set-actual",
                 new NamedRangeSelector.WorkbookScope("ChartActual"),
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "ChartActual",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Ops", "C2:C4"))),
             ExamplePlanSupport.step(
                 "step-05-set-chart",
                 ExamplePlanSupport.sheet("Ops"),
-                new MutationAction.SetChart(
+                new DrawingMutationAction.SetChart(
                     new ChartInput(
                         "OpsChart",
                         ExamplePlanSupport.anchor(4, 0, 8, 12),
-                        new ChartInput.Title.Text(TextSourceInput.inline("Roadmap")),
-                        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                        new ChartTitleInput.Text(TextSourceInput.inline("Roadmap")),
+                        new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                         dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs.SPAN,
                         false,
                         List.of(
-                            new ChartInput.Bar(
+                            new ChartPlotInput.Bar(
                                 true,
                                 ExcelChartBarDirection.COLUMN,
                                 ExcelChartBarGrouping.CLUSTERED,
                                 null,
                                 null,
                                 List.of(
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Text(TextSourceInput.inline("Plan")),
-                                        new ChartInput.DataSource.Reference("ChartCategories"),
-                                        new ChartInput.DataSource.Reference("Ops!$B$2:$B$4"),
+                                    new ChartSeriesInput(
+                                        new ChartTitleInput.Text(TextSourceInput.inline("Plan")),
+                                        new ChartDataSourceInput.Reference("ChartCategories"),
+                                        new ChartDataSourceInput.Reference("Ops!$B$2:$B$4"),
                                         null,
                                         null,
                                         null,
                                         null),
-                                    new ChartInput.Series(
-                                        new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
-                                        new ChartInput.DataSource.Reference("ChartCategories"),
-                                        new ChartInput.DataSource.Reference("ChartActual"),
+                                    new ChartSeriesInput(
+                                        new ChartTitleInput.Text(TextSourceInput.inline("Actual")),
+                                        new ChartDataSourceInput.Reference("ChartCategories"),
+                                        new ChartDataSourceInput.Reference("ChartActual"),
                                         null,
                                         null,
                                         null,
@@ -333,23 +338,22 @@ final class WorkbookAssetExamples {
         "PIVOT",
         "pivot-request.json",
         "Pivot authoring from a contiguous range with pivot readback and health analysis.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "pivot-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-pivot.xlsx")),
-            null,
             ExamplePlanSupport.step(
                 "step-01-ensure-data",
                 ExamplePlanSupport.sheet("Data"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-02-ensure-report",
                 ExamplePlanSupport.sheet("RangeReport"),
-                new MutationAction.EnsureSheet()),
+                new WorkbookMutationAction.EnsureSheet()),
             ExamplePlanSupport.step(
                 "step-03-set-range",
                 ExamplePlanSupport.range("Data", "A1:D5"),
-                new MutationAction.SetRange(
+                new CellMutationAction.SetRange(
                     ExamplePlanSupport.rows(
                         ExamplePlanSupport.row(
                             ExamplePlanSupport.text("Region"),
@@ -379,7 +383,7 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.step(
                 "step-04-set-pivot",
                 new PivotTableSelector.ByNameOnSheet("RegionalTotals", "RangeReport"),
-                new MutationAction.SetPivotTable(
+                new StructuredMutationAction.SetPivotTable(
                     new PivotTableInput(
                         "RegionalTotals",
                         "RangeReport",
@@ -410,13 +414,12 @@ final class WorkbookAssetExamples {
         "PACKAGE_SECURITY_INSPECTION",
         "package-security-inspect-request.json",
         "Repo-asset-backed encrypted package open plus factual package-security and cell inspection.",
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "package-security-inspection-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
                 new OoxmlOpenSecurityInput(java.util.Optional.of("GridGrind-2026"))),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.read(
                 "security",
                 ExamplePlanSupport.workbook(),

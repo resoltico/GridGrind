@@ -14,7 +14,7 @@ public final class GridGrindResponses {
    */
   public static GridGrindResponse.Success success(
       GridGrindProtocolVersion protocolVersion,
-      GridGrindResponse.PersistenceOutcome persistence,
+      GridGrindResponsePersistence.PersistenceOutcome persistence,
       List<RequestWarning> warnings,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections) {
@@ -29,7 +29,7 @@ public final class GridGrindResponses {
       List<InspectionResult> inspections) {
     return success(
         GridGrindProtocolVersion.current(),
-        new GridGrindResponse.PersistenceOutcome.NotSaved(),
+        new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
         warnings,
         assertions,
         inspections);
@@ -40,12 +40,12 @@ public final class GridGrindResponses {
    * report.
    */
   public static GridGrindResponse.Failure failure(
-      GridGrindProtocolVersion protocolVersion, GridGrindResponse.Problem problem) {
+      GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
     return GridGrindResponseSupport.failure(protocolVersion, problem);
   }
 
   /** Creates one failed response using the current protocol version. */
-  public static GridGrindResponse.Failure failure(GridGrindResponse.Problem problem) {
+  public static GridGrindResponse.Failure failure(GridGrindProblemDetail.Problem problem) {
     return failure(GridGrindProtocolVersion.current(), problem);
   }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
@@ -235,10 +236,10 @@ final class XlsxRoundTripExpectationVerification {
                 + " but was "
                 + actualWorkbookSummary);
       }
-      for (Map.Entry<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> entry :
+      for (Map.Entry<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> entry :
           expectedWorkbookState.expectedSheetSummaries().entrySet()) {
         var actualSheetSummary =
-            ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
+            ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
                     new WorkbookReadExecutor()
                         .apply(
                             workbook,
@@ -312,7 +313,7 @@ final class XlsxRoundTripExpectationVerification {
         }
       }
       List<ExcelPivotTableSnapshot> actualPivots =
-          ((dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult)
+          ((dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
                   new WorkbookReadExecutor()
                       .apply(
                           workbook,
@@ -438,7 +439,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
           expectedConditionalFormatting.entrySet()) {
         var actual =
-            ((dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult)
+            ((dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
                     readExecutor
                         .apply(
                             workbook,
@@ -472,7 +473,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
           expectedAutofilters.entrySet()) {
         var actual =
-            ((dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult)
+            ((dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
                     readExecutor
                         .apply(
                             workbook,
@@ -500,7 +501,7 @@ final class XlsxRoundTripExpectationVerification {
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
       var actual =
-          ((dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult)
+          ((dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
                   readExecutor
                       .apply(
                           workbook,

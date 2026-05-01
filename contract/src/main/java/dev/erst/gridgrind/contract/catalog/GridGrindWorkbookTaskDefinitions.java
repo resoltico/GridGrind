@@ -7,7 +7,7 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport
 import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport.ref;
 import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport.task;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -80,11 +80,10 @@ final class GridGrindWorkbookTaskDefinitions {
             "inspect workbook findings",
             "read workbook facts",
             "package security audit"),
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "audit-existing-workbook-starter",
             new WorkbookPlan.WorkbookSource.ExistingFile("audit-input.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            null,
             ExamplePlanSupport.read(
                 "workbook",
                 ExamplePlanSupport.workbook(),
@@ -167,11 +166,10 @@ final class GridGrindWorkbookTaskDefinitions {
             "mapped workbook",
             "xml mapped table",
             "import xml into xlsx"),
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "custom-xml-workflow-starter",
             new WorkbookPlan.WorkbookSource.ExistingFile("mapped-workbook.xlsx"),
             ExamplePlanSupport.saveAs("custom-xml-output.xlsx"),
-            null,
             ExamplePlanSupport.read(
                 "discover-mappings",
                 ExamplePlanSupport.workbook(),
@@ -321,11 +319,10 @@ final class GridGrindWorkbookTaskDefinitions {
             "sheet maintenance",
             "comment repair",
             "clone worksheet with comments"),
-        ExamplePlanSupport.plan(
+        ExamplePlanSupport.defaultExecutionPlan(
             "workbook-maintenance-starter",
             new WorkbookPlan.WorkbookSource.ExistingFile("maintenance-input.xlsx"),
             ExamplePlanSupport.saveAs("maintenance-output.xlsx"),
-            null,
             ExamplePlanSupport.read(
                 "workbook",
                 ExamplePlanSupport.workbook(),
@@ -337,7 +334,7 @@ final class GridGrindWorkbookTaskDefinitions {
             ExamplePlanSupport.step(
                 "copy-template",
                 new SheetSelector.ByName("Template"),
-                new MutationAction.CopySheet("Template Copy")),
+                new WorkbookMutationAction.CopySheet("Template Copy")),
             ExamplePlanSupport.read(
                 "comments-after-copy",
                 new CellSelector.AllUsedInSheet("Template Copy"),

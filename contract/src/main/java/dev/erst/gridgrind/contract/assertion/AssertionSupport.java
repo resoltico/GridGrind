@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.assertion;
 
 import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -46,8 +46,8 @@ final class AssertionSupport {
     return List.copyOf(copy);
   }
 
-  static List<GridGrindResponse.NamedRangeReport> copyNamedRanges(
-      List<GridGrindResponse.NamedRangeReport> namedRanges, String fieldName) {
+  static List<GridGrindWorkbookSurfaceReports.NamedRangeReport> copyNamedRanges(
+      List<GridGrindWorkbookSurfaceReports.NamedRangeReport> namedRanges, String fieldName) {
     return copyValues(namedRanges, fieldName);
   }
 

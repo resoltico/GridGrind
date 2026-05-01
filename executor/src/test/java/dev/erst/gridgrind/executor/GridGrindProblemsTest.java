@@ -7,8 +7,10 @@ import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -86,7 +88,8 @@ class GridGrindProblemsTest {
   @Test
   void buildsStructuredProblemsAndPublicDiagnostics() {
     ProblemContext context =
-        new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE"));
+        new ProblemContext.ValidateRequest(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"));
     InvalidRequestException exception =
         new InvalidRequestException(
             "bad request",
@@ -94,7 +97,7 @@ class GridGrindProblemsTest {
             6,
             41,
             new IllegalArgumentException("root cause"));
-    GridGrindResponse.Problem problem = GridGrindProblems.fromException(exception, context);
+    GridGrindProblemDetail.Problem problem = GridGrindProblems.fromException(exception, context);
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
     assertEquals(GridGrindProblemCategory.REQUEST, problem.category());
@@ -108,26 +111,27 @@ class GridGrindProblemsTest {
   void supportsExplicitProblemsAndSupplementalDiagnostics() {
     ProblemContext context =
         new ProblemContext.WriteResponse(
-            ProblemContext.ResponseOutput.responseFile("/tmp/response.json"));
+            ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/response.json"));
 
-    GridGrindResponse.Problem explicit =
+    GridGrindProblemDetail.Problem explicit =
         GridGrindProblems.problem(
             GridGrindProblemCode.IO_ERROR, "disk failed", context, new IOException("disk failed"));
     assertEquals(GridGrindProblemCode.IO_ERROR, explicit.code());
     assertEquals(1, explicit.causes().size());
 
-    GridGrindResponse.ProblemCause supplemental =
+    GridGrindProblemDetail.ProblemCause supplemental =
         GridGrindProblems.supplementalCause(
             "EXECUTE_REQUEST",
             new IOException("close failed"),
             "Workbook close failed after the primary problem");
     assertEquals("EXECUTE_REQUEST", supplemental.stage());
 
-    GridGrindResponse.Problem augmented = GridGrindProblems.appendCause(explicit, supplemental);
+    GridGrindProblemDetail.Problem augmented =
+        GridGrindProblems.appendCause(explicit, supplemental);
     assertEquals(2, augmented.causes().size());
     assertEquals(GridGrindProblemCode.IO_ERROR, GridGrindProblems.problemCause(explicit).code());
 
-    GridGrindResponse.ProblemCause withoutPrefix =
+    GridGrindProblemDetail.ProblemCause withoutPrefix =
         GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), "");
     assertEquals("disk failed", withoutPrefix.message());
     assertEquals(GridGrindProblemCode.IO_ERROR, withoutPrefix.code());
@@ -136,15 +140,16 @@ class GridGrindProblemsTest {
         GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), null)
             .message());
 
-    GridGrindResponse.Problem withoutCauses =
+    GridGrindProblemDetail.Problem withoutCauses =
         GridGrindProblems.problem(
             GridGrindProblemCode.INVALID_REQUEST,
             "bad request",
-            new ProblemContext.ValidateRequest(ProblemContext.RequestShape.known("NEW", "NONE")),
-            (List<GridGrindResponse.ProblemCause>) null);
+            new ProblemContext.ValidateRequest(
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE")),
+            (List<GridGrindProblemDetail.ProblemCause>) null);
     assertEquals(List.of(), withoutCauses.causes());
 
-    GridGrindResponse.Problem assertionProblem =
+    GridGrindProblemDetail.Problem assertionProblem =
         GridGrindProblems.fromException(
             new AssertionFailedException(
                 "assertion failed",
@@ -155,10 +160,10 @@ class GridGrindProblemsTest {
                     new Assertion.CellValue(new ExpectedCellValue.NumericValue(42.0d)),
                     List.of())),
             new ProblemContext.ExecuteStep(
-                ProblemContext.RequestShape.known("NEW", "NONE"),
-                new ProblemContext.StepReference(
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+                new ProblemContextWorkbookSurfaces.StepReference(
                     1, "assert-total", "ASSERTION", "EXPECT_CELL_VALUE"),
-                ProblemContext.ProblemLocation.cell("Budget", "B4")));
+                ProblemContextWorkbookSurfaces.ProblemLocation.cell("Budget", "B4")));
     assertEquals(GridGrindProblemCategory.ASSERTION, assertionProblem.category());
     assertTrue(assertionProblem.assertionFailure().isPresent());
   }
@@ -167,10 +172,10 @@ class GridGrindProblemsTest {
   void enrichesPayloadContextFromPayloadExceptions() {
     ProblemContext.ReadRequest readContext =
         new ProblemContext.ReadRequest(
-            ProblemContext.RequestInput.requestFile("/tmp/request.json"),
-            ProblemContext.JsonLocation.unavailable());
+            ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+            ProblemContextRequestSurfaces.JsonLocation.unavailable());
 
-    GridGrindResponse.Problem problem =
+    GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request",
@@ -190,17 +195,17 @@ class GridGrindProblemsTest {
         java.util.Optional.of(41),
         DefaultGridGrindRequestExecutorTestSupport.readRequestContext(problem).jsonColumn());
 
-    GridGrindResponse.Problem lineColumnProblem =
+    GridGrindProblemDetail.Problem lineColumnProblem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request", null, 9, 4, new IllegalArgumentException("bad")),
             readContext);
-    GridGrindResponse.Problem unavailableProblem =
+    GridGrindProblemDetail.Problem unavailableProblem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request", "steps[0]", null, null, new IllegalArgumentException("bad")),
             readContext);
-    GridGrindResponse.Problem partiallyUnavailableProblem =
+    GridGrindProblemDetail.Problem partiallyUnavailableProblem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request", "steps[0]", 11, null, new IllegalArgumentException("bad")),
@@ -234,12 +239,12 @@ class GridGrindProblemsTest {
 
   @Test
   void enrichesExecuteCalculationContextFromFormulaExceptions() {
-    GridGrindResponse.Problem problem =
+    GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             new InvalidFormulaException("Budget", "B1", "SUM(", "bad formula", null),
             new ProblemContext.ExecuteCalculation.Preflight(
-                ProblemContext.RequestShape.known("NEW", "SAVE_AS"),
-                ProblemContext.ProblemLocation.unknown()));
+                ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+                ProblemContextWorkbookSurfaces.ProblemLocation.unknown()));
 
     assertEquals("CALCULATION_PREFLIGHT", problem.context().stage());
     assertEquals(
@@ -259,27 +264,29 @@ class GridGrindProblemsTest {
     RuntimeException exception = new RuntimeException("test");
 
     ProblemContext.ParseArguments parseArguments =
-        new ProblemContext.ParseArguments(ProblemContext.CliArgument.named("--request"));
+        new ProblemContext.ParseArguments(
+            ProblemContextRequestSurfaces.CliArgument.named("--request"));
     ProblemContext.ValidateRequest validateRequest =
-        new ProblemContext.ValidateRequest(ProblemContext.RequestShape.unknown());
+        new ProblemContext.ValidateRequest(ProblemContextRequestSurfaces.RequestShape.unknown());
     ProblemContext.OpenWorkbook openWorkbook =
         new ProblemContext.OpenWorkbook(
-            ProblemContext.RequestShape.known("EXISTING", "NONE"),
-            ProblemContext.WorkbookReference.existingFile("/tmp/source.xlsx"));
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
+            ProblemContextWorkbookSurfaces.WorkbookReference.existingFile("/tmp/source.xlsx"));
     ProblemContext.PersistWorkbook persistWorkbook =
         new ProblemContext.PersistWorkbook(
-            ProblemContext.RequestShape.known("NEW", "SAVE_AS"),
-            ProblemContext.PersistenceReference.saveAs("/tmp/output.xlsx"));
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+            ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/output.xlsx"));
     ProblemContext.ExecuteRequest executeRequest =
-        new ProblemContext.ExecuteRequest(ProblemContext.RequestShape.known("NEW", "NONE"));
+        new ProblemContext.ExecuteRequest(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"));
     ProblemContext.WriteResponse writeResponse =
         new ProblemContext.WriteResponse(
-            ProblemContext.ResponseOutput.responseFile("/tmp/response.json"));
+            ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/response.json"));
     ProblemContext.ExecuteStep executeStep =
         new ProblemContext.ExecuteStep(
-            ProblemContext.RequestShape.unknown(),
-            new ProblemContext.StepReference(0, "step-0", "MUTATION", "SET_CELL"),
-            ProblemContext.ProblemLocation.unknown());
+            ProblemContextRequestSurfaces.RequestShape.unknown(),
+            new ProblemContextWorkbookSurfaces.StepReference(0, "step-0", "MUTATION", "SET_CELL"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.unknown());
 
     assertSame(parseArguments, GridGrindProblems.enrichContext(parseArguments, exception));
     assertSame(validateRequest, GridGrindProblems.enrichContext(validateRequest, exception));
@@ -291,8 +298,8 @@ class GridGrindProblemsTest {
 
     ProblemContext.ExecuteCalculation calculation =
         new ProblemContext.ExecuteCalculation.Preflight(
-            ProblemContext.RequestShape.known("NEW", "NONE"),
-            ProblemContext.ProblemLocation.unknown());
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.unknown());
     assertSame(
         calculation, GridGrindProblems.enrichContext(calculation, new AssertionError("boom")));
     assertSame(
@@ -317,8 +324,8 @@ class GridGrindProblemsTest {
 
     ProblemContext.ReadRequest readContext =
         new ProblemContext.ReadRequest(
-            ProblemContext.RequestInput.requestFile("/tmp/request.json"),
-            ProblemContext.JsonLocation.unavailable());
+            ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+            ProblemContextRequestSurfaces.JsonLocation.unavailable());
     assertSame(readContext, GridGrindProblems.enrichContext(readContext, anonymous));
   }
 }

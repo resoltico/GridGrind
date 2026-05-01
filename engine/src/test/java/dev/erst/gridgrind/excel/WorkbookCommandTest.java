@@ -38,28 +38,31 @@ class WorkbookCommandTest {
 
   @Test
   void buildsRowAndColumnStructureCommands() {
-    WorkbookCommand.InsertRows insertRows = new WorkbookCommand.InsertRows("Budget", 2, 3);
-    WorkbookCommand.DeleteRows deleteRows =
-        new WorkbookCommand.DeleteRows("Budget", new ExcelRowSpan(4, 6));
-    WorkbookCommand.ShiftRows shiftRows =
-        new WorkbookCommand.ShiftRows("Budget", new ExcelRowSpan(1, 3), 2);
-    WorkbookCommand.InsertColumns insertColumns = new WorkbookCommand.InsertColumns("Budget", 1, 2);
-    WorkbookCommand.DeleteColumns deleteColumns =
-        new WorkbookCommand.DeleteColumns("Budget", new ExcelColumnSpan(3, 4));
-    WorkbookCommand.ShiftColumns shiftColumns =
-        new WorkbookCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 1), -1);
-    WorkbookCommand.SetRowVisibility setRowVisibility =
-        new WorkbookCommand.SetRowVisibility("Budget", new ExcelRowSpan(5, 7), true);
-    WorkbookCommand.SetColumnVisibility setColumnVisibility =
-        new WorkbookCommand.SetColumnVisibility("Budget", new ExcelColumnSpan(2, 3), false);
-    WorkbookCommand.GroupRows groupRows =
-        new WorkbookCommand.GroupRows("Budget", new ExcelRowSpan(8, 10), false);
-    WorkbookCommand.UngroupRows ungroupRows =
-        new WorkbookCommand.UngroupRows("Budget", new ExcelRowSpan(8, 10));
-    WorkbookCommand.GroupColumns groupColumns =
-        new WorkbookCommand.GroupColumns("Budget", new ExcelColumnSpan(4, 6), true);
-    WorkbookCommand.UngroupColumns ungroupColumns =
-        new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(4, 6));
+    WorkbookStructureCommand.InsertRows insertRows =
+        new WorkbookStructureCommand.InsertRows("Budget", 2, 3);
+    WorkbookStructureCommand.DeleteRows deleteRows =
+        new WorkbookStructureCommand.DeleteRows("Budget", new ExcelRowSpan(4, 6));
+    WorkbookStructureCommand.ShiftRows shiftRows =
+        new WorkbookStructureCommand.ShiftRows("Budget", new ExcelRowSpan(1, 3), 2);
+    WorkbookStructureCommand.InsertColumns insertColumns =
+        new WorkbookStructureCommand.InsertColumns("Budget", 1, 2);
+    WorkbookStructureCommand.DeleteColumns deleteColumns =
+        new WorkbookStructureCommand.DeleteColumns("Budget", new ExcelColumnSpan(3, 4));
+    WorkbookStructureCommand.ShiftColumns shiftColumns =
+        new WorkbookStructureCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 1), -1);
+    WorkbookStructureCommand.SetRowVisibility setRowVisibility =
+        new WorkbookStructureCommand.SetRowVisibility("Budget", new ExcelRowSpan(5, 7), true);
+    WorkbookStructureCommand.SetColumnVisibility setColumnVisibility =
+        new WorkbookStructureCommand.SetColumnVisibility(
+            "Budget", new ExcelColumnSpan(2, 3), false);
+    WorkbookStructureCommand.GroupRows groupRows =
+        new WorkbookStructureCommand.GroupRows("Budget", new ExcelRowSpan(8, 10), false);
+    WorkbookStructureCommand.UngroupRows ungroupRows =
+        new WorkbookStructureCommand.UngroupRows("Budget", new ExcelRowSpan(8, 10));
+    WorkbookStructureCommand.GroupColumns groupColumns =
+        new WorkbookStructureCommand.GroupColumns("Budget", new ExcelColumnSpan(4, 6), true);
+    WorkbookStructureCommand.UngroupColumns ungroupColumns =
+        new WorkbookStructureCommand.UngroupColumns("Budget", new ExcelColumnSpan(4, 6));
 
     assertEquals(2, insertRows.rowIndex());
     assertEquals(new ExcelRowSpan(4, 6), deleteRows.rows());
@@ -82,15 +85,15 @@ class WorkbookCommandTest {
             List.of(
                 new ExcelAutofilterFilterColumn(
                     0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true))));
-    WorkbookCommand.SetSheetProtection sheetProtection =
-        new WorkbookCommand.SetSheetProtection("Budget", protectionSettings(), "gridgrind");
-    WorkbookCommand.SetWorkbookProtection workbookProtection =
-        new WorkbookCommand.SetWorkbookProtection(
+    WorkbookSheetCommand.SetSheetProtection sheetProtection =
+        new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings(), "gridgrind");
+    WorkbookSheetCommand.SetWorkbookProtection workbookProtection =
+        new WorkbookSheetCommand.SetWorkbookProtection(
             new ExcelWorkbookProtectionSettings(true, false, true, "book", "review"));
-    WorkbookCommand.ClearWorkbookProtection clearWorkbookProtection =
-        new WorkbookCommand.ClearWorkbookProtection();
-    WorkbookCommand.SetAutofilter setAutofilter =
-        new WorkbookCommand.SetAutofilter(
+    WorkbookSheetCommand.ClearWorkbookProtection clearWorkbookProtection =
+        new WorkbookSheetCommand.ClearWorkbookProtection();
+    WorkbookTabularCommand.SetAutofilter setAutofilter =
+        new WorkbookTabularCommand.SetAutofilter(
             "Budget",
             "A1:C4",
             criteria,
@@ -98,8 +101,8 @@ class WorkbookCommandTest {
                 "A1:C4",
                 true,
                 false,
-                "",
-                List.of(new ExcelAutofilterSortCondition("A2:A4", false, "", null, null))));
+                java.util.Optional.empty(),
+                List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false))));
 
     criteria.clear();
 
@@ -112,57 +115,59 @@ class WorkbookCommandTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSheetProtection("Budget", protectionSettings(), " "));
+        () -> new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings(), " "));
   }
 
   @Test
   void deletePivotTableCommandRejectsInvalidInputs() {
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.DeletePivotTable(null, "Budget"));
+        NullPointerException.class,
+        () -> new WorkbookTabularCommand.DeletePivotTable(null, "Budget"));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.DeletePivotTable("Budget Pivot", null));
+        () -> new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.DeletePivotTable("Budget Pivot", " "));
+        () -> new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", " "));
   }
 
   private CreatedCommands createSupportedCommands(
       List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
     return new CreatedCommands(
-        new WorkbookCommand.CreateSheet("Budget"),
-        new WorkbookCommand.RenameSheet("Budget", "Summary"),
-        new WorkbookCommand.DeleteSheet("Archive"),
-        new WorkbookCommand.MoveSheet("Budget", 1),
-        new WorkbookCommand.CopySheet(
+        new WorkbookSheetCommand.CreateSheet("Budget"),
+        new WorkbookSheetCommand.RenameSheet("Budget", "Summary"),
+        new WorkbookSheetCommand.DeleteSheet("Archive"),
+        new WorkbookSheetCommand.MoveSheet("Budget", 1),
+        new WorkbookSheetCommand.CopySheet(
             "Budget", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()),
-        new WorkbookCommand.SetActiveSheet("Budget"),
-        new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Summary")),
-        new WorkbookCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.VERY_HIDDEN),
-        new WorkbookCommand.SetSheetProtection("Budget", protectionSettings()),
-        new WorkbookCommand.ClearSheetProtection("Budget"),
-        new WorkbookCommand.MergeCells("Budget", "A1:B2"),
-        new WorkbookCommand.UnmergeCells("Budget", "A1:B2"),
-        new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
-        new WorkbookCommand.SetRowHeight("Budget", 0, 2, 28.5),
-        new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 2, 1, 2)),
-        new WorkbookCommand.SetSheetZoom("Budget", 135),
-        new WorkbookCommand.SetPrintLayout("Budget", defaultPrintLayout()),
-        new WorkbookCommand.ClearPrintLayout("Budget"),
-        new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
-        new WorkbookCommand.SetRange("Budget", "A1:B2", rows),
-        new WorkbookCommand.ClearRange("Budget", "C1:C2"),
-        new WorkbookCommand.SetHyperlink(
+        new WorkbookSheetCommand.SetActiveSheet("Budget"),
+        new WorkbookSheetCommand.SetSelectedSheets(List.of("Budget", "Summary")),
+        new WorkbookSheetCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.VERY_HIDDEN),
+        new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings()),
+        new WorkbookSheetCommand.ClearSheetProtection("Budget"),
+        new WorkbookStructureCommand.MergeCells("Budget", "A1:B2"),
+        new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B2"),
+        new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 1, 16.0),
+        new WorkbookStructureCommand.SetRowHeight("Budget", 0, 2, 28.5),
+        new WorkbookLayoutCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 2, 1, 2)),
+        new WorkbookLayoutCommand.SetSheetZoom("Budget", 135),
+        new WorkbookLayoutCommand.SetPrintLayout("Budget", defaultPrintLayout()),
+        new WorkbookLayoutCommand.ClearPrintLayout("Budget"),
+        new WorkbookCellCommand.SetCell(
+            "Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+        new WorkbookCellCommand.SetRange("Budget", "A1:B2", rows),
+        new WorkbookCellCommand.ClearRange("Budget", "C1:C2"),
+        new WorkbookAnnotationCommand.SetHyperlink(
             "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
-        new WorkbookCommand.ClearHyperlink("Budget", "A1"),
-        new WorkbookCommand.SetComment(
+        new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
+        new WorkbookAnnotationCommand.SetComment(
             "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
-        new WorkbookCommand.ClearComment("Budget", "A1"),
-        new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style),
-        new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
-        new WorkbookCommand.ClearDataValidations(
+        new WorkbookAnnotationCommand.ClearComment("Budget", "A1"),
+        new WorkbookFormattingCommand.ApplyStyle("Budget", "A1:B1", style),
+        new WorkbookFormattingCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
+        new WorkbookFormattingCommand.ClearDataValidations(
             "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
-        new WorkbookCommand.SetConditionalFormatting(
+        new WorkbookFormattingCommand.SetConditionalFormatting(
             "Budget",
             new ExcelConditionalFormattingBlockDefinition(
                 List.of("A2:A5"),
@@ -172,19 +177,19 @@ class WorkbookCommandTest {
                         true,
                         new ExcelDifferentialStyle(
                             "0.00", null, null, null, null, null, null, null, null))))),
-        new WorkbookCommand.ClearConditionalFormatting(
+        new WorkbookFormattingCommand.ClearConditionalFormatting(
             "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
-        new WorkbookCommand.SetAutofilter("Budget", "A1:C4"),
-        new WorkbookCommand.ClearAutofilter("Budget"),
-        new WorkbookCommand.SetTable(
+        new WorkbookTabularCommand.SetAutofilter("Budget", "A1:C4"),
+        new WorkbookTabularCommand.ClearAutofilter("Budget"),
+        new WorkbookTabularCommand.SetTable(
             new ExcelTableDefinition(
                 "BudgetTable",
                 "Budget",
                 "A1:C4",
                 true,
                 new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
-        new WorkbookCommand.DeleteTable("BudgetTable", "Budget"),
-        new WorkbookCommand.SetPivotTable(
+        new WorkbookTabularCommand.DeleteTable("BudgetTable", "Budget"),
+        new WorkbookTabularCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
                 "Budget Pivot",
                 "Budget",
@@ -196,16 +201,16 @@ class WorkbookCommandTest {
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
                         "Tax", ExcelPivotDataConsolidateFunction.SUM, "Total Tax", "#,##0.00")))),
-        new WorkbookCommand.DeletePivotTable("Budget Pivot", "Budget"),
-        new WorkbookCommand.SetNamedRange(
+        new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
+        new WorkbookMetadataCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 new ExcelNamedRangeTarget("Budget", "B4"))),
-        new WorkbookCommand.DeleteNamedRange(
+        new WorkbookMetadataCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
-        new WorkbookCommand.AppendRow("Budget", values),
-        new WorkbookCommand.AutoSizeColumns("Budget"));
+        new WorkbookCellCommand.AppendRow("Budget", values),
+        new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
   }
 
   private void assertCreatedCommands(CreatedCommands commands, ExcelCellStyle style) {
@@ -272,18 +277,22 @@ class WorkbookCommandTest {
 
   @Test
   void validatesSheetIdentityCommandInputs() {
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.CreateSheet(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.CreateSheet(" "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.RenameSheet(null, "New"));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.RenameSheet(" ", "New"));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.RenameSheet("Budget", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookSheetCommand.CreateSheet(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookSheetCommand.CreateSheet(" "));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.RenameSheet("Budget", " "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.DeleteSheet(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.DeleteSheet(" "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.MoveSheet(null, 0));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MoveSheet(" ", 0));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MoveSheet("Budget", -1));
+        NullPointerException.class, () -> new WorkbookSheetCommand.RenameSheet(null, "New"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookSheetCommand.RenameSheet(" ", "New"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookSheetCommand.RenameSheet("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookSheetCommand.RenameSheet("Budget", " "));
+    assertThrows(NullPointerException.class, () -> new WorkbookSheetCommand.DeleteSheet(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookSheetCommand.DeleteSheet(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookSheetCommand.MoveSheet(null, 0));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookSheetCommand.MoveSheet(" ", 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookSheetCommand.MoveSheet("Budget", -1));
   }
 
   @Test
@@ -291,266 +300,307 @@ class WorkbookCommandTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.CopySheet(
+            new WorkbookSheetCommand.CopySheet(
                 null, "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.CopySheet(
+            new WorkbookSheetCommand.CopySheet(
                 " ", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.CopySheet(
+            new WorkbookSheetCommand.CopySheet(
                 "Budget", null, new ExcelSheetCopyPosition.AppendAtEnd()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.CopySheet("Budget", " ", new ExcelSheetCopyPosition.AppendAtEnd()));
+            new WorkbookSheetCommand.CopySheet(
+                "Budget", " ", new ExcelSheetCopyPosition.AppendAtEnd()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.CopySheet("Budget", "Budget Copy", null));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetActiveSheet(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.SetActiveSheet(" "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetSelectedSheets(null));
+        () -> new WorkbookSheetCommand.CopySheet("Budget", "Budget Copy", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookSheetCommand.SetActiveSheet(null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetSelectedSheets(List.of()));
+        IllegalArgumentException.class, () -> new WorkbookSheetCommand.SetActiveSheet(" "));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookSheetCommand.SetSelectedSheets(null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookSheetCommand.SetSelectedSheets(List.of()));
     List<String> selectedSheetsWithNull = new ArrayList<>();
     selectedSheetsWithNull.add(null);
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetSelectedSheets(selectedSheetsWithNull));
+        () -> new WorkbookSheetCommand.SetSelectedSheets(selectedSheetsWithNull));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSelectedSheets(List.of("Budget", " ")));
+        () -> new WorkbookSheetCommand.SetSelectedSheets(List.of("Budget", " ")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Budget")));
+        () -> new WorkbookSheetCommand.SetSelectedSheets(List.of("Budget", "Budget")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSheetVisibility(" ", ExcelSheetVisibility.HIDDEN));
+        () -> new WorkbookSheetCommand.SetSheetVisibility(" ", ExcelSheetVisibility.HIDDEN));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetSheetVisibility("Budget", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSheetProtection(" ", protectionSettings()));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetSheetProtection("Budget", null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearSheetProtection(" "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearSheetProtection(null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows("Budget", -1, 1));
+        NullPointerException.class,
+        () -> new WorkbookSheetCommand.SetSheetVisibility("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.InsertRows("Budget", ExcelRowSpan.MAX_ROW_INDEX + 1, 1));
+        () -> new WorkbookSheetCommand.SetSheetProtection(" ", protectionSettings()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookSheetCommand.SetSheetProtection("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookSheetCommand.ClearSheetProtection(" "));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookSheetCommand.ClearSheetProtection(null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ShiftRows("Budget", new ExcelRowSpan(0, 0), 0));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns("Budget", -1, 1));
+        () -> new WorkbookStructureCommand.InsertRows("Budget", -1, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.InsertColumns("Budget", ExcelColumnSpan.MAX_COLUMN_INDEX + 1, 1));
+        () -> new WorkbookStructureCommand.InsertRows("Budget", ExcelRowSpan.MAX_ROW_INDEX + 1, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 0), 0));
+        () -> new WorkbookStructureCommand.ShiftRows("Budget", new ExcelRowSpan(0, 0), 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.InsertColumns("Budget", -1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookStructureCommand.InsertColumns(
+                "Budget", ExcelColumnSpan.MAX_COLUMN_INDEX + 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 0), 0));
   }
 
   @Test
   void validatesStructuralCommandSheetNamesAndCounts() {
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows(" ", 0, 1));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows("Budget", 0, 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.DeleteRows(" ", new ExcelRowSpan(0, 0)));
+        IllegalArgumentException.class, () -> new WorkbookStructureCommand.InsertRows(" ", 0, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ShiftRows(" ", new ExcelRowSpan(0, 0), 1));
+        () -> new WorkbookStructureCommand.InsertRows("Budget", 0, 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowVisibility(" ", new ExcelRowSpan(0, 0), true));
+        () -> new WorkbookStructureCommand.DeleteRows(" ", new ExcelRowSpan(0, 0)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.GroupRows(" ", new ExcelRowSpan(0, 0), false));
+        () -> new WorkbookStructureCommand.ShiftRows(" ", new ExcelRowSpan(0, 0), 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.UngroupRows(" ", new ExcelRowSpan(0, 0)));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns(" ", 0, 1));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns("Budget", 0, 0));
+        () -> new WorkbookStructureCommand.SetRowVisibility(" ", new ExcelRowSpan(0, 0), true));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.DeleteColumns(" ", new ExcelColumnSpan(0, 0)));
+        () -> new WorkbookStructureCommand.GroupRows(" ", new ExcelRowSpan(0, 0), false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ShiftColumns(" ", new ExcelColumnSpan(0, 0), 1));
+        () -> new WorkbookStructureCommand.UngroupRows(" ", new ExcelRowSpan(0, 0)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnVisibility(" ", new ExcelColumnSpan(0, 0), true));
+        () -> new WorkbookStructureCommand.InsertColumns(" ", 0, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.GroupColumns(" ", new ExcelColumnSpan(0, 0), false));
+        () -> new WorkbookStructureCommand.InsertColumns("Budget", 0, 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.UngroupColumns(" ", new ExcelColumnSpan(0, 0)));
+        () -> new WorkbookStructureCommand.DeleteColumns(" ", new ExcelColumnSpan(0, 0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.ShiftColumns(" ", new ExcelColumnSpan(0, 0), 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookStructureCommand.SetColumnVisibility(" ", new ExcelColumnSpan(0, 0), true));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.GroupColumns(" ", new ExcelColumnSpan(0, 0), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.UngroupColumns(" ", new ExcelColumnSpan(0, 0)));
   }
 
   @Test
   void validatesMergeAndLayoutSizingCommandInputs() {
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.MergeCells(null, "A1:B2"));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MergeCells(" ", "A1"));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.MergeCells("Budget", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.MergeCells("Budget", " "));
+        NullPointerException.class, () -> new WorkbookStructureCommand.MergeCells(null, "A1:B2"));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.UnmergeCells("Budget", null));
+        IllegalArgumentException.class, () -> new WorkbookStructureCommand.MergeCells(" ", "A1"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.UnmergeCells(" ", "A1:B2"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.UnmergeCells("Budget", " "));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetColumnWidth(null, 0, 0, 16.0));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetColumnWidth(" ", 0, 0, 16.0));
+        NullPointerException.class, () -> new WorkbookStructureCommand.MergeCells("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", -1, 0, 16.0));
+        () -> new WorkbookStructureCommand.MergeCells("Budget", " "));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookStructureCommand.UnmergeCells("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", 0, -1, 16.0));
+        () -> new WorkbookStructureCommand.UnmergeCells(" ", "A1:B2"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", 2, 1, 16.0));
+        () -> new WorkbookStructureCommand.UnmergeCells("Budget", " "));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookStructureCommand.SetColumnWidth(null, 0, 0, 16.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", 0, 0, 256.0));
+        () -> new WorkbookStructureCommand.SetColumnWidth(" ", 0, 0, 16.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", 0, 0, Double.MIN_VALUE));
+        () -> new WorkbookStructureCommand.SetColumnWidth("Budget", -1, 0, 16.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetColumnWidth("Budget", 0, 0, Double.POSITIVE_INFINITY));
+        () -> new WorkbookStructureCommand.SetColumnWidth("Budget", 0, -1, 16.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", -1, 0, 28.5));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetRowHeight(null, 0, 0, 28.5));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetRowHeight(" ", 0, 0, 28.5));
+        () -> new WorkbookStructureCommand.SetColumnWidth("Budget", 2, 1, 16.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", 0, -1, 28.5));
+        () -> new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 0, 256.0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", 2, 1, 28.5));
+        () -> new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 0, Double.MIN_VALUE));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 0, Double.POSITIVE_INFINITY));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.SetRowHeight("Budget", -1, 0, 28.5));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookStructureCommand.SetRowHeight(null, 0, 0, 28.5));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.SetRowHeight(" ", 0, 0, 28.5));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.SetRowHeight("Budget", 0, -1, 28.5));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookStructureCommand.SetRowHeight("Budget", 2, 1, 28.5));
     assertDoesNotThrow(
         () ->
-            new WorkbookCommand.SetRowHeight(
+            new WorkbookStructureCommand.SetRowHeight(
                 "Budget", 0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetRowHeight(
+            new WorkbookStructureCommand.SetRowHeight(
                 "Budget", 0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetRowHeight(
+            new WorkbookStructureCommand.SetRowHeight(
                 "Budget", 0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, Double.MIN_VALUE));
+        () -> new WorkbookStructureCommand.SetRowHeight("Budget", 0, 0, Double.MIN_VALUE));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, 0.0));
+        () -> new WorkbookStructureCommand.SetRowHeight("Budget", 0, 0, 0.0));
   }
 
   @Test
   void validatesPaneZoomAndPrintLayoutCommandInputs() {
-    assertDoesNotThrow(() -> new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.None()));
     assertDoesNotThrow(
-        () -> new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(0, 2, 0, 2)));
+        () -> new WorkbookLayoutCommand.SetSheetPane("Budget", new ExcelSheetPane.None()));
     assertDoesNotThrow(
         () ->
-            new WorkbookCommand.SetSheetPane(
+            new WorkbookLayoutCommand.SetSheetPane(
+                "Budget", new ExcelSheetPane.Frozen(0, 2, 0, 2)));
+    assertDoesNotThrow(
+        () ->
+            new WorkbookLayoutCommand.SetSheetPane(
                 "Budget", new ExcelSheetPane.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT)));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetSheetPane(null, new ExcelSheetPane.None()));
+        () -> new WorkbookLayoutCommand.SetSheetPane(null, new ExcelSheetPane.None()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSheetPane(" ", new ExcelSheetPane.None()));
+        () -> new WorkbookLayoutCommand.SetSheetPane(" ", new ExcelSheetPane.None()));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetSheetPane("Budget", null));
+        NullPointerException.class, () -> new WorkbookLayoutCommand.SetSheetPane("Budget", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom("Budget", 9));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom("Budget", 401));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom(" ", 100));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetPrintLayout("Budget", null));
+        IllegalArgumentException.class, () -> new WorkbookLayoutCommand.SetSheetZoom("Budget", 9));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetPrintLayout(" ", defaultPrintLayout()));
-    WorkbookCommand.SetSheetPresentation setSheetPresentation =
+        () -> new WorkbookLayoutCommand.SetSheetZoom("Budget", 401));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookLayoutCommand.SetSheetZoom(" ", 100));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookLayoutCommand.SetPrintLayout("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookLayoutCommand.SetPrintLayout(" ", defaultPrintLayout()));
+    WorkbookLayoutCommand.SetSheetPresentation setSheetPresentation =
         assertDoesNotThrow(
             () ->
-                new WorkbookCommand.SetSheetPresentation(
+                new WorkbookLayoutCommand.SetSheetPresentation(
                     "Budget", ExcelSheetPresentation.defaults()));
     assertEquals("Budget", setSheetPresentation.sheetName());
     assertEquals(ExcelSheetPresentation.defaults(), setSheetPresentation.presentation());
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetSheetPresentation(null, ExcelSheetPresentation.defaults()));
+        () ->
+            new WorkbookLayoutCommand.SetSheetPresentation(
+                null, ExcelSheetPresentation.defaults()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetSheetPresentation(" ", ExcelSheetPresentation.defaults()));
+        () ->
+            new WorkbookLayoutCommand.SetSheetPresentation(" ", ExcelSheetPresentation.defaults()));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetSheetPresentation("Budget", null));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearPrintLayout(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearPrintLayout(" "));
+        NullPointerException.class,
+        () -> new WorkbookLayoutCommand.SetSheetPresentation("Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookLayoutCommand.ClearPrintLayout(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookLayoutCommand.ClearPrintLayout(" "));
   }
 
   @Test
   void validatesCellRangeAndLinkCommentCommandInputs() {
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetCell(null, "A1", ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell(null, "A1", ExcelCellValue.text("x")));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetCell("Budget", null, ExcelCellValue.text("x")));
+        () -> new WorkbookCellCommand.SetCell("Budget", null, ExcelCellValue.text("x")));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetCell("Budget", "A1", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetCell(" ", "A1", ExcelCellValue.text("x")));
+        NullPointerException.class, () -> new WorkbookCellCommand.SetCell("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetCell("Budget", " ", ExcelCellValue.text("x")));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetRange(null, "A1", List.of()));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetRange(" ", "A1", List.of()));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetRange("Budget", null, List.of()));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetRange("Budget", "A1", null));
+        () -> new WorkbookCellCommand.SetCell(" ", "A1", ExcelCellValue.text("x")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRange("Budget", " ", List.of()));
+        () -> new WorkbookCellCommand.SetCell("Budget", " ", ExcelCellValue.text("x")));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCellCommand.SetRange(null, "A1", List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRange("Budget", "A1", List.of()));
+        () -> new WorkbookCellCommand.SetRange(" ", "A1", List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCellCommand.SetRange("Budget", null, List.of()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCellCommand.SetRange("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRange("Budget", "A1:B2", List.of(List.of())));
+        () -> new WorkbookCellCommand.SetRange("Budget", " ", List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCellCommand.SetRange("Budget", "A1", List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCellCommand.SetRange("Budget", "A1:B2", List.of(List.of())));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetRange(
+            new WorkbookCellCommand.SetRange(
                 "Budget",
                 "A1:B2",
                 List.of(
@@ -562,114 +612,141 @@ class WorkbookCommandTest {
     rowsWithNull.add(rowWithNull);
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetRange("Budget", "A1", rowsWithNull));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearRange(null, "A1"));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearRange("Budget", null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearRange(" ", "A1"));
+        () -> new WorkbookCellCommand.SetRange("Budget", "A1", rowsWithNull));
+    assertThrows(NullPointerException.class, () -> new WorkbookCellCommand.ClearRange(null, "A1"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearRange("Budget", " "));
+        NullPointerException.class, () -> new WorkbookCellCommand.ClearRange("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCellCommand.ClearRange(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCellCommand.ClearRange("Budget", " "));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.SetHyperlink(
+            new WorkbookAnnotationCommand.SetHyperlink(
                 null, "A1", new ExcelHyperlink.Url("https://example.com")));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.SetHyperlink(
+            new WorkbookAnnotationCommand.SetHyperlink(
                 "Budget", null, new ExcelHyperlink.Url("https://example.com")));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetHyperlink("Budget", "A1", null));
+        NullPointerException.class,
+        () -> new WorkbookAnnotationCommand.SetHyperlink("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetHyperlink(
+            new WorkbookAnnotationCommand.SetHyperlink(
                 " ", "A1", new ExcelHyperlink.Url("https://example.com")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetHyperlink(
+            new WorkbookAnnotationCommand.SetHyperlink(
                 "Budget", " ", new ExcelHyperlink.Url("https://example.com")));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearHyperlink(null, "A1"));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.ClearHyperlink("Budget", null));
+        NullPointerException.class, () -> new WorkbookAnnotationCommand.ClearHyperlink(null, "A1"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearHyperlink(" ", "A1"));
+        NullPointerException.class,
+        () -> new WorkbookAnnotationCommand.ClearHyperlink("Budget", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearHyperlink("Budget", " "));
+        IllegalArgumentException.class,
+        () -> new WorkbookAnnotationCommand.ClearHyperlink(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnnotationCommand.ClearHyperlink("Budget", " "));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.SetComment(
+            new WorkbookAnnotationCommand.SetComment(
                 null, "A1", new ExcelComment("Review", "GridGrind", false)));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.SetComment(
+            new WorkbookAnnotationCommand.SetComment(
                 "Budget", null, new ExcelComment("Review", "GridGrind", false)));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetComment("Budget", "A1", null));
+        NullPointerException.class,
+        () -> new WorkbookAnnotationCommand.SetComment("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetComment(
+            new WorkbookAnnotationCommand.SetComment(
                 " ", "A1", new ExcelComment("Review", "GridGrind", false)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetComment(
+            new WorkbookAnnotationCommand.SetComment(
                 "Budget", " ", new ExcelComment("Review", "GridGrind", false)));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearComment(null, "A1"));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.ClearComment("Budget", null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearComment(" ", "A1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.ClearComment("Budget", " "));
+        NullPointerException.class, () -> new WorkbookAnnotationCommand.ClearComment(null, "A1"));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.ApplyStyle(null, "A1", ExcelCellStyle.numberFormat("0")));
+        () -> new WorkbookAnnotationCommand.ClearComment("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnnotationCommand.ClearComment(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnnotationCommand.ClearComment("Budget", " "));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.ApplyStyle("Budget", null, ExcelCellStyle.numberFormat("0")));
+        () ->
+            new WorkbookFormattingCommand.ApplyStyle(null, "A1", ExcelCellStyle.numberFormat("0")));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.ApplyStyle("Budget", "A1", null));
+        NullPointerException.class,
+        () ->
+            new WorkbookFormattingCommand.ApplyStyle(
+                "Budget", null, ExcelCellStyle.numberFormat("0")));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookFormattingCommand.ApplyStyle("Budget", "A1", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ApplyStyle(" ", "A1", ExcelCellStyle.numberFormat("0")));
+        () ->
+            new WorkbookFormattingCommand.ApplyStyle(" ", "A1", ExcelCellStyle.numberFormat("0")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.ApplyStyle("Budget", " ", ExcelCellStyle.numberFormat("0")));
+        () ->
+            new WorkbookFormattingCommand.ApplyStyle(
+                "Budget", " ", ExcelCellStyle.numberFormat("0")));
   }
 
   @Test
   void validatesValidationNamedRangeAndAppendCommandInputs() {
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetDataValidation("Budget", "A1", null));
+        () -> new WorkbookFormattingCommand.SetDataValidation("Budget", "A1", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetDataValidation(null, "A1", validationDefinition()));
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookCommand.SetDataValidation("Budget", null, validationDefinition()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetDataValidation(" ", "A1", validationDefinition()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetDataValidation("Budget", " ", validationDefinition()));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.ClearDataValidations("Budget", null));
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookCommand.ClearDataValidations(null, new ExcelRangeSelection.All()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.ClearDataValidations(" ", new ExcelRangeSelection.All()));
+        () -> new WorkbookFormattingCommand.SetDataValidation(null, "A1", validationDefinition()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new WorkbookCommand.SetConditionalFormatting(
+            new WorkbookFormattingCommand.SetDataValidation(
+                "Budget", null, validationDefinition()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookFormattingCommand.SetDataValidation(" ", "A1", validationDefinition()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookFormattingCommand.SetDataValidation("Budget", " ", validationDefinition()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookFormattingCommand.ClearDataValidations("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookFormattingCommand.ClearDataValidations(
+                null, new ExcelRangeSelection.All()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookFormattingCommand.ClearDataValidations(" ", new ExcelRangeSelection.All()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookFormattingCommand.SetConditionalFormatting(
                 null,
                 new ExcelConditionalFormattingBlockDefinition(
                     List.of("A2:A5"),
@@ -681,11 +758,11 @@ class WorkbookCommandTest {
                                 "0.00", null, null, null, null, null, null, null, null))))));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.SetConditionalFormatting("Budget", null));
+        () -> new WorkbookFormattingCommand.SetConditionalFormatting("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetConditionalFormatting(
+            new WorkbookFormattingCommand.SetConditionalFormatting(
                 " ",
                 new ExcelConditionalFormattingBlockDefinition(
                     List.of("A2:A5"),
@@ -697,63 +774,83 @@ class WorkbookCommandTest {
                                 "0.00", null, null, null, null, null, null, null, null))))));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.ClearConditionalFormatting("Budget", null));
+        () -> new WorkbookFormattingCommand.ClearConditionalFormatting("Budget", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.ClearConditionalFormatting(null, new ExcelRangeSelection.All()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.ClearConditionalFormatting(" ", new ExcelRangeSelection.All()));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetAutofilter(null, "A1:B2"));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.SetAutofilter("Budget", null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetAutofilter(" ", "A1:B2"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.SetAutofilter("Budget", " "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearAutofilter(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearAutofilter(" "));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetTable(null));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.DeleteTable(null, "Budget"));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.DeleteTable("BudgetTable", null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable(" ", "Budget"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable("BudgetTable", " "));
+        () ->
+            new WorkbookFormattingCommand.ClearConditionalFormatting(
+                null, new ExcelRangeSelection.All()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetTable(
+            new WorkbookFormattingCommand.ClearConditionalFormatting(
+                " ", new ExcelRangeSelection.All()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookTabularCommand.SetAutofilter(null, "A1:B2"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookTabularCommand.SetAutofilter("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookTabularCommand.SetAutofilter(" ", "A1:B2"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookTabularCommand.SetAutofilter("Budget", " "));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookTabularCommand.ClearAutofilter(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookTabularCommand.ClearAutofilter(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookTabularCommand.SetTable(null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookTabularCommand.DeleteTable(null, "Budget"));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookTabularCommand.DeleteTable("BudgetTable", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookTabularCommand.DeleteTable(" ", "Budget"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookTabularCommand.DeleteTable("BudgetTable", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookTabularCommand.SetTable(
                 new ExcelTableDefinition(
                     "A1", "Budget", "A1:B2", false, new ExcelTableStyle.None())));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetNamedRange(null));
+    assertThrows(NullPointerException.class, () -> new WorkbookMetadataCommand.SetNamedRange(null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.DeleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
+        () ->
+            new WorkbookMetadataCommand.DeleteNamedRange(
+                null, new ExcelNamedRangeScope.WorkbookScope()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookCommand.DeleteNamedRange("BudgetTotal", null));
+        () -> new WorkbookMetadataCommand.DeleteNamedRange("BudgetTotal", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.DeleteNamedRange(
+            new WorkbookMetadataCommand.DeleteNamedRange(
                 "_XLNM.PRINT_AREA", new ExcelNamedRangeScope.WorkbookScope()));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable("A1", "Budget"));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.AppendRow(null, List.of()));
+        IllegalArgumentException.class,
+        () -> new WorkbookTabularCommand.DeleteTable("A1", "Budget"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.AppendRow(" ", List.of()));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.AppendRow("Budget", null));
+        NullPointerException.class, () -> new WorkbookCellCommand.AppendRow(null, List.of()));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.AppendRow("Budget", List.of()));
+        IllegalArgumentException.class, () -> new WorkbookCellCommand.AppendRow(" ", List.of()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCellCommand.AppendRow("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCellCommand.AppendRow("Budget", List.of()));
     List<ExcelCellValue> valuesWithNull = new ArrayList<>();
     valuesWithNull.add(null);
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.AppendRow("Budget", valuesWithNull));
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.AutoSizeColumns(null));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.AutoSizeColumns(" "));
+        NullPointerException.class,
+        () -> new WorkbookCellCommand.AppendRow("Budget", valuesWithNull));
+    assertThrows(NullPointerException.class, () -> new WorkbookLayoutCommand.AutoSizeColumns(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookLayoutCommand.AutoSizeColumns(" "));
   }
 
   private static ExcelDataValidationDefinition validationDefinition() {
@@ -778,46 +875,46 @@ class WorkbookCommandTest {
   }
 
   private record CreatedCommands(
-      WorkbookCommand.CreateSheet createSheet,
-      WorkbookCommand.RenameSheet renameSheet,
-      WorkbookCommand.DeleteSheet deleteSheet,
-      WorkbookCommand.MoveSheet moveSheet,
-      WorkbookCommand.CopySheet copySheet,
-      WorkbookCommand.SetActiveSheet setActiveSheet,
-      WorkbookCommand.SetSelectedSheets setSelectedSheets,
-      WorkbookCommand.SetSheetVisibility setSheetVisibility,
-      WorkbookCommand.SetSheetProtection setSheetProtection,
-      WorkbookCommand.ClearSheetProtection clearSheetProtection,
-      WorkbookCommand.MergeCells mergeCells,
-      WorkbookCommand.UnmergeCells unmergeCells,
-      WorkbookCommand.SetColumnWidth setColumnWidth,
-      WorkbookCommand.SetRowHeight setRowHeight,
-      WorkbookCommand.SetSheetPane setSheetPane,
-      WorkbookCommand.SetSheetZoom setSheetZoom,
-      WorkbookCommand.SetPrintLayout setPrintLayout,
-      WorkbookCommand.ClearPrintLayout clearPrintLayout,
-      WorkbookCommand.SetCell setCell,
-      WorkbookCommand.SetRange setRange,
-      WorkbookCommand.ClearRange clearRange,
-      WorkbookCommand.SetHyperlink setHyperlink,
-      WorkbookCommand.ClearHyperlink clearHyperlink,
-      WorkbookCommand.SetComment setComment,
-      WorkbookCommand.ClearComment clearComment,
-      WorkbookCommand.ApplyStyle applyStyle,
-      WorkbookCommand.SetDataValidation setDataValidation,
-      WorkbookCommand.ClearDataValidations clearDataValidations,
-      WorkbookCommand.SetConditionalFormatting setConditionalFormatting,
-      WorkbookCommand.ClearConditionalFormatting clearConditionalFormatting,
-      WorkbookCommand.SetAutofilter setAutofilter,
-      WorkbookCommand.ClearAutofilter clearAutofilter,
-      WorkbookCommand.SetTable setTable,
-      WorkbookCommand.DeleteTable deleteTable,
-      WorkbookCommand.SetPivotTable setPivotTable,
-      WorkbookCommand.DeletePivotTable deletePivotTable,
-      WorkbookCommand.SetNamedRange setNamedRange,
-      WorkbookCommand.DeleteNamedRange deleteNamedRange,
-      WorkbookCommand.AppendRow appendRow,
-      WorkbookCommand.AutoSizeColumns autoSizeColumns) {}
+      WorkbookSheetCommand.CreateSheet createSheet,
+      WorkbookSheetCommand.RenameSheet renameSheet,
+      WorkbookSheetCommand.DeleteSheet deleteSheet,
+      WorkbookSheetCommand.MoveSheet moveSheet,
+      WorkbookSheetCommand.CopySheet copySheet,
+      WorkbookSheetCommand.SetActiveSheet setActiveSheet,
+      WorkbookSheetCommand.SetSelectedSheets setSelectedSheets,
+      WorkbookSheetCommand.SetSheetVisibility setSheetVisibility,
+      WorkbookSheetCommand.SetSheetProtection setSheetProtection,
+      WorkbookSheetCommand.ClearSheetProtection clearSheetProtection,
+      WorkbookStructureCommand.MergeCells mergeCells,
+      WorkbookStructureCommand.UnmergeCells unmergeCells,
+      WorkbookStructureCommand.SetColumnWidth setColumnWidth,
+      WorkbookStructureCommand.SetRowHeight setRowHeight,
+      WorkbookLayoutCommand.SetSheetPane setSheetPane,
+      WorkbookLayoutCommand.SetSheetZoom setSheetZoom,
+      WorkbookLayoutCommand.SetPrintLayout setPrintLayout,
+      WorkbookLayoutCommand.ClearPrintLayout clearPrintLayout,
+      WorkbookCellCommand.SetCell setCell,
+      WorkbookCellCommand.SetRange setRange,
+      WorkbookCellCommand.ClearRange clearRange,
+      WorkbookAnnotationCommand.SetHyperlink setHyperlink,
+      WorkbookAnnotationCommand.ClearHyperlink clearHyperlink,
+      WorkbookAnnotationCommand.SetComment setComment,
+      WorkbookAnnotationCommand.ClearComment clearComment,
+      WorkbookFormattingCommand.ApplyStyle applyStyle,
+      WorkbookFormattingCommand.SetDataValidation setDataValidation,
+      WorkbookFormattingCommand.ClearDataValidations clearDataValidations,
+      WorkbookFormattingCommand.SetConditionalFormatting setConditionalFormatting,
+      WorkbookFormattingCommand.ClearConditionalFormatting clearConditionalFormatting,
+      WorkbookTabularCommand.SetAutofilter setAutofilter,
+      WorkbookTabularCommand.ClearAutofilter clearAutofilter,
+      WorkbookTabularCommand.SetTable setTable,
+      WorkbookTabularCommand.DeleteTable deleteTable,
+      WorkbookTabularCommand.SetPivotTable setPivotTable,
+      WorkbookTabularCommand.DeletePivotTable deletePivotTable,
+      WorkbookMetadataCommand.SetNamedRange setNamedRange,
+      WorkbookMetadataCommand.DeleteNamedRange deleteNamedRange,
+      WorkbookCellCommand.AppendRow appendRow,
+      WorkbookLayoutCommand.AutoSizeColumns autoSizeColumns) {}
 
   private static ExcelPrintLayout defaultPrintLayout() {
     return new ExcelPrintLayout(

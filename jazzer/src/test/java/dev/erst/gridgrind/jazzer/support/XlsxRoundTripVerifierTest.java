@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelCellFill;
@@ -34,7 +35,6 @@ import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
@@ -60,9 +60,10 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-gradient-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Budget"),
-                    new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.text("Gradient")),
-                    new WorkbookCommand.ApplyStyle(
+                    new WorkbookSheetCommand.CreateSheet("Budget"),
+                    new WorkbookCellCommand.SetCell(
+                        "Budget", "A1", ExcelCellValue.text("Gradient")),
+                    new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
                         new ExcelCellStyle(
@@ -86,8 +87,8 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-metadata-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Budget"),
-                    new WorkbookCommand.SetCell(
+                    new WorkbookSheetCommand.CreateSheet("Budget"),
+                    new WorkbookCellCommand.SetCell(
                         "Budget",
                         "A1",
                         ExcelCellValue.richText(
@@ -104,7 +105,7 @@ class XlsxRoundTripVerifierTest {
                                             ExcelColor.rgb("#C0504D"),
                                             null,
                                             null)))))),
-                    new WorkbookCommand.ApplyStyle(
+                    new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
                         new ExcelCellStyle(
@@ -117,11 +118,11 @@ class XlsxRoundTripVerifierTest {
                                 ExcelColor.rgb("#405060")),
                             null,
                             new ExcelCellProtection(false, true))),
-                    new WorkbookCommand.SetHyperlink(
+                    new WorkbookAnnotationCommand.SetHyperlink(
                         "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
-                    new WorkbookCommand.SetComment(
+                    new WorkbookAnnotationCommand.SetComment(
                         "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
-                    new WorkbookCommand.SetNamedRange(
+                    new WorkbookMetadataCommand.SetNamedRange(
                         new ExcelNamedRangeDefinition(
                             "BudgetTitle",
                             new ExcelNamedRangeScope.WorkbookScope(),
@@ -135,20 +136,20 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-structured-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Budget"),
-                    new WorkbookCommand.SetRange(
+                    new WorkbookSheetCommand.CreateSheet("Budget"),
+                    new WorkbookCellCommand.SetRange(
                         "Budget",
                         "A1:B3",
                         List.of(
                             List.of(ExcelCellValue.text("Item"), ExcelCellValue.text("Value")),
                             List.of(ExcelCellValue.text("Ada"), ExcelCellValue.number(49.0d)),
                             List.of(ExcelCellValue.text("Linus"), ExcelCellValue.number(10.0d)))),
-                    new WorkbookCommand.SetCell("Budget", "C1", ExcelCellValue.text("scratch")),
-                    new WorkbookCommand.ClearRange("Budget", "C1:C1"),
-                    new WorkbookCommand.AppendRow(
+                    new WorkbookCellCommand.SetCell("Budget", "C1", ExcelCellValue.text("scratch")),
+                    new WorkbookCellCommand.ClearRange("Budget", "C1:C1"),
+                    new WorkbookCellCommand.AppendRow(
                         "Budget",
                         List.of(ExcelCellValue.text("Grace"), ExcelCellValue.number(30.0d))),
-                    new WorkbookCommand.SetDataValidation(
+                    new WorkbookFormattingCommand.SetDataValidation(
                         "Budget",
                         "B2:B4",
                         new ExcelDataValidationDefinition(
@@ -163,7 +164,7 @@ class XlsxRoundTripVerifierTest {
                                 "Too long",
                                 "Use a shorter reason.",
                                 true))),
-                    new WorkbookCommand.SetConditionalFormatting(
+                    new WorkbookFormattingCommand.SetConditionalFormatting(
                         "Budget",
                         new ExcelConditionalFormattingBlockDefinition(
                             List.of("B2:B4"),
@@ -173,8 +174,8 @@ class XlsxRoundTripVerifierTest {
                                     true,
                                     new ExcelDifferentialStyle(
                                         "0.00", null, null, null, null, null, null, null, null))))),
-                    new WorkbookCommand.SetAutofilter("Budget", "A1:B4"),
-                    new WorkbookCommand.SetTable(
+                    new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B4"),
+                    new WorkbookTabularCommand.SetTable(
                         new ExcelTableDefinition(
                             "BudgetTable", "Budget", "A1:B4", true, new ExcelTableStyle.None())))));
   }
@@ -186,16 +187,16 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-comment-column-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("LL"),
-                    new WorkbookCommand.SetComment(
+                    new WorkbookSheetCommand.CreateSheet("LL"),
+                    new WorkbookAnnotationCommand.SetComment(
                         "LL", "E2", new ExcelComment("Note BudgetTotal", "GridGrind", true)),
-                    new WorkbookCommand.SetComment(
+                    new WorkbookAnnotationCommand.SetComment(
                         "LL", "A2", new ExcelComment("Note Report_Value", "GridGrind", true)),
-                    new WorkbookCommand.CreateSheet("LL"),
-                    new WorkbookCommand.DeleteColumns("LL", new ExcelColumnSpan(1, 3)),
-                    new WorkbookCommand.DeleteColumns("LL", new ExcelColumnSpan(0, 0)),
-                    new WorkbookCommand.AutoSizeColumns("LL"),
-                    new WorkbookCommand.AutoSizeColumns("LL"))));
+                    new WorkbookSheetCommand.CreateSheet("LL"),
+                    new WorkbookStructureCommand.DeleteColumns("LL", new ExcelColumnSpan(1, 3)),
+                    new WorkbookStructureCommand.DeleteColumns("LL", new ExcelColumnSpan(0, 0)),
+                    new WorkbookLayoutCommand.AutoSizeColumns("LL"),
+                    new WorkbookLayoutCommand.AutoSizeColumns("LL"))));
   }
 
   @Test
@@ -205,8 +206,8 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-copy-picture-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Queue"),
-                    new WorkbookCommand.SetPicture(
+                    new WorkbookSheetCommand.CreateSheet("Queue"),
+                    new WorkbookDrawingCommand.SetPicture(
                         "Queue",
                         new ExcelPictureDefinition(
                             "QueuePreview",
@@ -217,7 +218,7 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(4, 6, 0, 0),
                                 null),
                             "Queue preview")),
-                    new WorkbookCommand.SetPicture(
+                    new WorkbookDrawingCommand.SetPicture(
                         "Queue",
                         new ExcelPictureDefinition(
                             "QueuePreview2",
@@ -228,7 +229,7 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(9, 6, 0, 0),
                                 null),
                             null)),
-                    new WorkbookCommand.CopySheet(
+                    new WorkbookSheetCommand.CopySheet(
                         "Queue",
                         "Queue Copy",
                         new dev.erst.gridgrind.excel.ExcelSheetCopyPosition.AppendAtEnd()))));
@@ -241,8 +242,8 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-copy-embedded-preview-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Queue"),
-                    new WorkbookCommand.SetEmbeddedObject(
+                    new WorkbookSheetCommand.CreateSheet("Queue"),
+                    new WorkbookDrawingCommand.SetEmbeddedObject(
                         "Queue",
                         new ExcelEmbeddedObjectDefinition(
                             "QueueEmbed",
@@ -257,9 +258,9 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(1, 1, 0, 0),
                                 new ExcelDrawingMarker(4, 6, 0, 0),
                                 null))),
-                    new WorkbookCommand.SetComment(
+                    new WorkbookAnnotationCommand.SetComment(
                         "Queue", "B2", new ExcelComment("Queue note", "GridGrind", true)),
-                    new WorkbookCommand.CopySheet(
+                    new WorkbookSheetCommand.CopySheet(
                         "Queue",
                         "Queue Copy",
                         new dev.erst.gridgrind.excel.ExcelSheetCopyPosition.AppendAtEnd()))));
@@ -272,8 +273,8 @@ class XlsxRoundTripVerifierTest {
             roundTrip(
                 "gridgrind-jazzer-array-signature-roundtrip-",
                 List.of(
-                    new WorkbookCommand.CreateSheet("Approvals"),
-                    new WorkbookCommand.SetRange(
+                    new WorkbookSheetCommand.CreateSheet("Approvals"),
+                    new WorkbookCellCommand.SetRange(
                         "Approvals",
                         "A1:C4",
                         List.of(
@@ -293,10 +294,11 @@ class XlsxRoundTripVerifierTest {
                                 ExcelCellValue.text("Mar"),
                                 ExcelCellValue.number(15.0d),
                                 ExcelCellValue.number(21.0d)))),
-                    new WorkbookCommand.SetArrayFormula(
+                    new WorkbookCellCommand.SetArrayFormula(
                         "Approvals", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")),
-                    new WorkbookCommand.ClearArrayFormula("Approvals", "D2"),
-                    new WorkbookCommand.SetSignatureLine("Approvals", signatureLineDefinition()))));
+                    new WorkbookCellCommand.ClearArrayFormula("Approvals", "D2"),
+                    new WorkbookDrawingCommand.SetSignatureLine(
+                        "Approvals", signatureLineDefinition()))));
   }
 
   private static void roundTrip(String prefix, List<WorkbookCommand> commands) throws IOException {

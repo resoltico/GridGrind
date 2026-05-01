@@ -3,7 +3,8 @@ package dev.erst.gridgrind.executor;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
@@ -15,6 +16,7 @@ import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -30,7 +32,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSnapshot;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -53,10 +54,12 @@ class DefaultGridGrindRequestExecutorCoverageTest {
 
     dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep context =
         new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
-            dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known("NEW", "NONE"),
-            new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
+                "NEW", "NONE"),
+            new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
                 0, "step-01-set-cell", "MUTATION", "SET_CELL"),
-            dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.unknown());
+            dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                .unknown());
 
     InvalidFormulaException invalidFormula =
         new InvalidFormulaException("Budget", "B4", "SUM(", "invalid", null);
@@ -91,12 +94,12 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         new MutationStep(
             "step-01-set-cell",
             new CellSelector.ByAddress("Budget", "B4"),
-            new MutationAction.SetCell(formulaCell("SUM(B2:B3)")));
+            new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)")));
     MutationStep setNamedRange =
         new MutationStep(
             "step-02-set-named-range",
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-            new MutationAction.SetNamedRange(
+            new StructuredMutationAction.SetNamedRange(
                 "BudgetTotal",
                 new NamedRangeScope.Workbook(),
                 new NamedRangeTarget("Budget", "B4")));
@@ -153,7 +156,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         new MutationStep(
             "step-01-set-named-range",
             new NamedRangeSelector.WorkbookScope("BudgetExpr"),
-            new MutationAction.SetNamedRange(
+            new StructuredMutationAction.SetNamedRange(
                 "BudgetExpr",
                 new NamedRangeScope.Workbook(),
                 new NamedRangeTarget("SUM(Budget!A1:A3)")));
@@ -168,9 +171,10 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             new WorkbookSelector.Current(),
             new InspectionQuery.AnalyzeWorkbookFindings());
 
-    WorkbookCommand.SetNamedRange namedRangeCommand =
+    WorkbookMetadataCommand.SetNamedRange namedRangeCommand =
         assertInstanceOf(
-            WorkbookCommand.SetNamedRange.class, WorkbookCommandConverter.toCommand(setNamedRange));
+            WorkbookMetadataCommand.SetNamedRange.class,
+            WorkbookCommandConverter.toCommand(setNamedRange));
     WorkbookReadCommand.GetNamedRanges namedRangesCommand =
         assertInstanceOf(
             WorkbookReadCommand.GetNamedRanges.class,
@@ -189,14 +193,14 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         assertInstanceOf(
             InspectionResult.WorkbookProtectionResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookProtectionResult(
+                new dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookProtectionResult(
                     "step-01-protection",
                     new ExcelWorkbookProtectionSnapshot(true, false, true, true, false))));
     InspectionResult.CellsResult cells =
         assertInstanceOf(
             InspectionResult.CellsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult(
+                new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
                     "step-02-cells",
                     "Budget",
                     List.of(

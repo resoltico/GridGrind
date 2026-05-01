@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
@@ -57,36 +57,23 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   @Override
   public GridGrindResponse execute(
       WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
+    WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
         Objects.requireNonNull(bindings, "bindings must not be null");
     ExecutionJournalRecorder journal =
-        ExecutionJournalRecorder.start(request, sink, executionBindings.workingDirectory());
-    GridGrindProtocolVersion protocolVersion =
-        request == null ? GridGrindProtocolVersion.current() : request.protocolVersion();
+        ExecutionJournalRecorder.start(authoredRequest, sink, executionBindings.workingDirectory());
+    GridGrindProtocolVersion protocolVersion = authoredRequest.protocolVersion();
 
     ExecutionJournalRecorder.PhaseHandle validationPhase = journal.beginValidation();
-    if (request == null) {
-      GridGrindResponse.Problem problem =
-          GridGrindProblems.problem(
-              GridGrindProblemCode.INVALID_REQUEST,
-              "request must not be null",
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ValidateRequest(
-                  dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.unknown()),
-              (Throwable) null);
-      validationPhase.fail("failed (" + problem.code() + ")");
-      return ExecutionResponseSupport.failureResponse(
-          protocolVersion, journal, 0, problem, null, null);
-    }
-
-    Optional<GridGrindResponse.Problem> validationError =
-        validationSupport.validateRequest(request);
+    Optional<GridGrindProblemDetail.Problem> validationError =
+        validationSupport.validateRequest(authoredRequest);
     if (validationError.isPresent()) {
       validationPhase.fail("failed (" + validationError.get().code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          request.steps().size(),
-          CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy()),
+          authoredRequest.steps().size(),
+          CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           validationError.get(),
           null,
           null);
@@ -96,17 +83,17 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     ExecutionJournalRecorder.PhaseHandle inputResolutionPhase = journal.beginInputResolution();
     WorkbookPlan resolvedRequest;
     try {
-      resolvedRequest = SourceBackedPlanResolver.resolve(request, executionBindings);
+      resolvedRequest = SourceBackedPlanResolver.resolve(authoredRequest, executionBindings);
     } catch (Exception exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
-              exception, stepSupport.resolveInputsContext(request, exception));
+              exception, stepSupport.resolveInputsContext(authoredRequest, exception));
       inputResolutionPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          request.steps().size(),
-          CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy()),
+          authoredRequest.steps().size(),
+          CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           problem,
           null,
           null);
@@ -150,21 +137,23 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     try {
       workbook =
           workbookSupport.openWorkbook(
-              request.source(), request.formulaEnvironment(), executionBindings.workingDirectory());
+              authoredRequest.source(),
+              authoredRequest.formulaEnvironment(),
+              executionBindings.workingDirectory());
     } catch (Exception exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           ExecutionResponseSupport.problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
-                  ExecutionRequestPaths.requestShape(request),
+                  ExecutionRequestPaths.requestShape(authoredRequest),
                   ExecutionRequestPaths.workbookReference(
-                      request, executionBindings.workingDirectory())));
+                      authoredRequest, executionBindings.workingDirectory())));
       openPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          request.steps().size(),
-          CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy()),
+          authoredRequest.steps().size(),
+          CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           problem,
           null,
           null);

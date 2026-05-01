@@ -1,647 +1,151 @@
 package dev.erst.gridgrind.contract.action;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
-import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
-import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.CellStyleInput;
-import dev.erst.gridgrind.contract.dto.ChartInput;
-import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.DataValidationInput;
-import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
-import dev.erst.gridgrind.contract.dto.NamedRangeScope;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
-import dev.erst.gridgrind.contract.dto.PaneInput;
-import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
 import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
-import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
-import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
-import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.SignatureLineInput;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * One validated mutation action expressed in protocol form.
- *
- * <p>This closed sum type intentionally imports many payload records because it is the canonical
- * contract owner for every mutation family.
- */
-@SuppressWarnings({"PMD.ExcessiveImports", "PMD.ExcessivePublicCount"})
+/** One validated mutation action expressed in protocol form. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = MutationAction.EnsureSheet.class, name = "ENSURE_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.RenameSheet.class, name = "RENAME_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.DeleteSheet.class, name = "DELETE_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.MoveSheet.class, name = "MOVE_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.CopySheet.class, name = "COPY_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.SetActiveSheet.class, name = "SET_ACTIVE_SHEET"),
-  @JsonSubTypes.Type(value = MutationAction.SetSelectedSheets.class, name = "SET_SELECTED_SHEETS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.EnsureSheet.class, name = "ENSURE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.RenameSheet.class, name = "RENAME_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteSheet.class, name = "DELETE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.MoveSheet.class, name = "MOVE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.CopySheet.class, name = "COPY_SHEET"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetSheetVisibility.class,
+      value = WorkbookMutationAction.SetActiveSheet.class,
+      name = "SET_ACTIVE_SHEET"),
+  @JsonSubTypes.Type(
+      value = WorkbookMutationAction.SetSelectedSheets.class,
+      name = "SET_SELECTED_SHEETS"),
+  @JsonSubTypes.Type(
+      value = WorkbookMutationAction.SetSheetVisibility.class,
       name = "SET_SHEET_VISIBILITY"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetSheetProtection.class,
+      value = WorkbookMutationAction.SetSheetProtection.class,
       name = "SET_SHEET_PROTECTION"),
   @JsonSubTypes.Type(
-      value = MutationAction.ClearSheetProtection.class,
+      value = WorkbookMutationAction.ClearSheetProtection.class,
       name = "CLEAR_SHEET_PROTECTION"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetWorkbookProtection.class,
+      value = WorkbookMutationAction.SetWorkbookProtection.class,
       name = "SET_WORKBOOK_PROTECTION"),
   @JsonSubTypes.Type(
-      value = MutationAction.ClearWorkbookProtection.class,
+      value = WorkbookMutationAction.ClearWorkbookProtection.class,
       name = "CLEAR_WORKBOOK_PROTECTION"),
-  @JsonSubTypes.Type(value = MutationAction.MergeCells.class, name = "MERGE_CELLS"),
-  @JsonSubTypes.Type(value = MutationAction.UnmergeCells.class, name = "UNMERGE_CELLS"),
-  @JsonSubTypes.Type(value = MutationAction.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
-  @JsonSubTypes.Type(value = MutationAction.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
-  @JsonSubTypes.Type(value = MutationAction.InsertRows.class, name = "INSERT_ROWS"),
-  @JsonSubTypes.Type(value = MutationAction.DeleteRows.class, name = "DELETE_ROWS"),
-  @JsonSubTypes.Type(value = MutationAction.ShiftRows.class, name = "SHIFT_ROWS"),
-  @JsonSubTypes.Type(value = MutationAction.InsertColumns.class, name = "INSERT_COLUMNS"),
-  @JsonSubTypes.Type(value = MutationAction.DeleteColumns.class, name = "DELETE_COLUMNS"),
-  @JsonSubTypes.Type(value = MutationAction.ShiftColumns.class, name = "SHIFT_COLUMNS"),
-  @JsonSubTypes.Type(value = MutationAction.SetRowVisibility.class, name = "SET_ROW_VISIBILITY"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.MergeCells.class, name = "MERGE_CELLS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.UnmergeCells.class, name = "UNMERGE_CELLS"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetColumnVisibility.class,
+      value = WorkbookMutationAction.SetColumnWidth.class,
+      name = "SET_COLUMN_WIDTH"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.InsertRows.class, name = "INSERT_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteRows.class, name = "DELETE_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.ShiftRows.class, name = "SHIFT_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.InsertColumns.class, name = "INSERT_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteColumns.class, name = "DELETE_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.ShiftColumns.class, name = "SHIFT_COLUMNS"),
+  @JsonSubTypes.Type(
+      value = WorkbookMutationAction.SetRowVisibility.class,
+      name = "SET_ROW_VISIBILITY"),
+  @JsonSubTypes.Type(
+      value = WorkbookMutationAction.SetColumnVisibility.class,
       name = "SET_COLUMN_VISIBILITY"),
-  @JsonSubTypes.Type(value = MutationAction.GroupRows.class, name = "GROUP_ROWS"),
-  @JsonSubTypes.Type(value = MutationAction.UngroupRows.class, name = "UNGROUP_ROWS"),
-  @JsonSubTypes.Type(value = MutationAction.GroupColumns.class, name = "GROUP_COLUMNS"),
-  @JsonSubTypes.Type(value = MutationAction.UngroupColumns.class, name = "UNGROUP_COLUMNS"),
-  @JsonSubTypes.Type(value = MutationAction.SetSheetPane.class, name = "SET_SHEET_PANE"),
-  @JsonSubTypes.Type(value = MutationAction.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.GroupRows.class, name = "GROUP_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.UngroupRows.class, name = "UNGROUP_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.GroupColumns.class, name = "GROUP_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.UngroupColumns.class, name = "UNGROUP_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.SetSheetPane.class, name = "SET_SHEET_PANE"),
+  @JsonSubTypes.Type(value = WorkbookMutationAction.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetSheetPresentation.class,
+      value = WorkbookMutationAction.SetSheetPresentation.class,
       name = "SET_SHEET_PRESENTATION"),
-  @JsonSubTypes.Type(value = MutationAction.SetPrintLayout.class, name = "SET_PRINT_LAYOUT"),
-  @JsonSubTypes.Type(value = MutationAction.ClearPrintLayout.class, name = "CLEAR_PRINT_LAYOUT"),
-  @JsonSubTypes.Type(value = MutationAction.SetCell.class, name = "SET_CELL"),
-  @JsonSubTypes.Type(value = MutationAction.SetRange.class, name = "SET_RANGE"),
-  @JsonSubTypes.Type(value = MutationAction.ClearRange.class, name = "CLEAR_RANGE"),
-  @JsonSubTypes.Type(value = MutationAction.SetArrayFormula.class, name = "SET_ARRAY_FORMULA"),
-  @JsonSubTypes.Type(value = MutationAction.ClearArrayFormula.class, name = "CLEAR_ARRAY_FORMULA"),
   @JsonSubTypes.Type(
-      value = MutationAction.ImportCustomXmlMapping.class,
-      name = "IMPORT_CUSTOM_XML_MAPPING"),
-  @JsonSubTypes.Type(value = MutationAction.SetHyperlink.class, name = "SET_HYPERLINK"),
-  @JsonSubTypes.Type(value = MutationAction.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
-  @JsonSubTypes.Type(value = MutationAction.SetComment.class, name = "SET_COMMENT"),
-  @JsonSubTypes.Type(value = MutationAction.ClearComment.class, name = "CLEAR_COMMENT"),
-  @JsonSubTypes.Type(value = MutationAction.SetPicture.class, name = "SET_PICTURE"),
-  @JsonSubTypes.Type(value = MutationAction.SetSignatureLine.class, name = "SET_SIGNATURE_LINE"),
-  @JsonSubTypes.Type(value = MutationAction.SetChart.class, name = "SET_CHART"),
-  @JsonSubTypes.Type(value = MutationAction.SetPivotTable.class, name = "SET_PIVOT_TABLE"),
-  @JsonSubTypes.Type(value = MutationAction.SetShape.class, name = "SET_SHAPE"),
-  @JsonSubTypes.Type(value = MutationAction.SetEmbeddedObject.class, name = "SET_EMBEDDED_OBJECT"),
+      value = WorkbookMutationAction.SetPrintLayout.class,
+      name = "SET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetDrawingObjectAnchor.class,
+      value = WorkbookMutationAction.ClearPrintLayout.class,
+      name = "CLEAR_PRINT_LAYOUT"),
+  @JsonSubTypes.Type(value = CellMutationAction.SetCell.class, name = "SET_CELL"),
+  @JsonSubTypes.Type(value = CellMutationAction.SetRange.class, name = "SET_RANGE"),
+  @JsonSubTypes.Type(value = CellMutationAction.ClearRange.class, name = "CLEAR_RANGE"),
+  @JsonSubTypes.Type(value = CellMutationAction.SetArrayFormula.class, name = "SET_ARRAY_FORMULA"),
+  @JsonSubTypes.Type(
+      value = CellMutationAction.ClearArrayFormula.class,
+      name = "CLEAR_ARRAY_FORMULA"),
+  @JsonSubTypes.Type(value = CellMutationAction.SetHyperlink.class, name = "SET_HYPERLINK"),
+  @JsonSubTypes.Type(value = CellMutationAction.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
+  @JsonSubTypes.Type(value = CellMutationAction.SetComment.class, name = "SET_COMMENT"),
+  @JsonSubTypes.Type(value = CellMutationAction.ClearComment.class, name = "CLEAR_COMMENT"),
+  @JsonSubTypes.Type(value = CellMutationAction.ApplyStyle.class, name = "APPLY_STYLE"),
+  @JsonSubTypes.Type(value = CellMutationAction.AppendRow.class, name = "APPEND_ROW"),
+  @JsonSubTypes.Type(value = DrawingMutationAction.SetPicture.class, name = "SET_PICTURE"),
+  @JsonSubTypes.Type(
+      value = DrawingMutationAction.SetSignatureLine.class,
+      name = "SET_SIGNATURE_LINE"),
+  @JsonSubTypes.Type(value = DrawingMutationAction.SetChart.class, name = "SET_CHART"),
+  @JsonSubTypes.Type(value = DrawingMutationAction.SetShape.class, name = "SET_SHAPE"),
+  @JsonSubTypes.Type(
+      value = DrawingMutationAction.SetEmbeddedObject.class,
+      name = "SET_EMBEDDED_OBJECT"),
+  @JsonSubTypes.Type(
+      value = DrawingMutationAction.SetDrawingObjectAnchor.class,
       name = "SET_DRAWING_OBJECT_ANCHOR"),
   @JsonSubTypes.Type(
-      value = MutationAction.DeleteDrawingObject.class,
+      value = DrawingMutationAction.DeleteDrawingObject.class,
       name = "DELETE_DRAWING_OBJECT"),
-  @JsonSubTypes.Type(value = MutationAction.ApplyStyle.class, name = "APPLY_STYLE"),
-  @JsonSubTypes.Type(value = MutationAction.SetDataValidation.class, name = "SET_DATA_VALIDATION"),
   @JsonSubTypes.Type(
-      value = MutationAction.ClearDataValidations.class,
+      value = StructuredMutationAction.ImportCustomXmlMapping.class,
+      name = "IMPORT_CUSTOM_XML_MAPPING"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.SetPivotTable.class,
+      name = "SET_PIVOT_TABLE"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.SetDataValidation.class,
+      name = "SET_DATA_VALIDATION"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.ClearDataValidations.class,
       name = "CLEAR_DATA_VALIDATIONS"),
   @JsonSubTypes.Type(
-      value = MutationAction.SetConditionalFormatting.class,
+      value = StructuredMutationAction.SetConditionalFormatting.class,
       name = "SET_CONDITIONAL_FORMATTING"),
   @JsonSubTypes.Type(
-      value = MutationAction.ClearConditionalFormatting.class,
+      value = StructuredMutationAction.ClearConditionalFormatting.class,
       name = "CLEAR_CONDITIONAL_FORMATTING"),
-  @JsonSubTypes.Type(value = MutationAction.SetAutofilter.class, name = "SET_AUTOFILTER"),
-  @JsonSubTypes.Type(value = MutationAction.ClearAutofilter.class, name = "CLEAR_AUTOFILTER"),
-  @JsonSubTypes.Type(value = MutationAction.SetTable.class, name = "SET_TABLE"),
-  @JsonSubTypes.Type(value = MutationAction.DeleteTable.class, name = "DELETE_TABLE"),
-  @JsonSubTypes.Type(value = MutationAction.DeletePivotTable.class, name = "DELETE_PIVOT_TABLE"),
-  @JsonSubTypes.Type(value = MutationAction.SetNamedRange.class, name = "SET_NAMED_RANGE"),
-  @JsonSubTypes.Type(value = MutationAction.DeleteNamedRange.class, name = "DELETE_NAMED_RANGE"),
-  @JsonSubTypes.Type(value = MutationAction.AppendRow.class, name = "APPEND_ROW"),
-  @JsonSubTypes.Type(value = MutationAction.AutoSizeColumns.class, name = "AUTO_SIZE_COLUMNS")
+  @JsonSubTypes.Type(value = StructuredMutationAction.SetAutofilter.class, name = "SET_AUTOFILTER"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.ClearAutofilter.class,
+      name = "CLEAR_AUTOFILTER"),
+  @JsonSubTypes.Type(value = StructuredMutationAction.SetTable.class, name = "SET_TABLE"),
+  @JsonSubTypes.Type(value = StructuredMutationAction.DeleteTable.class, name = "DELETE_TABLE"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.DeletePivotTable.class,
+      name = "DELETE_PIVOT_TABLE"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.SetNamedRange.class,
+      name = "SET_NAMED_RANGE"),
+  @JsonSubTypes.Type(
+      value = StructuredMutationAction.DeleteNamedRange.class,
+      name = "DELETE_NAMED_RANGE"),
+  @JsonSubTypes.Type(
+      value = WorkbookMutationAction.AutoSizeColumns.class,
+      name = "AUTO_SIZE_COLUMNS")
 })
-public sealed interface MutationAction {
-  /** Mutation families that operate on workbook, sheet, row, column, or layout state. */
-  sealed interface WorkbookMutationAction extends MutationAction {}
-
-  /** Mutation families that operate on cells, ranges, comments, hyperlinks, or cell styles. */
-  sealed interface CellMutationAction extends MutationAction {}
-
-  /** Mutation families that operate on drawing-backed workbook objects. */
-  sealed interface DrawingMutationAction extends MutationAction {}
-
-  /** Mutation families that operate on workbook-scoped structured Excel features. */
-  sealed interface StructuredMutationAction extends MutationAction {}
-
-  /** Ensures a sheet with the given name exists, creating it if absent. */
-  record EnsureSheet() implements WorkbookMutationAction {
-    public EnsureSheet {}
-  }
-
-  /** Renames an existing sheet to a new destination name. */
-  record RenameSheet(String newSheetName) implements WorkbookMutationAction {
-    public RenameSheet {
-      Validation.requireSheetName(newSheetName, "newSheetName");
-    }
-  }
-
-  /** Deletes an existing sheet from the workbook. */
-  record DeleteSheet() implements WorkbookMutationAction {
-    public DeleteSheet {}
-  }
-
-  /** Moves an existing sheet to a zero-based workbook position. */
-  record MoveSheet(Integer targetIndex) implements WorkbookMutationAction {
-    public MoveSheet {
-      Objects.requireNonNull(targetIndex, "targetIndex must not be null");
-      Validation.requireNonNegative(targetIndex, "targetIndex");
-    }
-  }
-
-  /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
-  record CopySheet(String newSheetName, SheetCopyPosition position)
-      implements WorkbookMutationAction {
-    @JsonCreator
-    static CopySheet create(
-        @JsonProperty("newSheetName") String newSheetName,
-        @JsonProperty("position") SheetCopyPosition position) {
-      return new CopySheet(
-          newSheetName, position == null ? new SheetCopyPosition.AppendAtEnd() : position);
-    }
-
-    /** Copies one sheet to the end of the workbook. */
-    public CopySheet(String newSheetName) {
-      this(newSheetName, new SheetCopyPosition.AppendAtEnd());
-    }
-
-    public CopySheet {
-      Validation.requireSheetName(newSheetName, "newSheetName");
-      Objects.requireNonNull(position, "position must not be null");
-    }
-  }
-
-  /** Sets the active sheet and ensures it is selected. */
-  record SetActiveSheet() implements WorkbookMutationAction {
-    public SetActiveSheet {}
-  }
-
-  /** Sets the selected visible sheet set. */
-  record SetSelectedSheets() implements WorkbookMutationAction {
-    public SetSelectedSheets {}
-  }
-
-  /** Sets one sheet visibility. */
-  record SetSheetVisibility(ExcelSheetVisibility visibility) implements WorkbookMutationAction {
-    public SetSheetVisibility {
-      Objects.requireNonNull(visibility, "visibility must not be null");
-    }
-  }
-
-  /** Enables sheet protection with the exact supported lock flags. */
-  record SetSheetProtection(SheetProtectionSettings protection, String password)
-      implements WorkbookMutationAction {
-    /** Enables sheet protection without applying a password hash. */
-    public SetSheetProtection(SheetProtectionSettings protection) {
-      this(protection, null);
-    }
-
-    public SetSheetProtection {
-      Objects.requireNonNull(protection, "protection must not be null");
-      if (password != null && password.isBlank()) {
-        throw new IllegalArgumentException("password must not be blank");
-      }
-    }
-  }
-
-  /** Disables sheet protection entirely. */
-  record ClearSheetProtection() implements WorkbookMutationAction {
-    public ClearSheetProtection {}
-  }
-
-  /** Enables workbook-level protection and password hashes with authoritative settings. */
-  record SetWorkbookProtection(WorkbookProtectionInput protection)
-      implements WorkbookMutationAction {
-    public SetWorkbookProtection {
-      Objects.requireNonNull(protection, "protection must not be null");
-    }
-  }
-
-  /** Clears workbook-level protection and password hashes entirely. */
-  record ClearWorkbookProtection() implements WorkbookMutationAction {
-    public ClearWorkbookProtection {}
-  }
-
-  /** Merges an A1-style rectangular range into one displayed cell region. */
-  record MergeCells() implements WorkbookMutationAction {
-    public MergeCells {}
-  }
-
-  /** Removes the merged region whose coordinates exactly match the given range. */
-  record UnmergeCells() implements WorkbookMutationAction {
-    public UnmergeCells {}
-  }
-
-  /** Sets the width of one or more contiguous columns in Excel character units. */
-  record SetColumnWidth(Double widthCharacters) implements WorkbookMutationAction {
-    public SetColumnWidth {
-      Objects.requireNonNull(widthCharacters, "widthCharacters must not be null");
-      Validation.requireColumnWidthCharacters(widthCharacters);
-    }
-  }
-
-  /** Sets the height of one or more contiguous rows in Excel point units. */
-  record SetRowHeight(Double heightPoints) implements WorkbookMutationAction {
-    public SetRowHeight {
-      Objects.requireNonNull(heightPoints, "heightPoints must not be null");
-      Validation.requireRowHeightPoints(heightPoints);
-    }
-  }
-
-  /** Inserts one or more blank rows before the provided zero-based row index. */
-  record InsertRows() implements WorkbookMutationAction {
-    public InsertRows {}
-  }
-
-  /** Deletes the requested inclusive zero-based row band. */
-  record DeleteRows() implements WorkbookMutationAction {
-    public DeleteRows {}
-  }
-
-  /** Moves the requested inclusive zero-based row band by the provided signed delta. */
-  record ShiftRows(Integer delta) implements WorkbookMutationAction {
-    public ShiftRows {
-      Objects.requireNonNull(delta, "delta must not be null");
-      Validation.requireNonZero(delta, "delta");
-    }
-  }
-
-  /** Inserts one or more blank columns before the provided zero-based column index. */
-  record InsertColumns() implements WorkbookMutationAction {
-    public InsertColumns {}
-  }
-
-  /** Deletes the requested inclusive zero-based column band. */
-  record DeleteColumns() implements WorkbookMutationAction {
-    public DeleteColumns {}
-  }
-
-  /** Moves the requested inclusive zero-based column band by the provided signed delta. */
-  record ShiftColumns(Integer delta) implements WorkbookMutationAction {
-    public ShiftColumns {
-      Objects.requireNonNull(delta, "delta must not be null");
-      Validation.requireNonZero(delta, "delta");
-    }
-  }
-
-  /** Sets the hidden state for the requested inclusive zero-based row band. */
-  record SetRowVisibility(Boolean hidden) implements WorkbookMutationAction {
-    public SetRowVisibility {
-      Objects.requireNonNull(hidden, "hidden must not be null");
-    }
-  }
-
-  /** Sets the hidden state for the requested inclusive zero-based column band. */
-  record SetColumnVisibility(Boolean hidden) implements WorkbookMutationAction {
-    public SetColumnVisibility {
-      Objects.requireNonNull(hidden, "hidden must not be null");
-    }
-  }
-
-  /** Applies one outline group to the requested inclusive zero-based row band. */
-  record GroupRows(Boolean collapsed) implements WorkbookMutationAction {
-    @JsonCreator
-    static GroupRows create(@JsonProperty("collapsed") Boolean collapsed) {
-      return new GroupRows(collapsed == null ? Boolean.FALSE : collapsed);
-    }
-
-    /** Applies one non-collapsed outline group. */
-    public GroupRows() {
-      this(Boolean.FALSE);
-    }
-
-    public GroupRows {
-      Objects.requireNonNull(collapsed, "collapsed must not be null");
-    }
-  }
-
-  /** Removes outline grouping from the requested inclusive zero-based row band. */
-  record UngroupRows() implements WorkbookMutationAction {
-    public UngroupRows {}
-  }
-
-  /** Applies one outline group to the requested inclusive zero-based column band. */
-  record GroupColumns(Boolean collapsed) implements WorkbookMutationAction {
-    @JsonCreator
-    static GroupColumns create(@JsonProperty("collapsed") Boolean collapsed) {
-      return new GroupColumns(collapsed == null ? Boolean.FALSE : collapsed);
-    }
-
-    /** Applies one non-collapsed outline group. */
-    public GroupColumns() {
-      this(Boolean.FALSE);
-    }
-
-    public GroupColumns {
-      Objects.requireNonNull(collapsed, "collapsed must not be null");
-    }
-  }
-
-  /** Removes outline grouping from the requested inclusive zero-based column band. */
-  record UngroupColumns() implements WorkbookMutationAction {
-    public UngroupColumns {}
-  }
-
-  /** Applies one explicit pane state to a sheet. */
-  record SetSheetPane(PaneInput pane) implements WorkbookMutationAction {
-    public SetSheetPane {
-      Objects.requireNonNull(pane, "pane must not be null");
-    }
-  }
-
-  /** Applies one explicit zoom percentage to a sheet. */
-  record SetSheetZoom(Integer zoomPercent) implements WorkbookMutationAction {
-    public SetSheetZoom {
-      Objects.requireNonNull(zoomPercent, "zoomPercent must not be null");
-      Validation.requireZoomPercent(zoomPercent);
-    }
-  }
-
-  /** Applies authoritative sheet-presentation state such as display flags and defaults. */
-  record SetSheetPresentation(SheetPresentationInput presentation)
-      implements WorkbookMutationAction {
-    public SetSheetPresentation {
-      Objects.requireNonNull(presentation, "presentation must not be null");
-    }
-  }
-
-  /** Applies one authoritative supported print-layout state to a sheet. */
-  record SetPrintLayout(PrintLayoutInput printLayout) implements WorkbookMutationAction {
-    public SetPrintLayout {
-      Objects.requireNonNull(printLayout, "printLayout must not be null");
-    }
-  }
-
-  /** Clears the supported print-layout state from a sheet. */
-  record ClearPrintLayout() implements WorkbookMutationAction {
-    public ClearPrintLayout {}
-  }
-
-  /** Sets a single cell to the given value. */
-  record SetCell(CellInput value) implements CellMutationAction {
-    public SetCell {
-      Objects.requireNonNull(value, "value must not be null");
-    }
-  }
-
-  /** Sets a rectangular region of cells from a row-major grid of values. */
-  record SetRange(List<List<CellInput>> rows) implements CellMutationAction {
-    public SetRange {
-      rows = Validation.copyRows(rows);
-      Validation.requireRectangularRows(rows);
-      rows = Validation.freezeRows(rows);
-    }
-  }
-
-  /** Clears all cell values and styles within the specified range. */
-  record ClearRange() implements CellMutationAction {
-    public ClearRange {}
-  }
-
-  /** Creates or replaces one dedicated array-formula group over the addressed range. */
-  record SetArrayFormula(ArrayFormulaInput formula) implements CellMutationAction {
-    public SetArrayFormula {
-      Objects.requireNonNull(formula, "formula must not be null");
-    }
-  }
-
-  /** Removes the array-formula group containing the addressed cell and clears the group. */
-  record ClearArrayFormula() implements CellMutationAction {
-    public ClearArrayFormula {}
-  }
-
-  /** Imports one XML document into one existing workbook custom-XML mapping. */
-  record ImportCustomXmlMapping(CustomXmlImportInput mapping) implements StructuredMutationAction {
-    public ImportCustomXmlMapping {
-      Objects.requireNonNull(mapping, "mapping must not be null");
-    }
-  }
-
-  /** Replaces the hyperlink attached to a single cell. */
-  record SetHyperlink(HyperlinkTarget target) implements CellMutationAction {
-    public SetHyperlink {
-      Objects.requireNonNull(target, "target must not be null");
-    }
-  }
-
-  /** Removes any hyperlink attached to a single existing cell. */
-  record ClearHyperlink() implements CellMutationAction {
-    public ClearHyperlink {}
-  }
-
-  /** Replaces the plain-text comment attached to a single cell. */
-  record SetComment(CommentInput comment) implements CellMutationAction {
-    public SetComment {
-      Objects.requireNonNull(comment, "comment must not be null");
-    }
-  }
-
-  /** Removes any comment attached to a single existing cell. */
-  record ClearComment() implements CellMutationAction {
-    public ClearComment {}
-  }
-
-  /** Creates or replaces one picture-backed drawing object on one sheet. */
-  record SetPicture(PictureInput picture) implements DrawingMutationAction {
-    public SetPicture {
-      Objects.requireNonNull(picture, "picture must not be null");
-    }
-  }
-
-  /** Creates or replaces one signature-line drawing object on one sheet. */
-  record SetSignatureLine(SignatureLineInput signatureLine) implements DrawingMutationAction {
-    public SetSignatureLine {
-      Objects.requireNonNull(signatureLine, "signatureLine must not be null");
-    }
-  }
-
-  /** Creates or mutates one supported simple chart on one sheet. */
-  record SetChart(ChartInput chart) implements DrawingMutationAction {
-    public SetChart {
-      Objects.requireNonNull(chart, "chart must not be null");
-    }
-  }
-
-  /** Creates or replaces one workbook-global pivot-table definition. */
-  record SetPivotTable(PivotTableInput pivotTable) implements StructuredMutationAction {
-    public SetPivotTable {
-      Objects.requireNonNull(pivotTable, "pivotTable must not be null");
-    }
-  }
-
-  /** Creates or replaces one simple-shape or connector drawing object on one sheet. */
-  record SetShape(ShapeInput shape) implements DrawingMutationAction {
-    public SetShape {
-      Objects.requireNonNull(shape, "shape must not be null");
-    }
-  }
-
-  /** Creates or replaces one embedded-object drawing object on one sheet. */
-  record SetEmbeddedObject(EmbeddedObjectInput embeddedObject) implements DrawingMutationAction {
-    public SetEmbeddedObject {
-      Objects.requireNonNull(embeddedObject, "embeddedObject must not be null");
-    }
-  }
-
-  /** Moves one existing drawing object by replacing its anchor authoritatively. */
-  record SetDrawingObjectAnchor(DrawingAnchorInput anchor) implements DrawingMutationAction {
-    public SetDrawingObjectAnchor {
-      Objects.requireNonNull(anchor, "anchor must not be null");
-    }
-  }
-
-  /** Deletes one existing drawing object by sheet-local name. */
-  record DeleteDrawingObject() implements DrawingMutationAction {
-    public DeleteDrawingObject {}
-  }
-
-  /** Applies a style patch to every cell in the specified range. */
-  record ApplyStyle(CellStyleInput style) implements CellMutationAction {
-    public ApplyStyle {
-      Objects.requireNonNull(style, "style must not be null");
-    }
-  }
-
-  /** Creates or replaces one data-validation rule over the requested sheet range. */
-  record SetDataValidation(DataValidationInput validation) implements StructuredMutationAction {
-    public SetDataValidation {
-      Objects.requireNonNull(validation, "validation must not be null");
-    }
-  }
-
-  /** Removes data-validation structures on the sheet that match the provided range selection. */
-  record ClearDataValidations() implements StructuredMutationAction {
-    public ClearDataValidations {}
-  }
-
-  /** Creates or replaces one logical conditional-formatting block over the requested ranges. */
-  record SetConditionalFormatting(ConditionalFormattingBlockInput conditionalFormatting)
-      implements StructuredMutationAction {
-    public SetConditionalFormatting {
-      Objects.requireNonNull(conditionalFormatting, "conditionalFormatting must not be null");
-    }
-  }
-
-  /** Removes conditional-formatting blocks on the sheet that match the provided range selection. */
-  record ClearConditionalFormatting() implements StructuredMutationAction {
-    public ClearConditionalFormatting {}
-  }
-
-  /** Creates or replaces one sheet-level autofilter range. */
-  record SetAutofilter(
-      List<AutofilterFilterColumnInput> criteria, AutofilterSortStateInput sortState)
-      implements StructuredMutationAction {
-    @JsonCreator
-    static SetAutofilter create(
-        @JsonProperty("criteria") List<AutofilterFilterColumnInput> criteria,
-        @JsonProperty("sortState") AutofilterSortStateInput sortState) {
-      return new SetAutofilter(criteria == null ? List.of() : criteria, sortState);
-    }
-
-    /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
-    public SetAutofilter() {
-      this(List.of(), null);
-    }
-
-    public SetAutofilter {
-      Objects.requireNonNull(criteria, "criteria must not be null");
-      criteria = new ArrayList<>(criteria);
-      for (AutofilterFilterColumnInput criterion : criteria) {
-        Objects.requireNonNull(criterion, "criteria must not contain null values");
-      }
-      criteria = List.copyOf(criteria);
-    }
-  }
-
-  /** Clears the sheet-level autofilter range on one sheet. */
-  record ClearAutofilter() implements StructuredMutationAction {
-    public ClearAutofilter {}
-  }
-
-  /** Creates or replaces one workbook-global table definition. */
-  record SetTable(TableInput table) implements StructuredMutationAction {
-    public SetTable {
-      Objects.requireNonNull(table, "table must not be null");
-    }
-  }
-
-  /** Deletes one existing table by workbook-global name and expected sheet. */
-  record DeleteTable() implements StructuredMutationAction {
-    public DeleteTable {}
-  }
-
-  /** Deletes one existing pivot table by workbook-global name and expected sheet. */
-  record DeletePivotTable() implements StructuredMutationAction {
-    public DeletePivotTable {}
-  }
-
-  /** Creates or replaces one typed named range in workbook or sheet scope. */
-  record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
-      implements StructuredMutationAction {
-    public SetNamedRange {
-      Objects.requireNonNull(scope, "scope must not be null");
-      Objects.requireNonNull(target, "target must not be null");
-      Validation.requireNamedRangeName(name);
-    }
-  }
-
-  /** Deletes one existing named range from workbook or sheet scope. */
-  record DeleteNamedRange() implements StructuredMutationAction {
-    public DeleteNamedRange {}
-  }
-
-  /** Appends a new row of values after the last occupied row on the sheet. */
-  record AppendRow(List<CellInput> values) implements CellMutationAction {
-    public AppendRow {
-      Objects.requireNonNull(values, "values must not be null");
-      values = new ArrayList<>(values);
-      if (values.isEmpty()) {
-        throw new IllegalArgumentException("values must not be empty");
-      }
-      for (CellInput item : values) {
-        Objects.requireNonNull(item, "values must not contain nulls");
-      }
-      values = List.copyOf(values);
-    }
-  }
-
-  /** Auto-sizes all populated columns on the sheet to fit their content. */
-  record AutoSizeColumns() implements WorkbookMutationAction {
-    public AutoSizeColumns {}
-  }
-
+public sealed interface MutationAction
+    permits WorkbookMutationAction,
+        CellMutationAction,
+        DrawingMutationAction,
+        StructuredMutationAction {
   /** Returns the SCREAMING_SNAKE_CASE type name of this action as used in the wire protocol. */
   default String actionType() {
     return GridGrindProtocolTypeNames.mutationActionTypeName(

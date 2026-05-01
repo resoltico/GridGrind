@@ -12,8 +12,7 @@ public record TaskPlanTemplate(
     WorkbookPlan requestTemplate,
     List<String> authoringNotes) {
   public TaskPlanTemplate {
-    protocolVersion =
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     Objects.requireNonNull(task, "task must not be null");
     Objects.requireNonNull(requestTemplate, "requestTemplate must not be null");
     authoringNotes = CatalogRecordValidation.copyStrings(authoringNotes, "authoringNotes");

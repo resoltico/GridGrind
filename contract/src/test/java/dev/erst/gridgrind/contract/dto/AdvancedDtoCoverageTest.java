@@ -25,6 +25,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Broad constructor and validation coverage for advanced protocol DTO families. */
@@ -33,9 +34,13 @@ class AdvancedDtoCoverageTest {
   void drawingReportsValidatePayloadAndAnchorSemantics() {
     DrawingMarkerReport from = new DrawingMarkerReport(0, 0, 0, 0);
     DrawingMarkerReport to = new DrawingMarkerReport(1, 1, 0, 0);
-    DrawingAnchorReport.TwoCell twoCell = new DrawingAnchorReport.TwoCell(from, to, null);
-    DrawingAnchorReport.OneCell oneCell = new DrawingAnchorReport.OneCell(from, 1L, 2L, null);
-    DrawingAnchorReport.Absolute absolute = new DrawingAnchorReport.Absolute(1L, 2L, 3L, 4L, null);
+    DrawingAnchorReport.TwoCell twoCell =
+        new DrawingAnchorReport.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorReport.OneCell oneCell =
+        new DrawingAnchorReport.OneCell(from, 1L, 2L, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    DrawingAnchorReport.Absolute absolute =
+        new DrawingAnchorReport.Absolute(
+            1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE);
 
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, twoCell.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
@@ -708,13 +713,22 @@ class AdvancedDtoCoverageTest {
                         0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "))
             .getMessage());
 
-    TableColumnReport tableColumn = TableColumnReport.create(1L, "Amount", null, null, null, null);
-    assertEquals("", tableColumn.uniqueName());
+    TableColumnReport tableColumn =
+        TableColumnReport.create(
+            1L, "Amount", Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty());
+    assertEquals(Optional.empty(), tableColumn.uniqueName());
     assertEquals(
         "id must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new TableColumnReport(-1L, "Amount", "", "", "", ""))
+                () ->
+                    new TableColumnReport(
+                        -1L,
+                        "Amount",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
 
     PrintSetupReport defaults = PrintSetupReport.defaults();
@@ -739,15 +753,15 @@ class AdvancedDtoCoverageTest {
                         List.of()))
             .getMessage());
 
-    GridGrindResponse.AnalysisSummaryReport summary =
-        new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0);
-    GridGrindResponse.AnalysisFindingReport finding =
-        new GridGrindResponse.AnalysisFindingReport(
+    GridGrindAnalysisReports.AnalysisSummaryReport summary =
+        new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0);
+    GridGrindAnalysisReports.AnalysisFindingReport finding =
+        new GridGrindAnalysisReports.AnalysisFindingReport(
             AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
             AnalysisSeverity.WARNING,
             "Autofilter spans multiple ranges",
             "Autofilter found on disjoint ranges.",
-            new GridGrindResponse.AnalysisLocationReport.Sheet("Budget"),
+            new GridGrindAnalysisReports.AnalysisLocationReport.Sheet("Budget"),
             List.of("A1:B4"));
     AutofilterHealthReport report = new AutofilterHealthReport(1, summary, List.of(finding));
     assertEquals(1, report.checkedAutofilterCount());

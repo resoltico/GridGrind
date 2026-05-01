@@ -100,6 +100,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void licenseText_loadsBundledLicenseSurface_fromAnchorClass() {
+    String result = GridGrindCli.licenseText(GridGrindCli.class);
+
+    assertFalse(result.isBlank());
+  }
+
+  @Test
   void licenseText_thirdPartyOnly_whenOwnAbsent() {
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
@@ -194,6 +201,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("--print-example <id>"));
     assertTrue(help.contains("--help, -h, help"));
+    assertTrue(help.contains("gridgrind --license [--response <path>]"));
+    assertTrue(help.contains("--license"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("Coordinate Systems:"));
     assertTrue(
@@ -496,19 +505,20 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void helpTextMentionsOptionalRequestFields() {
+  void helpTextMentionsRequiredRequestFields() {
     String help = GridGrindCli.helpText("1.0.0");
 
     assertTrue(
-        help.contains("protocolVersion"), "help must mention that protocolVersion is optional");
+        help.contains("protocolVersion is required"),
+        "help must mention that protocolVersion is required");
     assertTrue(
-        help.contains("persistence is optional"), "help must mention that persistence is optional");
+        help.contains("persistence is required"), "help must mention that persistence is required");
     assertTrue(
-        help.contains("execution is optional"), "help must mention that execution is optional");
+        help.contains("execution is required"), "help must mention that execution is required");
     assertTrue(
-        help.contains("formulaEnvironment is optional"),
-        "help must mention that formulaEnvironment is optional");
-    assertTrue(help.contains("steps is optional"), "help must mention that steps is optional");
+        help.contains("formulaEnvironment is required"),
+        "help must mention that formulaEnvironment is required");
+    assertTrue(help.contains("steps is required"), "help must mention that steps is required");
     assertTrue(
         help.contains("ASSERTION steps for first-class verification"),
         "help must mention assertion steps");

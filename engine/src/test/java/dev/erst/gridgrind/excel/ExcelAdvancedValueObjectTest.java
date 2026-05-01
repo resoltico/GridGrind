@@ -35,8 +35,9 @@ class ExcelAdvancedValueObjectTest {
     var icon = new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2);
     var column = new ExcelAutofilterFilterColumn(4L, false, color);
     var sortCondition =
-        new ExcelAutofilterSortCondition("A2:A5", true, null, ExcelColor.rgb("#AABBCC"), 1);
-    var sortState = new ExcelAutofilterSortState("A1:F5", true, true, "", List.of(sortCondition));
+        new ExcelAutofilterSortCondition.CellColor("A2:A5", true, ExcelColor.rgb("#AABBCC"));
+    var sortState =
+        new ExcelAutofilterSortState("A1:F5", true, true, Optional.empty(), List.of(sortCondition));
 
     assertEquals(List.of("Queued", ""), values.values());
     assertEquals(List.of(customCondition), custom.conditions());
@@ -45,7 +46,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(ExcelColor.indexed(10, -0.25d), color.color());
     assertEquals("3TrafficLights1", icon.iconSet());
     assertEquals(4L, column.columnId());
-    assertEquals("", sortCondition.sortBy());
+    assertInstanceOf(ExcelAutofilterSortCondition.CellColor.class, sortCondition);
     assertEquals(List.of(sortCondition), sortState.conditions());
 
     List<String> valuesWithNull = new ArrayList<>(Arrays.asList("Queued", null));
@@ -80,23 +81,23 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelAutofilterFilterColumn(-1L, true, values));
     assertThrows(
-        NullPointerException.class,
-        () -> new ExcelAutofilterSortCondition(null, false, "", null, null));
+        NullPointerException.class, () -> new ExcelAutofilterSortCondition.Value(null, false));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ExcelAutofilterSortCondition.Value(" ", false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortCondition(" ", false, "", null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortCondition("A1", false, "", null, -1));
+        () -> new ExcelAutofilterSortCondition.Icon("A1", false, -1));
     assertThrows(
         NullPointerException.class,
         () -> new ExcelAutofilterSortState("A1:B2", false, false, null, List.of(sortCondition)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortState(" ", false, false, "", List.of(sortCondition)));
+        () ->
+            new ExcelAutofilterSortState(
+                " ", false, false, Optional.empty(), List.of(sortCondition)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelAutofilterSortState("A1:B2", false, false, "", List.of()));
+        () -> new ExcelAutofilterSortState("A1:B2", false, false, Optional.empty(), List.of()));
   }
 
   @Test

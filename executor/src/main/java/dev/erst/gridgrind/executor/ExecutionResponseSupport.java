@@ -2,6 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -37,7 +38,7 @@ final class ExecutionResponseSupport {
       return rebuildResponse(
           response, request, journal, primaryFailureCode, failedStepIndex, failedStepId);
     } catch (Exception closeFailure) {
-      GridGrindResponse.Problem closeProblem =
+      GridGrindProblemDetail.Problem closeProblem =
           problemFor(
               closeFailure,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
@@ -72,7 +73,7 @@ final class ExecutionResponseSupport {
       return rebuildResponse(
           response, request, journal, primaryFailureCode, failedStepIndex, failedStepId);
     } catch (Exception closeFailure) {
-      GridGrindResponse.Problem closeProblem =
+      GridGrindProblemDetail.Problem closeProblem =
           problemFor(
               closeFailure,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
@@ -97,7 +98,7 @@ final class ExecutionResponseSupport {
     try {
       return workflow.get();
     } catch (RuntimeException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
@@ -122,7 +123,7 @@ final class ExecutionResponseSupport {
     try {
       return workflow.get();
     } catch (RuntimeException exception) {
-      GridGrindResponse.Problem problem =
+      GridGrindProblemDetail.Problem problem =
           problemFor(
               exception,
               new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteRequest(
@@ -154,7 +155,7 @@ final class ExecutionResponseSupport {
     return GridGrindProblems.enrichContext(context, exception);
   }
 
-  static GridGrindResponse.Problem problemFor(
+  static GridGrindProblemDetail.Problem problemFor(
       Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     return GridGrindProblems.fromException(exception, context);
   }
@@ -163,7 +164,7 @@ final class ExecutionResponseSupport {
       GridGrindProtocolVersion protocolVersion,
       ExecutionJournalRecorder journal,
       int plannedStepCount,
-      GridGrindResponse.Problem problem,
+      GridGrindProblemDetail.Problem problem,
       Integer failedStepIndex,
       String failedStepId) {
     return failureResponse(
@@ -181,7 +182,7 @@ final class ExecutionResponseSupport {
       ExecutionJournalRecorder journal,
       int plannedStepCount,
       CalculationReport calculation,
-      GridGrindResponse.Problem problem,
+      GridGrindProblemDetail.Problem problem,
       Integer failedStepIndex,
       String failedStepId) {
     return new GridGrindResponse.Failure(
@@ -225,7 +226,7 @@ final class ExecutionResponseSupport {
       GridGrindProblemCode primaryFailureCode,
       Integer failedStepIndex,
       String failedStepId,
-      GridGrindResponse.Problem closeProblem) {
+      GridGrindProblemDetail.Problem closeProblem) {
     if (response instanceof GridGrindResponse.Failure existingFailure) {
       return new GridGrindResponse.Failure(
           existingFailure.protocolVersion(),

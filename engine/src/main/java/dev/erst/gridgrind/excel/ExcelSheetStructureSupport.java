@@ -219,18 +219,19 @@ final class ExcelSheetStructureSupport {
     return owner;
   }
 
-  List<WorkbookReadResult.MergedRegion> mergedRegions() {
-    List<WorkbookReadResult.MergedRegion> mergedRegions =
+  List<WorkbookSheetResult.MergedRegion> mergedRegions() {
+    List<WorkbookSheetResult.MergedRegion> mergedRegions =
         new ArrayList<>(sheet.getNumMergedRegions());
     for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
       mergedRegions.add(
-          new WorkbookReadResult.MergedRegion(sheet.getMergedRegion(regionIndex).formatAsString()));
+          new WorkbookSheetResult.MergedRegion(
+              sheet.getMergedRegion(regionIndex).formatAsString()));
     }
     return List.copyOf(mergedRegions);
   }
 
-  WorkbookReadResult.SheetLayout layout(String sheetName) {
-    return new WorkbookReadResult.SheetLayout(
+  WorkbookSheetResult.SheetLayout layout(String sheetName) {
+    return new WorkbookSheetResult.SheetLayout(
         sheetName,
         ExcelSheetViewSupport.pane(xssfSheet()),
         ExcelSheetViewSupport.zoomPercent(xssfSheet()),
@@ -296,7 +297,7 @@ final class ExcelSheetStructureSupport {
     try {
       return ExcelRange.parse(range);
     } catch (IllegalArgumentException exception) {
-      return java.util.Optional.<ExcelRange>empty().orElse(null);
+      return null;
     }
   }
 

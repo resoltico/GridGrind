@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
@@ -14,6 +15,7 @@ import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -187,19 +189,19 @@ class FormulaEnvironmentRequestExecutorTest {
                         mutations(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "A1"),
-                                new MutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                                new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "B1"),
-                                new MutationAction.SetCell(formulaCell("A1*2"))),
+                                new CellMutationAction.SetCell(formulaCell("A1*2"))),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "C1"),
-                                new MutationAction.SetCell(formulaCell("A1*3"))),
+                                new CellMutationAction.SetCell(formulaCell("A1*3"))),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "A1"),
-                                new MutationAction.SetCell(new CellInput.Numeric(4.0d)))),
+                                new CellMutationAction.SetCell(new CellInput.Numeric(4.0d)))),
                         inspections())));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
@@ -225,16 +227,16 @@ class FormulaEnvironmentRequestExecutorTest {
                         mutations(
                             mutate(
                                 new SheetSelector.ByName("Budget"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "A1"),
-                                new MutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                                new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "B1"),
-                                new MutationAction.SetCell(formulaCell("A1*2"))),
+                                new CellMutationAction.SetCell(formulaCell("A1*2"))),
                             mutate(
                                 new CellSelector.ByAddress("Budget", "C1"),
-                                new MutationAction.SetCell(formulaCell("A1*3")))),
+                                new CellMutationAction.SetCell(formulaCell("A1*3")))),
                         inspections())));
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(seeded));
 
@@ -258,10 +260,11 @@ class FormulaEnvironmentRequestExecutorTest {
 
   private static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
-      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
-      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten ->
+      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
+          savedAs.executionPath();
+      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
           overwritten.executionPath();
-      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("Expected the workbook to be persisted");
     };
   }

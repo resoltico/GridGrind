@@ -11,8 +11,8 @@ final class EventSheetSummaryHandler extends DefaultHandler {
   private int lastColumnIndex = -1;
   private int nextRowIndex;
   private boolean selected;
-  private WorkbookReadResult.SheetProtection protection =
-      new WorkbookReadResult.SheetProtection.Unprotected();
+  private WorkbookSheetResult.SheetProtection protection =
+      new WorkbookSheetResult.SheetProtection.Unprotected();
 
   @Override
   public void startElement(String uri, String localName, String qName, Attributes attributes) {
@@ -51,11 +51,11 @@ final class EventSheetSummaryHandler extends DefaultHandler {
     lastColumnIndex = Math.max(lastColumnIndex, Integer.parseInt(max) - 1);
   }
 
-  private WorkbookReadResult.SheetProtection sheetProtection(Attributes attributes) {
+  private WorkbookSheetResult.SheetProtection sheetProtection(Attributes attributes) {
     if (!booleanAttribute(attributes, "sheet")) {
-      return new WorkbookReadResult.SheetProtection.Unprotected();
+      return new WorkbookSheetResult.SheetProtection.Unprotected();
     }
-    return new WorkbookReadResult.SheetProtection.Protected(
+    return new WorkbookSheetResult.SheetProtection.Protected(
         new ExcelSheetProtectionSettings(
             booleanAttribute(attributes, "autoFilter"),
             booleanAttribute(attributes, "deleteColumns"),

@@ -8,52 +8,52 @@ import java.util.Set;
 public final class WorkbookCommandExecutor {
   private static final Set<Class<? extends WorkbookCommand>> WORKBOOK_SCOPE_COMMAND_TYPES =
       Set.of(
-          WorkbookCommand.CreateSheet.class,
-          WorkbookCommand.RenameSheet.class,
-          WorkbookCommand.DeleteSheet.class,
-          WorkbookCommand.MoveSheet.class,
-          WorkbookCommand.CopySheet.class,
-          WorkbookCommand.SetActiveSheet.class,
-          WorkbookCommand.SetSelectedSheets.class,
-          WorkbookCommand.SetSheetVisibility.class,
-          WorkbookCommand.SetSheetProtection.class,
-          WorkbookCommand.ClearSheetProtection.class,
-          WorkbookCommand.SetWorkbookProtection.class,
-          WorkbookCommand.ClearWorkbookProtection.class);
+          WorkbookSheetCommand.CreateSheet.class,
+          WorkbookSheetCommand.RenameSheet.class,
+          WorkbookSheetCommand.DeleteSheet.class,
+          WorkbookSheetCommand.MoveSheet.class,
+          WorkbookSheetCommand.CopySheet.class,
+          WorkbookSheetCommand.SetActiveSheet.class,
+          WorkbookSheetCommand.SetSelectedSheets.class,
+          WorkbookSheetCommand.SetSheetVisibility.class,
+          WorkbookSheetCommand.SetSheetProtection.class,
+          WorkbookSheetCommand.ClearSheetProtection.class,
+          WorkbookSheetCommand.SetWorkbookProtection.class,
+          WorkbookSheetCommand.ClearWorkbookProtection.class);
 
   private static final Set<Class<? extends WorkbookCommand>> SHEET_STRUCTURE_COMMAND_TYPES =
       Set.of(
-          WorkbookCommand.MergeCells.class,
-          WorkbookCommand.UnmergeCells.class,
-          WorkbookCommand.SetColumnWidth.class,
-          WorkbookCommand.SetRowHeight.class,
-          WorkbookCommand.InsertRows.class,
-          WorkbookCommand.DeleteRows.class,
-          WorkbookCommand.ShiftRows.class,
-          WorkbookCommand.InsertColumns.class,
-          WorkbookCommand.DeleteColumns.class,
-          WorkbookCommand.ShiftColumns.class,
-          WorkbookCommand.SetRowVisibility.class,
-          WorkbookCommand.SetColumnVisibility.class,
-          WorkbookCommand.GroupRows.class,
-          WorkbookCommand.UngroupRows.class,
-          WorkbookCommand.GroupColumns.class,
-          WorkbookCommand.UngroupColumns.class,
-          WorkbookCommand.SetSheetPane.class,
-          WorkbookCommand.SetSheetZoom.class,
-          WorkbookCommand.SetSheetPresentation.class,
-          WorkbookCommand.SetPrintLayout.class,
-          WorkbookCommand.ClearPrintLayout.class);
+          WorkbookStructureCommand.MergeCells.class,
+          WorkbookStructureCommand.UnmergeCells.class,
+          WorkbookStructureCommand.SetColumnWidth.class,
+          WorkbookStructureCommand.SetRowHeight.class,
+          WorkbookStructureCommand.InsertRows.class,
+          WorkbookStructureCommand.DeleteRows.class,
+          WorkbookStructureCommand.ShiftRows.class,
+          WorkbookStructureCommand.InsertColumns.class,
+          WorkbookStructureCommand.DeleteColumns.class,
+          WorkbookStructureCommand.ShiftColumns.class,
+          WorkbookStructureCommand.SetRowVisibility.class,
+          WorkbookStructureCommand.SetColumnVisibility.class,
+          WorkbookStructureCommand.GroupRows.class,
+          WorkbookStructureCommand.UngroupRows.class,
+          WorkbookStructureCommand.GroupColumns.class,
+          WorkbookStructureCommand.UngroupColumns.class,
+          WorkbookLayoutCommand.SetSheetPane.class,
+          WorkbookLayoutCommand.SetSheetZoom.class,
+          WorkbookLayoutCommand.SetSheetPresentation.class,
+          WorkbookLayoutCommand.SetPrintLayout.class,
+          WorkbookLayoutCommand.ClearPrintLayout.class);
 
   private static final Set<Class<? extends WorkbookCommand>> CELL_VALUE_COMMAND_TYPES =
       Set.of(
-          WorkbookCommand.SetCell.class,
-          WorkbookCommand.SetRange.class,
-          WorkbookCommand.ClearRange.class,
-          WorkbookCommand.SetArrayFormula.class,
-          WorkbookCommand.ClearArrayFormula.class,
-          WorkbookCommand.AppendRow.class,
-          WorkbookCommand.AutoSizeColumns.class);
+          WorkbookCellCommand.SetCell.class,
+          WorkbookCellCommand.SetRange.class,
+          WorkbookCellCommand.ClearRange.class,
+          WorkbookCellCommand.SetArrayFormula.class,
+          WorkbookCellCommand.ClearArrayFormula.class,
+          WorkbookCellCommand.AppendRow.class,
+          WorkbookLayoutCommand.AutoSizeColumns.class);
 
   /** Applies one or more commands in order. */
   public ExcelWorkbook apply(ExcelWorkbook workbook, WorkbookCommand... commands) {
@@ -102,104 +102,105 @@ public final class WorkbookCommandExecutor {
 
   static void applyWorkbookScopeCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
-      case WorkbookCommand.CreateSheet createSheet ->
+      case WorkbookSheetCommand.CreateSheet createSheet ->
           workbook.getOrCreateSheet(createSheet.sheetName());
-      case WorkbookCommand.RenameSheet renameSheet ->
+      case WorkbookSheetCommand.RenameSheet renameSheet ->
           workbook.renameSheet(renameSheet.sheetName(), renameSheet.newSheetName());
-      case WorkbookCommand.DeleteSheet deleteSheet -> workbook.deleteSheet(deleteSheet.sheetName());
-      case WorkbookCommand.MoveSheet moveSheet ->
+      case WorkbookSheetCommand.DeleteSheet deleteSheet ->
+          workbook.deleteSheet(deleteSheet.sheetName());
+      case WorkbookSheetCommand.MoveSheet moveSheet ->
           workbook.moveSheet(moveSheet.sheetName(), moveSheet.targetIndex());
-      case WorkbookCommand.CopySheet copySheet ->
+      case WorkbookSheetCommand.CopySheet copySheet ->
           workbook.copySheet(
               copySheet.sourceSheetName(), copySheet.newSheetName(), copySheet.position());
-      case WorkbookCommand.SetActiveSheet setActiveSheet ->
+      case WorkbookSheetCommand.SetActiveSheet setActiveSheet ->
           workbook.setActiveSheet(setActiveSheet.sheetName());
-      case WorkbookCommand.SetSelectedSheets setSelectedSheets ->
+      case WorkbookSheetCommand.SetSelectedSheets setSelectedSheets ->
           workbook.setSelectedSheets(setSelectedSheets.sheetNames());
-      case WorkbookCommand.SetSheetVisibility setSheetVisibility ->
+      case WorkbookSheetCommand.SetSheetVisibility setSheetVisibility ->
           workbook.setSheetVisibility(
               setSheetVisibility.sheetName(), setSheetVisibility.visibility());
-      case WorkbookCommand.SetSheetProtection setSheetProtection ->
+      case WorkbookSheetCommand.SetSheetProtection setSheetProtection ->
           workbook.setSheetProtection(
               setSheetProtection.sheetName(),
               setSheetProtection.protection(),
               setSheetProtection.password());
-      case WorkbookCommand.ClearSheetProtection clearSheetProtection ->
+      case WorkbookSheetCommand.ClearSheetProtection clearSheetProtection ->
           workbook.clearSheetProtection(clearSheetProtection.sheetName());
-      case WorkbookCommand.SetWorkbookProtection setWorkbookProtection ->
+      case WorkbookSheetCommand.SetWorkbookProtection setWorkbookProtection ->
           workbook.setWorkbookProtection(setWorkbookProtection.protection());
-      case WorkbookCommand.ClearWorkbookProtection _ -> workbook.clearWorkbookProtection();
+      case WorkbookSheetCommand.ClearWorkbookProtection _ -> workbook.clearWorkbookProtection();
       default -> throw new IllegalStateException("Unhandled workbook-scope command: " + command);
     }
   }
 
   static void applySheetStructureCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
-      case WorkbookCommand.MergeCells mergeCells ->
+      case WorkbookStructureCommand.MergeCells mergeCells ->
           workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
-      case WorkbookCommand.UnmergeCells unmergeCells ->
+      case WorkbookStructureCommand.UnmergeCells unmergeCells ->
           workbook.sheet(unmergeCells.sheetName()).unmergeCells(unmergeCells.range());
-      case WorkbookCommand.SetColumnWidth setColumnWidth ->
+      case WorkbookStructureCommand.SetColumnWidth setColumnWidth ->
           workbook
               .sheet(setColumnWidth.sheetName())
               .setColumnWidth(
                   setColumnWidth.firstColumnIndex(),
                   setColumnWidth.lastColumnIndex(),
                   setColumnWidth.widthCharacters());
-      case WorkbookCommand.SetRowHeight setRowHeight ->
+      case WorkbookStructureCommand.SetRowHeight setRowHeight ->
           workbook
               .sheet(setRowHeight.sheetName())
               .setRowHeight(
                   setRowHeight.firstRowIndex(),
                   setRowHeight.lastRowIndex(),
                   setRowHeight.heightPoints());
-      case WorkbookCommand.InsertRows insertRows ->
+      case WorkbookStructureCommand.InsertRows insertRows ->
           workbook
               .sheet(insertRows.sheetName())
               .insertRows(insertRows.rowIndex(), insertRows.rowCount());
-      case WorkbookCommand.DeleteRows deleteRows ->
+      case WorkbookStructureCommand.DeleteRows deleteRows ->
           workbook.sheet(deleteRows.sheetName()).deleteRows(deleteRows.rows());
-      case WorkbookCommand.ShiftRows shiftRows ->
+      case WorkbookStructureCommand.ShiftRows shiftRows ->
           workbook.sheet(shiftRows.sheetName()).shiftRows(shiftRows.rows(), shiftRows.delta());
-      case WorkbookCommand.InsertColumns insertColumns ->
+      case WorkbookStructureCommand.InsertColumns insertColumns ->
           workbook
               .sheet(insertColumns.sheetName())
               .insertColumns(insertColumns.columnIndex(), insertColumns.columnCount());
-      case WorkbookCommand.DeleteColumns deleteColumns ->
+      case WorkbookStructureCommand.DeleteColumns deleteColumns ->
           workbook.sheet(deleteColumns.sheetName()).deleteColumns(deleteColumns.columns());
-      case WorkbookCommand.ShiftColumns shiftColumns ->
+      case WorkbookStructureCommand.ShiftColumns shiftColumns ->
           workbook
               .sheet(shiftColumns.sheetName())
               .shiftColumns(shiftColumns.columns(), shiftColumns.delta());
-      case WorkbookCommand.SetRowVisibility setRowVisibility ->
+      case WorkbookStructureCommand.SetRowVisibility setRowVisibility ->
           workbook
               .sheet(setRowVisibility.sheetName())
               .setRowVisibility(setRowVisibility.rows(), setRowVisibility.hidden());
-      case WorkbookCommand.SetColumnVisibility setColumnVisibility ->
+      case WorkbookStructureCommand.SetColumnVisibility setColumnVisibility ->
           workbook
               .sheet(setColumnVisibility.sheetName())
               .setColumnVisibility(setColumnVisibility.columns(), setColumnVisibility.hidden());
-      case WorkbookCommand.GroupRows groupRows ->
+      case WorkbookStructureCommand.GroupRows groupRows ->
           workbook.sheet(groupRows.sheetName()).groupRows(groupRows.rows(), groupRows.collapsed());
-      case WorkbookCommand.UngroupRows ungroupRows ->
+      case WorkbookStructureCommand.UngroupRows ungroupRows ->
           workbook.sheet(ungroupRows.sheetName()).ungroupRows(ungroupRows.rows());
-      case WorkbookCommand.GroupColumns groupColumns ->
+      case WorkbookStructureCommand.GroupColumns groupColumns ->
           workbook
               .sheet(groupColumns.sheetName())
               .groupColumns(groupColumns.columns(), groupColumns.collapsed());
-      case WorkbookCommand.UngroupColumns ungroupColumns ->
+      case WorkbookStructureCommand.UngroupColumns ungroupColumns ->
           workbook.sheet(ungroupColumns.sheetName()).ungroupColumns(ungroupColumns.columns());
-      case WorkbookCommand.SetSheetPane setSheetPane ->
+      case WorkbookLayoutCommand.SetSheetPane setSheetPane ->
           workbook.sheet(setSheetPane.sheetName()).setPane(setSheetPane.pane());
-      case WorkbookCommand.SetSheetZoom setSheetZoom ->
+      case WorkbookLayoutCommand.SetSheetZoom setSheetZoom ->
           workbook.sheet(setSheetZoom.sheetName()).setZoom(setSheetZoom.zoomPercent());
-      case WorkbookCommand.SetSheetPresentation setSheetPresentation ->
+      case WorkbookLayoutCommand.SetSheetPresentation setSheetPresentation ->
           workbook
               .sheet(setSheetPresentation.sheetName())
               .setPresentation(setSheetPresentation.presentation());
-      case WorkbookCommand.SetPrintLayout setPrintLayout ->
+      case WorkbookLayoutCommand.SetPrintLayout setPrintLayout ->
           workbook.sheet(setPrintLayout.sheetName()).setPrintLayout(setPrintLayout.printLayout());
-      case WorkbookCommand.ClearPrintLayout clearPrintLayout ->
+      case WorkbookLayoutCommand.ClearPrintLayout clearPrintLayout ->
           workbook.sheet(clearPrintLayout.sheetName()).clearPrintLayout();
       default -> throw new IllegalStateException("Unhandled sheet-structure command: " + command);
     }
@@ -207,25 +208,25 @@ public final class WorkbookCommandExecutor {
 
   static void applyCellValueCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
-      case WorkbookCommand.SetCell setCell ->
+      case WorkbookCellCommand.SetCell setCell ->
           workbook.sheet(setCell.sheetName()).setCell(setCell.address(), setCell.value());
-      case WorkbookCommand.SetRange setRange ->
+      case WorkbookCellCommand.SetRange setRange ->
           workbook.sheet(setRange.sheetName()).setRange(setRange.range(), setRange.rows());
-      case WorkbookCommand.ClearRange clearRange ->
+      case WorkbookCellCommand.ClearRange clearRange ->
           workbook.sheet(clearRange.sheetName()).clearRange(clearRange.range());
-      case WorkbookCommand.SetArrayFormula setArrayFormula ->
+      case WorkbookCellCommand.SetArrayFormula setArrayFormula ->
           workbook
               .sheet(setArrayFormula.sheetName())
               .setArrayFormula(setArrayFormula.range(), setArrayFormula.formula());
-      case WorkbookCommand.ClearArrayFormula clearArrayFormula ->
+      case WorkbookCellCommand.ClearArrayFormula clearArrayFormula ->
           workbook
               .sheet(clearArrayFormula.sheetName())
               .clearArrayFormula(clearArrayFormula.address());
-      case WorkbookCommand.AppendRow appendRow ->
+      case WorkbookCellCommand.AppendRow appendRow ->
           workbook
               .sheet(appendRow.sheetName())
               .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
-      case WorkbookCommand.AutoSizeColumns autoSizeColumns ->
+      case WorkbookLayoutCommand.AutoSizeColumns autoSizeColumns ->
           workbook.sheet(autoSizeColumns.sheetName()).autoSizeColumns();
       default -> throw new IllegalStateException("Unhandled cell-value command: " + command);
     }
@@ -233,78 +234,78 @@ public final class WorkbookCommandExecutor {
 
   static void applyWorkbookMetadataCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
-      case WorkbookCommand.SetHyperlink setHyperlink ->
+      case WorkbookAnnotationCommand.SetHyperlink setHyperlink ->
           workbook
               .sheet(setHyperlink.sheetName())
               .setHyperlink(setHyperlink.address(), setHyperlink.target());
-      case WorkbookCommand.ImportCustomXmlMapping importCustomXmlMapping ->
+      case WorkbookMetadataCommand.ImportCustomXmlMapping importCustomXmlMapping ->
           workbook.importCustomXmlMapping(importCustomXmlMapping.mapping());
-      case WorkbookCommand.ClearHyperlink clearHyperlink ->
+      case WorkbookAnnotationCommand.ClearHyperlink clearHyperlink ->
           workbook.sheet(clearHyperlink.sheetName()).clearHyperlink(clearHyperlink.address());
-      case WorkbookCommand.SetComment setComment ->
+      case WorkbookAnnotationCommand.SetComment setComment ->
           workbook
               .sheet(setComment.sheetName())
               .setComment(setComment.address(), setComment.comment());
-      case WorkbookCommand.ClearComment clearComment ->
+      case WorkbookAnnotationCommand.ClearComment clearComment ->
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
-      case WorkbookCommand.SetPicture setPicture ->
+      case WorkbookDrawingCommand.SetPicture setPicture ->
           workbook.sheet(setPicture.sheetName()).setPicture(setPicture.picture());
-      case WorkbookCommand.SetSignatureLine setSignatureLine ->
+      case WorkbookDrawingCommand.SetSignatureLine setSignatureLine ->
           workbook
               .sheet(setSignatureLine.sheetName())
               .setSignatureLine(setSignatureLine.signatureLine());
-      case WorkbookCommand.SetChart setChart ->
+      case WorkbookDrawingCommand.SetChart setChart ->
           workbook.sheet(setChart.sheetName()).setChart(setChart.chart());
-      case WorkbookCommand.SetShape setShape ->
+      case WorkbookDrawingCommand.SetShape setShape ->
           workbook.sheet(setShape.sheetName()).setShape(setShape.shape());
-      case WorkbookCommand.SetEmbeddedObject setEmbeddedObject ->
+      case WorkbookDrawingCommand.SetEmbeddedObject setEmbeddedObject ->
           workbook
               .sheet(setEmbeddedObject.sheetName())
               .setEmbeddedObject(setEmbeddedObject.embeddedObject());
-      case WorkbookCommand.SetDrawingObjectAnchor setDrawingObjectAnchor ->
+      case WorkbookDrawingCommand.SetDrawingObjectAnchor setDrawingObjectAnchor ->
           workbook
               .sheet(setDrawingObjectAnchor.sheetName())
               .setDrawingObjectAnchor(
                   setDrawingObjectAnchor.objectName(), setDrawingObjectAnchor.anchor());
-      case WorkbookCommand.DeleteDrawingObject deleteDrawingObject ->
+      case WorkbookDrawingCommand.DeleteDrawingObject deleteDrawingObject ->
           workbook
               .sheet(deleteDrawingObject.sheetName())
               .deleteDrawingObject(deleteDrawingObject.objectName());
-      case WorkbookCommand.ApplyStyle applyStyle ->
+      case WorkbookFormattingCommand.ApplyStyle applyStyle ->
           workbook.sheet(applyStyle.sheetName()).applyStyle(applyStyle.range(), applyStyle.style());
-      case WorkbookCommand.SetDataValidation setDataValidation ->
+      case WorkbookFormattingCommand.SetDataValidation setDataValidation ->
           workbook
               .sheet(setDataValidation.sheetName())
               .setDataValidation(setDataValidation.range(), setDataValidation.validation());
-      case WorkbookCommand.ClearDataValidations clearDataValidations ->
+      case WorkbookFormattingCommand.ClearDataValidations clearDataValidations ->
           workbook
               .sheet(clearDataValidations.sheetName())
               .clearDataValidations(clearDataValidations.selection());
-      case WorkbookCommand.SetConditionalFormatting setConditionalFormatting ->
+      case WorkbookFormattingCommand.SetConditionalFormatting setConditionalFormatting ->
           workbook
               .sheet(setConditionalFormatting.sheetName())
               .setConditionalFormatting(setConditionalFormatting.block());
-      case WorkbookCommand.ClearConditionalFormatting clearConditionalFormatting ->
+      case WorkbookFormattingCommand.ClearConditionalFormatting clearConditionalFormatting ->
           workbook
               .sheet(clearConditionalFormatting.sheetName())
               .clearConditionalFormatting(clearConditionalFormatting.selection());
-      case WorkbookCommand.SetAutofilter setAutofilter ->
+      case WorkbookTabularCommand.SetAutofilter setAutofilter ->
           workbook
               .sheet(setAutofilter.sheetName())
               .setAutofilter(
                   setAutofilter.range(), setAutofilter.criteria(), setAutofilter.sortState());
-      case WorkbookCommand.ClearAutofilter clearAutofilter ->
+      case WorkbookTabularCommand.ClearAutofilter clearAutofilter ->
           workbook.sheet(clearAutofilter.sheetName()).clearAutofilter();
-      case WorkbookCommand.SetTable setTable -> workbook.setTable(setTable.definition());
-      case WorkbookCommand.SetPivotTable setPivotTable ->
+      case WorkbookTabularCommand.SetTable setTable -> workbook.setTable(setTable.definition());
+      case WorkbookTabularCommand.SetPivotTable setPivotTable ->
           workbook.setPivotTable(setPivotTable.definition());
-      case WorkbookCommand.DeleteTable deleteTable ->
+      case WorkbookTabularCommand.DeleteTable deleteTable ->
           workbook.deleteTable(deleteTable.name(), deleteTable.sheetName());
-      case WorkbookCommand.DeletePivotTable deletePivotTable ->
+      case WorkbookTabularCommand.DeletePivotTable deletePivotTable ->
           workbook.deletePivotTable(deletePivotTable.name(), deletePivotTable.sheetName());
-      case WorkbookCommand.SetNamedRange setNamedRange ->
+      case WorkbookMetadataCommand.SetNamedRange setNamedRange ->
           workbook.setNamedRange(setNamedRange.definition());
-      case WorkbookCommand.DeleteNamedRange deleteNamedRange ->
+      case WorkbookMetadataCommand.DeleteNamedRange deleteNamedRange ->
           workbook.deleteNamedRange(deleteNamedRange.name(), deleteNamedRange.scope());
       default -> throw new IllegalStateException("Unhandled workbook-metadata command: " + command);
     }

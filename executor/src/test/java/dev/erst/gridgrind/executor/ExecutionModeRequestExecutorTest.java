@@ -3,13 +3,15 @@ package dev.erst.gridgrind.executor;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -94,7 +96,8 @@ class ExecutionModeRequestExecutorTest {
                         null,
                         List.of(
                             mutate(
-                                new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                                new SheetSelector.ByName("Ops"),
+                                new WorkbookMutationAction.EnsureSheet())),
                         List.of(
                             inspect(
                                 "workbook",
@@ -114,13 +117,14 @@ class ExecutionModeRequestExecutorTest {
 
     List<ExecutorTestPlanSupport.PendingMutation> operations =
         List.of(
-            mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet()),
+            mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.AppendRow(List.of(textCell("Item"), textCell("Total")))),
+                new CellMutationAction.AppendRow(List.of(textCell("Item"), textCell("Total")))),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.AppendRow(List.of(textCell("Hosting"), formulaCell("2+3")))));
+                new CellMutationAction.AppendRow(
+                    List.of(textCell("Hosting"), formulaCell("2+3")))));
     List<InspectionStep> reads =
         List.of(
             inspect(
@@ -190,7 +194,8 @@ class ExecutionModeRequestExecutorTest {
                         null,
                         List.of(
                             mutate(
-                                new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                                new SheetSelector.ByName("Ops"),
+                                new WorkbookMutationAction.EnsureSheet())),
                         List.of(
                             inspect(
                                 "workbook",
@@ -237,7 +242,8 @@ class ExecutionModeRequestExecutorTest {
     assertEquals("workbook", workbookSummary.stepId());
     assertEquals(0, workbookSummary.workbook().sheetCount());
     assertEquals(List.of(), workbookSummary.workbook().sheetNames());
-    assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertInstanceOf(
+        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
   }
 
   @Test
@@ -273,8 +279,9 @@ class ExecutionModeRequestExecutorTest {
     InspectionResult.WorkbookSummaryResult workbookSummary =
         assertInstanceOf(
             InspectionResult.WorkbookSummaryResult.class, success.inspections().getFirst());
-    GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
-        assertInstanceOf(GridGrindResponse.PersistenceOutcome.SavedAs.class, success.persistence());
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, success.persistence());
 
     assertEquals(1, workbookSummary.workbook().sheetCount());
     assertTrue(Files.exists(persistedCopy));
@@ -326,7 +333,8 @@ class ExecutionModeRequestExecutorTest {
                         List.of())));
 
     assertEquals(List.of(), success.inspections());
-    assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertInstanceOf(
+        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
   }
 
   @Test
@@ -376,7 +384,7 @@ class ExecutionModeRequestExecutorTest {
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Ops"),
-                                new MutationAction.AppendRow(List.of(textCell("x"))))),
+                                new CellMutationAction.AppendRow(List.of(textCell("x"))))),
                         List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
@@ -409,7 +417,9 @@ class ExecutionModeRequestExecutorTest {
                         ExecutionModeInput.WriteMode.STREAMING_WRITE),
                     null,
                     List.of(
-                        mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
                     List.of())));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
@@ -431,7 +441,8 @@ class ExecutionModeRequestExecutorTest {
                         null,
                         List.of(
                             mutate(
-                                new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                                new SheetSelector.ByName("Ops"),
+                                new WorkbookMutationAction.EnsureSheet())),
                         List.of(
                             inspect(
                                 "cells",
@@ -463,7 +474,8 @@ class ExecutionModeRequestExecutorTest {
                         null,
                         List.of(
                             mutate(
-                                new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
+                                new SheetSelector.ByName("Ops"),
+                                new WorkbookMutationAction.EnsureSheet())),
                         List.of())));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
@@ -516,7 +528,7 @@ class ExecutionModeRequestExecutorTest {
                         mutations(
                             mutate(
                                 new SheetSelector.ByName("Ops"),
-                                new MutationAction.AppendRow(List.of(textCell("x"))))),
+                                new CellMutationAction.AppendRow(List.of(textCell("x"))))),
                         inspections())));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());
     assertTrue(existingStreamingSource.problem().message().contains("requires source.type=NEW"));
@@ -534,10 +546,11 @@ class ExecutionModeRequestExecutorTest {
                         null,
                         List.of(
                             mutate(
-                                new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet()),
+                                new SheetSelector.ByName("Ops"),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Ops", "A1"),
-                                new MutationAction.SetCell(textCell("x")))),
+                                new CellMutationAction.SetCell(textCell("x")))),
                         inspections())));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, unsupportedStreamingOperation.problem().code());
@@ -585,10 +598,11 @@ class ExecutionModeRequestExecutorTest {
 
   private static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
-      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
-      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten ->
+      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
+          savedAs.executionPath();
+      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
           overwritten.executionPath();
-      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("expected persisted workbook");
     };
   }

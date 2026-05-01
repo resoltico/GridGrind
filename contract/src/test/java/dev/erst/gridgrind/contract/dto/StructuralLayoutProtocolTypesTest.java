@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
@@ -99,8 +98,6 @@ class StructuralLayoutProtocolTypesTest {
   void printTitleInputsCoverNoneBandsAndBounds() {
     assertEquals(new PrintTitleRowsInput.None(), new PrintTitleRowsInput.None());
     assertEquals(new PrintTitleRowsInput.Band(0, 1), new PrintTitleRowsInput.Band(0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(null, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(0, null));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(-1, 1));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(0, -1));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleRowsInput.Band(2, 1));
@@ -110,8 +107,6 @@ class StructuralLayoutProtocolTypesTest {
 
     assertEquals(new PrintTitleColumnsInput.None(), new PrintTitleColumnsInput.None());
     assertEquals(new PrintTitleColumnsInput.Band(0, 1), new PrintTitleColumnsInput.Band(0, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(null, 1));
-    assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(0, null));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(-1, 1));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(0, -1));
     assertThrows(IllegalArgumentException.class, () -> new PrintTitleColumnsInput.Band(2, 1));
@@ -190,7 +185,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindResponse.SheetLayoutReport(
+            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
                 "Budget",
                 null,
                 100,
@@ -200,7 +195,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindResponse.SheetLayoutReport(
+            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 9,
@@ -210,7 +205,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindResponse.SheetLayoutReport(
+            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 401,
@@ -220,7 +215,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindResponse.SheetLayoutReport(
+            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 100,
@@ -235,7 +230,7 @@ class StructuralLayoutProtocolTypesTest {
     SheetPresentationInput explicitPresentation =
         new SheetPresentationInput(
             new SheetDisplayInput(false, false, false, true, true),
-            ColorInput.rgb("#112233"),
+            java.util.Optional.of(ColorInput.rgb("#112233")),
             new SheetOutlineSummaryInput(false, false),
             new SheetDefaultsInput(11, 18.5d),
             java.util.List.of(
@@ -245,13 +240,13 @@ class StructuralLayoutProtocolTypesTest {
                         dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType.FORMULA))));
 
     assertEquals(SheetDisplayInput.defaults(), defaultPresentation.display());
-    assertNull(defaultPresentation.tabColor());
+    assertEquals(java.util.Optional.empty(), defaultPresentation.tabColor());
     assertEquals(SheetOutlineSummaryInput.defaults(), defaultPresentation.outlineSummary());
     assertEquals(SheetDefaultsInput.defaults(), defaultPresentation.sheetDefaults());
     assertEquals(java.util.List.of(), defaultPresentation.ignoredErrors());
     assertEquals(
         new SheetDisplayInput(false, false, false, true, true), explicitPresentation.display());
-    assertEquals(ColorInput.rgb("#112233"), explicitPresentation.tabColor());
+    assertEquals(java.util.Optional.of(ColorInput.rgb("#112233")), explicitPresentation.tabColor());
     assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
     assertEquals(new SheetDefaultsInput(11, 18.5d), explicitPresentation.sheetDefaults());
     assertEquals(
@@ -261,7 +256,7 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(
         new SheetPresentationReport(
             SheetDisplayReport.defaults(),
-            null,
+            java.util.Optional.empty(),
             SheetOutlineSummaryReport.defaults(),
             SheetDefaultsReport.defaults(),
             java.util.List.of()),
@@ -269,14 +264,14 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, false, true, true),
-            CellColorReport.rgb("#112233"),
+            java.util.Optional.of(CellColorReport.rgb("#112233")),
             new SheetOutlineSummaryReport(false, false),
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(
                 new IgnoredErrorReport("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))),
         new SheetPresentationReport(
             new SheetDisplayReport(false, false, false, true, true),
-            CellColorReport.rgb("#112233"),
+            java.util.Optional.of(CellColorReport.rgb("#112233")),
             new SheetOutlineSummaryReport(false, false),
             new SheetDefaultsReport(11, 18.5d),
             java.util.List.of(
@@ -294,10 +289,10 @@ class StructuralLayoutProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             SheetPresentationInput.create(
-                null,
-                null,
-                null,
-                null,
+                SheetDisplayInput.defaults(),
+                java.util.Optional.empty(),
+                SheetOutlineSummaryInput.defaults(),
+                SheetDefaultsInput.defaults(),
                 java.util.List.of(
                     new IgnoredErrorInput("A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
                     new IgnoredErrorInput(
@@ -313,37 +308,45 @@ class StructuralLayoutProtocolTypesTest {
         () ->
             new SheetPresentationReport(
                 SheetDisplayReport.defaults(),
-                null,
+                java.util.Optional.empty(),
                 SheetOutlineSummaryReport.defaults(),
                 SheetDefaultsReport.defaults(),
                 null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new SheetPresentationReport(
-                SheetDisplayReport.defaults(),
-                null,
-                SheetOutlineSummaryReport.defaults(),
-                SheetDefaultsReport.defaults(),
-                java.util.List.of(
-                    new IgnoredErrorReport("A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
-                    new IgnoredErrorReport(
-                        "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
+    assertEquals(
+        "tabColor must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new SheetPresentationReport(
+                        SheetDisplayReport.defaults(),
+                        null,
+                        SheetOutlineSummaryReport.defaults(),
+                        SheetDefaultsReport.defaults(),
+                        java.util.List.of(
+                            new IgnoredErrorReport(
+                                "A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
+                            new IgnoredErrorReport(
+                                "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))))
+            .getMessage());
   }
 
   @Test
   void sheetDisplayDefaultsAndIgnoredErrorDtosCoverConstructorBranches() {
     assertEquals(
-        SheetDisplayInput.defaults(), SheetDisplayInput.create(null, null, null, null, null));
+        SheetDisplayInput.defaults(), new SheetDisplayInput(true, true, true, false, false));
     assertEquals(
         new SheetDisplayInput(false, false, true, true, false),
-        SheetDisplayInput.create(false, false, null, true, null));
-    assertEquals(SheetOutlineSummaryInput.defaults(), SheetOutlineSummaryInput.create(null, null));
+        new SheetDisplayInput(false, false, true, true, false));
+    assertEquals(SheetOutlineSummaryInput.defaults(), new SheetOutlineSummaryInput(true, true));
     assertEquals(
-        new SheetOutlineSummaryInput(true, false), SheetOutlineSummaryInput.create(null, false));
-    assertEquals(SheetDefaultsInput.defaults(), SheetDefaultsInput.create(null, null));
-    assertEquals(new SheetDefaultsInput(8, 18.5d), SheetDefaultsInput.create(null, 18.5d));
+        new SheetOutlineSummaryInput(true, false), new SheetOutlineSummaryInput(true, false));
+    assertEquals(SheetDefaultsInput.defaults(), new SheetDefaultsInput(8, 15.0d));
+    assertEquals(new SheetDefaultsInput(8, 18.5d), new SheetDefaultsInput(8, 18.5d));
     assertEquals(SheetDefaultsReport.defaults(), new SheetDefaultsReport(8, 15.0d));
+    assertThrows(
+        NullPointerException.class, () -> new SheetDisplayInput(null, null, null, null, null));
+    assertThrows(NullPointerException.class, () -> new SheetOutlineSummaryInput(null, null));
+    assertThrows(NullPointerException.class, () -> new SheetDefaultsInput(null, null));
 
     java.util.List<ExcelIgnoredErrorType> errorTypesWithNull =
         new java.util.ArrayList<>(java.util.Arrays.asList(ExcelIgnoredErrorType.FORMULA, null));

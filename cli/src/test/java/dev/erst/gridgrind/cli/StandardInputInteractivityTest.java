@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage tests for CLI stdin interactivity detection. */
@@ -79,6 +80,26 @@ class StandardInputInteractivityTest {
   void consoleHelperReturnsTerminalProbeValueWhenConsoleIsPresent() {
     assertTrue(StandardInputInteractivity.consoleIsInteractive(true, () -> true));
     assertFalse(StandardInputInteractivity.consoleIsInteractive(true, () -> false));
+  }
+
+  @Test
+  void lazyBooleanSupplierBuildsDelegateOnceAndReusesIt() {
+    AtomicInteger factoryCalls = new AtomicInteger();
+    AtomicInteger delegateCalls = new AtomicInteger();
+    BooleanSupplier supplier =
+        new LazyBooleanSupplier(
+            () -> {
+              factoryCalls.incrementAndGet();
+              return () -> {
+                delegateCalls.incrementAndGet();
+                return true;
+              };
+            });
+
+    assertTrue(supplier.getAsBoolean());
+    assertTrue(supplier.getAsBoolean());
+    assertEquals(1, factoryCalls.get());
+    assertEquals(2, delegateCalls.get());
   }
 
   @Test

@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -195,11 +197,12 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void classifiesIoErrorsWhenRequestFileCannotBeRead() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    String missingPath = "/tmp/does-not-exist.json";
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--request", "/tmp/does-not-exist.json"},
+                new String[] {"--request", missingPath},
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
@@ -210,6 +213,76 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
+    assertEquals("Request file not found: " + Path.of(missingPath), failure.problem().message());
+  }
+
+  @Test
+  void classifiesIoErrorsWhenRequestPathIsDirectory() throws IOException {
+    Path requestDirectory = Files.createTempDirectory("gridgrind-request-directory-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    try {
+      int exitCode =
+          new GridGrindCli()
+              .run(
+                  new String[] {"--request", requestDirectory.toString()},
+                  new ByteArrayInputStream(new byte[0]),
+                  stdout);
+
+      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+      assertEquals(1, exitCode);
+      assertInstanceOf(GridGrindResponse.Failure.class, response);
+      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertEquals("READ_REQUEST", failure.problem().context().stage());
+      assertEquals(
+          "Request path is not a regular file: " + requestDirectory.toAbsolutePath().normalize(),
+          failure.problem().message());
+    } finally {
+      Files.deleteIfExists(requestDirectory);
+    }
+  }
+
+  @Test
+  void classifiesIoErrorsWhenRequestFileIsUnreadable() throws IOException {
+    Path unreadableFile = Files.createTempFile("gridgrind-unreadable-request-", ".json");
+    String requestBody =
+        """
+        {
+          "source": { "type": "NEW" },
+          "steps": []
+        }
+        """;
+    Files.writeString(unreadableFile, requestBody, StandardCharsets.UTF_8);
+    Set<PosixFilePermission> originalPermissions = Files.getPosixFilePermissions(unreadableFile);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    try {
+      Files.setPosixFilePermissions(unreadableFile, Set.of());
+      assertFalse(Files.isReadable(unreadableFile), "test setup must make the file unreadable");
+
+      int exitCode =
+          new GridGrindCli()
+              .run(
+                  new String[] {"--request", unreadableFile.toString()},
+                  new ByteArrayInputStream(new byte[0]),
+                  stdout);
+
+      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+      assertEquals(1, exitCode);
+      assertInstanceOf(GridGrindResponse.Failure.class, response);
+      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+      assertEquals("READ_REQUEST", failure.problem().context().stage());
+      assertEquals(
+          "Request file is not readable: " + unreadableFile.toAbsolutePath().normalize(),
+          failure.problem().message());
+    } finally {
+      Files.setPosixFilePermissions(unreadableFile, originalPermissions);
+      Files.deleteIfExists(unreadableFile);
+    }
   }
 
   @Test
@@ -228,12 +301,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         cli.run(
             new String[] {"--response", responsePath.toString()},
             new ByteArrayInputStream(
-                """
-                {
-                  "source": { "type": "NEW" },
-                  "steps": []
-                }
-                """
+                requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             new ByteArrayOutputStream());
 
@@ -263,13 +331,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         cli.run(
             new String[0],
             new ByteArrayInputStream(
-                """
-                {
-                  "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
-                  "persistence": { "type": "OVERWRITE" },
-                  "steps": []
-                }
-                """
+                requestJson(
+                        "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
+                        "{ \"type\": \"OVERWRITE\" }",
+                        "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout);
 
@@ -298,13 +363,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         cli.run(
             new String[0],
             new ByteArrayInputStream(
-                """
-                {
-                  "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
-                  "persistence": { "type": "SAVE_AS", "path": "/tmp/output.xlsx" },
-                  "steps": []
-                }
-                """
+                requestJson(
+                        "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
+                        "{ \"type\": \"SAVE_AS\", \"path\": \"/tmp/output.xlsx\" }",
+                        "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout);
 
@@ -334,12 +396,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
           cli.run(
               new String[] {"--response", responsePath.toString()},
               new ByteArrayInputStream(
-                  """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": []
-                    }
-                    """
+                  requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                       .getBytes(StandardCharsets.UTF_8)),
               new ByteArrayOutputStream());
 
@@ -388,14 +445,14 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[0],
                 new ByteArrayInputStream(
-                    """
-                {
-                  "source": { "type": "NEW" },
-                  "steps": [
-                    { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" } }
-                  ]
-                }
-                """
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" } }
+                            ]
+                            """)
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -423,24 +480,24 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[0],
                 new ByteArrayInputStream(
-                    """
-                {
-                  "source": { "type": "NEW" },
-                  "steps": [
-                    {
-                      "stepId": "window",
-                      "target": {
-                        "type": "RANGE_RECTANGULAR_WINDOW",
-                        "sheetName": "Budget",
-                        "topLeftAddress": "A1",
-                        "rowCount": 0,
-                        "columnCount": 1
-                      },
-                      "query": { "type": "GET_WINDOW" }
-                    }
-                  ]
-                }
-                """
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "window",
+                                "target": {
+                                  "type": "RANGE_RECTANGULAR_WINDOW",
+                                  "sheetName": "Budget",
+                                  "topLeftAddress": "A1",
+                                  "rowCount": 0,
+                                  "columnCount": 1
+                                },
+                                "query": { "type": "GET_WINDOW" }
+                              }
+                            ]
+                            """)
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -501,12 +558,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
               .run(
                   new String[] {"--response", responsePath.toString()},
                   new ByteArrayInputStream(
-                      """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": []
-                    }
-                    """
+                      requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                           .getBytes(StandardCharsets.UTF_8)),
                   new ByteArrayOutputStream());
 
@@ -529,12 +581,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[] {"--response", responseDirectory.toString()},
                 new ByteArrayInputStream(
-                    """
-                {
-                  "source": { "type": "NEW" },
-                  "steps": []
-                }
-                """
+                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -564,12 +611,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         cli.run(
             new String[] {"--response", responseDirectory.toString()},
             new ByteArrayInputStream(
-                """
-                {
-                  "source": { "type": "NEW" },
-                  "steps": []
-                }
-                """
+                requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout);
 
@@ -593,20 +635,17 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[0],
                 new ByteArrayInputStream(
-                    """
-                {
-                  "protocolVersion": "V1",
-                  "source": { "type": "NEW" },
-                  "persistence": { "type": "NONE" },
-                  "execution": {
-                    "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
-                  },
-                  "steps": [
-                    { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
-                    { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
-                  ]
-                }
-                """
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            evaluateAllExecutionJson(),
+                            emptyFormulaEnvironmentJson(),
+                            """
+                            [
+                              { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
+                              { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
+                            ]
+                            """)
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -627,12 +666,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     try (TrackingInputStream stdin =
         new TrackingInputStream(
-            """
-            {
-              "source": { "type": "NEW" },
-              "steps": []
-            }
-            """
+            requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                 .getBytes(StandardCharsets.UTF_8))) {
       int exitCode = new GridGrindCli().run(new String[0], stdin, stdout);
 
@@ -678,25 +712,25 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[0],
                 new ByteArrayInputStream(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        { "stepId": "ensure-sheet", "target": { "type": "SHEET_BY_NAME", "name": "S" }, "action": { "type": "ENSURE_SHEET" } },
-                        {
-                          "stepId": "w",
-                          "target": {
-                            "type": "RANGE_RECTANGULAR_WINDOW",
-                            "sheetName": "S",
-                            "topLeftAddress": "A1",
-                            "rowCount": 1000,
-                            "columnCount": 1000
-                          },
-                          "query": { "type": "GET_WINDOW" }
-                        }
-                      ]
-                    }
-                    """
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              { "stepId": "ensure-sheet", "target": { "type": "SHEET_BY_NAME", "name": "S" }, "action": { "type": "ENSURE_SHEET" } },
+                              {
+                                "stepId": "w",
+                                "target": {
+                                  "type": "RANGE_RECTANGULAR_WINDOW",
+                                  "sheetName": "S",
+                                  "topLeftAddress": "A1",
+                                  "rowCount": 1000,
+                                  "columnCount": 1000
+                                },
+                                "query": { "type": "GET_WINDOW" }
+                              }
+                            ]
+                            """)
                         .getBytes(StandardCharsets.UTF_8)),
                 stdout);
 

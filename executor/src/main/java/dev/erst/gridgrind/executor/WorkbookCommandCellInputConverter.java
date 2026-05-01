@@ -114,11 +114,11 @@ final class WorkbookCommandCellInputConverter {
     }
     return Optional.of(
         new ExcelCellAlignment(
-            alignment.wrapText(),
-            alignment.horizontalAlignment(),
-            alignment.verticalAlignment(),
-            alignment.textRotation(),
-            alignment.indentation()));
+            alignment.wrapText().orElse(null),
+            alignment.horizontalAlignment().orElse(null),
+            alignment.verticalAlignment().orElse(null),
+            alignment.textRotation().orElse(null),
+            alignment.indentation().orElse(null)));
   }
 
   static Optional<ExcelCellFont> toExcelCellFont(CellFontInput font) {

@@ -12,18 +12,21 @@ final class CliArguments {
   static CliCommand parse(String[] args) {
     Objects.requireNonNull(args, "args must not be null");
     ParsedOptions options = new ParsedOptions();
+    String[] remainingArgs = extractGlobalResponse(args, options);
 
     int index = 0;
-    while (index < args.length) {
-      String argument = args[index];
+    while (index < remainingArgs.length) {
+      String argument = remainingArgs[index];
       Optional<ImmediateParseResult> immediate =
-          index == 0 ? parseImmediateCommand(args, index, argument) : Optional.empty();
+          index == 0
+              ? parseImmediateCommand(remainingArgs, index, argument, options.responsePath)
+              : Optional.empty();
       if (immediate.isPresent()) {
         ImmediateParseResult result = immediate.orElseThrow();
-        requireNoTrailingArguments(args, result.nextIndex());
+        requireNoTrailingArguments(remainingArgs, result.nextIndex());
         return result.command();
       }
-      index = consumeArgument(args, index, argument, options);
+      index = consumeArgument(remainingArgs, index, argument, options);
     }
 
     validateTerminalArguments(options);
@@ -40,70 +43,75 @@ final class CliArguments {
     return valueIndex;
   }
 
+  private static String requireNonBlankValue(String flagName, String value, String description) {
+    if (value.isBlank()) {
+      throw new CliArgumentsException(flagName, description + " must not be blank");
+    }
+    return value;
+  }
+
   private static Optional<ImmediateParseResult> parseImmediateCommand(
-      String[] args, int index, String argument) {
+      String[] args, int index, String argument, Path responsePath) {
     return switch (argument) {
-      case "--help", "-h", "help" -> Optional.of(parseHelpCommand(args, index));
-      case "--version" -> Optional.of(parseVersionCommand(args, index));
-      case "--license" -> Optional.of(parseLicenseCommand(args, index));
-      case "--print-request-template" -> Optional.of(parseRequestTemplateCommand(args, index));
+      case "--help", "-h", "help" -> Optional.of(parseHelpCommand(index, responsePath));
+      case "--version" -> Optional.of(parseVersionCommand(index, responsePath));
+      case "--license" -> Optional.of(parseLicenseCommand(index, responsePath));
+      case "--print-request-template" ->
+          Optional.of(parseRequestTemplateCommand(index, responsePath));
       case "--print-example" -> {
         int valueIndex = nextValueIndex(args, index, "--print-example");
-        TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
         yield Optional.of(
             new ImmediateParseResult(
-                new CliCommand.PrintExample(args[valueIndex], response.responsePath()),
-                response.nextIndex()));
+                new CliCommand.PrintExample(
+                    requireNonBlankValue("--print-example", args[valueIndex], "example id"),
+                    responsePath),
+                valueIndex + 1));
       }
-      case "--print-task-catalog" -> Optional.of(parseTaskCatalogCommand(args, index));
+      case "--print-task-catalog" ->
+          Optional.of(parseTaskCatalogCommand(args, index, responsePath));
       case "--print-task-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-task-plan");
-        TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
         yield Optional.of(
             new ImmediateParseResult(
-                new CliCommand.PrintTaskPlan(args[valueIndex], response.responsePath()),
-                response.nextIndex()));
+                new CliCommand.PrintTaskPlan(
+                    requireNonBlankValue("--print-task-plan", args[valueIndex], "task id"),
+                    responsePath),
+                valueIndex + 1));
       }
       case "--print-goal-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-goal-plan");
-        TrailingResponseParseResult response = parseTrailingResponse(args, valueIndex + 1);
         yield Optional.of(
             new ImmediateParseResult(
-                new CliCommand.PrintGoalPlan(args[valueIndex], response.responsePath()),
-                response.nextIndex()));
+                new CliCommand.PrintGoalPlan(
+                    requireNonBlankValue("--print-goal-plan", args[valueIndex], "goal"),
+                    responsePath),
+                valueIndex + 1));
       }
-      case "--print-protocol-catalog" -> Optional.of(parseProtocolCatalogCommand(args, index));
+      case "--print-protocol-catalog" ->
+          Optional.of(parseProtocolCatalogCommand(args, index, responsePath));
       default -> Optional.empty();
     };
   }
 
-  private static ImmediateParseResult parseHelpCommand(String[] args, int index) {
-    TrailingResponseParseResult response = parseTrailingResponse(args, index + 1);
-    return new ImmediateParseResult(
-        new CliCommand.Help(response.responsePath()), response.nextIndex());
+  private static ImmediateParseResult parseHelpCommand(int index, Path responsePath) {
+    return new ImmediateParseResult(new CliCommand.Help(responsePath), index + 1);
   }
 
-  private static ImmediateParseResult parseVersionCommand(String[] args, int index) {
-    TrailingResponseParseResult response = parseTrailingResponse(args, index + 1);
-    return new ImmediateParseResult(
-        new CliCommand.Version(response.responsePath()), response.nextIndex());
+  private static ImmediateParseResult parseVersionCommand(int index, Path responsePath) {
+    return new ImmediateParseResult(new CliCommand.Version(responsePath), index + 1);
   }
 
-  private static ImmediateParseResult parseLicenseCommand(String[] args, int index) {
-    TrailingResponseParseResult response = parseTrailingResponse(args, index + 1);
-    return new ImmediateParseResult(
-        new CliCommand.License(response.responsePath()), response.nextIndex());
+  private static ImmediateParseResult parseLicenseCommand(int index, Path responsePath) {
+    return new ImmediateParseResult(new CliCommand.License(responsePath), index + 1);
   }
 
-  private static ImmediateParseResult parseRequestTemplateCommand(String[] args, int index) {
-    TrailingResponseParseResult response = parseTrailingResponse(args, index + 1);
-    return new ImmediateParseResult(
-        new CliCommand.PrintRequestTemplate(response.responsePath()), response.nextIndex());
+  private static ImmediateParseResult parseRequestTemplateCommand(int index, Path responsePath) {
+    return new ImmediateParseResult(new CliCommand.PrintRequestTemplate(responsePath), index + 1);
   }
 
-  private static ImmediateParseResult parseTaskCatalogCommand(String[] args, int index) {
+  private static ImmediateParseResult parseTaskCatalogCommand(
+      String[] args, int index, Path responsePath) {
     String taskFilter = null;
-    Path responsePath = null;
     int nextIndex = index + 1;
     boolean keepParsing = true;
     while (nextIndex < args.length && keepParsing) {
@@ -113,14 +121,7 @@ final class CliArguments {
           throw new CliArgumentsException("--task", "Duplicate argument: --task");
         }
         int valueIndex = nextValueIndex(args, nextIndex, "--task");
-        taskFilter = args[valueIndex];
-        nextIndex = valueIndex + 1;
-      } else if ("--response".equals(argument)) {
-        if (responsePath != null) {
-          throw new CliArgumentsException("--response", "Duplicate argument: --response");
-        }
-        int valueIndex = nextValueIndex(args, nextIndex, "--response");
-        responsePath = Path.of(args[valueIndex]);
+        taskFilter = requireNonBlankValue("--task", args[valueIndex], "task id");
         nextIndex = valueIndex + 1;
       } else {
         keepParsing = false;
@@ -130,10 +131,10 @@ final class CliArguments {
         new CliCommand.PrintTaskCatalog(taskFilter, responsePath), nextIndex);
   }
 
-  private static ImmediateParseResult parseProtocolCatalogCommand(String[] args, int index) {
+  private static ImmediateParseResult parseProtocolCatalogCommand(
+      String[] args, int index, Path responsePath) {
     String operationFilter = null;
     String searchQuery = null;
-    Path responsePath = null;
     int nextIndex = index + 1;
     boolean keepParsing = true;
     while (nextIndex < args.length && keepParsing) {
@@ -143,21 +144,15 @@ final class CliArguments {
           throw new CliArgumentsException("--operation", "Duplicate argument: --operation");
         }
         int valueIndex = nextValueIndex(args, nextIndex, "--operation");
-        operationFilter = args[valueIndex];
+        operationFilter =
+            requireNonBlankValue("--operation", args[valueIndex], "protocol catalog lookup id");
         nextIndex = valueIndex + 1;
       } else if ("--search".equals(argument)) {
         if (searchQuery != null) {
           throw new CliArgumentsException("--search", "Duplicate argument: --search");
         }
         int valueIndex = nextValueIndex(args, nextIndex, "--search");
-        searchQuery = args[valueIndex];
-        nextIndex = valueIndex + 1;
-      } else if ("--response".equals(argument)) {
-        if (responsePath != null) {
-          throw new CliArgumentsException("--response", "Duplicate argument: --response");
-        }
-        int valueIndex = nextValueIndex(args, nextIndex, "--response");
-        responsePath = Path.of(args[valueIndex]);
+        searchQuery = requireNonBlankValue("--search", args[valueIndex], "search query");
         nextIndex = valueIndex + 1;
       } else {
         keepParsing = false;
@@ -187,24 +182,24 @@ final class CliArguments {
     return new CliCommand.PrintProtocolCatalogAll(responsePath);
   }
 
-  private static TrailingResponseParseResult parseTrailingResponse(String[] args, int index) {
-    Path responsePath = null;
-    int nextIndex = index;
-    boolean keepParsing = true;
-    while (nextIndex < args.length && keepParsing) {
-      String argument = args[nextIndex];
-      if ("--response".equals(argument)) {
-        if (responsePath != null) {
-          throw new CliArgumentsException("--response", "Duplicate argument: --response");
-        }
-        int valueIndex = nextValueIndex(args, nextIndex, "--response");
-        responsePath = Path.of(args[valueIndex]);
-        nextIndex = valueIndex + 1;
-      } else {
-        keepParsing = false;
+  private static String[] extractGlobalResponse(String[] args, ParsedOptions options) {
+    java.util.List<String> remainingArgs = new java.util.ArrayList<>(args.length);
+    int index = 0;
+    while (index < args.length) {
+      String argument = args[index];
+      if (!"--response".equals(argument)) {
+        remainingArgs.add(argument);
+        index++;
+        continue;
       }
+      if (options.responsePath != null) {
+        throw new CliArgumentsException("--response", "Duplicate argument: --response");
+      }
+      int valueIndex = nextValueIndex(args, index, "--response");
+      options.responsePath = Path.of(args[valueIndex]);
+      index = valueIndex + 1;
     }
-    return new TrailingResponseParseResult(responsePath, nextIndex);
+    return remainingArgs.toArray(String[]::new);
   }
 
   private static void requireNoTrailingArguments(String[] args, int nextIndex) {
@@ -212,7 +207,7 @@ final class CliArguments {
       return;
     }
     String trailingArgument = args[nextIndex];
-    throw new CliArgumentsException(trailingArgument, "Unknown argument: " + trailingArgument);
+    throw unknownArgumentException(trailingArgument);
   }
 
   private static int consumeArgument(
@@ -230,15 +225,23 @@ final class CliArguments {
         options.requestPath = Path.of(args[valueIndex]);
         yield valueIndex + 1;
       }
-      case "--response" -> {
-        if (options.responsePath != null) {
-          throw new CliArgumentsException("--response", "Duplicate argument: --response");
-        }
-        int valueIndex = nextValueIndex(args, index, "--response");
-        options.responsePath = Path.of(args[valueIndex]);
-        yield valueIndex + 1;
-      }
-      default -> throw new CliArgumentsException(argument, "Unknown argument: " + argument);
+      default -> throw unknownArgumentException(argument);
+    };
+  }
+
+  private static CliArgumentsException unknownArgumentException(String argument) {
+    return switch (argument) {
+      case "--task" ->
+          new CliArgumentsException(
+              "--task", "--task requires --print-task-catalog and one task id value");
+      case "--operation" ->
+          new CliArgumentsException(
+              "--operation",
+              "--operation requires --print-protocol-catalog and one lookup id value");
+      case "--search" ->
+          new CliArgumentsException(
+              "--search", "--search requires --print-protocol-catalog and one search text value");
+      default -> new CliArgumentsException(argument, "Unknown argument: " + argument);
     };
   }
 
@@ -259,6 +262,4 @@ final class CliArguments {
   }
 
   private record ImmediateParseResult(CliCommand command, int nextIndex) {}
-
-  private record TrailingResponseParseResult(Path responsePath, int nextIndex) {}
 }

@@ -1,15 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/drawing_media_request.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 7657
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: SAVE_AS
-Operation Count: 9
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: Missing required field 'execution'
+Input Bytes: 7647
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
 Assertion Count: 0
-Read Count: 4
+Read Count: 0
 Assertion Kinds: (none)
-Read Kinds: GET_DRAWING_OBJECT_PAYLOAD=2, GET_COMMENTS=1, GET_DRAWING_OBJECTS=1
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_SHAPE=2, DELETE_DRAWING_OBJECT=1, SET_COMMENT=1, SET_PICTURE=1, SET_RANGE=1, ENSURE_SHEET=1, SET_DRAWING_OBJECT_ANCHOR=1, SET_EMBEDDED_OBJECT=1
+Operation Kinds: (none)

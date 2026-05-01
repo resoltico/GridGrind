@@ -143,12 +143,14 @@ readonly mode="${1:-}"
 readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
+source "${script_dir}/lib/test-cli-contract-fixtures.sh"
 catalog_path=''
 task_catalog_path=''
 task_plan_path=''
 goal_plan_path=''
 doctor_report_path=''
 help_path=''
+help_stderr_path=''
 temp_dir=''
 temp_parent=''
 
@@ -197,13 +199,16 @@ temp_dir="${temp_parent}/run.$$.${RANDOM}"
 rm -rf "${temp_dir}"
 mkdir -p "${temp_dir}"
 help_path="${temp_dir}/help.txt"
+help_stderr_path="${temp_dir}/help.stderr"
 catalog_path="${temp_dir}/protocol-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"
 task_plan_path="${temp_dir}/task-plan.json"
 goal_plan_path="${temp_dir}/goal-plan.json"
 doctor_report_path="${temp_dir}/doctor-report.json"
 
-help_output="$("${launcher[@]}" --help | tr -d '\r')"
+help_output="$("${launcher[@]}" --help 2> "${help_stderr_path}" | tr -d '\r')"
+help_stderr="$(tr -d '\r' < "${help_stderr_path}")"
+[[ -z "${help_stderr}" ]] || die "${label} --help wrote unexpected stderr: ${help_stderr}"
 require_absent \
     "${help_output}" \
     'FORCE_FORMULA_RECALCULATION_ON_OPEN' \
@@ -232,6 +237,18 @@ require_contains \
     "${help_output}" \
     '--print-example <id>' \
     "${label} help output no longer advertises built-in example printing"
+require_contains \
+    "${help_output}" \
+    '--license' \
+    "${label} help output no longer advertises license rendering"
+require_absent \
+    "${help_output}" \
+    'WARNING: A restricted method in java.lang.foreign.Linker has been called' \
+    "${label} help output leaked a Java native-access warning before product help"
+require_absent \
+    "${help_output}" \
+    'Restricted methods will be blocked in a future release unless native access is enabled' \
+    "${label} help output leaked a Java native-access warning before product help"
 
 printf '%s' "${help_output}" > "${help_path}"
 verify_implicit_interactive_help "${help_path}" "${interactive_launcher[@]}"
@@ -240,7 +257,7 @@ verify_implicit_interactive_help "${help_path}" "${interactive_launcher[@]}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"
 "${launcher[@]}" --print-task-plan DASHBOARD | tr -d '\r' > "${task_plan_path}"
 "${launcher[@]}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r' > "${goal_plan_path}"
-printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' \
+print_cli_contract_minimal_request \
     | "${doctor_launcher[@]}" --doctor-request | tr -d '\r' > "${doctor_report_path}"
 
 python3 - "${catalog_path}" "${help_path}" "${task_catalog_path}" "${task_plan_path}" "${goal_plan_path}" "${doctor_report_path}" <<'PY'

@@ -5,7 +5,7 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/gridgrind-advanced-mutation.xlsx"
+    "path": "generated-workbooks/gridgrind-advanced-mutation.xlsx"
   },
   "steps": [
     {
@@ -841,6 +841,7 @@
             ]
           },
           "allowBlank": false,
+          "suppressDropDownArrow": false,
           "prompt": {
             "title": {
               "type": "INLINE",
@@ -892,12 +893,11 @@
           "range": "F2:H5",
           "caseSensitive": false,
           "columnSort": false,
-          "sortMethod": "",
           "conditions": [
             {
+              "type": "VALUE",
               "range": "H2:H5",
-              "descending": true,
-              "sortBy": ""
+              "descending": true
             }
           ]
         }

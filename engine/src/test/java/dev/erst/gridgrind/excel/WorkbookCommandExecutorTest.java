@@ -33,91 +33,93 @@ class WorkbookCommandExecutorTest {
           workbook,
           executor.apply(
               workbook,
-              new WorkbookCommand.CreateSheet("Budget"),
-              new WorkbookCommand.CreateSheet("Archive"),
-              new WorkbookCommand.CreateSheet("Scratch"),
-              new WorkbookCommand.CreateSheet("Ops"),
-              new WorkbookCommand.SetRange(
+              new WorkbookSheetCommand.CreateSheet("Budget"),
+              new WorkbookSheetCommand.CreateSheet("Archive"),
+              new WorkbookSheetCommand.CreateSheet("Scratch"),
+              new WorkbookSheetCommand.CreateSheet("Ops"),
+              new WorkbookCellCommand.SetRange(
                   "Budget",
                   "A1:B2",
                   List.of(
                       List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0)),
                       List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(5.0)))),
-              new WorkbookCommand.MergeCells("Budget", "A1:B1"),
-              new WorkbookCommand.ApplyStyle(
+              new WorkbookStructureCommand.MergeCells("Budget", "A1:B1"),
+              new WorkbookFormattingCommand.ApplyStyle(
                   "Budget",
                   "A1:B1",
                   ExcelCellStyle.alignment(
                       ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER)),
-              new WorkbookCommand.AppendRow(
+              new WorkbookCellCommand.AppendRow(
                   "Budget",
                   List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
-              new WorkbookCommand.ClearRange("Budget", "A2"),
-              new WorkbookCommand.SetHyperlink(
+              new WorkbookCellCommand.ClearRange("Budget", "A2"),
+              new WorkbookAnnotationCommand.SetHyperlink(
                   "Budget", "A1", new ExcelHyperlink.Document("Budget!B3")),
-              new WorkbookCommand.ClearHyperlink("Budget", "A1"),
-              new WorkbookCommand.SetComment(
+              new WorkbookAnnotationCommand.ClearHyperlink("Budget", "A1"),
+              new WorkbookAnnotationCommand.SetComment(
                   "Budget", "B1", new ExcelComment("Review", "GridGrind", false)),
-              new WorkbookCommand.ClearComment("Budget", "B1"),
-              new WorkbookCommand.SetDataValidation("Budget", "C1:C3", validationDefinition()),
-              new WorkbookCommand.ClearDataValidations(
+              new WorkbookAnnotationCommand.ClearComment("Budget", "B1"),
+              new WorkbookFormattingCommand.SetDataValidation(
+                  "Budget", "C1:C3", validationDefinition()),
+              new WorkbookFormattingCommand.ClearDataValidations(
                   "Budget", new ExcelRangeSelection.Selected(List.of("C2"))),
-              new WorkbookCommand.SetAutofilter("Budget", "A1:B3"),
-              new WorkbookCommand.ClearAutofilter("Budget"),
-              new WorkbookCommand.SetRange(
+              new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B3"),
+              new WorkbookTabularCommand.ClearAutofilter("Budget"),
+              new WorkbookCellCommand.SetRange(
                   "Ops",
                   "A1:B3",
                   List.of(
                       List.of(ExcelCellValue.text("Owner"), ExcelCellValue.text("Task")),
                       List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")),
                       List.of(ExcelCellValue.text("Lin"), ExcelCellValue.text("Pack")))),
-              new WorkbookCommand.SetRange(
+              new WorkbookCellCommand.SetRange(
                   "Ops",
                   "D1:E3",
                   List.of(
                       List.of(ExcelCellValue.text("Region"), ExcelCellValue.text("Desk")),
                       List.of(ExcelCellValue.text("North"), ExcelCellValue.text("A1")),
                       List.of(ExcelCellValue.text("South"), ExcelCellValue.text("B1")))),
-              new WorkbookCommand.SetRange(
+              new WorkbookCellCommand.SetRange(
                   "Ops",
                   "G1:H3",
                   List.of(
                       List.of(ExcelCellValue.text("Stage"), ExcelCellValue.text("Team")),
                       List.of(ExcelCellValue.text("Review"), ExcelCellValue.text("Docs")),
                       List.of(ExcelCellValue.text("Ship"), ExcelCellValue.text("Ops")))),
-              new WorkbookCommand.SetAutofilter("Ops", "D1:E3"),
-              new WorkbookCommand.SetTable(
+              new WorkbookTabularCommand.SetAutofilter("Ops", "D1:E3"),
+              new WorkbookTabularCommand.SetTable(
                   new ExcelTableDefinition(
                       "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())),
-              new WorkbookCommand.SetTable(
+              new WorkbookTabularCommand.SetTable(
                   new ExcelTableDefinition(
                       "Stages",
                       "Ops",
                       "G1:H3",
                       false,
                       new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
-              new WorkbookCommand.DeleteTable("Stages", "Ops"),
-              new WorkbookCommand.RenameSheet("Archive", "History"),
-              new WorkbookCommand.MoveSheet("History", 0),
-              new WorkbookCommand.DeleteSheet("Scratch"),
-              new WorkbookCommand.SetNamedRange(
+              new WorkbookTabularCommand.DeleteTable("Stages", "Ops"),
+              new WorkbookSheetCommand.RenameSheet("Archive", "History"),
+              new WorkbookSheetCommand.MoveSheet("History", 0),
+              new WorkbookSheetCommand.DeleteSheet("Scratch"),
+              new WorkbookMetadataCommand.SetNamedRange(
                   new ExcelNamedRangeDefinition(
                       "BudgetTotal",
                       new ExcelNamedRangeScope.WorkbookScope(),
                       new ExcelNamedRangeTarget("Budget", "B3"))),
-              new WorkbookCommand.SetNamedRange(
+              new WorkbookMetadataCommand.SetNamedRange(
                   new ExcelNamedRangeDefinition(
                       "HistoryCell",
                       new ExcelNamedRangeScope.SheetScope("History"),
                       new ExcelNamedRangeTarget("History", "A1"))),
-              new WorkbookCommand.DeleteNamedRange(
+              new WorkbookMetadataCommand.DeleteNamedRange(
                   "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()),
-              new WorkbookCommand.AutoSizeColumns("Budget"),
-              new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
-              new WorkbookCommand.SetRowHeight("Budget", 0, 0, 28.5),
-              new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
-              new WorkbookCommand.SetSheetZoom("Budget", 125),
-              new WorkbookCommand.SetPrintLayout(
+              new WorkbookLayoutCommand.AutoSizeColumns("Budget"),
+              new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 1, 16.0),
+              new WorkbookStructureCommand.SetRowHeight("Budget", 0, 0, 28.5),
+              new WorkbookLayoutCommand.SetSheetPane(
+                  "Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
+              new WorkbookLayoutCommand.SetSheetZoom("Budget", 125),
+              new WorkbookLayoutCommand.SetPrintLayout(
                   "Budget",
                   new ExcelPrintLayout(
                       new ExcelPrintLayout.Area.Range("A1:B3"),
@@ -127,7 +129,7 @@ class WorkbookCommandExecutorTest {
                       new ExcelPrintLayout.TitleColumns.Band(0, 0),
                       new ExcelHeaderFooterText("Budget", "", ""),
                       new ExcelHeaderFooterText("", "Confidential", ""))),
-              new WorkbookCommand.UnmergeCells("Budget", "A1:B1")));
+              new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B1")));
       workbook.formulas().markRecalculateOnOpen();
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
@@ -141,14 +143,14 @@ class WorkbookCommandExecutorTest {
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
-      WorkbookReadResult.AutofiltersResult autofilters =
+      WorkbookRuleResult.AutofiltersResult autofilters =
           assertInstanceOf(
-              WorkbookReadResult.AutofiltersResult.class,
+              WorkbookRuleResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
-      WorkbookReadResult.TablesResult tables =
+      WorkbookRuleResult.TablesResult tables =
           assertInstanceOf(
-              WorkbookReadResult.TablesResult.class,
+              WorkbookRuleResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -184,14 +186,14 @@ class WorkbookCommandExecutorTest {
                 new ExcelNamedRangeTarget("History", "A1"))),
         XlsxRoundTrip.namedRanges(workbookPath));
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      WorkbookReadResult.AutofiltersResult autofilters =
+      WorkbookRuleResult.AutofiltersResult autofilters =
           assertInstanceOf(
-              WorkbookReadResult.AutofiltersResult.class,
+              WorkbookRuleResult.AutofiltersResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(reopened, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
-      WorkbookReadResult.TablesResult tables =
+      WorkbookRuleResult.TablesResult tables =
           assertInstanceOf(
-              WorkbookReadResult.TablesResult.class,
+              WorkbookRuleResult.TablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       reopened,
@@ -217,34 +219,34 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetCell("Missing", "A1", ExcelCellValue.text("x"))));
+                  new WorkbookCellCommand.SetCell("Missing", "A1", ExcelCellValue.text("x"))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetRange(
+                  new WorkbookCellCommand.SetRange(
                       "Missing", "A1", List.of(List.of(ExcelCellValue.text("x"))))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetHyperlink(
+                  new WorkbookAnnotationCommand.SetHyperlink(
                       "Missing", "A1", new ExcelHyperlink.Document("Budget!A1"))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetComment(
+                  new WorkbookAnnotationCommand.SetComment(
                       "Missing", "A1", new ExcelComment("Review", "GridGrind", false))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.ApplyStyle(
+                  new WorkbookFormattingCommand.ApplyStyle(
                       "Missing",
                       "A1",
                       ExcelCellStyle.alignment(
@@ -254,13 +256,14 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetDataValidation("Missing", "A1", validationDefinition())));
+                  new WorkbookFormattingCommand.SetDataValidation(
+                      "Missing", "A1", validationDefinition())));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetConditionalFormatting(
+                  new WorkbookFormattingCommand.SetConditionalFormatting(
                       "Missing",
                       new ExcelConditionalFormattingBlockDefinition(
                           List.of("A1"),
@@ -275,38 +278,41 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.ClearDataValidations(
+                  new WorkbookFormattingCommand.ClearDataValidations(
                       "Missing", new ExcelRangeSelection.All())));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.ClearConditionalFormatting(
+                  new WorkbookFormattingCommand.ClearConditionalFormatting(
                       "Missing", new ExcelRangeSelection.All())));
       assertThrows(
           SheetNotFoundException.class,
-          () -> executor.apply(workbook, new WorkbookCommand.SetAutofilter("Missing", "A1:B2")));
+          () ->
+              executor.apply(
+                  workbook, new WorkbookTabularCommand.SetAutofilter("Missing", "A1:B2")));
       assertThrows(
           SheetNotFoundException.class,
-          () -> executor.apply(workbook, new WorkbookCommand.ClearAutofilter("Missing")));
+          () -> executor.apply(workbook, new WorkbookTabularCommand.ClearAutofilter("Missing")));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.SetTable(
+                  new WorkbookTabularCommand.SetTable(
                       new ExcelTableDefinition(
                           "Queue", "Missing", "A1:B2", false, new ExcelTableStyle.None()))));
       assertThrows(
           IllegalArgumentException.class,
-          () -> executor.apply(workbook, new WorkbookCommand.DeleteTable("Queue", "Missing")));
+          () ->
+              executor.apply(workbook, new WorkbookTabularCommand.DeleteTable("Queue", "Missing")));
       assertThrows(
           SheetNotFoundException.class,
           () ->
               executor.apply(
                   workbook,
-                  new WorkbookCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
+                  new WorkbookCellCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
     }
   }
 
@@ -328,9 +334,9 @@ class WorkbookCommandExecutorTest {
       assertSame(
           workbook,
           executor.apply(
-              workbook, new WorkbookCommand.SetSheetPresentation("Budget", presentation)));
+              workbook, new WorkbookLayoutCommand.SetSheetPresentation("Budget", presentation)));
 
-      WorkbookReadResult.SheetLayout layout = workbook.sheet("Budget").layout();
+      WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout();
       assertEquals(presentation.display(), layout.presentation().display());
       assertEquals(ExcelColorSnapshot.rgb("#225577"), layout.presentation().tabColor());
       assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
@@ -349,9 +355,9 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.CreateSheet("Data"),
-          new WorkbookCommand.CreateSheet("Report"),
-          new WorkbookCommand.SetRange(
+          new WorkbookSheetCommand.CreateSheet("Data"),
+          new WorkbookSheetCommand.CreateSheet("Report"),
+          new WorkbookCellCommand.SetRange(
               "Data",
               "A1:D5",
               List.of(
@@ -380,7 +386,7 @@ class WorkbookCommandExecutorTest {
                       ExcelCellValue.text("Do"),
                       ExcelCellValue.text("Lin"),
                       ExcelCellValue.number(12)))),
-          new WorkbookCommand.SetPivotTable(
+          new WorkbookTabularCommand.SetPivotTable(
               new ExcelPivotTableDefinition(
                   "Ops Pivot",
                   "Report",
@@ -396,9 +402,9 @@ class WorkbookCommandExecutorTest {
                           "Total Amount",
                           "#,##0.00")))));
 
-      WorkbookReadResult.PivotTablesResult pivotTables =
+      WorkbookDrawingResult.PivotTablesResult pivotTables =
           assertInstanceOf(
-              WorkbookReadResult.PivotTablesResult.class,
+              WorkbookDrawingResult.PivotTablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -411,11 +417,11 @@ class WorkbookCommandExecutorTest {
       assertEquals("Ops Pivot", pivot.name());
       assertEquals("Amount", pivot.dataFields().getFirst().sourceColumnName());
 
-      executor.apply(workbook, new WorkbookCommand.DeletePivotTable("Ops Pivot", "Report"));
+      executor.apply(workbook, new WorkbookTabularCommand.DeletePivotTable("Ops Pivot", "Report"));
 
-      WorkbookReadResult.PivotTablesResult afterDelete =
+      WorkbookDrawingResult.PivotTablesResult afterDelete =
           assertInstanceOf(
-              WorkbookReadResult.PivotTablesResult.class,
+              WorkbookDrawingResult.PivotTablesResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -446,8 +452,8 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.CreateSheet("Ops"),
-          new WorkbookCommand.SetPicture(
+          new WorkbookSheetCommand.CreateSheet("Ops"),
+          new WorkbookDrawingCommand.SetPicture(
               "Ops",
               new ExcelPictureDefinition(
                   "OpsPicture",
@@ -455,7 +461,7 @@ class WorkbookCommandExecutorTest {
                   ExcelPictureFormat.PNG,
                   firstAnchor,
                   "Queue preview")),
-          new WorkbookCommand.SetShape(
+          new WorkbookDrawingCommand.SetShape(
               "Ops",
               new ExcelShapeDefinition(
                   "OpsShape",
@@ -463,7 +469,7 @@ class WorkbookCommandExecutorTest {
                   firstAnchor,
                   "rect",
                   "Queue")),
-          new WorkbookCommand.SetEmbeddedObject(
+          new WorkbookDrawingCommand.SetEmbeddedObject(
               "Ops",
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -474,8 +480,8 @@ class WorkbookCommandExecutorTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(pngBytes),
                   firstAnchor)),
-          new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
-          new WorkbookCommand.DeleteDrawingObject("Ops", "OpsPicture"));
+          new WorkbookDrawingCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
+          new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "OpsPicture"));
 
       List<ExcelDrawingObjectSnapshot> drawingObjects = workbook.sheet("Ops").drawingObjects();
       assertEquals(
@@ -497,14 +503,14 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.SetWorkbookProtection(
+          new WorkbookSheetCommand.SetWorkbookProtection(
               new ExcelWorkbookProtectionSettings(true, false, true, "secret", "review")));
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(true, false, true, true, true),
           workbook.workbookProtection());
 
-      executor.apply(workbook, new WorkbookCommand.ClearWorkbookProtection());
+      executor.apply(workbook, new WorkbookSheetCommand.ClearWorkbookProtection());
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
@@ -532,7 +538,7 @@ class WorkbookCommandExecutorTest {
 
       assertSame(
           workbook,
-          executor.apply(workbook, List.of(new WorkbookCommand.ClearPrintLayout("Budget"))));
+          executor.apply(workbook, List.of(new WorkbookLayoutCommand.ClearPrintLayout("Budget"))));
       ExcelPrintLayout clearedPrintLayout = workbook.sheet("Budget").printLayout();
       assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
       assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
@@ -552,7 +558,7 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.SetConditionalFormatting(
+          new WorkbookFormattingCommand.SetConditionalFormatting(
               "Ops",
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("A1:A3"),
@@ -563,9 +569,9 @@ class WorkbookCommandExecutorTest {
                           new ExcelDifferentialStyle(
                               null, true, null, null, "#112233", null, null, null, null))))));
 
-      WorkbookReadResult.ConditionalFormattingResult initial =
+      WorkbookRuleResult.ConditionalFormattingResult initial =
           assertInstanceOf(
-              WorkbookReadResult.ConditionalFormattingResult.class,
+              WorkbookRuleResult.ConditionalFormattingResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -575,11 +581,12 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.ClearConditionalFormatting("Ops", new ExcelRangeSelection.All()));
+          new WorkbookFormattingCommand.ClearConditionalFormatting(
+              "Ops", new ExcelRangeSelection.All()));
 
-      WorkbookReadResult.ConditionalFormattingResult cleared =
+      WorkbookRuleResult.ConditionalFormattingResult cleared =
           assertInstanceOf(
-              WorkbookReadResult.ConditionalFormattingResult.class,
+              WorkbookRuleResult.ConditionalFormattingResult.class,
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
@@ -600,8 +607,8 @@ class WorkbookCommandExecutorTest {
           workbook,
           executor.apply(
               workbook,
-              new WorkbookCommand.CreateSheet("Layout"),
-              new WorkbookCommand.SetRange(
+              new WorkbookSheetCommand.CreateSheet("Layout"),
+              new WorkbookCellCommand.SetRange(
                   "Layout",
                   "A1:F6",
                   List.of(
@@ -647,12 +654,13 @@ class WorkbookCommandExecutorTest {
                           ExcelCellValue.text("Epsilon"),
                           ExcelCellValue.text("Mia"),
                           ExcelCellValue.text("Y")))),
-              new WorkbookCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
-              new WorkbookCommand.SetRowVisibility("Layout", new ExcelRowSpan(5, 5), true),
-              new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
-              new WorkbookCommand.SetColumnVisibility("Layout", new ExcelColumnSpan(5, 5), true),
-              new WorkbookCommand.CreateSheet("Moves"),
-              new WorkbookCommand.SetRange(
+              new WorkbookStructureCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
+              new WorkbookStructureCommand.SetRowVisibility("Layout", new ExcelRowSpan(5, 5), true),
+              new WorkbookStructureCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
+              new WorkbookStructureCommand.SetColumnVisibility(
+                  "Layout", new ExcelColumnSpan(5, 5), true),
+              new WorkbookSheetCommand.CreateSheet("Moves"),
+              new WorkbookCellCommand.SetRange(
                   "Moves",
                   "A1:D3",
                   List.of(
@@ -671,14 +679,14 @@ class WorkbookCommandExecutorTest {
                           ExcelCellValue.number(84.0),
                           ExcelCellValue.text("Closed"),
                           ExcelCellValue.text("Beta")))),
-              new WorkbookCommand.InsertRows("Moves", 1, 1),
-              new WorkbookCommand.SetCell("Moves", "A2", ExcelCellValue.text("Spacer")),
-              new WorkbookCommand.ShiftRows("Moves", new ExcelRowSpan(2, 3), 1),
-              new WorkbookCommand.DeleteRows("Moves", new ExcelRowSpan(2, 2)),
-              new WorkbookCommand.InsertColumns("Moves", 1, 1),
-              new WorkbookCommand.SetCell("Moves", "B1", ExcelCellValue.text("Pad")),
-              new WorkbookCommand.ShiftColumns("Moves", new ExcelColumnSpan(2, 4), 1),
-              new WorkbookCommand.DeleteColumns("Moves", new ExcelColumnSpan(2, 2))));
+              new WorkbookStructureCommand.InsertRows("Moves", 1, 1),
+              new WorkbookCellCommand.SetCell("Moves", "A2", ExcelCellValue.text("Spacer")),
+              new WorkbookStructureCommand.ShiftRows("Moves", new ExcelRowSpan(2, 3), 1),
+              new WorkbookStructureCommand.DeleteRows("Moves", new ExcelRowSpan(2, 2)),
+              new WorkbookStructureCommand.InsertColumns("Moves", 1, 1),
+              new WorkbookCellCommand.SetCell("Moves", "B1", ExcelCellValue.text("Pad")),
+              new WorkbookStructureCommand.ShiftColumns("Moves", new ExcelColumnSpan(2, 4), 1),
+              new WorkbookStructureCommand.DeleteColumns("Moves", new ExcelColumnSpan(2, 2))));
 
       assertEquals("Pad", workbook.sheet("Moves").text("B1"));
       assertEquals("Hosting", workbook.sheet("Moves").text("A3"));
@@ -687,7 +695,7 @@ class WorkbookCommandExecutorTest {
       workbook.save(workbookPath);
     }
 
-    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
     assertEquals(6, layout.rows().size());
     assertTrue(layout.rows().get(1).hidden());
     assertEquals(1, layout.rows().get(1).outlineLevel());
@@ -716,28 +724,28 @@ class WorkbookCommandExecutorTest {
           workbook,
           executor.apply(
               workbook,
-              new WorkbookCommand.CreateSheet("Alpha"),
-              new WorkbookCommand.CreateSheet("Beta"),
-              new WorkbookCommand.SetCell("Alpha", "A1", ExcelCellValue.text("Live")),
-              new WorkbookCommand.CopySheet(
+              new WorkbookSheetCommand.CreateSheet("Alpha"),
+              new WorkbookSheetCommand.CreateSheet("Beta"),
+              new WorkbookCellCommand.SetCell("Alpha", "A1", ExcelCellValue.text("Live")),
+              new WorkbookSheetCommand.CopySheet(
                   "Alpha", "Alpha Copy", new ExcelSheetCopyPosition.AtIndex(1)),
-              new WorkbookCommand.SetActiveSheet("Alpha"),
-              new WorkbookCommand.SetSelectedSheets(List.of("Alpha", "Beta")),
-              new WorkbookCommand.SetSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN),
-              new WorkbookCommand.SetSheetProtection("Alpha", protectionSettings()),
-              new WorkbookCommand.ClearSheetProtection("Alpha")));
+              new WorkbookSheetCommand.SetActiveSheet("Alpha"),
+              new WorkbookSheetCommand.SetSelectedSheets(List.of("Alpha", "Beta")),
+              new WorkbookSheetCommand.SetSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN),
+              new WorkbookSheetCommand.SetSheetProtection("Alpha", protectionSettings()),
+              new WorkbookSheetCommand.ClearSheetProtection("Alpha")));
 
       assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheetNames());
       assertEquals("Live", workbook.sheet("Alpha Copy").text("A1"));
 
-      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+              WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
       assertEquals("Alpha", summary.activeSheetName());
       assertEquals(List.of("Alpha"), summary.selectedSheetNames());
       assertEquals(ExcelSheetVisibility.HIDDEN, workbook.sheetSummary("Beta").visibility());
       assertInstanceOf(
-          WorkbookReadResult.SheetProtection.Unprotected.class,
+          WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
     }
   }
@@ -751,8 +759,8 @@ class WorkbookCommandExecutorTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.CreateSheet("Layout"),
-          new WorkbookCommand.SetRange(
+          new WorkbookSheetCommand.CreateSheet("Layout"),
+          new WorkbookCellCommand.SetRange(
               "Layout",
               "A1:D4",
               List.of(
@@ -776,15 +784,15 @@ class WorkbookCommandExecutorTest {
                       ExcelCellValue.number(7.0),
                       ExcelCellValue.text("Done"),
                       ExcelCellValue.text("Mia")))),
-          new WorkbookCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
-          new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
-          new WorkbookCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
-          new WorkbookCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
+          new WorkbookStructureCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
+          new WorkbookStructureCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
+          new WorkbookStructureCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
+          new WorkbookStructureCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
 
       workbook.save(workbookPath);
     }
 
-    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
 
     assertTrue(layout.rows().size() >= 4);
     assertFalse(layout.rows().get(1).hidden());
@@ -803,22 +811,22 @@ class WorkbookCommandExecutorTest {
           () ->
               WorkbookCommandExecutor.applyWorkbookScopeCommand(
                   workbook,
-                  new WorkbookCommand.SetHyperlink(
+                  new WorkbookAnnotationCommand.SetHyperlink(
                       "Budget", "A1", new ExcelHyperlink.Url("https://example.com"))));
       assertHelperRejects(
           () ->
               WorkbookCommandExecutor.applySheetStructureCommand(
-                  workbook, new WorkbookCommand.CreateSheet("Ops")));
+                  workbook, new WorkbookSheetCommand.CreateSheet("Ops")));
       assertHelperRejects(
           () ->
               WorkbookCommandExecutor.applyCellValueCommand(
                   workbook,
-                  new WorkbookCommand.SetWorkbookProtection(
+                  new WorkbookSheetCommand.SetWorkbookProtection(
                       new ExcelWorkbookProtectionSettings(true, false, false, null, null))));
       assertHelperRejects(
           () ->
               WorkbookCommandExecutor.applyWorkbookMetadataCommand(
-                  workbook, new WorkbookCommand.CreateSheet("Ops")));
+                  workbook, new WorkbookSheetCommand.CreateSheet("Ops")));
     }
   }
 

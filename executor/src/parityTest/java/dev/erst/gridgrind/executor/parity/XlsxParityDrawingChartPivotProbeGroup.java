@@ -4,7 +4,10 @@ import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.inspect;
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.executor.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
@@ -178,8 +181,9 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         List.of(
             mutate(
                 new CellSelector.ByAddress("Ops", "B2"),
-                new MutationAction.SetComment(comment("Transient", "GridGrind", false))),
-            mutate(new CellSelector.ByAddress("Ops", "B2"), new MutationAction.ClearComment())));
+                new CellMutationAction.SetComment(comment("Transient", "GridGrind", false))),
+            mutate(
+                new CellSelector.ByAddress("Ops", "B2"), new CellMutationAction.ClearComment())));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return before.equals(after)
         ? pass(
@@ -200,7 +204,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         List.of(
             mutate(
                 new CellSelector.ByAddress("Ops", "F8"),
-                new MutationAction.SetCell(text("Touch")))));
+                new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return !before.mergedRegions().isEmpty() && before.equals(after)
         ? pass("Unrelated edits preserve pictures that coexist with merged regions.")
@@ -235,7 +239,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         List.of(
             mutate(
                 new CellSelector.ByAddress("Objects", "G1"),
-                new MutationAction.SetCell(text("Touch")))));
+                new CellMutationAction.SetCell(text("Touch")))));
     XlsxParityOracle.DrawingSheetSnapshot after =
         XlsxParityOracle.drawingSheet(outputPath, "Objects");
     if (!XlsxParityGridGrind.hasInspectionQueryType("GET_DRAWING_OBJECTS")
@@ -377,21 +381,21 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             "OpsChart",
             twoCellAnchorInput(4, 1, 11, 17, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Actual focus"),
-            new ChartInput.Legend.Hidden(),
+            new ChartLegendInput.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             true,
             List.of(
-                new ChartInput.Bar(
+                new ChartPlotInput.Bar(
                     false,
                     ExcelChartBarDirection.BAR,
                     dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
                     null,
                     null,
                     List.of(
-                        new ChartInput.Series(
-                            new ChartInput.Title.Formula("C1"),
-                            new ChartInput.DataSource.Reference("A2:A4"),
-                            new ChartInput.DataSource.Reference("C2:C4"),
+                        new ChartSeriesInput(
+                            new ChartTitleInput.Formula("C1"),
+                            new ChartDataSourceInput.Reference("A2:A4"),
+                            new ChartDataSourceInput.Reference("C2:C4"),
                             null,
                             null,
                             null,
@@ -403,10 +407,10 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             List.of(
                 mutate(
                     new CellSelector.ByAddress("Chart", "F1"),
-                    new MutationAction.SetCell(text("Touch"))),
+                    new CellMutationAction.SetCell(text("Touch"))),
                 mutate(
                     new SheetSelector.ByName("Chart"),
-                    new MutationAction.SetChart(actualFocusChart))),
+                    new DrawingMutationAction.SetChart(actualFocusChart))),
             inspect(
                 "charts", new ChartSelector.AllOnSheet("Chart"), new InspectionQuery.GetCharts()),
             inspect(
@@ -467,7 +471,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
           List.of(
               mutate(
                   new CellSelector.ByAddress("Chart", "F8"),
-                  new MutationAction.SetCell(text("Touch")))));
+                  new CellMutationAction.SetCell(text("Touch")))));
       List<ChartReport> afterCharts = XlsxParityOracle.charts(outputPath, "Chart");
       XlsxParityOracle.DrawingSheetSnapshot afterDrawing =
           XlsxParityOracle.drawingSheet(outputPath, "Chart");
@@ -506,21 +510,21 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             "ComboChart",
             twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Roadmap"),
-            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             List.of(
-                new ChartInput.Bar(
+                new ChartPlotInput.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
                     null,
                     null,
                     List.of(
-                        new ChartInput.Series(
-                            new ChartInput.Title.Formula("B1"),
-                            new ChartInput.DataSource.Reference("A2:A4"),
-                            new ChartInput.DataSource.Reference("B2:B4"),
+                        new ChartSeriesInput(
+                            new ChartTitleInput.Formula("B1"),
+                            new ChartDataSourceInput.Reference("A2:A4"),
+                            new ChartDataSourceInput.Reference("B2:B4"),
                             null,
                             null,
                             null,
@@ -530,7 +534,8 @@ final class XlsxParityDrawingChartPivotProbeGroup {
         replacementPath,
         List.of(
             mutate(
-                new SheetSelector.ByName("Chart"), new MutationAction.SetChart(replacementChart))));
+                new SheetSelector.ByName("Chart"),
+                new DrawingMutationAction.SetChart(replacementChart))));
     if (directCharts.size() != 1
         || directCharts.getFirst().plots().size() != 2
         || directDrawing.objects().size() != 1
@@ -577,10 +582,10 @@ final class XlsxParityDrawingChartPivotProbeGroup {
           pivot.workbookPath(),
           outputPath,
           List.of(
-              mutate(new SheetSelector.ByName("Scratch"), new MutationAction.EnsureSheet()),
+              mutate(new SheetSelector.ByName("Scratch"), new WorkbookMutationAction.EnsureSheet()),
               mutate(
                   new CellSelector.ByAddress("Scratch", "A1"),
-                  new MutationAction.SetCell(text("Touch")))));
+                  new CellMutationAction.SetCell(text("Touch")))));
       List<PivotTableReport> after = XlsxParityOracle.pivotTables(outputPath);
       if (!before.equals(after)) {
         mismatches.add(scenarioId);
@@ -672,7 +677,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
             outputPath,
             List.of(
                 mutate(
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "Sales Pivot",
                             "RangeReport",
@@ -690,7 +695,7 @@ final class XlsxParityDrawingChartPivotProbeGroup {
                                     "#,##0.00"))))),
                 mutate(
                     new PivotTableSelector.ByNameOnSheet("Table Pivot", "TableReport"),
-                    new MutationAction.DeletePivotTable())),
+                    new StructuredMutationAction.DeletePivotTable())),
             inspect("pivots", new PivotTableSelector.All(), new InspectionQuery.GetPivotTables()),
             inspect(
                 "health",

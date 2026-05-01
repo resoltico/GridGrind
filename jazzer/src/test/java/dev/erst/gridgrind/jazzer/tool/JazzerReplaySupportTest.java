@@ -161,22 +161,24 @@ class JazzerReplaySupportTest {
 
     ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
 
-    assertInstanceOf(ReplayOutcome.Success.class, outcome);
-    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
+    ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
+    assertEquals("InvalidRequestException", expectedInvalid.invalidKind());
+    assertEquals("Missing required field 'digestAlgorithm'", expectedInvalid.message());
     assertEquals(
         new ProtocolRequestDetails(
             input.length,
-            "PARSED",
-            "EXISTING",
-            "SAVE_AS",
-            1,
-            Map.of("SET_CELL", 1L),
+            "INVALID_REQUEST",
+            "NOT_PARSED",
+            "NOT_PARSED",
+            0,
+            Map.of(),
             Map.of(),
             0,
             Map.of(),
-            2,
-            Map.of("GET_CELLS", 1L, "GET_PACKAGE_SECURITY", 1L)),
-        success.details());
+            0,
+            Map.of()),
+        expectedInvalid.details());
   }
 
   @Test

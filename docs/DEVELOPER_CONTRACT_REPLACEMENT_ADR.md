@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: DEVELOPER
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, adr, contract, executor, protocol, replacement, architecture, java, authoring-java]
   questions: ["what architecture decision locked the contract replacement", "why did gridgrind delete the protocol module", "what is contract replacement mode", "why is gridgrind split into contract and executor"]

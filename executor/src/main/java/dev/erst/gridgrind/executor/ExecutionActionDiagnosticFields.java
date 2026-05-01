@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
@@ -15,13 +17,13 @@ final class ExecutionActionDiagnosticFields {
 
   static Optional<String> sheetNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    if (action instanceof MutationAction.SetTable setTable) {
+    if (action instanceof StructuredMutationAction.SetTable setTable) {
       return Optional.of(setTable.table().sheetName());
     }
-    if (action instanceof MutationAction.SetPivotTable setPivotTable) {
+    if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
       return Optional.of(setPivotTable.pivotTable().sheetName());
     }
-    if (action instanceof MutationAction.SetNamedRange setNamedRange) {
+    if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return Optional.ofNullable(setNamedRange.target().sheetName())
           .or(() -> sheetNameFor(setNamedRange.scope()));
     }
@@ -29,7 +31,7 @@ final class ExecutionActionDiagnosticFields {
   }
 
   static Optional<String> addressFor(MutationAction action) {
-    if (action instanceof MutationAction.SetPivotTable setPivotTable) {
+    if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
       return Optional.of(setPivotTable.pivotTable().anchor().topLeftAddress());
     }
     return Optional.empty();
@@ -37,19 +39,20 @@ final class ExecutionActionDiagnosticFields {
 
   static Optional<String> rangeFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    if (action instanceof MutationAction.SetTable setTable) {
+    if (action instanceof StructuredMutationAction.SetTable setTable) {
       return Optional.of(setTable.table().range());
     }
-    if (action instanceof MutationAction.SetPivotTable setPivotTable) {
+    if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable) {
       if (setPivotTable.pivotTable().source() instanceof PivotTableInput.Source.Range range) {
         return Optional.of(range.range());
       }
       return Optional.empty();
     }
-    if (action instanceof MutationAction.SetNamedRange setNamedRange) {
+    if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return Optional.ofNullable(setNamedRange.target().range());
     }
-    if (action instanceof MutationAction.SetConditionalFormatting setConditionalFormatting) {
+    if (action
+        instanceof StructuredMutationAction.SetConditionalFormatting setConditionalFormatting) {
       return setConditionalFormatting.conditionalFormatting().ranges().size() == 1
           ? Optional.of(setConditionalFormatting.conditionalFormatting().ranges().getFirst())
           : Optional.empty();
@@ -59,12 +62,12 @@ final class ExecutionActionDiagnosticFields {
 
   static Optional<String> formulaFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    if (action instanceof MutationAction.SetCell setCell) {
+    if (action instanceof CellMutationAction.SetCell setCell) {
       return setCell.value() instanceof CellInput.Formula formula
           ? inlineFormula(formula)
           : Optional.empty();
     }
-    if (action instanceof MutationAction.SetNamedRange setNamedRange) {
+    if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return Optional.ofNullable(setNamedRange.target().formula());
     }
     return Optional.empty();
@@ -79,10 +82,10 @@ final class ExecutionActionDiagnosticFields {
 
   static Optional<String> namedRangeNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    if (action instanceof MutationAction.SetNamedRange setNamedRange) {
+    if (action instanceof StructuredMutationAction.SetNamedRange setNamedRange) {
       return Optional.of(setNamedRange.name());
     }
-    if (action instanceof MutationAction.SetPivotTable setPivotTable
+    if (action instanceof StructuredMutationAction.SetPivotTable setPivotTable
         && setPivotTable.pivotTable().source()
             instanceof PivotTableInput.Source.NamedRange namedRange) {
       return Optional.of(namedRange.name());

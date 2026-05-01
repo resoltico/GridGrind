@@ -18,6 +18,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for CellStyleInput record construction and ExcelCellStyle conversion. */
@@ -28,7 +29,11 @@ class CellStyleInputTest {
         new CellStyleInput(
             "#,##0.00",
             new CellAlignmentInput(
-                true, ExcelHorizontalAlignment.RIGHT, ExcelVerticalAlignment.CENTER, 45, 3),
+                Optional.of(true),
+                Optional.of(ExcelHorizontalAlignment.RIGHT),
+                Optional.of(ExcelVerticalAlignment.CENTER),
+                Optional.of(45),
+                Optional.of(3)),
             new CellFontInput(
                 true,
                 false,
@@ -80,7 +85,12 @@ class CellStyleInputTest {
     CellStyleInput style =
         new CellStyleInput(
             null,
-            new CellAlignmentInput(true, null, null, null, null),
+            new CellAlignmentInput(
+                Optional.of(true),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             new CellFontInput(null, true, null, null, null, null, null),
             null,
             null,
@@ -103,7 +113,14 @@ class CellStyleInputTest {
         IllegalArgumentException.class,
         () -> new CellStyleInput(null, null, null, null, null, null));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, null, null));
+        IllegalArgumentException.class,
+        () ->
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellFontInput(null, null, " ", null, null, null, null));
@@ -122,13 +139,41 @@ class CellStyleInputTest {
         IllegalArgumentException.class,
         () -> CellFillInput.patternForeground(ExcelFillPattern.SOLID, ColorInput.rgb(" ")));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, -1, null));
+        IllegalArgumentException.class,
+        () ->
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1),
+                Optional.empty()));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, 181, null));
+        IllegalArgumentException.class,
+        () ->
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(181),
+                Optional.empty()));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, null, -1));
+        IllegalArgumentException.class,
+        () ->
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1)));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellAlignmentInput(null, null, null, null, 251));
+        IllegalArgumentException.class,
+        () ->
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(251)));
     assertThrows(
         NullPointerException.class,
         () -> CellFillInput.patternBackground(null, ColorInput.rgb("#AABBCC")));
@@ -153,11 +198,26 @@ class CellStyleInputTest {
   void acceptsSingleAttributeStyles() {
     assertNotNull(
         new CellStyleInput(
-            null, new CellAlignmentInput(true, null, null, null, null), null, null, null, null));
+            null,
+            new CellAlignmentInput(
+                Optional.of(true),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
+            null,
+            null,
+            null,
+            null));
     assertNotNull(
         new CellStyleInput(
             null,
-            new CellAlignmentInput(null, ExcelHorizontalAlignment.CENTER, null, null, null),
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.of(ExcelHorizontalAlignment.CENTER),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()),
             null,
             null,
             null,
@@ -213,7 +273,12 @@ class CellStyleInputTest {
     assertNotNull(
         new CellStyleInput(
             null,
-            new CellAlignmentInput(null, null, ExcelVerticalAlignment.TOP, null, null),
+            new CellAlignmentInput(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(ExcelVerticalAlignment.TOP),
+                Optional.empty(),
+                Optional.empty()),
             null,
             null,
             null,
@@ -228,9 +293,14 @@ class CellStyleInputTest {
                 null, null, null, null, new CellBorderSideInput(ExcelBorderStyle.THIN)),
             null));
     CellAlignmentInput boundedAlignment =
-        new CellAlignmentInput(null, null, ExcelVerticalAlignment.BOTTOM, 180, 250);
-    assertEquals(180, boundedAlignment.textRotation());
-    assertEquals(250, boundedAlignment.indentation());
+        new CellAlignmentInput(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(ExcelVerticalAlignment.BOTTOM),
+            Optional.of(180),
+            Optional.of(250));
+    assertEquals(180, boundedAlignment.textRotation().orElseThrow());
+    assertEquals(250, boundedAlignment.indentation().orElseThrow());
     CellFillInput.PatternForeground solidFill =
         assertInstanceOf(
             CellFillInput.PatternForeground.class,

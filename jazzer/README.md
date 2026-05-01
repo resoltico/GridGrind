@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: TESTING
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, jazzer, fuzzing, regression, replay, promote, corpus, protocol-workflow, protocol-request, xlsx-roundtrip, engine-command-sequence]
   questions: ["how do I run jazzer for gridgrind", "how do I replay a jazzer input", "how do I promote a jazzer finding", "what fuzz harnesses does gridgrind ship"]
@@ -94,10 +94,10 @@ It does not start active fuzzing. It now emits `[JAZZER-PULSE]` lines while supp
 regression harnesses advance so whole-repo `./check.sh` runs can show live Stage 2 progress
 instead of going quiet.
 
-Run one harness:
+Run one short validated harness session:
 
 ```bash
-jazzer/bin/fuzz-protocol-workflow -PjazzerMaxDuration=30m --console=plain
+jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=15s --console=plain
 ```
 
 This is the supported live-fuzz operator surface. The wrapper records run history and summaries
@@ -108,8 +108,11 @@ harness behind.
 Run all four active harnesses sequentially:
 
 ```bash
-jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
+jazzer/bin/fuzz-all -PjazzerMaxDuration=30s --console=plain
 ```
+
+The `30s` duration applies per harness, not total. Increase it once the wrapper, corpus, and run
+history all look healthy on your machine.
 
 Inspect the latest state:
 

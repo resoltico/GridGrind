@@ -9,7 +9,9 @@ import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
+import dev.erst.gridgrind.contract.dto.GridGrindLayoutSurfaceReports;
+import dev.erst.gridgrind.contract.dto.GridGrindSchemaAndFormulaReports;
 import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
@@ -24,7 +26,7 @@ import java.util.List;
 final class WorkbookInvariantAnalysisSurfaceChecks {
   private WorkbookInvariantAnalysisSurfaceChecks() {}
 
-  static void requireWindowShape(GridGrindResponse.WindowReport window) {
+  static void requireWindowShape(GridGrindLayoutSurfaceReports.WindowReport window) {
     WorkbookInvariantChecks.require(
         window.sheetName() != null, "window sheetName must not be null");
     WorkbookInvariantChecks.require(
@@ -51,7 +53,8 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
             });
   }
 
-  static void requireHyperlinkEntryShape(GridGrindResponse.CellHyperlinkReport hyperlink) {
+  static void requireHyperlinkEntryShape(
+      GridGrindLayoutSurfaceReports.CellHyperlinkReport hyperlink) {
     WorkbookInvariantChecks.require(
         hyperlink.address() != null, "hyperlink address must not be null");
     WorkbookInvariantChecks.require(
@@ -61,7 +64,7 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     WorkbookInvariantCellSurfaceChecks.requireHyperlinkShape(hyperlink.hyperlink());
   }
 
-  static void requireCommentEntryShape(GridGrindResponse.CellCommentReport comment) {
+  static void requireCommentEntryShape(GridGrindLayoutSurfaceReports.CellCommentReport comment) {
     WorkbookInvariantChecks.require(comment.address() != null, "comment address must not be null");
     WorkbookInvariantChecks.require(
         !comment.address().isBlank(), "comment address must not be blank");
@@ -69,7 +72,7 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     WorkbookInvariantCellSurfaceChecks.requireCommentReportShape(comment.comment());
   }
 
-  static void requireSheetLayoutShape(GridGrindResponse.SheetLayoutReport layout) {
+  static void requireSheetLayoutShape(GridGrindLayoutSurfaceReports.SheetLayoutReport layout) {
     WorkbookInvariantChecks.require(
         layout.sheetName() != null, "layout sheetName must not be null");
     WorkbookInvariantChecks.require(
@@ -453,7 +456,8 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     WorkbookInvariantChecks.requireNonBlank(formula1, "comparison formula1");
   }
 
-  static void requireFormulaSurfaceShape(GridGrindResponse.FormulaSurfaceReport analysis) {
+  static void requireFormulaSurfaceShape(
+      GridGrindSchemaAndFormulaReports.FormulaSurfaceReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.totalFormulaCellCount() >= 0, "totalFormulaCellCount must not be negative");
     analysis
@@ -485,7 +489,7 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
             });
   }
 
-  static void requireSheetSchemaShape(GridGrindResponse.SheetSchemaReport analysis) {
+  static void requireSheetSchemaShape(GridGrindSchemaAndFormulaReports.SheetSchemaReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.sheetName() != null, "schema sheetName must not be null");
     WorkbookInvariantChecks.require(
@@ -532,7 +536,8 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
             });
   }
 
-  static void requireNamedRangeSurfaceShape(GridGrindResponse.NamedRangeSurfaceReport analysis) {
+  static void requireNamedRangeSurfaceShape(
+      GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.workbookScopedCount() >= 0, "workbookScopedCount must not be negative");
     WorkbookInvariantChecks.require(
@@ -559,7 +564,7 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
             });
   }
 
-  static void requireFormulaHealthShape(GridGrindResponse.FormulaHealthReport analysis) {
+  static void requireFormulaHealthShape(GridGrindAnalysisReports.FormulaHealthReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.checkedFormulaCellCount() >= 0, "checkedFormulaCellCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
@@ -597,25 +602,27 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
-  static void requireHyperlinkHealthShape(GridGrindResponse.HyperlinkHealthReport analysis) {
+  static void requireHyperlinkHealthShape(GridGrindAnalysisReports.HyperlinkHealthReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.checkedHyperlinkCount() >= 0, "checkedHyperlinkCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
-  static void requireNamedRangeHealthShape(GridGrindResponse.NamedRangeHealthReport analysis) {
+  static void requireNamedRangeHealthShape(
+      GridGrindAnalysisReports.NamedRangeHealthReport analysis) {
     WorkbookInvariantChecks.require(
         analysis.checkedNamedRangeCount() >= 0, "checkedNamedRangeCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
-  static void requireWorkbookFindingsShape(GridGrindResponse.WorkbookFindingsReport analysis) {
+  static void requireWorkbookFindingsShape(
+      GridGrindAnalysisReports.WorkbookFindingsReport analysis) {
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
   static void requireAnalysisSummaryShape(
-      GridGrindResponse.AnalysisSummaryReport summary,
-      List<GridGrindResponse.AnalysisFindingReport> findings) {
+      GridGrindAnalysisReports.AnalysisSummaryReport summary,
+      List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
     WorkbookInvariantChecks.require(summary != null, "analysis summary must not be null");
     WorkbookInvariantChecks.require(findings != null, "analysis findings must not be null");
     WorkbookInvariantChecks.require(
@@ -634,7 +641,7 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
     findings.forEach(WorkbookInvariantAnalysisSurfaceChecks::requireAnalysisFindingShape);
   }
 
-  static void requireAnalysisFindingShape(GridGrindResponse.AnalysisFindingReport finding) {
+  static void requireAnalysisFindingShape(GridGrindAnalysisReports.AnalysisFindingReport finding) {
     WorkbookInvariantChecks.require(
         finding.code() != null, "analysis finding code must not be null");
     WorkbookInvariantChecks.require(
@@ -651,18 +658,18 @@ final class WorkbookInvariantAnalysisSurfaceChecks {
             evidence -> WorkbookInvariantChecks.requireNonBlank(evidence, "analysis evidence"));
 
     switch (finding.location()) {
-      case GridGrindResponse.AnalysisLocationReport.Workbook _ -> {}
-      case GridGrindResponse.AnalysisLocationReport.Sheet sheet ->
+      case GridGrindAnalysisReports.AnalysisLocationReport.Workbook _ -> {}
+      case GridGrindAnalysisReports.AnalysisLocationReport.Sheet sheet ->
           WorkbookInvariantChecks.requireNonBlank(sheet.sheetName(), "analysis sheetName");
-      case GridGrindResponse.AnalysisLocationReport.Cell cell -> {
+      case GridGrindAnalysisReports.AnalysisLocationReport.Cell cell -> {
         WorkbookInvariantChecks.requireNonBlank(cell.sheetName(), "analysis sheetName");
         WorkbookInvariantChecks.requireNonBlank(cell.address(), "analysis address");
       }
-      case GridGrindResponse.AnalysisLocationReport.Range range -> {
+      case GridGrindAnalysisReports.AnalysisLocationReport.Range range -> {
         WorkbookInvariantChecks.requireNonBlank(range.sheetName(), "analysis sheetName");
         WorkbookInvariantChecks.requireNonBlank(range.range(), "analysis range");
       }
-      case GridGrindResponse.AnalysisLocationReport.NamedRange namedRange -> {
+      case GridGrindAnalysisReports.AnalysisLocationReport.NamedRange namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(namedRange.name(), "analysis named range");
         WorkbookInvariantChecks.require(
             namedRange.scope() != null, "analysis named range scope must not be null");

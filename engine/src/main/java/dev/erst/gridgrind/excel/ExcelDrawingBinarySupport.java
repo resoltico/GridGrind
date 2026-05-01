@@ -74,7 +74,7 @@ final class ExcelDrawingBinarySupport {
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     String sheetRelationId = previewSheetRelationId(objectData.getOleObject());
     if (sheetRelationId == null) {
-      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
+      return null;
     }
     org.apache.poi.openxml4j.opc.PackagePart previewPart =
         relatedInternalPart(sheetPart(objectData), sheetRelationId);
@@ -91,13 +91,13 @@ final class ExcelDrawingBinarySupport {
   static org.apache.poi.openxml4j.opc.PackagePart relatedInternalPart(
       org.apache.poi.openxml4j.opc.PackagePart sourcePart, String relationshipId) {
     if (relationshipId == null || relationshipId.isBlank()) {
-      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
+      return null;
     }
     org.apache.poi.openxml4j.opc.PackageRelationship relationship =
         sourcePart.getRelationship(relationshipId);
     if (relationship == null
         || relationship.getTargetMode() == org.apache.poi.openxml4j.opc.TargetMode.EXTERNAL) {
-      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
+      return null;
     }
     try {
       return sourcePart
@@ -146,7 +146,7 @@ final class ExcelDrawingBinarySupport {
   static String previewSheetRelationId(
       org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject oleObject) {
     if (!oleObject.isSetObjectPr()) {
-      return java.util.Optional.<String>empty().orElse(null);
+      return null;
     }
     org.openxmlformats.schemas.spreadsheetml.x2006.main.CTObjectPr objectPr =
         oleObject.getObjectPr();
@@ -169,7 +169,7 @@ final class ExcelDrawingBinarySupport {
   static String previewDrawingRelationId(org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     if (objectData.getCTShape().getSpPr().getBlipFill() == null
         || objectData.getCTShape().getSpPr().getBlipFill().getBlip() == null) {
-      return java.util.Optional.<String>empty().orElse(null);
+      return null;
     }
     return objectData.getCTShape().getSpPr().getBlipFill().getBlip().getEmbed();
   }

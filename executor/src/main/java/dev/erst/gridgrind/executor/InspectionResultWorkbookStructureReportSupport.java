@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
@@ -19,6 +18,7 @@ import dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
+import dev.erst.gridgrind.excel.ExcelAutofilterSortConditionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortStateSnapshot;
 import dev.erst.gridgrind.excel.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.ExcelCustomXmlExportSnapshot;
@@ -94,8 +94,9 @@ final class InspectionResultWorkbookStructureReportSupport {
         snapshot.xml());
   }
 
-  static ArrayFormulaReport toArrayFormulaReport(ExcelArrayFormulaSnapshot snapshot) {
-    return new ArrayFormulaReport(
+  static dev.erst.gridgrind.contract.dto.ArrayFormulaReport toArrayFormulaReport(
+      ExcelArrayFormulaSnapshot snapshot) {
+    return new dev.erst.gridgrind.contract.dto.ArrayFormulaReport(
         snapshot.sheetName(),
         snapshot.range(),
         snapshot.topLeftAddress(),
@@ -146,13 +147,13 @@ final class InspectionResultWorkbookStructureReportSupport {
             .toList(),
         toTableStyleReport(snapshot.style()),
         snapshot.hasAutofilter(),
-        snapshot.comment(),
+        optionalText(snapshot.comment()),
         snapshot.published(),
         snapshot.insertRow(),
         snapshot.insertRowShift(),
-        snapshot.headerRowCellStyle(),
-        snapshot.dataCellStyle(),
-        snapshot.totalsRowCellStyle());
+        optionalText(snapshot.headerRowCellStyle()),
+        optionalText(snapshot.dataCellStyle()),
+        optionalText(snapshot.totalsRowCellStyle()));
   }
 
   static PivotTableReport toPivotTableReport(ExcelPivotTableSnapshot snapshot) {
@@ -260,25 +261,34 @@ final class InspectionResultWorkbookStructureReportSupport {
         sortState.columnSort(),
         sortState.sortMethod(),
         sortState.conditions().stream()
-            .map(
-                condition ->
-                    new AutofilterSortConditionReport(
-                        condition.range(),
-                        condition.descending(),
-                        condition.sortBy(),
-                        toCellColorReport(condition.color()),
-                        condition.iconId()))
+            .map(InspectionResultWorkbookStructureReportSupport::toAutofilterSortConditionReport)
             .toList());
+  }
+
+  private static AutofilterSortConditionReport toAutofilterSortConditionReport(
+      ExcelAutofilterSortConditionSnapshot condition) {
+    return switch (condition) {
+      case ExcelAutofilterSortConditionSnapshot.Value value ->
+          new AutofilterSortConditionReport.Value(value.range(), value.descending());
+      case ExcelAutofilterSortConditionSnapshot.CellColor cellColor ->
+          new AutofilterSortConditionReport.CellColor(
+              cellColor.range(), cellColor.descending(), toCellColorReport(cellColor.color()));
+      case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
+          new AutofilterSortConditionReport.FontColor(
+              fontColor.range(), fontColor.descending(), toCellColorReport(fontColor.color()));
+      case ExcelAutofilterSortConditionSnapshot.Icon icon ->
+          new AutofilterSortConditionReport.Icon(icon.range(), icon.descending(), icon.iconId());
+    };
   }
 
   private static TableColumnReport toTableColumnReport(ExcelTableColumnSnapshot column) {
     return new TableColumnReport(
         column.id(),
         column.name(),
-        column.uniqueName(),
-        column.totalsRowLabel(),
-        column.totalsRowFunction(),
-        column.calculatedColumnFormula());
+        optionalText(column.uniqueName()),
+        optionalText(column.totalsRowLabel()),
+        optionalText(column.totalsRowFunction()),
+        optionalText(column.calculatedColumnFormula()));
   }
 
   private static TableStyleReport toTableStyleReport(ExcelTableStyleSnapshot snapshot) {
@@ -297,5 +307,12 @@ final class InspectionResultWorkbookStructureReportSupport {
   private static dev.erst.gridgrind.contract.dto.CellColorReport toCellColorReport(
       dev.erst.gridgrind.excel.ExcelColorSnapshot color) {
     return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
+  }
+
+  private static java.util.Optional<String> optionalText(String value) {
+    if (value.isBlank()) {
+      return java.util.Optional.empty();
+    }
+    return java.util.Optional.of(value);
   }
 }

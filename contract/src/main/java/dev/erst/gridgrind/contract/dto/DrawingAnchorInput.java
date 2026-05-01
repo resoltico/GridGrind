@@ -14,10 +14,15 @@ public sealed interface DrawingAnchorInput permits DrawingAnchorInput.TwoCell {
   record TwoCell(
       DrawingMarkerInput from, DrawingMarkerInput to, ExcelDrawingAnchorBehavior behavior)
       implements DrawingAnchorInput {
+    /** Creates one two-cell anchor that moves and resizes with the authored rectangle. */
+    public static TwoCell moveAndResize(DrawingMarkerInput from, DrawingMarkerInput to) {
+      return new TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    }
+
     public TwoCell {
       Objects.requireNonNull(from, "from must not be null");
       Objects.requireNonNull(to, "to must not be null");
-      behavior = Objects.requireNonNullElse(behavior, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+      Objects.requireNonNull(behavior, "behavior must not be null");
       if (to.rowIndex() < from.rowIndex()) {
         throw new IllegalArgumentException("to.rowIndex must not be less than from.rowIndex");
       }

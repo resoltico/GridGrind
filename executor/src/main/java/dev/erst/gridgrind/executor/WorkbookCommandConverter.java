@@ -1,6 +1,10 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
@@ -96,13 +100,13 @@ final class WorkbookCommandConverter {
    */
   static WorkbookCommand toCommand(Selector target, MutationAction action) {
     return switch (action) {
-      case MutationAction.WorkbookMutationAction workbookAction ->
+      case WorkbookMutationAction workbookAction ->
           WorkbookCommandWorkbookMutationConverter.toCommand(target, workbookAction);
-      case MutationAction.CellMutationAction cellAction ->
+      case CellMutationAction cellAction ->
           WorkbookCommandCellMutationConverter.toCommand(target, cellAction);
-      case MutationAction.DrawingMutationAction drawingAction ->
+      case DrawingMutationAction drawingAction ->
           WorkbookCommandDrawingMutationConverter.toCommand(target, drawingAction);
-      case MutationAction.StructuredMutationAction structuredAction ->
+      case StructuredMutationAction structuredAction ->
           WorkbookCommandStructuredMutationConverter.toCommand(target, structuredAction);
     };
   }

@@ -27,7 +27,6 @@ class SheetCopyPositionTest {
             WorkbookCommandConverter.toExcelSheetCopyPosition(position));
 
     assertEquals(2, converted.targetIndex());
-    assertThrows(NullPointerException.class, () -> new SheetCopyPosition.AtIndex(null));
     assertThrows(IllegalArgumentException.class, () -> new SheetCopyPosition.AtIndex(-1));
   }
 }

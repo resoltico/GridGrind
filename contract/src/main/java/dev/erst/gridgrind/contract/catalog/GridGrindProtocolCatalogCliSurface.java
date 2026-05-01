@@ -21,7 +21,8 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-protocol-catalog --search <text> [--response <path>]",
                   "gridgrind --print-example <id> [--response <path>]",
                   "gridgrind --help | -h | help [--response <path>]",
-                  "gridgrind --version [--response <path>]")),
+                  "gridgrind --version [--response <path>]",
+                  "gridgrind --license [--response <path>]")),
           new CliSurface.CliWorkflowSection(
               "First-Contact Workflows",
               List.of(
@@ -64,8 +65,9 @@ final class GridGrindProtocolCatalogCliSurface {
                       + " persistence is NONE); if any step fails, no workbook is written.",
                   "A NEW workbook starts with zero sheets; use ENSURE_SHEET to create the first"
                       + " sheet.",
-                  "execution is optional; omit it for the default FULL_XSSF read and write path"
-                      + " plus NORMAL journaling.")),
+                  "execution is explicit; use the standard request template or"
+                      + " ExecutionPolicyInput.defaults() when the default FULL_XSSF / NORMAL /"
+                      + " DO_NOT_CALCULATE policy is intended.")),
           new CliSurface.CliDefinitionSection(
               "Limits",
               List.of(
@@ -151,15 +153,14 @@ final class GridGrindProtocolCatalogCliSurface {
           new CliSurface.CliSection(
               "Request",
               List.of(
-                  "protocolVersion is optional; omit it and the current version is assumed.",
+                  "protocolVersion is required.",
                   "source.type is required; use NEW to create a blank workbook or EXISTING"
                       + " with source.path to reopen a workbook from disk.",
-                  "persistence is optional; omit it and the workbook stays in memory only"
-                      + " (NONE).",
-                  "planId is optional; omit it and GridGrind will generate one for the"
-                      + " execution journal.",
-                  "execution is optional; omit it for FULL_XSSF reads and writes with NORMAL"
-                      + " journaling, or supply execution.mode to choose EVENT_READ or"
+                  "persistence is required; use NONE when the workbook stays in memory only.",
+                  "planId is optional; omit it only when no caller-owned plan id is needed.",
+                  "execution is required; use the standard request template or"
+                      + " ExecutionPolicyInput.defaults() for FULL_XSSF reads and writes with"
+                      + " NORMAL journaling, or supply execution.mode to choose EVENT_READ or"
                       + " STREAMING_WRITE when their limits fit the plan.",
                   "execution.journal.level controls journal detail; VERBOSE also streams live"
                       + " phase events to stderr.",
@@ -173,10 +174,10 @@ final class GridGrindProtocolCatalogCliSurface {
                   GridGrindContractText.standardInputRequiresRequestMessage()
                       + " because stdin cannot carry both the request JSON and authored input"
                       + " content in one CLI invocation.",
-                  "formulaEnvironment is optional; omit it for the default evaluator, or supply"
-                      + " it to bind external workbooks, choose missing-workbook policy, and"
-                      + " register template-backed UDFs.",
-                  "steps is optional; omit or send [] for an empty no-op plan.",
+                  "formulaEnvironment is required; use FormulaEnvironmentInput.empty() when the"
+                      + " default evaluator environment is intended, or supply explicit"
+                      + " external workbooks, missing-workbook policy, and template-backed UDFs.",
+                  "steps is required; send [] for an empty no-op plan.",
                   GridGrindContractText.stepKindSummary(),
                   "Step order is authoritative: mutations, assertions, and inspections may be"
                       + " interleaved when the workflow demands it.")),

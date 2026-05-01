@@ -7,8 +7,8 @@ import java.util.Objects;
 /** Conditional-formatting-health analysis for one selected sheet set. */
 public record ConditionalFormattingHealthReport(
     int checkedConditionalFormattingBlockCount,
-    GridGrindResponse.AnalysisSummaryReport summary,
-    List<GridGrindResponse.AnalysisFindingReport> findings) {
+    GridGrindAnalysisReports.AnalysisSummaryReport summary,
+    List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
   public ConditionalFormattingHealthReport {
     if (checkedConditionalFormattingBlockCount < 0) {
       throw new IllegalArgumentException(

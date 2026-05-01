@@ -96,16 +96,16 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the saved sheet-protection state for one sheet. */
-  public static WorkbookReadResult.SheetProtection sheetProtection(
+  public static WorkbookSheetResult.SheetProtection sheetProtection(
       Path workbookPath, String sheetName) throws IOException {
     return readSheet(
         workbookPath,
         sheetName,
         sheet -> {
           if (!sheet.getProtect()) {
-            return new WorkbookReadResult.SheetProtection.Unprotected();
+            return new WorkbookSheetResult.SheetProtection.Unprotected();
           }
-          return new WorkbookReadResult.SheetProtection.Protected(
+          return new WorkbookSheetResult.SheetProtection.Protected(
               new ExcelSheetProtectionSettings(
                   sheet.isAutoFilterLocked(),
                   sheet.isDeleteColumnsLocked(),
@@ -170,7 +170,7 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns the supported sheet-layout snapshot stored on the named sheet. */
-  public static WorkbookReadResult.SheetLayout sheetLayout(Path workbookPath, String sheetName)
+  public static WorkbookSheetResult.SheetLayout sheetLayout(Path workbookPath, String sheetName)
       throws IOException {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");

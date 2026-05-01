@@ -42,14 +42,14 @@ class WorkbookReadExecutorTest {
               new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 1));
 
       assertEquals(List.of("workbook", "cells", "ranges"), stepIds(varargsResults));
-      assertInstanceOf(WorkbookReadResult.WorkbookSummaryResult.class, varargsResults.get(0));
-      assertInstanceOf(WorkbookReadResult.CellsResult.class, varargsResults.get(1));
-      assertInstanceOf(WorkbookReadResult.NamedRangeSurfaceResult.class, varargsResults.get(2));
+      assertInstanceOf(WorkbookCoreResult.WorkbookSummaryResult.class, varargsResults.get(0));
+      assertInstanceOf(WorkbookSheetResult.CellsResult.class, varargsResults.get(1));
+      assertInstanceOf(WorkbookSurfaceResult.NamedRangeSurfaceResult.class, varargsResults.get(2));
       assertEquals(List.of("sheet", "merged"), stepIds(iterableResults));
-      assertInstanceOf(WorkbookReadResult.SheetSummaryResult.class, iterableResults.get(0));
-      assertInstanceOf(WorkbookReadResult.MergedRegionsResult.class, iterableResults.get(1));
+      assertInstanceOf(WorkbookSheetResult.SheetSummaryResult.class, iterableResults.get(0));
+      assertInstanceOf(WorkbookSheetResult.MergedRegionsResult.class, iterableResults.get(1));
       assertEquals(List.of("window"), stepIds(explicitLocationResults));
-      assertInstanceOf(WorkbookReadResult.WindowResult.class, explicitLocationResults.getFirst());
+      assertInstanceOf(WorkbookSheetResult.WindowResult.class, explicitLocationResults.getFirst());
     }
   }
 
@@ -86,8 +86,8 @@ class WorkbookReadExecutorTest {
               new WorkbookReadCommand.AnalyzeFormulaHealth(
                   "formulaHealth", new ExcelSheetSelection.All()),
               new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings"));
-      assertInstanceOf(WorkbookReadResult.FormulaHealthResult.class, analysisResults.get(0));
-      assertInstanceOf(WorkbookReadResult.WorkbookFindingsResult.class, analysisResults.get(1));
+      assertInstanceOf(WorkbookAnalysisResult.FormulaHealthResult.class, analysisResults.get(0));
+      assertInstanceOf(WorkbookAnalysisResult.WorkbookFindingsResult.class, analysisResults.get(1));
     }
   }
 

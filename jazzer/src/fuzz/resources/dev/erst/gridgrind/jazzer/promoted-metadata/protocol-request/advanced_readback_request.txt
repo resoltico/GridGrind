@@ -2,10 +2,10 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestShapeException
-Message: Missing required field 'kind'
-Input Bytes: 20205
-Decode Outcome: INVALID_REQUEST_SHAPE
+Kind: InvalidRequestException
+Message: Missing required field 'printGridlines'
+Input Bytes: 20212
+Decode Outcome: INVALID_REQUEST
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0

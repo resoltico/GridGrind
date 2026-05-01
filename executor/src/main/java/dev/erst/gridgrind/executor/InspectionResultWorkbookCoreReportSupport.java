@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
@@ -15,17 +15,17 @@ import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSnapshot;
 final class InspectionResultWorkbookCoreReportSupport {
   private InspectionResultWorkbookCoreReportSupport() {}
 
-  static GridGrindResponse.WorkbookSummary toWorkbookSummary(
-      dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary workbookSummary) {
+  static GridGrindWorkbookSurfaceReports.WorkbookSummary toWorkbookSummary(
+      dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary workbookSummary) {
     return switch (workbookSummary) {
-      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty empty ->
-          new GridGrindResponse.WorkbookSummary.Empty(
+      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.Empty empty ->
+          new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
               empty.sheetCount(),
               empty.sheetNames(),
               empty.namedRangeCount(),
               empty.forceFormulaRecalculationOnOpen());
-      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets withSheets ->
-          new GridGrindResponse.WorkbookSummary.WithSheets(
+      case dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary.WithSheets withSheets ->
+          new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
               withSheets.sheetCount(),
               withSheets.sheetNames(),
               withSheets.activeSheetName(),
@@ -67,17 +67,18 @@ final class InspectionResultWorkbookCoreReportSupport {
         snapshot.state());
   }
 
-  static GridGrindResponse.NamedRangeReport toNamedRangeReport(ExcelNamedRangeSnapshot namedRange) {
+  static GridGrindWorkbookSurfaceReports.NamedRangeReport toNamedRangeReport(
+      ExcelNamedRangeSnapshot namedRange) {
     return switch (namedRange) {
       case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot ->
-          new GridGrindResponse.NamedRangeReport.RangeReport(
+          new GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport(
               rangeSnapshot.name(),
               toNamedRangeScope(rangeSnapshot.scope()),
               rangeSnapshot.refersToFormula(),
               new NamedRangeTarget(
                   rangeSnapshot.target().sheetName(), rangeSnapshot.target().range()));
       case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
-          new GridGrindResponse.NamedRangeReport.FormulaReport(
+          new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
               formulaSnapshot.name(),
               toNamedRangeScope(formulaSnapshot.scope()),
               formulaSnapshot.refersToFormula());

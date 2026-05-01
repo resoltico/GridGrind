@@ -261,7 +261,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     NullPointerException noFormulaFailure =
         assertThrows(
             NullPointerException.class,
-            () -> ExcelWorkbook.openMaterializedWorkbook(new XSSFWorkbook(), null, null, null));
+            () ->
+                ExcelWorkbookOpenSupport.openMaterializedWorkbook(
+                    new XSSFWorkbook(), null, null, null));
     assertEquals("loadedPackageSecurity must not be null", noFormulaFailure.getMessage());
 
     try (ThrowingOpenCloseWorkbook throwingNoFormulaWorkbook =
@@ -271,7 +273,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             assertThrows(
                 NullPointerException.class,
                 () ->
-                    ExcelWorkbook.openMaterializedWorkbook(
+                    ExcelWorkbookOpenSupport.openMaterializedWorkbook(
                         throwingNoFormulaWorkbook, null, null, null));
         assertEquals(1, throwingNoFormulaFailure.getSuppressed().length);
         assertEquals(
@@ -288,7 +290,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             assertThrows(
                 NullPointerException.class,
                 () ->
-                    ExcelWorkbook.openMaterializedWorkbook(
+                    ExcelWorkbookOpenSupport.openMaterializedWorkbook(
                         throwingFormulaWorkbook,
                         ExcelFormulaEnvironment.defaults(),
                         null,

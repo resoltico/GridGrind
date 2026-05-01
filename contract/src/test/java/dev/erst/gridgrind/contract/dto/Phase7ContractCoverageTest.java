@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -42,8 +43,8 @@ class Phase7ContractCoverageTest {
 
     ProblemContext.ResolveInputs context =
         new ProblemContext.ResolveInputs(
-            ProblemContext.RequestShape.known("NEW", "NONE"),
-            ProblemContext.InputReference.path("cell text", "missing.txt"));
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),
+            ProblemContextWorkbookSurfaces.InputReference.path("cell text", "missing.txt"));
     assertEquals("RESOLVE_INPUTS", context.stage());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
     assertEquals(java.util.Optional.of("missing.txt"), context.inputPath());
@@ -52,13 +53,8 @@ class Phase7ContractCoverageTest {
   @Test
   void sourceBackedDtosPreserveDeferredValuesAndDefaultOptionalFlags() {
     CommentInput defaultVisibleComment =
-        CommentInput.create(
-            TextSourceInput.inline("Owner note"),
-            "Ada",
-            null,
-            java.util.Optional.empty(),
-            java.util.Optional.empty());
-    assertEquals(false, defaultVisibleComment.visible());
+        CommentInput.plain(TextSourceInput.inline("Owner note"), "Ada", false);
+    assertFalse(defaultVisibleComment.visible());
 
     CommentInput fileBackedComment =
         new CommentInput(
@@ -89,7 +85,7 @@ class Phase7ContractCoverageTest {
 
     DataValidationPromptInput prompt =
         new DataValidationPromptInput(
-            TextSourceInput.utf8File("prompt-title.txt"), TextSourceInput.standardInput(), null);
+            TextSourceInput.utf8File("prompt-title.txt"), TextSourceInput.standardInput(), true);
     assertTrue(prompt.showPromptBox());
 
     DataValidationErrorAlertInput alert =
@@ -97,10 +93,10 @@ class Phase7ContractCoverageTest {
             ExcelDataValidationErrorStyle.STOP,
             TextSourceInput.standardInput(),
             TextSourceInput.utf8File("alert-text.txt"),
-            null);
+            true);
     assertTrue(alert.showErrorBox());
 
-    ChartInput.Title.Text chartTitle = new ChartInput.Title.Text(TextSourceInput.utf8File("title"));
+    ChartTitleInput.Text chartTitle = new ChartTitleInput.Text(TextSourceInput.utf8File("title"));
     assertEquals("title", ((TextSourceInput.Utf8File) chartTitle.source()).path());
   }
 
@@ -125,7 +121,7 @@ class Phase7ContractCoverageTest {
             "Banner",
             ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
             anchor,
-            null,
+            "rect",
             TextSourceInput.standardInput());
     assertInstanceOf(TextSourceInput.StandardInput.class, shape.text());
 
@@ -148,12 +144,12 @@ class Phase7ContractCoverageTest {
             new DataValidationPromptInput(
                 TextSourceInput.utf8File("prompt-title.txt"),
                 TextSourceInput.utf8File("prompt.txt"),
-                null),
+                true),
             new DataValidationErrorAlertInput(
                 ExcelDataValidationErrorStyle.STOP,
                 TextSourceInput.utf8File("alert-title.txt"),
                 TextSourceInput.utf8File("alert.txt"),
-                null));
+                true));
     assertTrue(validation.prompt().showPromptBox());
     assertTrue(validation.errorAlert().showErrorBox());
   }

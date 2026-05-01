@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
@@ -13,7 +14,7 @@ import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
@@ -45,9 +46,9 @@ import org.junit.jupiter.api.Test;
 class AssertionCoverageTest {
   @Test
   void exposesStableDiscriminatorsAcrossEveryAssertionLeaf() {
-    GridGrindResponse.CellStyleReport style = style();
-    GridGrindResponse.NamedRangeReport namedRange =
-        new GridGrindResponse.NamedRangeReport.RangeReport(
+    GridGrindWorkbookSurfaceReports.CellStyleReport style = style();
+    GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange =
+        new GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport(
             "BudgetTotal",
             new NamedRangeScope.Workbook(),
             "Budget!B2",
@@ -75,10 +76,10 @@ class AssertionCoverageTest {
     assertEquals(
         "EXPECT_SHEET_STRUCTURE",
         new Assertion.SheetStructureFacts(
-                new GridGrindResponse.SheetSummaryReport(
+                new GridGrindWorkbookSurfaceReports.SheetSummaryReport(
                     "Budget",
                     ExcelSheetVisibility.VISIBLE,
-                    new GridGrindResponse.SheetProtectionReport.Unprotected(),
+                    new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected(),
                     2,
                     1,
                     1))
@@ -137,20 +138,20 @@ class AssertionCoverageTest {
   @Test
   void expectedCellValueVariantsCoverSuccessConstructors() {
     assertInstanceOf(ExpectedCellValue.Blank.class, new ExpectedCellValue.Blank());
-    assertEquals(true, new ExpectedCellValue.BooleanValue(true).value());
+    assertTrue(new ExpectedCellValue.BooleanValue(true).value());
     assertEquals("#REF!", new ExpectedCellValue.ErrorValue("#REF!").error());
     assertEquals(42.0d, new ExpectedCellValue.NumericValue(42.0d).number());
   }
 
   @Test
   void assertionSupportCoversCollectionAndAnalysisValidationBranches() {
-    GridGrindResponse.NamedRangeReport namedRange =
-        new GridGrindResponse.NamedRangeReport.FormulaReport(
+    GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange =
+        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!B2:B4)");
     InspectionResult observation =
         new InspectionResult.WorkbookSummaryResult(
             "summary",
-            new GridGrindResponse.WorkbookSummary.WithSheets(
+            new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 1, false));
 
     assertEquals(
@@ -229,9 +230,9 @@ class AssertionCoverageTest {
             .getMessage());
   }
 
-  private static GridGrindResponse.CellStyleReport style() {
+  private static GridGrindWorkbookSurfaceReports.CellStyleReport style() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindResponse.CellStyleReport(
+    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),

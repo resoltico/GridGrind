@@ -125,7 +125,7 @@ final class ExcelSheetCellReadSupport {
   }
 
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-  WorkbookReadResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+  WorkbookSheetResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
     ExcelSheet.requireNonBlank(topLeftAddress, "topLeftAddress");
     if (rowCount <= 0) {
       throw new IllegalArgumentException("rowCount must be greater than 0");
@@ -148,7 +148,7 @@ final class ExcelSheetCellReadSupport {
               + " columnCount="
               + columnCount);
     }
-    List<WorkbookReadResult.WindowRow> rows = new ArrayList<>(rowCount);
+    List<WorkbookSheetResult.WindowRow> rows = new ArrayList<>(rowCount);
     for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
       int rowIndex = topLeft.getRow() + rowOffset;
       List<ExcelCellSnapshot> cells = new ArrayList<>(columnCount);
@@ -157,9 +157,9 @@ final class ExcelSheetCellReadSupport {
         String address = new CellReference(rowIndex, columnIndex).formatAsString();
         cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex));
       }
-      rows.add(new WorkbookReadResult.WindowRow(rowIndex, List.copyOf(cells)));
+      rows.add(new WorkbookSheetResult.WindowRow(rowIndex, List.copyOf(cells)));
     }
-    return new WorkbookReadResult.Window(
+    return new WorkbookSheetResult.Window(
         sheet.getSheetName(), topLeftAddress, rowCount, columnCount, List.copyOf(rows));
   }
 

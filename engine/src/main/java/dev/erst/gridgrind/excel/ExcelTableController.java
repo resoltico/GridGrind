@@ -132,8 +132,8 @@ final class ExcelTableController {
           new ExcelAutofilterSnapshot.TableOwned(
               Objects.requireNonNullElse(autoFilter.getRef(), ""),
               tableHandle.table().getName(),
-              autofilterController.filterColumns(workbook.xssfWorkbook(), autoFilter),
-              autofilterController.sortState(workbook.xssfWorkbook(), autoFilter)));
+              ExcelAutofilterOoxmlSupport.filterColumns(workbook.xssfWorkbook(), autoFilter),
+              ExcelAutofilterOoxmlSupport.sortState(workbook.xssfWorkbook(), autoFilter)));
     }
     return List.copyOf(autofilters);
   }
@@ -369,7 +369,7 @@ final class ExcelTableController {
         return tableHandle;
       }
     }
-    return java.util.Optional.<TableHandle>empty().orElse(null);
+    return null;
   }
 
   private static XSSFSheet requiredSheet(ExcelWorkbook workbook, String sheetName) {

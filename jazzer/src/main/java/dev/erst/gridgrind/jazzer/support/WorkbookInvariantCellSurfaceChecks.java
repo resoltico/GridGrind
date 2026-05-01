@@ -21,7 +21,7 @@ import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
@@ -91,7 +91,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireCommentReportShape(GridGrindResponse.CommentReport comment) {
+  static void requireCommentReportShape(GridGrindWorkbookSurfaceReports.CommentReport comment) {
     WorkbookInvariantChecks.require(comment.text() != null, "comment text must not be null");
     WorkbookInvariantChecks.require(comment.author() != null, "comment author must not be null");
     WorkbookInvariantChecks.require(!comment.text().isBlank(), "comment text must not be blank");
@@ -117,7 +117,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireNamedRangeShape(GridGrindResponse.NamedRangeReport namedRange) {
+  static void requireNamedRangeShape(GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange) {
     WorkbookInvariantChecks.require(namedRange.name() != null, "namedRange name must not be null");
     WorkbookInvariantChecks.require(
         !namedRange.name().isBlank(), "namedRange name must not be blank");
@@ -127,7 +127,7 @@ final class WorkbookInvariantCellSurfaceChecks {
         namedRange.refersToFormula() != null, "namedRange formula must not be null");
 
     switch (namedRange) {
-      case GridGrindResponse.NamedRangeReport.RangeReport range -> {
+      case GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport range -> {
         WorkbookInvariantChecks.require(
             range.target() != null, "namedRange target must not be null");
         WorkbookInvariantChecks.require(
@@ -139,7 +139,7 @@ final class WorkbookInvariantCellSurfaceChecks {
         WorkbookInvariantChecks.require(
             !range.target().range().isBlank(), "namedRange target range must not be blank");
       }
-      case GridGrindResponse.NamedRangeReport.FormulaReport _ -> {}
+      case GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport _ -> {}
     }
   }
 
@@ -181,7 +181,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireCellStyleShape(GridGrindResponse.CellStyleReport style) {
+  static void requireCellStyleShape(GridGrindWorkbookSurfaceReports.CellStyleReport style) {
     WorkbookInvariantChecks.require(style != null, "style must not be null");
     WorkbookInvariantChecks.require(style.numberFormat() != null, "numberFormat must not be null");
     requireCellAlignmentShape(style.alignment());
@@ -522,12 +522,20 @@ final class WorkbookInvariantCellSurfaceChecks {
     WorkbookInvariantChecks.require(
         condition != null, "autofilter sort condition must not be null");
     WorkbookInvariantChecks.requireNonBlank(condition.range(), "autofilter sort condition range");
-    if (condition.color() != null) {
-      requireCellColorShape(condition.color(), "autofilter sort color");
-    }
-    if (condition.iconId() != null) {
-      WorkbookInvariantChecks.require(
-          condition.iconId() >= 0, "autofilter sort iconId must not be negative");
+    switch (condition) {
+      case AutofilterSortConditionReport.Value _ -> {
+        // No auxiliary payload.
+      }
+      case AutofilterSortConditionReport.CellColor color -> {
+        requireCellColorShape(color.color(), "autofilter sort color");
+      }
+      case AutofilterSortConditionReport.FontColor color -> {
+        requireCellColorShape(color.color(), "autofilter sort color");
+      }
+      case AutofilterSortConditionReport.Icon icon -> {
+        WorkbookInvariantChecks.require(
+            icon.iconId() >= 0, "autofilter sort iconId must not be negative");
+      }
     }
   }
 

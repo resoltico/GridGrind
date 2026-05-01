@@ -2,8 +2,9 @@ package dev.erst.gridgrind.executor.parity;
 
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.mutate;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -203,8 +204,8 @@ final class XlsxParityProbeRegistry {
   static SheetProtectionSettings sheetProtectionSettings(
       InspectionResult.SheetSummaryResult summary) {
     return switch (summary.sheet().protection()) {
-      case GridGrindResponse.SheetProtectionReport.Unprotected _ -> null;
-      case GridGrindResponse.SheetProtectionReport.Protected protectedReport ->
+      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected _ -> null;
+      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected protectedReport ->
           protectedReport.settings();
     };
   }
@@ -345,7 +346,7 @@ final class XlsxParityProbeRegistry {
     PendingMutation colorScale =
         mutate(
             new SheetSelector.ByName("Advanced"),
-            new MutationAction.SetConditionalFormatting(
+            new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingBlockInput(
                     List.of("L2:L5"),
                     List.of(
@@ -367,7 +368,7 @@ final class XlsxParityProbeRegistry {
     PendingMutation dataBar =
         mutate(
             new SheetSelector.ByName("Advanced"),
-            new MutationAction.SetConditionalFormatting(
+            new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingBlockInput(
                     List.of("M2:M5"),
                     List.of(
@@ -384,7 +385,7 @@ final class XlsxParityProbeRegistry {
     PendingMutation iconSet =
         mutate(
             new SheetSelector.ByName("Advanced"),
-            new MutationAction.SetConditionalFormatting(
+            new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingBlockInput(
                     List.of("N2:N5"),
                     List.of(
@@ -405,7 +406,7 @@ final class XlsxParityProbeRegistry {
     PendingMutation top10 =
         mutate(
             new SheetSelector.ByName("Advanced"),
-            new MutationAction.SetConditionalFormatting(
+            new StructuredMutationAction.SetConditionalFormatting(
                 new ConditionalFormattingBlockInput(
                     List.of("K2:K5"),
                     List.of(
@@ -426,7 +427,12 @@ final class XlsxParityProbeRegistry {
       AutofilterSortConditionReport observed, XlsxParityOracle.SortConditionSnapshot direct) {
     return observed.range().equals(direct.range())
         && observed.descending() == direct.descending()
-        && observed.sortBy().equals(direct.sortBy());
+        && switch (observed) {
+          case AutofilterSortConditionReport.Value _ -> direct.sortBy().isEmpty();
+          case AutofilterSortConditionReport.CellColor _ -> "cellColor".equals(direct.sortBy());
+          case AutofilterSortConditionReport.FontColor _ -> "fontColor".equals(direct.sortBy());
+          case AutofilterSortConditionReport.Icon _ -> "icon".equals(direct.sortBy());
+        };
   }
 
   static TableEntryReport findTable(List<TableEntryReport> tables, String name) {
@@ -606,8 +612,8 @@ final class XlsxParityProbeRegistry {
     return new CellInput.Text(TextSourceInput.inline(value));
   }
 
-  static ChartInput.Title.Text chartTitle(String value) {
-    return new ChartInput.Title.Text(TextSourceInput.inline(value));
+  static ChartTitleInput.Text chartTitle(String value) {
+    return new ChartTitleInput.Text(TextSourceInput.inline(value));
   }
 
   static RichTextRunInput richTextRun(String value, CellFontInput font) {
@@ -615,7 +621,7 @@ final class XlsxParityProbeRegistry {
   }
 
   static CommentInput comment(String text, String author, boolean visible) {
-    return new CommentInput(TextSourceInput.inline(text), author, visible);
+    return CommentInput.plain(TextSourceInput.inline(text), author, visible);
   }
 
   static CommentInput comment(

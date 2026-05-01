@@ -107,32 +107,33 @@ final class ExecutionRequestPaths {
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape requestShape(
+  static dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape requestShape(
       WorkbookPlan request) {
-    return dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
+    return dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape.known(
         reqSourceType(request), reqPersistenceType(request));
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference workbookReference(
-      WorkbookPlan request, Path workingDirectory) {
+  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+      workbookReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.source()) {
       case WorkbookPlan.WorkbookSource.New _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference.newWorkbook();
+          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+              .newWorkbook();
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          dev.erst.gridgrind.contract.dto.ProblemContext.WorkbookReference.existingFile(
-              normalizePath(existingFile.path(), workingDirectory).toString());
+          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference
+              .existingFile(normalizePath(existingFile.path(), workingDirectory).toString());
     };
   }
 
-  static dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference persistenceReference(
-      WorkbookPlan request, Path workingDirectory) {
+  static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+      persistenceReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
-          dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference.overwriteSource(
-              Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
+          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+              .overwriteSource(Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          dev.erst.gridgrind.contract.dto.ProblemContext.PersistenceReference.saveAs(
-              normalizePath(saveAs.path(), workingDirectory).toString());
+          dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
+              .saveAs(normalizePath(saveAs.path(), workingDirectory).toString());
       case WorkbookPlan.WorkbookPersistence.None _ ->
           throw new IllegalArgumentException("persistence reference requires a saving policy");
     };

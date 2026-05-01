@@ -4,7 +4,10 @@ import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.calculateAllA
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.executionPolicy;
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.mutate;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -1129,25 +1132,28 @@ public final class XlsxParityScenarios {
             executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
             null,
             List.of(
-                mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet()),
-                mutate(new SheetSelector.ByName("Queue"), new MutationAction.EnsureSheet()),
-                mutate(new SheetSelector.ByName("Ops"), new MutationAction.SetActiveSheet()),
+                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(new SheetSelector.ByName("Queue"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("Ops"), new WorkbookMutationAction.SetActiveSheet()),
                 mutate(
                     new SheetSelector.ByNames(List.of("Ops")),
-                    new MutationAction.SetSelectedSheets()),
+                    new WorkbookMutationAction.SetSelectedSheets()),
                 mutate(
                     new SheetSelector.ByName("Queue"),
-                    new MutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN)),
+                    new WorkbookMutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN)),
                 mutate(
                     new SheetSelector.ByName("Ops"),
-                    new MutationAction.SetSheetProtection(
+                    new WorkbookMutationAction.SetSheetProtection(
                         new SheetProtectionSettings(
                             true, false, false, false, false, false, false, false, false, true,
                             false, false, true, true, true))),
-                mutate(new RangeSelector.ByRange("Ops", "A1:B1"), new MutationAction.MergeCells()),
+                mutate(
+                    new RangeSelector.ByRange("Ops", "A1:B1"),
+                    new WorkbookMutationAction.MergeCells()),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
-                    new MutationAction.SetRange(
+                    new CellMutationAction.SetRange(
                         List.of(
                             List.of(
                                 text("Quarterly Ops"),
@@ -1188,15 +1194,15 @@ public final class XlsxParityScenarios {
                                 new CellInput.Numeric(99.0d))))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
-                    new MutationAction.ApplyStyle(
+                    new CellMutationAction.ApplyStyle(
                         new CellStyleInput(
                             null,
                             new CellAlignmentInput(
-                                true,
-                                ExcelHorizontalAlignment.CENTER,
-                                ExcelVerticalAlignment.CENTER,
-                                null,
-                                null),
+                                Optional.of(true),
+                                Optional.of(ExcelHorizontalAlignment.CENTER),
+                                Optional.of(ExcelVerticalAlignment.CENTER),
+                                Optional.empty(),
+                                Optional.empty()),
                             new CellFontInput(
                                 true,
                                 null,
@@ -1217,21 +1223,25 @@ public final class XlsxParityScenarios {
                             new CellProtectionInput(true, null)))),
                 mutate(
                     new ColumnBandSelector.Span("Ops", 0, 1),
-                    new MutationAction.SetColumnWidth(18.0d)),
+                    new WorkbookMutationAction.SetColumnWidth(18.0d)),
                 mutate(
-                    new RowBandSelector.Span("Ops", 0, 3), new MutationAction.SetRowHeight(21.0d)),
-                mutate(new RowBandSelector.Span("Ops", 1, 3), new MutationAction.GroupRows(true)),
+                    new RowBandSelector.Span("Ops", 0, 3),
+                    new WorkbookMutationAction.SetRowHeight(21.0d)),
+                mutate(
+                    new RowBandSelector.Span("Ops", 1, 3),
+                    new WorkbookMutationAction.GroupRows(true)),
                 mutate(
                     new ColumnBandSelector.Span("Ops", 0, 1),
-                    new MutationAction.GroupColumns(false)),
+                    new WorkbookMutationAction.GroupColumns(false)),
                 mutate(
                     new SheetSelector.ByName("Ops"),
-                    new MutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
-                mutate(new SheetSelector.ByName("Ops"), new MutationAction.SetSheetZoom(125)),
+                    new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                mutate(
+                    new SheetSelector.ByName("Ops"), new WorkbookMutationAction.SetSheetZoom(125)),
                 mutate(
                     new SheetSelector.ByName("Ops"),
-                    new MutationAction.SetPrintLayout(
-                        new PrintLayoutInput(
+                    new WorkbookMutationAction.SetPrintLayout(
+                        PrintLayoutInput.withDefaultSetup(
                             new PrintAreaInput.Range("A1:D20"),
                             ExcelPrintOrientation.LANDSCAPE,
                             new PrintScalingInput.Fit(1, 2),
@@ -1241,24 +1251,24 @@ public final class XlsxParityScenarios {
                             headerFooter("GridGrind", "Parity", "1")))),
                 mutate(
                     new CellSelector.ByAddress("Ops", "C4"),
-                    new MutationAction.SetHyperlink(
+                    new CellMutationAction.SetHyperlink(
                         new HyperlinkTarget.Url("https://example.com/docs"))),
                 mutate(
                     new CellSelector.ByAddress("Ops", "C4"),
-                    new MutationAction.SetComment(comment("Review docs", "GridGrind", true))),
+                    new CellMutationAction.SetComment(comment("Review docs", "GridGrind", true))),
                 mutate(
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "OpsScore",
                         new NamedRangeScope.Workbook(),
                         new NamedRangeTarget("Ops", "D3:D4"))),
                 mutate(
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "QueueWindow",
                         new NamedRangeScope.Sheet("Queue"),
                         new NamedRangeTarget("Queue", "A1:B3"))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "B3:B10"),
-                    new MutationAction.SetDataValidation(
+                    new StructuredMutationAction.SetDataValidation(
                         new DataValidationInput(
                             new DataValidationRuleInput.WholeNumber(
                                 ExcelComparisonOperator.BETWEEN, "1", "40"),
@@ -1272,7 +1282,7 @@ public final class XlsxParityScenarios {
                                 true)))),
                 mutate(
                     new SheetSelector.ByName("Ops"),
-                    new MutationAction.SetConditionalFormatting(
+                    new StructuredMutationAction.SetConditionalFormatting(
                         new ConditionalFormattingBlockInput(
                             List.of("D3:D4"),
                             List.of(
@@ -1305,17 +1315,18 @@ public final class XlsxParityScenarios {
                                         Optional.of("#FFC7CE"),
                                         Optional.empty())))))),
                 mutate(
-                    new RangeSelector.ByRange("Ops", "A2:D4"), new MutationAction.SetAutofilter()),
+                    new RangeSelector.ByRange("Ops", "A2:D4"),
+                    new StructuredMutationAction.SetAutofilter()),
                 mutate(
                     new RangeSelector.ByRange("Queue", "A1:B3"),
-                    new MutationAction.SetRange(
+                    new CellMutationAction.SetRange(
                         List.of(
                             List.of(text("Owner"), text("Task")),
                             List.of(text("Ada"), text("Docs")),
                             List.of(text("Grace"), text("Review"))))),
                 mutate(
-                    new MutationAction.SetTable(
-                        new TableInput(
+                    new StructuredMutationAction.SetTable(
+                        TableInput.withDefaultMetadata(
                             "QueueTable",
                             "Queue",
                             "A1:B3",
@@ -1331,10 +1342,10 @@ public final class XlsxParityScenarios {
         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
         null,
         List.of(
-            mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet()),
+            mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.SetPicture(
+                new DrawingMutationAction.SetPicture(
                     new PictureInput(
                         "OpsPicture",
                         pictureDataInput(),
@@ -1342,7 +1353,7 @@ public final class XlsxParityScenarios {
                         TextSourceInput.inline("Queue preview")))),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.SetShape(
+                new DrawingMutationAction.SetShape(
                     shape(
                         "OpsShape",
                         ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
@@ -1351,7 +1362,7 @@ public final class XlsxParityScenarios {
                         "Queue"))),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.SetShape(
+                new DrawingMutationAction.SetShape(
                     shape(
                         "OpsConnector",
                         ExcelAuthoredDrawingShapeKind.CONNECTOR,
@@ -1360,7 +1371,7 @@ public final class XlsxParityScenarios {
                         null))),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new MutationAction.SetEmbeddedObject(
+                new DrawingMutationAction.SetEmbeddedObject(
                     new EmbeddedObjectInput(
                         "OpsEmbed",
                         "Payload",
@@ -1375,11 +1386,11 @@ public final class XlsxParityScenarios {
                             12, 1, 15, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)))),
             mutate(
                 new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
-                new MutationAction.SetDrawingObjectAnchor(
+                new DrawingMutationAction.SetDrawingObjectAnchor(
                     twoCellAnchorInput(6, 2, 9, 7, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE))),
             mutate(
                 new DrawingObjectSelector.ByName("Ops", "OpsConnector"),
-                new MutationAction.DeleteDrawingObject())),
+                new DrawingMutationAction.DeleteDrawingObject())),
         List.of());
   }
 
@@ -1389,29 +1400,29 @@ public final class XlsxParityScenarios {
             "OpsChart",
             twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             chartTitle("Roadmap"),
-            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            new ChartLegendInput.Visible(ExcelChartLegendPosition.TOP_RIGHT),
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             List.of(
-                new ChartInput.Bar(
+                new ChartPlotInput.Bar(
                     true,
                     ExcelChartBarDirection.COLUMN,
                     dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping.CLUSTERED,
                     null,
                     null,
                     List.of(
-                        new ChartInput.Series(
-                            new ChartInput.Title.Formula("B1"),
-                            new ChartInput.DataSource.Reference("A2:A4"),
-                            new ChartInput.DataSource.Reference("B2:B4"),
+                        new ChartSeriesInput(
+                            new ChartTitleInput.Formula("B1"),
+                            new ChartDataSourceInput.Reference("A2:A4"),
+                            new ChartDataSourceInput.Reference("B2:B4"),
                             null,
                             null,
                             null,
                             null),
-                        new ChartInput.Series(
-                            new ChartInput.Title.Formula("C1"),
-                            new ChartInput.DataSource.Reference("ChartCategories"),
-                            new ChartInput.DataSource.Reference("ChartActual"),
+                        new ChartSeriesInput(
+                            new ChartTitleInput.Formula("C1"),
+                            new ChartDataSourceInput.Reference("ChartCategories"),
+                            new ChartDataSourceInput.Reference("ChartActual"),
                             null,
                             null,
                             null,
@@ -1421,51 +1432,55 @@ public final class XlsxParityScenarios {
         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
         null,
         List.of(
-            mutate(new SheetSelector.ByName("Chart"), new MutationAction.EnsureSheet()),
+            mutate(new SheetSelector.ByName("Chart"), new WorkbookMutationAction.EnsureSheet()),
             mutate(
                 new CellSelector.ByAddress("Chart", "A1"),
-                new MutationAction.SetCell(text("Month"))),
+                new CellMutationAction.SetCell(text("Month"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B1"),
-                new MutationAction.SetCell(text("Plan"))),
+                new CellMutationAction.SetCell(text("Plan"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C1"),
-                new MutationAction.SetCell(text("Actual"))),
+                new CellMutationAction.SetCell(text("Actual"))),
             mutate(
-                new CellSelector.ByAddress("Chart", "A2"), new MutationAction.SetCell(text("Jan"))),
+                new CellSelector.ByAddress("Chart", "A2"),
+                new CellMutationAction.SetCell(text("Jan"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B2"),
-                new MutationAction.SetCell(new CellInput.Numeric(10d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(10d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C2"),
-                new MutationAction.SetCell(new CellInput.Numeric(12d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(12d))),
             mutate(
-                new CellSelector.ByAddress("Chart", "A3"), new MutationAction.SetCell(text("Feb"))),
+                new CellSelector.ByAddress("Chart", "A3"),
+                new CellMutationAction.SetCell(text("Feb"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B3"),
-                new MutationAction.SetCell(new CellInput.Numeric(18d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(18d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C3"),
-                new MutationAction.SetCell(new CellInput.Numeric(16d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(16d))),
             mutate(
-                new CellSelector.ByAddress("Chart", "A4"), new MutationAction.SetCell(text("Mar"))),
+                new CellSelector.ByAddress("Chart", "A4"),
+                new CellMutationAction.SetCell(text("Mar"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B4"),
-                new MutationAction.SetCell(new CellInput.Numeric(15d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(15d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C4"),
-                new MutationAction.SetCell(new CellInput.Numeric(21d))),
+                new CellMutationAction.SetCell(new CellInput.Numeric(21d))),
             mutate(
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "ChartCategories",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Chart", "A2:A4"))),
             mutate(
-                new MutationAction.SetNamedRange(
+                new StructuredMutationAction.SetNamedRange(
                     "ChartActual",
                     new NamedRangeScope.Workbook(),
                     new NamedRangeTarget("Chart", "C2:C4"))),
-            mutate(new SheetSelector.ByName("Chart"), new MutationAction.SetChart(opsChart))),
+            mutate(
+                new SheetSelector.ByName("Chart"), new DrawingMutationAction.SetChart(opsChart))),
         List.of());
   }
 
@@ -1476,81 +1491,87 @@ public final class XlsxParityScenarios {
             new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
             null,
             List.of(
-                mutate(new SheetSelector.ByName("Data"), new MutationAction.EnsureSheet()),
-                mutate(new SheetSelector.ByName("RangeReport"), new MutationAction.EnsureSheet()),
-                mutate(new SheetSelector.ByName("NamedReport"), new MutationAction.EnsureSheet()),
-                mutate(new SheetSelector.ByName("TableReport"), new MutationAction.EnsureSheet()),
+                mutate(new SheetSelector.ByName("Data"), new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("RangeReport"),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("NamedReport"),
+                    new WorkbookMutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("TableReport"),
+                    new WorkbookMutationAction.EnsureSheet()),
                 mutate(
                     new CellSelector.ByAddress("Data", "A1"),
-                    new MutationAction.SetCell(text("Region"))),
+                    new CellMutationAction.SetCell(text("Region"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "B1"),
-                    new MutationAction.SetCell(text("Stage"))),
+                    new CellMutationAction.SetCell(text("Stage"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "C1"),
-                    new MutationAction.SetCell(text("Owner"))),
+                    new CellMutationAction.SetCell(text("Owner"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D1"),
-                    new MutationAction.SetCell(text("Amount"))),
+                    new CellMutationAction.SetCell(text("Amount"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A2"),
-                    new MutationAction.SetCell(text("North"))),
+                    new CellMutationAction.SetCell(text("North"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "B2"),
-                    new MutationAction.SetCell(text("Plan"))),
+                    new CellMutationAction.SetCell(text("Plan"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "C2"),
-                    new MutationAction.SetCell(text("Ada"))),
+                    new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D2"),
-                    new MutationAction.SetCell(new CellInput.Numeric(10d))),
+                    new CellMutationAction.SetCell(new CellInput.Numeric(10d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A3"),
-                    new MutationAction.SetCell(text("North"))),
+                    new CellMutationAction.SetCell(text("North"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "B3"),
-                    new MutationAction.SetCell(text("Do"))),
+                    new CellMutationAction.SetCell(text("Do"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "C3"),
-                    new MutationAction.SetCell(text("Ada"))),
+                    new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D3"),
-                    new MutationAction.SetCell(new CellInput.Numeric(15d))),
+                    new CellMutationAction.SetCell(new CellInput.Numeric(15d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A4"),
-                    new MutationAction.SetCell(text("South"))),
+                    new CellMutationAction.SetCell(text("South"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "B4"),
-                    new MutationAction.SetCell(text("Plan"))),
+                    new CellMutationAction.SetCell(text("Plan"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "C4"),
-                    new MutationAction.SetCell(text("Lin"))),
+                    new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D4"),
-                    new MutationAction.SetCell(new CellInput.Numeric(7d))),
+                    new CellMutationAction.SetCell(new CellInput.Numeric(7d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A5"),
-                    new MutationAction.SetCell(text("South"))),
+                    new CellMutationAction.SetCell(text("South"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "B5"),
-                    new MutationAction.SetCell(text("Do"))),
+                    new CellMutationAction.SetCell(text("Do"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "C5"),
-                    new MutationAction.SetCell(text("Lin"))),
+                    new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D5"),
-                    new MutationAction.SetCell(new CellInput.Numeric(12d))),
+                    new CellMutationAction.SetCell(new CellInput.Numeric(12d))),
                 mutate(
-                    new MutationAction.SetNamedRange(
+                    new StructuredMutationAction.SetNamedRange(
                         "PivotSource",
                         new NamedRangeScope.Workbook(),
                         new NamedRangeTarget("Data", "A1:D5"))),
                 mutate(
-                    new MutationAction.SetTable(
-                        new TableInput(
+                    new StructuredMutationAction.SetTable(
+                        TableInput.withDefaultMetadata(
                             "SalesTable", "Data", "A1:D5", false, new TableStyleInput.None()))),
                 mutate(
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "Sales Pivot",
                             "RangeReport",
@@ -1561,7 +1582,7 @@ public final class XlsxParityScenarios {
                             List.of(),
                             List.of(defaultPivotDataFieldInput())))),
                 mutate(
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "Named Pivot",
                             "NamedReport",
@@ -1572,7 +1593,7 @@ public final class XlsxParityScenarios {
                             List.of("Owner"),
                             List.of(defaultPivotDataFieldInput())))),
                 mutate(
-                    new MutationAction.SetPivotTable(
+                    new StructuredMutationAction.SetPivotTable(
                         new PivotTableInput(
                             "Table Pivot",
                             "TableReport",
@@ -1613,7 +1634,7 @@ public final class XlsxParityScenarios {
   }
 
   private static CommentInput comment(String text, String author, boolean visible) {
-    return new CommentInput(TextSourceInput.inline(text), author, visible);
+    return CommentInput.plain(TextSourceInput.inline(text), author, visible);
   }
 
   private static DataValidationPromptInput prompt(
@@ -1628,8 +1649,8 @@ public final class XlsxParityScenarios {
         style, TextSourceInput.inline(title), TextSourceInput.inline(text), showErrorBox);
   }
 
-  private static ChartInput.Title.Text chartTitle(String value) {
-    return new ChartInput.Title.Text(TextSourceInput.inline(value));
+  private static ChartTitleInput.Text chartTitle(String value) {
+    return new ChartTitleInput.Text(TextSourceInput.inline(value));
   }
 
   private static ShapeInput shape(

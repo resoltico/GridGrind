@@ -73,7 +73,7 @@ class FormulaEnvironmentInputTest {
     assertFalse(filterMatches(filter, permissiveMissingWorkbookPolicy));
     assertFalse(filterMatches(filter, udfOnly));
     assertFalse(filterMatches(filter, "not-a-formula-environment"));
-    assertEquals(0, filter.hashCode());
+    assertEquals(FormulaEnvironmentInput.EmptyFilter.class.hashCode(), filter.hashCode());
   }
 
   @Test
@@ -95,8 +95,10 @@ class FormulaEnvironmentInputTest {
         IllegalArgumentException.class, () -> new FormulaUdfFunctionInput(" ", 1, 1, "ARG1"));
     assertThrows(
         IllegalArgumentException.class, () -> new FormulaUdfFunctionInput("1BAD", 1, 1, "ARG1"));
+    assertEquals(1, new FormulaUdfFunctionInput("DOUBLE", 1, "ARG1").maximumArgumentCount());
     assertThrows(
-        NullPointerException.class, () -> new FormulaUdfFunctionInput("DOUBLE", null, 1, "ARG1"));
+        NullPointerException.class,
+        () -> new FormulaUdfFunctionInput("DOUBLE", 1, (Integer) null, "ARG1"));
     assertThrows(
         IllegalArgumentException.class, () -> new FormulaUdfFunctionInput("DOUBLE", -1, 1, "ARG1"));
     assertThrows(

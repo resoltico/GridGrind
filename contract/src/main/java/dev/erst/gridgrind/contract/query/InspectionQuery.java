@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.contract.query;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
@@ -144,27 +142,21 @@ public sealed interface InspectionQuery
 
   record ExportCustomXmlMapping(
       dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator mapping,
-      Boolean validateSchema,
+      boolean validateSchema,
       String encoding)
       implements Introspection {
+    /** Creates one export query that uses UTF-8 explicitly for the extracted XML payload. */
+    public ExportCustomXmlMapping(
+        dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator mapping, boolean validateSchema) {
+      this(mapping, validateSchema, java.nio.charset.StandardCharsets.UTF_8.name());
+    }
+
     public ExportCustomXmlMapping {
       java.util.Objects.requireNonNull(mapping, "mapping must not be null");
-      java.util.Objects.requireNonNull(validateSchema, "validateSchema must not be null");
       java.util.Objects.requireNonNull(encoding, "encoding must not be null");
       if (encoding.isBlank()) {
         throw new IllegalArgumentException("encoding must not be blank");
       }
-    }
-
-    @JsonCreator
-    static ExportCustomXmlMapping create(
-        @JsonProperty("mapping") dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator mapping,
-        @JsonProperty("validateSchema") Boolean validateSchema,
-        @JsonProperty("encoding") String encoding) {
-      return new ExportCustomXmlMapping(
-          mapping,
-          validateSchema == null ? Boolean.FALSE : validateSchema,
-          encoding == null ? java.nio.charset.StandardCharsets.UTF_8.name() : encoding);
     }
   }
 

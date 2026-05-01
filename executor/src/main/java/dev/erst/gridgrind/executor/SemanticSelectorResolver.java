@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -16,7 +17,7 @@ import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
-import dev.erst.gridgrind.excel.WorkbookReadResult;
+import dev.erst.gridgrind.excel.WorkbookRuleResult;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -27,11 +28,11 @@ final class SemanticSelectorResolver {
   private static final String RESOLUTION_STEP_ID = "__semantic-selector-resolution__";
   private static final Set<Class<? extends MutationAction>> EXACT_CELL_MUTATION_ACTIONS =
       Set.of(
-          MutationAction.SetCell.class,
-          MutationAction.SetHyperlink.class,
-          MutationAction.ClearHyperlink.class,
-          MutationAction.SetComment.class,
-          MutationAction.ClearComment.class);
+          CellMutationAction.SetCell.class,
+          CellMutationAction.SetHyperlink.class,
+          CellMutationAction.ClearHyperlink.class,
+          CellMutationAction.SetComment.class,
+          CellMutationAction.ClearComment.class);
   private static final Set<Class<? extends InspectionQuery>> EXACT_CELL_INSPECTION_QUERIES =
       Set.of(
           InspectionQuery.GetCells.class,
@@ -214,8 +215,8 @@ final class SemanticSelectorResolver {
   }
 
   private ResolvedTable resolveExactTable(ExcelWorkbook workbook, TableSelector selector) {
-    WorkbookReadResult.TablesResult result =
-        (WorkbookReadResult.TablesResult)
+    WorkbookRuleResult.TablesResult result =
+        (WorkbookRuleResult.TablesResult)
             readExecutor
                 .apply(
                     workbook,

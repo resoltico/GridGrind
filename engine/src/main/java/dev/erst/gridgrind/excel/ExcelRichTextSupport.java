@@ -23,6 +23,7 @@ final class ExcelRichTextSupport {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
 
+    ExcelCellTextLimits.requireSupportedLength(richText.plainText(), "richText.text"); // LIM-010
     XSSFRichTextString poiRichText = new XSSFRichTextString();
     for (ExcelRichTextRun run : richText.runs()) {
       poiRichText.append(run.text(), run.font() == null ? null : fontPatch(workbook, run.font()));
@@ -39,7 +40,7 @@ final class ExcelRichTextSupport {
 
     CTRElt[] runs = richText.getCTRst().getRArray();
     if (runs.length == 0) {
-      return java.util.Optional.<ExcelRichTextSnapshot>empty().orElse(null);
+      return null;
     }
 
     List<ExcelRichTextRunSnapshot> snapshots = new ArrayList<>(runs.length);
@@ -90,7 +91,7 @@ final class ExcelRichTextSupport {
   private static RunFontPatch runFontPatch(XSSFWorkbook workbook, CTRElt run) {
     CTRPrElt properties = run.getRPr();
     if (properties == null) {
-      return java.util.Optional.<RunFontPatch>empty().orElse(null);
+      return null;
     }
 
     Boolean bold = readBold(properties);
@@ -102,7 +103,7 @@ final class ExcelRichTextSupport {
     Boolean strikeout = readStrikeout(properties);
     if (allFontAttributesNull(
         bold, italic, fontName, fontHeight, fontColor, underline, strikeout)) {
-      return java.util.Optional.<RunFontPatch>empty().orElse(null);
+      return null;
     }
     return new RunFontPatch(bold, italic, fontName, fontHeight, fontColor, underline, strikeout);
   }
@@ -121,7 +122,7 @@ final class ExcelRichTextSupport {
 
   private static ExcelFontHeight readFontHeight(CTRPrElt properties) {
     if (properties.sizeOfSzArray() == 0) {
-      return java.util.Optional.<ExcelFontHeight>empty().orElse(null);
+      return null;
     }
     return ExcelFontHeight.fromPoints(
         java.math.BigDecimal.valueOf(properties.getSzArray(0).getVal()));

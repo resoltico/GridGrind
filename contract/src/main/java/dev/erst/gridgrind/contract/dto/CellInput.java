@@ -46,18 +46,14 @@ public sealed interface CellInput {
   }
 
   /** Numeric cell input stored as a double. */
-  record Numeric(Double number) implements CellInput {
+  record Numeric(double number) implements CellInput {
     public Numeric {
-      Validation.required(number, "number");
+      Validation.requireFinite(number, "number");
     }
   }
 
   /** Boolean cell input. */
-  record BooleanValue(Boolean bool) implements CellInput {
-    public BooleanValue {
-      Validation.required(bool, "bool");
-    }
-  }
+  record BooleanValue(boolean bool) implements CellInput {}
 
   /** Excel formula cell input. A leading {@code =} sign is stripped automatically if present. */
   record Formula(TextSourceInput source) implements CellInput {
@@ -102,6 +98,12 @@ public sealed interface CellInput {
         throw new IllegalArgumentException(fieldName + " must not be null");
       }
       return value;
+    }
+
+    static void requireFinite(double value, String fieldName) {
+      if (!Double.isFinite(value)) {
+        throw new IllegalArgumentException(fieldName + " must be finite");
+      }
     }
   }
 }

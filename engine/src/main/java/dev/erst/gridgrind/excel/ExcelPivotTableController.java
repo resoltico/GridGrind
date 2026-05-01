@@ -7,28 +7,19 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiPredicate;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
-import org.apache.poi.ss.SpreadsheetVersion;
-import org.apache.poi.ss.usermodel.DataConsolidateFunction;
-import org.apache.poi.ss.usermodel.Name;
-import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFPivotCache;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheRecords;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotCache;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotTableDefinition;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorksheetSource;
 
 /** Reads, writes, and analyzes workbook pivot tables within the POI-supported XSSF surface. */
 final class ExcelPivotTableController {
@@ -149,151 +140,12 @@ final class ExcelPivotTableController {
     return List.copyOf(new ArrayList<>(new LinkedHashSet<>(findings)));
   }
 
-  List<WorkbookAnalysis.AnalysisFinding> duplicateNameFindings(List<PivotHandle> handles) {
-    Set<String> seenNames = new LinkedHashSet<>();
-    Set<String> duplicateNames = new LinkedHashSet<>();
-    for (PivotHandle handle : handles) {
-      String normalizedName = ExcelPivotTableIdentitySupport.normalizedResolvedName(handle);
-      if (!seenNames.add(normalizedName)) {
-        duplicateNames.add(normalizedName);
-      }
-    }
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    for (PivotHandle handle : handles) {
-      if (!duplicateNames.contains(ExcelPivotTableIdentitySupport.normalizedResolvedName(handle))) {
-        continue;
-      }
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_DUPLICATE_NAME,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table name is not unique",
-              "Multiple pivot tables share the same case-insensitive name, so exact-name selection is ambiguous.",
-              List.of(ExcelPivotTableIdentitySupport.resolvedName(handle))));
-    }
-    return List.copyOf(findings);
-  }
-
-  List<WorkbookAnalysis.AnalysisFinding> pivotTableHealthFindings(
-      XSSFWorkbook workbook, PivotHandle handle) {
-    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    if (ExcelPivotTableIdentitySupport.actualName(handle) == null) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
-              handle,
-              "Pivot table name is missing",
-              "The pivot table does not persist a name, so GridGrind assigned a synthetic identifier for readback.",
-              List.of(ExcelPivotTableIdentitySupport.resolvedName(handle))));
-    }
-
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    if (location == null) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
-                  .PIVOT_TABLE_UNSUPPORTED_DETAIL,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table location is malformed",
-              "The pivot table location range could not be parsed.",
-              List.of(ExcelPivotTableIdentitySupport.rawLocationRange(handle))));
-      return List.copyOf(findings);
-    }
-
-    XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(handle.table());
-    if (cacheDefinition == null) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
-                  .PIVOT_TABLE_MISSING_CACHE_DEFINITION,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table is missing its cache definition relation",
-              "The pivot table part no longer points at a pivot cache definition.",
-              List.of(location.locationRange())));
-      return List.copyOf(findings);
-    }
-
-    if (cacheRecords(cacheDefinition) == null) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
-                  .PIVOT_TABLE_MISSING_CACHE_RECORDS,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table is missing its cache records relation",
-              "The pivot cache definition does not point at pivot cache records.",
-              List.of(location.locationRange())));
-    }
-
-    CTPivotTableDefinition definition = handle.table().getCTPivotTableDefinition();
-    if (workbookPivotCache(workbook, definition.getCacheId()) == null) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
-                  .PIVOT_TABLE_MISSING_WORKBOOK_CACHE,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table cache is not registered in workbook metadata",
-              "The pivot table cacheId is missing from workbook.xml pivotCaches.",
-              List.of(Long.toString(definition.getCacheId()))));
-    }
-
-    ExcelPivotTableSnapshot snapshot = snapshot(workbook, handle);
-    if (snapshot instanceof ExcelPivotTableSnapshot.Unsupported unsupported) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
-                  .PIVOT_TABLE_UNSUPPORTED_DETAIL,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.WARNING,
-              handle,
-              "Pivot table contains unsupported detail",
-              unsupported.detail(),
-              List.of(unsupported.anchor().locationRange())));
-    }
-
-    try {
-      snapshotSource(workbook, handle.table());
-    } catch (RuntimeException exception) {
-      findings.add(
-          finding(
-              dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE,
-              dev.erst.gridgrind.excel.foundation.AnalysisSeverity.ERROR,
-              handle,
-              "Pivot table source is broken",
-              Objects.requireNonNullElse(
-                  exception.getMessage(), "The pivot source no longer resolves cleanly."),
-              List.of(location.locationRange())));
-    }
-    return List.copyOf(new ArrayList<>(new LinkedHashSet<>(findings)));
-  }
-
-  WorkbookAnalysis.AnalysisFinding finding(
-      dev.erst.gridgrind.excel.foundation.AnalysisFindingCode code,
-      dev.erst.gridgrind.excel.foundation.AnalysisSeverity severity,
-      PivotHandle handle,
-      String title,
-      String message,
-      List<String> evidence) {
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    WorkbookAnalysis.AnalysisLocation analysisLocation =
-        location == null
-            ? new WorkbookAnalysis.AnalysisLocation.Sheet(handle.sheetName())
-            : new WorkbookAnalysis.AnalysisLocation.Range(
-                handle.sheetName(), location.locationRange());
-    return new WorkbookAnalysis.AnalysisFinding(
-        code, severity, title, message, analysisLocation, List.copyOf(evidence));
-  }
-
   XSSFPivotTable createPivotTable(
       ExcelWorkbook workbook,
       ExcelPivotTableDefinition definition,
       ResolvedAuthoringSource source,
       CellReference anchor) {
-    XSSFSheet sheet = ExcelPivotTableSourceSupport.requiredSheet(workbook, definition.sheetName());
+    var sheet = ExcelPivotTableSourceSupport.requiredSheet(workbook, definition.sheetName());
     return switch (source.kind()) {
       case RANGE -> sheet.createPivotTable(source.area(), anchor, source.sheet());
       case NAMED_RANGE ->
@@ -336,217 +188,6 @@ final class ExcelPivotTableController {
     pivotTable.getCTPivotTableDefinition().setCacheId(normalizedId);
   }
 
-  void deletePivotHandle(ExcelWorkbook workbook, PivotHandle handle) {
-    XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(handle.table());
-    org.apache.poi.openxml4j.opc.PackagePartName pivotTablePartName =
-        handle.table().getPackagePart() == null
-            ? null
-            : handle.table().getPackagePart().getPartName();
-    org.apache.poi.openxml4j.opc.PackagePartName cacheDefinitionPartName =
-        cacheDefinition == null || cacheDefinition.getPackagePart() == null
-            ? null
-            : cacheDefinition.getPackagePart().getPartName();
-    String cacheRelationId =
-        cacheDefinition == null
-            ? null
-            : handle.sheet().getWorkbook().getRelationId(cacheDefinition);
-    boolean sharedCache =
-        cacheDefinition != null && cacheDefinitionShared(workbook, handle, cacheDefinition);
-
-    if (!removePoiRelation(handle.sheet(), handle.table())) {
-      throw new IllegalStateException(
-          "Failed to remove pivot table relation for '"
-              + ExcelPivotTableIdentitySupport.resolvedName(handle)
-              + "'");
-    }
-    workbook.xssfWorkbook().getPivotTables().remove(handle.table());
-    cleanupPackagePartIfUnused(workbook.xssfWorkbook().getPackage(), pivotTablePartName);
-
-    if (!sharedCache && cacheDefinition != null) {
-      removeWorkbookPivotCacheRegistration(
-          workbook.xssfWorkbook(),
-          handle.table().getCTPivotTableDefinition().getCacheId(),
-          cacheRelationId);
-      if (!removePoiRelation(workbook.xssfWorkbook(), cacheDefinition)) {
-        throw new IllegalStateException(
-            "Failed to remove pivot cache definition relation for '"
-                + ExcelPivotTableIdentitySupport.resolvedName(handle)
-                + "'");
-      }
-      cleanupPackagePartIfUnused(workbook.xssfWorkbook().getPackage(), cacheDefinitionPartName);
-    }
-    rebuildPivotTableRegistry(workbook.xssfWorkbook());
-  }
-
-  void removeWorkbookPivotCacheRegistration(
-      XSSFWorkbook workbook, long cacheId, String relationId) {
-    if (!workbook.getCTWorkbook().isSetPivotCaches()) {
-      return;
-    }
-    var pivotCaches = workbook.getCTWorkbook().getPivotCaches();
-    for (int index = 0; index < pivotCaches.sizeOfPivotCacheArray(); index++) {
-      CTPivotCache cache = pivotCaches.getPivotCacheArray(index);
-      boolean matchesId = cache.getCacheId() == cacheId;
-      boolean matchesRelation =
-          relationId != null && relationId.equals(Objects.requireNonNullElse(cache.getId(), ""));
-      if (matchesId || matchesRelation) {
-        pivotCaches.removePivotCache(index);
-        if (pivotCaches.sizeOfPivotCacheArray() == 0) {
-          workbook.getCTWorkbook().unsetPivotCaches();
-        }
-        return;
-      }
-    }
-  }
-
-  boolean cacheDefinitionShared(
-      ExcelWorkbook workbook, PivotHandle current, XSSFPivotCacheDefinition cacheDefinition) {
-    if (cacheDefinition.getPackagePart() == null) {
-      return false;
-    }
-    String expectedPartName = cacheDefinition.getPackagePart().getPartName().getName();
-    String currentPivotPartName = current.table().getPackagePart().getPartName().getName();
-    for (PivotHandle handle : allPivotTables(workbook)) {
-      if (handle.table().getPackagePart().getPartName().getName().equals(currentPivotPartName)) {
-        continue;
-      }
-      XSSFPivotCacheDefinition otherCacheDefinition = cacheDefinition(handle.table());
-      if (otherCacheDefinition == null) {
-        continue;
-      }
-      if (otherCacheDefinition.getPackagePart().getPartName().getName().equals(expectedPartName)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  boolean removePoiRelation(POIXMLDocumentPart parent, POIXMLDocumentPart child) {
-    return poiRelationRemover.test(parent, child);
-  }
-
-  void cleanupPackagePartIfUnused(
-      org.apache.poi.openxml4j.opc.OPCPackage pkg,
-      org.apache.poi.openxml4j.opc.PackagePartName partName) {
-    if (partName == null) {
-      return;
-    }
-    for (PackagePart part :
-        PoiPackageInspection.packageParts(pkg, "Failed to inspect package relationships")) {
-      if (part.isRelationshipPart()) {
-        continue;
-      }
-      for (org.apache.poi.openxml4j.opc.PackageRelationship relationship :
-          PoiPackageInspection.relationships(part, "Failed to inspect package relationships")) {
-        if (relationship.getTargetMode() == org.apache.poi.openxml4j.opc.TargetMode.EXTERNAL) {
-          continue;
-        }
-        if (partName
-            .getURI()
-            .equals(
-                org.apache.poi.openxml4j.opc.PackagingURIHelper.resolvePartUri(
-                    part.getPartName().getURI(), relationship.getTargetURI()))) {
-          return;
-        }
-      }
-    }
-    if (pkg.containPart(partName)) {
-      pkg.deletePartRecursive(partName);
-    }
-  }
-
-  void primePivotTableAllocator(XSSFWorkbook workbook, XSSFPivotTable allocationSentinel) {
-    int highWaterMark = pivotTableIdHighWaterMark(workbook);
-    List<XSSFPivotTable> registry = workbook.getPivotTables();
-    if (registry.size() >= highWaterMark) {
-      return;
-    }
-    if (registry.isEmpty()) {
-      if (allocationSentinel == null) {
-        throw new IllegalStateException(
-            "Pivot table allocation cannot advance because the workbook still contains pivot package numbering without any live pivot relations.");
-      }
-      while (registry.size() < highWaterMark) {
-        registry.add(allocationSentinel);
-      }
-      return;
-    }
-    XSSFPivotTable sentinel = registry.getLast();
-    while (registry.size() < highWaterMark) {
-      registry.add(sentinel);
-    }
-  }
-
-  void rebuildPivotTableRegistry(XSSFWorkbook workbook) {
-    List<XSSFPivotTable> registry = workbook.getPivotTables();
-    registry.clear();
-    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      for (POIXMLDocumentPart relation : workbook.getSheetAt(sheetIndex).getRelations()) {
-        if (relation instanceof XSSFPivotTable pivotTable) {
-          registry.add(pivotTable);
-        }
-      }
-    }
-  }
-
-  int pivotTableIdHighWaterMark(XSSFWorkbook workbook) {
-    int maximum = 0;
-    for (CTPivotCache cache : workbookPivotCaches(workbook)) {
-      maximum = Math.max(maximum, Math.toIntExact(cache.getCacheId()));
-    }
-    for (PackagePart packagePart :
-        PoiPackageInspection.packageParts(
-            workbook.getPackage(), "Failed to inspect workbook package parts")) {
-      maximum = Math.max(maximum, packagePartIndex(packagePart, "/xl/pivotTables/pivotTable"));
-      maximum =
-          Math.max(maximum, packagePartIndex(packagePart, "/xl/pivotCache/pivotCacheDefinition"));
-      maximum =
-          Math.max(maximum, packagePartIndex(packagePart, "/xl/pivotCache/pivotCacheRecords"));
-    }
-    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      for (POIXMLDocumentPart relation : workbook.getSheetAt(sheetIndex).getRelations()) {
-        if (!(relation instanceof XSSFPivotTable pivotTable)) {
-          continue;
-        }
-        maximum = Math.max(maximum, packagePartIndex(pivotTable, "/xl/pivotTables/pivotTable"));
-        XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(pivotTable);
-        if (cacheDefinition != null) {
-          maximum =
-              Math.max(
-                  maximum,
-                  packagePartIndex(cacheDefinition, "/xl/pivotCache/pivotCacheDefinition"));
-          XSSFPivotCacheRecords cacheRecords = cacheRecords(cacheDefinition);
-          if (cacheRecords != null) {
-            maximum =
-                Math.max(
-                    maximum, packagePartIndex(cacheRecords, "/xl/pivotCache/pivotCacheRecords"));
-          }
-        }
-      }
-    }
-    return maximum;
-  }
-
-  int packagePartIndex(POIXMLDocumentPart part, String prefix) {
-    if (part.getPackagePart() == null) {
-      return 0;
-    }
-    return packagePartIndex(part.getPackagePart(), prefix);
-  }
-
-  int packagePartIndex(PackagePart part, String prefix) {
-    String name = part.getPartName().getName();
-    if (!name.startsWith(prefix) || !name.endsWith(".xml")) {
-      return 0;
-    }
-    String numericSuffix = name.substring(prefix.length(), name.length() - ".xml".length());
-    try {
-      return Integer.parseInt(numericSuffix);
-    } catch (NumberFormatException exception) {
-      return 0;
-    }
-  }
-
   List<PivotHandle> selectHandles(ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
     List<PivotHandle> all = allPivotTables(workbook);
     return switch (selection) {
@@ -579,7 +220,7 @@ final class ExcelPivotTableController {
         return handle;
       }
     }
-    return java.util.Optional.<PivotHandle>empty().orElse(null);
+    return null;
   }
 
   List<PivotHandle> allPivotTables(ExcelWorkbook workbook) {
@@ -587,7 +228,7 @@ final class ExcelPivotTableController {
     for (int sheetIndex = 0;
         sheetIndex < workbook.xssfWorkbook().getNumberOfSheets();
         sheetIndex++) {
-      XSSFSheet sheet = workbook.xssfWorkbook().getSheetAt(sheetIndex);
+      var sheet = workbook.xssfWorkbook().getSheetAt(sheetIndex);
       int ordinalOnSheet = 0;
       for (POIXMLDocumentPart relation : sheet.getRelations()) {
         if (!(relation instanceof XSSFPivotTable pivotTable)) {
@@ -601,264 +242,143 @@ final class ExcelPivotTableController {
     return List.copyOf(handles);
   }
 
+  List<WorkbookAnalysis.AnalysisFinding> duplicateNameFindings(List<PivotHandle> handles) {
+    return ExcelPivotTableAnalysisSupport.duplicateNameFindings(handles);
+  }
+
+  List<WorkbookAnalysis.AnalysisFinding> pivotTableHealthFindings(
+      XSSFWorkbook workbook, PivotHandle handle) {
+    return ExcelPivotTableAnalysisSupport.pivotTableHealthFindings(workbook, handle);
+  }
+
+  WorkbookAnalysis.AnalysisFinding finding(
+      dev.erst.gridgrind.excel.foundation.AnalysisFindingCode code,
+      dev.erst.gridgrind.excel.foundation.AnalysisSeverity severity,
+      PivotHandle handle,
+      String title,
+      String message,
+      List<String> evidence) {
+    return ExcelPivotTableAnalysisSupport.finding(code, severity, handle, title, message, evidence);
+  }
+
+  void deletePivotHandle(ExcelWorkbook workbook, PivotHandle handle) {
+    ExcelPivotTableLifecycleSupport.deletePivotHandle(
+        workbook, handle, allPivotTables(workbook), poiRelationRemover);
+  }
+
+  void removeWorkbookPivotCacheRegistration(
+      XSSFWorkbook workbook, long cacheId, String relationId) {
+    ExcelPivotTableLifecycleSupport.removeWorkbookPivotCacheRegistration(
+        workbook, cacheId, relationId);
+  }
+
+  boolean cacheDefinitionShared(
+      ExcelWorkbook workbook, PivotHandle current, XSSFPivotCacheDefinition cacheDefinition) {
+    return ExcelPivotTableLifecycleSupport.cacheDefinitionShared(
+        workbook, current, cacheDefinition, allPivotTables(workbook));
+  }
+
+  boolean removePoiRelation(POIXMLDocumentPart parent, POIXMLDocumentPart child) {
+    return ExcelPivotTableLifecycleSupport.removePoiRelation(parent, child, poiRelationRemover);
+  }
+
+  void cleanupPackagePartIfUnused(
+      org.apache.poi.openxml4j.opc.OPCPackage pkg,
+      org.apache.poi.openxml4j.opc.PackagePartName partName) {
+    ExcelPivotTableLifecycleSupport.cleanupPackagePartIfUnused(pkg, partName);
+  }
+
+  void primePivotTableAllocator(XSSFWorkbook workbook, XSSFPivotTable allocationSentinel) {
+    ExcelPivotTableLifecycleSupport.primePivotTableAllocator(workbook, allocationSentinel);
+  }
+
+  void rebuildPivotTableRegistry(XSSFWorkbook workbook) {
+    ExcelPivotTableLifecycleSupport.rebuildPivotTableRegistry(workbook);
+  }
+
+  int pivotTableIdHighWaterMark(XSSFWorkbook workbook) {
+    return ExcelPivotTableLifecycleSupport.pivotTableIdHighWaterMark(workbook);
+  }
+
+  int packagePartIndex(POIXMLDocumentPart part, String prefix) {
+    return ExcelPivotTableLifecycleSupport.packagePartIndex(part, prefix);
+  }
+
+  int packagePartIndex(PackagePart part, String prefix) {
+    return ExcelPivotTableLifecycleSupport.packagePartIndex(part, prefix);
+  }
+
   ExcelPivotTableSnapshot snapshot(XSSFWorkbook workbook, PivotHandle handle) {
-    String name = ExcelPivotTableIdentitySupport.resolvedName(handle);
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    ExcelPivotTableSnapshot.Anchor anchor =
-        location == null
-            ? new ExcelPivotTableSnapshot.Anchor("A1", "A1")
-            : new ExcelPivotTableSnapshot.Anchor(
-                location.topLeftAddress(), location.locationRange());
-    if (location == null) {
-      return unsupportedSnapshot(
-          handle, name, anchor, "Pivot table location range is missing or malformed.");
-    }
-    try {
-      CTPivotTableDefinition definition = handle.table().getCTPivotTableDefinition();
-      List<String> sourceColumnNames = cacheFieldNames(handle.table());
-      ColumnAxisSnapshot columns = snapshotColumnLabels(definition, sourceColumnNames);
-      List<ExcelPivotTableSnapshot.DataField> dataFields =
-          snapshotDataFields(workbook, definition, sourceColumnNames);
-      if (dataFields.isEmpty()) {
-        return unsupportedSnapshot(
-            handle, name, anchor, "Pivot table does not contain any data fields.");
-      }
-      return new ExcelPivotTableSnapshot.Supported(
-          name,
-          handle.sheetName(),
-          anchor,
-          snapshotSource(workbook, handle.table()),
-          snapshotFields(
-              definition.getRowFields() == null ? null : definition.getRowFields().getFieldArray(),
-              sourceColumnNames),
-          columns.columnLabels(),
-          snapshotPageFields(
-              definition.getPageFields() == null
-                  ? null
-                  : definition.getPageFields().getPageFieldArray(),
-              sourceColumnNames),
-          dataFields,
-          columns.valuesAxisOnColumns());
-    } catch (RuntimeException exception) {
-      return unsupportedSnapshot(
-          handle,
-          name,
-          anchor,
-          Objects.requireNonNullElse(
-              exception.getMessage(),
-              "The pivot table could not be normalized into the modeled contract."));
-    }
+    return ExcelPivotTableSnapshotSupport.snapshot(workbook, handle);
   }
 
   ColumnAxisSnapshot snapshotColumnLabels(
       CTPivotTableDefinition definition, List<String> sourceColumnNames) {
-    boolean valuesAxisOnColumns = false;
-    List<ExcelPivotTableSnapshot.Field> columnLabels = new ArrayList<>();
-    if (definition.getColFields() != null) {
-      for (CTField field : definition.getColFields().getFieldArray()) {
-        if (field.getX() == -2) {
-          valuesAxisOnColumns = true;
-          continue;
-        }
-        columnLabels.add(sourceField(sourceColumnNames, field.getX()));
-      }
-    }
-    return new ColumnAxisSnapshot(List.copyOf(columnLabels), valuesAxisOnColumns);
+    return ExcelPivotTableSnapshotSupport.snapshotColumnLabels(definition, sourceColumnNames);
   }
 
   List<ExcelPivotTableSnapshot.Field> snapshotFields(
       CTField[] fields, List<String> sourceColumnNames) {
-    if (fields == null || fields.length == 0) {
-      return List.of();
-    }
-    List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(fields.length);
-    for (CTField field : fields) {
-      snapshots.add(sourceField(sourceColumnNames, field.getX()));
-    }
-    return List.copyOf(snapshots);
+    return ExcelPivotTableSnapshotSupport.snapshotFields(fields, sourceColumnNames);
   }
 
   List<ExcelPivotTableSnapshot.Field> snapshotPageFields(
       CTPageField[] pageFields, List<String> sourceColumnNames) {
-    if (pageFields == null || pageFields.length == 0) {
-      return List.of();
-    }
-    List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(pageFields.length);
-    for (CTPageField pageField : pageFields) {
-      snapshots.add(sourceField(sourceColumnNames, pageField.getFld()));
-    }
-    return List.copyOf(snapshots);
+    return ExcelPivotTableSnapshotSupport.snapshotPageFields(pageFields, sourceColumnNames);
   }
 
   List<ExcelPivotTableSnapshot.DataField> snapshotDataFields(
       XSSFWorkbook workbook, CTPivotTableDefinition definition, List<String> sourceColumnNames) {
-    if (definition.getDataFields() == null
-        || definition.getDataFields().sizeOfDataFieldArray() == 0) {
-      return List.of();
-    }
-    List<ExcelPivotTableSnapshot.DataField> dataFields = new ArrayList<>();
-    for (CTDataField dataField : definition.getDataFields().getDataFieldArray()) {
-      int sourceColumnIndex = Math.toIntExact(dataField.getFld());
-      String sourceColumnName =
-          ExcelPivotTableSourceSupport.sourceColumnName(sourceColumnNames, sourceColumnIndex);
-      dataFields.add(
-          new ExcelPivotTableSnapshot.DataField(
-              sourceColumnIndex,
-              sourceColumnName,
-              fromSubtotal(
-                  dataField.getSubtotal() == null
-                      ? DataConsolidateFunction.SUM.getValue()
-                      : dataField.getSubtotal().intValue()),
-              ExcelPivotTableIdentitySupport.nonBlankOrDefault(
-                  dataField.getName(), sourceColumnName),
-              numberFormat(workbook, dataField.isSetNumFmtId() ? dataField.getNumFmtId() : null)));
-    }
-    return List.copyOf(dataFields);
+    return ExcelPivotTableSnapshotSupport.snapshotDataFields(
+        workbook, definition, sourceColumnNames);
   }
 
   ExcelPivotTableSnapshot.Unsupported unsupportedSnapshot(
       PivotHandle handle, String name, ExcelPivotTableSnapshot.Anchor anchor, String detail) {
-    return new ExcelPivotTableSnapshot.Unsupported(name, handle.sheetName(), anchor, detail);
+    return ExcelPivotTableSnapshotSupport.unsupportedSnapshot(handle, name, anchor, detail);
   }
 
   ExcelPivotTableSnapshot.Source snapshotSource(XSSFWorkbook workbook, XSSFPivotTable pivotTable) {
-    XSSFPivotCacheDefinition cacheDefinition = requiredCacheDefinition(pivotTable);
-    if (cacheDefinition.getCTPivotCacheDefinition().getCacheSource() == null
-        || !cacheDefinition.getCTPivotCacheDefinition().getCacheSource().isSetWorksheetSource()) {
-      throw new IllegalArgumentException("Pivot cache source is missing its worksheetSource.");
-    }
-    CTWorksheetSource worksheetSource =
-        cacheDefinition.getCTPivotCacheDefinition().getCacheSource().getWorksheetSource();
-    String sheetName =
-        ExcelPivotTableIdentitySupport.requireNonBlank(
-            worksheetSource.getSheet(), "Pivot source sheet is missing.");
-    if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
-      AreaReference area =
-          new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007);
-      return new ExcelPivotTableSnapshot.Source.Range(
-          sheetName, ExcelPivotTableIdentitySupport.normalizeArea(area));
-    }
-
-    String sourceName =
-        ExcelPivotTableIdentitySupport.requireNonBlank(
-            worksheetSource.getName(), "Pivot source name is missing.");
-    List<Name> namedRanges =
-        ExcelPivotTableSourceSupport.matchingNamedRanges(workbook, sourceName, sheetName);
-    if (namedRanges.size() == 1) {
-      AreaReference area = ExcelPivotTableSourceSupport.namedRangeArea(namedRanges.getFirst());
-      return new ExcelPivotTableSnapshot.Source.NamedRange(
-          sourceName,
-          ExcelPivotTableSourceSupport.sourceSheetName(area, namedRanges.getFirst(), sheetName),
-          ExcelPivotTableIdentitySupport.normalizeArea(area));
-    }
-    if (namedRanges.size() > 1) {
-      throw new IllegalArgumentException(
-          "Pivot source name '"
-              + sourceName
-              + "' is ambiguous because multiple matching named ranges exist.");
-    }
-
-    XSSFTable table = ExcelPivotTableSourceSupport.tableByName(workbook, sourceName, sheetName);
-    if (table != null) {
-      return new ExcelPivotTableSnapshot.Source.Table(
-          sourceName,
-          table.getSheetName(),
-          ExcelPivotTableIdentitySupport.normalizeArea(
-              new AreaReference(
-                  table.getStartCellReference(),
-                  table.getEndCellReference(),
-                  SpreadsheetVersion.EXCEL2007)));
-    }
-    throw new IllegalArgumentException(
-        "Pivot source name '"
-            + sourceName
-            + "' does not resolve to an existing named range or table.");
+    return ExcelPivotTableSnapshotSupport.snapshotSource(workbook, pivotTable);
   }
 
   List<String> cacheFieldNames(XSSFPivotTable pivotTable) {
-    XSSFPivotCacheDefinition cacheDefinition = requiredCacheDefinition(pivotTable);
-    if (cacheDefinition.getCTPivotCacheDefinition().getCacheFields() == null) {
-      throw new IllegalArgumentException("Pivot cache definition is missing cacheFields.");
-    }
-    List<String> fieldNames = new ArrayList<>();
-    for (var cacheField :
-        cacheDefinition.getCTPivotCacheDefinition().getCacheFields().getCacheFieldArray()) {
-      fieldNames.add(
-          ExcelPivotTableIdentitySupport.requireNonBlank(
-              cacheField.getName(), "Pivot cache field name is missing."));
-    }
-    return List.copyOf(fieldNames);
+    return ExcelPivotTableSnapshotSupport.cacheFieldNames(pivotTable);
   }
 
   ExcelPivotTableSnapshot.Field sourceField(List<String> sourceColumnNames, int sourceColumnIndex) {
-    return new ExcelPivotTableSnapshot.Field(
-        sourceColumnIndex,
-        ExcelPivotTableSourceSupport.sourceColumnName(sourceColumnNames, sourceColumnIndex));
+    return ExcelPivotTableSnapshotSupport.sourceField(sourceColumnNames, sourceColumnIndex);
   }
 
   ExcelPivotDataConsolidateFunction fromSubtotal(int subtotalValue) {
-    for (DataConsolidateFunction function : DataConsolidateFunction.values()) {
-      if (function.getValue() == subtotalValue) {
-        return ExcelPivotDataPoiBridge.fromPoi(function);
-      }
-    }
-    throw new IllegalArgumentException(
-        "Unsupported pivot data consolidate function value: " + subtotalValue);
+    return ExcelPivotTableSnapshotSupport.fromSubtotal(subtotalValue);
   }
 
   String numberFormat(XSSFWorkbook workbook, Long numFmtId) {
-    if (numFmtId == null) {
-      return java.util.Optional.<String>empty().orElse(null);
-    }
-    short formatIndex = numFmtId > Short.MAX_VALUE ? Short.MAX_VALUE : (short) numFmtId.longValue();
-    String format = workbook.createDataFormat().getFormat(formatIndex);
-    return format == null || format.isBlank()
-        ? java.util.Optional.<String>empty().orElse(null)
-        : format;
+    return ExcelPivotTableSnapshotSupport.numberFormat(workbook, numFmtId);
   }
 
   XSSFPivotCacheDefinition requiredCacheDefinition(XSSFPivotTable pivotTable) {
-    XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(pivotTable);
-    if (cacheDefinition == null) {
-      throw new IllegalArgumentException("Pivot table is missing its cache definition relation.");
-    }
-    return cacheDefinition;
+    return ExcelPivotTableSnapshotSupport.requiredCacheDefinition(pivotTable);
   }
 
   XSSFPivotCacheDefinition cacheDefinition(XSSFPivotTable pivotTable) {
-    try {
-      return pivotTable.getPivotCacheDefinition();
-    } catch (RuntimeException exception) {
-      return java.util.Optional.<XSSFPivotCacheDefinition>empty().orElse(null);
-    }
+    return ExcelPivotTableSnapshotSupport.cacheDefinition(pivotTable);
   }
 
   XSSFPivotCacheRecords cacheRecords(XSSFPivotCacheDefinition cacheDefinition) {
-    return firstRelation(cacheDefinition, XSSFPivotCacheRecords.class);
+    return ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition);
   }
 
   <T extends POIXMLDocumentPart> T firstRelation(POIXMLDocumentPart parent, Class<T> relationType) {
-    for (POIXMLDocumentPart relation : parent.getRelations()) {
-      if (relationType.isInstance(relation)) {
-        return relationType.cast(relation);
-      }
-    }
-    return java.util.Optional.<T>empty().orElse(null);
+    return ExcelPivotTableSnapshotSupport.firstRelation(parent, relationType);
   }
 
   CTPivotCache workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
-    for (CTPivotCache cache : workbookPivotCaches(workbook)) {
-      if (cache.getCacheId() == cacheId) {
-        return cache;
-      }
-    }
-    return java.util.Optional.<CTPivotCache>empty().orElse(null);
+    return ExcelPivotTableSnapshotSupport.workbookPivotCache(workbook, cacheId);
   }
 
   List<CTPivotCache> workbookPivotCaches(XSSFWorkbook workbook) {
-    if (!workbook.getCTWorkbook().isSetPivotCaches()) {
-      return List.of();
-    }
-    return List.of(workbook.getCTWorkbook().getPivotCaches().getPivotCacheArray());
+    return ExcelPivotTableSnapshotSupport.workbookPivotCaches(workbook);
   }
 }

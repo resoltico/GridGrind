@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.dto.ChartAxisInput;
+import dev.erst.gridgrind.contract.dto.ChartDataSourceInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.ChartLegendInput;
+import dev.erst.gridgrind.contract.dto.ChartPlotInput;
+import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
+import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
@@ -129,26 +135,26 @@ final class WorkbookCommandDrawingInputConverter {
     };
   }
 
-  private static ExcelChartDefinition.Title toExcelChartTitle(ChartInput.Title title) {
+  private static ExcelChartDefinition.Title toExcelChartTitle(ChartTitleInput title) {
     return switch (title) {
-      case ChartInput.Title.None _ -> new ExcelChartDefinition.Title.None();
-      case ChartInput.Title.Text text ->
+      case ChartTitleInput.None _ -> new ExcelChartDefinition.Title.None();
+      case ChartTitleInput.Text text ->
           new ExcelChartDefinition.Title.Text(
               WorkbookCommandSourceSupport.inlineText(text.source(), "chart title"));
-      case ChartInput.Title.Formula formula ->
+      case ChartTitleInput.Formula formula ->
           new ExcelChartDefinition.Title.Formula(formula.formula());
     };
   }
 
-  private static ExcelChartDefinition.Legend toExcelChartLegend(ChartInput.Legend legend) {
+  private static ExcelChartDefinition.Legend toExcelChartLegend(ChartLegendInput legend) {
     return switch (legend) {
-      case ChartInput.Legend.Hidden _ -> new ExcelChartDefinition.Legend.Hidden();
-      case ChartInput.Legend.Visible visible ->
+      case ChartLegendInput.Hidden _ -> new ExcelChartDefinition.Legend.Hidden();
+      case ChartLegendInput.Visible visible ->
           new ExcelChartDefinition.Legend.Visible(visible.position());
     };
   }
 
-  private static ExcelChartDefinition.Series toExcelChartSeries(ChartInput.Series series) {
+  private static ExcelChartDefinition.Series toExcelChartSeries(ChartSeriesInput series) {
     return new ExcelChartDefinition.Series(
         toExcelChartTitle(series.title()),
         toExcelChartDataSource(series.categories()),
@@ -160,25 +166,25 @@ final class WorkbookCommandDrawingInputConverter {
   }
 
   private static ExcelChartDefinition.DataSource toExcelChartDataSource(
-      ChartInput.DataSource source) {
+      ChartDataSourceInput source) {
     return switch (source) {
-      case ChartInput.DataSource.Reference reference ->
+      case ChartDataSourceInput.Reference reference ->
           new ExcelChartDefinition.DataSource.Reference(reference.formula());
-      case ChartInput.DataSource.StringLiteral literal ->
+      case ChartDataSourceInput.StringLiteral literal ->
           new ExcelChartDefinition.DataSource.StringLiteral(literal.values());
-      case ChartInput.DataSource.NumericLiteral literal ->
+      case ChartDataSourceInput.NumericLiteral literal ->
           new ExcelChartDefinition.DataSource.NumericLiteral(literal.values());
     };
   }
 
-  private static ExcelChartDefinition.Axis toExcelChartAxis(ChartInput.Axis axis) {
+  private static ExcelChartDefinition.Axis toExcelChartAxis(ChartAxisInput axis) {
     return new ExcelChartDefinition.Axis(
         axis.kind(), axis.position(), axis.crosses(), axis.visible());
   }
 
-  private static ExcelChartDefinition.Plot toExcelChartPlot(ChartInput.Plot plot) {
+  private static ExcelChartDefinition.Plot toExcelChartPlot(ChartPlotInput plot) {
     return switch (plot) {
-      case ChartInput.Area area ->
+      case ChartPlotInput.Area area ->
           new ExcelChartDefinition.Area(
               area.varyColors(),
               area.grouping(),
@@ -188,7 +194,7 @@ final class WorkbookCommandDrawingInputConverter {
               area.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Area3D area3D ->
+      case ChartPlotInput.Area3D area3D ->
           new ExcelChartDefinition.Area3D(
               area3D.varyColors(),
               area3D.grouping(),
@@ -199,7 +205,7 @@ final class WorkbookCommandDrawingInputConverter {
               area3D.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Bar bar ->
+      case ChartPlotInput.Bar bar ->
           new ExcelChartDefinition.Bar(
               bar.varyColors(),
               bar.barDirection(),
@@ -212,7 +218,7 @@ final class WorkbookCommandDrawingInputConverter {
               bar.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Bar3D bar3D ->
+      case ChartPlotInput.Bar3D bar3D ->
           new ExcelChartDefinition.Bar3D(
               bar3D.varyColors(),
               bar3D.barDirection(),
@@ -226,7 +232,7 @@ final class WorkbookCommandDrawingInputConverter {
               bar3D.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Doughnut doughnut ->
+      case ChartPlotInput.Doughnut doughnut ->
           new ExcelChartDefinition.Doughnut(
               doughnut.varyColors(),
               doughnut.firstSliceAngle(),
@@ -234,7 +240,7 @@ final class WorkbookCommandDrawingInputConverter {
               doughnut.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Line line ->
+      case ChartPlotInput.Line line ->
           new ExcelChartDefinition.Line(
               line.varyColors(),
               line.grouping(),
@@ -244,7 +250,7 @@ final class WorkbookCommandDrawingInputConverter {
               line.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Line3D line3D ->
+      case ChartPlotInput.Line3D line3D ->
           new ExcelChartDefinition.Line3D(
               line3D.varyColors(),
               line3D.grouping(),
@@ -255,20 +261,20 @@ final class WorkbookCommandDrawingInputConverter {
               line3D.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Pie pie ->
+      case ChartPlotInput.Pie pie ->
           new ExcelChartDefinition.Pie(
               pie.varyColors(),
               pie.firstSliceAngle(),
               pie.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Pie3D pie3D ->
+      case ChartPlotInput.Pie3D pie3D ->
           new ExcelChartDefinition.Pie3D(
               pie3D.varyColors(),
               pie3D.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Radar radar ->
+      case ChartPlotInput.Radar radar ->
           new ExcelChartDefinition.Radar(
               radar.varyColors(),
               radar.style(),
@@ -278,7 +284,7 @@ final class WorkbookCommandDrawingInputConverter {
               radar.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Scatter scatter ->
+      case ChartPlotInput.Scatter scatter ->
           new ExcelChartDefinition.Scatter(
               scatter.varyColors(),
               scatter.style(),
@@ -288,7 +294,7 @@ final class WorkbookCommandDrawingInputConverter {
               scatter.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Surface surface ->
+      case ChartPlotInput.Surface surface ->
           new ExcelChartDefinition.Surface(
               surface.varyColors(),
               surface.wireframe(),
@@ -298,7 +304,7 @@ final class WorkbookCommandDrawingInputConverter {
               surface.series().stream()
                   .map(WorkbookCommandDrawingInputConverter::toExcelChartSeries)
                   .toList());
-      case ChartInput.Surface3D surface3D ->
+      case ChartPlotInput.Surface3D surface3D ->
           new ExcelChartDefinition.Surface3D(
               surface3D.varyColors(),
               surface3D.wireframe(),

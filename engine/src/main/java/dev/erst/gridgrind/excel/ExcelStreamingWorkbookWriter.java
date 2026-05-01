@@ -11,6 +11,7 @@ import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Stateful low-memory append-oriented workbook authoring backed by POI's SXSSF writer. */
 public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
@@ -21,8 +22,7 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
 
   /** Creates one empty streaming workbook session. */
   public ExcelStreamingWorkbookWriter() {
-    this.workbook = new SXSSFWorkbook(100);
-    this.workbook.setCompressTempFiles(true);
+    this.workbook = new SXSSFWorkbook(new XSSFWorkbook(), 100, true, true);
     this.styleRegistry = new WorkbookStyleRegistry(workbook.getXSSFWorkbook());
     this.sheets = new HashMap<>();
     this.nextRowIndexes = new HashMap<>();
@@ -32,14 +32,14 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
   public void apply(WorkbookCommand command) {
     Objects.requireNonNull(command, "command must not be null");
     switch (command) {
-      case WorkbookCommand.CreateSheet createSheet ->
+      case WorkbookSheetCommand.CreateSheet createSheet ->
           sheets.computeIfAbsent(
               createSheet.sheetName(),
               sheetName -> {
                 nextRowIndexes.put(sheetName, 0);
                 return workbook.createSheet(sheetName);
               });
-      case WorkbookCommand.AppendRow appendRow ->
+      case WorkbookCellCommand.AppendRow appendRow ->
           appendRow(requiredSheet(appendRow.sheetName()), appendRow);
       default ->
           throw new IllegalArgumentException(
@@ -77,7 +77,7 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
     return sheet;
   }
 
-  private void appendRow(SXSSFSheet sheet, WorkbookCommand.AppendRow appendRow) {
+  private void appendRow(SXSSFSheet sheet, WorkbookCellCommand.AppendRow appendRow) {
     int rowIndex =
         nextRowIndexes.compute(appendRow.sheetName(), (_, nextRowIndex) -> nextRowIndex + 1) - 1;
     SXSSFRow row = sheet.createRow(rowIndex);
@@ -89,7 +89,10 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
   private void writeCellValue(SXSSFCell cell, ExcelCellValue value) {
     switch (value) {
       case ExcelCellValue.BlankValue _ -> cell.setBlank();
-      case ExcelCellValue.TextValue textValue -> cell.setCellValue(textValue.value());
+      case ExcelCellValue.TextValue textValue -> {
+        ExcelCellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
+        cell.setCellValue(textValue.value());
+      }
       case ExcelCellValue.RichTextValue richTextValue ->
           cell.setCellValue(
               ExcelRichTextSupport.toPoiRichText(

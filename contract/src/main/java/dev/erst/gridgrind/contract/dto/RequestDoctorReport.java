@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +14,7 @@ public record RequestDoctorReport(
     boolean valid,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Summary> summary,
     List<RequestWarning> warnings,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindResponse.Problem> problem) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindProblemDetail.Problem> problem) {
   public RequestDoctorReport {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     Objects.requireNonNull(severity, "severity must not be null");
@@ -69,13 +67,15 @@ public record RequestDoctorReport(
 
   /** Returns one invalid doctor report with a blocking problem and any derived warnings. */
   public static RequestDoctorReport invalid(
-      Summary summary, List<RequestWarning> warnings, GridGrindResponse.Problem problem) {
+      Summary summary, List<RequestWarning> warnings, GridGrindProblemDetail.Problem problem) {
     return invalid(Optional.ofNullable(summary), warnings, problem);
   }
 
   /** Returns one invalid doctor report with an optional summary and one blocking problem. */
   public static RequestDoctorReport invalid(
-      Optional<Summary> summary, List<RequestWarning> warnings, GridGrindResponse.Problem problem) {
+      Optional<Summary> summary,
+      List<RequestWarning> warnings,
+      GridGrindProblemDetail.Problem problem) {
     return new RequestDoctorReport(
         GridGrindProtocolVersion.current(),
         AnalysisSeverity.ERROR,
@@ -83,23 +83,6 @@ public record RequestDoctorReport(
         summary,
         warnings,
         Optional.of(problem));
-  }
-
-  @JsonCreator
-  static RequestDoctorReport create(
-      @JsonProperty("protocolVersion") GridGrindProtocolVersion protocolVersion,
-      @JsonProperty("severity") AnalysisSeverity severity,
-      @JsonProperty("valid") boolean valid,
-      @JsonProperty("summary") Optional<Summary> summary,
-      @JsonProperty("warnings") List<RequestWarning> warnings,
-      @JsonProperty("problem") Optional<GridGrindResponse.Problem> problem) {
-    return new RequestDoctorReport(
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion,
-        severity,
-        valid,
-        summary,
-        warnings,
-        problem);
   }
 
   /** One derived summary of the authored request shape and execution posture. */

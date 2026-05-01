@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: LINK_COMMENT_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, hyperlink mutations, comment mutations, set-hyperlink, clear-hyperlink, set-comment, clear-comment]
   questions: ["how do i set hyperlinks in gridgrind", "how do i clear comments in gridgrind", "how do i manage comments in gridgrind"]
@@ -160,7 +160,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
 | `address` | Yes | A1-notation cell address. |
 | `comment` | Yes | Comment payload. |
 
-`comment.visible` defaults to `false` when omitted.
+`comment.visible` is explicit on the wire. Use `false` when the comment should stay hidden.
 
 `comment` fields:
 
@@ -168,7 +168,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
 |:------|:---------|:------------|
 | `text` | Yes | Source-backed plain-text payload. Inline text uses `{ "type": "INLINE", "text": "..." }`; file-backed and standard-input variants are also supported. The resolved text must be nonblank. |
 | `author` | Yes | Nonblank comment author. |
-| `visible` | No | Whether the comment box is shown by default. Defaults to `false`. |
+| `visible` | Yes | Whether the comment box is shown by default. Use `false` to keep it hidden. |
 | `runs` | No | Ordered rich-text run list. When present, the concatenated run text must equal `comment.text` exactly. |
 | `anchor` | No | Explicit comment-box bounds using zero-based `firstColumn`, `firstRow`, `lastColumn`, and `lastRow`. |
 

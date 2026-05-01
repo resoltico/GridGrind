@@ -4,11 +4,13 @@ import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.inspect;
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.executor.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.executor.parity.ParityPlanSupport.PendingMutation;
 import dev.erst.gridgrind.executor.parity.XlsxParityProbeRegistry.ProbeContext;
@@ -73,12 +75,13 @@ final class XlsxParitySecurityProbeGroup {
             () -> Files.exists(streamedWorkbook) && Files.size(streamedWorkbook) > 0);
     Path gridGrindWorkbook = context.derivedWorkbook("streaming-gridgrind");
     List<PendingMutation> operations = new ArrayList<>();
-    operations.add(mutate(new SheetSelector.ByName("Streamed"), new MutationAction.EnsureSheet()));
+    operations.add(
+        mutate(new SheetSelector.ByName("Streamed"), new WorkbookMutationAction.EnsureSheet()));
     for (int rowIndex = 0; rowIndex < 1_500; rowIndex++) {
       operations.add(
           mutate(
               new SheetSelector.ByName("Streamed"),
-              new MutationAction.AppendRow(
+              new CellMutationAction.AppendRow(
                   List.of(text("R" + rowIndex), new CellInput.Numeric((double) rowIndex)))));
     }
     GridGrindResponse.Success streamed =
@@ -153,7 +156,7 @@ final class XlsxParitySecurityProbeGroup {
             List.of(
                 mutate(
                     new CellSelector.ByAddress("Encrypted", "A2"),
-                    new MutationAction.SetCell(text("Preserved encryption")))));
+                    new CellMutationAction.SetCell(text("Preserved encryption")))));
     boolean poiPreservedOpens = XlsxParityOracle.encryptedWorkbookOpens(preservedOutput);
     String poiPreservedText =
         XlsxParityOracle.encryptedStringCell(preservedOutput, "Encrypted", "A2");
@@ -180,13 +183,16 @@ final class XlsxParitySecurityProbeGroup {
         XlsxParityGridGrind.writeNewWorkbook(
             authoredOutput,
             new OoxmlPersistenceSecurityInput(
-                new OoxmlEncryptionInput(XlsxParityScenarios.ENCRYPTION_PASSWORD, null), null),
+                new OoxmlEncryptionInput(
+                    XlsxParityScenarios.ENCRYPTION_PASSWORD, ExcelOoxmlEncryptionMode.AGILE),
+                null),
             (ExecutionModeInput) null,
             List.of(
-                mutate(new SheetSelector.ByName("Secure"), new MutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("Secure"), new WorkbookMutationAction.EnsureSheet()),
                 mutate(
                     new CellSelector.ByAddress("Secure", "A1"),
-                    new MutationAction.SetCell(text("Authored encrypted")))));
+                    new CellMutationAction.SetCell(text("Authored encrypted")))));
     String poiAuthoredText = XlsxParityOracle.encryptedStringCell(authoredOutput, "Secure", "A1");
     GridGrindResponse.Success authoredRead =
         XlsxParityGridGrind.readWorkbook(
@@ -341,7 +347,7 @@ final class XlsxParitySecurityProbeGroup {
             List.of(
                 mutate(
                     new CellSelector.ByAddress("Signed", "C1"),
-                    new MutationAction.SetCell(text("Touch")))));
+                    new CellMutationAction.SetCell(text("Touch")))));
     if (!(unsignedMutationResponse instanceof GridGrindResponse.Failure unsignedMutationFailure)) {
       return fail("Mutating a signed workbook without explicit re-sign unexpectedly succeeded.");
     }
@@ -363,7 +369,7 @@ final class XlsxParitySecurityProbeGroup {
             List.of(
                 mutate(
                     new CellSelector.ByAddress("Signed", "C1"),
-                    new MutationAction.SetCell(text("Re-signed")))));
+                    new CellMutationAction.SetCell(text("Re-signed")))));
     boolean poiResignedValid = XlsxParityOracle.signatureValid(resignedOutput);
     GridGrindResponse.Success resignedRead =
         XlsxParityGridGrind.readWorkbook(
@@ -393,10 +399,11 @@ final class XlsxParitySecurityProbeGroup {
                     "GridGrind parity authored signature")),
             (ExecutionModeInput) null,
             List.of(
-                mutate(new SheetSelector.ByName("Signed"), new MutationAction.EnsureSheet()),
+                mutate(
+                    new SheetSelector.ByName("Signed"), new WorkbookMutationAction.EnsureSheet()),
                 mutate(
                     new CellSelector.ByAddress("Signed", "A1"),
-                    new MutationAction.SetCell(text("Authored signed")))));
+                    new CellMutationAction.SetCell(text("Authored signed")))));
     boolean poiAuthoredValid = XlsxParityOracle.signatureValid(authoredOutput);
     GridGrindResponse.Success authoredRead =
         XlsxParityGridGrind.readWorkbook(

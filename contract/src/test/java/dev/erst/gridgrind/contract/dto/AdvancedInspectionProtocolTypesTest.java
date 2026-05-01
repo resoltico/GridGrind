@@ -58,14 +58,14 @@ class AdvancedInspectionProtocolTypesTest {
     PivotTableHealthReport health =
         new PivotTableHealthReport(
             1,
-            new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0),
+            new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0),
             List.of(
-                new GridGrindResponse.AnalysisFindingReport(
+                new GridGrindAnalysisReports.AnalysisFindingReport(
                     AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
                     AnalysisSeverity.WARNING,
                     "Pivot table name is missing",
                     "GridGrind assigned a synthetic identifier for readback.",
-                    new GridGrindResponse.AnalysisLocationReport.Sheet("Report"),
+                    new GridGrindAnalysisReports.AnalysisLocationReport.Sheet("Report"),
                     List.of("_GG_PIVOT_Report_A3"))));
     InspectionResult.PivotTableHealthResult pivotHealth =
         new InspectionResult.PivotTableHealthResult("pivot-health", health);

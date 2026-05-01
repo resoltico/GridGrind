@@ -20,7 +20,7 @@ final class GridGrindTaskDefinitionSupport {
       WorkbookPlan.WorkbookPersistence persistence) {
     return new WorkbookPlan(
         dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-        Optional.ofNullable(planId),
+        Optional.of(planId),
         source,
         persistence,
         template.execution(),

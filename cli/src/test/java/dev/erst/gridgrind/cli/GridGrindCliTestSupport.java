@@ -13,6 +13,93 @@ import java.io.IOException;
 class GridGrindCliTestSupport {
   protected GridGrindCliTestSupport() {}
 
+  protected static String requestJson(String sourceJson, String persistenceJson, String stepsJson) {
+    return requestJson(
+        sourceJson,
+        persistenceJson,
+        defaultExecutionJson(),
+        emptyFormulaEnvironmentJson(),
+        stepsJson);
+  }
+
+  protected static String requestJson(
+      String sourceJson,
+      String persistenceJson,
+      String executionJson,
+      String formulaEnvironmentJson,
+      String stepsJson) {
+    return """
+        {
+          "protocolVersion": "V1",
+          "source": %s,
+          "persistence": %s,
+          "execution": %s,
+          "formulaEnvironment": %s,
+          "steps": %s
+        }
+        """
+        .formatted(sourceJson, persistenceJson, executionJson, formulaEnvironmentJson, stepsJson);
+  }
+
+  protected static String requestJsonWithPlanId(
+      String planId,
+      String sourceJson,
+      String persistenceJson,
+      String executionJson,
+      String formulaEnvironmentJson,
+      String stepsJson) {
+    return """
+        {
+          "protocolVersion": "V1",
+          "planId": "%s",
+          "source": %s,
+          "persistence": %s,
+          "execution": %s,
+          "formulaEnvironment": %s,
+          "steps": %s
+        }
+        """
+        .formatted(
+            planId, sourceJson, persistenceJson, executionJson, formulaEnvironmentJson, stepsJson);
+  }
+
+  protected static String defaultExecutionJson() {
+    return executionJson("NORMAL", "DO_NOT_CALCULATE", false);
+  }
+
+  protected static String verboseExecutionJson() {
+    return executionJson("VERBOSE", "DO_NOT_CALCULATE", false);
+  }
+
+  protected static String evaluateAllExecutionJson() {
+    return executionJson("NORMAL", "EVALUATE_ALL", false);
+  }
+
+  protected static String executionJson(
+      String journalLevel, String calculationStrategy, boolean markRecalculateOnOpen) {
+    return """
+        {
+          "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+          "journal": { "level": "%s" },
+          "calculation": {
+            "strategy": { "type": "%s" },
+            "markRecalculateOnOpen": %s
+          }
+        }
+        """
+        .formatted(journalLevel, calculationStrategy, markRecalculateOnOpen);
+  }
+
+  protected static String emptyFormulaEnvironmentJson() {
+    return """
+        {
+          "externalWorkbooks": [],
+          "missingWorkbookPolicy": "ERROR",
+          "udfToolpacks": []
+        }
+        """;
+  }
+
   protected static ProblemContext.ParseArguments parseArgumentsContext(
       GridGrindResponse.Failure failure) {
     return assertInstanceOf(ProblemContext.ParseArguments.class, failure.problem().context());

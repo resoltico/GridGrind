@@ -6,7 +6,7 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/gridgrind-chart.xlsx"
+    "path": "generated-workbooks/gridgrind-chart.xlsx"
   },
   "steps": [
     {

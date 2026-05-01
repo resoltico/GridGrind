@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -19,22 +20,20 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the ordered step-based workbook plan contract. */
 class WorkbookPlanTest {
   @Test
-  void defaultsProtocolVersionPersistenceAndOptionalSections() {
+  void standardFactoryBuildsExplicitDefaultSectionsAndRejectsNullSteps() {
     WorkbookPlan plan =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
             List.of());
-    WorkbookPlan nullStepsPlan =
-        new WorkbookPlan(
-            new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            (List<WorkbookStep>) null);
 
     assertEquals(GridGrindProtocolVersion.current(), plan.protocolVersion());
     assertInstanceOf(WorkbookPlan.WorkbookPersistence.None.class, plan.persistence());
@@ -44,20 +43,34 @@ class WorkbookPlanTest {
     assertEquals(ExecutionJournalLevel.NORMAL, plan.journalLevel());
     assertTrue(plan.formulaEnvironment().isEmpty());
     assertEquals(List.of(), plan.steps());
-    assertEquals(List.of(), nullStepsPlan.steps());
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookPlan(
+                GridGrindProtocolVersion.current(),
+                Optional.empty(),
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                ExecutionPolicyInput.defaults(),
+                FormulaEnvironmentInput.empty(),
+                null));
   }
 
   @Test
   void copiesStepsAndRejectsDuplicateStepIds() {
     WorkbookStep authoredStep =
         new MutationStep(
-            "ensure-budget", new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet());
+            "ensure-budget",
+            new SheetSelector.ByName("Budget"),
+            new WorkbookMutationAction.EnsureSheet());
     List<WorkbookStep> steps = new ArrayList<>();
     steps.add(authoredStep);
     WorkbookPlan plan =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
             steps);
 
     steps.clear();
@@ -70,14 +83,16 @@ class WorkbookPlanTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new WorkbookPlan(
+                WorkbookPlan.standard(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicyInput.defaults(),
+                    FormulaEnvironmentInput.empty(),
                     List.of(
                         new MutationStep(
                             "duplicate",
                             new SheetSelector.ByName("Budget"),
-                            new MutationAction.EnsureSheet()),
+                            new WorkbookMutationAction.EnsureSheet()),
                         new InspectionStep(
                             "duplicate",
                             new WorkbookSelector.Current(),
@@ -109,17 +124,19 @@ class WorkbookPlanTest {
             FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
             List.of());
     WorkbookPlan plan =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            ExecutionPolicyInput.mode(
+                new ExecutionModeInput(
+                    ExecutionModeInput.ReadMode.EVENT_READ,
+                    ExecutionModeInput.WriteMode.FULL_XSSF)),
             formulaEnvironment,
             List.of(
                 new MutationStep(
                     "set-cell",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new MutationAction.SetCell(new CellInput.Text(text("Owner"))))));
+                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))))));
 
     assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, plan.executionMode().readMode());
     assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, plan.effectiveExecutionMode().readMode());
@@ -129,23 +146,24 @@ class WorkbookPlanTest {
         NullPointerException.class,
         () ->
             new WorkbookPlan(
+                GridGrindProtocolVersion.current(),
+                Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 null,
-                new FormulaEnvironmentInput(
-                    List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of()),
+                formulaEnvironment,
                 List.of()));
   }
 
   @Test
   void supportsExplicitPlanIdAndExecutionJournalPolicy() {
     WorkbookPlan plan =
-        new WorkbookPlan(
+        WorkbookPlan.identified(
             GridGrindProtocolVersion.current(),
             "budget-audit",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionPolicyInput(
+            ExecutionPolicyInput.modeAndJournal(
                 new ExecutionModeInput(
                     ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
                 new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
@@ -161,7 +179,7 @@ class WorkbookPlanTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new WorkbookPlan(
+                    WorkbookPlan.identified(
                         GridGrindProtocolVersion.current(),
                         " ",
                         new WorkbookPlan.WorkbookSource.New(),
@@ -175,23 +193,24 @@ class WorkbookPlanTest {
   @Test
   void supportsExecutionPolicyConstructorAndDefaultEffectiveExecution() {
     ExecutionPolicyInput executionPolicy =
-        new ExecutionPolicyInput(
+        ExecutionPolicyInput.modeAndJournal(
             new ExecutionModeInput(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
             new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY));
     WorkbookPlan explicitPlan =
         new WorkbookPlan(
             GridGrindProtocolVersion.current(),
+            Optional.empty(),
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             executionPolicy,
             FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan defaultPlan =
-        new WorkbookPlan(
-            GridGrindProtocolVersion.current(),
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
 
@@ -207,9 +226,10 @@ class WorkbookPlanTest {
         () ->
             new WorkbookPlan(
                 GridGrindProtocolVersion.current(),
+                Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                (ExecutionPolicyInput) null,
+                null,
                 FormulaEnvironmentInput.empty(),
                 List.of()));
     assertThrows(
@@ -217,6 +237,7 @@ class WorkbookPlanTest {
         () ->
             new WorkbookPlan(
                 GridGrindProtocolVersion.current(),
+                Optional.empty(),
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
                 executionPolicy,
@@ -227,14 +248,16 @@ class WorkbookPlanTest {
   @Test
   void separatesMutationAssertionAndInspectionViewsAndValidatesWorkbookPaths() {
     WorkbookPlan plan =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
             new WorkbookPlan.WorkbookPersistence.SaveAs("report.xlsx"),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
                     "set-cell",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new MutationAction.SetCell(new CellInput.Text(text("Owner")))),
+                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
                     "assert-cell",
                     new CellSelector.ByAddress("Budget", "A1"),
@@ -244,25 +267,27 @@ class WorkbookPlanTest {
                     new WorkbookSelector.Current(),
                     new InspectionQuery.GetWorkbookSummary())));
 
-    assertEquals(1, plan.mutationSteps().size());
-    assertEquals(1, plan.assertionSteps().size());
-    assertEquals(1, plan.inspectionSteps().size());
-    assertEquals("set-cell", plan.mutationSteps().getFirst().stepId());
-    assertEquals("assert-cell", plan.assertionSteps().getFirst().stepId());
-    assertEquals("summary", plan.inspectionSteps().getFirst().stepId());
+    assertEquals(1, plan.stepPartition().mutations().size());
+    assertEquals(1, plan.stepPartition().assertions().size());
+    assertEquals(1, plan.stepPartition().inspections().size());
+    assertEquals("set-cell", plan.stepPartition().mutations().getFirst().stepId());
+    assertEquals("assert-cell", plan.stepPartition().assertions().getFirst().stepId());
+    assertEquals("summary", plan.stepPartition().inspections().getFirst().stepId());
     assertEquals(
         "steps must not contain nulls",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new WorkbookPlan(
+                    WorkbookPlan.standard(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
+                        ExecutionPolicyInput.defaults(),
+                        FormulaEnvironmentInput.empty(),
                         java.util.Arrays.asList(
                             new MutationStep(
                                 "ok",
                                 new WorkbookSelector.Current(),
-                                new MutationAction.ClearWorkbookProtection()),
+                                new WorkbookMutationAction.ClearWorkbookProtection()),
                             null)))
             .getMessage());
     assertTrue(

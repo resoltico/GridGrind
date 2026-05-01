@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -21,11 +21,11 @@ import org.junit.jupiter.api.Test;
 /** Additional catalog-validation coverage for private and package-private helper seams. */
 class CatalogEdgeCoverageTest {
   @Test
-  void catalogAndTypeEntriesCoverDefaultsAndLookupPaths() {
+  void catalogAndTypeEntriesCoverStrictProtocolVersionAndLookupPaths() {
     TypeEntry requestType = new TypeEntry("REQUEST", "Summary", List.of());
     Catalog catalog =
         new Catalog(
-            null,
+            GridGrindProtocolVersion.current(),
             "type",
             requestType,
             new CliSurface(
@@ -76,6 +76,26 @@ class CatalogEdgeCoverageTest {
 
     assertEquals(GridGrindProtocolVersion.current(), catalog.protocolVersion());
     assertTrue(requestType.field("missing").isEmpty());
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new Catalog(
+                        null,
+                        "type",
+                        requestType,
+                        catalog.cliSurface(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of(),
+                        List.of()))
+            .getMessage());
     assertEquals(
         "name must not be null",
         assertThrows(NullPointerException.class, () -> requestType.field(null)).getMessage());
@@ -217,7 +237,7 @@ class CatalogEdgeCoverageTest {
             IllegalStateException.class,
             () ->
                 GridGrindProtocolCatalog.requireMatchingCatalogId(
-                    "BROKEN", "SET_CELL", MutationAction.SetCell.class));
+                    "BROKEN", "SET_CELL", CellMutationAction.SetCell.class));
     assertTrue(mismatch.getMessage().contains("Catalog type id mismatch"));
   }
 

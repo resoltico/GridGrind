@@ -3,12 +3,16 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.zip.ZipFile;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Tests for low-memory append-only workbook writes backed by SXSSF. */
@@ -21,10 +25,10 @@ class ExcelStreamingWorkbookWriterTest {
             .resolve("streaming workbook.xlsx");
 
     try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
-      writer.apply(new WorkbookCommand.CreateSheet("Ops"));
-      writer.apply(new WorkbookCommand.CreateSheet("Ops"));
+      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
+      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
       writer.apply(
-          new WorkbookCommand.AppendRow(
+          new WorkbookCellCommand.AppendRow(
               "Ops",
               List.of(
                   ExcelCellValue.blank(),
@@ -37,7 +41,7 @@ class ExcelStreamingWorkbookWriterTest {
                   ExcelCellValue.dateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
                   ExcelCellValue.formula("2+3"))));
       writer.apply(
-          new WorkbookCommand.AppendRow(
+          new WorkbookCellCommand.AppendRow(
               "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
       writer.markRecalculateOnOpen();
       writer.save(workbookPath);
@@ -69,13 +73,13 @@ class ExcelStreamingWorkbookWriterTest {
               SheetNotFoundException.class,
               () ->
                   writer.apply(
-                      new WorkbookCommand.AppendRow(
+                      new WorkbookCellCommand.AppendRow(
                           "Ops", List.of(ExcelCellValue.text("missing")))));
       assertEquals("Sheet does not exist: Ops", missingSheet.getMessage());
 
       for (WorkbookCommand command : WorkbookSampleFixtures.workbookCommands()) {
-        if (command instanceof WorkbookCommand.CreateSheet
-            || command instanceof WorkbookCommand.AppendRow) {
+        if (command instanceof WorkbookSheetCommand.CreateSheet
+            || command instanceof WorkbookCellCommand.AppendRow) {
           continue;
         }
 
@@ -96,18 +100,73 @@ class ExcelStreamingWorkbookWriterTest {
 
   @Test
   void workbookCommandsExposeCanonicalOperationStyleNames() {
-    assertEquals("ENSURE_SHEET", new WorkbookCommand.CreateSheet("Ops").commandType());
+    assertEquals("ENSURE_SHEET", new WorkbookSheetCommand.CreateSheet("Ops").commandType());
     assertEquals(
         "APPEND_ROW",
-        new WorkbookCommand.AppendRow("Ops", List.of(ExcelCellValue.text("value"))).commandType());
+        new WorkbookCellCommand.AppendRow("Ops", List.of(ExcelCellValue.text("value")))
+            .commandType());
     assertEquals(
         "SET_SHEET_PRESENTATION",
-        new WorkbookCommand.SetSheetPresentation("Ops", ExcelSheetPresentation.defaults())
+        new WorkbookLayoutCommand.SetSheetPresentation("Ops", ExcelSheetPresentation.defaults())
             .commandType());
     assertEquals(
         "SET_WORKBOOK_PROTECTION",
-        new WorkbookCommand.SetWorkbookProtection(
+        new WorkbookSheetCommand.SetWorkbookProtection(
                 new ExcelWorkbookProtectionSettings(true, false, false, null, null))
             .commandType());
+  }
+
+  @Test
+  void streamingWriterUsesSharedStringsToAvoidInlineStringPackageInflation() throws IOException {
+    Path tempDirectory = ExcelTempFiles.createManagedTempDirectory("gridgrind-streaming-size-");
+    Path gridGrindWorkbookPath = tempDirectory.resolve("gridgrind-streaming.xlsx");
+    Path inlineWorkbookPath = tempDirectory.resolve("poi-inline-streaming.xlsx");
+
+    List<ExcelCellValue> repeatedValues =
+        List.of(
+            ExcelCellValue.text("Quarterly revenue forecast"),
+            ExcelCellValue.text("North"),
+            ExcelCellValue.text("Approved"),
+            ExcelCellValue.text("Quarterly revenue forecast"),
+            ExcelCellValue.text("North"),
+            ExcelCellValue.text("Approved"));
+
+    try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
+      WorkbookCellCommand.AppendRow repeatedAppendRow =
+          new WorkbookCellCommand.AppendRow("Ops", repeatedValues);
+      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
+      for (int rowIndex = 0; rowIndex < 4_000; rowIndex++) {
+        writer.apply(repeatedAppendRow);
+      }
+      writer.save(gridGrindWorkbookPath);
+    }
+
+    try (SXSSFWorkbook workbook = new SXSSFWorkbook(new XSSFWorkbook(), 100, true, false)) {
+      var sheet = workbook.createSheet("Ops");
+      for (int rowIndex = 0; rowIndex < 4_000; rowIndex++) {
+        var row = sheet.createRow(rowIndex);
+        for (int columnIndex = 0; columnIndex < repeatedValues.size(); columnIndex++) {
+          row.createCell(columnIndex)
+              .setCellValue(((ExcelCellValue.TextValue) repeatedValues.get(columnIndex)).value());
+        }
+      }
+      try (OutputStream outputStream = java.nio.file.Files.newOutputStream(inlineWorkbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (ZipFile archive = new ZipFile(gridGrindWorkbookPath.toFile())) {
+      assertNotNull(archive.getEntry("xl/sharedStrings.xml"));
+    }
+
+    long gridGrindWorkbookSize = java.nio.file.Files.size(gridGrindWorkbookPath);
+    long inlineWorkbookSize = java.nio.file.Files.size(inlineWorkbookPath);
+    assertTrue(
+        gridGrindWorkbookSize < inlineWorkbookSize,
+        () ->
+            "shared-strings streaming output should be smaller than inline-string SXSSF output: "
+                + gridGrindWorkbookSize
+                + " vs "
+                + inlineWorkbookSize);
   }
 }

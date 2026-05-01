@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
@@ -14,10 +14,14 @@ import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
@@ -46,18 +50,64 @@ import tools.jackson.databind.exc.UnrecognizedPropertyException;
 @SuppressWarnings("NotJavadoc")
 class GridGrindJsonTest {
   @Test
-  void defaultsRequestProtocolVersionDuringJsonRead() throws IOException {
+  void readsRequestsFromAnExplicitTopLevelProtocolEnvelope() throws IOException {
     WorkbookPlan plan =
         GridGrindJson.readRequest(
             """
             {
+              "protocolVersion": "V1",
               "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
               "steps": []
             }
             """
                 .getBytes(StandardCharsets.UTF_8));
 
     assertEquals(GridGrindProtocolVersion.V1, plan.protocolVersion());
+  }
+
+  @Test
+  void rejectsRequestsThatOmitRequiredTopLevelSections() {
+    InvalidRequestException exception =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" }
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(exception.getMessage().contains("protocolVersion"));
+  }
+
+  @Test
+  void rejectsNonObjectTopLevelPayloadsForWorkbookPlans() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJsonCodecSupport.readValue(
+                    "[]".getBytes(StandardCharsets.UTF_8),
+                    GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+                    WorkbookPlan.class,
+                    GridGrindJsonMessageSupport::invalidRequestPayload));
+    assertEquals("JSON value has the wrong shape for this field", exception.getMessage());
   }
 
   @Test
@@ -102,17 +152,18 @@ class GridGrindJsonTest {
   @SuppressWarnings("StringConcatToTextBlock")
   void roundTripsRequestsResponsesAndCatalogs() throws IOException {
     WorkbookPlan request =
-        new WorkbookPlan(
+        WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
+            ExecutionPolicyInput.mode(
+                new ExecutionModeInput(
+                    ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF)),
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
                     "set-owner",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new MutationAction.SetCell(new CellInput.Text(text("Owner")))),
+                    new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))),
                 new AssertionStep(
                     "assert-owner",
                     new CellSelector.ByAddress("Budget", "A1"),
@@ -124,13 +175,13 @@ class GridGrindJsonTest {
     GridGrindResponse response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
             List.of(new AssertionResult("assert-owner", "EXPECT_CELL_VALUE")),
             List.of(
                 new InspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
 
@@ -146,7 +197,7 @@ class GridGrindJsonTest {
     GridGrindResponse resolveInputsFailure =
         GridGrindResponses.failure(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.Problem(
+            new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .category(),
@@ -157,16 +208,16 @@ class GridGrindJsonTest {
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
                     .resolution(),
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs(
-                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                        "NEW", "NONE"),
-                    dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
-                        "cell text", "missing.txt")),
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                        .known("NEW", "NONE"),
+                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
+                        .path("cell text", "missing.txt")),
                 java.util.Optional.empty(),
                 List.of()));
     GridGrindResponse calculationFailure =
         GridGrindResponses.failure(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.Problem(
+            new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.category(),
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.recovery(),
@@ -174,10 +225,10 @@ class GridGrindJsonTest {
                 "bad formula",
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.resolution(),
                 new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteCalculation.Preflight(
-                    dev.erst.gridgrind.contract.dto.ProblemContext.RequestShape.known(
-                        "EXISTING", "SAVE_AS"),
-                    dev.erst.gridgrind.contract.dto.ProblemContext.ProblemLocation.formulaCell(
-                        "Ops", "B1", "SUM(")),
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
+                        .known("EXISTING", "SAVE_AS"),
+                    dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation
+                        .formulaCell("Ops", "B1", "SUM(")),
                 java.util.Optional.empty(),
                 List.of()));
 
@@ -200,11 +251,21 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
+              "protocolVersion": "V1",
               "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
               "execution": {
+                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
                 "calculation": {
-                  "strategy": { "type": "EVALUATE_ALL" }
+                  "strategy": { "type": "EVALUATE_ALL" },
+                  "markRecalculateOnOpen": false
                 }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
               },
               "steps": []
             }
@@ -229,7 +290,22 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
+              "protocolVersion": "V1",
               "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
               "steps": [
                 {
                   "stepId": "set-owner",
@@ -272,7 +348,22 @@ class GridGrindJsonTest {
         new TrackingInputStream(
             """
             {
+              "protocolVersion": "V1",
               "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "journal": { "level": "NORMAL" },
+                "calculation": {
+                  "strategy": { "type": "DO_NOT_CALCULATE" },
+                  "markRecalculateOnOpen": false
+                }
+              },
+              "formulaEnvironment": {
+                "externalWorkbooks": [],
+                "missingWorkbookPolicy": "ERROR",
+                "udfToolpacks": []
+              },
               "steps": []
             }
             """
@@ -490,6 +581,82 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void rejectsDataValidationPayloadsThatOmitExplicitValidationBooleans() {
+    InvalidRequestException missingAllowBlank =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "validation-missing-allowBlank",
+                          "target": {
+                            "type": "RANGE_BY_RANGE",
+                            "sheetName": "Intake",
+                            "range": "A2:A20"
+                          },
+                          "action": {
+                            "type": "SET_DATA_VALIDATION",
+                            "validation": {
+                              "rule": {
+                                "type": "EXPLICIT_LIST",
+                                "values": [ "Queued" ]
+                              },
+                              "suppressDropDownArrow": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException missingSuppressDropDownArrow =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "validation-missing-suppressDropDownArrow",
+                          "target": {
+                            "type": "RANGE_BY_RANGE",
+                            "sheetName": "Intake",
+                            "range": "A2:A20"
+                          },
+                          "action": {
+                            "type": "SET_DATA_VALIDATION",
+                            "validation": {
+                              "rule": {
+                                "type": "EXPLICIT_LIST",
+                                "values": [ "Queued" ]
+                              },
+                              "allowBlank": false
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Missing required field 'allowBlank'", missingAllowBlank.getMessage());
+    assertEquals(
+        "steps[0].action.validation",
+        missingAllowBlank.jsonPath(),
+        "missing fields must point at the validation object");
+    assertEquals(
+        "Missing required field 'suppressDropDownArrow'",
+        missingSuppressDropDownArrow.getMessage());
+    assertEquals("steps[0].action.validation", missingSuppressDropDownArrow.jsonPath());
+  }
+
+  @Test
   void validatesNullArgumentsAndDoesNotCloseOutputStreams() throws IOException {
     assertEquals(
         "inputStream must not be null",
@@ -506,7 +673,7 @@ class GridGrindJsonTest {
                 NullPointerException.class, () -> GridGrindJson.writeProtocolCatalogBytes(null))
             .getMessage());
     assertEquals(
-        "entry must not be null",
+        "value must not be null",
         assertThrows(
                 NullPointerException.class,
                 () -> GridGrindJson.writeTypeEntry(new ByteArrayOutputStream(), null))
@@ -515,9 +682,11 @@ class GridGrindJsonTest {
     try (TrackingOutputStream outputStream = new TrackingOutputStream()) {
       GridGrindJson.writeRequest(
           outputStream,
-          new WorkbookPlan(
+          WorkbookPlan.standard(
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.None(),
+              dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+              dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
               List.of()));
       assertFalse(outputStream.closed);
     }
@@ -563,9 +732,9 @@ class GridGrindJsonTest {
         assertThrows(
             InvalidJsonException.class,
             () -> GridGrindJson.readResponse("{".getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestShapeException invalidCatalog =
+    InvalidRequestException invalidCatalog =
         assertThrows(
-            InvalidRequestShapeException.class,
+            InvalidRequestException.class,
             () ->
                 GridGrindJson.readProtocolCatalog(
                     """

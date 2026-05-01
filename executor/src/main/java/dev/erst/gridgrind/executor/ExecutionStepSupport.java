@@ -65,7 +65,7 @@ final class ExecutionStepSupport {
       WorkbookPlan request, int stepIndex, WorkbookStep step, Exception exception) {
     return new dev.erst.gridgrind.contract.dto.ProblemContext.ExecuteStep(
         ExecutionRequestPaths.requestShape(request),
-        new dev.erst.gridgrind.contract.dto.ProblemContext.StepReference(
+        new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference(
             stepIndex, step.stepId(), step.stepKind(), ExecutionStepKinds.stepType(step)),
         ExecutionDiagnosticFields.locationFor(step, exception));
   }
@@ -76,11 +76,12 @@ final class ExecutionStepSupport {
         ExecutionRequestPaths.requestShape(request),
         exception instanceof InputSourceException inputSourceException
             ? inputSourceException.inputPath() != null
-                ? dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.path(
-                    inputSourceException.inputKind(), inputSourceException.inputPath())
-                : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.kind(
-                    inputSourceException.inputKind())
-            : dev.erst.gridgrind.contract.dto.ProblemContext.InputReference.unknown());
+                ? dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
+                    .path(inputSourceException.inputKind(), inputSourceException.inputPath())
+                : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
+                    .kind(inputSourceException.inputKind())
+            : dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference
+                .unknown());
   }
 
   InspectionResult executeInspectionStep(

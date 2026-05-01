@@ -3,13 +3,16 @@ package dev.erst.gridgrind.executor;
 import static dev.erst.gridgrind.executor.ExecutorTestPlanSupport.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -141,7 +144,7 @@ class OoxmlSecurityRequestExecutorTest {
                         mutations(
                             mutate(
                                 new CellSelector.ByAddress("Signed", "C1"),
-                                new MutationAction.SetCell(textCell("Touch")))),
+                                new CellMutationAction.SetCell(textCell("Touch")))),
                         inspections())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
@@ -166,7 +169,8 @@ class OoxmlSecurityRequestExecutorTest {
                             securedWorkbook.toString(),
                             new OoxmlPersistenceSecurityInput(
                                 new OoxmlEncryptionInput(
-                                    OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD, null),
+                                    OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD,
+                                    ExcelOoxmlEncryptionMode.AGILE),
                                 new OoxmlSignatureInput(
                                     signingMaterial.pkcs12Path().toString(),
                                     signingMaterial.keystorePassword(),
@@ -178,10 +182,10 @@ class OoxmlSecurityRequestExecutorTest {
                         mutations(
                             mutate(
                                 new SheetSelector.ByName("Secure"),
-                                new MutationAction.EnsureSheet()),
+                                new WorkbookMutationAction.EnsureSheet()),
                             mutate(
                                 new CellSelector.ByAddress("Secure", "A1"),
-                                new MutationAction.SetCell(textCell("Secured")))),
+                                new CellMutationAction.SetCell(textCell("Secured")))),
                         inspections())));
 
     assertEquals(securedWorkbook.toAbsolutePath().toString(), savedPath(persisted));
@@ -252,7 +256,7 @@ class OoxmlSecurityRequestExecutorTest {
                         List.of(
                             mutate(
                                 new SheetSelector.ByName("Secure"),
-                                new MutationAction.EnsureSheet())),
+                                new WorkbookMutationAction.EnsureSheet())),
                         List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION, failure.problem().code());
@@ -337,10 +341,11 @@ class OoxmlSecurityRequestExecutorTest {
 
   private static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
-      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
-      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten ->
+      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
+          savedAs.executionPath();
+      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
           overwritten.executionPath();
-      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("Expected the request to persist a workbook");
     };
   }

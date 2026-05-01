@@ -26,9 +26,9 @@ class ExcelSheetStateControllerTest {
 
       controller.setSelectedSheets(workbook, List.of("Beta"));
 
-      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookReadResult.WorkbookSummary.WithSheets.class,
+              WorkbookCoreResult.WorkbookSummary.WithSheets.class,
               controller.summarizeWorkbook(workbook));
       assertEquals("Beta", summary.activeSheetName());
       assertEquals(List.of("Beta"), summary.selectedSheetNames());
@@ -51,9 +51,9 @@ class ExcelSheetStateControllerTest {
 
       controller.setSelectedSheets(workbook, List.of("Beta"));
 
-      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+      WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
-              WorkbookReadResult.WorkbookSummary.WithSheets.class,
+              WorkbookCoreResult.WorkbookSummary.WithSheets.class,
               controller.summarizeWorkbook(workbook));
       assertEquals("Beta", summary.activeSheetName());
       assertEquals(List.of("Beta"), summary.selectedSheetNames());

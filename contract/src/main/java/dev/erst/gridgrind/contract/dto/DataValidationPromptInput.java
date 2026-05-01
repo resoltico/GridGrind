@@ -1,15 +1,16 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
 
 /** Prompt-box configuration attached to one data-validation rule. */
 public record DataValidationPromptInput(
-    TextSourceInput title, TextSourceInput text, Boolean showPromptBox) {
+    TextSourceInput title, TextSourceInput text, boolean showPromptBox) {
   public DataValidationPromptInput {
     title = requireNonBlankSource(title, "title");
     text = requireNonBlankSource(text, "text");
-    showPromptBox = showPromptBox == null || showPromptBox;
   }
 
   private static TextSourceInput requireNonBlankSource(TextSourceInput value, String fieldName) {
@@ -18,5 +19,17 @@ public record DataValidationPromptInput(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
+  }
+
+  /** Creates a prompt-box payload while defaulting prompt visibility to Excel's enabled state. */
+  @JsonCreator
+  public DataValidationPromptInput(
+      @JsonProperty("title") TextSourceInput title,
+      @JsonProperty("text") TextSourceInput text,
+      @JsonProperty("showPromptBox") Boolean showPromptBox) {
+    this(
+        title,
+        text,
+        Objects.requireNonNull(showPromptBox, "showPromptBox must not be null").booleanValue());
   }
 }

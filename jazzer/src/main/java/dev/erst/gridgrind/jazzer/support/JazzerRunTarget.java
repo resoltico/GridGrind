@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -54,7 +55,8 @@ public record JazzerRunTarget(
     Map<String, JazzerRunTarget> runTargetsByKey = JazzerTopology.registry().runTargetsByKey();
     JazzerRunTarget runTarget = runTargetsByKey.get(key);
     if (runTarget == null) {
-      throw new IllegalArgumentException("Unknown Jazzer run target: " + key);
+      throw new IllegalArgumentException(
+          "Unknown Jazzer target: " + key + ". Valid targets: " + String.join(", ", keys()));
     }
     return runTarget;
   }
@@ -94,6 +96,11 @@ public record JazzerRunTarget(
   /** Returns the active xlsx-roundtrip fuzz target. */
   public static JazzerRunTarget xlsxRoundTrip() {
     return fromKey("xlsx-roundtrip");
+  }
+
+  /** Returns the stable external keys that users may pass to the operator surface. */
+  public static List<String> keys() {
+    return Arrays.stream(values()).map(JazzerRunTarget::key).toList();
   }
 
   private static String requireNonBlank(String value, String fieldName) {

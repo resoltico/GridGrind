@@ -7,8 +7,8 @@ import java.util.Objects;
 /** Table-health analysis for one selected table set. */
 public record TableHealthReport(
     int checkedTableCount,
-    GridGrindResponse.AnalysisSummaryReport summary,
-    List<GridGrindResponse.AnalysisFindingReport> findings) {
+    GridGrindAnalysisReports.AnalysisSummaryReport summary,
+    List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
   public TableHealthReport {
     if (checkedTableCount < 0) {
       throw new IllegalArgumentException("checkedTableCount must not be negative");

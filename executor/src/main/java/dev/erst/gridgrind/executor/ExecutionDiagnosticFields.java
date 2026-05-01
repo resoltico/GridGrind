@@ -3,6 +3,7 @@ package dev.erst.gridgrind.executor;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
@@ -17,7 +18,7 @@ import java.util.Optional;
 final class ExecutionDiagnosticFields {
   private ExecutionDiagnosticFields() {}
 
-  static ProblemContext.ProblemLocation locationFor(WorkbookStep step) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(WorkbookStep step) {
     return switch (step) {
       case MutationStep mutationStep ->
           ProblemContext.mergeLocation(
@@ -29,91 +30,97 @@ final class ExecutionDiagnosticFields {
     };
   }
 
-  static ProblemContext.ProblemLocation locationFor(WorkbookStep step, Exception exception) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(
+      WorkbookStep step, Exception exception) {
     return ProblemContext.mergeLocation(locationFor(step), locationFor(exception));
   }
 
-  static ProblemContext.ProblemLocation locationFor(Exception exception) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(Exception exception) {
     Optional<String> namedRange = ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception);
     Optional<String> sheetName = ExecutionExceptionDiagnosticFields.sheetNameFor(exception);
     Optional<String> address = ExecutionExceptionDiagnosticFields.addressFor(exception);
     Optional<String> range = ExecutionExceptionDiagnosticFields.rangeFor(exception);
     Optional<String> formula = ExecutionExceptionDiagnosticFields.formulaFor(exception);
     if (namedRange.isPresent() && sheetName.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
           sheetName.orElseThrow(), namedRange.orElseThrow());
     }
     if (namedRange.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(namedRange.orElseThrow());
     }
     if (sheetName.isPresent() && address.isPresent() && formula.isPresent()) {
-      return ProblemContext.ProblemLocation.formulaCell(
+      return ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
           sheetName.orElseThrow(), address.orElseThrow(), formula.orElseThrow());
     }
     if (sheetName.isPresent() && address.isPresent()) {
-      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.cell(
+          sheetName.orElseThrow(), address.orElseThrow());
     }
     if (sheetName.isPresent()) {
-      return ProblemContext.ProblemLocation.sheet(sheetName.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.sheet(sheetName.orElseThrow());
     }
     if (address.isPresent()) {
-      return ProblemContext.ProblemLocation.address(address.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.address(address.orElseThrow());
     }
     if (range.isPresent()) {
-      return ProblemContext.ProblemLocation.range(range.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.range(range.orElseThrow());
     }
-    return ProblemContext.ProblemLocation.unknown();
+    return ProblemContextWorkbookSurfaces.ProblemLocation.unknown();
   }
 
-  static ProblemContext.ProblemLocation locationFor(MutationAction action) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(MutationAction action) {
     Optional<String> namedRange = ExecutionActionDiagnosticFields.namedRangeNameFor(action);
     Optional<String> sheetName = ExecutionActionDiagnosticFields.sheetNameFor(action);
     Optional<String> address = ExecutionActionDiagnosticFields.addressFor(action);
     Optional<String> range = ExecutionActionDiagnosticFields.rangeFor(action);
     if (namedRange.isPresent() && sheetName.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
           sheetName.orElseThrow(), namedRange.orElseThrow());
     }
     if (namedRange.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(namedRange.orElseThrow());
     }
     if (sheetName.isPresent() && address.isPresent()) {
-      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.cell(
+          sheetName.orElseThrow(), address.orElseThrow());
     }
     if (range.isPresent()) {
       return sheetName.isPresent()
-          ? ProblemContext.ProblemLocation.range(sheetName.orElseThrow(), range.orElseThrow())
-          : ProblemContext.ProblemLocation.range(range.orElseThrow());
+          ? ProblemContextWorkbookSurfaces.ProblemLocation.range(
+              sheetName.orElseThrow(), range.orElseThrow())
+          : ProblemContextWorkbookSurfaces.ProblemLocation.range(range.orElseThrow());
     }
-    return ProblemContext.ProblemLocation.unknown();
+    return ProblemContextWorkbookSurfaces.ProblemLocation.unknown();
   }
 
-  static ProblemContext.ProblemLocation locationFor(Assertion assertion) {
-    return ProblemContext.ProblemLocation.unknown();
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(Assertion assertion) {
+    return ProblemContextWorkbookSurfaces.ProblemLocation.unknown();
   }
 
-  static ProblemContext.ProblemLocation locationFor(Selector selector) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation locationFor(Selector selector) {
     Optional<String> namedRange = ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector);
     Optional<String> sheetName = ExecutionSelectorDiagnosticFields.sheetNameFor(selector);
     Optional<String> address = ExecutionSelectorDiagnosticFields.addressFor(selector);
     Optional<String> range = ExecutionSelectorDiagnosticFields.rangeFor(selector);
     if (namedRange.isPresent() && sheetName.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(
           sheetName.orElseThrow(), namedRange.orElseThrow());
     }
     if (namedRange.isPresent()) {
-      return ProblemContext.ProblemLocation.namedRange(namedRange.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.namedRange(namedRange.orElseThrow());
     }
     if (sheetName.isPresent() && address.isPresent()) {
-      return ProblemContext.ProblemLocation.cell(sheetName.orElseThrow(), address.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.cell(
+          sheetName.orElseThrow(), address.orElseThrow());
     }
     if (sheetName.isPresent() && range.isPresent()) {
-      return ProblemContext.ProblemLocation.range(sheetName.orElseThrow(), range.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.range(
+          sheetName.orElseThrow(), range.orElseThrow());
     }
     if (sheetName.isPresent()) {
-      return ProblemContext.ProblemLocation.sheet(sheetName.orElseThrow());
+      return ProblemContextWorkbookSurfaces.ProblemLocation.sheet(sheetName.orElseThrow());
     }
-    return ProblemContext.ProblemLocation.unknown();
+    return ProblemContextWorkbookSurfaces.ProblemLocation.unknown();
   }
 
   static Optional<String> sheetNameFor(WorkbookStep step) {

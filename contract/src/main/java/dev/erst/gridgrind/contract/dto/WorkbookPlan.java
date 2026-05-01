@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -24,21 +22,17 @@ public record WorkbookPlan(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
-    @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = ExecutionPolicyInput.DefaultFilter.class)
-        ExecutionPolicyInput execution,
-    @JsonInclude(
-            value = JsonInclude.Include.CUSTOM,
-            valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
-        FormulaEnvironmentInput formulaEnvironment,
+    ExecutionPolicyInput execution,
+    FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookStep> steps) {
+  /** Normalizes one authored plan instance. */
   public WorkbookPlan {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    planId = Objects.requireNonNullElseGet(planId, Optional::empty);
-    if (planId.isPresent()) {
-      planId = Optional.of(requireNonBlank(planId.orElseThrow(), "planId"));
+    Optional<String> normalizedPlanId = Objects.requireNonNull(planId, "planId must not be null");
+    if (normalizedPlanId.isPresent()) {
+      normalizedPlanId = Optional.of(requireNonBlank(normalizedPlanId.orElseThrow(), "planId"));
     }
+    planId = normalizedPlanId;
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
     Objects.requireNonNull(execution, "execution must not be null");
@@ -46,36 +40,35 @@ public record WorkbookPlan(
     steps = copySteps(steps);
   }
 
-  @JsonCreator
-  static WorkbookPlan create(
-      @JsonProperty("protocolVersion") GridGrindProtocolVersion protocolVersion,
-      @JsonProperty("planId") Optional<String> planId,
-      @JsonProperty("source") WorkbookSource source,
-      @JsonProperty("persistence") WorkbookPersistence persistence,
-      @JsonProperty("execution") ExecutionPolicyInput execution,
-      @JsonProperty("formulaEnvironment") FormulaEnvironmentInput formulaEnvironment,
-      @JsonProperty("steps") List<WorkbookStep> steps) {
+  /**
+   * Creates one canonical plan on the current protocol version with explicit execution settings.
+   */
+  public static WorkbookPlan standard(
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      ExecutionPolicyInput execution,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookStep> steps) {
     return new WorkbookPlan(
-        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion,
-        planId,
+        GridGrindProtocolVersion.current(),
+        Optional.empty(),
         source,
-        persistence == null ? new WorkbookPersistence.None() : persistence,
-        execution == null ? ExecutionPolicyInput.defaults() : execution,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        persistence,
+        execution,
+        formulaEnvironment,
         steps);
   }
 
-  /** Creates a plan with one concrete plan id string when external callers already have it. */
-  public WorkbookPlan(
-      GridGrindProtocolVersion protocolVersion,
+  /** Creates one caller-identified canonical plan on the current protocol version. */
+  public static WorkbookPlan identified(
       String planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookStep> steps) {
-    this(
-        protocolVersion,
+    return new WorkbookPlan(
+        GridGrindProtocolVersion.current(),
         Optional.of(requireNonBlank(planId, "planId")),
         source,
         persistence,
@@ -84,134 +77,22 @@ public record WorkbookPlan(
         steps);
   }
 
-  /** Creates a plan with one concrete plan id string and default execution settings. */
-  public WorkbookPlan(
-      GridGrindProtocolVersion protocolVersion,
-      String planId,
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      List<WorkbookStep> steps) {
-    this(
-        protocolVersion,
-        Optional.of(requireNonBlank(planId, "planId")),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
-        steps);
-  }
-
-  /** Creates a plan with one concrete plan id string and the given execution settings. */
-  public WorkbookPlan(
+  /** Creates one caller-identified canonical plan on an explicit protocol version. */
+  public static WorkbookPlan identified(
       GridGrindProtocolVersion protocolVersion,
       String planId,
       WorkbookSource source,
       WorkbookPersistence persistence,
       ExecutionPolicyInput execution,
+      FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookStep> steps) {
-    this(
+    return new WorkbookPlan(
         protocolVersion,
         Optional.of(requireNonBlank(planId, "planId")),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        Objects.requireNonNull(execution, "execution must not be null"),
-        FormulaEnvironmentInput.empty(),
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and an explicit execution policy. */
-  public WorkbookPlan(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      ExecutionPolicyInput execution,
-      FormulaEnvironmentInput formulaEnvironment,
-      List<WorkbookStep> steps) {
-    this(
-        protocolVersion,
-        Optional.empty(),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        Objects.requireNonNull(execution, "execution must not be null"),
-        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and the given parameters. */
-  public WorkbookPlan(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
-      List<WorkbookStep> steps) {
-    this(
-        protocolVersion,
-        Optional.empty(),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        ExecutionPolicyInput.defaults(),
-        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and the given parameters. */
-  public WorkbookPlan(
-      GridGrindProtocolVersion protocolVersion,
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
-      List<WorkbookStep> steps) {
-    this(
-        protocolVersion,
-        Optional.empty(),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        new ExecutionPolicyInput(
-            Objects.requireNonNull(executionMode, "executionMode must not be null")),
-        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and the given parameters. */
-  public WorkbookPlan(
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      ExecutionModeInput executionMode,
-      FormulaEnvironmentInput formulaEnvironment,
-      List<WorkbookStep> steps) {
-    this(
-        GridGrindProtocolVersion.current(),
         source,
         persistence,
-        executionMode,
+        execution,
         formulaEnvironment,
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and the given parameters. */
-  public WorkbookPlan(
-      WorkbookSource source,
-      WorkbookPersistence persistence,
-      FormulaEnvironmentInput formulaEnvironment,
-      List<WorkbookStep> steps) {
-    this(
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        ExecutionModeInput.defaults(),
-        Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null"),
-        steps);
-  }
-
-  /** Creates a plan with the current protocol version and no explicit formula environment. */
-  public WorkbookPlan(
-      WorkbookSource source, WorkbookPersistence persistence, List<WorkbookStep> steps) {
-    this(
-        GridGrindProtocolVersion.current(),
-        Objects.requireNonNull(source, "source must not be null"),
-        Objects.requireNonNull(persistence, "persistence must not be null"),
-        ExecutionPolicyInput.defaults(),
-        FormulaEnvironmentInput.empty(),
         steps);
   }
 
@@ -240,28 +121,36 @@ public record WorkbookPlan(
     return effectiveExecution().effectiveCalculation();
   }
 
-  /** Returns the mutation steps in authored order. */
-  public List<MutationStep> mutationSteps() {
-    return steps.stream()
-        .filter(MutationStep.class::isInstance)
-        .map(MutationStep.class::cast)
-        .toList();
+  /** Returns the authored steps partitioned by family in authored order. */
+  public StepPartition stepPartition() {
+    return partitionSteps(steps);
   }
 
-  /** Returns the assertion steps in authored order. */
-  public List<AssertionStep> assertionSteps() {
-    return steps.stream()
-        .filter(AssertionStep.class::isInstance)
-        .map(AssertionStep.class::cast)
-        .toList();
+  /** One authored-step partition with each family preserved in original authored order. */
+  public record StepPartition(
+      List<MutationStep> mutations,
+      List<AssertionStep> assertions,
+      List<InspectionStep> inspections) {
+    public StepPartition {
+      mutations = List.copyOf(Objects.requireNonNull(mutations, "mutations must not be null"));
+      assertions = List.copyOf(Objects.requireNonNull(assertions, "assertions must not be null"));
+      inspections =
+          List.copyOf(Objects.requireNonNull(inspections, "inspections must not be null"));
+    }
   }
 
-  /** Returns the inspection steps in authored order. */
-  public List<InspectionStep> inspectionSteps() {
-    return steps.stream()
-        .filter(InspectionStep.class::isInstance)
-        .map(InspectionStep.class::cast)
-        .toList();
+  private static StepPartition partitionSteps(List<WorkbookStep> steps) {
+    List<MutationStep> mutationSteps = new java.util.ArrayList<>();
+    List<AssertionStep> assertionSteps = new java.util.ArrayList<>();
+    List<InspectionStep> inspectionSteps = new java.util.ArrayList<>();
+    for (WorkbookStep step : steps) {
+      switch (step) {
+        case MutationStep mutationStep -> mutationSteps.add(mutationStep);
+        case AssertionStep assertionStep -> assertionSteps.add(assertionStep);
+        case InspectionStep inspectionStep -> inspectionSteps.add(inspectionStep);
+      }
+    }
+    return new StepPartition(mutationSteps, assertionSteps, inspectionSteps);
   }
 
   /** Describes where the input workbook comes from. */
@@ -353,9 +242,7 @@ public record WorkbookPlan(
   }
 
   private static List<WorkbookStep> copySteps(List<WorkbookStep> steps) {
-    if (steps == null) {
-      return List.of();
-    }
+    Objects.requireNonNull(steps, "steps must not be null");
     List<WorkbookStep> copy = new java.util.ArrayList<>(steps.size());
     Set<String> seen = new HashSet<>();
     for (WorkbookStep step : steps) {
@@ -389,12 +276,12 @@ public record WorkbookPlan(
   private static Optional<OoxmlOpenSecurityInput> normalizeOpenSecurity(
       Optional<OoxmlOpenSecurityInput> security) {
     Optional<OoxmlOpenSecurityInput> normalized =
-        Objects.requireNonNullElseGet(security, Optional::empty);
+        Objects.requireNonNull(security, "security must not be null");
     return normalized.filter(value -> !value.isEmpty());
   }
 
   private static Optional<OoxmlPersistenceSecurityInput> normalizePersistenceSecurity(
       Optional<OoxmlPersistenceSecurityInput> security) {
-    return Objects.requireNonNullElseGet(security, Optional::empty);
+    return Objects.requireNonNull(security, "security must not be null");
   }
 }

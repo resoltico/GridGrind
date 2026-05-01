@@ -16,9 +16,8 @@ public sealed interface SheetCopyPosition
   record AppendAtEnd() implements SheetCopyPosition {}
 
   /** Places the copied sheet at the requested zero-based workbook position. */
-  record AtIndex(Integer targetIndex) implements SheetCopyPosition {
+  record AtIndex(int targetIndex) implements SheetCopyPosition {
     public AtIndex {
-      java.util.Objects.requireNonNull(targetIndex, "targetIndex must not be null");
       if (targetIndex < 0) {
         throw new IllegalArgumentException("targetIndex must be >= 0");
       }

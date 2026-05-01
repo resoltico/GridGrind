@@ -10,19 +10,28 @@ import org.junit.jupiter.api.Test;
 class ProblemContextCoverageTest {
   @Test
   void foundationalVariantsExposeOptionalFactsWithoutNullPadding() {
-    ProblemContext.RequestShape unknownShape = ProblemContext.RequestShape.unknown();
-    ProblemContext.RequestInput standardInput = ProblemContext.RequestInput.standardInput();
-    ProblemContext.ResponseOutput standardOutput = ProblemContext.ResponseOutput.standardOutput();
-    ProblemContext.JsonLocation unavailable = ProblemContext.JsonLocation.unavailable();
-    ProblemContext.JsonLocation lineColumn = ProblemContext.JsonLocation.lineColumn(4, 12);
-    ProblemContext.CliArgument unknownArgument = ProblemContext.CliArgument.unknown();
-    ProblemContext.InputReference unknownInput = ProblemContext.InputReference.unknown();
-    ProblemContext.InputReference kindInput = ProblemContext.InputReference.kind("cell text");
-    ProblemContext.WorkbookReference newWorkbook = ProblemContext.WorkbookReference.newWorkbook();
-    ProblemContext.PersistenceReference overwrite =
-        ProblemContext.PersistenceReference.overwriteSource("/tmp/source.xlsx");
-    ProblemContext.PersistenceReference saveAs =
-        ProblemContext.PersistenceReference.saveAs("/tmp/output.xlsx");
+    ProblemContextRequestSurfaces.RequestShape unknownShape =
+        ProblemContextRequestSurfaces.RequestShape.unknown();
+    ProblemContextRequestSurfaces.RequestInput standardInput =
+        ProblemContextRequestSurfaces.RequestInput.standardInput();
+    ProblemContextRequestSurfaces.ResponseOutput standardOutput =
+        ProblemContextRequestSurfaces.ResponseOutput.standardOutput();
+    ProblemContextRequestSurfaces.JsonLocation unavailable =
+        ProblemContextRequestSurfaces.JsonLocation.unavailable();
+    ProblemContextRequestSurfaces.JsonLocation lineColumn =
+        ProblemContextRequestSurfaces.JsonLocation.lineColumn(4, 12);
+    ProblemContextRequestSurfaces.CliArgument unknownArgument =
+        ProblemContextRequestSurfaces.CliArgument.unknown();
+    ProblemContextWorkbookSurfaces.InputReference unknownInput =
+        ProblemContextWorkbookSurfaces.InputReference.unknown();
+    ProblemContextWorkbookSurfaces.InputReference kindInput =
+        ProblemContextWorkbookSurfaces.InputReference.kind("cell text");
+    ProblemContextWorkbookSurfaces.WorkbookReference newWorkbook =
+        ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook();
+    ProblemContextWorkbookSurfaces.PersistenceReference overwrite =
+        ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource("/tmp/source.xlsx");
+    ProblemContextWorkbookSurfaces.PersistenceReference saveAs =
+        ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/output.xlsx");
 
     assertEquals(Optional.empty(), unknownShape.known());
     assertEquals(Optional.empty(), unknownShape.sourceTypeValue());
@@ -49,40 +58,47 @@ class ProblemContextCoverageTest {
 
   @Test
   void stageContextsExposeTypedRequestInputLocationAndOutputFacts() {
-    ProblemContext.RequestShape requestShape =
-        ProblemContext.RequestShape.known("EXISTING", "OVERWRITE");
+    ProblemContextRequestSurfaces.RequestShape requestShape =
+        ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE");
     ProblemContext.ReadRequest readRequest =
-        new ProblemContext.ReadRequest(ProblemContext.RequestInput.standardInput(), null)
-            .withJson(ProblemContext.JsonLocation.lineColumn(7, 3));
+        new ProblemContext.ReadRequest(
+                ProblemContextRequestSurfaces.RequestInput.standardInput(), null)
+            .withJson(ProblemContextRequestSurfaces.JsonLocation.lineColumn(7, 3));
     ProblemContext.ValidateRequest validateRequest =
         new ProblemContext.ValidateRequest(requestShape);
     ProblemContext.ResolveInputs resolveInputs =
         new ProblemContext.ResolveInputs(
-            requestShape, ProblemContext.InputReference.kind("comment"));
+            requestShape, ProblemContextWorkbookSurfaces.InputReference.kind("comment"));
     ProblemContext.OpenWorkbook openWorkbook =
         new ProblemContext.OpenWorkbook(
-            requestShape, ProblemContext.WorkbookReference.newWorkbook());
+            requestShape, ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook());
     ProblemContext.ExecuteCalculation.Preflight preflight =
         new ProblemContext.ExecuteCalculation.Preflight(
-            requestShape, ProblemContext.ProblemLocation.range("Budget", "A1:B2"));
+            requestShape, ProblemContextWorkbookSurfaces.ProblemLocation.range("Budget", "A1:B2"));
     ProblemContext.ExecuteCalculation.Execution execution =
         new ProblemContext.ExecuteCalculation.Execution(
-            requestShape, ProblemContext.ProblemLocation.formulaCell("Budget", "B4", "SUM(B2:B3)"));
+            requestShape,
+            ProblemContextWorkbookSurfaces.ProblemLocation.formulaCell(
+                "Budget", "B4", "SUM(B2:B3)"));
     ProblemContext.ExecuteStep executeStep =
         new ProblemContext.ExecuteStep(
             requestShape,
-            new ProblemContext.StepReference(2, "step-2", "ASSERTION", "EXPECT_CELL_VALUE"),
-            ProblemContext.ProblemLocation.namedRange("Budget", "BudgetTotal"));
+            new ProblemContextWorkbookSurfaces.StepReference(
+                2, "step-2", "ASSERTION", "EXPECT_CELL_VALUE"),
+            ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal"));
     ProblemContext.PersistWorkbook persistOverwrite =
         new ProblemContext.PersistWorkbook(
-            requestShape, ProblemContext.PersistenceReference.overwriteSource("/tmp/source.xlsx"));
+            requestShape,
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource(
+                "/tmp/source.xlsx"));
     ProblemContext.PersistWorkbook persistSaveAs =
         new ProblemContext.PersistWorkbook(
-            requestShape, ProblemContext.PersistenceReference.saveAs("/tmp/out.xlsx"));
+            requestShape,
+            ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/out.xlsx"));
     ProblemContext.ExecuteRequest executeRequest = new ProblemContext.ExecuteRequest(requestShape);
     ProblemContext.WriteResponse writeResponse =
         new ProblemContext.WriteResponse(
-            ProblemContext.ResponseOutput.responseFile("/tmp/response.json"));
+            ProblemContextRequestSurfaces.ResponseOutput.responseFile("/tmp/response.json"));
 
     assertEquals(Optional.empty(), readRequest.requestPath());
     assertEquals(Optional.empty(), readRequest.jsonPath());
@@ -113,7 +129,8 @@ class ProblemContextCoverageTest {
     assertEquals(
         Optional.of("BudgetTotal"),
         new ProblemContext.ExecuteCalculation.Execution(
-                requestShape, ProblemContext.ProblemLocation.namedRange("BudgetTotal"))
+                requestShape,
+                ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal"))
             .namedRangeName());
     assertEquals(Optional.of("EXISTING"), persistOverwrite.sourceType());
     assertEquals(Optional.of("OVERWRITE"), persistOverwrite.persistenceType());
@@ -130,47 +147,62 @@ class ProblemContextCoverageTest {
 
   @Test
   void supportingVariantsValidateNegativeAndAbsentBranches() {
-    assertEquals(Optional.empty(), ProblemContext.ProblemLocation.address("B4").sheetNameValue());
-    assertEquals(Optional.of("B4"), ProblemContext.ProblemLocation.address("B4").addressValue());
-    assertEquals(Optional.empty(), ProblemContext.ProblemLocation.range("A1:B2").sheetNameValue());
-    assertEquals(Optional.of("A1:B2"), ProblemContext.ProblemLocation.range("A1:B2").rangeValue());
     assertEquals(
         Optional.empty(),
-        ProblemContext.ProblemLocation.namedRange("BudgetTotal").sheetNameValue());
+        ProblemContextWorkbookSurfaces.ProblemLocation.address("B4").sheetNameValue());
+    assertEquals(
+        Optional.of("B4"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.address("B4").addressValue());
+    assertEquals(
+        Optional.empty(),
+        ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2").sheetNameValue());
+    assertEquals(
+        Optional.of("A1:B2"),
+        ProblemContextWorkbookSurfaces.ProblemLocation.range("A1:B2").rangeValue());
+    assertEquals(
+        Optional.empty(),
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal").sheetNameValue());
     assertEquals(
         Optional.of("BudgetTotal"),
-        ProblemContext.ProblemLocation.namedRange("BudgetTotal").namedRangeNameValue());
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("BudgetTotal")
+            .namedRangeNameValue());
     assertEquals(
         Optional.of("BudgetTotal"),
-        ProblemContext.ProblemLocation.namedRange("Budget", "BudgetTotal").namedRangeNameValue());
-    assertEquals(Optional.empty(), ProblemContext.ProblemLocation.unknown().formulaValue());
+        ProblemContextWorkbookSurfaces.ProblemLocation.namedRange("Budget", "BudgetTotal")
+            .namedRangeNameValue());
+    assertEquals(
+        Optional.empty(), ProblemContextWorkbookSurfaces.ProblemLocation.unknown().formulaValue());
     assertEquals(
         "stepIndex must be greater than or equal to 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ProblemContext.StepReference(-1, "step", "MUTATION", "SET_CELL"))
-            .getMessage());
-    assertEquals(
-        "jsonLine must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class, () -> ProblemContext.JsonLocation.lineColumn(0, 1))
-            .getMessage());
-    assertEquals(
-        "jsonColumn must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class, () -> ProblemContext.JsonLocation.lineColumn(1, 0))
+                () ->
+                    new ProblemContextWorkbookSurfaces.StepReference(
+                        -1, "step", "MUTATION", "SET_CELL"))
             .getMessage());
     assertEquals(
         "jsonLine must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ProblemContext.JsonLocation.located("steps[0]", 0, 1))
+                () -> ProblemContextRequestSurfaces.JsonLocation.lineColumn(0, 1))
             .getMessage());
     assertEquals(
         "jsonColumn must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> ProblemContext.JsonLocation.located("steps[0]", 1, 0))
+                () -> ProblemContextRequestSurfaces.JsonLocation.lineColumn(1, 0))
+            .getMessage());
+    assertEquals(
+        "jsonLine must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ProblemContextRequestSurfaces.JsonLocation.located("steps[0]", 0, 1))
+            .getMessage());
+    assertEquals(
+        "jsonColumn must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> ProblemContextRequestSurfaces.JsonLocation.located("steps[0]", 1, 0))
             .getMessage());
   }
 }

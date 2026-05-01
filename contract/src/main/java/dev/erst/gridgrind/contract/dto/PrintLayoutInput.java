@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.contract.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.Objects;
 
@@ -17,38 +16,18 @@ public record PrintLayoutInput(
   /** Returns the effective default print-layout payload for one unconfigured sheet. */
   public static PrintLayoutInput defaults() {
     return new PrintLayoutInput(
-        new PrintAreaInput.None(),
-        ExcelPrintOrientation.PORTRAIT,
-        new PrintScalingInput.Automatic(),
-        new PrintTitleRowsInput.None(),
-        new PrintTitleColumnsInput.None(),
-        HeaderFooterTextInput.blank(),
-        HeaderFooterTextInput.blank(),
+        defaultPrintArea(),
+        defaultOrientation(),
+        defaultScaling(),
+        defaultRepeatingRows(),
+        defaultRepeatingColumns(),
+        defaultHeader(),
+        defaultFooter(),
         PrintSetupInput.defaults());
   }
 
-  /** Creates a print-layout payload while defaulting the advanced setup block. */
-  public PrintLayoutInput(
-      PrintAreaInput printArea,
-      ExcelPrintOrientation orientation,
-      PrintScalingInput scaling,
-      PrintTitleRowsInput repeatingRows,
-      PrintTitleColumnsInput repeatingColumns,
-      HeaderFooterTextInput header,
-      HeaderFooterTextInput footer) {
-    this(
-        printArea,
-        orientation,
-        scaling,
-        repeatingRows,
-        repeatingColumns,
-        header,
-        footer,
-        PrintSetupInput.defaults());
-  }
-
-  /** Creates one layout while defaulting the advanced setup block. */
-  public static PrintLayoutInput create(
+  /** Creates a print-layout payload with the documented default advanced setup block. */
+  public static PrintLayoutInput withDefaultSetup(
       PrintAreaInput printArea,
       ExcelPrintOrientation orientation,
       PrintScalingInput scaling,
@@ -78,31 +57,31 @@ public record PrintLayoutInput(
     Objects.requireNonNull(setup, "setup must not be null");
   }
 
-  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-  static PrintLayoutInput create(PrintLayoutJson json) {
-    PrintLayoutInput defaults = defaults();
-    return new PrintLayoutInput(
-        defaultValue(json.printArea(), defaults.printArea()),
-        defaultValue(json.orientation(), defaults.orientation()),
-        defaultValue(json.scaling(), defaults.scaling()),
-        defaultValue(json.repeatingRows(), defaults.repeatingRows()),
-        defaultValue(json.repeatingColumns(), defaults.repeatingColumns()),
-        defaultValue(json.header(), defaults.header()),
-        defaultValue(json.footer(), defaults.footer()),
-        defaultValue(json.setup(), defaults.setup()));
+  private static PrintAreaInput defaultPrintArea() {
+    return new PrintAreaInput.None();
   }
 
-  private static <T> T defaultValue(T value, T defaultValue) {
-    return value == null ? defaultValue : value;
+  private static ExcelPrintOrientation defaultOrientation() {
+    return ExcelPrintOrientation.PORTRAIT;
   }
 
-  private record PrintLayoutJson(
-      PrintAreaInput printArea,
-      ExcelPrintOrientation orientation,
-      PrintScalingInput scaling,
-      PrintTitleRowsInput repeatingRows,
-      PrintTitleColumnsInput repeatingColumns,
-      HeaderFooterTextInput header,
-      HeaderFooterTextInput footer,
-      PrintSetupInput setup) {}
+  private static PrintScalingInput defaultScaling() {
+    return new PrintScalingInput.Automatic();
+  }
+
+  private static PrintTitleRowsInput defaultRepeatingRows() {
+    return new PrintTitleRowsInput.None();
+  }
+
+  private static PrintTitleColumnsInput defaultRepeatingColumns() {
+    return new PrintTitleColumnsInput.None();
+  }
+
+  private static HeaderFooterTextInput defaultHeader() {
+    return HeaderFooterTextInput.blank();
+  }
+
+  private static HeaderFooterTextInput defaultFooter() {
+    return HeaderFooterTextInput.blank();
+  }
 }

@@ -2,7 +2,11 @@ package dev.erst.gridgrind.executor;
 
 import static dev.erst.gridgrind.executor.SourceBackedResolutionIdentitySupport.sameReference;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -85,98 +89,98 @@ public final class SourceBackedPlanResolver {
   private static MutationAction resolveAction(
       MutationAction action, ExecutionInputBindings bindings) throws IOException {
     return switch (action) {
-      case MutationAction.SetCell setCell -> {
+      case CellMutationAction.SetCell setCell -> {
         CellInput resolvedValue = resolveCellInput(setCell.value(), bindings);
         yield sameReference(resolvedValue, setCell.value())
             ? setCell
-            : new MutationAction.SetCell(resolvedValue);
+            : new CellMutationAction.SetCell(resolvedValue);
       }
-      case MutationAction.SetRange setRange -> {
+      case CellMutationAction.SetRange setRange -> {
         List<List<CellInput>> resolvedRows = resolveRows(setRange.rows(), bindings);
         yield sameReference(resolvedRows, setRange.rows())
             ? setRange
-            : new MutationAction.SetRange(resolvedRows);
+            : new CellMutationAction.SetRange(resolvedRows);
       }
-      case MutationAction.SetComment setComment -> {
+      case CellMutationAction.SetComment setComment -> {
         var resolvedComment =
             SourceBackedStructuredInputResolver.resolveComment(setComment.comment(), bindings);
         yield sameReference(resolvedComment, setComment.comment())
             ? setComment
-            : new MutationAction.SetComment(resolvedComment);
+            : new CellMutationAction.SetComment(resolvedComment);
       }
-      case MutationAction.SetPicture setPicture -> {
+      case DrawingMutationAction.SetPicture setPicture -> {
         var resolvedPicture =
             SourceBackedStructuredInputResolver.resolvePicture(setPicture.picture(), bindings);
         yield sameReference(resolvedPicture, setPicture.picture())
             ? setPicture
-            : new MutationAction.SetPicture(resolvedPicture);
+            : new DrawingMutationAction.SetPicture(resolvedPicture);
       }
-      case MutationAction.SetSignatureLine setSignatureLine -> {
+      case DrawingMutationAction.SetSignatureLine setSignatureLine -> {
         var resolvedSignatureLine =
             SourceBackedStructuredInputResolver.resolveSignatureLine(
                 setSignatureLine.signatureLine(), bindings);
         yield sameReference(resolvedSignatureLine, setSignatureLine.signatureLine())
             ? setSignatureLine
-            : new MutationAction.SetSignatureLine(resolvedSignatureLine);
+            : new DrawingMutationAction.SetSignatureLine(resolvedSignatureLine);
       }
-      case MutationAction.SetChart setChart -> {
+      case DrawingMutationAction.SetChart setChart -> {
         var resolvedChart =
             SourceBackedStructuredInputResolver.resolveChart(setChart.chart(), bindings);
         yield sameReference(resolvedChart, setChart.chart())
             ? setChart
-            : new MutationAction.SetChart(resolvedChart);
+            : new DrawingMutationAction.SetChart(resolvedChart);
       }
-      case MutationAction.SetShape setShape -> {
+      case DrawingMutationAction.SetShape setShape -> {
         var resolvedShape =
             SourceBackedStructuredInputResolver.resolveShape(setShape.shape(), bindings);
         yield sameReference(resolvedShape, setShape.shape())
             ? setShape
-            : new MutationAction.SetShape(resolvedShape);
+            : new DrawingMutationAction.SetShape(resolvedShape);
       }
-      case MutationAction.SetEmbeddedObject setEmbeddedObject -> {
+      case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject -> {
         var resolvedEmbeddedObject =
             SourceBackedStructuredInputResolver.resolveEmbeddedObject(
                 setEmbeddedObject.embeddedObject(), bindings);
         yield sameReference(resolvedEmbeddedObject, setEmbeddedObject.embeddedObject())
             ? setEmbeddedObject
-            : new MutationAction.SetEmbeddedObject(resolvedEmbeddedObject);
+            : new DrawingMutationAction.SetEmbeddedObject(resolvedEmbeddedObject);
       }
-      case MutationAction.SetDataValidation setDataValidation -> {
+      case StructuredMutationAction.SetDataValidation setDataValidation -> {
         var resolvedValidation =
             SourceBackedStructuredInputResolver.resolveDataValidation(
                 setDataValidation.validation(), bindings);
         yield sameReference(resolvedValidation, setDataValidation.validation())
             ? setDataValidation
-            : new MutationAction.SetDataValidation(resolvedValidation);
+            : new StructuredMutationAction.SetDataValidation(resolvedValidation);
       }
-      case MutationAction.SetTable setTable -> {
+      case StructuredMutationAction.SetTable setTable -> {
         var resolvedTable =
             SourceBackedStructuredInputResolver.resolveTable(setTable.table(), bindings);
         yield sameReference(resolvedTable, setTable.table())
             ? setTable
-            : new MutationAction.SetTable(resolvedTable);
+            : new StructuredMutationAction.SetTable(resolvedTable);
       }
-      case MutationAction.AppendRow appendRow -> {
+      case CellMutationAction.AppendRow appendRow -> {
         List<CellInput> resolvedValues = resolveCells(appendRow.values(), bindings);
         yield sameReference(resolvedValues, appendRow.values())
             ? appendRow
-            : new MutationAction.AppendRow(resolvedValues);
+            : new CellMutationAction.AppendRow(resolvedValues);
       }
-      case MutationAction.SetPrintLayout setPrintLayout -> {
+      case WorkbookMutationAction.SetPrintLayout setPrintLayout -> {
         var resolvedPrintLayout =
             SourceBackedStructuredInputResolver.resolvePrintLayout(
                 setPrintLayout.printLayout(), bindings);
         yield sameReference(resolvedPrintLayout, setPrintLayout.printLayout())
             ? setPrintLayout
-            : new MutationAction.SetPrintLayout(resolvedPrintLayout);
+            : new WorkbookMutationAction.SetPrintLayout(resolvedPrintLayout);
       }
-      case MutationAction.ImportCustomXmlMapping importCustomXmlMapping -> {
+      case StructuredMutationAction.ImportCustomXmlMapping importCustomXmlMapping -> {
         var resolvedImport =
             SourceBackedStructuredInputResolver.resolveCustomXmlImport(
                 importCustomXmlMapping.mapping(), bindings);
         yield sameReference(resolvedImport, importCustomXmlMapping.mapping())
             ? importCustomXmlMapping
-            : new MutationAction.ImportCustomXmlMapping(resolvedImport);
+            : new StructuredMutationAction.ImportCustomXmlMapping(resolvedImport);
       }
       default -> action;
     };

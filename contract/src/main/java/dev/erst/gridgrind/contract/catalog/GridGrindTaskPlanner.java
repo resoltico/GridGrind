@@ -33,7 +33,13 @@ public final class GridGrindTaskPlanner {
   private static TaskPlanTemplate genericTemplateFor(TaskEntry task) {
     WorkbookPlan.WorkbookSource source = sourceFor(task);
     WorkbookPlan.WorkbookPersistence persistence = persistenceFor(task, source);
-    WorkbookPlan requestTemplate = new WorkbookPlan(source, persistence, List.of());
+    WorkbookPlan requestTemplate =
+        WorkbookPlan.standard(
+            source,
+            persistence,
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of());
     return new TaskPlanTemplate(
         GridGrindProtocolVersion.current(), task, requestTemplate, genericAuthoringNotes(task));
   }

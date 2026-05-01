@@ -1,8 +1,8 @@
 ---
-afad: "3.5"
-version: "0.61.0"
+afad: "4.0"
+version: "0.62.0"
 domain: WORKBOOK_SHEET_MUTATIONS
-updated: "2026-04-25"
+updated: "2026-05-01"
 route:
   keywords: [gridgrind, workbook mutations, sheet mutations, protection, copy-sheet, rename-sheet, custom-xml]
   questions: ["how do i manage sheets in gridgrind", "how do i protect workbooks in gridgrind", "how do i import custom xml mappings in gridgrind"]

@@ -6,38 +6,40 @@ import java.util.Objects;
 final class ProblemContextSupport {
   private ProblemContextSupport() {}
 
-  static ProblemContext.ProblemLocation mergeLocation(
-      ProblemContext.ProblemLocation current, ProblemContext.ProblemLocation discovered) {
+  static ProblemContextWorkbookSurfaces.ProblemLocation mergeLocation(
+      ProblemContextWorkbookSurfaces.ProblemLocation current,
+      ProblemContextWorkbookSurfaces.ProblemLocation discovered) {
     Objects.requireNonNull(current, "current must not be null");
     Objects.requireNonNull(discovered, "discovered must not be null");
-    if (current instanceof ProblemContext.ProblemLocation.Unknown) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Unknown) {
       return discovered;
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Unknown) {
+    if (discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Unknown) {
       return current;
     }
-    if (current instanceof ProblemContext.ProblemLocation.FormulaCell) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell) {
       return current;
     }
-    if (current instanceof ProblemContext.ProblemLocation.SheetNamedRange) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange) {
       return current;
     }
-    if (current instanceof ProblemContext.ProblemLocation.NamedRange) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange) {
       return current;
     }
-    if (current instanceof ProblemContext.ProblemLocation.Range) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Range) {
       return current;
     }
-    if (current instanceof ProblemContext.ProblemLocation.RangeOnly currentRange) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.RangeOnly currentRange) {
       return mergeRangeOnlyLocation(currentRange, discovered);
     }
-    if (current instanceof ProblemContext.ProblemLocation.Address currentAddress) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Address currentAddress) {
       return mergeAddressLocation(currentAddress, discovered);
     }
-    if (current instanceof ProblemContext.ProblemLocation.Sheet currentSheet) {
+    if (current instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Sheet currentSheet) {
       return mergeSheetLocation(currentSheet, discovered);
     }
-    return mergeCellLocation((ProblemContext.ProblemLocation.Cell) current, discovered);
+    return mergeCellLocation(
+        (ProblemContextWorkbookSurfaces.ProblemLocation.Cell) current, discovered);
   }
 
   static String requireNonBlank(String value, String fieldName) {
@@ -48,68 +50,88 @@ final class ProblemContextSupport {
     return value;
   }
 
-  private static ProblemContext.ProblemLocation mergeSheetLocation(
-      ProblemContext.ProblemLocation.Sheet current, ProblemContext.ProblemLocation discovered) {
-    if (discovered instanceof ProblemContext.ProblemLocation.Sheet) {
+  private static ProblemContextWorkbookSurfaces.ProblemLocation mergeSheetLocation(
+      ProblemContextWorkbookSurfaces.ProblemLocation.Sheet current,
+      ProblemContextWorkbookSurfaces.ProblemLocation discovered) {
+    if (discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Sheet) {
       return current;
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Address discoveredAddress) {
-      return new ProblemContext.ProblemLocation.Cell(
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Address discoveredAddress) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(
           current.sheetName(), discoveredAddress.address());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Cell discoveredCell) {
-      return new ProblemContext.ProblemLocation.Cell(current.sheetName(), discoveredCell.address());
+    if (discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Cell discoveredCell) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(
+          current.sheetName(), discoveredCell.address());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.RangeOnly discoveredRange) {
-      return new ProblemContext.ProblemLocation.Range(current.sheetName(), discoveredRange.range());
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.RangeOnly discoveredRange) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Range(
+          current.sheetName(), discoveredRange.range());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Range discoveredRange) {
-      return new ProblemContext.ProblemLocation.Range(current.sheetName(), discoveredRange.range());
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Range discoveredRange) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Range(
+          current.sheetName(), discoveredRange.range());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.NamedRange discoveredNamedRange) {
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange discoveredNamedRange) {
       return discoveredNamedRange;
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.SheetNamedRange discoveredNamedRange) {
+    if (discovered
+        instanceof
+        ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange discoveredNamedRange) {
       return discoveredNamedRange;
     }
-    ProblemContext.ProblemLocation.FormulaCell discoveredFormulaCell =
-        (ProblemContext.ProblemLocation.FormulaCell) discovered;
-    return new ProblemContext.ProblemLocation.FormulaCell(
+    ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell discoveredFormulaCell =
+        (ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell) discovered;
+    return new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
         current.sheetName(), discoveredFormulaCell.address(), discoveredFormulaCell.formula());
   }
 
-  private static ProblemContext.ProblemLocation mergeCellLocation(
-      ProblemContext.ProblemLocation.Cell current, ProblemContext.ProblemLocation discovered) {
-    if (discovered instanceof ProblemContext.ProblemLocation.FormulaCell discoveredFormulaCell) {
-      return new ProblemContext.ProblemLocation.FormulaCell(
+  private static ProblemContextWorkbookSurfaces.ProblemLocation mergeCellLocation(
+      ProblemContextWorkbookSurfaces.ProblemLocation.Cell current,
+      ProblemContextWorkbookSurfaces.ProblemLocation discovered) {
+    if (discovered
+        instanceof
+        ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell discoveredFormulaCell) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
           current.sheetName(), current.address(), discoveredFormulaCell.formula());
     }
     return current;
   }
 
-  private static ProblemContext.ProblemLocation mergeAddressLocation(
-      ProblemContext.ProblemLocation.Address current, ProblemContext.ProblemLocation discovered) {
-    if (discovered instanceof ProblemContext.ProblemLocation.FormulaCell discoveredFormulaCell) {
-      return new ProblemContext.ProblemLocation.FormulaCell(
+  private static ProblemContextWorkbookSurfaces.ProblemLocation mergeAddressLocation(
+      ProblemContextWorkbookSurfaces.ProblemLocation.Address current,
+      ProblemContextWorkbookSurfaces.ProblemLocation discovered) {
+    if (discovered
+        instanceof
+        ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell discoveredFormulaCell) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell(
           discoveredFormulaCell.sheetName(), current.address(), discoveredFormulaCell.formula());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Sheet discoveredSheet) {
-      return new ProblemContext.ProblemLocation.Cell(
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Sheet discoveredSheet) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Cell(
           discoveredSheet.sheetName(), current.address());
     }
     return current;
   }
 
-  private static ProblemContext.ProblemLocation mergeRangeOnlyLocation(
-      ProblemContext.ProblemLocation.RangeOnly current, ProblemContext.ProblemLocation discovered) {
-    if (discovered instanceof ProblemContext.ProblemLocation.Sheet discoveredSheet) {
-      return new ProblemContext.ProblemLocation.Range(discoveredSheet.sheetName(), current.range());
+  private static ProblemContextWorkbookSurfaces.ProblemLocation mergeRangeOnlyLocation(
+      ProblemContextWorkbookSurfaces.ProblemLocation.RangeOnly current,
+      ProblemContextWorkbookSurfaces.ProblemLocation discovered) {
+    if (discovered
+        instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Sheet discoveredSheet) {
+      return new ProblemContextWorkbookSurfaces.ProblemLocation.Range(
+          discoveredSheet.sheetName(), current.range());
     }
-    if (discovered instanceof ProblemContext.ProblemLocation.Range
-        || discovered instanceof ProblemContext.ProblemLocation.FormulaCell
-        || discovered instanceof ProblemContext.ProblemLocation.Cell
-        || discovered instanceof ProblemContext.ProblemLocation.NamedRange
-        || discovered instanceof ProblemContext.ProblemLocation.SheetNamedRange) {
+    if (discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Range
+        || discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.FormulaCell
+        || discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.Cell
+        || discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.NamedRange
+        || discovered instanceof ProblemContextWorkbookSurfaces.ProblemLocation.SheetNamedRange) {
       return discovered;
     }
     return current;

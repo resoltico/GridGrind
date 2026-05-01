@@ -7,7 +7,12 @@ import java.util.Objects;
 public record OoxmlEncryptionInput(String password, ExcelOoxmlEncryptionMode mode) {
   public OoxmlEncryptionInput {
     password = normalizeRequired(password, "password");
-    mode = Objects.requireNonNullElse(mode, ExcelOoxmlEncryptionMode.AGILE);
+    Objects.requireNonNull(mode, "mode must not be null");
+  }
+
+  /** Creates one AGILE OOXML encryption payload explicitly. */
+  public static OoxmlEncryptionInput agile(String password) {
+    return new OoxmlEncryptionInput(password, ExcelOoxmlEncryptionMode.AGILE);
   }
 
   private static String normalizeRequired(String value, String fieldName) {

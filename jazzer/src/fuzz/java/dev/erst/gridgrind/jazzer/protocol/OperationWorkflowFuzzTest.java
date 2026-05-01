@@ -35,10 +35,14 @@ class OperationWorkflowFuzzTest {
     WorkbookPlan request = workflow.request();
     TELEMETRY.recordSourceKind(SequenceIntrospection.sourceKind(request));
     TELEMETRY.recordPersistenceKind(SequenceIntrospection.persistenceKind(request));
-    TELEMETRY.recordSequenceKinds(SequenceIntrospection.mutationKinds(request.mutationSteps()));
-    TELEMETRY.recordAssertionKinds(SequenceIntrospection.assertionKinds(request.assertionSteps()));
-    TELEMETRY.recordReadKinds(SequenceIntrospection.inspectionKinds(request.inspectionSteps()));
-    TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.mutationSteps()));
+    TELEMETRY.recordSequenceKinds(
+        SequenceIntrospection.mutationKinds(request.stepPartition().mutations()));
+    TELEMETRY.recordAssertionKinds(
+        SequenceIntrospection.assertionKinds(request.stepPartition().assertions()));
+    TELEMETRY.recordReadKinds(
+        SequenceIntrospection.inspectionKinds(request.stepPartition().inspections()));
+    TELEMETRY.recordStyleKinds(
+        SequenceIntrospection.styleKinds(request.stepPartition().mutations()));
     try {
       try {
         GridGrindResponse response = new DefaultGridGrindRequestExecutor().execute(request);

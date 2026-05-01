@@ -4,8 +4,11 @@ import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.inspect;
 import static dev.erst.gridgrind.executor.parity.ParityPlanSupport.mutate;
 import static dev.erst.gridgrind.executor.parity.XlsxParityProbeRegistry.*;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
@@ -15,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -92,7 +96,7 @@ final class XlsxParityCoreProbeGroup {
     InspectionResult.WorkbookSummaryResult summaryResult =
         XlsxParityGridGrind.read(success, "summary", InspectionResult.WorkbookSummaryResult.class);
     if (!(summaryResult.workbook()
-        instanceof GridGrindResponse.WorkbookSummary.WithSheets summary)) {
+        instanceof GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets summary)) {
       throw new IllegalStateException(
           "Core workbook summary did not surface active and selected sheets.");
     }
@@ -121,7 +125,7 @@ final class XlsxParityCoreProbeGroup {
 
   private static void compareCoreWorkbookSummary(
       CoreReadObservation observation, List<String> mismatches) {
-    GridGrindResponse.WorkbookSummary.WithSheets summary = observation.summary();
+    GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets summary = observation.summary();
     XlsxParityOracle.CoreWorkbookSnapshot direct = observation.direct();
     if (!summary.sheetNames().equals(direct.sheetNames())) {
       mismatches.add(
@@ -144,7 +148,7 @@ final class XlsxParityCoreProbeGroup {
                   summary.forceFormulaRecalculationOnOpen(), direct.forceFormulaRecalculation()));
     }
     if (!(observation.opsSummary().sheet().protection()
-        instanceof GridGrindResponse.SheetProtectionReport.Protected)) {
+        instanceof GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected)) {
       mismatches.add("ops sheet protection did not report Protected");
     }
     if (observation.queueSummary().sheet().visibility()
@@ -258,7 +262,7 @@ final class XlsxParityCoreProbeGroup {
       mismatches.add("commentCount=%d".formatted(observation.comments().comments().size()));
       return;
     }
-    GridGrindResponse.CommentReport comment =
+    GridGrindWorkbookSurfaceReports.CommentReport comment =
         observation.comments().comments().getFirst().comment();
     if (!comment.text().equals(observation.direct().commentText())) {
       mismatches.add(
@@ -417,11 +421,14 @@ final class XlsxParityCoreProbeGroup {
     boolean coreOk =
         coreRanges.namedRanges().size() == 2
             && coreRanges.namedRanges().stream()
-                .allMatch(GridGrindResponse.NamedRangeReport.RangeReport.class::isInstance);
+                .allMatch(
+                    GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport.class::isInstance);
     boolean advancedOk =
         advancedRanges.namedRanges().size() == 2
             && advancedRanges.namedRanges().stream()
-                .allMatch(GridGrindResponse.NamedRangeReport.FormulaReport.class::isInstance);
+                .allMatch(
+                    GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport.class
+                        ::isInstance);
     boolean directOk =
         directCore.stream()
                 .filter(snapshot -> !snapshot.name().startsWith("_xlnm."))
@@ -607,7 +614,7 @@ final class XlsxParityCoreProbeGroup {
                 new InspectionQuery.GetComments()));
     InspectionResult.CommentsResult comments =
         XlsxParityGridGrind.read(success, "comments", InspectionResult.CommentsResult.class);
-    GridGrindResponse.CommentReport comment =
+    GridGrindWorkbookSurfaceReports.CommentReport comment =
         comments.comments().isEmpty() ? null : comments.comments().getFirst().comment();
     boolean parityAchieved =
         comment != null
@@ -729,23 +736,31 @@ final class XlsxParityCoreProbeGroup {
     TableEntryReport observed = findTable(tables.tables(), "AdvancedTable");
     boolean parityAchieved =
         observed != null
-            && direct.comment().equals(observed.comment())
+            && optionalString(direct.comment()).equals(observed.comment())
             && direct.published() == observed.published()
             && direct.insertRow() == observed.insertRow()
             && direct.insertRowShift() == observed.insertRowShift()
-            && direct.headerRowCellStyle().equals(observed.headerRowCellStyle())
-            && direct.dataCellStyle().equals(observed.dataCellStyle())
-            && direct.totalsRowCellStyle().equals(observed.totalsRowCellStyle())
+            && optionalString(direct.headerRowCellStyle()).equals(observed.headerRowCellStyle())
+            && optionalString(direct.dataCellStyle()).equals(observed.dataCellStyle())
+            && optionalString(direct.totalsRowCellStyle()).equals(observed.totalsRowCellStyle())
             && observed.columns().size() >= 3
-            && direct.totalsRowLabel().equals(observed.columns().get(0).totalsRowLabel())
-            && direct.totalsRowFunction().equals(observed.columns().get(1).totalsRowFunction())
-            && direct
-                .calculatedColumnFormula()
+            && optionalString(direct.totalsRowLabel())
+                .equals(observed.columns().get(0).totalsRowLabel())
+            && optionalString(direct.totalsRowFunction())
+                .equals(observed.columns().get(1).totalsRowFunction())
+            && optionalString(direct.calculatedColumnFormula())
                 .equals(observed.columns().get(1).calculatedColumnFormula())
-            && direct.uniqueName().equals(observed.columns().get(2).uniqueName());
+            && optionalString(direct.uniqueName()).equals(observed.columns().get(2).uniqueName());
     return parityAchieved
         ? pass("Advanced table read parity is present.")
         : fail("Advanced table read mismatch." + " direct=" + direct + " observed=" + observed);
+  }
+
+  private static Optional<String> optionalString(String value) {
+    if (value == null || value.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(value);
   }
 
   static ProbeResult probeConditionalFormattingModeledRead(ProbeContext context) {
@@ -852,7 +867,8 @@ final class XlsxParityCoreProbeGroup {
             clearedPath,
             List.of(
                 mutate(
-                    new WorkbookSelector.Current(), new MutationAction.ClearWorkbookProtection())),
+                    new WorkbookSelector.Current(),
+                    new WorkbookMutationAction.ClearWorkbookProtection())),
             inspect(
                 "protection",
                 new WorkbookSelector.Current(),
@@ -877,7 +893,7 @@ final class XlsxParityCoreProbeGroup {
             List.of(
                 mutate(
                     new WorkbookSelector.Current(),
-                    new MutationAction.SetWorkbookProtection(
+                    new WorkbookMutationAction.SetWorkbookProtection(
                         new WorkbookProtectionInput(
                             true,
                             true,
@@ -942,7 +958,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Advanced"),
-                        new MutationAction.ClearSheetProtection())),
+                        new WorkbookMutationAction.ClearSheetProtection())),
                 inspect(
                     "summary",
                     new SheetSelector.ByName("Advanced"),
@@ -951,7 +967,7 @@ final class XlsxParityCoreProbeGroup {
             InspectionResult.SheetSummaryResult.class);
     boolean clearedOk =
         clearedSummary.sheet().protection()
-                instanceof GridGrindResponse.SheetProtectionReport.Unprotected
+                instanceof GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected
             && !sheetPasswordMatches(
                 clearedPath, "Advanced", XlsxParityScenarios.SHEET_PROTECTION_PASSWORD);
 
@@ -964,7 +980,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Advanced"),
-                        new MutationAction.SetSheetProtection(
+                        new WorkbookMutationAction.SetSheetProtection(
                             expectedSettings, XlsxParityScenarios.SHEET_PROTECTION_PASSWORD))),
                 inspect(
                     "summary",
@@ -974,7 +990,8 @@ final class XlsxParityCoreProbeGroup {
             InspectionResult.SheetSummaryResult.class);
     boolean restoredOk =
         restoredSummary.sheet().protection()
-                instanceof GridGrindResponse.SheetProtectionReport.Protected protectedReport
+                instanceof
+                GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected protectedReport
             && protectedReport.settings().equals(expectedSettings)
             && sheetPasswordMatches(
                 restoredPath, "Advanced", XlsxParityScenarios.SHEET_PROTECTION_PASSWORD);
@@ -1084,7 +1101,7 @@ final class XlsxParityCoreProbeGroup {
             List.of(
                 mutate(
                     new SheetSelector.ByName("Advanced"),
-                    new MutationAction.CopySheet(
+                    new WorkbookMutationAction.CopySheet(
                         "Advanced Replica", new SheetCopyPosition.AppendAtEnd()))),
             inspect(
                 "workbook",
@@ -1142,7 +1159,7 @@ final class XlsxParityCoreProbeGroup {
   private static void compareSheetCopyWorkbook(
       SheetCopyCopiedObservation copied, List<String> mismatches) {
     if (!(copied.copiedWorkbook().workbook()
-            instanceof GridGrindResponse.WorkbookSummary.WithSheets workbook)
+            instanceof GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets workbook)
         || !workbook.sheetNames().contains("Advanced Replica")) {
       mismatches.add("workbookSummary=" + copied.copiedWorkbook().workbook());
     }
@@ -1217,9 +1234,11 @@ final class XlsxParityCoreProbeGroup {
       SheetCopyCopiedObservation copied,
       List<String> mismatches) {
     if (!(copied.copiedSummary().sheet().protection()
-            instanceof GridGrindResponse.SheetProtectionReport.Protected protectedReport)
+            instanceof
+            GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected protectedReport)
         || !(source.sourceSummary().sheet().protection()
-            instanceof GridGrindResponse.SheetProtectionReport.Protected sourceProtected)
+            instanceof
+            GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected sourceProtected)
         || !protectedReport.settings().equals(sourceProtected.settings())
         || !sheetPasswordMatches(
             copied.copiedPath(),
@@ -1297,7 +1316,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Advanced"),
-                        new MutationAction.ClearPrintLayout())),
+                        new WorkbookMutationAction.ClearPrintLayout())),
                 inspect(
                     "print",
                     new SheetSelector.ByName("Advanced"),
@@ -1315,7 +1334,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Advanced"),
-                        new MutationAction.SetPrintLayout(advancedPrintLayoutInput()))),
+                        new WorkbookMutationAction.SetPrintLayout(advancedPrintLayoutInput()))),
                 inspect(
                     "print",
                     new SheetSelector.ByName("Advanced"),
@@ -1357,16 +1376,16 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new RangeSelector.ByRange("Ops", "A5:A6"),
-                        new MutationAction.SetRange(
+                        new CellMutationAction.SetRange(
                             List.of(
                                 List.of(text("ThemeTintStyle")),
                                 List.of(text("GradientFillStyle"))))),
                     mutate(
                         new RangeSelector.ByRange("Ops", "A5"),
-                        new MutationAction.ApplyStyle(advancedThemedStyleInput())),
+                        new CellMutationAction.ApplyStyle(advancedThemedStyleInput())),
                     mutate(
                         new RangeSelector.ByRange("Ops", "A6"),
-                        new MutationAction.ApplyStyle(advancedGradientStyleInput()))),
+                        new CellMutationAction.ApplyStyle(advancedGradientStyleInput()))),
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
@@ -1390,7 +1409,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new RangeSelector.ByRange("Ops", "A5:A6"),
-                        new MutationAction.ClearRange())),
+                        new CellMutationAction.ClearRange())),
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
@@ -1441,7 +1460,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new CellSelector.ByAddress("Advanced", "E2"),
-                        new MutationAction.ClearComment())),
+                        new CellMutationAction.ClearComment())),
                 inspect(
                     "comments",
                     new CellSelector.ByAddresses("Advanced", List.of("E2")),
@@ -1459,7 +1478,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new CellSelector.ByAddress("Advanced", "E2"),
-                        new MutationAction.SetComment(advancedCommentInput()))),
+                        new CellMutationAction.SetComment(advancedCommentInput()))),
                 inspect(
                     "comments",
                     new CellSelector.ByAddresses("Advanced", List.of("E2")),
@@ -1511,11 +1530,11 @@ final class XlsxParityCoreProbeGroup {
                     mutate(
                         new dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope(
                             "WorkbookFormulaBudget"),
-                        new MutationAction.DeleteNamedRange()),
+                        new StructuredMutationAction.DeleteNamedRange()),
                     mutate(
                         new dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope(
                             "SheetScopedFormulaBudget", "Advanced"),
-                        new MutationAction.DeleteNamedRange())),
+                        new StructuredMutationAction.DeleteNamedRange())),
                 inspect(
                     "names",
                     new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
@@ -1537,12 +1556,12 @@ final class XlsxParityCoreProbeGroup {
                 restoredPath,
                 List.of(
                     mutate(
-                        new MutationAction.SetNamedRange(
+                        new StructuredMutationAction.SetNamedRange(
                             "WorkbookFormulaBudget",
                             new NamedRangeScope.Workbook(),
                             new NamedRangeTarget("SUM(Advanced!$B$2:$B$5)"))),
                     mutate(
-                        new MutationAction.SetNamedRange(
+                        new StructuredMutationAction.SetNamedRange(
                             "SheetScopedFormulaBudget",
                             new NamedRangeScope.Sheet("Advanced"),
                             new NamedRangeTarget("SUM(Advanced!$C$2:$C$5)")))),
@@ -1595,7 +1614,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Advanced"),
-                        new MutationAction.ClearAutofilter())),
+                        new StructuredMutationAction.ClearAutofilter())),
                 inspect(
                     "filters",
                     new SheetSelector.ByName("Advanced"),
@@ -1616,7 +1635,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new RangeSelector.ByRange("Advanced", "A1:C5"),
-                        new MutationAction.SetAutofilter(
+                        new StructuredMutationAction.SetAutofilter(
                             List.of(
                                 new AutofilterFilterColumnInput(
                                     0L,
@@ -1627,10 +1646,8 @@ final class XlsxParityCoreProbeGroup {
                                 "A2:C5",
                                 false,
                                 false,
-                                "",
-                                List.of(
-                                    new AutofilterSortConditionInput(
-                                        "B2:B5", true, "", null, null)))))),
+                                java.util.Optional.empty(),
+                                List.of(new AutofilterSortConditionInput.Value("B2:B5", true)))))),
                 inspect(
                     "filters",
                     new SheetSelector.ByName("Advanced"),
@@ -1680,7 +1697,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new TableSelector.ByNameOnSheet("AdvancedTable", "Advanced"),
-                        new MutationAction.DeleteTable())),
+                        new StructuredMutationAction.DeleteTable())),
                 inspect("tables", new TableSelector.All(), new InspectionQuery.GetTables())),
             "tables",
             InspectionResult.TablesResult.class);
@@ -1692,7 +1709,7 @@ final class XlsxParityCoreProbeGroup {
             XlsxParityGridGrind.mutateWorkbook(
                 clearedPath,
                 restoredPath,
-                List.of(mutate(new MutationAction.SetTable(advancedTableInput()))),
+                List.of(mutate(new StructuredMutationAction.SetTable(advancedTableInput()))),
                 inspect("tables", new TableSelector.All(), new InspectionQuery.GetTables())),
             "tables",
             InspectionResult.TablesResult.class);
@@ -1747,7 +1764,7 @@ final class XlsxParityCoreProbeGroup {
                 List.of(
                     mutate(
                         new RangeSelector.AllOnSheet("Advanced"),
-                        new MutationAction.ClearConditionalFormatting())),
+                        new StructuredMutationAction.ClearConditionalFormatting())),
                 inspect(
                     "formatting",
                     new RangeSelector.AllOnSheet("Advanced"),
@@ -1790,7 +1807,7 @@ final class XlsxParityCoreProbeGroup {
 
   record CoreReadObservation(
       XlsxParityOracle.CoreWorkbookSnapshot direct,
-      GridGrindResponse.WorkbookSummary.WithSheets summary,
+      GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets summary,
       InspectionResult.SheetSummaryResult opsSummary,
       InspectionResult.SheetSummaryResult queueSummary,
       InspectionResult.CellsResult cells,

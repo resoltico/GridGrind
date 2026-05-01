@@ -7,8 +7,8 @@ import java.util.Objects;
 /** Data-validation-health analysis for one selected sheet set. */
 public record DataValidationHealthReport(
     int checkedValidationCount,
-    GridGrindResponse.AnalysisSummaryReport summary,
-    List<GridGrindResponse.AnalysisFindingReport> findings) {
+    GridGrindAnalysisReports.AnalysisSummaryReport summary,
+    List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
   public DataValidationHealthReport {
     if (checkedValidationCount < 0) {
       throw new IllegalArgumentException("checkedValidationCount must not be negative");

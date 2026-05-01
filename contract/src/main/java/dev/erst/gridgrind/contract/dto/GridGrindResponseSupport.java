@@ -13,7 +13,7 @@ final class GridGrindResponseSupport {
 
   static GridGrindResponse.Success success(
       GridGrindProtocolVersion protocolVersion,
-      GridGrindResponse.PersistenceOutcome persistence,
+      GridGrindResponsePersistence.PersistenceOutcome persistence,
       List<RequestWarning> warnings,
       List<AssertionResult> assertions,
       List<InspectionResult> inspections) {
@@ -29,7 +29,7 @@ final class GridGrindResponseSupport {
   }
 
   static GridGrindResponse.Failure failure(
-      GridGrindProtocolVersion protocolVersion, GridGrindResponse.Problem problem) {
+      GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new GridGrindResponse.Failure(
         protocolVersionOrCurrent(protocolVersion),
@@ -141,13 +141,13 @@ final class GridGrindResponseSupport {
     return Optional.of(copy);
   }
 
-  static List<GridGrindResponse.ProblemCause> copyProblemCauses(
-      List<GridGrindResponse.ProblemCause> causes) {
+  static List<GridGrindProblemDetail.ProblemCause> copyProblemCauses(
+      List<GridGrindProblemDetail.ProblemCause> causes) {
     if (causes == null) {
       return List.of();
     }
-    List<GridGrindResponse.ProblemCause> copy = new ArrayList<>(causes.size());
-    for (GridGrindResponse.ProblemCause cause : causes) {
+    List<GridGrindProblemDetail.ProblemCause> copy = new ArrayList<>(causes.size());
+    for (GridGrindProblemDetail.ProblemCause cause : causes) {
       copy.add(Objects.requireNonNull(cause, "causes must not contain nulls"));
     }
     return List.copyOf(copy);

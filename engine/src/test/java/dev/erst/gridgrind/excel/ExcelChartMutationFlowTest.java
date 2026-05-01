@@ -25,7 +25,7 @@ class ExcelChartMutationFlowTest {
 
       executor.apply(
           workbook,
-          new WorkbookCommand.SetChart(
+          new WorkbookDrawingCommand.SetChart(
               "Charts",
               lineChartDefinition(
                   "OpsLine",
@@ -33,9 +33,9 @@ class ExcelChartMutationFlowTest {
                   new ExcelChartDefinition.Title.Text("Line roadmap"),
                   new ExcelChartDefinition.Title.Formula("B1"))));
 
-      WorkbookReadResult.ChartsResult lineRead =
+      WorkbookDrawingResult.ChartsResult lineRead =
           assertInstanceOf(
-              WorkbookReadResult.ChartsResult.class,
+              WorkbookDrawingResult.ChartsResult.class,
               introspector.execute(
                   workbook, new WorkbookReadCommand.GetCharts("charts", "Charts")));
       ExcelChartSnapshot initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");

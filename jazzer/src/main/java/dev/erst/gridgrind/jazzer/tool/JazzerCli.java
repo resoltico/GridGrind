@@ -17,8 +17,20 @@ public final class JazzerCli {
 
   /** Dispatches one local Jazzer operator command. */
   public static void main(String[] arguments) throws IOException {
+    try {
+      run(arguments);
+    } catch (IllegalArgumentException exception) {
+      String subcommand = arguments.length == 0 ? "" : arguments[0];
+      System.err.println(exception.getMessage());
+      System.err.println();
+      System.err.println(usageText(subcommand));
+      System.exit(2);
+    }
+  }
+
+  private static void run(String[] arguments) throws IOException {
     if (arguments.length == 0) {
-      throw new IllegalArgumentException("A Jazzer subcommand is required");
+      throw new IllegalArgumentException("A Jazzer subcommand is required.");
     }
 
     List<String> args = Arrays.asList(arguments);
@@ -62,10 +74,6 @@ public final class JazzerCli {
         targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
             : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
-    if (summaries.isEmpty()) {
-      System.out.println("No Jazzer summaries recorded yet.");
-      return;
-    }
     System.out.println(JazzerTextRenderer.renderStatus(summaries));
   }
 
@@ -152,8 +160,8 @@ public final class JazzerCli {
           "Replay requires a single-harness target, not " + target.key());
     }
     Path inputPath = requiredPath(args, "--input");
-    ReplayOutcome outcome =
-        JazzerReplaySupport.replay(target.replayHarness(), Files.readAllBytes(inputPath));
+    byte[] input = readRequiredInputBytes(inputPath, "Replay input");
+    ReplayOutcome outcome = JazzerReplaySupport.replay(target.replayHarness(), input);
     if (hasFlag(args, "--json")) {
       System.out.println(JazzerJson.toJson(outcome));
     } else {
@@ -174,7 +182,7 @@ public final class JazzerCli {
 
     Path inputPath = requiredPath(args, "--input");
     String name = requiredValue(args, "--name");
-    byte[] input = Files.readAllBytes(inputPath);
+    byte[] input = readRequiredInputBytes(inputPath, "Promotion input");
     ReplayOutcome outcome = JazzerReplaySupport.replay(target.replayHarness(), input);
 
     Path promotedInputDirectory = target.replayHarness().inputDirectory(projectDirectory);
@@ -274,9 +282,58 @@ public final class JazzerCli {
     return args.contains(flag);
   }
 
+  private static byte[] readRequiredInputBytes(Path inputPath, String label) {
+    Objects.requireNonNull(inputPath, "inputPath must not be null");
+    Objects.requireNonNull(label, "label must not be null");
+    if (!Files.exists(inputPath)) {
+      throw new IllegalArgumentException(label + " does not exist: " + inputPath);
+    }
+    if (!Files.isRegularFile(inputPath)) {
+      throw new IllegalArgumentException(label + " is not a regular file: " + inputPath);
+    }
+    try {
+      return Files.readAllBytes(inputPath);
+    } catch (IOException exception) {
+      throw new IllegalArgumentException(
+          label + " could not be read: " + inputPath + " (" + exception.getMessage() + ")",
+          exception);
+    }
+  }
+
   private static String extensionFor(Path inputPath) {
     String fileName = inputPath.getFileName().toString();
     int separator = fileName.lastIndexOf('.');
     return separator >= 0 ? fileName.substring(separator) : ".bin";
+  }
+
+  private static String usageText(String subcommand) {
+    String targets = String.join(", ", JazzerRunTarget.keys());
+    return switch (subcommand) {
+      case "status" ->
+          "Usage: jazzer/bin/status [target] [gradle-options...]\nValid targets: " + targets;
+      case "report" ->
+          "Usage: jazzer/bin/report [target] [gradle-options...]\nValid targets: " + targets;
+      case "list-findings" ->
+          "Usage: jazzer/bin/list-findings [target] [gradle-options...]\nValid targets: " + targets;
+      case "list-corpus" ->
+          "Usage: jazzer/bin/list-corpus [target] [gradle-options...]\nValid targets: " + targets;
+      case "replay" ->
+          "Usage: jazzer/bin/replay <target> <input-path> [--json] [gradle-options...]\nValid targets: "
+              + targets;
+      case "promote" ->
+          "Usage: jazzer/bin/promote <target> <input-path> <name> [gradle-options...]\nValid targets: "
+              + targets;
+      case "refresh-promoted-metadata" ->
+          "Usage: jazzer/bin/refresh-promoted-metadata [target] [gradle-options...]\nValid targets: "
+              + targets;
+      case "summarize-run" ->
+          "Usage: internal summarize-run requires --target, --task, --log, --history,"
+              + " --started-at, --finished-at, --exit-code, --corpus-before-files,"
+              + " and --corpus-before-bytes.";
+      default ->
+          "Usage: jazzer/bin/<command> [args]\nCommands: status, report, list-findings,"
+              + " list-corpus, replay, promote, refresh-promoted-metadata.\nValid targets: "
+              + targets;
+    };
   }
 }

@@ -215,10 +215,10 @@ final class ExcelSheetCopyController {
   /** Immutable copy plan for the sheet-local structures GridGrind can reproduce safely. */
   private record ExcelSheetCopySnapshot(
       List<ExcelNamedRangeSnapshot> localNamedRanges,
-      WorkbookReadResult.SheetLayout layout,
+      WorkbookSheetResult.SheetLayout layout,
       ExcelPrintLayout printLayout,
-      List<WorkbookReadResult.MergedRegion> mergedRegions,
-      List<WorkbookReadResult.CellComment> comments,
+      List<WorkbookSheetResult.MergedRegion> mergedRegions,
+      List<WorkbookSheetResult.CellComment> comments,
       List<CTDataValidation> dataValidations,
       List<ExcelConditionalFormattingBlockDefinition> conditionalFormattingBlocks,
       ExcelAutofilterSnapshot.SheetOwned sheetAutofilter,

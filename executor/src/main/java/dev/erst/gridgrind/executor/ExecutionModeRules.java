@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.executor;
 
+import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -106,10 +108,10 @@ final class ExecutionModeRules {
             return Optional.of(
                 STREAMING_WRITE.unsupportedActionMessage(mutationStep.action().actionType()));
           }
-          if (mutationStep.action() instanceof MutationAction.EnsureSheet) {
+          if (mutationStep.action() instanceof WorkbookMutationAction.EnsureSheet) {
             seenEnsureSheet = true;
           }
-          if (mutationStep.action() instanceof MutationAction.AppendRow && !seenEnsureSheet) {
+          if (mutationStep.action() instanceof CellMutationAction.AppendRow && !seenEnsureSheet) {
             return Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage());
           }
         }

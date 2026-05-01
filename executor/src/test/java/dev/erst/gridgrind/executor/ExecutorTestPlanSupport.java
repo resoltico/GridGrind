@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
@@ -11,7 +12,6 @@ import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
@@ -61,18 +61,18 @@ final class ExecutorTestPlanSupport {
     return new PendingMutation(target, action);
   }
 
-  static PendingMutation mutate(MutationAction.SetTable action) {
+  static PendingMutation mutate(StructuredMutationAction.SetTable action) {
     TableInput table = action.table();
     return mutate(new TableSelector.ByNameOnSheet(table.name(), table.sheetName()), action);
   }
 
-  static PendingMutation mutate(MutationAction.SetPivotTable action) {
+  static PendingMutation mutate(StructuredMutationAction.SetPivotTable action) {
     PivotTableInput pivotTable = action.pivotTable();
     return mutate(
         new PivotTableSelector.ByNameOnSheet(pivotTable.name(), pivotTable.sheetName()), action);
   }
 
-  static PendingMutation mutate(MutationAction.SetNamedRange action) {
+  static PendingMutation mutate(StructuredMutationAction.SetNamedRange action) {
     return mutate(namedRangeSelector(action.name(), action.scope()), action);
   }
 
@@ -97,7 +97,7 @@ final class ExecutorTestPlanSupport {
   }
 
   static CalculationPolicyInput calculateAll() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll());
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.EvaluateAll());
   }
 
   static CalculationPolicyInput calculateAllAndMarkRecalculateOnOpen() {
@@ -105,11 +105,12 @@ final class ExecutorTestPlanSupport {
   }
 
   static CalculationPolicyInput calculateTargets(CellSelector.QualifiedAddress... cells) {
-    return new CalculationPolicyInput(new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
+    return CalculationPolicyInput.strategy(
+        new CalculationStrategyInput.EvaluateTargets(List.of(cells)));
   }
 
   static CalculationPolicyInput clearFormulaCaches() {
-    return new CalculationPolicyInput(new CalculationStrategyInput.ClearCachesOnly());
+    return CalculationPolicyInput.strategy(new CalculationStrategyInput.ClearCachesOnly());
   }
 
   static CalculationPolicyInput markRecalculateOnOpen() {
@@ -122,7 +123,7 @@ final class ExecutorTestPlanSupport {
 
   static ExecutionPolicyInput executionPolicy(
       ExecutionModeInput mode, CalculationPolicyInput calculation) {
-    return new ExecutionPolicyInput(mode, calculation);
+    return ExecutionPolicyInput.modeAndCalculation(mode, calculation);
   }
 
   static TextSourceInput text(String value) {
@@ -155,12 +156,14 @@ final class ExecutorTestPlanSupport {
   }
 
   static DataValidationPromptInput prompt(String title, String body, Boolean showPromptBox) {
-    return new DataValidationPromptInput(text(title), text(body), showPromptBox);
+    return new DataValidationPromptInput(
+        text(title), text(body), Objects.requireNonNullElse(showPromptBox, true));
   }
 
   static DataValidationErrorAlertInput errorAlert(
       ExcelDataValidationErrorStyle style, String title, String body, Boolean showErrorBox) {
-    return new DataValidationErrorAlertInput(style, text(title), text(body), showErrorBox);
+    return new DataValidationErrorAlertInput(
+        style, text(title), text(body), Objects.requireNonNullElse(showErrorBox, true));
   }
 
   static MutationStep materializeMutation(PendingMutation mutation, int stepIndex) {
@@ -210,7 +213,12 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(source, persistence, steps(mutations, assertions, inspections));
+    return WorkbookPlan.standard(
+        source,
+        persistence,
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps(mutations, assertions, inspections));
   }
 
   static WorkbookPlan request(
@@ -218,7 +226,12 @@ final class ExecutorTestPlanSupport {
       WorkbookPlan.WorkbookPersistence persistence,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(source, persistence, steps(mutations, inspections));
+    return WorkbookPlan.standard(
+        source,
+        persistence,
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -226,7 +239,12 @@ final class ExecutorTestPlanSupport {
       WorkbookPlan.WorkbookPersistence persistence,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
-    return new WorkbookPlan(source, persistence, steps(mutations, inspections));
+    return WorkbookPlan.standard(
+        source,
+        persistence,
+        ExecutionPolicyInput.defaults(),
+        FormulaEnvironmentInput.empty(),
+        steps(mutations, inspections));
   }
 
   static WorkbookPlan request(
@@ -237,13 +255,11 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
-        GridGrindProtocolVersion.current(),
-        java.util.Optional.empty(),
+    return WorkbookPlan.standard(
         source,
         persistence,
-        execution == null ? ExecutionPolicyInput.defaults() : execution,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        Objects.requireNonNullElseGet(execution, ExecutionPolicyInput::defaults),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, assertions, inspections));
   }
 
@@ -281,10 +297,11 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, assertions, inspections));
   }
 
@@ -294,10 +311,11 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
 
@@ -307,10 +325,11 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.defaults(),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
 
@@ -322,11 +341,12 @@ final class ExecutorTestPlanSupport {
       List<PendingMutation> mutations,
       List<PendingAssertion> assertions,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        executionMode,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, assertions, inspections));
   }
 
@@ -337,11 +357,12 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       List<InspectionStep> inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        executionMode,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
 
@@ -352,11 +373,12 @@ final class ExecutorTestPlanSupport {
       FormulaEnvironmentInput formulaEnvironment,
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
-    return new WorkbookPlan(
+    return WorkbookPlan.standard(
         source,
         persistence,
-        executionMode,
-        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment,
+        ExecutionPolicyInput.mode(
+            Objects.requireNonNullElseGet(executionMode, ExecutionModeInput::defaults)),
+        Objects.requireNonNullElseGet(formulaEnvironment, FormulaEnvironmentInput::empty),
         steps(mutations, inspections));
   }
 

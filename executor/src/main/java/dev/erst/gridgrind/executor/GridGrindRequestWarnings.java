@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.CellMutationAction;
+import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -42,14 +43,14 @@ final class GridGrindRequestWarnings {
     Set<String> sheetNames = new LinkedHashSet<>();
     for (MutationStep step : steps) {
       switch (step.action()) {
-        case MutationAction.EnsureSheet _ ->
+        case WorkbookMutationAction.EnsureSheet _ ->
             addIfSpaced(
                 sheetNames,
                 SelectorConverter.toSheetName(
                     (dev.erst.gridgrind.contract.selector.SheetSelector.ByName) step.target()));
-        case MutationAction.RenameSheet renameSheet ->
+        case WorkbookMutationAction.RenameSheet renameSheet ->
             addIfSpaced(sheetNames, renameSheet.newSheetName());
-        case MutationAction.CopySheet copySheet ->
+        case WorkbookMutationAction.CopySheet copySheet ->
             addIfSpaced(sheetNames, copySheet.newSheetName());
         default -> {}
       }
@@ -66,16 +67,16 @@ final class GridGrindRequestWarnings {
   private static void collectOffendingSheetNames(
       MutationStep step, Set<String> spacedSheetNames, Set<String> offendingSheetNames) {
     switch (step.action()) {
-      case MutationAction.SetCell setCell ->
+      case CellMutationAction.SetCell setCell ->
           collectFromCellInput(setCell.value(), spacedSheetNames, offendingSheetNames);
-      case MutationAction.SetRange setRange -> {
+      case CellMutationAction.SetRange setRange -> {
         for (List<CellInput> row : setRange.rows()) {
           for (CellInput cellInput : row) {
             collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
           }
         }
       }
-      case MutationAction.AppendRow appendRow -> {
+      case CellMutationAction.AppendRow appendRow -> {
         for (CellInput cellInput : appendRow.values()) {
           collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
         }

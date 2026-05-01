@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import java.util.List;
@@ -16,7 +16,7 @@ class WorkbookStepTargetingTest {
   @Test
   void exposesStaticSelectorFamiliesForMutations() {
     WorkbookStepTargeting.TargetSurface targetSurface =
-        WorkbookStepTargeting.forMutationActionType(MutationAction.SetTable.class);
+        WorkbookStepTargeting.forMutationActionType(StructuredMutationAction.SetTable.class);
 
     assertEquals(
         List.of(

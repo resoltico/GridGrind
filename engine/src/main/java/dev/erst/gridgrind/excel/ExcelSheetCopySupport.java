@@ -14,7 +14,7 @@ final class ExcelSheetCopySupport {
   private ExcelSheetCopySupport() {}
 
   static void repairComments(
-      List<WorkbookReadResult.CellComment> expectedComments, ExcelSheet targetSheet) {
+      List<WorkbookSheetResult.CellComment> expectedComments, ExcelSheet targetSheet) {
     if (expectedComments.isEmpty()) {
       return;
     }
@@ -317,7 +317,7 @@ final class ExcelSheetCopySupport {
       ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
     if (style == null) {
-      return java.util.Optional.<ExcelDifferentialStyle>empty().orElse(null);
+      return null;
     }
     if (!style.unsupportedFeatures().isEmpty()) {
       throw new IllegalArgumentException(
@@ -342,7 +342,7 @@ final class ExcelSheetCopySupport {
       List<ExcelAutofilterSnapshot> autofilters) {
     Objects.requireNonNull(autofilters, "autofilters must not be null");
     if (autofilters.isEmpty()) {
-      return java.util.Optional.<ExcelAutofilterSnapshot.SheetOwned>empty().orElse(null);
+      return null;
     }
     ExcelAutofilterSnapshot autofilter = autofilters.getFirst();
     return switch (autofilter) {
@@ -417,12 +417,22 @@ final class ExcelSheetCopySupport {
 
   private static ExcelAutofilterSortCondition copyableSortCondition(
       ExcelAutofilterSortConditionSnapshot condition) {
-    return new ExcelAutofilterSortCondition(
-        condition.range(),
-        condition.descending(),
-        condition.sortBy(),
-        ExcelColorSupport.copyOf(condition.color()),
-        condition.iconId());
+    return switch (condition) {
+      case ExcelAutofilterSortConditionSnapshot.Value value ->
+          new ExcelAutofilterSortCondition.Value(value.range(), value.descending());
+      case ExcelAutofilterSortConditionSnapshot.CellColor cellColor ->
+          new ExcelAutofilterSortCondition.CellColor(
+              cellColor.range(),
+              cellColor.descending(),
+              ExcelColorSupport.copyOf(cellColor.color()));
+      case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
+          new ExcelAutofilterSortCondition.FontColor(
+              fontColor.range(),
+              fontColor.descending(),
+              ExcelColorSupport.copyOf(fontColor.color()));
+      case ExcelAutofilterSortConditionSnapshot.Icon icon ->
+          new ExcelAutofilterSortCondition.Icon(icon.range(), icon.descending(), icon.iconId());
+    };
   }
 
   static List<ExcelTableSnapshot> tablesOnSheet(XSSFSheet sourcePoiSheet) {

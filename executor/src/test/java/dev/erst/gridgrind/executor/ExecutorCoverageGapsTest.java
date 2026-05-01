@@ -10,9 +10,10 @@ import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderInput;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderSideInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
@@ -179,20 +180,20 @@ class ExecutorCoverageGapsTest {
                     new NamedRangeSelector.ByName("BudgetTotal"),
                     new NamedRangeSelector.WorkbookScope("GrandTotal"),
                     new NamedRangeSelector.SheetScope("OpsTotal", "Ops"))));
-    GridGrindResponse.Problem problem =
+    GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request", null, 11, null, new IllegalArgumentException("bad")),
             new ProblemContext.ReadRequest(
-                ProblemContext.RequestInput.requestFile("/tmp/request.json"),
-                ProblemContext.JsonLocation.unavailable()));
-    GridGrindResponse.Problem unavailableProblem =
+                ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+                ProblemContextRequestSurfaces.JsonLocation.unavailable()));
+    GridGrindProblemDetail.Problem unavailableProblem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
                 "bad request", null, null, 9, new IllegalArgumentException("bad")),
             new ProblemContext.ReadRequest(
-                ProblemContext.RequestInput.requestFile("/tmp/request.json"),
-                ProblemContext.JsonLocation.unavailable()));
+                ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
+                ProblemContextRequestSurfaces.JsonLocation.unavailable()));
     DifferentialBorderInput border =
         new DifferentialBorderInput(
             Optional.of(

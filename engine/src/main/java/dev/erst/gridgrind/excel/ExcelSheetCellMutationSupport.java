@@ -188,6 +188,7 @@ final class ExcelSheetCellMutationSupport {
       }
       case ExcelCellValue.TextValue textValue -> {
         clearExistingFormula(cell);
+        ExcelCellTextLimits.requireSupportedLength(textValue.value(), "textValue.value"); // LIM-010
         cell.setCellValue(textValue.value());
       }
       case ExcelCellValue.RichTextValue richTextValue -> {

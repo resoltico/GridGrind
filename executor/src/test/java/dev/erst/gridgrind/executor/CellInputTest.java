@@ -103,8 +103,9 @@ class CellInputTest {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.RichText(List.of()));
     assertThrows(
         IllegalArgumentException.class, () -> new CellInput.RichText(List.of(richTextRun(""))));
-    assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(null));
-    assertThrows(IllegalArgumentException.class, () -> new CellInput.BooleanValue(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellInput.Numeric(Double.POSITIVE_INFINITY));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(Double.NaN));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));
     assertThrows(IllegalArgumentException.class, () -> formulaCell("="));
     assertThrows(IllegalArgumentException.class, () -> formulaCell("=   "));

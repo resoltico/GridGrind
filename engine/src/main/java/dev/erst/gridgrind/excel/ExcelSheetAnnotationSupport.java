@@ -41,6 +41,7 @@ final class ExcelSheetAnnotationSupport {
 
     CellReference cellReference = parseCellReference(address);
     Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
+    requireHyperlinkCapacity(cell);
     cell.removeHyperlink();
     org.apache.poi.ss.usermodel.Hyperlink poiHyperlink =
         sheet.getWorkbook().getCreationHelper().createHyperlink(toPoi(hyperlink.type()));
@@ -89,7 +90,7 @@ final class ExcelSheetAnnotationSupport {
         optionalHyperlink(cell).orElse(null), optionalCommentSnapshot(cell).orElse(null));
   }
 
-  List<WorkbookReadResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+  List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return switch (selection) {
       case ExcelCellSelection.AllUsedCells _ -> allUsedHyperlinks();
@@ -97,7 +98,7 @@ final class ExcelSheetAnnotationSupport {
     };
   }
 
-  List<WorkbookReadResult.CellComment> comments(ExcelCellSelection selection) {
+  List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return switch (selection) {
       case ExcelCellSelection.AllUsedCells _ -> allUsedComments();
@@ -156,6 +157,7 @@ final class ExcelSheetAnnotationSupport {
   }
 
   private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
+    ExcelCellTextLimits.requireSupportedLength(comment.text(), "comment.text"); // LIM-010
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
     ExcelCommentAnchor authoredAnchor = comment.anchor();
     anchor.setRow1(authoredAnchor == null ? rowIndex : authoredAnchor.firstRow());
@@ -173,14 +175,14 @@ final class ExcelSheetAnnotationSupport {
     return poiComment;
   }
 
-  private List<WorkbookReadResult.CellHyperlink> allUsedHyperlinks() {
-    List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
+  private List<WorkbookSheetResult.CellHyperlink> allUsedHyperlinks() {
+    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
         if (hyperlink.isPresent()) {
           hyperlinks.add(
-              new WorkbookReadResult.CellHyperlink(
+              new WorkbookSheetResult.CellHyperlink(
                   new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
                   hyperlink.orElseThrow()));
         }
@@ -189,8 +191,8 @@ final class ExcelSheetAnnotationSupport {
     return List.copyOf(hyperlinks);
   }
 
-  private List<WorkbookReadResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
-    List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
+  private List<WorkbookSheetResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
+    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
     for (String address : addresses) {
       Cell cell = cellOrNull(address).orElse(null);
       if (cell == null) {
@@ -198,20 +200,20 @@ final class ExcelSheetAnnotationSupport {
       }
       Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
       if (hyperlink.isPresent()) {
-        hyperlinks.add(new WorkbookReadResult.CellHyperlink(address, hyperlink.orElseThrow()));
+        hyperlinks.add(new WorkbookSheetResult.CellHyperlink(address, hyperlink.orElseThrow()));
       }
     }
     return List.copyOf(hyperlinks);
   }
 
-  private List<WorkbookReadResult.CellComment> allUsedComments() {
-    List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
+  private List<WorkbookSheetResult.CellComment> allUsedComments() {
+    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
         Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
         if (comment.isPresent()) {
           comments.add(
-              new WorkbookReadResult.CellComment(
+              new WorkbookSheetResult.CellComment(
                   new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
                   comment.orElseThrow()));
         }
@@ -220,8 +222,8 @@ final class ExcelSheetAnnotationSupport {
     return List.copyOf(comments);
   }
 
-  private List<WorkbookReadResult.CellComment> selectedComments(List<String> addresses) {
-    List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
+  private List<WorkbookSheetResult.CellComment> selectedComments(List<String> addresses) {
+    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
     for (String address : addresses) {
       Cell cell = cellOrNull(address).orElse(null);
       if (cell == null) {
@@ -229,10 +231,25 @@ final class ExcelSheetAnnotationSupport {
       }
       Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
       if (comment.isPresent()) {
-        comments.add(new WorkbookReadResult.CellComment(address, comment.orElseThrow()));
+        comments.add(new WorkbookSheetResult.CellComment(address, comment.orElseThrow()));
       }
     }
     return List.copyOf(comments);
+  }
+
+  private void requireHyperlinkCapacity(Cell cell) {
+    if (optionalHyperlink(cell).isPresent()) {
+      return;
+    }
+    int hyperlinkCount = 0;
+    for (Row row : sheet) {
+      for (Cell candidate : row) {
+        if (optionalHyperlink(candidate).isPresent()) {
+          hyperlinkCount++;
+        }
+      }
+    }
+    ExcelHyperlinkLimits.requireWorksheetHyperlinkCapacity(hyperlinkCount); // LIM-012
   }
 
   private Optional<Cell> cellOrNull(String address) {
