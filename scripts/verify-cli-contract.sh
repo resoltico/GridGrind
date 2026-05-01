@@ -143,12 +143,12 @@ readonly mode="${1:-}"
 readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
-source "${script_dir}/lib/test-cli-contract-fixtures.sh"
 catalog_path=''
 task_catalog_path=''
 task_plan_path=''
 goal_plan_path=''
 doctor_report_path=''
+request_template_path=''
 help_path=''
 help_stderr_path=''
 temp_dir=''
@@ -205,6 +205,7 @@ task_catalog_path="${temp_dir}/task-catalog.json"
 task_plan_path="${temp_dir}/task-plan.json"
 goal_plan_path="${temp_dir}/goal-plan.json"
 doctor_report_path="${temp_dir}/doctor-report.json"
+request_template_path="${temp_dir}/request-template.json"
 
 help_output="$("${launcher[@]}" --help 2> "${help_stderr_path}" | tr -d '\r')"
 help_stderr="$(tr -d '\r' < "${help_stderr_path}")"
@@ -253,14 +254,15 @@ require_absent \
 printf '%s' "${help_output}" > "${help_path}"
 verify_implicit_interactive_help "${help_path}" "${interactive_launcher[@]}"
 
+"${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"
 "${launcher[@]}" --print-task-plan DASHBOARD | tr -d '\r' > "${task_plan_path}"
 "${launcher[@]}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r' > "${goal_plan_path}"
-print_cli_contract_minimal_request \
+cat "${request_template_path}" \
     | "${doctor_launcher[@]}" --doctor-request | tr -d '\r' > "${doctor_report_path}"
 
-python3 - "${catalog_path}" "${help_path}" "${task_catalog_path}" "${task_plan_path}" "${goal_plan_path}" "${doctor_report_path}" <<'PY'
+python3 - "${catalog_path}" "${help_path}" "${task_catalog_path}" "${task_plan_path}" "${goal_plan_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
 import json
 import re
 import sys
@@ -272,6 +274,7 @@ task_catalog = json.loads(Path(sys.argv[3]).read_text())
 task_plan = json.loads(Path(sys.argv[4]).read_text())
 goal_plan = json.loads(Path(sys.argv[5]).read_text())
 doctor_report = json.loads(Path(sys.argv[6]).read_text())
+request_template = json.loads(Path(sys.argv[7]).read_text())
 
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
@@ -352,6 +355,32 @@ if "FORCE_FORMULA_RECALCULATION_ON_OPEN" in execution_summary:
     die("catalog executionModeInputType summary still exposes the deleted recalc mutation action")
 if "FORCE_FORMULA_RECALC_ON_OPEN" in execution_summary:
     die("catalog executionModeInputType summary still exposes the rejected legacy recalc shorthand")
+
+if request_template.get("protocolVersion") != "V1":
+    die("request template no longer emits protocolVersion=V1")
+if request_template.get("source", {}).get("type") != "NEW":
+    die("request template no longer emits source.type=NEW")
+if request_template.get("persistence", {}).get("type") != "NONE":
+    die("request template no longer emits persistence.type=NONE")
+mode = request_template.get("execution", {}).get("mode", {})
+if mode.get("readMode") != "FULL_XSSF" or mode.get("writeMode") != "FULL_XSSF":
+    die("request template no longer emits FULL_XSSF execution defaults")
+journal = request_template.get("execution", {}).get("journal", {})
+if journal.get("level") != "NORMAL":
+    die("request template no longer emits execution.journal.level=NORMAL")
+calculation = request_template.get("execution", {}).get("calculation", {})
+strategy = calculation.get("strategy", {})
+if strategy.get("type") != "DO_NOT_CALCULATE" or calculation.get("markRecalculateOnOpen") is not False:
+    die("request template no longer emits the DO_NOT_CALCULATE calculation default")
+formula_environment = request_template.get("formulaEnvironment", {})
+if formula_environment.get("externalWorkbooks") != []:
+    die("request template no longer emits an empty external workbook list")
+if formula_environment.get("missingWorkbookPolicy") != "ERROR":
+    die("request template no longer emits missingWorkbookPolicy=ERROR")
+if formula_environment.get("udfToolpacks") != []:
+    die("request template no longer emits an empty UDF toolpack list")
+if request_template.get("steps") != []:
+    die("request template no longer emits an empty steps list")
 
 sheet_layout = inspection_query_types["GET_SHEET_LAYOUT"]["summary"]
 if "presentation" not in sheet_layout:

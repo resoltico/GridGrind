@@ -56,6 +56,9 @@ case "${1:-}" in
     --help)
         emit_fixture_file "${FAKE_GRIDGRIND_HELP_FILE:?}"
         ;;
+    --print-request-template)
+        emit_fixture_file "${FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE:?}"
+        ;;
     --doctor-request)
         emit_fixture_file "${FAKE_GRIDGRIND_DOCTOR_REPORT_FILE:?}"
         ;;
@@ -116,6 +119,7 @@ run_verify_with_fixture_texts() {
     local task_catalog_file
     local task_plan_file
     local goal_plan_file
+    local request_template_file
     local doctor_report_file
     local implicit_help_file
 
@@ -125,6 +129,7 @@ run_verify_with_fixture_texts() {
     task_catalog_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_text}")"
     task_plan_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_text}")"
     goal_plan_file="$(write_case_fixture "${case_dir}" 'goal-plan.json' "${goal_plan_text}")"
+    request_template_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_text}")"
     implicit_help_file="$(write_case_fixture "${case_dir}" 'implicit-help.txt' "${implicit_help_text}")"
 
@@ -136,6 +141,7 @@ run_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
             FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
             FAKE_GRIDGRIND_GOAL_PLAN_FILE="${goal_plan_file}" \
+            FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
             FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
             "${verify_script}" binary "${fake_cli}" >/dev/null
         return 0
@@ -147,6 +153,7 @@ run_verify_with_fixture_texts() {
         FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
         FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
         FAKE_GRIDGRIND_GOAL_PLAN_FILE="${goal_plan_file}" \
+        FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
         FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
         "${verify_script}" binary "${fake_cli}" >/dev/null
 }

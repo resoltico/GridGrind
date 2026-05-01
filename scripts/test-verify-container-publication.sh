@@ -117,6 +117,9 @@ case "${command}" in
             --help)
                 emit_fixture_file "${FAKE_DOCKER_HELP_OUTPUT_FILE:?}"
                 ;;
+            --print-request-template)
+                emit_fixture_file "${FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE:?}"
+                ;;
             --print-task-catalog)
                 emit_fixture_file "${FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE:?}"
                 ;;
@@ -182,6 +185,7 @@ run_verify_with_fixture_texts() {
     local task_catalog_output_file
     local task_plan_output_file
     local goal_plan_output_file
+    local request_template_output_file
     local doctor_report_output_file
 
     case_dir="$(next_case_dir)"
@@ -192,6 +196,7 @@ run_verify_with_fixture_texts() {
     task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
     task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
     goal_plan_output_file="$(write_case_fixture "${case_dir}" 'goal-plan.json' "${goal_plan_output}")"
+    request_template_output_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_output_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_output}")"
 
     PATH="${fake_bin}:${PATH}" \
@@ -203,6 +208,7 @@ run_verify_with_fixture_texts() {
         FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
         FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
         FAKE_DOCKER_GOAL_PLAN_OUTPUT_FILE="${goal_plan_output_file}" \
+        FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE="${request_template_output_file}" \
         FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE="${doctor_report_output_file}" \
         GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
         GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \

@@ -59,8 +59,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and invalid replay or promotion targets now print the correct wrapper usage instead of leaking
   the internal `_run-task` contract.
 - Jazzer status now keeps a stable `Jazzer Status` surface even on a fresh workspace with no
-  recorded summaries, and the documentation-contract regression no longer depends on `rg` being
-  installed on the host shell.
+  recorded summaries, the documentation-contract regression no longer depends on `rg` being
+  installed on the host shell, and the release-surface container verifier now drives
+  `--doctor-request` from the printed request template instead of a drift-prone hard-coded stub.
 - `STREAMING_WRITE` now keeps SXSSF shared strings enabled, so repeated-text workbooks no longer
   balloon into inline-string-heavy `.xlsx` packages that are much larger than equivalent
   full-XSSF or Excel-authored files.

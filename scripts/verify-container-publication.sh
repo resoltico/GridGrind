@@ -50,6 +50,7 @@ readonly verify_cli_contract_script="${repo_root}/scripts/verify-cli-contract.sh
 readonly docker_config_parent="${repo_root}/tmp/verify-container-publication"
 docker_config_dir=''
 docker_endpoint=''
+cli_contract_log_path=''
 
 [[ -n "${image_name}" ]] || die "image name is required"
 [[ -n "${expected_version}" ]] || die "expected version is required"
@@ -86,6 +87,24 @@ anonymous_docker() {
     docker --config "${docker_config_dir}" "$@"
 }
 
+run_verify_cli_contract() {
+    local image_ref=$1
+    cli_contract_log_path="${docker_config_dir}/$(basename "${image_ref}").cli-contract.log"
+    if [[ -n "${docker_endpoint}" ]]; then
+        if ! DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
+            "${verify_cli_contract_script}" docker-image "${image_ref}" >"${cli_contract_log_path}" 2>&1; then
+            cat "${cli_contract_log_path}" >&2
+            die "published container ${image_ref} failed the packaged CLI contract verifier"
+        fi
+        return
+    fi
+    if ! DOCKER_CONFIG="${docker_config_dir}" \
+        "${verify_cli_contract_script}" docker-image "${image_ref}" >"${cli_contract_log_path}" 2>&1; then
+        cat "${cli_contract_log_path}" >&2
+        die "published container ${image_ref} failed the packaged CLI contract verifier"
+    fi
+}
+
 verify_ref() {
     local tag_ref=$1
     local image_ref="${image_name}:${tag_ref}"
@@ -111,14 +130,5 @@ verify_ref() {
 verify_ref "${expected_version}"
 verify_ref latest
 
-if [[ -n "${docker_endpoint}" ]]; then
-    DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
-        "${verify_cli_contract_script}" docker-image "${image_name}:${expected_version}" >/dev/null
-    DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
-        "${verify_cli_contract_script}" docker-image "${image_name}:latest" >/dev/null
-else
-    DOCKER_CONFIG="${docker_config_dir}" \
-        "${verify_cli_contract_script}" docker-image "${image_name}:${expected_version}" >/dev/null
-    DOCKER_CONFIG="${docker_config_dir}" \
-        "${verify_cli_contract_script}" docker-image "${image_name}:latest" >/dev/null
-fi
+run_verify_cli_contract "${image_name}:${expected_version}"
+run_verify_cli_contract "${image_name}:latest"

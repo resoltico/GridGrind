@@ -140,9 +140,9 @@ grep -Fq 'docker smoke response did not include the structured execution journal
     "docker smoke no longer asserts response-journal presence"
 grep -Fq 'docker smoke create request did not stream live verbose journal events to stderr' "${docker_smoke_script}" || die \
     "docker smoke no longer asserts live verbose stderr journal streaming"
-grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:${expected_version}"' \
+grep -Fq 'run_verify_cli_contract "${image_name}:${expected_version}"' \
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
-grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:latest"' \
+grep -Fq 'run_verify_cli_contract "${image_name}:latest"' \
     "${container_verify_script}" || die "public container verification no longer checks the latest tag contract"
 grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_script}" || die \
     "Stage 4 contract no longer exercises the release primary-checkout regression"
