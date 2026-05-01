@@ -557,10 +557,10 @@ docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/d
 printf 'Docker smoke: verifying packaged help and catalog contract\n'
 if [[ -n "${docker_endpoint}" ]]; then
     DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" \
-        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}" >/dev/null
+        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"
 else
     DOCKER_CONFIG="${anonymous_docker_config}" \
-        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}" >/dev/null
+        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"
 fi
 
 printf 'Docker smoke: verifying custom workdir and weird paths\n'

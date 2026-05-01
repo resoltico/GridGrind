@@ -79,7 +79,10 @@ load_test_cli_contract_fixtures() {
     success_goal_plan="$(
         java -jar "${jar_path}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r'
     )"
+    success_request_template="$(
+        java -jar "${jar_path}" --print-request-template | tr -d '\r'
+    )"
     success_doctor_report="$(
-        print_cli_contract_minimal_request | java -jar "${jar_path}" --doctor-request | tr -d '\r'
+        printf '%s' "${success_request_template}" | java -jar "${jar_path}" --doctor-request | tr -d '\r'
     )"
 }
