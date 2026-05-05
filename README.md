@@ -90,8 +90,6 @@ Good fit:
 - Automation and agent pipelines that create or maintain Excel files without a UI
 - Workbook health checks and fact extraction without saving (`"persistence": {"type": "NONE"}`)
 - Environments without Excel — Linux containers, CI pipelines, server-side workflows
-- Low-memory append pipelines — `STREAMING_WRITE` mode limits mutations to `ENSURE_SHEET`
-  and `APPEND_ROW`; set `markRecalculateOnOpen=true` when Excel clients should recalculate on open
 
 Skip it when:
 - You need `.xls`, `.xlsm`, or `.xlsb` — GridGrind handles `.xlsx` only

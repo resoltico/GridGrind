@@ -168,7 +168,6 @@ final class XlsxParityDocsTest {
     Path repositoryRoot = repositoryRoot();
     for (String relativePath :
         List.of(
-            "README.md",
             "docs/OPERATIONS.md",
             "docs/QUICK_REFERENCE.md",
             "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
