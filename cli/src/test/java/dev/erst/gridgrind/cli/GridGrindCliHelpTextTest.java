@@ -232,8 +232,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(flagsPos >= 0, "help must contain Flags:");
     assertTrue(workflowsPos >= 0, "help must contain Workflows:");
     assertTrue(
-        usagePos < flagsPos,
-        "Flags must appear after Usage so grammar sections cluster together");
+        usagePos < flagsPos, "Flags must appear after Usage so grammar sections cluster together");
     assertTrue(
         flagsPos < workflowsPos,
         "Flags must appear before Workflows so grammar precedes operator guidance");
