@@ -165,8 +165,12 @@ final class GridGrindProtocolCatalogCliSurface {
                   "execution.journal.level controls journal detail; VERBOSE also streams live"
                       + " phase events to stderr.",
                   "execution.calculation controls server-side evaluation, cache clearing, and"
-                      + " open-time recalc flags. "
-                      + GridGrindContractText.calculationPolicyInputSummary(),
+                      + " open-time recalc flags. Use CalculationPolicyInput.defaults() for"
+                      + " DO_NOT_CALCULATE with markRecalculateOnOpen=false. Use EVALUATE_ALL or"
+                      + " EVALUATE_TARGETS for immediate server-side evaluation,"
+                      + " CLEAR_CACHES_ONLY to strip persisted caches,"
+                      + " or markRecalculateOnOpen=true when Excel-compatible clients should"
+                      + " recalculate later.",
                   "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and"
                       + " STANDARD_INPUT sources.",
                   "Large authored payloads belong in UTF8_FILE, FILE, or STANDARD_INPUT"
@@ -314,8 +318,8 @@ final class GridGrindProtocolCatalogCliSurface {
                       "--print-protocol-catalog", "Print the machine-readable protocol catalog."),
                   new CliSurface.DefinitionEntry(
                       "--operation <id>",
-                      "With --print-protocol-catalog, print one unique entry or one nested/"
-                          + " plain type group; qualify duplicate ids as <group>:<id> and"
+                      "With --print-protocol-catalog, print one unique entry or one nested/plain"
+                          + " type group; qualify duplicate ids as <group>:<id> and"
                           + " query type groups as nestedTypes:<group> or plainTypes:<group>."),
                   new CliSurface.DefinitionEntry(
                       "--search <text>",

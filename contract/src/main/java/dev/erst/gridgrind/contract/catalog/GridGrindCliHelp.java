@@ -68,11 +68,20 @@ public final class GridGrindCliHelp {
   }
 
   private static String renderCoordinateSystems(CliSurface.CliTableSection section) {
+    int leftWidth = 22;
+    String separator =
+        "  "
+            + "-".repeat(section.leftHeader().length())
+            + " ".repeat(leftWidth - section.leftHeader().length())
+            + " "
+            + "-".repeat(section.rightHeader().length());
     return section.label()
         + ":\n"
-        + "  %-22s %s\n".formatted(section.leftHeader(), section.rightHeader())
+        + ("  %-" + leftWidth + "s %s\n").formatted(section.leftHeader(), section.rightHeader())
+        + separator
+        + "\n"
         + section.entries().stream()
-            .map(entry -> "  %-22s %s".formatted(entry.pattern(), entry.convention()))
+            .map(entry -> ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
             .map(line -> line + "\n")
             .collect(java.util.stream.Collectors.joining())
             .stripTrailing();
