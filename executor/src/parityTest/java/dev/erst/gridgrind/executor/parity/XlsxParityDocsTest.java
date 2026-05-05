@@ -252,7 +252,6 @@ final class XlsxParityDocsTest {
     String drawingMutations = readDoc(repositoryRoot, "docs/DRAWING_MUTATIONS.md");
     String drawingAndStructuredInspections =
         readDoc(repositoryRoot, "docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md");
-    String readme = readDoc(repositoryRoot, "README.md");
     String limitations = readDoc(repositoryRoot, "docs/LIMITATIONS.md");
 
     assertTrue(operations.contains("DRAWING_MUTATIONS.md"));
@@ -272,7 +271,7 @@ final class XlsxParityDocsTest {
     assertFalse(
         quickReference.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
 
-    assertTrue(readme.contains("examples/signature-line-request.json"));
+    assertTrue(quickReference.contains("examples/signature-line-request.json"));
     assertTrue(limitations.contains("AREA_3D"));
     assertTrue(limitations.contains("SURFACE_3D"));
     assertTrue(limitations.contains("UNSUPPORTED"));

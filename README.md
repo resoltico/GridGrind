@@ -88,7 +88,7 @@ Good fit:
 - Recurring `.xlsx` workbook jobs that should run the same way each time — filing, updating,
   checking, extracting
 - Automation and agent pipelines that create or maintain Excel files without a UI
-- Workbook health checks and fact extraction without saving (`"persistence": {"type": "NONE"}`)
+- Workbook health checks and fact extraction without saving a file
 - Environments without Excel — Linux containers, CI pipelines, server-side workflows
 
 Skip it when:
@@ -98,38 +98,23 @@ Skip it when:
 
 ## Get it
 
-**Docker** (recommended — no install beyond Docker, works on macOS, Linux, Windows, x64 and ARM):
+**Docker** (recommended — no install, runs on macOS, Linux, Windows, x64 and ARM):
 
 ```bash
 docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
 ```
 
-**Release JAR** (requires Java 26) — download from
-[Releases](https://github.com/resoltico/GridGrind/releases/latest), then:
-
-Don't know the protocol yet? Describe your workbook goal — GridGrind matches it to one of eight
-task recipes and returns a runnable starter request:
+**JAR** (requires Java 26) — download from [Releases](https://github.com/resoltico/GridGrind/releases/latest):
 
 ```bash
-java -jar gridgrind.jar --print-goal-plan "weekly coffee lot tracker with totals"
-java -jar gridgrind.jar --print-task-catalog
+java -jar gridgrind.jar --help
 ```
 
-Or copy one of 14 built-in working examples and run it directly:
-
-```bash
-java -jar gridgrind.jar --print-example BUDGET --response budget-request.json
-java -jar gridgrind.jar --request budget-request.json --response response.json
-```
-
-- [First run guide](docs/QUICK_START.md) — Docker or JAR, first successful run, common pitfalls
-- [Snippets](docs/QUICK_REFERENCE.md) — request shapes, step patterns, assertion and inspection snippets
-- [Java authoring](docs/JAVA_AUTHORING.md) — build the same plan from Java instead of hand-writing JSON
-- [Operations reference](docs/OPERATIONS.md) — full field list for mutations, assertions, and inspections
-- [Examples](examples/) — ready-to-run request files including
-  [chart-request.json](examples/chart-request.json),
-  [signature-line-request.json](examples/signature-line-request.json), and
-  [large-file-modes-request.json](examples/large-file-modes-request.json)
+- [First run guide](docs/QUICK_START.md) — first successful run, Docker or JAR
+- [Snippets](docs/QUICK_REFERENCE.md) — copy-paste request patterns
+- [Java authoring](docs/JAVA_AUTHORING.md) — build requests from Java instead of JSON
+- [Operations reference](docs/OPERATIONS.md) — every field and operation
+- [Examples](examples/) — ready-to-run request files
 
 ## Legal
 
