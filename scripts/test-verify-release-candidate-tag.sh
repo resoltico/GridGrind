@@ -204,7 +204,7 @@ run_verify_expect_failure() {
 
 success_repo="$(create_repo "${test_root}/success" "9.9.9")"
 success_sha="$(git -C "${success_repo}" rev-parse HEAD)"
-successful_checks="$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tsuccess\nContributor devcontainer\tcompleted\tsuccess')"
+successful_checks="$(printf 'Gate\tcompleted\tsuccess')"
 run_verify_expect_success \
     "${success_repo}" \
     "v9.9.9" \
@@ -253,6 +253,6 @@ run_verify_expect_failure \
     "v7.7.7" \
     "${checks_sha}" \
     "${checks_sha}" \
-    "$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tfailure\nContributor devcontainer\tcompleted\tsuccess')"
+    "$(printf 'Gate\tcompleted\tfailure')"
 
 printf 'verify-release-candidate-tag regression: success\n'
