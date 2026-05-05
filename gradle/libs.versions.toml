@@ -19,7 +19,7 @@ google-java-format = "1.35.0"
 # exact artifact version below; keep the repository wiring aligned with this pin.
 jacoco = "0.8.15-20260429.155228-97"
 pmd = "7.24.0"
-shadow = "9.4.0"
+shadow = "9.4.1"
 spotless = "8.4.0"
 
 [libraries]
