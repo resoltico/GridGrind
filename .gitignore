@@ -47,7 +47,6 @@ replay_pid*
 *.swp
 *.swo
 *~
-.DS_Store
 Thumbs.db
 ehthumbs.db
 Desktop.ini

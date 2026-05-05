@@ -13,12 +13,12 @@ on:
 
 concurrency:
   group: publication-${{ github.workflow }}-${{ inputs.release_tag || github.ref_name }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Build and publish release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     permissions:

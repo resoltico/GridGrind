@@ -66,6 +66,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     archiveBaseName = "gridgrind"
     archiveVersion = ""
     archiveClassifier = ""
+    isReproducibleFileOrder = true
 
     // Merge ServiceLoader registrations from all bundled JARs.
     mergeServiceFiles()

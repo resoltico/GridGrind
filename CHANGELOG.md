@@ -5,6 +5,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pinned all GitHub Actions workflow runners from the floating `ubuntu-latest` label to `ubuntu-24.04` across all four workflows (`ci.yml`: 3 jobs; `release.yml`: 1 job; `container.yml`: 2 jobs; `gradle-wrapper-validation.yml`: 1 job) so runner image updates cannot silently change the build or release environment.
+- Added `workflow_dispatch:` trigger to `ci.yml` so maintainers can manually rerun the aggregate `Gate` against a branch when GitHub fails to attach the `pull_request` workflow on initial PR open.
+- Added a `devcontainer-changes` path-detection job to `ci.yml` that computes a git diff against the devcontainer trigger paths (`.devcontainer/`, `scripts/validate-devcontainer.sh`, `scripts/devcontainer-prepare-user-home.sh`); non-devcontainer PRs skip the full Docker build-and-validate cycle, reducing typical PR wall-clock time significantly.
+- Added a `Gate` aggregate required-status job to `ci.yml` using `if: always()` with explicit `${{ toJSON(needs.*.result) }}` failure detection so a correctly skipped `devcontainer` gate does not prevent `Gate` from being reported or block merge — only a failed or cancelled job prevents success. Configure branch protection to require `Gate` as the single required check.
+- Promoted `permissions: contents: read` to the workflow level in `ci.yml` and removed the redundant per-job declarations.
+- Fixed `release.yml` concurrency to `cancel-in-progress: false`; the previous `true` setting could cancel an in-progress release publication mid-way if a second tag was pushed, leaving the release in a half-published state.
+- Raised `container` job `timeout-minutes` from 20 to 25 to provide a clear margin between Docker image build-and-push time and the post-publish verification step.
+- Added `id-token: write` permission to the `container` job in `container.yml` to activate the OIDC token flow required for keyless provenance attestation signing; the job already enabled `provenance: mode=max` and `sbom: true` but lacked the permission to complete attestation signing.
+- Updated `actions/checkout` in `gradle-wrapper-validation.yml` from `v5.0.0` (`08c6903cd8c0fde910a37f88322edcfb5dd907a8`) to `v6.0.2` (`de0fac2e4500dabe0009e67214ff5f5447ce83dd`) for consistency with all other workflows; added `timeout-minutes: 10`.
+- Hardcoded the release-blocking check in `verify-release-candidate-tag.sh` to `Gate` (the single aggregate CI check) and removed the `GRIDGRIND_RELEASE_BLOCKING_CHECKS` env-var override; the previous default included `Contributor devcontainer` which is legitimately skipped on commits that do not touch devcontainer files, causing false failures on those release commits.
+- Added retry support to `verify-github-release.sh` (default 3 attempts with 5-second delay, overridable via `GRIDGRIND_GITHUB_RELEASE_VERIFY_RETRIES` and `GRIDGRIND_GITHUB_RELEASE_VERIFY_DELAY_SECONDS`) so release asset availability checks are resilient to brief GitHub API propagation lag.
+- Added `isReproducibleFileOrder = true` to the `shadowJar` task in `cli/build.gradle.kts` for deterministic, auditable JAR entry ordering across builds.
+- Added `jazzer` Gradle ecosystem and `docker` ecosystem entries to `.github/dependabot.yml`; the nested `jazzer/` Gradle build was not scanned for dependency updates, and the Dockerfile base image had no automated update coverage.
+- Removed duplicate `.DS_Store` entry from `.gitignore`.
+- Updated `RELEASE_PROTOCOL.md` to replace all references to the old three-job blocking check list (`Check`, `Docker smoke`, `Contributor devcontainer`) with the new single `Gate` aggregate check.
+- Added a Dependabot Approval Strategy section to `RELEASE_PROTOCOL.md` with triage tiers (security within 7 days, regular before next release, major version bumps as considered upgrades), required CI gates before any merge, and explicit prohibitions.
+
 ## [0.62.0] - 2026-05-01
 
 ### Changed
