@@ -189,7 +189,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--print-goal-plan <goal>"));
     assertTrue(help.contains("--doctor-request"));
     assertTrue(help.contains("gridgrind --doctor-request [--request <path>] [--response <path>]"));
-    assertTrue(help.contains("First-Contact Workflows:"));
+    assertTrue(help.contains("Workflows:"));
     assertTrue(help.contains("Discover What To Send:"));
     assertTrue(help.contains("Draft And Preflight:"));
     assertTrue(help.contains("Execute And Keep Artifacts:"));
@@ -224,6 +224,18 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(
         help.contains("cellInputTypes:FORMULA"),
         "help must explain how to qualify duplicate catalog ids");
+    assertTrue(help.endsWith("\n"), "help must end with a newline");
+    int usagePos = help.indexOf("Usage:");
+    int flagsPos = help.indexOf("Flags:");
+    int workflowsPos = help.indexOf("Workflows:");
+    assertTrue(usagePos >= 0, "help must contain Usage:");
+    assertTrue(flagsPos >= 0, "help must contain Flags:");
+    assertTrue(workflowsPos >= 0, "help must contain Workflows:");
+    assertTrue(
+        usagePos < flagsPos, "Flags must appear after Usage so grammar sections cluster together");
+    assertTrue(
+        flagsPos < workflowsPos,
+        "Flags must appear before Workflows so grammar precedes operator guidance");
 
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
@@ -255,7 +267,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertTrue(Files.readString(responsePath).contains("First-Contact Workflows:"));
+    assertTrue(Files.readString(responsePath).contains("Workflows:"));
   }
 
   @Test
@@ -318,7 +330,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String help = GridGrindCli.helpText("1.0.0");
     CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
 
-    assertTrue(help.contains("First-Contact Workflows:"));
+    assertTrue(help.contains("Workflows:"));
     for (CliSurface.WorkflowEntry entry : cliSurface.workflows().entries()) {
       assertTrue(
           help.contains(entry.title() + ":"), () -> "missing workflow title " + entry.title());

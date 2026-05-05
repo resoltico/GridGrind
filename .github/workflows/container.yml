@@ -21,13 +21,14 @@ env:
 jobs:
   container:
     name: Build and push container image
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
 
     permissions:
       checks: read
       contents: read
       packages: write
+      id-token: write
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -109,7 +110,7 @@ jobs:
 
   cleanup:
     name: Prune old container versions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: container
     timeout-minutes: 5
 

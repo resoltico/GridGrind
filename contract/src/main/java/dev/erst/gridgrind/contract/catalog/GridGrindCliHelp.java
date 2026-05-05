@@ -30,21 +30,22 @@ public final class GridGrindCliHelp {
     String requestTemplate = requestTemplateText();
     String discoveryExamples = formatExamples(catalog.shippedExamples());
     return String.join(
-        "\n\n",
-        productHeader(version, description),
-        renderSection(cliSurface.usage()),
-        renderWorkflows(cliSurface.workflows()),
-        renderSection(cliSurface.execution()),
-        renderDefinitions(cliSurface.limits()),
-        renderSection(cliSurface.request()),
-        renderDefinitions(cliSurface.fileWorkflow()),
-        renderCoordinateSystems(cliSurface.coordinateSystems()),
-        renderTemplate(cliSurface.minimalValidRequest(), requestTemplate),
-        renderCommandExample(cliSurface.stdinExample(), containerTag),
-        renderCommandExample(cliSurface.dockerFileExample(), containerTag),
-        renderDiscovery(cliSurface.discovery(), discoveryExamples),
-        renderReferences(cliSurface.docs(), documentRef),
-        renderDefinitions(cliSurface.flags()));
+            "\n\n",
+            productHeader(version, description),
+            renderSection(cliSurface.usage()),
+            renderDefinitions(cliSurface.flags()),
+            renderWorkflows(cliSurface.workflows()),
+            renderSection(cliSurface.execution()),
+            renderDefinitions(cliSurface.limits()),
+            renderSection(cliSurface.request()),
+            renderDefinitions(cliSurface.fileWorkflow()),
+            renderCoordinateSystems(cliSurface.coordinateSystems()),
+            renderTemplate(cliSurface.minimalValidRequest(), requestTemplate),
+            renderCommandExample(cliSurface.stdinExample(), containerTag),
+            renderCommandExample(cliSurface.dockerFileExample(), containerTag),
+            renderDiscovery(cliSurface.discovery(), discoveryExamples),
+            renderReferences(cliSurface.docs(), documentRef))
+        + "\n";
   }
 
   /** Returns the shared two-line product header used by help and version surfaces. */
@@ -59,7 +60,7 @@ public final class GridGrindCliHelp {
     return shippedExamples.stream()
         .map(
             example ->
-                ("  %-" + width + "s  %s  %s")
+                ("    %-" + width + "s  %s  %s")
                     .formatted(example.id(), "examples/" + example.fileName(), example.summary()))
         .map(line -> line + "\n")
         .collect(java.util.stream.Collectors.joining())
@@ -67,11 +68,22 @@ public final class GridGrindCliHelp {
   }
 
   private static String renderCoordinateSystems(CliSurface.CliTableSection section) {
+    int leftWidth = 22;
+    String separator =
+        "  "
+            + "-".repeat(section.leftHeader().length())
+            + " ".repeat(leftWidth - section.leftHeader().length())
+            + " "
+            + "-".repeat(section.rightHeader().length());
     return section.label()
         + ":\n"
-        + "  %-22s %s\n".formatted(section.leftHeader(), section.rightHeader())
+        + ("  %-" + leftWidth + "s %s\n").formatted(section.leftHeader(), section.rightHeader())
+        + separator
+        + "\n"
         + section.entries().stream()
-            .map(entry -> "  %-22s %s".formatted(entry.pattern(), entry.convention()))
+            .map(
+                entry ->
+                    ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
             .map(line -> line + "\n")
             .collect(java.util.stream.Collectors.joining())
             .stripTrailing();

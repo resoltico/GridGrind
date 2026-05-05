@@ -157,10 +157,7 @@ Then verify every item in this checklist. All must be true before any commit or 
   - default branch is `main`
   - `delete_branch_on_merge` is enabled
   - `main` is protected with admin enforcement
-  - required status checks are exactly `Check` and `Docker smoke`
-- Workflow `CI` also publishes a `Contributor devcontainer` job. Branch protection does not need
-  to require that context, but the release verifiers and release operator still treat it as
-  release-blocking because it guards the committed preferred contributor environment.
+  - required status checks are exactly `Gate` (the single aggregate check that subsumes all CI jobs)
 
 Before cutting the release branch, enumerate open PRs so dependency-automation work is never
 surprise-discovered after publication:
@@ -240,12 +237,10 @@ Treat the PR itself as a second scope-verification checkpoint:
 - Every new commit pushed to the release branch reopens both the Step 2 staging checkpoint and
   this PR diff checkpoint. Re-verify both after each fix commit.
 
-Do not proceed until **every** release-blocking job in workflow `CI` has `"conclusion":
-"SUCCESS"`. At the time of writing that means `Check`, `Docker smoke`, and
-`Contributor devcontainer`. Branch protection still requires only `Check` and `Docker smoke`, but
-the devcontainer job remains release-blocking here because it protects the committed contributor
-environment contract. If any blocking job fails, fix the failure, push to the release branch, and
-wait again — do not merge a red PR.
+Do not proceed until the `Gate` aggregate check in workflow `CI` has `"conclusion": "SUCCESS"`.
+`Gate` is the single required status check in branch protection and subsumes `Check`, `Docker smoke`,
+and `Contributor devcontainer` (when devcontainer files changed). If `Gate` fails, fix the failure,
+push to the release branch, and wait again — do not merge a red PR.
 
 ### Step 4 — Merge PR, wait for main CI, and verify the merge handoff
 
@@ -262,9 +257,8 @@ gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefNa
 The `--admin` flag uses administrator privileges to get the merge through branch protection
 without relying on an interactive local follow-up flow. If required pull-request reviews are
 enabled, `--admin` also bypasses the self-approval dead-end that a PR author cannot satisfy in a
-single-owner release. CI release-blocking jobs (`Check`, `Docker smoke`, and
-`Contributor devcontainer`) remain the authoritative quality gate; any review requirement is
-optional policy, not the release-quality signal.
+single-owner release. The `Gate` aggregate check in workflow `CI` remains the authoritative
+release quality gate; any review requirement is optional policy, not the release-quality signal.
 
 If the release is being driven from a dedicated worktree while the primary checkout already has
 `main` checked out, do not rely on `gh pr merge` or `git checkout main` in the auxiliary
@@ -299,9 +293,8 @@ Requirements before continuing:
 - `mergedAt` is populated.
 - The checked-out verifier commit contains the merge commit you expect.
 - The checkout used for `./scripts/verify-release-merge-handoff.sh` exactly matches `origin/main`.
-- The merged `main` commit already has successful `Check`, `Docker smoke`, and
-  `Contributor devcontainer` runs from workflow `CI`. `./scripts/verify-release-merge-handoff.sh`
-  is the authoritative gate for this handoff.
+- The merged `main` commit already has a successful `Gate` run from workflow `CI`.
+  `./scripts/verify-release-merge-handoff.sh` is the authoritative gate for this handoff.
 - The remote release branch is deleted by the merge step.
 
 GitHub auto-delete on merge should also be enabled at the repository level. `--delete-branch`
@@ -353,8 +346,7 @@ An existing-tag rerun is expected to fail unless all of the following are still 
 - `gradle.properties` in the checked-out tag still reports `version=X.Y.Z`
 - the workflow checkout matches the exact remote `vX.Y.Z` tag commit
 - that tag commit remains reachable from the default branch (`main`)
-- that exact commit already has successful `Check`, `Docker smoke`, and
-  `Contributor devcontainer` runs from workflow `CI`
+- that exact commit already has a successful `Gate` run from workflow `CI`
 
 ### Step 6 — Branch hygiene
 
@@ -612,3 +604,36 @@ If a disposable release worktree was created and is no longer needed:
 ```bash
 git worktree remove "$RELEASE_WORKTREE"
 ```
+
+---
+
+## Dependabot Approval Strategy
+
+GridGrind is a workbook automation engine integrated into financial and business workflows.
+**No Dependabot PR may be auto-merged.** Every update — regardless of ecosystem, scope, or
+whether it is flagged as a security fix — requires a human decision before landing on `main`.
+
+### Triage tiers
+
+| Tier | Trigger | Deadline | Action |
+|:-----|:--------|:---------|:-------|
+| **Security** | Dependabot security advisory on any direct or transitive dependency | Within 7 calendar days of PR open | Review, verify CI passes, merge or reject with documented reason |
+| **Regular** | Non-security weekly update | Before the next release | Review during Step 10 Dependabot hygiene; merge or close |
+| **Major version bump** | `semver-major` update on any ecosystem | Before the next release | Treat as a considered upgrade, not a routine bump; verify API compatibility explicitly |
+
+### Required gates before any Dependabot merge
+
+1. The full CI `Gate` check passes on the Dependabot PR head commit.
+2. For Docker base image updates: `Docker smoke` specifically passes, confirming the new base
+   image does not break the containerized runtime.
+3. For Gradle dependency updates that touch Apache POI, Log4j, or Jackson: the `Check` step that
+   exercises CLI contract verification and Jazzer regression passes cleanly.
+4. For GitHub Actions updates: the pinned commit SHA in the workflow file matches the SHA of the
+   tagged release being adopted — verify with `gh api repos/<owner>/<repo>/git/ref/tags/<tag>`.
+
+### What to never do
+
+- Never merge a Dependabot PR that has a failing or missing `Gate` check.
+- Never retag or amend a published release to absorb a post-release Dependabot merge.
+- Never leave a Dependabot PR open indefinitely without an explicit keep-open reason documented
+  in a PR comment.

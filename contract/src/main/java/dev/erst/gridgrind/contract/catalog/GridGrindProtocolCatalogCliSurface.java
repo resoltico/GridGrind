@@ -24,7 +24,7 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --version [--response <path>]",
                   "gridgrind --license [--response <path>]")),
           new CliSurface.CliWorkflowSection(
-              "First-Contact Workflows",
+              "Workflows",
               List.of(
                   new CliSurface.WorkflowEntry(
                       "Discover What To Send",
@@ -119,7 +119,8 @@ final class GridGrindProtocolCatalogCliSurface {
                           + " named ranges."),
                   new CliSurface.DefinitionEntry(
                       "Column structural edits",
-                      "same ownership rule; deletes/shifts also reject destructive range-backed"
+                      "rejected when they would move tables, sheet autofilters, or data"
+                          + " validations; deletes/shifts also reject destructive range-backed"
                           + " named ranges; all column edits reject any workbook formulas or"
                           + " formula-defined names."),
                   new CliSurface.DefinitionEntry(
@@ -165,8 +166,12 @@ final class GridGrindProtocolCatalogCliSurface {
                   "execution.journal.level controls journal detail; VERBOSE also streams live"
                       + " phase events to stderr.",
                   "execution.calculation controls server-side evaluation, cache clearing, and"
-                      + " open-time recalc flags. "
-                      + GridGrindContractText.calculationPolicyInputSummary(),
+                      + " open-time recalc flags. Use CalculationPolicyInput.defaults() for"
+                      + " DO_NOT_CALCULATE with markRecalculateOnOpen=false. Use EVALUATE_ALL or"
+                      + " EVALUATE_TARGETS for immediate server-side evaluation,"
+                      + " CLEAR_CACHES_ONLY to strip persisted caches,"
+                      + " or markRecalculateOnOpen=true when Excel-compatible clients should"
+                      + " recalculate later.",
                   "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and"
                       + " STANDARD_INPUT sources.",
                   "Large authored payloads belong in UTF8_FILE, FILE, or STANDARD_INPUT"
@@ -234,9 +239,9 @@ final class GridGrindProtocolCatalogCliSurface {
                       "first/last pairs", "inclusive zero-based bands."))),
           new CliSurface.CliTemplateSection("Minimal Valid Request"),
           new CliSurface.CliCommandExample(
-              "stdin Example", List.of("gridgrind --print-request-template | gridgrind"), null),
+              "Stdin Example", List.of("gridgrind --print-request-template | gridgrind"), null),
           new CliSurface.CliCommandExample(
-              "Docker File Example",
+              "Docker Example",
               List.of(
                   "docker run --rm -i \\",
                   "  -v \"$(pwd)\":/workdir \\",
@@ -256,11 +261,12 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-task-plan <id> --response task-plan.json",
                   "gridgrind --print-goal-plan \"monthly sales dashboard with charts\""
                       + " --response goal-plan.json",
-                  "gridgrind --print-protocol-catalog --response protocol-catalog.json",
-                  GridGrindContractText.workbookFindingsDiscoverySummary()),
+                  "gridgrind --print-protocol-catalog --response protocol-catalog.json"),
               "Built-in generated examples",
               "Print one built-in example",
-              "The task catalog publishes high-level office-work recipes composed from exact"
+              GridGrindContractText.workbookFindingsDiscoverySummary()
+                  + " Include it in any diagnostic plan with persistence.type=NONE."
+                  + " The task catalog publishes high-level office-work recipes composed from exact"
                   + " protocol capabilities. The protocol catalog remains the authoritative"
                   + " execution contract: it lists each field, whether it is required, and"
                   + " the nested/plain type group accepted by polymorphic fields such as"
@@ -314,8 +320,8 @@ final class GridGrindProtocolCatalogCliSurface {
                       "--print-protocol-catalog", "Print the machine-readable protocol catalog."),
                   new CliSurface.DefinitionEntry(
                       "--operation <id>",
-                      "With --print-protocol-catalog, print one unique entry or one nested/"
-                          + " plain type group; qualify duplicate ids as <group>:<id> and"
+                      "With --print-protocol-catalog, print one unique entry or one nested/plain"
+                          + " type group; qualify duplicate ids as <group>:<id> and"
                           + " query type groups as nestedTypes:<group> or plainTypes:<group>."),
                   new CliSurface.DefinitionEntry(
                       "--search <text>",
