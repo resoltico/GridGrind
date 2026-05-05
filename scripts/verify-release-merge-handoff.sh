@@ -84,7 +84,7 @@ require_non_negative_integer() {
 
 readonly script_dir="$(resolve_script_dir)"
 readonly script_repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
-readonly blocking_checks_csv="${GRIDGRIND_RELEASE_BLOCKING_CHECKS:-Check,Docker smoke,Contributor devcontainer}"
+readonly blocking_checks_csv="Gate"
 readonly poll_interval_seconds="${GRIDGRIND_RELEASE_CHECK_POLL_INTERVAL_SECONDS:-10}"
 readonly timeout_seconds="${GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS:-900}"
 

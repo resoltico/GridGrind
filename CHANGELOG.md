@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.63.0] - 2026-05-05
+
+### Changed
+
+- Bumped `tools.jackson.core:jackson-databind` from `3.1.2` to `3.1.3`; annotations remain on the Jackson 2.x coordinates at `2.21` by design.
+- Hardcoded the release-blocking check in `verify-release-merge-handoff.sh` to `Gate` (the single aggregate CI check) and removed the `GRIDGRIND_RELEASE_BLOCKING_CHECKS` env-var override; the previous default included `Check,Docker smoke,Contributor devcontainer`, which is inconsistent with the already-hardened `verify-release-candidate-tag.sh`.
+- Updated `test-verify-release-merge-handoff.sh` and `test-verify-release-candidate-tag.sh` regression tests to provide `Gate` as the single successful check run and `Gate` failure as the failure case, replacing the old three-check format.
+- Suppressed `[GRADLE-TEST-PULSE]` and `[JAZZER-PULSE]` lines from `check.sh` stdout; they are still written to the stage log for post-run inspection but no longer flood the terminal during a run.
+
 ### Fixed
 
 - Pinned all GitHub Actions workflow runners from the floating `ubuntu-latest` label to `ubuntu-24.04` across all four workflows (`ci.yml`: 3 jobs; `release.yml`: 1 job; `container.yml`: 2 jobs; `gradle-wrapper-validation.yml`: 1 job) so runner image updates cannot silently change the build or release environment.
@@ -2575,7 +2584,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.62.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.63.0...HEAD
+[0.63.0]: https://github.com/resoltico/GridGrind/compare/v0.62.0...v0.63.0
 [0.62.0]: https://github.com/resoltico/GridGrind/compare/v0.61.0...v0.62.0
 [0.61.0]: https://github.com/resoltico/GridGrind/compare/v0.60.0...v0.61.0
 [0.60.0]: https://github.com/resoltico/GridGrind/compare/v0.59.0...v0.60.0
