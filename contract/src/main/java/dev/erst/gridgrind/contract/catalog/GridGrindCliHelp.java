@@ -60,7 +60,7 @@ public final class GridGrindCliHelp {
     return shippedExamples.stream()
         .map(
             example ->
-                ("  %-" + width + "s  %s  %s")
+                ("    %-" + width + "s  %s  %s")
                     .formatted(example.id(), "examples/" + example.fileName(), example.summary()))
         .map(line -> line + "\n")
         .collect(java.util.stream.Collectors.joining())

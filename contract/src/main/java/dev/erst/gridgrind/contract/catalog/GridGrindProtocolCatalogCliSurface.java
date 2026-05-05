@@ -119,7 +119,8 @@ final class GridGrindProtocolCatalogCliSurface {
                           + " named ranges."),
                   new CliSurface.DefinitionEntry(
                       "Column structural edits",
-                      "same ownership rule; deletes/shifts also reject destructive range-backed"
+                      "rejected when they would move tables, sheet autofilters, or data"
+                          + " validations; deletes/shifts also reject destructive range-backed"
                           + " named ranges; all column edits reject any workbook formulas or"
                           + " formula-defined names."),
                   new CliSurface.DefinitionEntry(
@@ -260,11 +261,12 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-task-plan <id> --response task-plan.json",
                   "gridgrind --print-goal-plan \"monthly sales dashboard with charts\""
                       + " --response goal-plan.json",
-                  "gridgrind --print-protocol-catalog --response protocol-catalog.json",
-                  GridGrindContractText.workbookFindingsDiscoverySummary()),
+                  "gridgrind --print-protocol-catalog --response protocol-catalog.json"),
               "Built-in generated examples",
               "Print one built-in example",
-              "The task catalog publishes high-level office-work recipes composed from exact"
+              GridGrindContractText.workbookFindingsDiscoverySummary()
+                  + " Include it in any diagnostic plan with persistence.type=NONE."
+                  + " The task catalog publishes high-level office-work recipes composed from exact"
                   + " protocol capabilities. The protocol catalog remains the authoritative"
                   + " execution contract: it lists each field, whether it is required, and"
                   + " the nested/plain type group accepted by polymorphic fields such as"

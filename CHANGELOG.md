@@ -30,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed CLI help section `First-Contact Workflows` to `Workflows` to use cleaner Ubiquitous Language that does not expose internal jargon to operators and agents.
 - Renamed CLI help section `stdin Example` to `Stdin Example` for consistent Title Case across all section labels.
 - Renamed CLI help section `Docker File Example` to `Docker Example`; the previous name implied a Dockerfile definition rather than a `docker run` command example.
+- Moved the `ANALYZE_WORKBOOK_FINDINGS` prose summary out of the Discovery command list into the prose note at the bottom of the Discovery section; it was rendered at the same indent and visual level as `gridgrind` commands, making it look like an invocable CLI entry.
+- Indented the built-in generated examples list one additional level (from 2 to 4 spaces) so the entries appear visually nested under the `Built-in generated examples:` sub-label rather than at the same indent as the CLI commands above them.
+- Replaced the implicit `Column structural edits: same ownership rule` cross-reference with the explicit rule text so the Limits entry is self-contained and readable without requiring the adjacent `Row structural edits` entry for context.
 
 ## [0.62.0] - 2026-05-01
 
