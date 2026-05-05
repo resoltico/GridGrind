@@ -560,7 +560,7 @@ run_monitored_command() {
 
     (
         cd "${project_dir}"
-        "$@" > >(tee -a "${log_path}") 2>&1
+        "$@" > >(tee -a "${log_path}" | grep -Ev --line-buffered '^\[(GRADLE-TEST-PULSE|JAZZER-PULSE)\]') 2>&1
     ) &
     local child_pid=$!
 

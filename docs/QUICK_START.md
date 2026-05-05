@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.62.0"
+version: "0.63.0"
 domain: QUICK_START
 updated: "2026-05-01"
 route:

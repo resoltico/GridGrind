@@ -169,7 +169,7 @@ run_verify_expect_failure() {
 
 success_repo="$(create_repo "${test_root}/success" "9.9.9")"
 readonly success_sha="$(git -C "${success_repo}" rev-parse HEAD)"
-successful_checks="$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tsuccess\nContributor devcontainer\tcompleted\tsuccess')"
+successful_checks="$(printf 'Gate\tcompleted\tsuccess')"
 run_verify_expect_success \
     "${success_repo}" \
     "${success_sha}" \
@@ -180,7 +180,7 @@ run_verify_expect_success \
 delayed_repo="$(create_repo "${test_root}/delayed" "8.8.8")"
 readonly delayed_sha="$(git -C "${delayed_repo}" rev-parse HEAD)"
 readonly delayed_checks_file="${test_root}/delayed-checks.tsv"
-printf 'Check\tin_progress\t\nDocker smoke\tqueued\t\nContributor devcontainer\tqueued\t\n' > "${delayed_checks_file}"
+printf 'Gate\tin_progress\t\n' > "${delayed_checks_file}"
 (
     sleep 1
     printf '%s\n' "${successful_checks}" > "${delayed_checks_file}"
@@ -199,7 +199,7 @@ run_verify_expect_failure \
     "${failure_repo}" \
     "${failure_sha}" \
     env \
-    FAKE_GH_CHECK_RUNS_TSV="$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tfailure\nContributor devcontainer\tcompleted\tsuccess')" \
+    FAKE_GH_CHECK_RUNS_TSV="$(printf 'Gate\tcompleted\tfailure')" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0
 
 stale_repo="$(create_repo "${test_root}/stale" "6.6.6")"
