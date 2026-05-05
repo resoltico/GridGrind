@@ -24,7 +24,7 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --version [--response <path>]",
                   "gridgrind --license [--response <path>]")),
           new CliSurface.CliWorkflowSection(
-              "First-Contact Workflows",
+              "Workflows",
               List.of(
                   new CliSurface.WorkflowEntry(
                       "Discover What To Send",
@@ -234,9 +234,9 @@ final class GridGrindProtocolCatalogCliSurface {
                       "first/last pairs", "inclusive zero-based bands."))),
           new CliSurface.CliTemplateSection("Minimal Valid Request"),
           new CliSurface.CliCommandExample(
-              "stdin Example", List.of("gridgrind --print-request-template | gridgrind"), null),
+              "Stdin Example", List.of("gridgrind --print-request-template | gridgrind"), null),
           new CliSurface.CliCommandExample(
-              "Docker File Example",
+              "Docker Example",
               List.of(
                   "docker run --rm -i \\",
                   "  -v \"$(pwd)\":/workdir \\",

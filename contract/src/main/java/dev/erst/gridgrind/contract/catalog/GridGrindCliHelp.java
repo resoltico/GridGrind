@@ -30,21 +30,22 @@ public final class GridGrindCliHelp {
     String requestTemplate = requestTemplateText();
     String discoveryExamples = formatExamples(catalog.shippedExamples());
     return String.join(
-        "\n\n",
-        productHeader(version, description),
-        renderSection(cliSurface.usage()),
-        renderWorkflows(cliSurface.workflows()),
-        renderSection(cliSurface.execution()),
-        renderDefinitions(cliSurface.limits()),
-        renderSection(cliSurface.request()),
-        renderDefinitions(cliSurface.fileWorkflow()),
-        renderCoordinateSystems(cliSurface.coordinateSystems()),
-        renderTemplate(cliSurface.minimalValidRequest(), requestTemplate),
-        renderCommandExample(cliSurface.stdinExample(), containerTag),
-        renderCommandExample(cliSurface.dockerFileExample(), containerTag),
-        renderDiscovery(cliSurface.discovery(), discoveryExamples),
-        renderReferences(cliSurface.docs(), documentRef),
-        renderDefinitions(cliSurface.flags()));
+            "\n\n",
+            productHeader(version, description),
+            renderSection(cliSurface.usage()),
+            renderDefinitions(cliSurface.flags()),
+            renderWorkflows(cliSurface.workflows()),
+            renderSection(cliSurface.execution()),
+            renderDefinitions(cliSurface.limits()),
+            renderSection(cliSurface.request()),
+            renderDefinitions(cliSurface.fileWorkflow()),
+            renderCoordinateSystems(cliSurface.coordinateSystems()),
+            renderTemplate(cliSurface.minimalValidRequest(), requestTemplate),
+            renderCommandExample(cliSurface.stdinExample(), containerTag),
+            renderCommandExample(cliSurface.dockerFileExample(), containerTag),
+            renderDiscovery(cliSurface.discovery(), discoveryExamples),
+            renderReferences(cliSurface.docs(), documentRef))
+        + "\n";
   }
 
   /** Returns the shared two-line product header used by help and version surfaces. */

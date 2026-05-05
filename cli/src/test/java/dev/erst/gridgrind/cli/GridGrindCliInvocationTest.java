@@ -33,6 +33,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--print-goal-plan <goal>"));
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("Minimal Valid Request:"));
+    assertTrue(help.endsWith("\n"), "implicit help must end with a newline");
   }
 
   @Test
@@ -76,6 +77,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
       assertTrue(help.contains("Usage:"));
       assertTrue(help.contains("--doctor-request"));
       assertTrue(help.contains("--print-protocol-catalog"));
+      assertTrue(help.endsWith("\n"), "interactive implicit help must end with a newline");
     }
   }
 

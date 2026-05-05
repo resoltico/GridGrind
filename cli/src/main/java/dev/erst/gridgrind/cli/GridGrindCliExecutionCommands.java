@@ -196,10 +196,10 @@ final class GridGrindCliExecutionCommands {
   }
 
   private void writeHelp(OutputStream stdout) throws IOException {
-    stdout.write(
+    byte[] bytes =
         GridGrindCliProductInfo.helpText(GridGrindCliProductInfo.version())
-            .getBytes(StandardCharsets.UTF_8));
-    stdout.flush();
+            .getBytes(StandardCharsets.UTF_8);
+    responseWriter.writePayload(null, stdout, bytes, 0);
   }
 
   private static GridGrindResponse.Failure failure(

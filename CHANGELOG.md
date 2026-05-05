@@ -23,6 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed duplicate `.DS_Store` entry from `.gitignore`.
 - Updated `RELEASE_PROTOCOL.md` to replace all references to the old three-job blocking check list (`Check`, `Docker smoke`, `Contributor devcontainer`) with the new single `Gate` aggregate check.
 - Added a Dependabot Approval Strategy section to `RELEASE_PROTOCOL.md` with triage tiers (security within 7 days, regular before next release, major version bumps as considered upgrades), required CI gates before any merge, and explicit prohibitions.
+- Fixed bare invocation (`gridgrind` with no arguments) producing a missing trailing newline on the help output, causing zsh and other POSIX-compliant shells to display a `%` prompt indicator; the implicit-help path now routes through the same `CliResponseWriter.writePayload` infrastructure as `--help` so the newline guarantee is uniform across all help entry points.
+- Moved the `Flags:` section immediately after `Usage:` so the CLI grammar surface (usage patterns and flag definitions) is presented as a contiguous block before operator-guidance sections such as `Workflows:`, `Execution:`, `Limits:`, and `Request:`; this follows the conventional `--help` structure and prevents operator-guidance prose from appearing to be first-class grammar.
+- Renamed CLI help section `First-Contact Workflows` to `Workflows` to use cleaner Ubiquitous Language that does not expose internal jargon to operators and agents.
+- Renamed CLI help section `stdin Example` to `Stdin Example` for consistent Title Case across all section labels.
+- Renamed CLI help section `Docker File Example` to `Docker Example`; the previous name implied a Dockerfile definition rather than a `docker run` command example.
 
 ## [0.62.0] - 2026-05-01
 
