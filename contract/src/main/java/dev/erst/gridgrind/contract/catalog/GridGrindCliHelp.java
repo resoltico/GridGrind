@@ -81,7 +81,9 @@ public final class GridGrindCliHelp {
         + separator
         + "\n"
         + section.entries().stream()
-            .map(entry -> ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
+            .map(
+                entry ->
+                    ("  %-" + leftWidth + "s %s").formatted(entry.pattern(), entry.convention()))
             .map(line -> line + "\n")
             .collect(java.util.stream.Collectors.joining())
             .stripTrailing();
