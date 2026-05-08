@@ -560,15 +560,19 @@ run_monitored_command() {
 
     (
         cd "${project_dir}"
-        set -o pipefail
-        "$@" 2>&1 | tee -a "${log_path}" | awk '
+        "$@" >"${log_path}" 2>&1
+    ) &
+    local child_pid=$!
+
+    (
+        tail -n +1 -f "${log_path}" 2>/dev/null | awk '
             $0 !~ /^\[(GRADLE-TEST-PULSE|JAZZER-PULSE)\]/ {
                 print
                 fflush()
             }
         '
     ) &
-    local child_pid=$!
+    local log_printer_pid=$!
 
     local monitor_exit_code=0
     if monitor_stage_process "${stage_id}" "${project_dir}" "${log_path}" "${diagnostics_root}" "${child_pid}"; then
@@ -583,6 +587,10 @@ run_monitored_command() {
     else
         child_exit_code=$?
     fi
+
+    terminate_process_tree "${log_printer_pid}" 1
+    wait "${log_printer_pid}" 2>/dev/null || true
+
     if (( monitor_exit_code != 0 )); then
         child_exit_code="${monitor_exit_code}"
     fi
