@@ -15,11 +15,11 @@ final class ExcelWorkbookPersistenceSupport {
       ExcelWorkbook workbook,
       Path workbookPath,
       ExcelOoxmlPersistenceOptions persistenceOptions,
-      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
-    if ((persistenceOptions == null || persistenceOptions.isEmpty())
-        && !workbook.context().loadedPackageSecurity().isSecure()) {
+    Objects.requireNonNull(persistenceOptions, "persistenceOptions must not be null");
+    if (persistenceOptions.isEmpty() && !workbook.context().loadedPackageSecurity().isSecure()) {
       savePlainWorkbook(workbook, workbookPath);
       return;
     }

@@ -62,11 +62,14 @@ case "${1:-}" in
     --doctor-request)
         emit_fixture_file "${FAKE_GRIDGRIND_DOCTOR_REPORT_FILE:?}"
         ;;
-    --print-goal-plan)
-        emit_fixture_file "${FAKE_GRIDGRIND_GOAL_PLAN_FILE:?}"
+    --print-task-keyword-match)
+        emit_fixture_file "${FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE:?}"
         ;;
     --print-task-catalog)
         emit_fixture_file "${FAKE_GRIDGRIND_TASK_CATALOG_FILE:?}"
+        ;;
+    --print-example-catalog)
+        emit_fixture_file "${FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE:?}"
         ;;
     --print-task-plan)
         emit_fixture_file "${FAKE_GRIDGRIND_TASK_PLAN_FILE:?}"
@@ -108,17 +111,19 @@ run_verify_with_fixture_texts() {
     local unset_tmpdir=$1
     local help_text=$2
     local catalog_text=$3
-    local task_catalog_text=$4
-    local task_plan_text=$5
-    local goal_plan_text=$6
-    local doctor_report_text=$7
-    local implicit_help_text=$8
+    local example_catalog_text=$4
+    local task_catalog_text=$5
+    local task_plan_text=$6
+    local task_keyword_match_text=$7
+    local doctor_report_text=$8
+    local implicit_help_text=$9
     local case_dir
     local help_file
     local catalog_file
+    local example_catalog_file
     local task_catalog_file
     local task_plan_file
-    local goal_plan_file
+    local task_keyword_match_file
     local request_template_file
     local doctor_report_file
     local implicit_help_file
@@ -126,9 +131,10 @@ run_verify_with_fixture_texts() {
     case_dir="$(next_case_dir)"
     help_file="$(write_case_fixture "${case_dir}" 'help.txt' "${help_text}")"
     catalog_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_text}")"
+    example_catalog_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_text}")"
     task_catalog_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_text}")"
     task_plan_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_text}")"
-    goal_plan_file="$(write_case_fixture "${case_dir}" 'goal-plan.json' "${goal_plan_text}")"
+    task_keyword_match_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_text}")"
     request_template_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_text}")"
     implicit_help_file="$(write_case_fixture "${case_dir}" 'implicit-help.txt' "${implicit_help_text}")"
@@ -138,9 +144,10 @@ run_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_HELP_FILE="${help_file}" \
             FAKE_GRIDGRIND_IMPLICIT_HELP_FILE="${implicit_help_file}" \
             FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
+            FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
             FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
             FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
-            FAKE_GRIDGRIND_GOAL_PLAN_FILE="${goal_plan_file}" \
+            FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
             FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
             FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
             "${verify_script}" binary "${fake_cli}" >/dev/null
@@ -150,9 +157,10 @@ run_verify_with_fixture_texts() {
     FAKE_GRIDGRIND_HELP_FILE="${help_file}" \
         FAKE_GRIDGRIND_IMPLICIT_HELP_FILE="${implicit_help_file}" \
         FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
+        FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
         FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
         FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
-        FAKE_GRIDGRIND_GOAL_PLAN_FILE="${goal_plan_file}" \
+        FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
         FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
         FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
         "${verify_script}" binary "${fake_cli}" >/dev/null
@@ -163,9 +171,10 @@ run_verify_expect_success() {
         false \
         "${success_help}" \
         "${success_catalog}" \
+        "${success_example_catalog}" \
         "${success_task_catalog}" \
         "${success_task_plan}" \
-        "${success_goal_plan}" \
+        "${success_task_keyword_match}" \
         "${success_doctor_report}" \
         "${success_help}"
 }
@@ -175,9 +184,10 @@ run_verify_expect_success_without_tmpdir() {
         true \
         "${success_help}" \
         "${success_catalog}" \
+        "${success_example_catalog}" \
         "${success_task_catalog}" \
         "${success_task_plan}" \
-        "${success_goal_plan}" \
+        "${success_task_keyword_match}" \
         "${success_doctor_report}" \
         "${success_help}"
 }
@@ -185,18 +195,20 @@ run_verify_expect_success_without_tmpdir() {
 run_verify_expect_failure() {
     local help_text=$1
     local catalog_text=$2
-    local task_catalog_text=${3:-${success_task_catalog}}
-    local task_plan_text=${4:-${success_task_plan}}
-    local goal_plan_text=${5:-${success_goal_plan}}
-    local doctor_report_text=${6:-${success_doctor_report}}
-    local implicit_help_text=${7:-${help_text}}
+    local example_catalog_text=${3:-${success_example_catalog}}
+    local task_catalog_text=${4:-${success_task_catalog}}
+    local task_plan_text=${5:-${success_task_plan}}
+    local task_keyword_match_text=${6:-${success_task_keyword_match}}
+    local doctor_report_text=${7:-${success_doctor_report}}
+    local implicit_help_text=${8:-${help_text}}
     if run_verify_with_fixture_texts \
         false \
         "${help_text}" \
         "${catalog_text}" \
+        "${example_catalog_text}" \
         "${task_catalog_text}" \
         "${task_plan_text}" \
-        "${goal_plan_text}" \
+        "${task_keyword_match_text}" \
         "${doctor_report_text}" \
         "${implicit_help_text}" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
@@ -217,11 +229,13 @@ run_verify_expect_failure \
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "$(replace_fixture_token "${success_task_catalog}" 'SET_TABLE' 'NO_SUCH_MUTATION')"
 
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "$(replace_fixture_token \
         "${success_task_plan}" \
@@ -231,9 +245,10 @@ run_verify_expect_failure \
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "$(replace_fixture_token \
         "${success_doctor_report}" \
         '"sourceType" : "NEW"' \
@@ -243,10 +258,11 @@ run_verify_expect_failure \
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "$(replace_fixture_token \
-        "${success_goal_plan}" \
+        "${success_task_keyword_match}" \
         '"id" : "DASHBOARD"' \
         '"id" : "TABULAR_REPORT"')" \
     "${success_doctor_report}"
@@ -254,9 +270,10 @@ run_verify_expect_failure \
 run_verify_expect_failure \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "${success_doctor_report}" \
     "$(append_fixture_line "${success_help}" 'Implicit Help Drifted')"
 

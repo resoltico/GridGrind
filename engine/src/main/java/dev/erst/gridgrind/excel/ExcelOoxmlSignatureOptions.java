@@ -4,15 +4,16 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** OOXML package-signing settings applied during workbook persistence. */
 public record ExcelOoxmlSignatureOptions(
     Path pkcs12Path,
     String keystorePassword,
     String keyPassword,
-    String alias,
+    @Nullable String alias,
     ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
-    String description) {
+    @Nullable String description) {
   public ExcelOoxmlSignatureOptions {
     Objects.requireNonNull(pkcs12Path, "pkcs12Path must not be null");
     keystorePassword = normalizeRequired(keystorePassword, "keystorePassword");
@@ -32,7 +33,7 @@ public record ExcelOoxmlSignatureOptions(
     return value;
   }
 
-  private static Optional<String> normalizeOptional(String value, String fieldName) {
+  private static Optional<String> normalizeOptional(@Nullable String value, String fieldName) {
     if (value == null) {
       return Optional.empty();
     }

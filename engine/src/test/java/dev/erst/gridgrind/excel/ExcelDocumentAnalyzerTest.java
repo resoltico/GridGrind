@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for document-level validation analysis aggregation. */
@@ -20,7 +21,11 @@ class ExcelDocumentAnalyzerTest {
           .setDataValidation(
               "A1:A3",
               new ExcelDataValidationDefinition(
-                  new ExcelDataValidationRule.FormulaList("#REF!"), false, false, null, null));
+                  new ExcelDataValidationRule.FormulaList("#REF!"),
+                  false,
+                  false,
+                  Optional.empty(),
+                  Optional.empty()));
       workbook
           .sheet("Archive")
           .setDataValidation(
@@ -29,8 +34,8 @@ class ExcelDocumentAnalyzerTest {
                   new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
                   false,
                   false,
-                  null,
-                  null));
+                  Optional.empty(),
+                  Optional.empty()));
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();
       WorkbookAnalysis.DataValidationHealth selected =

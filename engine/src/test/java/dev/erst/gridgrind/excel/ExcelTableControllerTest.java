@@ -458,7 +458,7 @@ class ExcelTableControllerTest {
           new ExcelNamedRangeDefinition(
               "Queue",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Ops", "A1")));
+              ExcelNamedRangeTarget.range("Ops", "A1")));
 
       IllegalArgumentException definedNameFailure =
           assertThrows(
@@ -891,7 +891,7 @@ class ExcelTableControllerTest {
           new ExcelNamedRangeDefinition(
               "OtherAnchor",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Ops", "I1")));
+              ExcelNamedRangeTarget.range("Ops", "I1")));
 
       XSSFTable invalidTable =
           workbook
@@ -932,7 +932,7 @@ class ExcelTableControllerTest {
           new ExcelNamedRangeDefinition(
               "OpsAnchor",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Ops", "H1")));
+              ExcelNamedRangeTarget.range("Ops", "H1")));
       controller.setTable(
           workbook,
           new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));

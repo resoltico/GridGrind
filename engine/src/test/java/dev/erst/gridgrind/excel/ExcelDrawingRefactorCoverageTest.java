@@ -44,8 +44,8 @@ class ExcelDrawingRefactorCoverageTest {
           createEmbeddedObject(workbook, sheet.createDrawingPatriarch(), "OpsEmbed", 0, 0, 3, 3);
 
       assertEquals("OpsEmbed", controller.snapshotEmbeddedObject(objectData).name());
-      assertNotNull(controller.oleObjectPart(objectData));
-      assertNull(controller.nullIfBlank(" "));
+      assertTrue(controller.oleObjectPart(objectData).isPresent());
+      assertTrue(controller.blankAsOptional(" ").isEmpty());
 
       ExcelDrawingController.RasterDimensions dimensions =
           ExcelDrawingController.rasterDimensions(PNG_PIXEL_BYTES);

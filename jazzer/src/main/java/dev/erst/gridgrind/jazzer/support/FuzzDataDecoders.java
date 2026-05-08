@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** Decodes bounded structured values from a Jazzer data provider. */
 public final class FuzzDataDecoders {
@@ -199,8 +200,7 @@ public final class FuzzDataDecoders {
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       ExcelCellFont fontPatch = data.consumeBoolean() ? nextRichTextFontPatch(data) : null;
       runs.add(
-          new RichTextRunInput(
-              TextSourceInput.inline(nextText(data)), toCellFontInput(fontPatch).orElse(null)));
+          new RichTextRunInput(TextSourceInput.inline(nextText(data)), toCellFontInput(fontPatch)));
     }
     return new CellInput.RichText(List.copyOf(runs));
   }
@@ -211,7 +211,8 @@ public final class FuzzDataDecoders {
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       runs.add(
           new ExcelRichTextRun(
-              nextText(data), data.consumeBoolean() ? nextRichTextFontPatch(data) : null));
+              nextText(data),
+              data.consumeBoolean() ? Optional.of(nextRichTextFontPatch(data)) : Optional.empty()));
     }
     return new ExcelRichText(List.copyOf(runs));
   }
@@ -223,26 +224,68 @@ public final class FuzzDataDecoders {
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
           new ExcelCellStyle(
-              data.consumeBoolean() ? "0.00" : "yyyy-mm-dd", null, null, null, null, null);
-      case 1 -> new ExcelCellStyle(null, nextAlignment(data, true), null, null, null, null);
-      case 2 -> new ExcelCellStyle(null, null, nextFont(data, true), null, null, null);
+              Optional.of(data.consumeBoolean() ? "0.00" : "yyyy-mm-dd"),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 1 ->
+          new ExcelCellStyle(
+              Optional.empty(),
+              Optional.of(nextAlignment(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 2 ->
+          new ExcelCellStyle(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFont(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
       case 3 ->
           new ExcelCellStyle(
-              null,
-              nextAlignment(data, true),
-              nextFont(data, true),
-              nextFill(data),
-              nextExcelBorder(data),
-              nextProtection(data));
+              Optional.empty(),
+              Optional.of(nextAlignment(data, true)),
+              Optional.of(nextFont(data, true)),
+              Optional.of(nextFill(data)),
+              Optional.of(nextExcelBorder(data)),
+              Optional.ofNullable(nextProtection(data)));
       case 4 ->
           new ExcelCellStyle(
-              null, null, nextFont(data, false), nextFill(data), nextExcelBorder(data), null);
-      case 5 -> new ExcelCellStyle(null, null, null, nextFill(data), null, nextProtection(data));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFont(data, false)),
+              Optional.of(nextFill(data)),
+              Optional.of(nextExcelBorder(data)),
+              Optional.empty());
+      case 5 ->
+          new ExcelCellStyle(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFill(data)),
+              Optional.empty(),
+              Optional.ofNullable(nextProtection(data)));
       case 6 ->
           new ExcelCellStyle(
-              null, nextAlignment(data, true), null, null, nextExcelBorder(data), null);
+              Optional.empty(),
+              Optional.of(nextAlignment(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextExcelBorder(data)),
+              Optional.empty());
       default ->
-          new ExcelCellStyle(null, null, nextFont(data, false), null, null, nextProtection(data));
+          new ExcelCellStyle(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFont(data, false)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.ofNullable(nextProtection(data)));
     };
   }
 
@@ -285,33 +328,95 @@ public final class FuzzDataDecoders {
 
   private static ExcelCellAlignment nextAlignment(GridGrindFuzzData data, boolean includeDepth) {
     return new ExcelCellAlignment(
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        nextHorizontalAlignment(data),
-        nextVerticalAlignment(data),
-        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 180) : null,
-        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 8) : null);
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        Optional.of(nextHorizontalAlignment(data)),
+        Optional.of(nextVerticalAlignment(data)),
+        includeDepth && data.consumeBoolean()
+            ? Optional.of(data.consumeInt(0, 180))
+            : Optional.empty(),
+        includeDepth && data.consumeBoolean()
+            ? Optional.of(data.consumeInt(0, 8))
+            : Optional.empty());
   }
 
   private static ExcelCellFont nextFont(GridGrindFuzzData data, boolean includeName) {
     return new ExcelCellFont(
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        data.consumeBoolean() ? Boolean.FALSE : null,
-        includeName ? (data.consumeBoolean() ? "Aptos" : "Aptos Display") : null,
-        data.consumeBoolean() ? nextExcelFontHeight(data) : null,
-        data.consumeBoolean() ? nextExcelColor(data) : null,
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        data.consumeBoolean() ? Boolean.FALSE : null);
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty(),
+        includeName
+            ? Optional.of(data.consumeBoolean() ? "Aptos" : "Aptos Display")
+            : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextExcelFontHeight(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextExcelColor(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
   }
 
   private static ExcelCellFont nextRichTextFontPatch(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 6)) {
-      case 0 -> new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null);
-      case 1 -> new ExcelCellFont(null, Boolean.FALSE, null, null, null, null, null);
-      case 2 -> new ExcelCellFont(null, null, "Aptos", null, null, null, null);
-      case 3 -> new ExcelCellFont(null, null, null, nextExcelFontHeight(data), null, null, null);
-      case 4 -> new ExcelCellFont(null, null, null, null, nextExcelColor(data), null, null);
-      case 5 -> new ExcelCellFont(null, null, null, null, null, Boolean.TRUE, null);
-      default -> new ExcelCellFont(null, null, null, null, null, null, Boolean.FALSE);
+      case 0 ->
+          new ExcelCellFont(
+              Optional.of(Boolean.TRUE),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 1 ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.of(Boolean.FALSE),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 2 ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of("Aptos"),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 3 ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextExcelFontHeight(data)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 4 ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextExcelColor(data)),
+              Optional.empty(),
+              Optional.empty());
+      case 5 ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(Boolean.TRUE),
+              Optional.empty());
+      default ->
+          new ExcelCellFont(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(Boolean.FALSE));
     };
   }
 
@@ -345,8 +450,8 @@ public final class FuzzDataDecoders {
 
   private static ExcelCellProtection nextProtection(GridGrindFuzzData data) {
     return new ExcelCellProtection(
-        data.consumeBoolean() ? data.consumeBoolean() : null,
-        data.consumeBoolean() ? data.consumeBoolean() : null);
+        data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty());
   }
 
   private static ExcelVerticalAlignment nextVerticalAlignment(GridGrindFuzzData data) {
@@ -394,11 +499,18 @@ public final class FuzzDataDecoders {
 
   private static ExcelColor nextExcelColor(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
-      case 0 -> ExcelColor.rgb(nextRgbHex(data), data.consumeBoolean() ? nextTint(data) : null);
+      case 0 ->
+          ExcelColor.rgb(
+              nextRgbHex(data),
+              data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
       case 1 ->
-          ExcelColor.theme(data.consumeInt(0, 9), data.consumeBoolean() ? nextTint(data) : null);
+          ExcelColor.theme(
+              data.consumeInt(0, 9),
+              data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
       default ->
-          ExcelColor.indexed(data.consumeInt(0, 64), data.consumeBoolean() ? nextTint(data) : null);
+          ExcelColor.indexed(
+              data.consumeInt(0, 64),
+              data.consumeBoolean() ? Optional.of(nextTint(data)) : Optional.empty());
     };
   }
 
@@ -410,13 +522,24 @@ public final class FuzzDataDecoders {
             new ExcelGradientStop(1.0d, nextExcelColor(data)));
     if (linear) {
       return ExcelGradientFill.linear(
-          data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 180.0d) : null, stops);
+          data.consumeBoolean()
+              ? Optional.of(data.consumeRegularDouble(0.0d, 180.0d))
+              : Optional.empty(),
+          stops);
     }
     return ExcelGradientFill.path(
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        data.consumeBoolean()
+            ? Optional.of(data.consumeRegularDouble(0.0d, 1.0d))
+            : Optional.empty(),
+        data.consumeBoolean()
+            ? Optional.of(data.consumeRegularDouble(0.0d, 1.0d))
+            : Optional.empty(),
+        data.consumeBoolean()
+            ? Optional.of(data.consumeRegularDouble(0.0d, 1.0d))
+            : Optional.empty(),
+        data.consumeBoolean()
+            ? Optional.of(data.consumeRegularDouble(0.0d, 1.0d))
+            : Optional.empty(),
         stops);
   }
 
@@ -424,7 +547,7 @@ public final class FuzzDataDecoders {
     return data.consumeRegularDouble(-1.0d, 1.0d);
   }
 
-  private static Optional<CellFontInput> toCellFontInput(ExcelCellFont font) {
+  private static Optional<CellFontInput> toCellFontInput(@Nullable ExcelCellFont font) {
     if (font == null) {
       return Optional.empty();
     }
@@ -433,8 +556,8 @@ public final class FuzzDataDecoders {
             font.bold(),
             font.italic(),
             font.fontName(),
-            font.fontHeight() == null ? null : new FontHeightInput.Twips(font.fontHeight().twips()),
-            toColorInput(font.fontColor()).orElse(null),
+            font.fontHeight().map(height -> new FontHeightInput.Twips(height.twips())),
+            font.fontColor().flatMap(FuzzDataDecoders::toColorInput),
             font.underline(),
             font.strikeout()));
   }
@@ -445,25 +568,58 @@ public final class FuzzDataDecoders {
     }
     return Optional.of(
         switch (color) {
-          case ExcelColor.Rgb rgb -> ColorInput.rgb(rgb.rgb(), rgb.tint());
-          case ExcelColor.Theme theme -> ColorInput.theme(theme.theme(), theme.tint());
-          case ExcelColor.Indexed indexed -> ColorInput.indexed(indexed.indexed(), indexed.tint());
+          case ExcelColor.Rgb rgb ->
+              rgb.tint().isPresent()
+                  ? ColorInput.rgb(rgb.rgb(), rgb.tint().orElseThrow())
+                  : ColorInput.rgb(rgb.rgb());
+          case ExcelColor.Theme theme ->
+              theme.tint().isPresent()
+                  ? ColorInput.theme(theme.theme(), theme.tint().orElseThrow())
+                  : ColorInput.theme(theme.theme());
+          case ExcelColor.Indexed indexed ->
+              indexed.tint().isPresent()
+                  ? ColorInput.indexed(indexed.indexed(), indexed.tint().orElseThrow())
+                  : ColorInput.indexed(indexed.indexed());
         });
   }
 
   private static ExcelBorder nextExcelBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
-      case 0 -> new ExcelBorder(nextBorderSide(data), null, null, null, null);
-      case 1 -> new ExcelBorder(nextBorderSide(data), null, nextBorderSide(data), null, null);
-      case 2 -> new ExcelBorder(null, nextBorderSide(data), null, null, nextBorderSide(data));
+      case 0 ->
+          new ExcelBorder(
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 1 ->
+          new ExcelBorder(
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty());
+      case 2 ->
+          new ExcelBorder(
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)));
       case 3 ->
           new ExcelBorder(
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data));
-      default -> new ExcelBorder(null, nextBorderSide(data), null, nextBorderSide(data), null);
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)));
+      default ->
+          new ExcelBorder(
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty());
     };
   }
 
@@ -471,7 +627,9 @@ public final class FuzzDataDecoders {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
     return new ExcelBorderSide(
-        style,
-        style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextExcelColor(data));
+        Optional.of(style),
+        style == ExcelBorderStyle.NONE || !data.consumeBoolean()
+            ? Optional.empty()
+            : Optional.of(nextExcelColor(data)));
   }
 }

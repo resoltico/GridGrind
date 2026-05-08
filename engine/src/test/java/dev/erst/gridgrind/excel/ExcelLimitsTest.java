@@ -6,9 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.reflect.Method;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -134,39 +131,42 @@ class ExcelLimitsTest {
   }
 
   @Test
-  void classifiesFormulaShapeLexicallyAcrossFunctionNameVariants() throws Throwable {
-    Object shape = scanFormulaShape("SUM(1,ABS(2),_XLFN.TEXTAFTER(\"a,b\",\",\"))");
+  void classifiesFormulaShapeLexicallyAcrossFunctionNameVariants() {
+    ExcelFormulaLimits.FormulaShape shape =
+        ExcelFormulaLimits.scanFormulaShape("SUM(1,ABS(2),_XLFN.TEXTAFTER(\"a,b\",\",\"))");
 
-    assertEquals(2, shapeMetric(shape, "maximumFunctionNesting"));
-    assertEquals(3, shapeMetric(shape, "maximumFunctionArguments"));
-    assertTrue(isFunctionIdentifierCharacter('A'));
-    assertTrue(isFunctionIdentifierCharacter('_'));
-    assertTrue(isFunctionIdentifierCharacter('.'));
-    assertFalse(isFunctionIdentifierCharacter('('));
+    assertEquals(2, shape.maximumFunctionNesting());
+    assertEquals(3, shape.maximumFunctionArguments());
+    assertTrue(ExcelFormulaLimits.isFunctionIdentifierCharacter('A'));
+    assertTrue(ExcelFormulaLimits.isFunctionIdentifierCharacter('_'));
+    assertTrue(ExcelFormulaLimits.isFunctionIdentifierCharacter('.'));
+    assertFalse(ExcelFormulaLimits.isFunctionIdentifierCharacter('('));
   }
 
   @Test
-  void recognizesWhitespaceSeparatedFunctionCallsButRejectsGroupingParens() throws Throwable {
-    assertTrue(looksLikeFunctionCall("ABS (1)", 4));
-    assertFalse(looksLikeFunctionCall("(1+2)", 0));
-    assertFalse(looksLikeFunctionCall("A1 + (1+2)", 5));
+  void recognizesWhitespaceSeparatedFunctionCallsButRejectsGroupingParens() {
+    assertTrue(ExcelFormulaLimits.looksLikeFunctionCall("ABS (1)", 4));
+    assertFalse(ExcelFormulaLimits.looksLikeFunctionCall("(1+2)", 0));
+    assertFalse(ExcelFormulaLimits.looksLikeFunctionCall("A1 + (1+2)", 5));
   }
 
   @Test
-  void treatsWhitespaceOnlyBodiesOuterCommasAndGroupingParensAsNonArguments() throws Throwable {
-    Object whitespaceOnlyFunction = scanFormulaShape("SUM(   )");
-    Object whitespaceSeparatedFunction = scanFormulaShape("ABS (1)");
-    Object groupingOnly = scanFormulaShape("(1+2)");
-    Object outerCommaOnly = scanFormulaShape("1,2");
+  void treatsWhitespaceOnlyBodiesOuterCommasAndGroupingParensAsNonArguments() {
+    ExcelFormulaLimits.FormulaShape whitespaceOnlyFunction =
+        ExcelFormulaLimits.scanFormulaShape("SUM(   )");
+    ExcelFormulaLimits.FormulaShape whitespaceSeparatedFunction =
+        ExcelFormulaLimits.scanFormulaShape("ABS (1)");
+    ExcelFormulaLimits.FormulaShape groupingOnly = ExcelFormulaLimits.scanFormulaShape("(1+2)");
+    ExcelFormulaLimits.FormulaShape outerCommaOnly = ExcelFormulaLimits.scanFormulaShape("1,2");
 
-    assertEquals(1, shapeMetric(whitespaceOnlyFunction, "maximumFunctionNesting"));
-    assertEquals(0, shapeMetric(whitespaceOnlyFunction, "maximumFunctionArguments"));
-    assertEquals(1, shapeMetric(whitespaceSeparatedFunction, "maximumFunctionNesting"));
-    assertEquals(1, shapeMetric(whitespaceSeparatedFunction, "maximumFunctionArguments"));
-    assertEquals(0, shapeMetric(groupingOnly, "maximumFunctionNesting"));
-    assertEquals(0, shapeMetric(groupingOnly, "maximumFunctionArguments"));
-    assertEquals(0, shapeMetric(outerCommaOnly, "maximumFunctionNesting"));
-    assertEquals(0, shapeMetric(outerCommaOnly, "maximumFunctionArguments"));
+    assertEquals(1, whitespaceOnlyFunction.maximumFunctionNesting());
+    assertEquals(0, whitespaceOnlyFunction.maximumFunctionArguments());
+    assertEquals(1, whitespaceSeparatedFunction.maximumFunctionNesting());
+    assertEquals(1, whitespaceSeparatedFunction.maximumFunctionArguments());
+    assertEquals(0, groupingOnly.maximumFunctionNesting());
+    assertEquals(0, groupingOnly.maximumFunctionArguments());
+    assertEquals(0, outerCommaOnly.maximumFunctionNesting());
+    assertEquals(0, outerCommaOnly.maximumFunctionArguments());
   }
 
   @Test
@@ -202,39 +202,5 @@ class ExcelLimitsTest {
       formula.insert(0, "ABS(").append(')');
     }
     return formula.toString();
-  }
-
-  private static Object scanFormulaShape(String formula) throws Throwable {
-    Method method = ExcelFormulaLimits.class.getDeclaredMethod("scanFormulaShape", String.class);
-    MethodHandles.Lookup lookup =
-        MethodHandles.privateLookupIn(ExcelFormulaLimits.class, MethodHandles.lookup());
-    return lookup.unreflect(method).invoke(formula);
-  }
-
-  private static int shapeMetric(Object shape, String accessorName) throws Throwable {
-    MethodHandles.Lookup lookup =
-        MethodHandles.privateLookupIn(shape.getClass(), MethodHandles.lookup());
-    return (int)
-        lookup
-            .findVirtual(shape.getClass(), accessorName, MethodType.methodType(int.class))
-            .invoke(shape);
-  }
-
-  private static boolean looksLikeFunctionCall(String formula, int openParenIndex)
-      throws Throwable {
-    Method method =
-        ExcelFormulaLimits.class.getDeclaredMethod(
-            "looksLikeFunctionCall", String.class, int.class);
-    MethodHandles.Lookup lookup =
-        MethodHandles.privateLookupIn(ExcelFormulaLimits.class, MethodHandles.lookup());
-    return (boolean) lookup.unreflect(method).invoke(formula, openParenIndex);
-  }
-
-  private static boolean isFunctionIdentifierCharacter(char value) throws Throwable {
-    Method method =
-        ExcelFormulaLimits.class.getDeclaredMethod("isFunctionIdentifierCharacter", char.class);
-    MethodHandles.Lookup lookup =
-        MethodHandles.privateLookupIn(ExcelFormulaLimits.class, MethodHandles.lookup());
-    return (boolean) lookup.unreflect(method).invoke(value);
   }
 }

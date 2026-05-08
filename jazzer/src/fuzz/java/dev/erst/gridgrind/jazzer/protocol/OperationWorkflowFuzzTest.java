@@ -4,7 +4,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;

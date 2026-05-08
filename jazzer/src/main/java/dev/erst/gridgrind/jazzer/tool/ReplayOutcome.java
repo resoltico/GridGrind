@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /** Captures whether replaying a local Jazzer input succeeded, was expected-invalid, or failed. */
 public sealed interface ReplayOutcome
     permits ReplayOutcome.ExpectedInvalid, ReplayOutcome.Success, ReplayOutcome.UnexpectedFailure {
@@ -14,15 +17,30 @@ public sealed interface ReplayOutcome
 
   /** Represents a replay that was invalid in a documented, expected way. */
   record ExpectedInvalid(
-      String harnessKey, String invalidKind, String message, ReplayDetails details)
-      implements ReplayOutcome {}
+      String harnessKey, String invalidKind, Optional<String> message, ReplayDetails details)
+      implements ReplayOutcome {
+    public ExpectedInvalid {
+      Objects.requireNonNull(harnessKey, "harnessKey must not be null");
+      Objects.requireNonNull(invalidKind, "invalidKind must not be null");
+      Objects.requireNonNull(message, "message must not be null");
+      Objects.requireNonNull(details, "details must not be null");
+    }
+  }
 
   /** Represents a replay that surfaced an unexpected exception or invariant failure. */
   record UnexpectedFailure(
       String harnessKey,
       String failureKind,
-      String message,
+      Optional<String> message,
       String stackTrace,
       ReplayDetails details)
-      implements ReplayOutcome {}
+      implements ReplayOutcome {
+    public UnexpectedFailure {
+      Objects.requireNonNull(harnessKey, "harnessKey must not be null");
+      Objects.requireNonNull(failureKind, "failureKind must not be null");
+      Objects.requireNonNull(message, "message must not be null");
+      Objects.requireNonNull(stackTrace, "stackTrace must not be null");
+      Objects.requireNonNull(details, "details must not be null");
+    }
+  }
 }

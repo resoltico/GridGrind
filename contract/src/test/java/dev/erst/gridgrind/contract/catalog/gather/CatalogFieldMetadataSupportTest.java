@@ -1,13 +1,9 @@
-package dev.erst.gridgrind.contract.catalog.gather;
+package dev.erst.gridgrind.contract.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.FieldEntry;
-import dev.erst.gridgrind.contract.catalog.FieldRequirement;
-import dev.erst.gridgrind.contract.catalog.FieldShape;
-import dev.erst.gridgrind.contract.catalog.ScalarType;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
@@ -134,7 +130,7 @@ class CatalogFieldMetadataSupportTest {
                 () -> CatalogFieldMetadataSupport.fieldShape(new InvalidListParameterizedType()))
             .getMessage());
     assertEquals(
-        "alpha",
+        java.util.Optional.of("alpha"),
         CatalogFieldMetadataSupport.lookupAssignableGroup(
             Map.of(Alpha.class, "alpha"), Gamma.class));
   }
@@ -148,22 +144,22 @@ class CatalogFieldMetadataSupportTest {
     groups.put(dev.erst.gridgrind.contract.selector.SheetSelector.class, List.of("nested"));
 
     assertEquals(
-        List.of("nested"),
+        java.util.Optional.of(List.of("nested")),
         CatalogFieldMetadataSupport.lookupAssignableGroupList(
             groups, dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
-        null,
+        java.util.Optional.empty(),
         CatalogFieldMetadataSupport.lookupAssignableGroupList(
             groups, dev.erst.gridgrind.contract.selector.Selector.class));
     Map<Class<?>, List<String>> reversedGroups = new LinkedHashMap<>();
     reversedGroups.put(dev.erst.gridgrind.contract.selector.SheetSelector.class, List.of("nested"));
     reversedGroups.put(dev.erst.gridgrind.contract.selector.Selector.class, List.of("selector"));
     assertEquals(
-        List.of("nested"),
+        java.util.Optional.of(List.of("nested")),
         CatalogFieldMetadataSupport.lookupAssignableGroupList(
             reversedGroups, dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
-        "nested",
+        java.util.Optional.of("nested"),
         CatalogFieldMetadataSupport.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.Selector.class,
@@ -172,7 +168,7 @@ class CatalogFieldMetadataSupportTest {
                 "nested"),
             dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
-        "nested",
+        java.util.Optional.of("nested"),
         CatalogFieldMetadataSupport.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.SheetSelector.class,
@@ -181,7 +177,7 @@ class CatalogFieldMetadataSupportTest {
                 "selector"),
             dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
-        "selector",
+        java.util.Optional.of("selector"),
         CatalogFieldMetadataSupport.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.SheetSelector.class,

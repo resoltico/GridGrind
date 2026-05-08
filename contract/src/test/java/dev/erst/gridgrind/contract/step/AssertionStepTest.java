@@ -3,7 +3,7 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class AssertionStepTest {
   @Test
   void constructsAssertionStepsAndRejectsIncompatibleTargets() {
-    Assertion assertion = new Assertion.CellValue(new ExpectedCellValue.Text("Owner"));
+    Assertion assertion = new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"));
     AssertionStep step =
         new AssertionStep("assert-owner", new CellSelector.ByAddress("Budget", "A1"), assertion);
 
@@ -26,7 +26,9 @@ class AssertionStepTest {
             IllegalArgumentException.class,
             () -> new AssertionStep("bad", new WorkbookSelector.Current(), assertion));
     assertEquals(
-        "EXPECT_CELL_VALUE requires target type ByAddress, ByAddresses or ByColumnName but got Current",
+        "EXPECT_CELL_VALUE requires target type CellSelector.ByAddress,"
+            + " CellSelector.ByAddresses or TableCellSelector.ByColumnName but got"
+            + " WorkbookSelector.Current",
         wrongTarget.getMessage());
   }
 }

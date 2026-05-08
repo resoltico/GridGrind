@@ -294,10 +294,10 @@ class ExcelChartWrapperCoverageTest {
                 new ExcelChartDefinition.Title.Formula("B1"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
-                null,
-                null,
-                null,
-                null)));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())));
   }
 
   private static CTSerTx formulaSeriesTitle(String formula) {

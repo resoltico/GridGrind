@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.authoring;
 
 import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.SheetSelector;
 import java.util.Objects;
 
 /** Chart-scoped fluent target. */
@@ -16,14 +15,9 @@ public final class ChartTarget {
     return selector;
   }
 
-  /** Returns one chart inventory inspection step on the owning sheet. */
-  public PlannedInspection inspectOnSheet() {
-    return switch (selector) {
-      case ChartSelector.ByName byName ->
-          new PlannedInspection(new SheetSelector.ByName(byName.sheetName()), Queries.charts());
-      case ChartSelector.AllOnSheet allOnSheet ->
-          new PlannedInspection(new SheetSelector.ByName(allOnSheet.sheetName()), Queries.charts());
-    };
+  /** Returns one chart inspection step for the exact chart selector. */
+  public PlannedInspection inspect() {
+    return new PlannedInspection(selector, Queries.charts());
   }
 
   /** Returns one chart presence assertion step. */

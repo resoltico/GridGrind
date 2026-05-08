@@ -7,8 +7,8 @@ import java.util.Objects;
 /** Pivot-table-health analysis for one selected pivot-table set. */
 public record PivotTableHealthReport(
     int checkedPivotTableCount,
-    GridGrindAnalysisReports.AnalysisSummaryReport summary,
-    List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
+    AnalysisSummaryReport summary,
+    List<AnalysisFindingReport> findings) {
   public PivotTableHealthReport {
     if (checkedPivotTableCount < 0) {
       throw new IllegalArgumentException("checkedPivotTableCount must not be negative");

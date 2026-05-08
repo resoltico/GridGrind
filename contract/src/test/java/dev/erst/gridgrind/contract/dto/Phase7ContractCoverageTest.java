@@ -9,11 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Dedicated coverage for Phase 7 source-backed contract value objects and contexts. */
@@ -62,7 +62,9 @@ class Phase7ContractCoverageTest {
             "Ada",
             false,
             java.util.Optional.of(
-                java.util.List.of(new RichTextRunInput(TextSourceInput.utf8File("run.txt"), null))),
+                java.util.List.of(
+                    new RichTextRunInput(
+                        TextSourceInput.utf8File("run.txt"), java.util.Optional.empty()))),
             java.util.Optional.empty());
     assertNotNull(fileBackedComment.runs());
 
@@ -73,8 +75,9 @@ class Phase7ContractCoverageTest {
             false,
             java.util.Optional.of(
                 java.util.List.of(
-                    new RichTextRunInput(TextSourceInput.inline("Ada"), null),
-                    new RichTextRunInput(TextSourceInput.utf8File("run-2.txt"), null))),
+                    new RichTextRunInput(TextSourceInput.inline("Ada"), java.util.Optional.empty()),
+                    new RichTextRunInput(
+                        TextSourceInput.utf8File("run-2.txt"), java.util.Optional.empty()))),
             java.util.Optional.empty());
     assertEquals(2, mixedSourceComment.runs().orElseThrow().size());
 
@@ -113,17 +116,13 @@ class Phase7ContractCoverageTest {
             "Logo",
             new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.file("logo.png")),
             anchor,
-            TextSourceInput.utf8File("logo.txt"));
+            Optional.of(TextSourceInput.utf8File("logo.txt")));
     assertEquals("logo.png", ((BinarySourceInput.File) picture.image().source()).path());
 
-    ShapeInput shape =
-        new ShapeInput(
-            "Banner",
-            ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-            anchor,
-            "rect",
-            TextSourceInput.standardInput());
-    assertInstanceOf(TextSourceInput.StandardInput.class, shape.text());
+    ShapeInput.SimpleShape shape =
+        new ShapeInput.SimpleShape(
+            "Banner", anchor, "rect", Optional.of(TextSourceInput.standardInput()));
+    assertInstanceOf(TextSourceInput.StandardInput.class, shape.text().orElseThrow());
 
     EmbeddedObjectInput embeddedObject =
         new EmbeddedObjectInput(
@@ -138,19 +137,22 @@ class Phase7ContractCoverageTest {
 
     DataValidationInput validation =
         new DataValidationInput(
-            new DataValidationRuleInput.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", "10"),
+            new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.BETWEEN, "1", Optional.of("10")),
             false,
             false,
-            new DataValidationPromptInput(
-                TextSourceInput.utf8File("prompt-title.txt"),
-                TextSourceInput.utf8File("prompt.txt"),
-                true),
-            new DataValidationErrorAlertInput(
-                ExcelDataValidationErrorStyle.STOP,
-                TextSourceInput.utf8File("alert-title.txt"),
-                TextSourceInput.utf8File("alert.txt"),
-                true));
-    assertTrue(validation.prompt().showPromptBox());
-    assertTrue(validation.errorAlert().showErrorBox());
+            Optional.of(
+                new DataValidationPromptInput(
+                    TextSourceInput.utf8File("prompt-title.txt"),
+                    TextSourceInput.utf8File("prompt.txt"),
+                    true)),
+            Optional.of(
+                new DataValidationErrorAlertInput(
+                    ExcelDataValidationErrorStyle.STOP,
+                    TextSourceInput.utf8File("alert-title.txt"),
+                    TextSourceInput.utf8File("alert.txt"),
+                    true)));
+    assertTrue(validation.prompt().orElseThrow().showPromptBox());
+    assertTrue(validation.errorAlert().orElseThrow().showErrorBox());
   }
 }

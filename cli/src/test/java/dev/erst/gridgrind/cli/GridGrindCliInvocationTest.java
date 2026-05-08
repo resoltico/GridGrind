@@ -30,7 +30,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--doctor-request"));
     assertTrue(help.contains("--print-task-catalog"));
     assertTrue(help.contains("--print-task-plan <id>"));
-    assertTrue(help.contains("--print-goal-plan <goal>"));
+    assertTrue(help.contains("--print-task-keyword-match <query>"));
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("Minimal Valid Request:"));
     assertTrue(help.endsWith("\n"), "implicit help must end with a newline");

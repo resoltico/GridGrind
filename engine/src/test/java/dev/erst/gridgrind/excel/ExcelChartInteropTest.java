@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
@@ -100,7 +101,7 @@ class ExcelChartInteropTest {
       assertTrue(
           ExcelChartTestSupport.singlePlot(literalPie, ExcelChartSnapshot.Pie.class).varyColors());
       assertEquals(
-          75,
+          Optional.of(75),
           ExcelChartTestSupport.singlePlot(literalPie, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
 

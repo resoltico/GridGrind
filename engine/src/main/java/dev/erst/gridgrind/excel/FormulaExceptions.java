@@ -9,6 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.formula.atp.AnalysisToolPak;
 import org.apache.poi.ss.formula.function.FunctionMetadataRegistry;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Translates raw Apache POI formula evaluation exceptions into typed GridGrind exception hierarchy
@@ -35,7 +36,7 @@ final class FormulaExceptions {
    * @return a typed formula exception, or the original exception if it is not a formula error
    */
   static RuntimeException wrap(
-      String sheetName, String address, String formula, RuntimeException exception) {
+      String sheetName, String address, @Nullable String formula, RuntimeException exception) {
     return wrap(
         ExcelFormulaEnvironment.defaults().runtimeContext(),
         sheetName,
@@ -48,7 +49,7 @@ final class FormulaExceptions {
       ExcelFormulaRuntime formulaRuntime,
       String sheetName,
       String address,
-      String formula,
+      @Nullable String formula,
       RuntimeException exception) {
     return wrap(formulaRuntime.context(), sheetName, address, formula, exception);
   }
@@ -57,49 +58,50 @@ final class FormulaExceptions {
       ExcelFormulaRuntimeContext context,
       String sheetName,
       String address,
-      String formula,
+      @Nullable String formula,
       RuntimeException exception) {
+    String normalizedFormula = formula == null ? "" : formula;
     if (isMissingExternalWorkbookFailure(exception)) {
-      String workbookName = missingExternalWorkbookName(exception, formula);
+      String workbookName = missingExternalWorkbookName(exception, normalizedFormula);
       return new MissingExternalWorkbookException(
           sheetName,
           address,
-          formula,
+          normalizedFormula,
           workbookName,
           "Missing external workbook"
               + workbookLabel(workbookName)
               + " at "
               + location(sheetName, address)
               + ": "
-              + formula,
+              + normalizedFormula,
           exception);
     }
-    if (isUnregisteredUserDefinedFunctionFailure(context, exception, formula)) {
-      String functionName = leadingFunctionName(formula).orElse(null);
+    if (isUnregisteredUserDefinedFunctionFailure(context, exception, normalizedFormula)) {
+      String functionName = leadingFunctionName(normalizedFormula).orElse(null);
       return new UnregisteredUserDefinedFunctionException(
           sheetName,
           address,
-          formula,
+          normalizedFormula,
           functionName,
           "User-defined function "
               + functionName
               + " is not registered at "
               + location(sheetName, address)
               + ": "
-              + formula,
+              + normalizedFormula,
           exception);
     }
     if (isUnsupportedFormulaFailure(exception)) {
       return new UnsupportedFormulaException(
           sheetName,
           address,
-          formula,
+          normalizedFormula,
           "Unsupported formula"
-              + functionLabel(formula)
+              + functionLabel(normalizedFormula)
               + " at "
               + location(sheetName, address)
               + ": "
-              + formula,
+              + normalizedFormula,
           exception);
     }
     if (isUnhandledFormulaEvaluationFailure(exception)) {
@@ -109,8 +111,8 @@ final class FormulaExceptions {
       return new InvalidFormulaException(
           sheetName,
           address,
-          formula,
-          "Invalid formula at " + location(sheetName, address) + ": " + formula,
+          normalizedFormula,
+          "Invalid formula at " + location(sheetName, address) + ": " + normalizedFormula,
           exception);
     }
     return exception;
@@ -172,11 +174,11 @@ final class FormulaExceptions {
     return functionName == null ? "" : " function " + functionName;
   }
 
-  private static String workbookLabel(String workbookName) {
+  private static String workbookLabel(@Nullable String workbookName) {
     return workbookName == null ? "" : " " + workbookName;
   }
 
-  static String missingExternalWorkbookName(Throwable exception, String formula) {
+  static @Nullable String missingExternalWorkbookName(Throwable exception, String formula) {
     for (Throwable current = exception; current != null; current = current.getCause()) {
       String message = current.getMessage();
       if (message == null) {

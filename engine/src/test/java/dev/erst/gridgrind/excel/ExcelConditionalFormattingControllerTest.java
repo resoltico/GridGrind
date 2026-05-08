@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
 import org.apache.poi.ss.usermodel.IconMultiStateFormatting;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -126,10 +127,15 @@ class ExcelConditionalFormattingControllerTest {
           new ExcelConditionalFormattingBlockDefinition(
               List.of("A1:A3"),
               List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, null),
+                  new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, Optional.empty()),
                   new ExcelConditionalFormattingRule.CellValueRule(
-                      ExcelComparisonOperator.GREATER_THAN, "1", null, false, null),
-                  new ExcelConditionalFormattingRule.Top10Rule(10, false, false, false, null))));
+                      ExcelComparisonOperator.GREATER_THAN,
+                      "1",
+                      Optional.empty(),
+                      false,
+                      Optional.empty()),
+                  new ExcelConditionalFormattingRule.Top10Rule(
+                      10, false, false, false, Optional.empty()))));
 
       assertEquals(
           List.of(
@@ -274,8 +280,17 @@ class ExcelConditionalFormattingControllerTest {
                       true,
                       true,
                       true,
-                      new ExcelDifferentialStyle(
-                          null, true, null, null, "#223344", null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.empty(),
+                              Optional.of(true),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of("#223344"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertEquals(
           List.of(
@@ -308,10 +323,19 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
                       "1",
-                      null,
+                      Optional.empty(),
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertEquals(1, sheet.conditionalFormattingBlockCount());
       assertEquals(
@@ -744,10 +768,19 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
                       "#REF!",
-                      null,
+                      Optional.empty(),
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       WorkbookAnalysis.AnalysisFinding finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
@@ -773,10 +806,19 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
                       "1",
-                      "#REF!",
+                      Optional.of("#REF!"),
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       WorkbookAnalysis.AnalysisFinding finding =
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
@@ -803,8 +845,17 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.FormulaRule(
                       "A1>0",
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
@@ -826,10 +877,19 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.CellValueRule(
                       ExcelComparisonOperator.BETWEEN,
                       "1",
-                      "10",
+                      Optional.of("10"),
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
@@ -896,8 +956,17 @@ class ExcelConditionalFormattingControllerTest {
                       false,
                       false,
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertTrue(
           controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
@@ -1035,8 +1104,17 @@ class ExcelConditionalFormattingControllerTest {
                   new ExcelConditionalFormattingRule.FormulaRule(
                       "#REF!",
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
 
       assertEquals(
           List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA),
@@ -1054,28 +1132,39 @@ class ExcelConditionalFormattingControllerTest {
             new ExcelConditionalFormattingRule.FormulaRule(
                 "A1>10",
                 true,
-                new ExcelDifferentialStyle(
-                    "0.00",
-                    true,
-                    false,
-                    ExcelFontHeight.fromPoints(BigDecimal.valueOf(12)),
-                    "#102030",
-                    true,
-                    true,
-                    "#E0F0AA",
-                    new ExcelDifferentialBorder(
-                        new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
-                        null,
-                        null,
-                        null,
-                        null))),
+                Optional.of(
+                    new ExcelDifferentialStyle(
+                        Optional.of("0.00"),
+                        Optional.of(true),
+                        Optional.of(false),
+                        Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(12))),
+                        Optional.of("#102030"),
+                        Optional.of(true),
+                        Optional.of(true),
+                        Optional.of("#E0F0AA"),
+                        Optional.ofNullable(
+                            new ExcelDifferentialBorder(
+                                new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
+                                null,
+                                null,
+                                null,
+                                null))))),
             new ExcelConditionalFormattingRule.CellValueRule(
                 ExcelComparisonOperator.BETWEEN,
                 "1",
-                "9",
+                Optional.of("9"),
                 false,
-                new ExcelDifferentialStyle(
-                    null, null, true, null, null, null, null, "#AAEECC", null))));
+                Optional.of(
+                    new ExcelDifferentialStyle(
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(true),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of("#AAEECC"),
+                        Optional.empty())))));
   }
 
   private static ExcelConditionalFormattingBlockDefinition secondaryBlock(String range) {
@@ -1085,8 +1174,17 @@ class ExcelConditionalFormattingControllerTest {
             new ExcelConditionalFormattingRule.FormulaRule(
                 range.startsWith("B") ? "B1>5" : "C1=\"Ready\"",
                 false,
-                new ExcelDifferentialStyle(
-                    null, false, null, null, "#223344", null, null, null, null))));
+                Optional.of(
+                    new ExcelDifferentialStyle(
+                        Optional.empty(),
+                        Optional.of(false),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of("#223344"),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))));
   }
 
   private static ExcelDifferentialBorder expandedBorder(ExcelDifferentialBorderSide side) {

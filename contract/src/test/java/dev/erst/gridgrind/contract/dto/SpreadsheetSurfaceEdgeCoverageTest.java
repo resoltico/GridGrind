@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
@@ -22,6 +22,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -39,27 +40,30 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         ChartSeriesInput.untitled(
             new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
             new ChartDataSourceInput.NumericLiteral(List.of(10.0d, 18.0d)),
-            true,
-            ExcelChartMarkerStyle.DIAMOND,
-            (short) 8,
-            12L);
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.DIAMOND),
+            Optional.of((short) 8),
+            Optional.of(12L));
 
     ChartPlotInput.Area area =
         new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, List.of(series));
     ChartPlotInput.Area3D area3D =
-        new ChartPlotInput.Area3D(false, ExcelChartGrouping.STANDARD, 42, List.of(series));
+        new ChartPlotInput.Area3D(
+            false, ExcelChartGrouping.STANDARD, Optional.of(42), List.of(series));
     ChartPlotInput.Bar3D bar3D =
         new ChartPlotInput.Bar3D(
             false,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.PERCENT_STACKED,
-            24,
-            88,
-            ExcelChartBarShape.CONE,
+            Optional.of(24),
+            Optional.of(88),
+            Optional.of(ExcelChartBarShape.CONE),
             List.of(series));
-    ChartPlotInput.Doughnut doughnut = new ChartPlotInput.Doughnut(false, 45, 40, List.of(series));
+    ChartPlotInput.Doughnut doughnut =
+        new ChartPlotInput.Doughnut(false, Optional.of(45), Optional.of(40), List.of(series));
     ChartPlotInput.Line3D line3D =
-        new ChartPlotInput.Line3D(false, ExcelChartGrouping.STANDARD, 16, List.of(series));
+        new ChartPlotInput.Line3D(
+            false, ExcelChartGrouping.STANDARD, Optional.of(16), List.of(series));
     ChartPlotInput.Pie3D pie3D = new ChartPlotInput.Pie3D(false, List.of(series));
     ChartPlotInput.Radar radar =
         new ChartPlotInput.Radar(false, ExcelChartRadarStyle.STANDARD, List.of(series));
@@ -78,14 +82,14 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertFalse(area.varyColors());
     assertEquals(ExcelChartGrouping.STANDARD, area.grouping());
     assertEquals(2, area.axes().size());
-    assertEquals(42, area3D.gapDepth());
+    assertEquals(Optional.of(42), area3D.gapDepth());
     assertFalse(area3D.varyColors());
     assertEquals(ExcelChartBarDirection.BAR, bar3D.barDirection());
     assertEquals(ExcelChartBarGrouping.PERCENT_STACKED, bar3D.grouping());
-    assertEquals(ExcelChartBarShape.CONE, bar3D.shape());
+    assertEquals(Optional.of(ExcelChartBarShape.CONE), bar3D.shape());
     assertFalse(doughnut.varyColors());
-    assertEquals(45, doughnut.firstSliceAngle());
-    assertEquals(40, doughnut.holeSize());
+    assertEquals(Optional.of(45), doughnut.firstSliceAngle());
+    assertEquals(Optional.of(40), doughnut.holeSize());
     assertEquals(ExcelChartGrouping.STANDARD, line3D.grouping());
     assertFalse(pie3D.varyColors());
     assertEquals(ExcelChartRadarStyle.STANDARD, radar.style());
@@ -106,30 +110,30 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             ChartSeriesInput.untitled(
                 new ChartDataSourceInput.Reference("Categories"),
                 new ChartDataSourceInput.Reference("Values"),
-                null,
-                null,
-                (short) 1,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             ChartSeriesInput.untitled(
                 new ChartDataSourceInput.Reference("Categories"),
                 new ChartDataSourceInput.Reference("Values"),
-                null,
-                null,
-                (short) 73,
-                null));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 73),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             ChartSeriesInput.untitled(
                 new ChartDataSourceInput.Reference("Categories"),
                 new ChartDataSourceInput.Reference("Values"),
-                null,
-                null,
-                null,
-                -1L));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1L)));
     assertThrows(
         NullPointerException.class,
         () -> new ChartDataSourceInput.StringLiteral(List.of("Jan", null)));
@@ -138,10 +142,10 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () -> new ChartDataSourceInput.NumericLiteral(List.of(1.0d, null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartPlotInput.Doughnut(false, 0, 9, List.of(series)));
+        () -> new ChartPlotInput.Doughnut(false, Optional.of(0), Optional.of(9), List.of(series)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartPlotInput.Doughnut(false, 0, 91, List.of(series)));
+        () -> new ChartPlotInput.Doughnut(false, Optional.of(0), Optional.of(91), List.of(series)));
   }
 
   @Test
@@ -156,11 +160,11 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new ChartReport.Title.Text("Series"),
             new ChartReport.DataSource.StringReference("ChartCategories", List.of("Jan", "Feb")),
             new ChartReport.DataSource.NumericReference(
-                "ChartValues", "#,##0.00", List.of("10", "18")),
-            true,
-            ExcelChartMarkerStyle.SQUARE,
-            (short) 6,
-            4L);
+                "ChartValues", Optional.of("#,##0.00"), List.of("10", "18")),
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.SQUARE),
+            Optional.of((short) 6),
+            Optional.of(4L));
     List<ChartReport.Axis> axes =
         List.of(
             new ChartReport.Axis(
@@ -178,20 +182,22 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         new ChartReport.Area(false, ExcelChartGrouping.STANDARD, axes, List.of(series));
     ChartReport.Area3D area3D =
         new ChartReport.Area3D(
-            false, ExcelChartGrouping.PERCENT_STACKED, 24, axes, List.of(series));
+            false, ExcelChartGrouping.PERCENT_STACKED, Optional.of(24), axes, List.of(series));
     ChartReport.Bar3D bar3D =
         new ChartReport.Bar3D(
             true,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.STACKED,
-            32,
-            88,
-            ExcelChartBarShape.PYRAMID,
+            Optional.of(32),
+            Optional.of(88),
+            Optional.of(ExcelChartBarShape.PYRAMID),
             axes,
             List.of(series));
-    ChartReport.Doughnut doughnut = new ChartReport.Doughnut(true, 30, 55, List.of(series));
+    ChartReport.Doughnut doughnut =
+        new ChartReport.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series));
     ChartReport.Line3D line3D =
-        new ChartReport.Line3D(false, ExcelChartGrouping.STANDARD, 18, axes, List.of(series));
+        new ChartReport.Line3D(
+            false, ExcelChartGrouping.STANDARD, Optional.of(18), axes, List.of(series));
     ChartReport.Pie3D pie3D = new ChartReport.Pie3D(true, List.of(series));
     ChartReport.Radar radar =
         new ChartReport.Radar(false, ExcelChartRadarStyle.FILLED, axes, List.of(series));
@@ -239,10 +245,10 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                     "Foglio1", "Table1", "CourseTable", "A1:B4", "/CORSO/RIGHE/RIGA")));
 
     assertFalse(area.varyColors());
-    assertEquals(24, area3D.gapDepth());
-    assertEquals(ExcelChartBarShape.PYRAMID, bar3D.shape());
-    assertEquals(55, doughnut.holeSize());
-    assertEquals(18, line3D.gapDepth());
+    assertEquals(Optional.of(24), area3D.gapDepth());
+    assertEquals(Optional.of(ExcelChartBarShape.PYRAMID), bar3D.shape());
+    assertEquals(Optional.of(55), doughnut.holeSize());
+    assertEquals(Optional.of(18), line3D.gapDepth());
     assertTrue(pie3D.varyColors());
     assertEquals(ExcelChartRadarStyle.FILLED, radar.style());
     assertEquals(ExcelChartScatterStyle.SMOOTH_MARKER, scatter.style());
@@ -544,18 +550,25 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 List.of((CustomXmlLinkedTableReport) null)));
     assertThrows(
         NullPointerException.class,
-        () -> new ChartReport.Area3D(false, null, 12, axes, List.of(series)));
+        () -> new ChartReport.Area3D(false, null, Optional.of(12), axes, List.of(series)));
     assertThrows(
         NullPointerException.class,
         () ->
             new ChartReport.Bar3D(
-                false, ExcelChartBarDirection.COLUMN, null, 12, 44, null, axes, List.of(series)));
+                false,
+                ExcelChartBarDirection.COLUMN,
+                null,
+                Optional.of(12),
+                Optional.of(44),
+                Optional.empty(),
+                axes,
+                List.of(series)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ChartReport.Doughnut(false, 0, 9, List.of(series)));
+        () -> new ChartReport.Doughnut(false, Optional.of(0), Optional.of(9), List.of(series)));
     assertThrows(
         NullPointerException.class,
-        () -> new ChartReport.Line3D(false, null, 12, axes, List.of(series)));
+        () -> new ChartReport.Line3D(false, null, Optional.of(12), axes, List.of(series)));
     assertThrows(
         NullPointerException.class,
         () -> new ChartReport.Radar(false, null, axes, List.of(series)));
@@ -595,8 +608,9 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             java.util.Optional.empty(),
             java.util.Optional.of("invalid"),
             java.util.Optional.empty());
-    InspectionQuery.ExportCustomXmlMapping export =
-        new InspectionQuery.ExportCustomXmlMapping(new CustomXmlMappingLocator(1L, null), false);
+    WorkbookIntrospectionQuery.ExportCustomXmlMapping export =
+        new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
+            new CustomXmlMappingLocator(1L, null), false);
 
     assertTrue(captionOnly.allowComments());
     assertEquals("Please sign\nbefore release", captionOnly.caption().orElseThrow());
@@ -664,7 +678,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new InspectionQuery.ExportCustomXmlMapping(
+            new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                 new CustomXmlMappingLocator(1L, null), true, " "));
   }
 
@@ -717,16 +731,16 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                101,
+                Optional.empty(),
+                Optional.of(101),
                 List.of(
                     ChartSeriesInput.untitled(
                         new ChartDataSourceInput.StringLiteral(List.of("Jan")),
                         new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-                        null,
-                        null,
-                        null,
-                        null))));
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -734,94 +748,96 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                -101,
+                Optional.empty(),
+                Optional.of(-101),
                 List.of(
                     ChartSeriesInput.untitled(
                         new ChartDataSourceInput.StringLiteral(List.of("Jan")),
                         new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-                        null,
-                        null,
-                        null,
-                        null))));
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))));
     assertEquals(
         ExcelChartBarDirection.COLUMN,
         new ChartPlotInput.Bar3D(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(
                     ChartSeriesInput.untitled(
                         new ChartDataSourceInput.StringLiteral(List.of("Jan")),
                         new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-                        null,
-                        null,
-                        null,
-                        null)))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))
             .barDirection());
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         new ChartPlotInput.Doughnut(
                 false,
-                0,
-                null,
+                Optional.of(0),
+                Optional.empty(),
                 List.of(
                     ChartSeriesInput.untitled(
                         new ChartDataSourceInput.StringLiteral(List.of("Jan")),
                         new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-                        null,
-                        null,
-                        null,
-                        null)))
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))
             .holeSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ChartPlotInput.Doughnut(
                 false,
-                0,
-                91,
+                Optional.of(0),
+                Optional.of(91),
                 List.of(
                     ChartSeriesInput.untitled(
                         new ChartDataSourceInput.StringLiteral(List.of("Jan")),
                         new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-                        null,
-                        null,
-                        null,
-                        null))));
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                null,
-                null,
-                (short) 1,
-                null));
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                null,
-                null,
-                (short) 73,
-                null));
-    assertNull(
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 73),
+                Optional.empty()));
+    assertEquals(
+        Optional.empty(),
         new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                null,
-                null,
-                null,
-                null)
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
             .markerSize());
     assertThrows(
         IllegalArgumentException.class,
@@ -829,41 +845,42 @@ class SpreadsheetSurfaceEdgeCoverageTest {
             new ChartReport.Series(
                 new ChartReport.Title.Text("Series"),
                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                null,
-                null,
-                null,
-                -1L));
+                new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1L)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ChartReport.Doughnut(
                 false,
-                0,
-                91,
+                Optional.of(0),
+                Optional.of(91),
                 List.of(
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                        null,
-                        null,
-                        null,
-                        null))));
-    assertNull(
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))));
+    assertEquals(
+        Optional.empty(),
         new ChartReport.Doughnut(
                 false,
-                0,
-                null,
+                Optional.of(0),
+                Optional.empty(),
                 List.of(
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(null, List.of("10")),
-                        null,
-                        null,
-                        null,
-                        null)))
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("10")),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))
             .holeSize());
     assertThrows(
         IllegalArgumentException.class,

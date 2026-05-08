@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.vml.CTShape;
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -22,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
@@ -68,21 +68,11 @@ class ExcelDrawingControllerTest {
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
-                  "Queue preview"))
+                  Optional.of("Queue preview")))
           .setShape(
-              new ExcelShapeDefinition(
-                  "OpsShape",
-                  ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                  anchor(5, 1, 8, 5),
-                  "rect",
-                  "Queue"))
-          .setShape(
-              new ExcelShapeDefinition(
-                  "OpsConnector",
-                  ExcelAuthoredDrawingShapeKind.CONNECTOR,
-                  anchor(9, 1, 11, 4),
-                  null,
-                  null))
+              new ExcelShapeDefinition.SimpleShape(
+                  "OpsShape", anchor(5, 1, 8, 5), "rect", Optional.of("Queue")))
+          .setShape(new ExcelShapeDefinition.Connector("OpsConnector", anchor(9, 1, 11, 4)))
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -176,8 +166,8 @@ class ExcelDrawingControllerTest {
               "ada@example.com",
               null,
               "invalid",
-              ExcelPictureFormat.PNG,
-              new ExcelBinaryData(PNG_PIXEL_BYTES)));
+              Optional.of(ExcelPictureFormat.PNG),
+              Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES))));
 
       List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawingObjects();
       assertEquals(
@@ -405,8 +395,8 @@ class ExcelDrawingControllerTest {
                       true,
                       ExcelChartBarDirection.COLUMN,
                       ExcelChartBarGrouping.CLUSTERED,
-                      null,
-                      null,
+                      Optional.empty(),
+                      Optional.empty(),
                       List.of(
                           new ExcelChartDefinition.Axis(
                               ExcelChartAxisKind.CATEGORY,
@@ -495,7 +485,7 @@ class ExcelDrawingControllerTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       List<ExcelDrawingObjectSnapshot> before = withDrawing.drawingObjects();
 
       withDrawing.setComment("A1", new ExcelComment("Review", "GridGrind", false));
@@ -701,7 +691,7 @@ class ExcelDrawingControllerTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       sheet.setEmbeddedObject(
           new ExcelEmbeddedObjectDefinition(
               "OpsEmbed",
@@ -757,8 +747,7 @@ class ExcelDrawingControllerTest {
               .findFirst()
               .orElseThrow();
       org.apache.poi.openxml4j.opc.PackagePart objectPart =
-          new ExcelDrawingController().oleObjectPart(objectData);
-      assertNotNull(objectPart);
+          new ExcelDrawingController().oleObjectPart(objectData).orElseThrow();
       try (var outputStream = objectPart.getOutputStream()) {
         outputStream.write(new byte[0]);
       }
@@ -796,12 +785,12 @@ class ExcelDrawingControllerTest {
               new ExcelNamedRangeDefinition(
                   "ChartCategories",
                   new ExcelNamedRangeScope.WorkbookScope(),
-                  new ExcelNamedRangeTarget("Chart", "A2:A4")))
+                  ExcelNamedRangeTarget.range("Chart", "A2:A4")))
           .setNamedRange(
               new ExcelNamedRangeDefinition(
                   "ChartActual",
                   new ExcelNamedRangeScope.WorkbookScope(),
-                  new ExcelNamedRangeTarget("Chart", "C2:C4")));
+                  ExcelNamedRangeTarget.range("Chart", "C2:C4")));
 
       sheet.setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
 
@@ -935,12 +924,11 @@ class ExcelDrawingControllerTest {
               IllegalArgumentException.class,
               () ->
                   sheet.setShape(
-                      new ExcelShapeDefinition(
+                      new ExcelShapeDefinition.SimpleShape(
                           "OpsBrokenShape",
-                          ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
                           anchor(1, 1, 3, 3),
                           "invalid-shape",
-                          null)));
+                          Optional.empty())));
       assertTrue(invalidShape.getMessage().contains("Unsupported presetGeometryToken"));
       assertEquals(List.of(), sheet.drawingObjects());
       assertEquals(List.of(), sheet.charts());
@@ -1062,12 +1050,12 @@ class ExcelDrawingControllerTest {
             new ExcelNamedRangeDefinition(
                 "ChartCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Chart", "A2:A4")))
+                ExcelNamedRangeTarget.range("Chart", "A2:A4")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ChartActual",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Chart", "C2:C4")));
+                ExcelNamedRangeTarget.range("Chart", "C2:C4")));
   }
 
   private static void assertInitialChartSnapshot(ExcelSheet sheet) {

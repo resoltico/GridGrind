@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 class ExcelDrawingSupportCoverageTest {
   @Test
   void supportHelperResidualBranchesStayCovered() throws Exception {
-    assertNull(ExcelDrawingAnchorSupport.nullIfBlank(null));
-    assertNull(ExcelChartSourceSupport.nullIfBlank(null));
+    assertTrue(ExcelDrawingAnchorSupport.blankAsOptional(null).isEmpty());
+    assertTrue(ExcelChartSourceSupport.blankAsOptional(null).isEmpty());
 
     IllegalArgumentException blankFailure =
         assertThrows(

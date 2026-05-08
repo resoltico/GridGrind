@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -35,7 +36,11 @@ class ExcelDataValidationControllerTest {
     assertRoundTrip(
         "B1:B3",
         new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.FormulaList("=Statuses"), false, true, null, null));
+            new ExcelDataValidationRule.FormulaList("=Statuses"),
+            false,
+            true,
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -44,11 +49,11 @@ class ExcelDataValidationControllerTest {
         "C1:C3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.GREATER_THAN, "=1", null),
+                ExcelComparisonOperator.GREATER_THAN, "=1", Optional.empty()),
             false,
             false,
-            null,
-            null));
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -57,11 +62,11 @@ class ExcelDataValidationControllerTest {
         "D1:D3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.DecimalNumber(
-                ExcelComparisonOperator.GREATER_THAN, "=0.5", null),
+                ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.empty()),
             false,
             false,
-            null,
-            warningAlert()));
+            Optional.empty(),
+            Optional.of(warningAlert())));
   }
 
   @Test
@@ -70,11 +75,11 @@ class ExcelDataValidationControllerTest {
         "E1:E3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.DateRule(
-                ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", null),
+                ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", Optional.empty()),
             false,
             false,
-            null,
-            null));
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -83,11 +88,11 @@ class ExcelDataValidationControllerTest {
         "F1:F3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.TimeRule(
-                ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", null),
+                ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", Optional.empty()),
             false,
             false,
-            null,
-            null));
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -96,11 +101,11 @@ class ExcelDataValidationControllerTest {
         "G1:G3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.TextLength(
-                ExcelComparisonOperator.GREATER_THAN, "=20", null),
+                ExcelComparisonOperator.GREATER_THAN, "=20", Optional.empty()),
             false,
             false,
-            null,
-            null));
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -108,7 +113,11 @@ class ExcelDataValidationControllerTest {
     assertRoundTrip(
         "H1:H3",
         new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.CustomFormula("=LEN(H1)>0"), false, false, null, null));
+            new ExcelDataValidationRule.CustomFormula("=LEN(H1)>0"),
+            false,
+            false,
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Test
@@ -121,11 +130,11 @@ class ExcelDataValidationControllerTest {
           "C1:C3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.TextLength(
-                  ExcelComparisonOperator.GREATER_THAN, "20", null),
+                  ExcelComparisonOperator.GREATER_THAN, "20", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
 
       List<ExcelDataValidationSnapshot> selected =
           controller.dataValidations(sheet, new ExcelRangeSelection.Selected(List.of("C2")));
@@ -137,11 +146,11 @@ class ExcelDataValidationControllerTest {
                   expectedRoundTripDefinition(
                       new ExcelDataValidationDefinition(
                           new ExcelDataValidationRule.TextLength(
-                              ExcelComparisonOperator.GREATER_THAN, "20", null),
+                              ExcelComparisonOperator.GREATER_THAN, "20", Optional.empty()),
                           false,
                           false,
-                          null,
-                          null)))),
+                          Optional.empty(),
+                          Optional.empty())))),
           selected);
     }
   }
@@ -266,7 +275,11 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationSnapshot.Supported(
             List.of("C0"),
             new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of()), false, true, null, null)),
+                new ExcelDataValidationRule.ExplicitList(List.of()),
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty())),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], null, null),
@@ -275,7 +288,11 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationSnapshot.Supported(
             List.of("C0b"),
             new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.ExplicitList(List.of()), false, true, null, null)),
+                new ExcelDataValidationRule.ExplicitList(List.of()),
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty())),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], "\"\"", null),
@@ -300,7 +317,11 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationSnapshot.Supported(
             List.of("C3"),
             new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("Statuses"), false, true, null, null)),
+                new ExcelDataValidationRule.FormulaList("Statuses"),
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty())),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, null, "Statuses", null),
@@ -362,8 +383,8 @@ class ExcelDataValidationControllerTest {
         assertInstanceOf(
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(blankPromptTitle, List.of("A1")));
-    assertNull(blankPromptTitleSnapshot.validation().prompt());
-    assertNull(blankPromptTitleSnapshot.validation().errorAlert());
+    assertEquals(Optional.empty(), blankPromptTitleSnapshot.validation().prompt());
+    assertEquals(Optional.empty(), blankPromptTitleSnapshot.validation().errorAlert());
 
     StubXssfDataValidation blankPromptText =
         new StubXssfDataValidation(
@@ -383,8 +404,8 @@ class ExcelDataValidationControllerTest {
         assertInstanceOf(
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(blankPromptText, List.of("B1")));
-    assertNull(blankPromptTextSnapshot.validation().prompt());
-    assertNull(blankPromptTextSnapshot.validation().errorAlert());
+    assertEquals(Optional.empty(), blankPromptTextSnapshot.validation().prompt());
+    assertEquals(Optional.empty(), blankPromptTextSnapshot.validation().errorAlert());
   }
 
   @Test
@@ -405,48 +426,60 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationSnapshot.Supported.class,
             ExcelDataValidationController.toSnapshot(nullPromptText, List.of("C1")));
 
-    assertNull(snapshot.validation().prompt());
-    assertNull(snapshot.validation().errorAlert());
+    assertEquals(Optional.empty(), snapshot.validation().prompt());
+    assertEquals(Optional.empty(), snapshot.validation().errorAlert());
   }
 
   @Test
   void xssfMetadataHelpersCoverPromptErrorAndSupportedFormulaPayloads() {
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.prompt(
             xssfListStub().overridePrompt(null, "Choose one workflow state.", true)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.prompt(
             xssfListStub().overridePrompt(" ", "Choose one workflow state.", true)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", null, true)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", " ", true)));
     assertEquals(
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(
             xssfListStub().overridePrompt("Status", "Choose one workflow state.", false)));
 
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.errorAlert(
             xssfListStub()
                 .overrideError(
                     null, "Use an allowed value.", true, DataValidation.ErrorStyle.STOP)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.errorAlert(
             xssfListStub()
                 .overrideError(
                     " ", "Use an allowed value.", true, DataValidation.ErrorStyle.STOP)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.errorAlert(
             xssfListStub()
                 .overrideError("Invalid status", null, true, DataValidation.ErrorStyle.STOP)));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         ExcelDataValidationController.errorAlert(
             xssfListStub()
                 .overrideError("Invalid status", " ", true, DataValidation.ErrorStyle.STOP)));
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.INFORMATION, "Heads up", "Use an allowed value.", false),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.INFORMATION,
+                "Heads up",
+                "Use an allowed value.",
+                false)),
         ExcelDataValidationController.errorAlert(
             xssfListStub()
                 .overrideError(
@@ -474,11 +507,15 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationRule.FormulaList("Statuses"),
         formulaListSnapshot.validation().rule());
     assertEquals(
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
         formulaListSnapshot.validation().prompt());
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.WARNING, "Heads up", "Read the allowed values.", false),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.WARNING,
+                "Heads up",
+                "Read the allowed values.",
+                false)),
         formulaListSnapshot.validation().errorAlert());
 
     ExcelDataValidationSnapshot.Supported customFormulaSnapshot =
@@ -510,7 +547,7 @@ class ExcelDataValidationControllerTest {
     promptDefaults.setPromptTitle("Status");
     promptDefaults.setPrompt("Choose one workflow state.");
     assertEquals(
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptDefaults));
 
     CTDataValidation promptExplicitFalse =
@@ -519,34 +556,35 @@ class ExcelDataValidationControllerTest {
     promptExplicitFalse.setPrompt("Choose one workflow state.");
     promptExplicitFalse.setShowInputMessage(false);
     assertEquals(
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false)),
         ExcelDataValidationController.prompt(promptExplicitFalse));
 
     CTDataValidation promptBlankTitle =
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     promptBlankTitle.setPromptTitle(" ");
     promptBlankTitle.setPrompt("Choose one workflow state.");
-    assertNull(ExcelDataValidationController.prompt(promptBlankTitle));
+    assertEquals(Optional.empty(), ExcelDataValidationController.prompt(promptBlankTitle));
 
     CTDataValidation promptMissingText =
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     promptMissingText.setPromptTitle("Status");
-    assertNull(ExcelDataValidationController.prompt(promptMissingText));
+    assertEquals(Optional.empty(), ExcelDataValidationController.prompt(promptMissingText));
 
     CTDataValidation promptBlankText = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     promptBlankText.setPromptTitle("Status");
     promptBlankText.setPrompt(" ");
-    assertNull(ExcelDataValidationController.prompt(promptBlankText));
+    assertEquals(Optional.empty(), ExcelDataValidationController.prompt(promptBlankText));
 
     CTDataValidation errorDefaults = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     errorDefaults.setErrorTitle("Invalid status");
     errorDefaults.setError("Use one of the allowed values.");
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP,
-            "Invalid status",
-            "Use one of the allowed values.",
-            false),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP,
+                "Invalid status",
+                "Use one of the allowed values.",
+                false)),
         ExcelDataValidationController.errorAlert(errorDefaults));
 
     CTDataValidation warningError = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
@@ -556,8 +594,9 @@ class ExcelDataValidationControllerTest {
     warningError.setErrorStyle(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.WARNING, "Warning", "Watch this value.", true),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.WARNING, "Warning", "Watch this value.", true)),
         ExcelDataValidationController.errorAlert(warningError));
 
     CTDataValidation infoError = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
@@ -566,8 +605,9 @@ class ExcelDataValidationControllerTest {
     infoError.setErrorStyle(
         org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false)),
         ExcelDataValidationController.errorAlert(infoError));
 
     CTDataValidation explicitFalseError =
@@ -576,24 +616,25 @@ class ExcelDataValidationControllerTest {
     explicitFalseError.setError("Stay false.");
     explicitFalseError.setShowErrorMessage(false);
     assertEquals(
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP, "Explicit false", "Stay false.", false),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP, "Explicit false", "Stay false.", false)),
         ExcelDataValidationController.errorAlert(explicitFalseError));
 
     CTDataValidation blankErrorTitle = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     blankErrorTitle.setErrorTitle(" ");
     blankErrorTitle.setError("Use one of the allowed values.");
-    assertNull(ExcelDataValidationController.errorAlert(blankErrorTitle));
+    assertEquals(Optional.empty(), ExcelDataValidationController.errorAlert(blankErrorTitle));
 
     CTDataValidation missingErrorText =
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     missingErrorText.setErrorTitle("Invalid status");
-    assertNull(ExcelDataValidationController.errorAlert(missingErrorText));
+    assertEquals(Optional.empty(), ExcelDataValidationController.errorAlert(missingErrorText));
 
     CTDataValidation blankErrorText = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     blankErrorText.setErrorTitle("Invalid status");
     blankErrorText.setError(" ");
-    assertNull(ExcelDataValidationController.errorAlert(blankErrorText));
+    assertEquals(Optional.empty(), ExcelDataValidationController.errorAlert(blankErrorText));
   }
 
   @Test
@@ -729,7 +770,7 @@ class ExcelDataValidationControllerTest {
                 List.of("A1")));
     assertEquals(
         new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", null),
+            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
         decimalSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported dateSnapshot =
@@ -744,7 +785,8 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("B1")));
     assertEquals(
-        new ExcelDataValidationRule.DateRule(ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", null),
+        new ExcelDataValidationRule.DateRule(
+            ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", Optional.empty()),
         dateSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported timeSnapshot =
@@ -760,7 +802,7 @@ class ExcelDataValidationControllerTest {
                 List.of("C1")));
     assertEquals(
         new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", null),
+            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", Optional.empty()),
         timeSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported textLengthSnapshot =
@@ -775,7 +817,8 @@ class ExcelDataValidationControllerTest {
                     null),
                 List.of("D1")));
     assertEquals(
-        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        new ExcelDataValidationRule.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
         textLengthSnapshot.validation().rule());
 
     ExcelDataValidationSnapshot.Supported wholeBetweenSnapshot =
@@ -790,7 +833,8 @@ class ExcelDataValidationControllerTest {
                     "9"),
                 List.of("E1")));
     assertEquals(
-        new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", "9"),
+        new ExcelDataValidationRule.WholeNumber(
+            ExcelComparisonOperator.BETWEEN, "1", Optional.of("9")),
         wholeBetweenSnapshot.validation().rule());
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
@@ -885,14 +929,22 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationSnapshot.Supported(
             List.of("L1"),
             new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("\"Queued"), false, true, null, null)),
+                new ExcelDataValidationRule.FormulaList("\"Queued"),
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty())),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.LIST, "L1", "\"Queued"), List.of("L1")));
     assertEquals(
         new ExcelDataValidationSnapshot.Supported(
             List.of("L2"),
             new ExcelDataValidationDefinition(
-                new ExcelDataValidationRule.FormulaList("\""), false, true, null, null)),
+                new ExcelDataValidationRule.FormulaList("\""),
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty())),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.LIST, "L2", "\""), List.of("L2")));
 
@@ -932,11 +984,11 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
         explicitListSnapshot.validation().rule());
     assertEquals(
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true),
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
         explicitListSnapshot.validation().prompt());
     assertEquals(
         ExcelDataValidationErrorStyle.WARNING,
-        explicitListSnapshot.validation().errorAlert().style());
+        explicitListSnapshot.validation().errorAlert().orElseThrow().style());
     assertTrue(explicitListSnapshot.validation().suppressDropDownArrow());
 
     CTDataValidation formulaList = CTDataValidation.Factory.newInstance();
@@ -960,7 +1012,7 @@ class ExcelDataValidationControllerTest {
     assertFalse(formulaListSnapshot.validation().suppressDropDownArrow());
     assertEquals(
         ExcelDataValidationErrorStyle.INFORMATION,
-        formulaListSnapshot.validation().errorAlert().style());
+        formulaListSnapshot.validation().errorAlert().orElseThrow().style());
 
     assertRawComparisonSnapshot(
         STDataValidationType.WHOLE,
@@ -1035,62 +1087,70 @@ class ExcelDataValidationControllerTest {
           sheet,
           "A1:A3",
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.FormulaList("#REF!"), false, false, null, null));
+              new ExcelDataValidationRule.FormulaList("#REF!"),
+              false,
+              false,
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "B1:B3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.WholeNumber(
-                  ExcelComparisonOperator.BETWEEN, "#REF!", "#REF!"),
+                  ExcelComparisonOperator.BETWEEN, "#REF!", Optional.of("#REF!")),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "C1:C3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.DecimalNumber(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", null),
+                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "D1:D3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.DateRule(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", null),
+                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "E1:E3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.TimeRule(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", null),
+                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "F1:F3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.TextLength(
-                  ExcelComparisonOperator.GREATER_THAN, "#REF!", null),
+                  ExcelComparisonOperator.GREATER_THAN, "#REF!", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "G1:G3",
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.CustomFormula("#REF!"), false, false, null, null));
+              new ExcelDataValidationRule.CustomFormula("#REF!"),
+              false,
+              false,
+              Optional.empty(),
+              Optional.empty()));
       addHelperValidation(sheet, "H1:H3", helperValidation(sheet, 0, 2, 7, 7));
       addHelperValidation(sheet, "H2:H4", helperValidation(sheet, 1, 3, 7, 7));
 
@@ -1113,21 +1173,29 @@ class ExcelDataValidationControllerTest {
           "A1:A3",
           new ExcelDataValidationDefinition(
               new ExcelDataValidationRule.WholeNumber(
-                  ExcelComparisonOperator.GREATER_THAN, "1", null),
+                  ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty()),
               false,
               false,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "B1:B3",
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.FormulaList("Statuses"), false, true, null, null));
+              new ExcelDataValidationRule.FormulaList("Statuses"),
+              false,
+              true,
+              Optional.empty(),
+              Optional.empty()));
       controller.setDataValidation(
           sheet,
           "C1:C3",
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.CustomFormula("LEN(C1)>0"), false, false, null, null));
+              new ExcelDataValidationRule.CustomFormula("LEN(C1)>0"),
+              false,
+              false,
+              Optional.empty(),
+              Optional.empty()));
       addRawValidation(sheet, "D1", STDataValidationType.NONE);
 
       List<WorkbookAnalysis.AnalysisFinding> findings =
@@ -1206,7 +1274,11 @@ class ExcelDataValidationControllerTest {
       XSSFSheet sheet = workbook.createSheet("Budget");
       ExcelDataValidationDefinition definition =
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.ExplicitList(List.of()), true, false, null, null);
+              new ExcelDataValidationRule.ExplicitList(List.of()),
+              true,
+              false,
+              Optional.empty(),
+              Optional.empty());
 
       controller.setDataValidation(sheet, "E2:E4", definition);
 
@@ -1221,8 +1293,8 @@ class ExcelDataValidationControllerTest {
                       new ExcelDataValidationRule.ExplicitList(List.of()),
                       true,
                       false,
-                      null,
-                      null))),
+                      Optional.empty(),
+                      Optional.empty()))),
           snapshots);
       assertEquals(
           "\"\"",
@@ -1241,12 +1313,13 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
         true,
         false,
-        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true),
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP,
-            "Invalid status",
-            "Use one of the allowed values.",
-            true));
+        Optional.of(new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP,
+                "Invalid status",
+                "Use one of the allowed values.",
+                true)));
   }
 
   private static ExcelDataValidationErrorAlert warningAlert() {

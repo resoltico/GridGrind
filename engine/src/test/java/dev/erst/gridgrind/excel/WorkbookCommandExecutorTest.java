@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
@@ -18,6 +17,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for WorkbookCommandExecutor applying commands to a workbook. */
@@ -105,12 +105,12 @@ class WorkbookCommandExecutorTest {
                   new ExcelNamedRangeDefinition(
                       "BudgetTotal",
                       new ExcelNamedRangeScope.WorkbookScope(),
-                      new ExcelNamedRangeTarget("Budget", "B3"))),
+                      ExcelNamedRangeTarget.range("Budget", "B3"))),
               new WorkbookMetadataCommand.SetNamedRange(
                   new ExcelNamedRangeDefinition(
                       "HistoryCell",
                       new ExcelNamedRangeScope.SheetScope("History"),
-                      new ExcelNamedRangeTarget("History", "A1"))),
+                      ExcelNamedRangeTarget.range("History", "A1"))),
               new WorkbookMetadataCommand.DeleteNamedRange(
                   "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()),
               new WorkbookLayoutCommand.AutoSizeColumns("Budget"),
@@ -183,7 +183,7 @@ class WorkbookCommandExecutorTest {
                 "HistoryCell",
                 new ExcelNamedRangeScope.SheetScope("History"),
                 "History!$A$1",
-                new ExcelNamedRangeTarget("History", "A1"))),
+                ExcelNamedRangeTarget.range("History", "A1"))),
         XlsxRoundTrip.namedRanges(workbookPath));
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
       WorkbookRuleResult.AutofiltersResult autofilters =
@@ -271,8 +271,17 @@ class WorkbookCommandExecutorTest {
                               new ExcelConditionalFormattingRule.FormulaRule(
                                   "A1>0",
                                   false,
-                                  new ExcelDifferentialStyle(
-                                      null, true, null, null, null, null, null, null, null)))))));
+                                  Optional.of(
+                                      new ExcelDifferentialStyle(
+                                          Optional.empty(),
+                                          Optional.of(true),
+                                          Optional.empty(),
+                                          Optional.empty(),
+                                          Optional.empty(),
+                                          Optional.empty(),
+                                          Optional.empty(),
+                                          Optional.empty(),
+                                          Optional.empty()))))))));
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -324,7 +333,7 @@ class WorkbookCommandExecutorTest {
       ExcelSheetPresentation presentation =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              ExcelColor.rgb("#225577"),
+              Optional.of(ExcelColor.rgb("#225577")),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(12, 19.5d),
               List.of(
@@ -338,7 +347,8 @@ class WorkbookCommandExecutorTest {
 
       WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout();
       assertEquals(presentation.display(), layout.presentation().display());
-      assertEquals(ExcelColorSnapshot.rgb("#225577"), layout.presentation().tabColor());
+      assertEquals(
+          Optional.of(ExcelColorSnapshot.rgb("#225577")), layout.presentation().tabColor());
       assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
       assertEquals(presentation.sheetDefaults(), layout.presentation().sheetDefaults());
       assertEquals(
@@ -400,7 +410,7 @@ class WorkbookCommandExecutorTest {
                           "Amount",
                           ExcelPivotDataConsolidateFunction.SUM,
                           "Total Amount",
-                          "#,##0.00")))));
+                          Optional.of("#,##0.00"))))));
 
       WorkbookDrawingResult.PivotTablesResult pivotTables =
           assertInstanceOf(
@@ -460,15 +470,11 @@ class WorkbookCommandExecutorTest {
                   new ExcelBinaryData(pngBytes),
                   ExcelPictureFormat.PNG,
                   firstAnchor,
-                  "Queue preview")),
+                  Optional.of("Queue preview"))),
           new WorkbookDrawingCommand.SetShape(
               "Ops",
-              new ExcelShapeDefinition(
-                  "OpsShape",
-                  ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                  firstAnchor,
-                  "rect",
-                  "Queue")),
+              new ExcelShapeDefinition.SimpleShape(
+                  "OpsShape", firstAnchor, "rect", Optional.of("Queue"))),
           new WorkbookDrawingCommand.SetEmbeddedObject(
               "Ops",
               new ExcelEmbeddedObjectDefinition(
@@ -504,7 +510,8 @@ class WorkbookCommandExecutorTest {
       executor.apply(
           workbook,
           new WorkbookSheetCommand.SetWorkbookProtection(
-              new ExcelWorkbookProtectionSettings(true, false, true, "secret", "review")));
+              new ExcelWorkbookProtectionSettings(
+                  true, false, true, Optional.of("secret"), Optional.of("review"))));
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(true, false, true, true, true),
@@ -566,8 +573,17 @@ class WorkbookCommandExecutorTest {
                       new ExcelConditionalFormattingRule.FormulaRule(
                           "A1>0",
                           true,
-                          new ExcelDifferentialStyle(
-                              null, true, null, null, "#112233", null, null, null, null))))));
+                          Optional.of(
+                              new ExcelDifferentialStyle(
+                                  Optional.empty(),
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of("#112233"),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty())))))));
 
       WorkbookRuleResult.ConditionalFormattingResult initial =
           assertInstanceOf(
@@ -803,30 +819,94 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
-  void rejectsUnexpectedCommandsInPrivateCommandFamilies() throws Exception {
+  void routesDedicatedHelperFamiliesAcrossWorkbookSeams() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget");
+      WorkbookCommandExecutor.applyWorkbookScopeCommand(
+          workbook, new WorkbookSheetCommand.CreateSheet("Budget"));
+      WorkbookCommandExecutor.applyWorkbookScopeCommand(
+          workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
+      assertEquals(List.of("Budget", "Ops"), workbook.sheetNames());
 
-      assertHelperRejects(
-          () ->
-              WorkbookCommandExecutor.applyWorkbookScopeCommand(
-                  workbook,
-                  new WorkbookAnnotationCommand.SetHyperlink(
-                      "Budget", "A1", new ExcelHyperlink.Url("https://example.com"))));
-      assertHelperRejects(
-          () ->
-              WorkbookCommandExecutor.applySheetStructureCommand(
-                  workbook, new WorkbookSheetCommand.CreateSheet("Ops")));
-      assertHelperRejects(
-          () ->
-              WorkbookCommandExecutor.applyCellValueCommand(
-                  workbook,
-                  new WorkbookSheetCommand.SetWorkbookProtection(
-                      new ExcelWorkbookProtectionSettings(true, false, false, null, null))));
-      assertHelperRejects(
-          () ->
-              WorkbookCommandExecutor.applyWorkbookMetadataCommand(
-                  workbook, new WorkbookSheetCommand.CreateSheet("Ops")));
+      WorkbookCommandExecutor.applyCellValueCommand(
+          workbook,
+          new WorkbookCellCommand.SetRange(
+              "Budget",
+              "A1:B2",
+              List.of(
+                  List.of(
+                      ExcelCellValue.text("Extremely long workflow heading"),
+                      ExcelCellValue.text("State")),
+                  List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queued")))));
+      WorkbookCommandExecutor.applySheetStructureCommand(
+          workbook, new WorkbookStructureCommand.SetColumnWidth("Budget", 0, 0, 4.0));
+      WorkbookCommandExecutor.applySheetLayoutCommand(
+          workbook, new WorkbookLayoutCommand.SetSheetZoom("Budget", 135));
+
+      double widthBeforeAutoSize =
+          workbook.sheet("Budget").layout().columns().getFirst().widthCharacters();
+      WorkbookCommandExecutor.applySheetLayoutCommand(
+          workbook, new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
+
+      assertEquals(135, workbook.sheet("Budget").layout().zoomPercent());
+      assertTrue(
+          workbook.sheet("Budget").layout().columns().getFirst().widthCharacters()
+              > widthBeforeAutoSize);
+
+      WorkbookCommandExecutor.applyAnnotationCommand(
+          workbook,
+          new WorkbookAnnotationCommand.SetComment(
+              "Budget", "A1", new ExcelComment("Review", "GridGrind", false)));
+      WorkbookCommandExecutor.applyMetadataCommand(
+          workbook,
+          new WorkbookMetadataCommand.SetNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetStatus",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "B2"))));
+      WorkbookCommandExecutor.applyDrawingCommand(
+          workbook,
+          new WorkbookDrawingCommand.SetShape(
+              "Budget",
+              new ExcelShapeDefinition.SimpleShape(
+                  "BudgetShape",
+                  new ExcelDrawingAnchor.TwoCell(
+                      new ExcelDrawingMarker(0, 0),
+                      new ExcelDrawingMarker(2, 3),
+                      ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                  "rect",
+                  Optional.of("Queue"))));
+      WorkbookCommandExecutor.applyFormattingCommand(
+          workbook,
+          new WorkbookFormattingCommand.ApplyStyle(
+              "Budget",
+              "A1",
+              ExcelCellStyle.alignment(
+                  ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.CENTER)));
+      WorkbookCommandExecutor.applyTabularCommand(
+          workbook, new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B2"));
+
+      assertEquals(
+          new ExcelComment("Review", "GridGrind", false),
+          workbook
+              .sheet("Budget")
+              .snapshotCell("A1")
+              .metadata()
+              .comment()
+              .orElseThrow()
+              .toPlainComment());
+      assertEquals(1, workbook.namedRangeCount());
+      assertEquals(1, workbook.sheet("Budget").drawingObjects().size());
+      assertEquals(
+          ExcelHorizontalAlignment.CENTER,
+          workbook.sheet("Budget").snapshotCell("A1").style().alignment().horizontalAlignment());
+      WorkbookRuleResult.AutofiltersResult autofilters =
+          assertInstanceOf(
+              WorkbookRuleResult.AutofiltersResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Budget")));
+      assertEquals(
+          List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B2")), autofilters.autofilters());
     }
   }
 
@@ -852,22 +932,18 @@ class WorkbookCommandExecutorTest {
         new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
         true,
         false,
-        new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true),
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP,
-            "Invalid status",
-            "Use one of the allowed values.",
-            true));
+        Optional.of(new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true)),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP,
+                "Invalid status",
+                "Use one of the allowed values.",
+                true)));
   }
 
   private static ExcelSheetProtectionSettings protectionSettings() {
     return new ExcelSheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
-  }
-
-  private static void assertHelperRejects(Runnable invocation) {
-    assertInstanceOf(
-        IllegalStateException.class, assertThrows(IllegalStateException.class, invocation::run));
   }
 }

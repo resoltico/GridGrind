@@ -48,22 +48,26 @@ valid_target_keys=(regression protocol-request protocol-workflow engine-command-
 gradle_property_value() {
   local property_name="$1"
   local arg=''
-  for arg in "${gradle_args[@]}"; do
-    if [[ "${arg}" == "-P${property_name}="* ]]; then
-      echo "${arg#-P${property_name}=}"
-      return 0
-    fi
-  done
+  if ((${#gradle_args[@]} > 0)); then
+    for arg in "${gradle_args[@]}"; do
+      if [[ "${arg}" == "-P${property_name}="* ]]; then
+        echo "${arg#-P${property_name}=}"
+        return 0
+      fi
+    done
+  fi
   echo ""
 }
 
 is_help_flag() {
   local arg=''
-  for arg in "${gradle_args[@]}"; do
-    case "${arg}" in
-      --help|-h|help) return 0 ;;
-    esac
-  done
+  if ((${#gradle_args[@]} > 0)); then
+    for arg in "${gradle_args[@]}"; do
+      case "${arg}" in
+        --help|-h|help) return 0 ;;
+      esac
+    done
+  fi
   return 1
 }
 
@@ -195,12 +199,14 @@ fi
 
 ensure_plain_console() {
   local has_console=0
-  for arg in "${gradle_args[@]}"; do
-    if [[ "$arg" == --console=* ]]; then
-      has_console=1
-      break
-    fi
-  done
+  if ((${#gradle_args[@]} > 0)); then
+    for arg in "${gradle_args[@]}"; do
+      if [[ "$arg" == --console=* ]]; then
+        has_console=1
+        break
+      fi
+    done
+  fi
   if [[ $has_console -eq 0 ]]; then
     gradle_args+=(--console=plain)
   fi
@@ -209,13 +215,19 @@ ensure_plain_console() {
 remove_daemon_args() {
   local filtered_args=()
   local arg
-  for arg in "${gradle_args[@]}"; do
-    case "${arg}" in
-      --daemon|--no-daemon) ;;
-      *) filtered_args+=("${arg}") ;;
-    esac
-  done
-  gradle_args=("${filtered_args[@]}")
+  if ((${#gradle_args[@]} > 0)); then
+    for arg in "${gradle_args[@]}"; do
+      case "${arg}" in
+        --daemon|--no-daemon) ;;
+        *) filtered_args+=("${arg}") ;;
+      esac
+    done
+  fi
+  if ((${#filtered_args[@]} > 0)); then
+    gradle_args=("${filtered_args[@]}")
+  else
+    gradle_args=()
+  fi
 }
 
 parse_duration_seconds() {
@@ -240,12 +252,14 @@ parse_duration_seconds() {
 
 requested_max_duration() {
   local arg
-  for arg in "${gradle_args[@]}"; do
-    if [[ "${arg}" == -PjazzerMaxDuration=* ]]; then
-      echo "${arg#-PjazzerMaxDuration=}"
-      return 0
-    fi
-  done
+  if ((${#gradle_args[@]} > 0)); then
+    for arg in "${gradle_args[@]}"; do
+      if [[ "${arg}" == -PjazzerMaxDuration=* ]]; then
+        echo "${arg#-PjazzerMaxDuration=}"
+        return 0
+      fi
+    done
+  fi
   echo ""
 }
 
@@ -387,7 +401,10 @@ gradle_command=("${repo_root}/gradlew" --project-dir "${jazzer_root}")
 if [[ "${active_fuzz_task}" -eq 1 ]]; then
   gradle_command+=(--no-daemon)
 fi
-gradle_command+=("${gradle_args[@]}" "${task_name}")
+if ((${#gradle_args[@]} > 0)); then
+  gradle_command+=("${gradle_args[@]}")
+fi
+gradle_command+=("${task_name}")
 
 if [[ -z "${target_key}" ]]; then
   "${gradle_command[@]}"

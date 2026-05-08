@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
@@ -384,37 +385,37 @@ public final class XlsxRoundTrip {
     return workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
   }
 
-  private static ExcelHyperlink hyperlink(XSSFCell cell) {
+  private static Optional<ExcelHyperlink> hyperlink(XSSFCell cell) {
     XSSFHyperlink hyperlink = cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
-      return null;
+      return Optional.empty();
     }
     String address = hyperlink.getAddress();
     if (address == null || address.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     try {
       return switch (hyperlink.getType()) {
-        case URL -> new ExcelHyperlink.Url(address);
-        case EMAIL -> new ExcelHyperlink.Email(address);
-        case FILE -> new ExcelHyperlink.File(address);
-        case DOCUMENT -> new ExcelHyperlink.Document(address);
-        case NONE -> null;
+        case URL -> Optional.of(new ExcelHyperlink.Url(address));
+        case EMAIL -> Optional.of(new ExcelHyperlink.Email(address));
+        case FILE -> Optional.of(new ExcelHyperlink.File(address));
+        case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(address));
+        case NONE -> Optional.empty();
       };
     } catch (IllegalArgumentException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 
-  private static ExcelCommentSnapshot commentSnapshot(XSSFCell cell) {
+  private static Optional<ExcelCommentSnapshot> commentSnapshot(XSSFCell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
-      return null;
+      return Optional.empty();
     }
     String text = comment.getString().getString();
     String author = comment.getAuthor();
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     return ExcelSheet.commentSnapshot(cell);
   }
@@ -446,7 +447,8 @@ public final class XlsxRoundTrip {
             : "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
     Integer theme = color.isThemed() ? color.getTheme() : null;
     Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
-    Double tint = color.hasTint() ? color.getTint() : null;
+    java.util.Optional<Double> tint =
+        color.hasTint() ? java.util.Optional.of(color.getTint()) : java.util.Optional.empty();
     if (rgbHex != null) {
       return ExcelColorSnapshot.rgb(rgbHex, tint);
     }
@@ -480,7 +482,14 @@ public final class XlsxRoundTrip {
   private static ExcelGradientStopSnapshot gradientStopSnapshot(
       XSSFWorkbook workbook, CTGradientStop stop) {
     return new ExcelGradientStopSnapshot(
-        stop.getPosition(), ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor()));
+        stop.getPosition(),
+        ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor())
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Gradient stop at position "
+                            + stop.getPosition()
+                            + " is missing its color definition.")));
   }
 
   private static ExcelBorderSideSnapshot borderSideSnapshot(

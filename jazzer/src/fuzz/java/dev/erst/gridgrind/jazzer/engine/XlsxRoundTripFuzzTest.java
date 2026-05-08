@@ -4,7 +4,7 @@ import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
@@ -39,7 +39,7 @@ class XlsxRoundTripFuzzTest {
     Path workbookPath = directory.resolve("workbook.xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+      WorkbookExecutionEngine executor = new WorkbookExecutionEngine();
       try {
         executor.apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);

@@ -3,40 +3,44 @@ package dev.erst.gridgrind.contract.assertion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for the first-class assertion type system. */
 class AssertionTypesTest {
   @Test
   void exposesStableDiscriminatorsAndValidatesLeafInputs() {
-    assertEquals("EXPECT_TABLE_PRESENT", new Assertion.TablePresent().assertionType());
+    assertEquals("EXPECT_TABLE_PRESENT", new PresenceAssertion.TablePresent().assertionType());
     assertEquals(
         "EXPECT_ANALYSIS_FINDING_PRESENT",
-        new Assertion.AnalysisFindingPresent(
-                new InspectionQuery.AnalyzeFormulaHealth(),
+        new AnalysisAssertion.AnalysisFindingPresent(
+                new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                 AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                AnalysisSeverity.ERROR,
-                "error")
+                Optional.of(AnalysisSeverity.ERROR),
+                Optional.of("error"))
             .assertionType());
     assertEquals(
-        "ALL_OF", new Assertion.AllOf(List.of(new Assertion.TablePresent())).assertionType());
+        "ALL_OF",
+        new CompositeAssertion.AllOf(List.of(new PresenceAssertion.TablePresent()))
+            .assertionType());
     assertEquals(
         "expectedValue must not be null",
-        assertThrows(NullPointerException.class, () -> new Assertion.CellValue(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new CellAssertion.CellValue(null))
+            .getMessage());
     assertEquals(
         "messageContains must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new Assertion.AnalysisFindingAbsent(
-                        new InspectionQuery.AnalyzeFormulaHealth(),
+                    new AnalysisAssertion.AnalysisFindingAbsent(
+                        new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                         AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                        null,
-                        " "))
+                        Optional.empty(),
+                        Optional.of(" ")))
             .getMessage());
   }
 

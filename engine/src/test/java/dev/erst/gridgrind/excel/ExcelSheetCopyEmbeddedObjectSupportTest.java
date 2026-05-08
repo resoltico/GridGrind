@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.junit.jupiter.api.Test;
@@ -35,14 +36,14 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
       XSSFSheet replicaPoiSheet = workbook.xssfWorkbook().getSheet("Replica");
       XSSFObjectData copiedObject = requiredEmbeddedObject(replicaPoiSheet, "OpsEmbed");
-      assertNull(drawingController.oleObjectPart(copiedObject));
+      assertEquals(Optional.empty(), drawingController.oleObjectPart(copiedObject));
       assertNull(previewSheetPart(copiedObject));
       assertNull(previewDrawingPart(copiedObject));
 
       support.repairCopiedEmbeddedObjects(workbook.sheet("Replica"), snapshot);
 
       XSSFObjectData repairedObject = requiredEmbeddedObject(replicaPoiSheet, "OpsEmbed");
-      assertNotNull(drawingController.oleObjectPart(repairedObject));
+      assertTrue(drawingController.oleObjectPart(repairedObject).isPresent());
       assertNotNull(previewSheetPart(repairedObject));
       assertNotNull(previewDrawingPart(repairedObject));
       ExcelDrawingObjectPayload.EmbeddedObject payload =
@@ -154,16 +155,17 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
   private static org.apache.poi.openxml4j.opc.PackagePart previewDrawingPart(
       XSSFObjectData objectData) {
-    String relationId = ExcelDrawingBinarySupport.previewDrawingRelationId(objectData);
-    return relationId == null
-        ? null
-        : ExcelDrawingBinarySupport.relatedInternalPart(
-            objectData.getDrawing().getPackagePart(), relationId);
+    return ExcelDrawingBinarySupport.previewDrawingRelationId(objectData)
+        .flatMap(
+            relationId ->
+                ExcelDrawingBinarySupport.relatedInternalPart(
+                    objectData.getDrawing().getPackagePart(), relationId))
+        .orElse(null);
   }
 
   private static org.apache.poi.openxml4j.opc.PackagePart previewSheetPart(
       XSSFObjectData objectData) {
-    return ExcelDrawingBinarySupport.previewSheetImagePart(objectData);
+    return ExcelDrawingBinarySupport.previewSheetImagePart(objectData).orElse(null);
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

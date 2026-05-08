@@ -1,39 +1,48 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindTaskCatalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.executor.GridGrindProblems;
+import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 /** Discovery, help, and non-executing output commands for the CLI surface. */
 final class GridGrindCliCatalogCommands {
   private GridGrindCliCatalogCommands() {}
 
-  static int help(CliCommand.Help command, OutputStream stdout, CliResponseWriter responseWriter)
+  static int help(
+      CliCommand.Help command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
       throws IOException {
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
         GridGrindCliProductInfo.helpText(GridGrindCliProductInfo.version())
             .getBytes(StandardCharsets.UTF_8));
   }
 
   static int version(
-      CliCommand.Version command, OutputStream stdout, CliResponseWriter responseWriter)
+      CliCommand.Version command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
       throws IOException {
     String version = GridGrindCliProductInfo.version();
     String description = GridGrindCliProductInfo.description();
@@ -41,41 +50,52 @@ final class GridGrindCliCatalogCommands {
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
         GridGrindCliProductInfo.productHeader(version, description)
             .getBytes(StandardCharsets.UTF_8));
   }
 
   static int license(
-      CliCommand.License command, OutputStream stdout, CliResponseWriter responseWriter)
-      throws IOException {
-    return writePayload(
-        responseWriter,
-        command.responsePath(),
-        stdout,
-        GridGrindCliProductInfo.licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8));
-  }
-
-  static int requestTemplate(
-      CliCommand.PrintRequestTemplate command,
+      CliCommand.License command,
       OutputStream stdout,
+      OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
+        GridGrindCliProductInfo.licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8));
+  }
+
+  static int requestTemplate(
+      CliCommand.PrintRequestTemplate command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    return writePayload(
+        responseWriter,
+        command.responsePath(),
+        stdout,
+        stderr,
         GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
   }
 
   static int example(
-      CliCommand.PrintExample command, OutputStream stdout, CliResponseWriter responseWriter)
+      CliCommand.PrintExample command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
       throws IOException {
-    var example = GridGrindProtocolCatalog.exampleFor(command.exampleId());
+    var example = GridGrindShippedExamples.find(command.exampleId());
     if (example.isEmpty()) {
       String message = unknownExampleMessage(command.exampleId());
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
@@ -85,29 +105,51 @@ final class GridGrindCliCatalogCommands {
               new IllegalArgumentException(message)),
           2);
     }
+    emitExamplePortabilityWarning(example.get(), stderr);
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
         GridGrindJson.writeRequestBytes(example.get().plan()));
   }
 
-  static int taskCatalog(
-      CliCommand.PrintTaskCatalog command, OutputStream stdout, CliResponseWriter responseWriter)
+  static int exampleCatalog(
+      CliCommand.PrintExampleCatalog command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
       throws IOException {
-    if (command.taskFilter() == null) {
+    return writePayload(
+        responseWriter,
+        command.responsePath(),
+        stdout,
+        stderr,
+        GridGrindCliJson.writeShippedExampleCatalogBytes(GridGrindShippedExamples.catalog()));
+  }
+
+  static int taskCatalog(
+      CliCommand.PrintTaskCatalog command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    if (command.taskFilter().isEmpty()) {
       return writePayload(
           responseWriter,
           command.responsePath(),
           stdout,
-          GridGrindJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog()));
+          stderr,
+          GridGrindCliJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog()));
     }
-    var entry = GridGrindTaskCatalog.entryFor(command.taskFilter());
+    String taskFilter = command.taskFilter().orElseThrow();
+    var entry = GridGrindTaskCatalog.entryFor(taskFilter);
     if (entry.isEmpty()) {
-      String message = unknownTaskMessage(command.taskFilter());
+      String message = unknownTaskMessage(taskFilter);
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
@@ -121,11 +163,15 @@ final class GridGrindCliCatalogCommands {
         responseWriter,
         command.responsePath(),
         stdout,
-        output -> GridGrindJson.writeTaskEntry(output, entry.get()));
+        stderr,
+        output -> GridGrindCliJson.writeTaskEntry(output, entry.get()));
   }
 
   static int taskPlan(
-      CliCommand.PrintTaskPlan command, OutputStream stdout, CliResponseWriter responseWriter)
+      CliCommand.PrintTaskPlan command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
       throws IOException {
     var task = GridGrindTaskCatalog.entryFor(command.taskId());
     if (task.isEmpty()) {
@@ -133,6 +179,7 @@ final class GridGrindCliCatalogCommands {
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
@@ -146,41 +193,50 @@ final class GridGrindCliCatalogCommands {
         responseWriter,
         command.responsePath(),
         stdout,
-        GridGrindJson.writeTaskPlanTemplateBytes(GridGrindTaskPlanner.planFor(task.get())));
+        stderr,
+        GridGrindCliJson.writeTaskPlanTemplateBytes(GridGrindTaskPlanner.planFor(task.get())));
   }
 
-  static int goalPlan(
-      CliCommand.PrintGoalPlan command, OutputStream stdout, CliResponseWriter responseWriter)
-      throws IOException {
-    return writePayload(
-        responseWriter,
-        command.responsePath(),
-        stdout,
-        GridGrindJson.writeGoalPlanReportBytes(
-            dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner.reportFor(command.goal())));
-  }
-
-  static int protocolCatalogAll(
-      CliCommand.PrintProtocolCatalogAll command,
+  static int taskKeywordMatch(
+      CliCommand.PrintTaskKeywordMatch command,
       OutputStream stdout,
+      OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
+        GridGrindCliJson.writeTaskKeywordMatchReportBytes(
+            GridGrindTaskKeywordMatcher.reportFor(command.query())));
+  }
+
+  static int protocolCatalogAll(
+      CliCommand.PrintProtocolCatalogAll command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    return writePayload(
+        responseWriter,
+        command.responsePath(),
+        stdout,
+        stderr,
         GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
   }
 
   static int protocolCatalogSearch(
       CliCommand.PrintProtocolCatalogSearch command,
       OutputStream stdout,
+      OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
         output ->
             GridGrindJson.writeCatalogLookupValue(
                 output, GridGrindProtocolCatalog.searchCatalog(command.searchQuery())));
@@ -189,6 +245,7 @@ final class GridGrindCliCatalogCommands {
   static int protocolCatalogLookup(
       CliCommand.PrintProtocolCatalogLookup command,
       OutputStream stdout,
+      OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
     List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(command.operationFilter());
@@ -201,6 +258,7 @@ final class GridGrindCliCatalogCommands {
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
@@ -216,6 +274,7 @@ final class GridGrindCliCatalogCommands {
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
               message,
@@ -229,6 +288,7 @@ final class GridGrindCliCatalogCommands {
         responseWriter,
         command.responsePath(),
         stdout,
+        stderr,
         output -> GridGrindJson.writeCatalogLookupValue(output, lookupValue.get()));
   }
 
@@ -249,6 +309,27 @@ final class GridGrindCliCatalogCommands {
                 + " to list valid ids.");
   }
 
+  private static void emitExamplePortabilityWarning(
+      GridGrindShippedExamples.ShippedExample example, OutputStream stderr) throws IOException {
+    Objects.requireNonNull(example, "example must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
+    if (GridGrindShippedExamples.workspaceModeFor(example.id()).orElseThrow()
+        != dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
+      return;
+    }
+    var requirements = GridGrindShippedExamples.requirementsFor(example);
+    String requiredPaths = String.join(", ", requirements.requiredPaths());
+    stderr.write(
+        ("Printed example "
+                + example.id()
+                + " requires copied examples/ assets beside the request before execution;"
+                + " required paths: "
+                + requiredPaths
+                + ". Inspect --print-example-catalog or --help for portability details.\n")
+            .getBytes(StandardCharsets.UTF_8));
+    stderr.flush();
+  }
+
   private static String unknownTaskMessage(String taskId) {
     return suggestedTaskId(taskId)
         .map(
@@ -258,18 +339,18 @@ final class GridGrindCliCatalogCommands {
                     + ". Task ids use stable upper-case tokens; did you mean "
                     + suggestion
                     + "? Run gridgrind --print-task-catalog to list valid ids or"
-                    + " gridgrind --print-goal-plan <goal> to discover a close starter plan.")
+                    + " gridgrind --print-task-keyword-match <query> to discover a close starter plan.")
         .orElse(
             "Unknown task: "
                 + taskId
                 + ". Run gridgrind --print-task-catalog to list valid ids or"
-                + " gridgrind --print-goal-plan <goal> to discover a close starter plan.");
+                + " gridgrind --print-task-keyword-match <query> to discover a close starter plan.");
   }
 
   private static Optional<String> suggestedTaskId(String taskId) {
     String normalizedTaskId = normalizeLookupToken(taskId);
     return GridGrindTaskCatalog.catalog().tasks().stream()
-        .map(dev.erst.gridgrind.contract.catalog.TaskEntry::id)
+        .map(dev.erst.gridgrind.cli.discovery.TaskEntry::id)
         .filter(
             candidate ->
                 candidate.equalsIgnoreCase(taskId)
@@ -286,7 +367,7 @@ final class GridGrindCliCatalogCommands {
 
   private static Optional<String> suggestedExampleId(String exampleId) {
     String normalizedExampleId = normalizeLookupToken(exampleId);
-    return GridGrindProtocolCatalog.shippedExamples().stream()
+    return GridGrindShippedExamples.examples().stream()
         .filter(
             example ->
                 example.id().equalsIgnoreCase(exampleId)
@@ -294,7 +375,7 @@ final class GridGrindCliCatalogCommands {
                     || exampleStem(example.fileName()).equalsIgnoreCase(exampleId)
                     || normalizeLookupToken(exampleStem(example.fileName()))
                         .equals(normalizedExampleId))
-        .map(dev.erst.gridgrind.contract.catalog.GridGrindShippedExamples.ShippedExample::id)
+        .map(GridGrindShippedExamples.ShippedExample::id)
         .findFirst();
   }
 
@@ -307,20 +388,25 @@ final class GridGrindCliCatalogCommands {
   }
 
   private static int writePayload(
-      CliResponseWriter responseWriter, Path responsePath, OutputStream stdout, byte[] payload)
+      CliResponseWriter responseWriter,
+      Optional<java.nio.file.Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      byte[] payload)
       throws IOException {
-    return responseWriter.writePayload(responsePath, stdout, payload, 0);
+    return responseWriter.writePayload(responsePath, stdout, stderr, payload, 0);
   }
 
   private static int writePayload(
       CliResponseWriter responseWriter,
-      Path responsePath,
+      Optional<java.nio.file.Path> responsePath,
       OutputStream stdout,
+      OutputStream stderr,
       OutputRenderer renderer)
       throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     renderer.write(buffer);
-    return responseWriter.writePayload(responsePath, stdout, buffer.toByteArray(), 0);
+    return responseWriter.writePayload(responsePath, stdout, stderr, buffer.toByteArray(), 0);
   }
 
   private static GridGrindResponse.Failure failure(

@@ -4,6 +4,8 @@ import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
+import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,7 +21,9 @@ public final class GridGrindContractText {
       STREAMING_WRITE_MUTATION_ACTION_CLASSES =
           List.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class);
   private static final List<Class<? extends InspectionQuery>> EVENT_READ_INSPECTION_QUERY_CLASSES =
-      List.of(InspectionQuery.GetWorkbookSummary.class, InspectionQuery.GetSheetSummary.class);
+      List.of(
+          WorkbookIntrospectionQuery.GetWorkbookSummary.class,
+          SheetIntrospectionQuery.GetSheetSummary.class);
   private static final List<String> WORKBOOK_ANALYSIS_FAMILIES =
       List.of(
           "formula health",
@@ -30,6 +34,32 @@ public final class GridGrindContractText {
           "pivot-table health",
           "hyperlink health",
           "named-range health");
+  public static final String FORMULA_SURFACE_READ_SUMMARY =
+      "Return surface.totalFormulaCellCount plus per-sheet formula usage groups."
+          + " surface.sheets[*] includes sheetName, formulaCellCount,"
+          + " distinctFormulaCount, and grouped formulas with occurrenceCount"
+          + " and addresses.";
+  public static final String NAMED_RANGE_SURFACE_READ_SUMMARY =
+      "Return surface.workbookScopedCount, sheetScopedCount,"
+          + " rangeBackedCount, formulaBackedCount, and namedRanges."
+          + " Each namedRanges entry reports name, scope, refersToFormula,"
+          + " and backing kind.";
+  public static final String FORMULA_HEALTH_READ_SUMMARY =
+      "Return analysis.checkedFormulaCellCount, a severity summary,"
+          + " and findings for formula errors, volatile usage,"
+          + " or evaluation failures.";
+  public static final String NAMED_RANGE_HEALTH_READ_SUMMARY =
+      "Return analysis.checkedNamedRangeCount, a severity summary,"
+          + " and named-range findings such as broken references,"
+          + " unresolved targets, or scope shadowing.";
+  public static final String WORKBOOK_FINDINGS_READ_SUMMARY =
+      "Return analysis.summary plus one flat analysis.findings list after running"
+          + " all analysis families (formula health, data-validation health,"
+          + " conditional-formatting health, autofilter health, table health,"
+          + " pivot-table health, hyperlink health, named-range health)"
+          + " across the entire workbook and aggregate findings in a single response."
+          + " This is the primary workbook-health check and pairs naturally with"
+          + " persistence.type=NONE when no save is required.";
 
   private GridGrindContractText() {}
 
@@ -84,42 +114,27 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `GET_FORMULA_SURFACE`. */
   public static String formulaSurfaceReadSummary() {
-    return "Return analysis.totalFormulaCellCount plus per-sheet formula usage groups."
-        + " analysis.sheets[*] includes sheetName, formulaCellCount,"
-        + " distinctFormulaCount, and grouped formulas with occurrenceCount"
-        + " and addresses.";
+    return FORMULA_SURFACE_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `GET_NAMED_RANGE_SURFACE`. */
   public static String namedRangeSurfaceReadSummary() {
-    return "Return analysis.workbookScopedCount, sheetScopedCount,"
-        + " rangeBackedCount, formulaBackedCount, and namedRanges."
-        + " Each namedRanges entry reports name, scope, refersToFormula,"
-        + " and backing kind.";
+    return NAMED_RANGE_SURFACE_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `ANALYZE_FORMULA_HEALTH`. */
   public static String formulaHealthReadSummary() {
-    return "Return analysis.checkedFormulaCellCount, a severity summary,"
-        + " and findings for formula errors, volatile usage,"
-        + " or evaluation failures.";
+    return FORMULA_HEALTH_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `ANALYZE_NAMED_RANGE_HEALTH`. */
   public static String namedRangeHealthReadSummary() {
-    return "Return analysis.checkedNamedRangeCount, a severity summary,"
-        + " and named-range findings such as broken references,"
-        + " unresolved targets, or scope shadowing.";
+    return NAMED_RANGE_HEALTH_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `ANALYZE_WORKBOOK_FINDINGS`. */
   public static String workbookFindingsReadSummary() {
-    return "Return analysis.summary plus one flat analysis.findings list after running"
-        + " all analysis families ("
-        + workbookAnalysisFamilyPhrase()
-        + ") across the entire workbook and aggregate findings in a single response."
-        + " This is the primary workbook-health check and pairs naturally with"
-        + " persistence.type=NONE when no save is required.";
+    return WORKBOOK_FINDINGS_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `ExecutionModeInput`. */

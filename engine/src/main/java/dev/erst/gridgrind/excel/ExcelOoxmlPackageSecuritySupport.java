@@ -1,8 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -16,6 +14,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import javax.xml.crypto.MarshalException;
 import javax.xml.crypto.dsig.XMLSignatureException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -29,26 +28,27 @@ import org.apache.poi.poifs.crypt.dsig.SignatureInfo;
 import org.apache.poi.poifs.crypt.dsig.SignaturePart;
 import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.jspecify.annotations.Nullable;
 
 /**
  * OOXML package-security bridge for encrypted open/save and package-signature inspection/signing.
  */
-public final class ExcelOoxmlPackageSecuritySupport {
+final class ExcelOoxmlPackageSecuritySupport {
   private ExcelOoxmlPackageSecuritySupport() {}
 
   /** Opens one workbook through the full formula runtime plus any required package security. */
-  public static ExcelWorkbook openWorkbook(
+  static ExcelWorkbook openWorkbook(
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
       ExcelOoxmlOpenOptions openOptions,
-      TempFileFactory tempFileFactory)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     try (ReadableWorkbook materialized =
         materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory)) {
       return ExcelWorkbook.openMaterializedWorkbook(
           materialized.workbookPath(),
           formulaEnvironment,
-          workbookPath.toAbsolutePath().normalize(),
+          Optional.of(workbookPath.toAbsolutePath().normalize()),
           materialized.packageSecurity(),
           materialized.sourceEncryptionPassword());
     }
@@ -57,22 +57,22 @@ public final class ExcelOoxmlPackageSecuritySupport {
   /**
    * Opens one workbook without an explicit formula environment but with package security support.
    */
-  public static ExcelWorkbook openWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, TempFileFactory tempFileFactory)
+  static ExcelWorkbook openWorkbook(
+      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     try (ReadableWorkbook materialized =
         materializeReadableWorkbook(workbookPath, openOptions, tempFileFactory)) {
       return ExcelWorkbook.openMaterializedWorkbook(
           materialized.workbookPath(),
-          workbookPath.toAbsolutePath().normalize(),
+          Optional.of(workbookPath.toAbsolutePath().normalize()),
           materialized.packageSecurity(),
           materialized.sourceEncryptionPassword());
     }
   }
 
   /** Materializes one readable plain `.xlsx` path from a plain or encrypted source workbook. */
-  public static ReadableWorkbook materializeReadableWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, TempFileFactory tempFileFactory)
+  static ReadableWorkbook materializeReadableWorkbook(
+      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
@@ -89,7 +89,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
           new ReadableWorkbook(
               absolutePath,
               inspectPackageSecurity(absolutePath, ExcelOoxmlEncryptionSnapshot.none()),
-              null,
+              Optional.empty(),
               false);
       case OLE2 -> decryptWorkbook(absolutePath, effectiveOpenOptions, tempFileFactory);
       default ->
@@ -102,7 +102,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       ExcelWorkbook workbook,
       Path targetPath,
       ExcelOoxmlPersistenceOptions persistenceOptions,
-      TempFileFactory tempFileFactory)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(targetPath, "targetPath must not be null");
@@ -112,12 +112,10 @@ public final class ExcelOoxmlPackageSecuritySupport {
     createTargetParentDirectories(normalizedTarget);
 
     ExcelOoxmlPersistenceOptions explicitOptions =
-        persistenceOptions == null
-            ? new ExcelOoxmlPersistenceOptions(null, null)
-            : persistenceOptions;
+        persistenceOptions == null ? ExcelOoxmlPersistenceOptions.none() : persistenceOptions;
 
     if (passThroughEligible(workbook, explicitOptions)) {
-      copySourceWorkbook(workbook.sourcePath(), normalizedTarget);
+      copySourceWorkbook(workbook.sourcePath().orElseThrow(), normalizedTarget);
       return;
     }
 
@@ -152,11 +150,11 @@ public final class ExcelOoxmlPackageSecuritySupport {
   /**
    * Persists one materialized plain workbook with the requested encryption and signing settings.
    */
-  public static void persistMaterializedWorkbook(
+  static void persistMaterializedWorkbook(
       Path plainWorkbookPath,
       Path targetPath,
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
-      String sourceEncryptionPassword,
+      Optional<String> sourceEncryptionPassword,
       boolean sourceMutated,
       ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
@@ -170,7 +168,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
     if (!sourceSecurity.signatures().isEmpty()
         && sourceMutated
-        && persistenceOptions.signature() == null) {
+        && persistenceOptions.signature().isEmpty()) {
       throw new IllegalArgumentException(
           "The workbook was opened from a signed OOXML package and has been rewritten."
               + " Supply persistence.security.signature to sign the saved output instead of"
@@ -179,11 +177,12 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
     ExcelOoxmlPersistenceOptions effectiveOptions =
         effectiveOptions(sourceSecurity, sourceEncryptionPassword, persistenceOptions);
-    if (effectiveOptions.signature() != null) {
-      signWorkbook(plainWorkbookPath, effectiveOptions.signature());
+    if (effectiveOptions.signature().isPresent()) {
+      signWorkbook(plainWorkbookPath, effectiveOptions.signature().orElseThrow());
     }
-    if (effectiveOptions.encryption() != null) {
-      encryptWorkbook(plainWorkbookPath, normalizedTarget, effectiveOptions.encryption());
+    if (effectiveOptions.encryption().isPresent()) {
+      encryptWorkbook(
+          plainWorkbookPath, normalizedTarget, effectiveOptions.encryption().orElseThrow());
     } else {
       Files.move(
           plainWorkbookPath, normalizedTarget, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
@@ -197,7 +196,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
   private static boolean passThroughEligible(
       ExcelWorkbook workbook, ExcelOoxmlPersistenceOptions persistenceOptions) {
-    return workbook.sourcePath() != null
+    return workbook.sourcePath().isPresent()
         && !workbook.wasMutatedSinceOpen()
         && workbook.loadedPackageSecurity().isSecure()
         && persistenceOptions.isEmpty();
@@ -205,9 +204,9 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
   private static boolean requiresResigning(
       ExcelWorkbook workbook, ExcelOoxmlPersistenceOptions persistenceOptions) {
-    return workbook.sourcePath() != null
+    return workbook.sourcePath().isPresent()
         && !workbook.loadedPackageSecurity().signatures().isEmpty()
-        && persistenceOptions.signature() == null;
+        && persistenceOptions.signature().isEmpty();
   }
 
   private static ExcelOoxmlPersistenceOptions effectiveOptions(
@@ -218,23 +217,25 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
   static ExcelOoxmlPersistenceOptions effectiveOptions(
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
-      String sourceEncryptionPassword,
+      Optional<String> sourceEncryptionPassword,
       ExcelOoxmlPersistenceOptions persistenceOptions) {
-    ExcelOoxmlEncryptionOptions encryption = persistenceOptions.encryption();
-    if (encryption == null && sourceSecurity.encryption().encrypted()) {
-      if (sourceEncryptionPassword == null) {
+    Optional<ExcelOoxmlEncryptionOptions> encryption = persistenceOptions.encryption();
+    if (encryption.isEmpty() && sourceSecurity.encryption().encrypted()) {
+      if (sourceEncryptionPassword.isEmpty()) {
         throw new IllegalStateException(
             "Encrypted source workbooks must retain their verified source password while open");
       }
       encryption =
-          new ExcelOoxmlEncryptionOptions(
-              sourceEncryptionPassword, sourceSecurity.encryption().mode());
+          Optional.of(
+              new ExcelOoxmlEncryptionOptions(
+                  sourceEncryptionPassword.orElseThrow(),
+                  sourceSecurity.encryption().mode().orElseThrow()));
     }
     return new ExcelOoxmlPersistenceOptions(encryption, persistenceOptions.signature());
   }
 
   private static ReadableWorkbook decryptWorkbook(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, TempFileFactory tempFileFactory)
+      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Path plainWorkbookPath = tempFileFactory.createTempFile("gridgrind-ooxml-decrypted-", ".xlsx");
     boolean success = false;
@@ -260,7 +261,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
           new ReadableWorkbook(
               plainWorkbookPath,
               inspectPackageSecurity(plainWorkbookPath, encryption),
-              password,
+              Optional.of(password),
               true);
       success = true;
       return readableWorkbook;
@@ -292,13 +293,16 @@ public final class ExcelOoxmlPackageSecuritySupport {
     try {
       return new ExcelOoxmlEncryptionSnapshot(
           true,
-          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode()),
-          encryptionInfo.getHeader().getCipherAlgorithm().name(),
-          encryptionInfo.getVerifier().getHashAlgorithm().name(),
-          encryptionInfo.getHeader().getChainingMode().name(),
-          encryptionInfo.getHeader().getKeySize(),
-          encryptionInfo.getHeader().getBlockSize(),
-          encryptionInfo.getVerifier().getSpinCount());
+          Optional.of(ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode())),
+          Optional.of(
+              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getCipherAlgorithm())),
+          Optional.of(
+              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getVerifier().getHashAlgorithm())),
+          Optional.of(
+              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getChainingMode())),
+          Optional.of(encryptionInfo.getHeader().getKeySize()),
+          Optional.of(encryptionInfo.getHeader().getBlockSize()),
+          Optional.of(encryptionInfo.getVerifier().getSpinCount()));
     } catch (RuntimeException exception) {
       throw new WorkbookSecurityException("Failed to inspect OOXML encryption metadata", exception);
     }
@@ -332,8 +336,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
       Path plainWorkbookPath,
       Path workbookPath)
       throws IOException {
-    try (InputStream decryptedStream = decryptedWorkbookStreamSupplier.open();
-        OutputStream outputStream = Files.newOutputStream(plainWorkbookPath)) {
+    try (java.io.InputStream decryptedStream = decryptedWorkbookStreamSupplier.open();
+        java.io.OutputStream outputStream = Files.newOutputStream(plainWorkbookPath)) {
       decryptedStream.transferTo(outputStream);
     } catch (GeneralSecurityException exception) {
       throw new WorkbookSecurityException(
@@ -344,7 +348,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   static ExcelOoxmlPackageSecuritySnapshot inspectPackageSecurity(
       Path workbookPath, ExcelOoxmlEncryptionSnapshot encryption) throws IOException {
     try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
-      SignatureInfo signatureInfo = new SignatureInfo();
+      SignatureInfo signatureInfo = ExcelOoxmlDsigProviderSupport.newSignatureInfo();
       signatureInfo.setSignatureConfig(new SignatureConfig());
       signatureInfo.setOpcPackage(pkg);
 
@@ -371,16 +375,22 @@ public final class ExcelOoxmlPackageSecuritySupport {
             : dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.INVALID);
   }
 
-  static String signerSubject(X509Certificate signer) {
-    return signer == null ? null : signer.getSubjectX500Principal().getName();
+  static Optional<String> signerSubject(@Nullable X509Certificate signer) {
+    return signer == null
+        ? Optional.empty()
+        : Optional.of(signer.getSubjectX500Principal().getName());
   }
 
-  static String signerIssuer(X509Certificate signer) {
-    return signer == null ? null : signer.getIssuerX500Principal().getName();
+  static Optional<String> signerIssuer(@Nullable X509Certificate signer) {
+    return signer == null
+        ? Optional.empty()
+        : Optional.of(signer.getIssuerX500Principal().getName());
   }
 
-  static String signerSerialNumber(X509Certificate signer) {
-    return signer == null ? null : signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT);
+  static Optional<String> signerSerialNumber(@Nullable X509Certificate signer) {
+    return signer == null
+        ? Optional.empty()
+        : Optional.of(signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT));
   }
 
   static void signWorkbook(Path workbookPath, ExcelOoxmlSignatureOptions signatureOptions)
@@ -396,7 +406,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
         signatureConfig.setSignatureDescription(signatureOptions.description());
       }
 
-      SignatureInfo signatureInfo = new SignatureInfo();
+      SignatureInfo signatureInfo = ExcelOoxmlDsigProviderSupport.newSignatureInfo();
       signatureInfo.setSignatureConfig(signatureConfig);
       signatureInfo.setOpcPackage(pkg);
       confirmAndVerifySignature(
@@ -446,7 +456,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       Path keyStorePath, ExcelOoxmlSignatureOptions signatureOptions) {
     try {
       KeyStore keyStore = KeyStore.getInstance("PKCS12");
-      try (InputStream inputStream = Files.newInputStream(keyStorePath)) {
+      try (java.io.InputStream inputStream = Files.newInputStream(keyStorePath)) {
         keyStore.load(inputStream, signatureOptions.keystorePassword().toCharArray());
       }
       return keyStore;
@@ -511,7 +521,9 @@ public final class ExcelOoxmlPackageSecuritySupport {
   }
 
   static String resolveAlias(
-      KeyStore keyStore, String requestedAlias, ExcelOoxmlSignatureOptions signatureOptions)
+      KeyStore keyStore,
+      @Nullable String requestedAlias,
+      ExcelOoxmlSignatureOptions signatureOptions)
       throws java.security.GeneralSecurityException {
     if (requestedAlias != null) {
       if (!keyStore.containsAlias(requestedAlias)) {
@@ -562,10 +574,11 @@ public final class ExcelOoxmlPackageSecuritySupport {
       Path targetPath)
       throws IOException {
     try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
-      try (OutputStream encryptedStream = encryptedWorkbookStreamSupplier.open(fileSystem)) {
+      try (java.io.OutputStream encryptedStream =
+          encryptedWorkbookStreamSupplier.open(fileSystem)) {
         Files.copy(plainWorkbookPath, encryptedStream);
       }
-      try (OutputStream outputStream = Files.newOutputStream(targetPath)) {
+      try (java.io.OutputStream outputStream = Files.newOutputStream(targetPath)) {
         fileSystem.writeFilesystem(outputStream);
       }
     } catch (GeneralSecurityException exception) {
@@ -583,7 +596,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   }
 
   private static FileMagic fileMagic(Path workbookPath) throws IOException {
-    try (InputStream inputStream = Files.newInputStream(workbookPath)) {
+    try (java.io.InputStream inputStream = Files.newInputStream(workbookPath)) {
       return FileMagic.valueOf(FileMagic.prepareToCheckMagic(inputStream));
     }
   }
@@ -599,41 +612,36 @@ public final class ExcelOoxmlPackageSecuritySupport {
     }
   }
 
-  /** Temporary-file factory shared with executor-owned low-memory and package-security paths. */
-  @FunctionalInterface
-  public interface TempFileFactory {
-    /** Creates one temporary file owned by the caller. */
-    Path createTempFile(String prefix, String suffix) throws IOException;
-  }
-
   /** One readable plain `.xlsx` path materialized from a possibly encrypted source workbook. */
-  public static final class ReadableWorkbook implements AutoCloseable {
+  static final class ReadableWorkbook implements AutoCloseable {
     private final Path workbookPath;
     private final ExcelOoxmlPackageSecuritySnapshot packageSecurity;
-    private final String sourceEncryptionPassword;
+    private final Optional<String> sourceEncryptionPassword;
     private final boolean deleteOnClose;
 
     private ReadableWorkbook(
         Path workbookPath,
         ExcelOoxmlPackageSecuritySnapshot packageSecurity,
-        String sourceEncryptionPassword,
+        Optional<String> sourceEncryptionPassword,
         boolean deleteOnClose) {
       this.workbookPath = Objects.requireNonNull(workbookPath, "workbookPath must not be null");
       this.packageSecurity =
           Objects.requireNonNull(packageSecurity, "packageSecurity must not be null");
-      this.sourceEncryptionPassword = sourceEncryptionPassword;
+      this.sourceEncryptionPassword =
+          Objects.requireNonNull(
+              sourceEncryptionPassword, "sourceEncryptionPassword must not be null");
       this.deleteOnClose = deleteOnClose;
     }
 
-    public Path workbookPath() {
+    Path workbookPath() {
       return workbookPath;
     }
 
-    public ExcelOoxmlPackageSecuritySnapshot packageSecurity() {
+    ExcelOoxmlPackageSecuritySnapshot packageSecurity() {
       return packageSecurity;
     }
 
-    public String sourceEncryptionPassword() {
+    Optional<String> sourceEncryptionPassword() {
       return sourceEncryptionPassword;
     }
 
@@ -663,7 +671,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   @FunctionalInterface
   interface DecryptedWorkbookStreamSupplier {
     /** Opens the decrypted workbook bytes. */
-    InputStream open() throws IOException, GeneralSecurityException;
+    java.io.InputStream open() throws IOException, GeneralSecurityException;
   }
 
   /** Confirms and verifies one OOXML package signature in a single testable step. */
@@ -677,6 +685,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
   @FunctionalInterface
   interface EncryptedWorkbookStreamSupplier {
     /** Opens the encrypted output stream for one POIFS package. */
-    OutputStream open(POIFSFileSystem fileSystem) throws IOException, GeneralSecurityException;
+    java.io.OutputStream open(POIFSFileSystem fileSystem)
+        throws IOException, GeneralSecurityException;
   }
 }

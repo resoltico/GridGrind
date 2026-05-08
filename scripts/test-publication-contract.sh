@@ -40,6 +40,8 @@ readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 readonly temp_parent="${repo_root}/tmp/test-publication-contract"
 test_root=''
+jar_listing_path=''
+archive_listing_path=''
 
 cleanup() {
     [[ -n "${test_root}" ]] && rm -rf "${test_root}" || true
@@ -81,16 +83,19 @@ grep -Eq '^!.*\.codex(/|\*\*|$)' "${dockerignore_file}" && die \
 
 command -v jar >/dev/null 2>&1 || die "jar is required for publication contract verification"
 [[ -f "${cli_jar}" ]] || die "missing CLI fat JAR at ${cli_jar}"
-jar_listing="$(jar tf "${cli_jar}")"
-grep -Fq 'AGENTS.md' <<<"${jar_listing}" && die \
-    "CLI fat JAR unexpectedly contains /AGENTS.md"
-grep -Fq '.codex/' <<<"${jar_listing}" && die \
-    "CLI fat JAR unexpectedly contains /.codex/"
-
 mkdir -p "${temp_parent}"
 test_root="${temp_parent}/run.$$"
 rm -rf "${test_root}"
 mkdir -p "${test_root}/archive-root/.codex/protocol" "${test_root}/archive-root/src"
+jar_listing_path="${test_root}/cli-jar-listing.txt"
+archive_listing_path="${test_root}/archive-listing.txt"
+
+jar tf "${cli_jar}" > "${jar_listing_path}"
+grep -Fq 'AGENTS.md' "${jar_listing_path}" && die \
+    "CLI fat JAR unexpectedly contains /AGENTS.md"
+grep -Fq '.codex/' "${jar_listing_path}" && die \
+    "CLI fat JAR unexpectedly contains /.codex/"
+
 cp "${gitattributes_file}" "${test_root}/archive-root/.gitattributes"
 printf '# synthetic agent entry point\n' > "${test_root}/archive-root/AGENTS.md"
 printf '# synthetic codex doc\n' > "${test_root}/archive-root/.codex/AGENTS_EXTRA.md"
@@ -102,14 +107,14 @@ git -C "${test_root}/archive-root" config user.email "gridgrind-test@example.com
 git -C "${test_root}/archive-root" add .gitattributes AGENTS.md .codex/AGENTS_EXTRA.md .codex/protocol/guide.md src/published.txt
 git -C "${test_root}/archive-root" commit -m "Archive surface fixture" >/dev/null
 git -C "${test_root}/archive-root" archive --format=tar --output "${test_root}/archive.tar" HEAD
-archive_listing="$(tar -tf "${test_root}/archive.tar")"
-grep -Fq 'src/published.txt' <<<"${archive_listing}" || die \
+tar -tf "${test_root}/archive.tar" > "${archive_listing_path}"
+grep -Fq 'src/published.txt' "${archive_listing_path}" || die \
     "git archive no longer includes ordinary tracked files for the public source asset"
-grep -Fq 'AGENTS.md' <<<"${archive_listing}" && die \
+grep -Fq 'AGENTS.md' "${archive_listing_path}" && die \
     "git archive still includes /AGENTS.md in the public source asset"
-grep -Fq '.codex/AGENTS_EXTRA.md' <<<"${archive_listing}" && die \
+grep -Fq '.codex/AGENTS_EXTRA.md' "${archive_listing_path}" && die \
     "git archive still includes /.codex/AGENTS_EXTRA.md in the public source asset"
-grep -Fq '.codex/protocol/guide.md' <<<"${archive_listing}" && die \
+grep -Fq '.codex/protocol/guide.md' "${archive_listing_path}" && die \
     "git archive still includes nested /.codex content in the public source asset"
 
 grep -Fq './scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.outputs.tag }}"' \
@@ -154,10 +159,12 @@ grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is mi
 
 grep -Fq 'provenance: mode=max' "${container_workflow}" || die "container workflow does not publish explicit provenance"
 grep -Fq 'sbom: true' "${container_workflow}" || die "container workflow does not publish an SBOM attestation"
-grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-3-Clause' \
+grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0' \
     "${container_workflow}" || die "container workflow still uses the wrong OCI license label"
 grep -Fqx '            org.opencontainers.image.licenses=MIT' "${container_workflow}" && die \
     "container workflow still contains the legacy MIT-only OCI license label"
+grep -Fqx '            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-3-Clause' "${container_workflow}" && die \
+    "container workflow still contains the incomplete 3-license OCI label (missing BSD-2-Clause and EDL-1.0)"
 
 grep -Fq 'api(libs.jackson.annotations)' "${contract_build}" || die \
     "contract no longer exposes the Jackson annotations API needed by downstream compiles"

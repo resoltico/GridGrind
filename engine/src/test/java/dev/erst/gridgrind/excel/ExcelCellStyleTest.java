@@ -8,6 +8,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ExcelCellStyle record construction. */
@@ -20,46 +21,85 @@ class ExcelCellStyleTest {
         ExcelCellStyle.alignment(ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP);
     ExcelCellStyle fontAndFill =
         new ExcelCellStyle(
-            null,
-            null,
-            new ExcelCellFont(
-                null,
-                null,
-                "Aptos",
-                ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                ExcelColor.rgb("#00AAFF"),
-                true,
-                false),
-            ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC")),
-            new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
-            null);
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ExcelCellFont(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of("Aptos"),
+                    Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("11.5"))),
+                    Optional.of(ExcelColor.rgb("#00AAFF")),
+                    Optional.of(true),
+                    Optional.of(false))),
+            Optional.of(
+                ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+            Optional.of(
+                new ExcelBorder(
+                    Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())),
+            Optional.empty());
 
-    assertEquals("#,##0.00", numberFormat.numberFormat());
-    assertTrue(emphasis.font().bold());
-    assertFalse(emphasis.font().italic());
-    assertEquals(ExcelHorizontalAlignment.CENTER, alignment.alignment().horizontalAlignment());
-    assertEquals(ExcelVerticalAlignment.TOP, alignment.alignment().verticalAlignment());
-    assertEquals("Aptos", fontAndFill.font().fontName());
-    assertEquals(230, fontAndFill.font().fontHeight().twips());
-    assertEquals(new BigDecimal("11.5"), fontAndFill.font().fontHeight().points());
-    assertEquals(ExcelColor.rgb("#00AAFF"), fontAndFill.font().fontColor());
-    assertTrue(fontAndFill.font().underline());
-    assertFalse(fontAndFill.font().strikeout());
-    assertEquals(ExcelColor.rgb("#FFF2CC"), fillForegroundColor(fontAndFill.fill()));
-    assertEquals(ExcelBorderStyle.THIN, fontAndFill.border().all().style());
+    assertEquals("#,##0.00", numberFormat.numberFormat().orElseThrow());
+    assertTrue(emphasis.font().orElseThrow().bold().orElseThrow());
+    assertFalse(emphasis.font().orElseThrow().italic().orElseThrow());
+    assertEquals(
+        ExcelHorizontalAlignment.CENTER,
+        alignment.alignment().orElseThrow().horizontalAlignment().orElseThrow());
+    assertEquals(
+        ExcelVerticalAlignment.TOP,
+        alignment.alignment().orElseThrow().verticalAlignment().orElseThrow());
+    assertEquals("Aptos", fontAndFill.font().orElseThrow().fontName().orElseThrow());
+    assertEquals(230, fontAndFill.font().orElseThrow().fontHeight().orElseThrow().twips());
+    assertEquals(
+        new BigDecimal("11.5"),
+        fontAndFill.font().orElseThrow().fontHeight().orElseThrow().points());
+    assertEquals(
+        ExcelColor.rgb("#00AAFF"), fontAndFill.font().orElseThrow().fontColor().orElseThrow());
+    assertTrue(fontAndFill.font().orElseThrow().underline().orElseThrow());
+    assertFalse(fontAndFill.font().orElseThrow().strikeout().orElseThrow());
+    assertEquals(ExcelColor.rgb("#FFF2CC"), fillForegroundColor(fontAndFill.fill().orElseThrow()));
+    assertEquals(
+        Optional.of(ExcelBorderStyle.THIN),
+        fontAndFill.border().orElseThrow().all().orElseThrow().style());
   }
 
   @Test
   void rejectsBlankOrEmptyStyles() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellStyle(" ", null, null, null, null, null));
+        () ->
+            new ExcelCellStyle(
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellStyle(null, null, null, null, null, null));
+        () ->
+            new ExcelCellStyle(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFont(null, null, " ", null, null, null, null));
+        () ->
+            new ExcelCellFont(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(Short.MAX_VALUE + 1));
     assertThrows(IllegalArgumentException.class, () -> ExcelColor.rgb("#12ab"));
@@ -74,87 +114,183 @@ class ExcelCellStyleTest {
   void acceptsSingleAttributePatches() {
     ExcelCellStyle italicOnly =
         new ExcelCellStyle(
-            null,
-            null,
-            new ExcelCellFont(null, true, null, null, null, null, null),
-            null,
-            null,
-            null);
-    assertTrue(italicOnly.font().italic());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ExcelCellFont(
+                    Optional.empty(),
+                    Optional.of(true),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertTrue(italicOnly.font().orElseThrow().italic().orElseThrow());
 
     ExcelCellStyle wrapTextOnly =
         new ExcelCellStyle(
-            null, new ExcelCellAlignment(true, null, null, null, null), null, null, null, null);
-    assertTrue(wrapTextOnly.alignment().wrapText());
+            Optional.empty(),
+            Optional.of(
+                new ExcelCellAlignment(
+                    Optional.of(true),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertTrue(wrapTextOnly.alignment().orElseThrow().wrapText().orElseThrow());
 
     ExcelCellStyle fontColorOnly =
         new ExcelCellStyle(
-            null,
-            null,
-            new ExcelCellFont(null, null, null, null, ExcelColor.rgb("#aa00cc"), null, null),
-            null,
-            null,
-            null);
-    assertEquals(ExcelColor.rgb("#AA00CC"), fontColorOnly.font().fontColor());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ExcelCellFont(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(ExcelColor.rgb("#aa00cc")),
+                    Optional.empty(),
+                    Optional.empty())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(
+        ExcelColor.rgb("#AA00CC"), fontColorOnly.font().orElseThrow().fontColor().orElseThrow());
 
     ExcelCellStyle fontHeightOnly =
         new ExcelCellStyle(
-            null,
-            null,
-            new ExcelCellFont(null, null, null, new ExcelFontHeight(230), null, null, null),
-            null,
-            null,
-            null);
-    assertEquals(new BigDecimal("11.5"), fontHeightOnly.font().fontHeight().points());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ExcelCellFont(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.of(new ExcelFontHeight(230)),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(
+        new BigDecimal("11.5"),
+        fontHeightOnly.font().orElseThrow().fontHeight().orElseThrow().points());
 
     ExcelCellStyle fillColorOnly =
         new ExcelCellStyle(
-            null,
-            null,
-            null,
-            ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#abc123")),
-            null,
-            null);
-    assertEquals(ExcelColor.rgb("#ABC123"), fillForegroundColor(fillColorOnly.fill()));
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#abc123"))),
+            Optional.empty(),
+            Optional.empty());
+    assertEquals(
+        ExcelColor.rgb("#ABC123"), fillForegroundColor(fillColorOnly.fill().orElseThrow()));
 
     ExcelCellStyle borderOnly =
         new ExcelCellStyle(
-            null,
-            null,
-            null,
-            null,
-            new ExcelBorder(null, null, null, null, new ExcelBorderSide(ExcelBorderStyle.THIN)),
-            null);
-    assertEquals(ExcelBorderStyle.THIN, borderOnly.border().left().style());
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(
+                new ExcelBorder(
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)))),
+            Optional.empty());
+    assertEquals(
+        Optional.of(ExcelBorderStyle.THIN),
+        borderOnly.border().orElseThrow().left().orElseThrow().style());
 
     ExcelCellStyle verticalOnly = ExcelCellStyle.alignment(null, ExcelVerticalAlignment.TOP);
-    assertNull(verticalOnly.alignment().horizontalAlignment());
-    assertEquals(ExcelVerticalAlignment.TOP, verticalOnly.alignment().verticalAlignment());
+    assertTrue(verticalOnly.alignment().orElseThrow().horizontalAlignment().isEmpty());
+    assertEquals(
+        ExcelVerticalAlignment.TOP,
+        verticalOnly.alignment().orElseThrow().verticalAlignment().orElseThrow());
 
     ExcelCellStyle protectionOnly =
-        new ExcelCellStyle(null, null, null, null, null, new ExcelCellProtection(true, null));
-    assertTrue(protectionOnly.protection().locked());
-    assertNull(protectionOnly.protection().hiddenFormula());
+        new ExcelCellStyle(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(new ExcelCellProtection(Optional.of(true), Optional.empty())));
+    assertTrue(protectionOnly.protection().orElseThrow().locked().orElseThrow());
+    assertEquals(Optional.empty(), protectionOnly.protection().orElseThrow().hiddenFormula());
   }
 
   @Test
   void validatesAlignmentContracts() {
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCellAlignment(null, null, null, null, null));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCellAlignment(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCellAlignment(null, null, null, -1, null));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCellAlignment(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1),
+                Optional.empty()));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCellAlignment(null, null, null, 181, null));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCellAlignment(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(181),
+                Optional.empty()));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCellAlignment(null, null, null, null, -1));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCellAlignment(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1)));
     assertThrows(
-        IllegalArgumentException.class, () -> new ExcelCellAlignment(null, null, null, null, 251));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCellAlignment(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(251)));
 
     ExcelCellAlignment alignment =
-        new ExcelCellAlignment(null, null, ExcelVerticalAlignment.BOTTOM, 180, 250);
-    assertEquals(180, alignment.textRotation());
-    assertEquals(250, alignment.indentation());
-    assertEquals(ExcelVerticalAlignment.BOTTOM, alignment.verticalAlignment());
+        new ExcelCellAlignment(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(ExcelVerticalAlignment.BOTTOM),
+            Optional.of(180),
+            Optional.of(250));
+    assertEquals(180, alignment.textRotation().orElseThrow());
+    assertEquals(250, alignment.indentation().orElseThrow());
+    assertEquals(ExcelVerticalAlignment.BOTTOM, alignment.verticalAlignment().orElseThrow());
   }
 
   @Test
@@ -207,15 +343,33 @@ class ExcelCellStyleTest {
   void validatesFontAndProtectionContracts() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFont(null, null, null, null, null, null, null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelCellProtection(null, null));
+        () ->
+            new ExcelCellFont(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelCellProtection(Optional.empty(), Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellStyle.emphasis(null, null));
 
-    ExcelCellFont strikeoutOnly = new ExcelCellFont(null, null, null, null, null, null, true);
-    ExcelCellProtection hiddenOnly = new ExcelCellProtection(null, false);
-    assertTrue(strikeoutOnly.strikeout());
-    assertFalse(hiddenOnly.hiddenFormula());
-    assertNull(hiddenOnly.locked());
+    ExcelCellFont strikeoutOnly =
+        new ExcelCellFont(
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(true));
+    ExcelCellProtection hiddenOnly = new ExcelCellProtection(Optional.empty(), Optional.of(false));
+    assertTrue(strikeoutOnly.strikeout().orElseThrow());
+    assertFalse(hiddenOnly.hiddenFormula().orElseThrow());
+    assertEquals(Optional.empty(), hiddenOnly.locked());
   }
 
   private static ExcelColorSnapshot rgb(String rgb) {

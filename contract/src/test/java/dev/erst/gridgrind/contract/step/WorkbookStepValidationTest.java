@@ -8,10 +8,10 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
@@ -83,7 +83,8 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new SheetSelector.ByName("Budget"), setCell));
     assertEquals(
-        "SET_CELL requires target type ByAddress or ByColumnName but got ByName",
+        "SET_CELL requires target type CellSelector.ByAddress or"
+            + " TableCellSelector.ByColumnName but got SheetSelector.ByName",
         wrongTarget.getMessage());
 
     IllegalArgumentException unionTargetFailure =
@@ -93,19 +94,20 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new WorkbookSelector.Current(), deleteTable));
     assertEquals(
-        "DELETE_TABLE requires target type ByNameOnSheet but got Current",
+        "DELETE_TABLE requires target type TableSelector.ByNameOnSheet but got"
+            + " WorkbookSelector.Current",
         unionTargetFailure.getMessage());
   }
 
   @Test
   void validatesCompatibleInspectionTargetsAcrossSingleAndUnionTargetFamilies() {
-    InspectionQuery getCharts = new InspectionQuery.GetCharts();
+    InspectionQuery getCharts = new WorkbookAssetIntrospectionQuery.GetCharts();
     assertEquals(
         getCharts,
         WorkbookStepValidation.requireCompatible(
             new ChartSelector.AllOnSheet("Budget"), getCharts));
 
-    InspectionQuery analyzeNamedRangeHealth = new InspectionQuery.AnalyzeNamedRangeHealth();
+    InspectionQuery analyzeNamedRangeHealth = new InspectionAnalysisQuery.AnalyzeNamedRangeHealth();
     assertEquals(
         analyzeNamedRangeHealth,
         WorkbookStepValidation.requireCompatible(
@@ -118,28 +120,30 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new RangeSelector.ByRange("Budget", "A1:B2"), getCharts));
     assertEquals(
-        "GET_CHARTS requires target type AllOnSheet or ByName but got ByRange",
+        "GET_CHARTS requires target type ChartSelector.AllOnSheet or ChartSelector.ByName but got"
+            + " RangeSelector.ByRange",
         wrongTarget.getMessage());
   }
 
   @Test
   void validatesCompatibleAssertionTargetsAcrossDirectAnalysisAndCompositeFamilies() {
-    Assertion cellValue = new Assertion.CellValue(new ExpectedCellValue.Text("Owner"));
+    Assertion cellValue = new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"));
     assertEquals(
         cellValue,
         WorkbookStepValidation.requireCompatible(
             new CellSelector.ByAddress("Budget", "A1"), cellValue));
 
     Assertion analysisSeverity =
-        new Assertion.AnalysisMaxSeverity(
-            new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING);
+        new AnalysisAssertion.AnalysisMaxSeverity(
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING);
     assertEquals(
         analysisSeverity,
         WorkbookStepValidation.requireCompatible(
             new SheetSelector.ByName("Budget"), analysisSeverity));
 
     Assertion anyOf =
-        new Assertion.AnyOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
+        new CompositeAssertion.AnyOf(
+            List.of(new PresenceAssertion.TablePresent(), new PresenceAssertion.TableAbsent()));
     assertEquals(
         anyOf,
         WorkbookStepValidation.requireCompatible(
@@ -151,9 +155,11 @@ class WorkbookStepValidationTest {
             () ->
                 WorkbookStepValidation.requireCompatible(
                     new WorkbookSelector.Current(),
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner"))));
+                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))));
     assertEquals(
-        "EXPECT_CELL_VALUE requires target type ByAddress, ByAddresses or ByColumnName but got Current",
+        "EXPECT_CELL_VALUE requires target type CellSelector.ByAddress,"
+            + " CellSelector.ByAddresses or TableCellSelector.ByColumnName but got"
+            + " WorkbookSelector.Current",
         wrongTarget.getMessage());
 
     IllegalArgumentException incompatibleComposite =
@@ -161,10 +167,10 @@ class WorkbookStepValidationTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookStepValidation.allowedTargetTypes(
-                    new Assertion.AllOf(
+                    new CompositeAssertion.AllOf(
                         List.of(
-                            new Assertion.CellValue(new ExpectedCellValue.Text("Owner")),
-                            new Assertion.TablePresent()))));
+                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                            new PresenceAssertion.TablePresent()))));
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families",
         incompatibleComposite.getMessage());
@@ -183,7 +189,8 @@ class WorkbookStepValidationTest {
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetWorkbookSummary())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
@@ -195,18 +202,21 @@ class WorkbookStepValidationTest {
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetCustomXmlMappings())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookIntrospectionQuery.GetCustomXmlMappings())));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.ExportCustomXmlMapping(
+                new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                     new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(1L, "Map"),
                     false,
                     "UTF-8"))));
     assertEquals(
-        List.of(ChartSelector.AllOnSheet.class, SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetCharts())));
+        List.of(ChartSelector.AllOnSheet.class, ChartSelector.ByName.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookAssetIntrospectionQuery.GetCharts())));
     assertEquals(
         List.of(
             CellSelector.ByAddress.class,
@@ -214,16 +224,16 @@ class WorkbookStepValidationTest {
             TableCellSelector.ByColumnName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new Assertion.CellValue(new ExpectedCellValue.Text("Owner")))));
+                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new Assertion.AnalysisFindingPresent(
-                    new InspectionQuery.AnalyzeFormulaHealth(),
+                new AnalysisAssertion.AnalysisFindingPresent(
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                    null,
-                    null))));
+                    Optional.empty(),
+                    Optional.empty()))));
   }
 
   @Test
@@ -233,11 +243,11 @@ class WorkbookStepValidationTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookStepValidation.staticAllowedTargetTypesForAssertionType(
-                    Assertion.AnalysisFindingPresent.class));
+                    AnalysisAssertion.AnalysisFindingPresent.class));
 
     assertEquals(
         "Assertion type "
-            + Assertion.AnalysisFindingPresent.class.getName()
+            + AnalysisAssertion.AnalysisFindingPresent.class.getName()
             + " derives target selectors dynamically: Matches the nested analysis query's target selectors.",
         failure.getMessage());
   }
@@ -247,13 +257,14 @@ class WorkbookStepValidationTest {
     assertEquals(
         Optional.of("Matches the nested analysis query's target selectors."),
         WorkbookStepValidation.targetSelectorRuleForAssertionType(
-            Assertion.AnalysisFindingAbsent.class));
+            AnalysisAssertion.AnalysisFindingAbsent.class));
     assertEquals(
         Optional.empty(),
-        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.CellValue.class));
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(CellAssertion.CellValue.class));
     assertEquals(
         Optional.empty(),
-        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.TableAbsent.class));
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(
+            PresenceAssertion.TableAbsent.class));
   }
 
   @Test
@@ -290,40 +301,45 @@ class WorkbookStepValidationTest {
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeConditionalFormattingHealth())));
+                new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth())));
     assertEquals(
         List.of(
             CellSelector.AllUsedInSheet.class,
             CellSelector.ByAddress.class,
             CellSelector.ByAddresses.class,
             TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetComments())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new SheetIntrospectionQuery.GetComments())));
     assertEquals(
         List.of(RangeSelector.RectangularWindow.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetSheetSchema())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionSurfaceQuery.GetSheetSchema())));
     assertEquals(
         List.of(RangeSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.GetConditionalFormatting())));
+                new SheetIntrospectionQuery.GetConditionalFormatting())));
     assertEquals(
         List.of(DrawingObjectSelector.AllOnSheet.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetDrawingObjects())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookAssetIntrospectionQuery.GetDrawingObjects())));
     assertEquals(
         List.of(DrawingObjectSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.GetDrawingObjectPayload())));
+                new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload())));
     assertEquals(
         List.of(PivotTableSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzePivotTableHealth())));
+                new InspectionAnalysisQuery.AnalyzePivotTableHealth())));
     assertEquals(
         List.of(TableSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.AnalyzeTableHealth())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionAnalysisQuery.AnalyzeTableHealth())));
   }
 
   @Test
@@ -343,7 +359,7 @@ class WorkbookStepValidationTest {
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
                             dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior
                                 .MOVE_AND_RESIZE),
-                        null)))));
+                        java.util.Optional.empty())))));
     assertEquals(
         List.of(SheetSelector.ByName.class),
         List.of(
@@ -373,7 +389,11 @@ class WorkbookStepValidationTest {
             WorkbookStepValidation.allowedTargetTypes(
                 new WorkbookMutationAction.SetWorkbookProtection(
                     new dev.erst.gridgrind.contract.dto.WorkbookProtectionInput(
-                        true, false, false, null, null)))));
+                        true,
+                        false,
+                        false,
+                        java.util.Optional.empty(),
+                        java.util.Optional.empty())))));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
         List.of(
@@ -438,7 +458,7 @@ class WorkbookStepValidationTest {
                                 dev.erst.gridgrind.excel.foundation
                                     .ExcelPivotDataConsolidateFunction.SUM,
                                 "Total Amount",
-                                null)))))));
+                                Optional.empty())))))));
     assertEquals(
         List.of(
             NamedRangeSelector.ByName.class,
@@ -449,42 +469,53 @@ class WorkbookStepValidationTest {
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new dev.erst.gridgrind.contract.dto.NamedRangeScope.Workbook(),
-                    new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "A1")))));
+                    dev.erst.gridgrind.contract.dto.NamedRangeTarget.range("Budget", "A1")))));
 
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeWorkbookFindings())));
+                new InspectionAnalysisQuery.AnalyzeWorkbookFindings())));
     assertEquals(
         List.of(NamedRangeSelector.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetNamedRanges())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookIntrospectionQuery.GetNamedRanges())));
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetSheetLayout())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetSheetLayout())));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetFormulaSurface())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionSurfaceQuery.GetFormulaSurface())));
     assertEquals(
         List.of(
             CellSelector.ByAddress.class,
             CellSelector.ByAddresses.class,
             TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetCells())));
+        List.of(WorkbookStepValidation.allowedTargetTypes(new SheetIntrospectionQuery.GetCells())));
     assertEquals(
         List.of(RangeSelector.RectangularWindow.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetWindow())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new SheetIntrospectionQuery.GetWindow())));
     assertEquals(
         List.of(RangeSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetDataValidations())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetDataValidations())));
     assertEquals(
         List.of(PivotTableSelector.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetPivotTables())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookAssetIntrospectionQuery.GetPivotTables())));
     assertEquals(
         List.of(TableSelector.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetTables())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookAssetIntrospectionQuery.GetTables())));
 
     IllegalArgumentException threeWayUnionFailure =
         assertThrows(
@@ -494,7 +525,9 @@ class WorkbookStepValidationTest {
                     new WorkbookSelector.Current(),
                     new StructuredMutationAction.DeleteNamedRange()));
     assertEquals(
-        "DELETE_NAMED_RANGE requires target type ByName, WorkbookScope or SheetScope but got Current",
+        "DELETE_NAMED_RANGE requires target type NamedRangeSelector.ByName,"
+            + " NamedRangeSelector.WorkbookScope or NamedRangeSelector.SheetScope but got"
+            + " WorkbookSelector.Current",
         threeWayUnionFailure.getMessage());
 
     assertEquals(
@@ -579,79 +612,94 @@ class WorkbookStepValidationTest {
         List.of(WorkbookSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.GetWorkbookProtection())));
+                new WorkbookIntrospectionQuery.GetWorkbookProtection())));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetPackageSecurity())));
-    assertEquals(
-        List.of(NamedRangeSelector.class),
-        List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetNamedRangeSurface())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new WorkbookIntrospectionQuery.GetPackageSecurity())));
     assertEquals(
         List.of(NamedRangeSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeNamedRangeHealth())));
+                new InspectionSurfaceQuery.GetNamedRangeSurface())));
+    assertEquals(
+        List.of(NamedRangeSelector.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionAnalysisQuery.AnalyzeNamedRangeHealth())));
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetAutofilters())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetAutofilters())));
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetMergedRegions())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetMergedRegions())));
     assertEquals(
         List.of(SheetSelector.ByName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetPrintLayout())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetPrintLayout())));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeHyperlinkHealth())));
-    assertEquals(
-        List.of(SheetSelector.class),
-        List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.AnalyzeFormulaHealth())));
+                new InspectionAnalysisQuery.AnalyzeHyperlinkHealth())));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeDataValidationHealth())));
+                new InspectionAnalysisQuery.AnalyzeFormulaHealth())));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzeAutofilterHealth())));
+                new InspectionAnalysisQuery.AnalyzeDataValidationHealth())));
+    assertEquals(
+        List.of(SheetSelector.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionAnalysisQuery.AnalyzeAutofilterHealth())));
     assertEquals(
         List.of(
             CellSelector.AllUsedInSheet.class,
             CellSelector.ByAddress.class,
             CellSelector.ByAddresses.class,
             TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetHyperlinks())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new SheetIntrospectionQuery.GetHyperlinks())));
     assertEquals(
         List.of(
             CellSelector.AllUsedInSheet.class,
             CellSelector.ByAddress.class,
             CellSelector.ByAddresses.class,
             TableCellSelector.ByColumnName.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetComments())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new SheetIntrospectionQuery.GetComments())));
     assertEquals(
         List.of(RangeSelector.RectangularWindow.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetSheetSchema())));
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionSurfaceQuery.GetSheetSchema())));
     assertEquals(
         List.of(RangeSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.GetConditionalFormatting())));
+                new SheetIntrospectionQuery.GetConditionalFormatting())));
     assertEquals(
         List.of(PivotTableSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new InspectionQuery.AnalyzePivotTableHealth())));
+                new InspectionAnalysisQuery.AnalyzePivotTableHealth())));
     assertEquals(
         List.of(TableSelector.class),
         List.of(
-            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.AnalyzeTableHealth())));
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionAnalysisQuery.AnalyzeTableHealth())));
   }
 
   @Test
@@ -669,11 +717,12 @@ class WorkbookStepValidationTest {
         WorkbookStepValidation.requireCompatible(
             tableCell, new CellMutationAction.SetCell(new CellInput.Numeric(125.0))));
     assertEquals(
-        new InspectionQuery.GetCells(),
-        WorkbookStepValidation.requireCompatible(tableCell, new InspectionQuery.GetCells()));
+        new SheetIntrospectionQuery.GetCells(),
+        WorkbookStepValidation.requireCompatible(
+            tableCell, new SheetIntrospectionQuery.GetCells()));
     assertEquals(
-        new Assertion.DisplayValue("125"),
-        WorkbookStepValidation.requireCompatible(tableCell, new Assertion.DisplayValue("125")));
+        new CellAssertion.DisplayValue("125"),
+        WorkbookStepValidation.requireCompatible(tableCell, new CellAssertion.DisplayValue("125")));
   }
 
   private static TextSourceInput text(String value) {

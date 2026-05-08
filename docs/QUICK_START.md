@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: QUICK_START
 updated: "2026-05-01"
 route:
@@ -73,7 +73,8 @@ response, so you can see both the output file and the run result. If you are alr
 checkout, [budget-request.json](../examples/budget-request.json) is the matching checked-in copy.
 `BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
 examples are repo-asset-backed and expect copied `examples/` assets; [EXAMPLES.md](./EXAMPLES.md)
-calls those out explicitly.
+calls those out explicitly, and `--print-example-catalog` now exposes that distinction through each
+example's `workspaceMode` and asset-backed `requiredPaths`.
 
 ### Docker Example
 
@@ -115,9 +116,9 @@ After a successful run:
 
 - Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
-  - `--print-task-catalog --response tasks.json` lists the contract-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
+  - `--print-task-catalog --response tasks.json` lists the CLI-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
   - `--print-task-plan DASHBOARD --response dashboard-plan.json` emits a starter request scaffold for one task.
-  - `--print-goal-plan "monthly sales dashboard with charts" --response goal-plan.json` ranks likely tasks for one freeform goal.
+  - `--print-task-keyword-match "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
   - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report without mutating a workbook.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
@@ -132,6 +133,7 @@ After a successful run:
 
 - Using `.xls`, `.xlsm`, or `.xlsb` instead of `.xlsx`
 - Mixing up path roots: `--response` follows the shell working directory, while relative paths inside a `--request` file follow that request file's directory
+- Ignoring stderr after a failed `--response` run: GridGrind prints one line naming the written response or doctor-report file so the structured failure payload is easy to find
 - Expecting GridGrind to save a workbook after a failed run
 
 For hard limits and supported boundaries, see [LIMITATIONS.md](./LIMITATIONS.md).

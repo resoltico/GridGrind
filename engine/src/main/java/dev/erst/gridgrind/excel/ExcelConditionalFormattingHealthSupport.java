@@ -83,7 +83,7 @@ final class ExcelConditionalFormattingHealthSupport {
 
   private static boolean hasInvalidRanges(List<String> ranges) {
     for (String range : ranges) {
-      if (ExcelSheetStructureSupport.parseRangeOrNull(range) == null) {
+      if (ExcelSheetStructureSupport.parseOptionalRange(range).isEmpty()) {
         return true;
       }
     }
@@ -162,7 +162,11 @@ final class ExcelConditionalFormattingHealthSupport {
   }
 
   private record BlockRuleContext(
-      WorkbookAnalysis.AnalysisLocation location, List<String> ranges, String label) {}
+      WorkbookAnalysis.AnalysisLocation location, List<String> ranges, String label) {
+    private BlockRuleContext {
+      ranges = List.copyOf(ranges);
+    }
+  }
 
   private record PriorityContext(int priority, BlockRuleContext context) {}
 }

@@ -6,10 +6,10 @@ import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
@@ -25,6 +25,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** Replays raw Jazzer inputs outside active fuzzing and classifies their semantic outcome. */
 public final class JazzerReplaySupport {
@@ -89,7 +91,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (InvalidRequestShapeException expected) {
       ProtocolRequestDetails details =
@@ -108,7 +110,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (InvalidRequestException expected) {
       ProtocolRequestDetails details =
@@ -127,7 +129,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (IOException unexpected) {
       ProtocolRequestDetails details =
@@ -180,7 +182,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.protocolWorkflow().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (IOException unexpected) {
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
@@ -201,7 +203,7 @@ public final class JazzerReplaySupport {
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
       try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-        new WorkbookCommandExecutor().apply(workbook, commands);
+        new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
       }
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
@@ -211,7 +213,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.engineCommandSequence().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (IOException unexpected) {
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
@@ -231,7 +233,7 @@ public final class JazzerReplaySupport {
       directory = Files.createTempDirectory("gridgrind-jazzer-replay-");
       Path workbookPath = directory.resolve("workbook.xlsx");
       try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-        new WorkbookCommandExecutor().apply(workbook, commands);
+        new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
         workbook.save(workbookPath);
         XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
@@ -243,7 +245,7 @@ public final class JazzerReplaySupport {
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.xlsxRoundTrip().key(),
           expected.getClass().getSimpleName(),
-          expected.getMessage(),
+          Optional.ofNullable(expected.getMessage()),
           details);
     } catch (IOException unexpected) {
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
@@ -263,7 +265,7 @@ public final class JazzerReplaySupport {
     return new ReplayOutcome.UnexpectedFailure(
         harness.key(),
         error.getClass().getSimpleName(),
-        error.getMessage(),
+        Optional.ofNullable(error.getMessage()),
         stackTrace(error),
         details);
   }
@@ -279,7 +281,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ProtocolWorkflowDetails workflowDetails(
-      int inputLength, WorkbookPlan request, GridGrindResponse response) {
+      int inputLength, @Nullable WorkbookPlan request, @Nullable GridGrindResponse response) {
     if (request == null) {
       return new ProtocolWorkflowDetails(
           inputLength,

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage for request-rooted execution binding helpers. */
@@ -13,6 +14,6 @@ class CliExecutionBindingsFactoryTest {
     Path root = Path.of("").toAbsolutePath().normalize().getRoot();
     assertNotNull(root);
 
-    assertEquals(root, CliExecutionBindingsFactory.executionWorkingDirectory(root));
+    assertEquals(root, CliExecutionBindingsFactory.executionWorkingDirectory(Optional.of(root)));
   }
 }

@@ -19,7 +19,10 @@ import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
@@ -243,65 +246,150 @@ class AdvancedDtoCoverageTest {
   @Test
   void encryptionPaneAndColorReportsValidateBoundaries() {
     assertFalse(
-        new OoxmlEncryptionReport(false, null, null, null, null, null, null, null).encrypted());
+        new OoxmlEncryptionReport(
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())
+            .encrypted());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        false, ExcelOoxmlEncryptionMode.AGILE, null, null, null, null, null, null))
+                        false,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
-        "cipherAlgorithm must not be blank",
+        "cipherAlgorithm must not be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, " ", "SHA-512", "CBC", 128, 16, 1000))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new OoxmlEncryptionReport(false, null, "AES", null, null, null, null, null))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.of(1000)))
             .getMessage());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(false, null, null, "SHA-512", null, null, null, null))
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new OoxmlEncryptionReport(false, null, null, null, "CBC", null, null, null))
+                () ->
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new OoxmlEncryptionReport(false, null, null, null, null, 128, null, null))
+                () ->
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new OoxmlEncryptionReport(false, null, null, null, null, null, 16, null))
+                () ->
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(128),
+                        Optional.empty(),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new OoxmlEncryptionReport(false, null, null, null, null, null, null, 1000))
+                () ->
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(16),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
-        "mode must not be null when encrypted",
+        "Unencrypted package reports must not include encryption detail fields",
         assertThrows(
-                NullPointerException.class,
-                () -> new OoxmlEncryptionReport(true, null, "AES", "SHA-512", "CBC", 128, 16, 100))
+                IllegalArgumentException.class,
+                () ->
+                    new OoxmlEncryptionReport(
+                        false,
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.of(1000)))
+            .getMessage());
+    assertEquals(
+        "mode must not be absent",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new OoxmlEncryptionReport(
+                        true,
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.of(100)))
             .getMessage());
     assertEquals(
         "keyBits must be positive when encrypted",
@@ -310,13 +398,13 @@ class AdvancedDtoCoverageTest {
                 () ->
                     new OoxmlEncryptionReport(
                         true,
-                        ExcelOoxmlEncryptionMode.AGILE,
-                        "AES",
-                        "SHA-512",
-                        "CBC",
-                        null,
-                        16,
-                        100))
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.empty(),
+                        Optional.of(16),
+                        Optional.of(100)))
             .getMessage());
     assertEquals(
         "blockSize must be positive when encrypted",
@@ -325,13 +413,13 @@ class AdvancedDtoCoverageTest {
                 () ->
                     new OoxmlEncryptionReport(
                         true,
-                        ExcelOoxmlEncryptionMode.AGILE,
-                        "AES",
-                        "SHA-512",
-                        "CBC",
-                        128,
-                        null,
-                        100))
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.empty(),
+                        Optional.of(100)))
             .getMessage());
     assertEquals(
         "spinCount must be zero or positive when encrypted",
@@ -340,29 +428,43 @@ class AdvancedDtoCoverageTest {
                 () ->
                     new OoxmlEncryptionReport(
                         true,
-                        ExcelOoxmlEncryptionMode.AGILE,
-                        "AES",
-                        "SHA-512",
-                        "CBC",
-                        128,
-                        16,
-                        null))
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.empty()))
             .getMessage());
     assertEquals(
-        "hashAlgorithm must not be blank",
+        "hashAlgorithm must not be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, "AES", " ", "CBC", 128, 16, 1000))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.empty(),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.of(1000)))
             .getMessage());
     assertEquals(
-        "chainingMode must not be blank",
+        "chainingMode must not be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, "AES", "SHA-512", " ", 128, 16, 1000))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.empty(),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.of(1000)))
             .getMessage());
 
     PaneInput.Frozen frozen = new PaneInput.Frozen(1, 0, 1, 0);
@@ -618,8 +720,8 @@ class AdvancedDtoCoverageTest {
                     false,
                     ExcelChartBarDirection.COLUMN,
                     ExcelChartBarGrouping.CLUSTERED,
-                    null,
-                    null,
+                    Optional.empty(),
+                    Optional.empty(),
                     List.of(
                         new ChartReport.Axis(
                             ExcelChartAxisKind.CATEGORY,
@@ -631,7 +733,7 @@ class AdvancedDtoCoverageTest {
                             new ChartReport.Title.Text("Series 1"),
                             new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
                             new ChartReport.DataSource.NumericLiteral(
-                                "#,##0", List.of("1", "2")))))));
+                                Optional.of("#,##0"), List.of("1", "2")))))));
     assertEquals("Revenue", bar.name());
     assertEquals(
         "firstSliceAngle must be between 0 and 360",
@@ -640,12 +742,13 @@ class AdvancedDtoCoverageTest {
                 () ->
                     new ChartReport.Pie(
                         false,
-                        361,
+                        Optional.of(361),
                         List.of(
                             chartSeries(
                                 new ChartReport.Title.Text("Series 1"),
                                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                                new ChartReport.DataSource.NumericLiteral(null, List.of("1"))))))
+                                new ChartReport.DataSource.NumericLiteral(
+                                    Optional.empty(), List.of("1"))))))
             .getMessage());
     assertEquals(
         "series must not be empty",
@@ -664,26 +767,26 @@ class AdvancedDtoCoverageTest {
                         List.of()))
             .getMessage());
     assertEquals(
-        180,
+        Optional.of(180),
         new ChartReport.Pie(
                 false,
-                180,
+                Optional.of(180),
                 List.of(
                     chartSeries(
                         new ChartReport.Title.Text("Series 1"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(null, List.of("1")))))
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
             .firstSliceAngle());
     assertEquals(
-        null,
+        Optional.empty(),
         new ChartReport.Pie(
                 false,
-                null,
+                Optional.empty(),
                 List.of(
                     chartSeries(
                         new ChartReport.Title.Text("Series 1"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                        new ChartReport.DataSource.NumericLiteral(null, List.of("1")))))
+                        new ChartReport.DataSource.NumericLiteral(Optional.empty(), List.of("1")))))
             .firstSliceAngle());
 
     PivotTableReport.Supported pivot =
@@ -701,7 +804,7 @@ class AdvancedDtoCoverageTest {
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Total Amount",
-                    "#,##0.00")),
+                    Optional.of("#,##0.00"))),
             true);
     assertEquals("Report", pivot.sheetName());
     assertEquals(
@@ -710,7 +813,11 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new PivotTableReport.DataField(
-                        0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "))
+                        0,
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.of(" ")))
             .getMessage());
 
     TableColumnReport tableColumn =
@@ -753,15 +860,14 @@ class AdvancedDtoCoverageTest {
                         List.of()))
             .getMessage());
 
-    GridGrindAnalysisReports.AnalysisSummaryReport summary =
-        new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0);
-    GridGrindAnalysisReports.AnalysisFindingReport finding =
-        new GridGrindAnalysisReports.AnalysisFindingReport(
+    AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 0, 1, 0);
+    AnalysisFindingReport finding =
+        new AnalysisFindingReport(
             AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
             AnalysisSeverity.WARNING,
             "Autofilter spans multiple ranges",
             "Autofilter found on disjoint ranges.",
-            new GridGrindAnalysisReports.AnalysisLocationReport.Sheet("Budget"),
+            new AnalysisLocationReport.Sheet("Budget"),
             List.of("A1:B4"));
     AutofilterHealthReport report = new AutofilterHealthReport(1, summary, List.of(finding));
     assertEquals(1, report.checkedAutofilterCount());
@@ -775,6 +881,13 @@ class AdvancedDtoCoverageTest {
 
   private static ChartReport.Series chartSeries(
       ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
-    return new ChartReport.Series(title, categories, values, null, null, null, null);
+    return new ChartReport.Series(
+        title,
+        categories,
+        values,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 }

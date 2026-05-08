@@ -15,21 +15,25 @@ class ExcelCellMetadataSnapshotTest {
 
     ExcelCellMetadataSnapshot snapshot =
         ExcelCellMetadataSnapshot.of(
-            new ExcelHyperlink.Document("Budget!B4"),
-            new ExcelCommentSnapshot("Review", "GridGrind", false, null, null));
+            Optional.of(new ExcelHyperlink.Document("Budget!B4")),
+            Optional.of(
+                new ExcelCommentSnapshot(
+                    "Review", "GridGrind", false, Optional.empty(), Optional.empty())));
 
     assertEquals(Optional.of(new ExcelHyperlink.Document("Budget!B4")), snapshot.hyperlink());
     assertEquals(
-        Optional.of(new ExcelCommentSnapshot("Review", "GridGrind", false, null, null)),
+        Optional.of(
+            new ExcelCommentSnapshot(
+                "Review", "GridGrind", false, Optional.empty(), Optional.empty())),
         snapshot.comment());
   }
 
   @Test
   @SuppressWarnings("NullOptional")
-  void coalescesNullOptionalsToEmptyOptionals() {
-    ExcelCellMetadataSnapshot snapshot = new ExcelCellMetadataSnapshot(null, null);
-
-    assertEquals(Optional.empty(), snapshot.hyperlink());
-    assertEquals(Optional.empty(), snapshot.comment());
+  void rejectsNullOptionals() {
+    assertThrows(
+        NullPointerException.class, () -> new ExcelCellMetadataSnapshot(null, Optional.empty()));
+    assertThrows(
+        NullPointerException.class, () -> new ExcelCellMetadataSnapshot(Optional.empty(), null));
   }
 }

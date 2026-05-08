@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Sheet and workbook state commands that reshape workbook tabs and protection. */
 public sealed interface WorkbookSheetCommand extends WorkbookCommand
@@ -125,22 +126,26 @@ public sealed interface WorkbookSheetCommand extends WorkbookCommand
 
   /** Enables sheet protection with the exact supported lock flags. */
   record SetSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection, String password)
+      String sheetName, ExcelSheetProtectionSettings protection, Optional<String> password)
       implements WorkbookSheetCommand {
     /** Enables sheet protection without applying a password hash. */
     public SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection) {
-      this(sheetName, protection, null);
+      this(sheetName, protection, Optional.empty());
     }
 
     public SetSheetProtection {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(protection, "protection must not be null");
+      Objects.requireNonNull(password, "password must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
-      if (password != null && password.isBlank()) {
-        throw new IllegalArgumentException("password must not be blank");
-      }
+      password.ifPresent(
+          value -> {
+            if (value.isBlank()) {
+              throw new IllegalArgumentException("password must not be blank");
+            }
+          });
     }
   }
 

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Name;
@@ -22,9 +23,9 @@ public final class ExcelWorkbook implements AutoCloseable {
     this(
         workbook,
         ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()),
-        null,
+        Optional.empty(),
         ExcelOoxmlPackageSecuritySnapshot.none(),
-        null);
+        Optional.empty());
   }
 
   private ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
@@ -32,21 +33,26 @@ public final class ExcelWorkbook implements AutoCloseable {
     this(
         workbook,
         ExcelFormulaRuntime.poi(workbook, formulaEnvironment),
-        null,
+        Optional.empty(),
         ExcelOoxmlPackageSecuritySnapshot.none(),
-        null);
+        Optional.empty());
   }
 
   ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaRuntime formulaRuntime) {
-    this(workbook, formulaRuntime, null, ExcelOoxmlPackageSecuritySnapshot.none(), null);
+    this(
+        workbook,
+        formulaRuntime,
+        Optional.empty(),
+        ExcelOoxmlPackageSecuritySnapshot.none(),
+        Optional.empty());
   }
 
   ExcelWorkbook(
       XSSFWorkbook workbook,
       ExcelFormulaRuntime formulaRuntime,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword) {
+      Optional<String> sourceEncryptionPassword) {
     this.context =
         new ExcelWorkbookContext(
             workbook, formulaRuntime, sourcePath, loadedPackageSecurity, sourceEncryptionPassword);
@@ -96,9 +102,7 @@ public final class ExcelWorkbook implements AutoCloseable {
    * Opens an existing workbook with explicit package-open settings and a custom temp-file factory.
    */
   public static ExcelWorkbook open(
-      Path workbookPath,
-      ExcelOoxmlOpenOptions openOptions,
-      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(
         workbookPath, openOptions, tempFileFactory);
@@ -107,9 +111,9 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Opens one materialized plain OOXML package with explicit source-security metadata. */
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     return ExcelWorkbookOpenSupport.openMaterializedWorkbook(
         workbookPath, sourcePath, loadedPackageSecurity, sourceEncryptionPassword);
@@ -118,7 +122,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Opens an existing workbook file from disk with the supplied formula environment. */
   public static ExcelWorkbook open(Path workbookPath, ExcelFormulaEnvironment formulaEnvironment)
       throws IOException {
-    return open(workbookPath, formulaEnvironment, null);
+    return open(workbookPath, formulaEnvironment, new ExcelOoxmlOpenOptions.Unencrypted());
   }
 
   /** Opens an existing workbook file from disk with formula and OOXML package-open settings. */
@@ -139,7 +143,7 @@ public final class ExcelWorkbook implements AutoCloseable {
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
       ExcelOoxmlOpenOptions openOptions,
-      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(
         workbookPath, formulaEnvironment, openOptions, tempFileFactory);
@@ -149,9 +153,9 @@ public final class ExcelWorkbook implements AutoCloseable {
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     return ExcelWorkbookOpenSupport.openMaterializedWorkbook(
         workbookPath,
@@ -233,12 +237,12 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Enables sheet protection with the exact supported lock flags. */
   public ExcelWorkbook setSheetProtection(
       String sheetName, ExcelSheetProtectionSettings protection) {
-    return setSheetProtection(sheetName, protection, null);
+    return setSheetProtection(sheetName, protection, Optional.empty());
   }
 
   /** Enables sheet protection with the exact supported lock flags. */
   public ExcelWorkbook setSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection, String password) {
+      String sheetName, ExcelSheetProtectionSettings protection, Optional<String> password) {
     return sheetStateController().setSheetProtection(this, sheetName, protection, password);
   }
 
@@ -370,7 +374,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Saves the workbook to disk, creating parent directories as needed. */
   public void save(Path workbookPath) throws IOException {
-    save(workbookPath, null);
+    save(workbookPath, ExcelOoxmlPersistenceOptions.none());
   }
 
   /** Saves the workbook to disk with optional OOXML package-encryption and signing settings. */
@@ -383,7 +387,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   public void save(
       Path workbookPath,
       ExcelOoxmlPersistenceOptions persistenceOptions,
-      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     ExcelWorkbookPersistenceSupport.save(this, workbookPath, persistenceOptions, tempFileFactory);
   }
@@ -412,7 +416,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return context;
   }
 
-  Path sourcePath() {
+  Optional<Path> sourcePath() {
     return context.sourcePath();
   }
 
@@ -420,7 +424,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return context.loadedPackageSecurity();
   }
 
-  String sourceEncryptionPassword() {
+  Optional<String> sourceEncryptionPassword() {
     return context.sourceEncryptionPassword();
   }
 

@@ -85,6 +85,16 @@ public final class SelectorJsonSupport {
     return enclosingClass == null ? selectorType.getSimpleName() : enclosingClass.getSimpleName();
   }
 
+  /** Returns one stable human-readable selector type name, including the selector family. */
+  public static String displayName(Class<?> selectorType) {
+    Objects.requireNonNull(selectorType, "selectorType must not be null");
+    Class<?> enclosingClass = selectorType.getEnclosingClass();
+    if (enclosingClass == null) {
+      return selectorType.getSimpleName();
+    }
+    return familyName(selectorType) + "." + selectorType.getSimpleName();
+  }
+
   /** Returns a stable human-readable summary of the supplied selector families and wire ids. */
   public static String familySummary(Iterable<Class<? extends Selector>> selectorTypes) {
     return familyInfosFor(selectorTypes).stream()

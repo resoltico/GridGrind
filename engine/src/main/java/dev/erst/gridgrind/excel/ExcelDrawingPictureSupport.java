@@ -9,6 +9,7 @@ import org.apache.poi.openxml4j.opc.PackagePartName;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /** Picture-specific relation, readback, and deletion helpers. */
 final class ExcelDrawingPictureSupport {
@@ -27,8 +28,9 @@ final class ExcelDrawingPictureSupport {
         ExcelDrawingBinarySupport.sha256(readback.bytes()),
         dimensions.widthPixels(),
         dimensions.heightPixels(),
-        ExcelDrawingBinarySupport.nullIfBlank(
-            picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
+        ExcelDrawingBinarySupport.blankAsOptional(
+                picture.getCTPicture().getNvPicPr().getCNvPr().getDescr())
+            .orElse(null));
   }
 
   static ExcelDrawingObjectPayload.Picture picturePayload(String objectName, XSSFPicture picture) {
@@ -40,8 +42,9 @@ final class ExcelDrawingPictureSupport {
         objectName + readback.format().defaultExtension(),
         ExcelDrawingBinarySupport.sha256(readback.bytes()),
         ExcelBinaryData.readback(readback.bytes()),
-        ExcelDrawingBinarySupport.nullIfBlank(
-            picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
+        ExcelDrawingBinarySupport.blankAsOptional(
+                picture.getCTPicture().getNvPicPr().getCNvPr().getDescr())
+            .orElse(null));
   }
 
   static void deletePicture(
@@ -89,7 +92,8 @@ final class ExcelDrawingPictureSupport {
     }
     PackagePart imagePart =
         ExcelDrawingBinarySupport.relatedInternalPart(
-            picture.getDrawing().getPackagePart(), relationId);
+                picture.getDrawing().getPackagePart(), relationId)
+            .orElse(null);
     if (imagePart == null) {
       return Optional.empty();
     }
@@ -111,9 +115,8 @@ final class ExcelDrawingPictureSupport {
     if (pictureData != null) {
       return Optional.of(pictureData.getPackagePart());
     }
-    return Optional.ofNullable(
-        ExcelDrawingBinarySupport.relatedInternalPart(
-            picture.getDrawing().getPackagePart(), relationId));
+    return ExcelDrawingBinarySupport.relatedInternalPart(
+        picture.getDrawing().getPackagePart(), relationId);
   }
 
   static Optional<PackagePartName> imagePartNameOrNull(XSSFPicture picture) {
@@ -135,9 +138,8 @@ final class ExcelDrawingPictureSupport {
         || picture.getCTPicture().getBlipFill().getBlip() == null) {
       return Optional.empty();
     }
-    return Optional.ofNullable(
-        ExcelDrawingBinarySupport.nullIfBlank(
-            picture.getCTPicture().getBlipFill().getBlip().getEmbed()));
+    return ExcelDrawingBinarySupport.blankAsOptional(
+        picture.getCTPicture().getBlipFill().getBlip().getEmbed());
   }
 
   static void setPictureRelationId(XSSFPicture picture, String relationId) {
@@ -160,7 +162,7 @@ final class ExcelDrawingPictureSupport {
 
   static Optional<String> reusableRelationId(
       org.apache.poi.xssf.usermodel.XSSFDrawing drawing,
-      String relationId,
+      @Nullable String relationId,
       PackagePartName targetPartName) {
     Objects.requireNonNull(drawing, "drawing must not be null");
     Objects.requireNonNull(targetPartName, "targetPartName must not be null");

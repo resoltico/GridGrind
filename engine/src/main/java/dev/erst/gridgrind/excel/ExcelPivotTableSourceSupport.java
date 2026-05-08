@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
@@ -11,6 +12,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 
 /** Authoring-source lookup and source-column normalization helpers for pivot tables. */
 final class ExcelPivotTableSourceSupport {
@@ -54,14 +56,12 @@ final class ExcelPivotTableSourceSupport {
   }
 
   static XSSFTable requiredTableByName(ExcelWorkbook workbook, String name) {
-    XSSFTable table = tableByName(workbook.xssfWorkbook(), name, null);
-    if (table == null) {
-      throw new IllegalArgumentException("pivot source table not found: " + name);
-    }
-    return table;
+    return tableByName(workbook.xssfWorkbook(), name, null)
+        .orElseThrow(() -> new IllegalArgumentException("pivot source table not found: " + name));
   }
 
-  static XSSFTable tableByName(XSSFWorkbook workbook, String name, String preferredSheetName) {
+  static Optional<XSSFTable> tableByName(
+      XSSFWorkbook workbook, String name, @Nullable String preferredSheetName) {
     String expected = name.toUpperCase(Locale.ROOT);
     XSSFTable match = null;
     for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
@@ -79,10 +79,11 @@ final class ExcelPivotTableSourceSupport {
         match = table;
       }
     }
-    return match;
+    return Optional.ofNullable(match);
   }
 
-  static List<Name> matchingNamedRanges(XSSFWorkbook workbook, String name, String sheetNameHint) {
+  static List<Name> matchingNamedRanges(
+      XSSFWorkbook workbook, String name, @Nullable String sheetNameHint) {
     List<Name> matches = new ArrayList<>();
     for (Name candidate : workbook.getAllNames()) {
       if (!candidate.getNameName().equalsIgnoreCase(name)) {
@@ -118,7 +119,8 @@ final class ExcelPivotTableSourceSupport {
     }
   }
 
-  static String sourceSheetName(AreaReference area, Name namedRange, String fallbackSheetName) {
+  static String sourceSheetName(
+      AreaReference area, @Nullable Name namedRange, @Nullable String fallbackSheetName) {
     String areaSheetName = area.getFirstCell().getSheetName();
     if (areaSheetName != null) {
       return areaSheetName;

@@ -115,6 +115,7 @@
         "type" : "WORKBOOK"
       },
       "target" : {
+        "kind" : "RANGE",
         "sheetName" : "Ops",
         "range" : "A2:A4"
       }
@@ -132,6 +133,7 @@
         "type" : "WORKBOOK"
       },
       "target" : {
+        "kind" : "RANGE",
         "sheetName" : "Ops",
         "range" : "C2:C4"
       }
@@ -180,6 +182,8 @@
           "varyColors" : true,
           "barDirection" : "COLUMN",
           "grouping" : "CLUSTERED",
+          "gapWidth" : 150,
+          "overlap" : 0,
           "axes" : [ {
             "kind" : "CATEGORY",
             "position" : "BOTTOM",
@@ -230,8 +234,8 @@
   }, {
     "stepId" : "charts",
     "target" : {
-      "type" : "SHEET_BY_NAME",
-      "name" : "Ops"
+      "type" : "CHART_ALL_ON_SHEET",
+      "sheetName" : "Ops"
     },
     "query" : {
       "type" : "GET_CHARTS"

@@ -123,11 +123,14 @@ case "${command}" in
             --print-task-catalog)
                 emit_fixture_file "${FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE:?}"
                 ;;
+            --print-example-catalog)
+                emit_fixture_file "${FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE:?}"
+                ;;
             --print-task-plan)
                 emit_fixture_file "${FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE:?}"
                 ;;
-            --print-goal-plan)
-                emit_fixture_file "${FAKE_DOCKER_GOAL_PLAN_OUTPUT_FILE:?}"
+            --print-task-keyword-match)
+                emit_fixture_file "${FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE:?}"
                 ;;
             --doctor-request)
                 emit_fixture_file "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE:?}"
@@ -173,18 +176,20 @@ run_verify_with_fixture_texts() {
     local latest_version_output=$2
     local help_output=$3
     local catalog_output=$4
-    local task_catalog_output=$5
-    local task_plan_output=$6
-    local goal_plan_output=$7
-    local doctor_report_output=$8
+    local example_catalog_output=$5
+    local task_catalog_output=$6
+    local task_plan_output=$7
+    local task_keyword_match_output=$8
+    local doctor_report_output=$9
     local case_dir
     local version_output_file
     local latest_version_output_file
     local help_output_file
     local catalog_output_file
+    local example_catalog_output_file
     local task_catalog_output_file
     local task_plan_output_file
-    local goal_plan_output_file
+    local task_keyword_match_output_file
     local request_template_output_file
     local doctor_report_output_file
 
@@ -193,9 +198,10 @@ run_verify_with_fixture_texts() {
     latest_version_output_file="$(write_case_fixture "${case_dir}" 'latest-version.txt' "${latest_version_output}")"
     help_output_file="$(write_case_fixture "${case_dir}" 'help.txt' "${help_output}")"
     catalog_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_output}")"
+    example_catalog_output_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_output}")"
     task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
     task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
-    goal_plan_output_file="$(write_case_fixture "${case_dir}" 'goal-plan.json' "${goal_plan_output}")"
+    task_keyword_match_output_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_output}")"
     request_template_output_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_output_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_output}")"
 
@@ -205,9 +211,10 @@ run_verify_with_fixture_texts() {
         FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE="${latest_version_output_file}" \
         FAKE_DOCKER_HELP_OUTPUT_FILE="${help_output_file}" \
         FAKE_DOCKER_CATALOG_OUTPUT_FILE="${catalog_output_file}" \
+        FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE="${example_catalog_output_file}" \
         FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
         FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
-        FAKE_DOCKER_GOAL_PLAN_OUTPUT_FILE="${goal_plan_output_file}" \
+        FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE="${task_keyword_match_output_file}" \
         FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE="${request_template_output_file}" \
         FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE="${doctor_report_output_file}" \
         GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
@@ -235,9 +242,10 @@ run_verify_expect_success \
     "${expected_header}" \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "${success_doctor_report}"
 grep -Fq 'pull ghcr.io/example/gridgrind:9.9.9' "${fake_log}" || die "verifier did not pull the version tag"
 grep -Fq 'pull ghcr.io/example/gridgrind:latest' "${fake_log}" || die "verifier did not pull the latest tag"
@@ -245,12 +253,14 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:9.9.9 --help' "${fake_log}" || die 
     "verifier did not inspect the version tag help surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag catalog surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-example-catalog' "${fake_log}" || die \
+    "verifier did not inspect the latest tag example-catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag task-catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-plan DASHBOARD' "${fake_log}" || die \
     "verifier did not inspect the latest tag task-plan surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-goal-plan monthly sales dashboard with charts' "${fake_log}" || die \
-    "verifier did not inspect the latest tag goal-plan surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-keyword-match monthly sales dashboard with charts' "${fake_log}" || die \
+    "verifier did not inspect the latest tag task-keyword-match surface"
 grep -Fq 'run --rm -i -t ghcr.io/example/gridgrind:latest' "${fake_log}" || die \
     "verifier did not inspect the latest tag interactive no-arg help surface"
 grep -Fq 'run --rm -i ghcr.io/example/gridgrind:latest --doctor-request' "${fake_log}" || die \
@@ -261,35 +271,39 @@ run_verify_expect_failure \
     "$(printf 'gridgrind 9.9.9')" \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "${success_doctor_report}"
 run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
     "$(printf 'GridGrind 9.9.9\nWrong description')" \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "${success_doctor_report}"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
     "$(append_fixture_line "${success_help}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "${success_doctor_report}"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
-    "${success_goal_plan}" \
+    "${success_task_keyword_match}" \
     "$(replace_fixture_token \
         "${success_doctor_report}" \
         '"valid" : true' \
@@ -299,10 +313,11 @@ run_verify_expect_failure \
     "${expected_header}" \
     "${success_help}" \
     "${success_catalog}" \
+    "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "$(replace_fixture_token \
-        "${success_goal_plan}" \
+        "${success_task_keyword_match}" \
         '"id" : "DASHBOARD"' \
         '"id" : "TABULAR_REPORT"')" \
     "$(replace_fixture_token \

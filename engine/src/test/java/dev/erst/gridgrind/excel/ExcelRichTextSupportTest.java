@@ -9,6 +9,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -27,16 +28,24 @@ class ExcelRichTextSupportTest {
     invalidRuns.add(null);
     assertThrows(NullPointerException.class, () -> new ExcelRichText(invalidRuns));
 
-    assertThrows(NullPointerException.class, () -> new ExcelRichTextRun(null, null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelRichTextRun("", null));
+    assertThrows(NullPointerException.class, () -> new ExcelRichTextRun(null, Optional.empty()));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelRichTextRun("", Optional.empty()));
 
     List<ExcelRichTextRun> runs =
         new ArrayList<>(
             List.of(
-                new ExcelRichTextRun("Quarterly", null),
+                new ExcelRichTextRun("Quarterly", Optional.empty()),
                 new ExcelRichTextRun(
                     " Report",
-                    new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null))));
+                    Optional.of(
+                        new ExcelCellFont(
+                            Optional.of(Boolean.TRUE),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty())))));
     ExcelRichText richText = new ExcelRichText(runs);
     runs.clear();
 
@@ -111,7 +120,8 @@ class ExcelRichTextSupportTest {
           NullPointerException.class,
           () ->
               ExcelRichTextSupport.toPoiRichText(
-                  null, new ExcelRichText(List.of(new ExcelRichTextRun("text", null)))));
+                  null,
+                  new ExcelRichText(List.of(new ExcelRichTextRun("text", Optional.empty())))));
       assertThrows(
           NullPointerException.class, () -> ExcelRichTextSupport.toPoiRichText(workbook, null));
       assertThrows(
@@ -124,13 +134,14 @@ class ExcelRichTextSupportTest {
           NullPointerException.class,
           () -> ExcelRichTextSupport.snapshot(workbook, new XSSFRichTextString("plain"), null));
 
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           ExcelRichTextSupport.snapshot(workbook, new XSSFRichTextString("plain"), baseFont()));
 
       XSSFRichTextString runWithoutProperties = new XSSFRichTextString();
       runWithoutProperties.getCTRst().addNewR().setT("Base");
       ExcelRichTextSnapshot inheritedWithoutProperties =
-          ExcelRichTextSupport.snapshot(workbook, runWithoutProperties, baseFont());
+          ExcelRichTextSupport.snapshot(workbook, runWithoutProperties, baseFont()).orElseThrow();
 
       assertNotNull(inheritedWithoutProperties);
       assertEquals("Base", inheritedWithoutProperties.plainText());
@@ -141,7 +152,7 @@ class ExcelRichTextSupportTest {
       run.setT(" Still Base");
       run.addNewRPr();
       ExcelRichTextSnapshot inheritedWithEmptyProperties =
-          ExcelRichTextSupport.snapshot(workbook, runWithEmptyProperties, baseFont());
+          ExcelRichTextSupport.snapshot(workbook, runWithEmptyProperties, baseFont()).orElseThrow();
 
       assertNotNull(inheritedWithEmptyProperties);
       assertEquals(" Still Base", inheritedWithEmptyProperties.plainText());
@@ -159,23 +170,33 @@ class ExcelRichTextSupportTest {
                   List.of(
                       new ExcelRichTextRun(
                           "Lead",
-                          new ExcelCellFont(
-                              true, null, null, null, ExcelColor.theme(4, -0.20d), null, null)),
-                      new ExcelRichTextRun(" ", null),
+                          Optional.of(
+                              new ExcelCellFont(
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of(ExcelColor.theme(4, -0.20d)),
+                                  Optional.empty(),
+                                  Optional.empty()))),
+                      new ExcelRichTextRun(" ", Optional.empty()),
                       new ExcelRichTextRun(
                           "review scheduled",
-                          new ExcelCellFont(
-                              null,
-                              true,
-                              null,
-                              null,
-                              ExcelColor.indexed(
-                                  Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex())),
-                              null,
-                              null)))));
+                          Optional.of(
+                              new ExcelCellFont(
+                                  Optional.empty(),
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of(
+                                      ExcelColor.indexed(
+                                          Short.toUnsignedInt(
+                                              IndexedColors.DARK_GREEN.getIndex()))),
+                                  Optional.empty(),
+                                  Optional.empty()))))));
 
       ExcelRichTextSnapshot snapshot =
-          ExcelRichTextSupport.snapshot(workbook, richText, baseFont());
+          ExcelRichTextSupport.snapshot(workbook, richText, baseFont()).orElseThrow();
 
       assertEquals(ExcelColorSnapshot.theme(4, -0.20d), snapshot.runs().get(0).font().fontColor());
       assertEquals(baseFont().fontColor(), snapshot.runs().get(1).font().fontColor());
@@ -193,32 +214,43 @@ class ExcelRichTextSupportTest {
               List.of(
                   new ExcelRichTextRun(
                       "Alpha",
-                      new ExcelCellFont(
-                          Boolean.FALSE,
-                          Boolean.FALSE,
-                          "Courier New",
-                          ExcelFontHeight.fromPoints(new BigDecimal("14")),
-                          ExcelColor.rgb("#123456"),
-                          Boolean.FALSE,
-                          Boolean.TRUE)),
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.of(Boolean.FALSE),
+                              Optional.of(Boolean.FALSE),
+                              Optional.of("Courier New"),
+                              Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("14"))),
+                              Optional.of(ExcelColor.rgb("#123456")),
+                              Optional.of(Boolean.FALSE),
+                              Optional.of(Boolean.TRUE)))),
                   new ExcelRichTextRun(
                       " Beta",
-                      new ExcelCellFont(
-                          Boolean.TRUE,
-                          null,
-                          null,
-                          null,
-                          ExcelColor.rgb("#ABCDEF"),
-                          Boolean.TRUE,
-                          Boolean.FALSE)),
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.of(Boolean.TRUE),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of(ExcelColor.rgb("#ABCDEF")),
+                              Optional.of(Boolean.TRUE),
+                              Optional.of(Boolean.FALSE)))),
                   new ExcelRichTextRun(
                       " Delta",
-                      new ExcelCellFont(null, Boolean.FALSE, null, null, null, null, null)),
-                  new ExcelRichTextRun(" Gamma", null)));
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.of(Boolean.FALSE),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))),
+                  new ExcelRichTextRun(" Gamma", Optional.empty())));
 
       ExcelRichTextSnapshot snapshot =
           ExcelRichTextSupport.snapshot(
-              workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont());
+                  workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont())
+              .orElseThrow();
 
       assertNotNull(snapshot);
       assertEquals("Alpha Beta Delta Gamma", snapshot.plainText());
@@ -280,7 +312,7 @@ class ExcelRichTextSupportTest {
           .setRgb(ExcelRgbColorSupport.toXssfColor(workbook, "#00AA11").getARGB());
 
       ExcelRichTextSnapshot snapshot =
-          ExcelRichTextSupport.snapshot(workbook, richText, baseFont());
+          ExcelRichTextSupport.snapshot(workbook, richText, baseFont()).orElseThrow();
 
       assertNotNull(snapshot);
       assertEquals("Flags", snapshot.plainText());
@@ -303,31 +335,65 @@ class ExcelRichTextSupportTest {
           new ExcelRichText(
               List.of(
                   new ExcelRichTextRun(
-                      "Name", new ExcelCellFont(null, null, "Courier New", null, null, null, null)),
+                      "Name",
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of("Courier New"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))),
                   new ExcelRichTextRun(
                       " Size",
-                      new ExcelCellFont(
-                          null,
-                          null,
-                          null,
-                          ExcelFontHeight.fromPoints(new BigDecimal("13")),
-                          null,
-                          null,
-                          null)),
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("13"))),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))),
                   new ExcelRichTextRun(
                       " Color",
-                      new ExcelCellFont(
-                          null, null, null, null, ExcelColor.rgb("#ABCDEF"), null, null)),
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of(ExcelColor.rgb("#ABCDEF")),
+                              Optional.empty(),
+                              Optional.empty()))),
                   new ExcelRichTextRun(
                       " Underline",
-                      new ExcelCellFont(null, null, null, null, null, Boolean.FALSE, null)),
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of(Boolean.FALSE),
+                              Optional.empty()))),
                   new ExcelRichTextRun(
                       " Strike",
-                      new ExcelCellFont(null, null, null, null, null, null, Boolean.TRUE))));
+                      Optional.of(
+                          new ExcelCellFont(
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.of(Boolean.TRUE))))));
 
       ExcelRichTextSnapshot snapshot =
           ExcelRichTextSupport.snapshot(
-              workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont());
+                  workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont())
+              .orElseThrow();
 
       assertNotNull(snapshot);
       assertEquals(5, snapshot.runs().size());

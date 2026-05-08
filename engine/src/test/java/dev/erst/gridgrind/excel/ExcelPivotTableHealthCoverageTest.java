@@ -58,7 +58,8 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
 
       Object firstHandle = allPivotHandles(workbook).getFirst();
       firstPivot.getCTPivotTableDefinition().getLocation().setRef(null);
-      assertNull(invoke(controller, "rawLocationRange", Object.class, firstHandle));
+      assertEquals(
+          Optional.empty(), invoke(controller, "rawLocationRange", Object.class, firstHandle));
       assertEquals(Optional.empty(), invoke(controller, "safeLocation", Object.class, firstHandle));
 
       WorkbookAnalysis.AnalysisFinding sheetFinding =
@@ -124,29 +125,33 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
               workbook.xssfWorkbook().getSheet("Report"),
               pivot);
 
-      assertNull(invoke(controller, "cacheDefinition", XSSFPivotCacheDefinition.class, pivot));
-      IllegalArgumentException failure =
+      IllegalStateException cacheDefinitionFailure =
           assertInvocationFailure(
-              IllegalArgumentException.class,
+              IllegalStateException.class,
+              () -> invoke(controller, "cacheDefinition", Optional.class, pivot));
+      assertTrue(cacheDefinitionFailure.getMessage().contains("broken cache relation"));
+      IllegalStateException failure =
+          assertInvocationFailure(
+              IllegalStateException.class,
               () ->
                   invoke(
                       controller,
                       "requiredCacheDefinition",
                       XSSFPivotCacheDefinition.class,
                       pivot));
-      assertTrue(failure.getMessage().contains("missing its cache definition relation"));
+      assertTrue(failure.getMessage().contains("broken cache relation"));
 
-      @SuppressWarnings("unchecked")
-      List<AnalysisFindingCode> codes =
-          ((List<WorkbookAnalysis.AnalysisFinding>)
+      IllegalStateException healthFailure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () ->
                   invoke(
                       controller,
                       "pivotTableHealthFindings",
                       List.class,
                       workbook.xssfWorkbook(),
-                      handle))
-              .stream().map(WorkbookAnalysis.AnalysisFinding::code).toList();
-      assertTrue(codes.contains(AnalysisFindingCode.PIVOT_TABLE_MISSING_CACHE_DEFINITION));
+                      handle));
+      assertTrue(healthFailure.getMessage().contains("broken cache relation"));
     }
 
     try (ExcelWorkbook workbook = pivotWorkbook()) {

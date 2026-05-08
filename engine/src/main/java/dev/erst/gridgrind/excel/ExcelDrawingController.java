@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -8,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import javax.imageio.ImageIO;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
@@ -19,6 +19,7 @@ import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.XmlObject;
+import org.jspecify.annotations.Nullable;
 
 /** Package-aware drawing and media controller for read and mutation workflows. */
 final class ExcelDrawingController {
@@ -47,7 +48,7 @@ final class ExcelDrawingController {
   }
 
   List<ExcelDrawingObjectSnapshot> drawingObjects(
-      XSSFSheet sheet, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     List<ExcelDrawingObjectSnapshot> snapshots = new ArrayList<>();
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
@@ -66,7 +67,7 @@ final class ExcelDrawingController {
     return charts(sheet, null);
   }
 
-  List<ExcelChartSnapshot> charts(XSSFSheet sheet, ExcelFormulaRuntime formulaRuntime) {
+  List<ExcelChartSnapshot> charts(XSSFSheet sheet, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
@@ -89,18 +90,18 @@ final class ExcelDrawingController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireNonBlank(objectName, "objectName");
 
-    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
     boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
-    if (located != null && signatureLine) {
+    if (located.isPresent() && signatureLine) {
       throw ambiguousObjectName(sheet, objectName);
     }
-    if (located == null) {
+    if (located.isEmpty()) {
       if (signatureLine) {
         throw noBinaryPayloadException(sheet, objectName);
       }
       throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
     }
-    XSSFShape shape = located.shape();
+    XSSFShape shape = located.orElseThrow().shape();
     if (shape instanceof XSSFPicture picture) {
       return picturePayload(objectName, picture);
     }
@@ -125,9 +126,10 @@ final class ExcelDrawingController {
             ExcelPicturePoiBridge.toPoiPictureType(definition.format()));
     XSSFPicture picture = drawing.createPicture(anchor, pictureIndex);
     picture.getCTPicture().getNvPicPr().getCNvPr().setName(definition.name());
-    if (definition.description() != null) {
-      picture.getCTPicture().getNvPicPr().getCNvPr().setDescr(definition.description());
-    }
+    definition
+        .description()
+        .ifPresent(
+            description -> picture.getCTPicture().getNvPicPr().getCNvPr().setDescr(description));
   }
 
   void setChart(XSSFSheet sheet, ExcelChartDefinition definition) {
@@ -135,7 +137,9 @@ final class ExcelDrawingController {
   }
 
   void setChart(
-      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition definition,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -161,25 +165,25 @@ final class ExcelDrawingController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    Integer preparedShapeType =
-        definition.kind() == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
-            ? shapeType(definition.presetGeometryToken())
-            : null;
     deleteNamedObjectIfPresent(sheet, definition.name());
     XSSFDrawing drawing = sheet.createDrawingPatriarch();
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         toPoiAnchor(drawing, definition.anchor());
-    if (definition.kind() == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE) {
-      org.apache.poi.xssf.usermodel.XSSFSimpleShape shape = drawing.createSimpleShape(anchor);
-      shape.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());
-      shape.setShapeType(Objects.requireNonNull(preparedShapeType));
-      if (definition.text() != null) {
-        shape.setText(definition.text());
+    switch (definition) {
+      case ExcelShapeDefinition.SimpleShape simpleShape -> {
+        int resolvedShapeType = shapeType(simpleShape.presetGeometryToken());
+        org.apache.poi.xssf.usermodel.XSSFSimpleShape shape = drawing.createSimpleShape(anchor);
+        shape.getCTShape().getNvSpPr().getCNvPr().setName(simpleShape.name());
+        shape.setShapeType(resolvedShapeType);
+        simpleShape.text().ifPresent(shape::setText);
+        return;
       }
-      return;
+      case ExcelShapeDefinition.Connector connector -> {
+        org.apache.poi.xssf.usermodel.XSSFConnector poiConnector = drawing.createConnector(anchor);
+        poiConnector.getCTConnector().getNvCxnSpPr().getCNvPr().setName(connector.name());
+        return;
+      }
     }
-    org.apache.poi.xssf.usermodel.XSSFConnector connector = drawing.createConnector(anchor);
-    connector.getCTConnector().getNvCxnSpPr().getCNvPr().setName(definition.name());
   }
 
   void setEmbeddedObject(XSSFSheet sheet, ExcelEmbeddedObjectDefinition definition) {
@@ -218,9 +222,9 @@ final class ExcelDrawingController {
     requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
-    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
     boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
-    if (located != null && signatureLine) {
+    if (located.isPresent() && signatureLine) {
       throw ambiguousObjectName(sheet, objectName);
     }
     if (signatureLine) {
@@ -251,13 +255,13 @@ final class ExcelDrawingController {
   void deleteDrawingObject(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireNonBlank(objectName, "objectName");
-    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
     boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
-    if (located != null && signatureLine) {
+    if (located.isPresent() && signatureLine) {
       throw ambiguousObjectName(sheet, objectName);
     }
-    if (located != null) {
-      deleteLocatedShape(sheet, located);
+    if (located.isPresent()) {
+      deleteLocatedShape(sheet, located.orElseThrow());
       return;
     }
     if (signatureLineController.deleteIfPresent(sheet, objectName)) {
@@ -275,7 +279,7 @@ final class ExcelDrawingController {
   }
 
   private ExcelDrawingObjectSnapshot snapshot(
-      XSSFDrawing drawing, XSSFShape shape, ExcelFormulaRuntime formulaRuntime) {
+      XSSFDrawing drawing, XSSFShape shape, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelDrawingSnapshotSupport.snapshot(drawing, shape, formulaRuntime);
   }
 
@@ -318,9 +322,9 @@ final class ExcelDrawingController {
   }
 
   private void deleteNamedShapeIfPresent(XSSFSheet sheet, String objectName) {
-    LocatedShape located = optionalLocatedShape(sheet, objectName);
-    if (located != null) {
-      deleteLocatedShape(sheet, located);
+    Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
+    if (located.isPresent()) {
+      deleteLocatedShape(sheet, located.orElseThrow());
     }
   }
 
@@ -334,12 +338,12 @@ final class ExcelDrawingController {
     cleanupEmptyDrawingPatriarch(sheet);
   }
 
-  org.apache.poi.openxml4j.opc.PackagePart oleObjectPart(
+  Optional<org.apache.poi.openxml4j.opc.PackagePart> oleObjectPart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     return relatedInternalPart(sheetPart(objectData), objectData.getOleObject().getId());
   }
 
-  org.apache.poi.openxml4j.opc.PackagePart previewImagePart(
+  Optional<org.apache.poi.openxml4j.opc.PackagePart> previewImagePart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     return ExcelDrawingBinarySupport.previewImagePart(objectData);
   }
@@ -365,7 +369,7 @@ final class ExcelDrawingController {
     ExcelDrawingRemovalSupport.cleanupPackagePartIfUnused(pkg, partName);
   }
 
-  org.apache.poi.openxml4j.opc.PackagePart relatedInternalPart(
+  Optional<org.apache.poi.openxml4j.opc.PackagePart> relatedInternalPart(
       org.apache.poi.openxml4j.opc.PackagePart sourcePart, String relationshipId) {
     return ExcelDrawingBinarySupport.relatedInternalPart(sourcePart, relationshipId);
   }
@@ -377,11 +381,11 @@ final class ExcelDrawingController {
   }
 
   LocatedShape requiredLocatedShape(XSSFSheet sheet, String objectName) {
-    LocatedShape located = optionalLocatedShape(sheet, objectName);
-    if (located == null) {
+    Optional<LocatedShape> located = optionalLocatedShape(sheet, objectName);
+    if (located.isEmpty()) {
       throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
     }
-    return located;
+    return located.orElseThrow();
   }
 
   private IllegalArgumentException ambiguousObjectName(XSSFSheet sheet, String objectName) {
@@ -402,10 +406,10 @@ final class ExcelDrawingController {
             + "' does not expose a binary payload");
   }
 
-  private LocatedShape optionalLocatedShape(XSSFSheet sheet, String objectName) {
+  private Optional<LocatedShape> optionalLocatedShape(XSSFSheet sheet, String objectName) {
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
-      return null;
+      return Optional.empty();
     }
     XSSFShape matchedShape = null;
     XmlObject matchedShapeXml = null;
@@ -425,8 +429,13 @@ final class ExcelDrawingController {
       matchedShapeXml = shapeXml(shape);
     }
     return matchedShape == null
-        ? null
-        : new LocatedShape(drawing, matchedShape, matchedShapeXml, parentAnchor(matchedShapeXml));
+        ? Optional.empty()
+        : Optional.of(
+            new LocatedShape(
+                drawing,
+                matchedShape,
+                matchedShapeXml,
+                parentAnchor(matchedShapeXml).orElse(null)));
   }
 
   static RasterDimensions rasterDimensions(byte[] bytes) {
@@ -446,7 +455,7 @@ final class ExcelDrawingController {
     NUMERIC
   }
 
-  record CellScalar(CellScalarKind kind, String text, double number) {
+  record CellScalar(CellScalarKind kind, @Nullable String text, double number) {
     CellScalar {
       Objects.requireNonNull(kind, "kind must not be null");
       if (kind == CellScalarKind.STRING) {
@@ -473,12 +482,13 @@ final class ExcelDrawingController {
     return ExcelDrawingAnchorSupport.behavior(editAs);
   }
 
-  String previewSheetRelationId(
+  Optional<String> previewSheetRelationId(
       org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject oleObject) {
     return ExcelDrawingBinarySupport.previewSheetRelationId(oleObject);
   }
 
-  String previewDrawingRelationId(org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
+  Optional<String> previewDrawingRelationId(
+      org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     return ExcelDrawingBinarySupport.previewDrawingRelationId(objectData);
   }
 
@@ -486,7 +496,7 @@ final class ExcelDrawingController {
     return ExcelDrawingAnchorSupport.shapeXml(shape);
   }
 
-  XmlObject parentAnchor(XmlObject shapeXml) {
+  Optional<XmlObject> parentAnchor(@Nullable XmlObject shapeXml) {
     return ExcelDrawingAnchorSupport.parentAnchor(shapeXml);
   }
 
@@ -526,18 +536,18 @@ final class ExcelDrawingController {
     return value;
   }
 
-  String nullIfBlank(String value) {
-    return ExcelDrawingBinarySupport.nullIfBlank(value);
+  Optional<String> blankAsOptional(String value) {
+    return ExcelDrawingBinarySupport.blankAsOptional(value);
   }
 
-  String firstNonBlank(String first, String second) {
+  Optional<String> firstNonBlank(String first, String second) {
     return ExcelDrawingBinarySupport.firstNonBlank(first, second);
   }
 
   void updateAnchorInPlace(
       XSSFSheet sheet,
       String objectName,
-      XmlObject parentAnchor,
+      @Nullable XmlObject parentAnchor,
       ExcelDrawingAnchor.TwoCell anchor) {
     ExcelDrawingAnchorSupport.updateAnchorInPlace(sheet, objectName, parentAnchor, anchor);
   }
@@ -579,9 +589,12 @@ final class ExcelDrawingController {
   }
 
   record LocatedShape(
-      XSSFDrawing drawing, XSSFShape shape, XmlObject shapeXml, XmlObject parentAnchor) {}
+      XSSFDrawing drawing,
+      XSSFShape shape,
+      @Nullable XmlObject shapeXml,
+      @Nullable XmlObject parentAnchor) {}
 
-  record RasterDimensions(Integer widthPixels, Integer heightPixels) {
+  record RasterDimensions(@Nullable Integer widthPixels, @Nullable Integer heightPixels) {
     static RasterDimensions none() {
       return new RasterDimensions(null, null);
     }

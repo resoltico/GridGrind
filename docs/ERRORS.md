@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: ERRORS
 updated: "2026-05-01"
 route:
@@ -274,7 +274,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
-| `IO_ERROR` | File could not be read or written — wrong path, missing permissions, disk full, or file locked. |
+| `IO_ERROR` | File could not be read or written — wrong path, missing permissions, disk full, or file locked. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)
 
@@ -337,6 +337,12 @@ The `context` block provides structured metadata about where the failure occurre
 | `jsonLine` | Line number in the request payload (transport errors only). |
 | `jsonColumn` | Column number in the request payload (transport errors only). |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |
+
+When a command exits non-zero but successfully writes its JSON response or doctor report to
+`--response <path>`, GridGrind also prints one stderr line naming that file. Treat stderr as the
+pointer and the JSON file as the structured diagnostic payload. When GridGrind cannot write the
+requested `--response <path>`, it prints one stderr line explaining the write failure and then
+streams the structured failure response to stdout instead.
 
 ## Index-Based Validation Messages
 

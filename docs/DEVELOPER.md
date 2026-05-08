@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DEVELOPER
 updated: "2026-05-01"
 route:
@@ -58,15 +58,17 @@ excel-foundation/
             executor-facing tests, and downstream adapters.
 
 engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
-            workbook mutation rules, and factual workbook inspection.
+            workbook mutation rules, factual workbook inspection, and the
+            narrow exported request-execution API used by downstream
+            transports.
 
 contract/   Canonical GridGrind contract model. Owns the public request and
             response types, catalog metadata, JSON codecs, and transport-
             neutral contract shapes.
 
-executor/   The only execution bridge from the canonical contract into the
-            workbook engine. Owns plan validation, request execution, and
-            parity-facing integration.
+executor/   Verification-only parity and execution-regression surface.
+            Exercises the engine runtime directly but does not own the live
+            request-execution boundary.
 
 authoring-java/
             Fluent Java authoring layer. Owns selector builders, authored
@@ -75,29 +77,32 @@ authoring-java/
             into the module boundary.
 
 cli/        Thin transport adapter. Reads a contract request from stdin
-            or --request file, delegates to executor, writes the response,
-            and exposes help/template/catalog discovery commands.
+            or --request file, delegates to engine's exported API, writes
+            the response, and exposes help/template/catalog discovery
+            commands.
 ```
 
 The CLI is not the core. The foundation is `excel-foundation` plus `engine` plus `contract` plus
 `executor`. The `authoring-java` API and the CLI are two downstream surfaces on top of that
 foundation. Future adapters (HTTP, gRPC, library embedding) can be added without touching
-`excel-foundation`, `engine`, `contract`, or `executor`.
+`excel-foundation`, `engine`, or `contract`.
 
 The enforced dependency graph is:
 
 ```text
 dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
 
-`authoring-java` and `cli` do not depend on `engine`, `authoring-java` also does not depend on
-`executor`, and `executor` is the only module allowed to bridge from the canonical contract into
-workbook execution. `excel-foundation` is the only shared Excel-domain surface allowed to sit
-below both `contract` and `engine`, so the public contract no longer imports POI-backed engine
-internals just to reuse enums or limits. Shared Java build conventions enable
-`modularity.inferModulePath`, so the `module-info.java` descriptors in all six product modules
+`authoring-java` does not depend on `engine`, and `cli` depends only on the `engine` module's
+exported `dev.erst.gridgrind.engine.api` seam instead of the internal runtime package. The
+`executor` Gradle project exists only as a parity and regression-verification surface; the live
+request executor and workbook-to-contract bridge are inside `engine`, and the exported API is now
+narrower than the internal runtime namespace. `excel-foundation` is the only shared Excel-domain
+surface allowed to sit below both `contract` and `engine`, so the public contract no longer
+imports POI-backed engine internals just to reuse enums or limits. Shared Java build conventions enable
+`modularity.inferModulePath`, so the `module-info.java` descriptors in the product modules
 participate in normal local builds, CI, and release verification.
 
 The highest-churn architecture seams are intentionally split too:
@@ -141,7 +146,8 @@ Jackson design, not a GridGrind version-skew bug.
 ## Commands
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
-explicit-import verification, Error Prone, PMD, tests, and JaCoCo coverage verification for
+explicit-import verification, Error Prone with NullAway on `@NullMarked` production packages,
+PMD, tests, and JaCoCo coverage verification for
 `engine`, `contract`, `executor`, `authoring-java`, and `cli`. `./check.sh` is the supported
 whole-repo deterministic gate: root `check` plus `coverage`, nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
@@ -198,9 +204,10 @@ overlay contract in `.devcontainer/devcontainer.json`.
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
 ./gradlew :cli:run --args="--print-example BUDGET"
+./gradlew :cli:run --args="--print-example-catalog"
 ./gradlew :cli:run --args="--print-task-catalog"
 ./gradlew :cli:run --args="--print-task-plan DASHBOARD"
-./gradlew :cli:run --args='--print-goal-plan "monthly sales dashboard with charts"'
+./gradlew :cli:run --args='--print-task-keyword-match "monthly sales dashboard with charts"'
 ./scripts/docker-smoke.sh
 ./scripts/validate-devcontainer.sh
 ```
@@ -209,20 +216,23 @@ The protocol catalog is generated from the contract record signatures. If you ch
 records, nested tagged unions, or plain input records, keep the field-shape output authoritative:
 every field should still publish required/optional status and the exact nested/plain group
 accepted by polymorphic inputs. Contract-bearing discovery prose such as low-memory mode limits,
-formula parse boundaries, workbook-health summaries, and CLI help labels now live in the
-contract-owned metadata layer instead of thin downstream string copies. `GridGrindContractText`
-owns stable wording, `GridGrindExecutionModeMetadata` owns the structured EVENT_READ and
-STREAMING_WRITE contract rules plus their validation messages, and `CliSurface` owns the help
-section labels, key/value entries, flags, docs links, and example routing that `cli` renders.
-`GridGrindTaskCatalog` owns the high-level task descriptors, `GridGrindTaskPlanner` derives
-starter request scaffolds from those descriptors, and `GridGrindGoalPlanner` turns one freeform
-goal into ranked task candidates without hardcoding scenario permutations. Request linting is
-also part of that authoritative public surface now: `executor` owns `GridGrindRequestDoctor`, and
-the packaged-artifact verifier exercises the emitted doctor report instead of relying only on
-module-local tests. The build now also includes a contract-owned public-surface linter that fails
-if docs, generated help, catalog summaries, shipped examples, or shared runtime diagnostics
-mention a canonical mutation, assertion, or inspection id that is not registered in the catalog
-vocabulary.
+formula parse boundaries, and workbook-health summaries now live in the canonical contract layer
+instead of thin downstream string copies. `GridGrindContractText` owns stable wording and
+`GridGrindExecutionModeMetadata` owns the structured EVENT_READ and STREAMING_WRITE contract
+rules plus their validation messages. CLI-specific presentation lives downstream in `cli`:
+`CliSurface` and `GridGrindCliHelp` own the help section labels, key/value entries, flags,
+docs links, and example routing that the transport renders. `cli` owns the high-level task
+descriptors, while `cli` also owns
+`GridGrindTaskPlanner` and `GridGrindTaskKeywordMatcher` as downstream discovery policy: starter request
+scaffolds are derived generically from the published task descriptors, and English keyword query ranking
+runs from the CLI-owned planner rather than hidden contract-side search metadata. Request linting
+is also part of that authoritative public surface now: `engine` exports a narrow request-doctor
+API alongside the request executor, and the packaged-artifact verifier exercises the emitted
+doctor report instead of relying only on module-local tests. The build now also includes
+contract-side and CLI-side public-surface
+linters that fail if docs, generated help, catalog summaries, shipped examples, or shared runtime
+diagnostics mention a canonical mutation, assertion, or inspection id that is not registered in
+the catalog vocabulary.
 The catalog build path still uses a small internal
 `contract.catalog.gather` seam for the two cases that genuinely benefit from Stream Gatherers:
 ordered uniqueness and reflected field-metadata expansion. The built-in request template remains
@@ -247,7 +257,7 @@ Release automation is split across three workflows:
   builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
   config that both the exact version tag and `latest` are publicly pullable and runnable, then
   black-box verifies the published CLI help, protocol catalog, task catalog, task planner,
-  goal planner, and doctor surfaces from both tags before pruning older container package
+  task keyword matcher, and doctor surfaces from both tags before pruning older container package
   versions.
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
   surface.
@@ -287,6 +297,7 @@ just to make smoke tests pass.
 
 Compile-time static analysis. These checks are promoted to errors (build fails):
 
+- `NullAway` on `@NullMarked` production packages, using JSpecify nullness
 - `BadImport`
 - `BoxedPrimitiveConstructor`
 - `CheckReturnValue`
@@ -378,7 +389,7 @@ boundary: GridGrind does not emit a partially written workbook file.
 
 ## Workflow Fixtures
 
-The shipped JSON fixtures are generated from the contract-owned example registry in
+The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
 the artifact-native built-in examples directly with `gridgrind --print-example <id>`. The full

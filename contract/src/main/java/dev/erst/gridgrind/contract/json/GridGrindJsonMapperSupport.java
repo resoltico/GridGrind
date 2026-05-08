@@ -1,7 +1,12 @@
 package dev.erst.gridgrind.contract.json;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.InspectionResult;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.core.StreamReadConstraints;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
@@ -33,9 +38,13 @@ final class GridGrindJsonMapperSupport {
     }
   }
 
-  static InvalidRequestException requestTooLarge(Throwable cause) {
+  static InvalidRequestException requestTooLarge(@Nullable Throwable cause) {
     return new InvalidRequestException(
-        GridGrindContractText.requestDocumentTooLargeMessage(), null, null, null, cause);
+        GridGrindContractText.requestDocumentTooLargeMessage(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        java.util.Optional.empty(),
+        cause);
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory) {
@@ -49,6 +58,10 @@ final class GridGrindJsonMapperSupport {
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .enable(SerializationFeature.INDENT_OUTPUT)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(MutationAction.class))
+            .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(Assertion.class))
+            .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(InspectionQuery.class))
+            .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(InspectionResult.class))
             .withCoercionConfig(
                 LogicalType.Integer,
                 config -> config.setCoercion(CoercionInputShape.Float, CoercionAction.Fail));

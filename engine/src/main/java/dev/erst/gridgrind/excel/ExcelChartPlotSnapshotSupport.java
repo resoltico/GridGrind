@@ -3,12 +3,15 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTArea3DChart;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTAreaChart;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTBar3DChart;
@@ -36,7 +39,9 @@ final class ExcelChartPlotSnapshotSupport {
   }
 
   static List<ExcelChartSnapshot.Plot> snapshotPlots(
-      XSSFChart chart, List<XDDFChartData> chartData, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart,
+      List<XDDFChartData> chartData,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return snapshotPlots(chart, chart.getGraphicFrame(), chartData, formulaRuntime);
   }
 
@@ -44,7 +49,7 @@ final class ExcelChartPlotSnapshotSupport {
       XSSFChart chart,
       XSSFGraphicFrame graphicFrame,
       List<XDDFChartData> chartData,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (chartData.isEmpty()) {
       return List.of(
           new ExcelChartSnapshot.Unsupported("UNKNOWN", "Chart contains no parsed plots"));
@@ -60,18 +65,21 @@ final class ExcelChartPlotSnapshotSupport {
       } catch (RuntimeException exception) {
         plots.add(
             new ExcelChartSnapshot.Unsupported(
-                ExcelChartPoiBridge.plotTypeToken(data), exception.getMessage()));
+                ExcelChartPoiBridge.plotTypeToken(data),
+                Objects.requireNonNullElse(
+                    exception.getMessage(),
+                    "Chart plot family is outside the current modeled chart contract.")));
       }
     }
     return List.copyOf(plots);
   }
 
   private static ExcelChartSnapshot.Plot snapshotPlot(
-      XSSFSheet contextSheet,
+      @Nullable XSSFSheet contextSheet,
       PlotAreaState state,
       PlotCursor cursor,
       XDDFChartData data,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return switch (data) {
       case org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData areaData -> {
         CTAreaChart areaChart = state.plotArea().getAreaChartArray(cursor.nextArea());
@@ -89,7 +97,7 @@ final class ExcelChartPlotSnapshotSupport {
             truthy(areaChart.getVaryColors()),
             ExcelChartPoiBridge.fromGroupingTokenOrDefault(
                 areaChart.isSetGrouping() ? areaChart.getGrouping().getVal().toString() : null),
-            areaData.getGapDepth(),
+            Optional.ofNullable(areaData.getGapDepth()),
             snapshotAxes(state.axesById(), areaChart.getAxIdList()),
             ExcelChartSeriesSnapshotSupport.snapshotArea3DSeries(
                 contextSheet, areaData, formulaRuntime));
@@ -101,8 +109,8 @@ final class ExcelChartPlotSnapshotSupport {
             ExcelChartPoiBridge.fromPoiBarDirection(barData.getBarDirection()),
             ExcelChartPoiBridge.fromBarGroupingTokenOrDefault(
                 barChart.isSetGrouping() ? barChart.getGrouping().getVal().toString() : null),
-            barData.getGapWidth(),
-            barData.getOverlap() == null ? null : Integer.valueOf(barData.getOverlap()),
+            Optional.ofNullable(barData.getGapWidth()),
+            Optional.ofNullable(barData.getOverlap()).map(Integer::valueOf),
             snapshotAxes(state.axesById(), barChart.getAxIdList()),
             ExcelChartSeriesSnapshotSupport.snapshotBarSeries(
                 contextSheet, barData, formulaRuntime));
@@ -114,9 +122,11 @@ final class ExcelChartPlotSnapshotSupport {
             ExcelChartPoiBridge.fromPoiBarDirection(barData.getBarDirection()),
             ExcelChartPoiBridge.fromBarGroupingTokenOrDefault(
                 barChart.isSetGrouping() ? barChart.getGrouping().getVal().toString() : null),
-            barData.getGapDepth(),
-            barData.getGapWidth(),
-            barChart.isSetShape() ? ExcelChartPoiBridge.fromPoiBarShape(barData.getShape()) : null,
+            Optional.ofNullable(barData.getGapDepth()),
+            Optional.ofNullable(barData.getGapWidth()),
+            barChart.isSetShape()
+                ? ExcelChartPoiBridge.fromPoiBarShape(barData.getShape())
+                : Optional.empty(),
             snapshotAxes(state.axesById(), barChart.getAxIdList()),
             ExcelChartSeriesSnapshotSupport.snapshotBar3DSeries(
                 contextSheet, barData, formulaRuntime));
@@ -126,8 +136,8 @@ final class ExcelChartPlotSnapshotSupport {
             state.plotArea().getDoughnutChartArray(cursor.nextDoughnut());
         yield new ExcelChartSnapshot.Doughnut(
             truthy(doughnutChart.getVaryColors()),
-            doughnutData.getFirstSliceAngle(),
-            doughnutData.getHoleSize(),
+            Optional.ofNullable(doughnutData.getFirstSliceAngle()),
+            Optional.ofNullable(doughnutData.getHoleSize()),
             ExcelChartSeriesSnapshotSupport.snapshotDoughnutSeries(
                 contextSheet, doughnutData, formulaRuntime));
       }
@@ -151,7 +161,7 @@ final class ExcelChartPlotSnapshotSupport {
                 lineChart.getGrouping() == null
                     ? null
                     : lineChart.getGrouping().getVal().toString()),
-            lineData.getGapDepth(),
+            Optional.ofNullable(lineData.getGapDepth()),
             snapshotAxes(state.axesById(), lineChart.getAxIdList()),
             ExcelChartSeriesSnapshotSupport.snapshotLine3DSeries(
                 contextSheet, lineData, formulaRuntime));
@@ -160,7 +170,7 @@ final class ExcelChartPlotSnapshotSupport {
         CTPieChart pieChart = state.plotArea().getPieChartArray(cursor.nextPie());
         yield new ExcelChartSnapshot.Pie(
             truthy(pieChart.getVaryColors()),
-            pieData.getFirstSliceAngle(),
+            Optional.ofNullable(pieData.getFirstSliceAngle()),
             ExcelChartSeriesSnapshotSupport.snapshotPieSeries(
                 contextSheet, pieData, formulaRuntime));
       }

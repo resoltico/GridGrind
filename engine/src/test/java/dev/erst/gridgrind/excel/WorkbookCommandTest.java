@@ -16,6 +16,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for WorkbookCommand sealed interface record construction. */
@@ -86,10 +87,12 @@ class WorkbookCommandTest {
                 new ExcelAutofilterFilterColumn(
                     0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true))));
     WorkbookSheetCommand.SetSheetProtection sheetProtection =
-        new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings(), "gridgrind");
+        new WorkbookSheetCommand.SetSheetProtection(
+            "Budget", protectionSettings(), Optional.of("gridgrind"));
     WorkbookSheetCommand.SetWorkbookProtection workbookProtection =
         new WorkbookSheetCommand.SetWorkbookProtection(
-            new ExcelWorkbookProtectionSettings(true, false, true, "book", "review"));
+            new ExcelWorkbookProtectionSettings(
+                true, false, true, Optional.of("book"), Optional.of("review")));
     WorkbookSheetCommand.ClearWorkbookProtection clearWorkbookProtection =
         new WorkbookSheetCommand.ClearWorkbookProtection();
     WorkbookTabularCommand.SetAutofilter setAutofilter =
@@ -97,25 +100,28 @@ class WorkbookCommandTest {
             "Budget",
             "A1:C4",
             criteria,
-            new ExcelAutofilterSortState(
-                "A1:C4",
-                true,
-                false,
-                java.util.Optional.empty(),
-                List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false))));
+            Optional.of(
+                new ExcelAutofilterSortState(
+                    "A1:C4",
+                    true,
+                    false,
+                    Optional.empty(),
+                    List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false)))));
 
     criteria.clear();
 
-    assertEquals("gridgrind", sheetProtection.password());
-    assertEquals("book", workbookProtection.protection().workbookPassword());
+    assertEquals("gridgrind", sheetProtection.password().orElseThrow());
+    assertEquals("book", workbookProtection.protection().workbookPassword().orElseThrow());
     assertNotNull(clearWorkbookProtection);
     assertEquals(1, setAutofilter.criteria().size());
     assertFalse(setAutofilter.criteria().getFirst().showButton());
-    assertTrue(setAutofilter.sortState().caseSensitive());
+    assertTrue(setAutofilter.sortState().orElseThrow().caseSensitive());
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings(), " "));
+        () ->
+            new WorkbookSheetCommand.SetSheetProtection(
+                "Budget", protectionSettings(), Optional.of(" ")));
   }
 
   @Test
@@ -175,8 +181,17 @@ class WorkbookCommandTest {
                     new ExcelConditionalFormattingRule.FormulaRule(
                         "A2>0",
                         true,
-                        new ExcelDifferentialStyle(
-                            "0.00", null, null, null, null, null, null, null, null))))),
+                        Optional.of(
+                            new ExcelDifferentialStyle(
+                                Optional.of("0.00"),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty())))))),
         new WorkbookFormattingCommand.ClearConditionalFormatting(
             "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
         new WorkbookTabularCommand.SetAutofilter("Budget", "A1:C4"),
@@ -200,13 +215,16 @@ class WorkbookCommandTest {
                 List.of(),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Tax", ExcelPivotDataConsolidateFunction.SUM, "Total Tax", "#,##0.00")))),
+                        "Tax",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total Tax",
+                        Optional.of("#,##0.00"))))),
         new WorkbookTabularCommand.DeletePivotTable("Budget Pivot", "Budget"),
         new WorkbookMetadataCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Budget", "B4"))),
+                ExcelNamedRangeTarget.range("Budget", "B4"))),
         new WorkbookMetadataCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
         new WorkbookCellCommand.AppendRow("Budget", values),
@@ -754,8 +772,17 @@ class WorkbookCommandTest {
                         new ExcelConditionalFormattingRule.FormulaRule(
                             "A2>0",
                             true,
-                            new ExcelDifferentialStyle(
-                                "0.00", null, null, null, null, null, null, null, null))))));
+                            Optional.of(
+                                new ExcelDifferentialStyle(
+                                    Optional.of("0.00"),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty())))))));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookFormattingCommand.SetConditionalFormatting("Budget", null));
@@ -770,8 +797,17 @@ class WorkbookCommandTest {
                         new ExcelConditionalFormattingRule.FormulaRule(
                             "A2>0",
                             true,
-                            new ExcelDifferentialStyle(
-                                "0.00", null, null, null, null, null, null, null, null))))));
+                            Optional.of(
+                                new ExcelDifferentialStyle(
+                                    Optional.of("0.00"),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty())))))));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookFormattingCommand.ClearConditionalFormatting("Budget", null));
@@ -855,23 +891,38 @@ class WorkbookCommandTest {
 
   private static ExcelDataValidationDefinition validationDefinition() {
     return new ExcelDataValidationDefinition(
-        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        new ExcelDataValidationRule.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
         true,
         false,
-        new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true),
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true));
+        Optional.of(new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true)),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true)));
   }
 
   private ExcelCellStyle defaultStyle() {
     return new ExcelCellStyle(
-        "#,##0.00",
-        new ExcelCellAlignment(
-            true, ExcelHorizontalAlignment.RIGHT, ExcelVerticalAlignment.CENTER, null, null),
-        new ExcelCellFont(true, false, null, null, null, null, null),
-        null,
-        null,
-        null);
+        Optional.of("#,##0.00"),
+        Optional.of(
+            new ExcelCellAlignment(
+                Optional.of(true),
+                Optional.of(ExcelHorizontalAlignment.RIGHT),
+                Optional.of(ExcelVerticalAlignment.CENTER),
+                Optional.empty(),
+                Optional.empty())),
+        Optional.of(
+            new ExcelCellFont(
+                Optional.of(true),
+                Optional.of(false),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private record CreatedCommands(

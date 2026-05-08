@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.io.IOException;
+import java.util.Optional;
 import org.apache.poi.xddf.usermodel.XDDFShapeProperties;
 import org.apache.poi.xddf.usermodel.chart.*;
 import org.apache.poi.xddf.usermodel.text.XDDFRunProperties;
@@ -118,15 +119,23 @@ class ExcelChartPoiBridgeTest {
         Grouping.PERCENT_STACKED,
         ExcelChartPoiBridge.toPoiGrouping(ExcelChartGrouping.PERCENT_STACKED));
 
-    assertEquals(ExcelChartBarShape.BOX, ExcelChartPoiBridge.fromPoiBarShape(Shape.BOX));
-    assertEquals(ExcelChartBarShape.CONE, ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE));
     assertEquals(
-        ExcelChartBarShape.CONE_TO_MAX, ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE_TO_MAX));
-    assertEquals(ExcelChartBarShape.CYLINDER, ExcelChartPoiBridge.fromPoiBarShape(Shape.CYLINDER));
-    assertEquals(ExcelChartBarShape.PYRAMID, ExcelChartPoiBridge.fromPoiBarShape(Shape.PYRAMID));
+        Optional.of(ExcelChartBarShape.BOX), ExcelChartPoiBridge.fromPoiBarShape(Shape.BOX));
     assertEquals(
-        ExcelChartBarShape.PYRAMID_TO_MAX,
+        Optional.of(ExcelChartBarShape.CONE), ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE));
+    assertEquals(
+        Optional.of(ExcelChartBarShape.CONE_TO_MAX),
+        ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE_TO_MAX));
+    assertEquals(
+        Optional.of(ExcelChartBarShape.CYLINDER),
+        ExcelChartPoiBridge.fromPoiBarShape(Shape.CYLINDER));
+    assertEquals(
+        Optional.of(ExcelChartBarShape.PYRAMID),
+        ExcelChartPoiBridge.fromPoiBarShape(Shape.PYRAMID));
+    assertEquals(
+        Optional.of(ExcelChartBarShape.PYRAMID_TO_MAX),
         ExcelChartPoiBridge.fromPoiBarShape(Shape.PYRAMID_TO_MAX));
+    assertEquals(Optional.empty(), ExcelChartPoiBridge.fromPoiBarShape(null));
     assertEquals(Shape.BOX, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.BOX));
     assertEquals(Shape.CONE, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.CONE));
     assertEquals(

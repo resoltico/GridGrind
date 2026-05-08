@@ -90,6 +90,8 @@ check_stage_execute() {
             run_shell_stage "${stage_id}" "${stage_label}" \
                 bash -c '
                     set -euo pipefail
+                    # shellcheck source=/dev/null
+                    source "'"${check_repo_root}"'/scripts/lib/cli-shadow-jar-support.sh"
                     shell_syntax_targets=()
                     while [[ "$1" != "--" ]]; do
                         shell_syntax_targets+=("$1")
@@ -97,7 +99,8 @@ check_stage_execute() {
                     done
                     shift
                     bash -n "${shell_syntax_targets[@]}"
-                    "'"${check_repo_root}"'/scripts/verify-cli-contract.sh" jar "'"${check_repo_root}"'/cli/build/libs/gridgrind.jar" >/dev/null
+                    cli_jar_path="$(ensure_cli_shadow_jar "'"${check_repo_root}"'")"
+                    "'"${check_repo_root}"'/scripts/verify-cli-contract.sh" jar "${cli_jar_path}" >/dev/null
                     local_script_path=""
                     for local_script_path in "$@"; do
                         bash "'"${check_repo_root}"'/${local_script_path}"

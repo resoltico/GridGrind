@@ -12,6 +12,13 @@ LICENSE-APACHE-2.0 and is also available at:
 The BSD 3-Clause License full text is included in this distribution as
 LICENSE-BSD-3-CLAUSE.
 
+The Eclipse Distribution License v. 1.0 full text is included in this
+distribution as LICENSE-EDL-1.0 and is also available at:
+  https://www.eclipse.org/org/documents/edl-v10.php
+
+The BSD 2-Clause License full text is included in this distribution as
+LICENSE-BSD-2-CLAUSE.
+
 ================================================================================
 Apache Software Foundation Components
 ================================================================================
@@ -128,6 +135,31 @@ SparseBitSet
 
   Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
 
+--------------------------------------------------------------------------------
+Woodstox Core
+  Copyright 2004- Tatu Saloranta, tatu.saloranta@iki.fi (FasterXML)
+  https://github.com/FasterXML/woodstox
+
+  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+================================================================================
+Eclipse Distribution License 1.0 Components
+================================================================================
+
+--------------------------------------------------------------------------------
+Jakarta Activation API (jakarta.activation-api)
+  Copyright (c) 1997, 2023 Oracle and/or its affiliates. All rights reserved.
+  https://github.com/jakartaee/jaf-api
+
+  Licensed under the Eclipse Distribution License v. 1.0 (see LICENSE-EDL-1.0).
+
+--------------------------------------------------------------------------------
+Jakarta XML Binding API (jakarta.xml.bind-api)
+  Copyright (c) 2018, 2023 Oracle and/or its affiliates. All rights reserved.
+  https://github.com/jakartaee/jaxb-api
+
+  Licensed under the Eclipse Distribution License v. 1.0 (see LICENSE-EDL-1.0).
+
 ================================================================================
 MIT-Licensed Components
 ================================================================================
@@ -181,6 +213,17 @@ SLF4J API (slf4j-api)
   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
+
+================================================================================
+BSD 2-Clause Components
+================================================================================
+
+--------------------------------------------------------------------------------
+Stax2 API
+  Copyright 2010- FasterXML.com
+  https://github.com/FasterXML/stax2-api
+
+  Licensed under the BSD 2-Clause License (see LICENSE-BSD-2-CLAUSE).
 
 ================================================================================
 BSD 3-Clause Components

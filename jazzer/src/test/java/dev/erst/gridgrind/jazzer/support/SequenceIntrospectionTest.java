@@ -38,7 +38,7 @@ import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
@@ -76,7 +76,6 @@ import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -210,7 +209,7 @@ class SequenceIntrospectionTest {
                 new StructuredMutationAction.SetNamedRange(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    new NamedRangeTarget("Budget", "B4")))));
+                    NamedRangeTarget.range("Budget", "B4")))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         mutationKind(
@@ -225,11 +224,11 @@ class SequenceIntrospectionTest {
                 new StructuredMutationAction.SetDataValidation(
                     new DataValidationInput(
                         new DataValidationRuleInput.WholeNumber(
-                            ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                            ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
                         false,
                         false,
-                        null,
-                        null)))));
+                        Optional.empty(),
+                        Optional.empty())))));
     assertEquals(
         "CLEAR_DATA_VALIDATIONS",
         mutationKind(
@@ -248,16 +247,17 @@ class SequenceIntrospectionTest {
                             new ConditionalFormattingRuleInput.FormulaRule(
                                 "A2>0",
                                 true,
-                                new DifferentialStyleInput(
-                                    "0.00",
-                                    true,
-                                    null,
-                                    null,
-                                    Optional.empty(),
-                                    null,
-                                    null,
-                                    Optional.empty(),
-                                    Optional.empty()))))))));
+                                Optional.of(
+                                    new DifferentialStyleInput(
+                                        Optional.of("0.00"),
+                                        Optional.of(true),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty())))))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         mutationKind(
@@ -306,7 +306,8 @@ class SequenceIntrospectionTest {
             mutate(
                 new WorkbookSelector.Current(),
                 new WorkbookMutationAction.SetWorkbookProtection(
-                    new WorkbookProtectionInput(true, false, false, null, null)))));
+                    new WorkbookProtectionInput(
+                        true, false, false, Optional.empty(), Optional.empty())))));
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
         mutationKind(
@@ -432,7 +433,7 @@ class SequenceIntrospectionTest {
                 new ExcelNamedRangeDefinition(
                     "BudgetTotal",
                     new ExcelNamedRangeScope.WorkbookScope(),
-                    new ExcelNamedRangeTarget("Budget", "B4")))));
+                    ExcelNamedRangeTarget.range("Budget", "B4")))));
     assertEquals(
         "DELETE_NAMED_RANGE",
         SequenceIntrospection.commandKind(
@@ -446,11 +447,11 @@ class SequenceIntrospectionTest {
                 "A2:A5",
                 new ExcelDataValidationDefinition(
                     new ExcelDataValidationRule.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
                     false,
                     false,
-                    null,
-                    null))));
+                    Optional.empty(),
+                    Optional.empty()))));
     assertEquals(
         "CLEAR_DATA_VALIDATIONS",
         SequenceIntrospection.commandKind(
@@ -467,8 +468,17 @@ class SequenceIntrospectionTest {
                         new dev.erst.gridgrind.excel.ExcelConditionalFormattingRule.FormulaRule(
                             "A2>0",
                             true,
-                            new dev.erst.gridgrind.excel.ExcelDifferentialStyle(
-                                "0.00", true, null, null, null, null, null, null, null)))))));
+                            Optional.of(
+                                new dev.erst.gridgrind.excel.ExcelDifferentialStyle(
+                                    Optional.of("0.00"),
+                                    Optional.of(true),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty(),
+                                    Optional.empty()))))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         SequenceIntrospection.commandKind(
@@ -503,7 +513,8 @@ class SequenceIntrospectionTest {
         "SET_WORKBOOK_PROTECTION",
         SequenceIntrospection.commandKind(
             new WorkbookSheetCommand.SetWorkbookProtection(
-                new ExcelWorkbookProtectionSettings(true, false, false, null, null))));
+                new ExcelWorkbookProtectionSettings(
+                    true, false, false, Optional.empty(), Optional.empty()))));
     assertEquals(
         "CLEAR_WORKBOOK_PROTECTION",
         SequenceIntrospection.commandKind(new WorkbookSheetCommand.ClearWorkbookProtection()));
@@ -533,19 +544,19 @@ class SequenceIntrospectionTest {
                 inspect(
                     "summary",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetWorkbookSummary()),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 inspect(
                     "workbook-protection",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetWorkbookProtection()),
+                    new WorkbookIntrospectionQuery.GetWorkbookProtection()),
                 inspect(
                     "custom-xml-mappings",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetCustomXmlMappings()),
+                    new WorkbookIntrospectionQuery.GetCustomXmlMappings()),
                 inspect(
                     "custom-xml-export",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.ExportCustomXmlMapping(
+                    new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                         new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(
                             1L, "BudgetMap"),
                         true,
@@ -553,70 +564,75 @@ class SequenceIntrospectionTest {
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
-                    new InspectionQuery.GetCells()),
+                    new SheetIntrospectionQuery.GetCells()),
                 inspect(
                     "array-formulas",
                     new SheetSelector.ByName("Budget"),
-                    new InspectionQuery.GetArrayFormulas()),
+                    new SheetIntrospectionQuery.GetArrayFormulas()),
                 inspect(
                     "drawing-objects",
                     new DrawingObjectSelector.AllOnSheet("Budget"),
-                    new InspectionQuery.GetDrawingObjects()),
+                    new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
                 inspect(
                     "drawing-payload",
                     new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
-                    new InspectionQuery.GetDrawingObjectPayload()),
+                    new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()),
                 inspect(
                     "charts",
                     new ChartSelector.AllOnSheet("Budget"),
-                    new InspectionQuery.GetCharts()),
+                    new WorkbookAssetIntrospectionQuery.GetCharts()),
                 inspect(
                     "pivots",
                     new PivotTableSelector.ByNames(List.of("OpsPivot")),
-                    new InspectionQuery.GetPivotTables()),
+                    new WorkbookAssetIntrospectionQuery.GetPivotTables()),
                 inspect(
                     "validations",
                     new RangeSelector.AllOnSheet("Budget"),
-                    new InspectionQuery.GetDataValidations()),
+                    new SheetIntrospectionQuery.GetDataValidations()),
                 inspect(
                     "conditional-formatting",
                     new RangeSelector.AllOnSheet("Budget"),
-                    new InspectionQuery.GetConditionalFormatting()),
+                    new SheetIntrospectionQuery.GetConditionalFormatting()),
                 inspect(
                     "autofilters",
                     new SheetSelector.ByName("Budget"),
-                    new InspectionQuery.GetAutofilters()),
-                inspect("tables", new TableSelector.All(), new InspectionQuery.GetTables()),
+                    new SheetIntrospectionQuery.GetAutofilters()),
                 inspect(
-                    "formulas", new SheetSelector.All(), new InspectionQuery.GetFormulaSurface()),
+                    "tables",
+                    new TableSelector.All(),
+                    new WorkbookAssetIntrospectionQuery.GetTables()),
+                inspect(
+                    "formulas",
+                    new SheetSelector.All(),
+                    new InspectionSurfaceQuery.GetFormulaSurface()),
                 inspect(
                     "data-validation-health",
                     new SheetSelector.All(),
-                    new InspectionQuery.AnalyzeDataValidationHealth()),
+                    new InspectionAnalysisQuery.AnalyzeDataValidationHealth()),
                 inspect(
                     "conditional-formatting-health",
                     new SheetSelector.All(),
-                    new InspectionQuery.AnalyzeConditionalFormattingHealth()),
+                    new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth()),
                 inspect(
                     "autofilter-health",
                     new SheetSelector.All(),
-                    new InspectionQuery.AnalyzeAutofilterHealth()),
+                    new InspectionAnalysisQuery.AnalyzeAutofilterHealth()),
                 inspect(
                     "table-health",
                     new TableSelector.All(),
-                    new InspectionQuery.AnalyzeTableHealth()),
+                    new InspectionAnalysisQuery.AnalyzeTableHealth()),
                 inspect(
                     "pivot-table-health",
                     new PivotTableSelector.All(),
-                    new InspectionQuery.AnalyzePivotTableHealth()),
+                    new InspectionAnalysisQuery.AnalyzePivotTableHealth()),
                 inspect(
                     "named-range-health",
                     new NamedRangeSelector.All(),
-                    new InspectionQuery.AnalyzeNamedRangeHealth()),
+                    new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()),
                 inspect(
                     "workbook-findings",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.AnalyzeWorkbookFindings())));
+                    new InspectionAnalysisQuery.AnalyzeWorkbookFindings())));
 
     assertEquals(22, inspectionCount(request));
     assertEquals(1L, inspectionKinds(request).get("GET_WORKBOOK_SUMMARY"));
@@ -653,7 +669,7 @@ class SequenceIntrospectionTest {
                 inspect(
                     "security",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetPackageSecurity())));
+                    new WorkbookIntrospectionQuery.GetPackageSecurity())));
 
     assertEquals(1, inspectionCount(request));
     assertEquals(1L, inspectionKinds(request).get("GET_PACKAGE_SECURITY"));
@@ -708,16 +724,12 @@ class SequenceIntrospectionTest {
         new PictureDataInput(
             ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64)),
         protocolAnchor(),
-        TextSourceInput.inline("Queue preview"));
+        Optional.of(TextSourceInput.inline("Queue preview")));
   }
 
   private static ShapeInput protocolShapeInput() {
-    return new ShapeInput(
-        "OpsShape",
-        ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-        protocolAnchor(),
-        "rect",
-        TextSourceInput.inline("Queue"));
+    return new ShapeInput.SimpleShape(
+        "OpsShape", protocolAnchor(), "rect", Optional.of(TextSourceInput.inline("Queue")));
   }
 
   private static EmbeddedObjectInput protocolEmbeddedObjectInput() {
@@ -745,18 +757,18 @@ class SequenceIntrospectionTest {
                 true,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 protocolCategoryAxes(),
                 List.of(
                     new ChartSeriesInput(
                         new ChartTitleInput.Text(TextSourceInput.inline("Actual")),
                         new ChartDataSourceInput.Reference("Budget!$A$2:$A$4"),
                         new ChartDataSourceInput.Reference("Budget!$B$2:$B$4"),
-                        null,
-                        null,
-                        null,
-                        null)))));
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))));
   }
 
   private static PivotTableInput protocolPivotTableInput() {
@@ -770,7 +782,10 @@ class SequenceIntrospectionTest {
         List.of(),
         List.of(
             new PivotTableInput.DataField(
-                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+                "Actual",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Actual",
+                Optional.empty())));
   }
 
   private static ExcelDrawingAnchor.TwoCell excelAnchor() {
@@ -784,12 +799,12 @@ class SequenceIntrospectionTest {
         new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         ExcelPictureFormat.PNG,
         excelAnchor(),
-        "Queue preview");
+        Optional.of("Queue preview"));
   }
 
   private static ExcelShapeDefinition excelShapeDefinition() {
-    return new ExcelShapeDefinition(
-        "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, excelAnchor(), "rect", "Queue");
+    return new ExcelShapeDefinition.SimpleShape(
+        "OpsShape", excelAnchor(), "rect", Optional.of("Queue"));
   }
 
   private static ExcelEmbeddedObjectDefinition excelEmbeddedObjectDefinition() {
@@ -815,8 +830,8 @@ class SequenceIntrospectionTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }
 
   private static ExcelChartDefinition excelChartDefinition() {
@@ -832,18 +847,18 @@ class SequenceIntrospectionTest {
                 true,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 excelCategoryAxes(),
                 List.of(
                     new ExcelChartDefinition.Series(
                         new ExcelChartDefinition.Title.Text("Actual"),
                         new ExcelChartDefinition.DataSource.Reference("Budget!$A$2:$A$4"),
                         new ExcelChartDefinition.DataSource.Reference("Budget!$B$2:$B$4"),
-                        null,
-                        null,
-                        null,
-                        null)))));
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))));
   }
 
   private static List<ChartAxisInput> protocolCategoryAxes() {
@@ -885,6 +900,9 @@ class SequenceIntrospectionTest {
         List.of(),
         List.of(
             new ExcelPivotTableDefinition.DataField(
-                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+                "Actual",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Actual",
+                Optional.empty())));
   }
 }

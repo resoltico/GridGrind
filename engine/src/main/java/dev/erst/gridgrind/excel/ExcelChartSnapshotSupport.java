@@ -11,6 +11,7 @@ import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTBoolean;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 import org.w3c.dom.NamedNodeMap;
@@ -32,7 +33,7 @@ final class ExcelChartSnapshotSupport {
   static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartSnapshot snapshot = snapshotChart(chart, graphicFrame, formulaRuntime);
     boolean supported =
         snapshot.plots().stream().noneMatch(ExcelChartSnapshot.Unsupported.class::isInstance);
@@ -50,7 +51,9 @@ final class ExcelChartSnapshotSupport {
   }
 
   static ExcelChartSnapshot snapshotChart(
-      XSSFChart chart, XSSFGraphicFrame graphicFrame, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart,
+      XSSFGraphicFrame graphicFrame,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     List<XDDFChartData> chartData = chart.getChartSeries();
     List<ExcelChartSnapshot.Plot> plots =
         ExcelChartPlotSnapshotSupport.snapshotPlots(chart, graphicFrame, chartData, formulaRuntime);
@@ -64,7 +67,8 @@ final class ExcelChartSnapshotSupport {
         plots);
   }
 
-  static XSSFChart chartForGraphicFrame(XSSFDrawing drawing, XSSFGraphicFrame graphicFrame) {
+  static @Nullable XSSFChart chartForGraphicFrame(
+      XSSFDrawing drawing, @Nullable XSSFGraphicFrame graphicFrame) {
     return optionalChartForGraphicFrame(drawing, graphicFrame).orElse(null);
   }
 
@@ -73,12 +77,14 @@ final class ExcelChartSnapshotSupport {
   }
 
   static ExcelChartSnapshot.Title snapshotTitle(
-      XSSFChart chart, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return snapshotTitle(chart, chart.getGraphicFrame(), formulaRuntime);
   }
 
   static ExcelChartSnapshot.Title snapshotTitle(
-      XSSFChart chart, XSSFGraphicFrame graphicFrame, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart,
+      @Nullable XSSFGraphicFrame graphicFrame,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (!chart.getCTChart().isSetTitle()) {
       return new ExcelChartSnapshot.Title.None();
     }
@@ -98,15 +104,15 @@ final class ExcelChartSnapshotSupport {
   }
 
   static String cachedTitleText(
-      XSSFChart chart, String formula, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart, String formula, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return cachedTitleText(chart, chart.getGraphicFrame(), formula, formulaRuntime);
   }
 
   static String cachedTitleText(
       XSSFChart chart,
-      XSSFGraphicFrame graphicFrame,
+      @Nullable XSSFGraphicFrame graphicFrame,
       String formula,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     Optional<String> resolvedText =
         optionalResolvedTitleFormulaText(chart, graphicFrame, formula, formulaRuntime);
     if (resolvedText.isPresent()) {
@@ -129,16 +135,16 @@ final class ExcelChartSnapshotSupport {
   }
 
   static String resolvedTitleFormulaText(
-      XSSFChart chart, String formula, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart, String formula, @Nullable ExcelFormulaRuntime formulaRuntime) {
     return optionalResolvedTitleFormulaText(chart, chart.getGraphicFrame(), formula, formulaRuntime)
         .orElse("");
   }
 
   static Optional<String> optionalResolvedTitleFormulaText(
       XSSFChart chart,
-      XSSFGraphicFrame graphicFrame,
+      @Nullable XSSFGraphicFrame graphicFrame,
       String formula,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     try {
       XSSFGraphicFrame resolvedGraphicFrame =
           graphicFrame != null ? graphicFrame : chart == null ? null : chart.getGraphicFrame();
@@ -154,12 +160,6 @@ final class ExcelChartSnapshotSupport {
       if (recoverableTitleFormulaResolutionFailure(exception)) {
         return Optional.empty();
       }
-      LOGGER.log(
-          System.Logger.Level.WARNING,
-          "Failed to resolve chart title formula '" + formula + "'; using cached or empty title",
-          exception);
-      return Optional.empty();
-    } catch (RuntimeException exception) {
       LOGGER.log(
           System.Logger.Level.WARNING,
           "Failed to resolve chart title formula '" + formula + "'; using cached or empty title",
@@ -188,7 +188,9 @@ final class ExcelChartSnapshotSupport {
   }
 
   static ExcelChartSnapshot.Title snapshotSeriesTitle(
-      XSSFSheet contextSheet, CTSerTx title, ExcelFormulaRuntime formulaRuntime) {
+      @Nullable XSSFSheet contextSheet,
+      @Nullable CTSerTx title,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (title == null) {
       return new ExcelChartSnapshot.Title.None();
     }
@@ -202,7 +204,7 @@ final class ExcelChartSnapshotSupport {
                   ExcelChartSourceSupport.resolveSingleCellReference(
                       contextSheet, title.getStrRef().getF(), "Series title formula"),
                   formulaRuntime));
-        } catch (RuntimeException ignored) {
+        } catch (IllegalArgumentException ignored) {
           // Fall back to the embedded chart cache when the formula cannot be resolved live.
         }
       }
@@ -242,7 +244,7 @@ final class ExcelChartSnapshotSupport {
       XSSFSheet contextSheet,
       String referenceFormula,
       org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartSeriesSnapshotSupport.resolvedOrCachedReferenceValues(
         contextSheet, referenceFormula, source, formulaRuntime);
   }
@@ -259,13 +261,14 @@ final class ExcelChartSnapshotSupport {
     return List.copyOf(tokens);
   }
 
-  static XSSFSheet contextSheet(XSSFChart chart, XSSFGraphicFrame graphicFrame) {
+  static @Nullable XSSFSheet contextSheet(
+      @Nullable XSSFChart chart, @Nullable XSSFGraphicFrame graphicFrame) {
     XSSFGraphicFrame resolvedGraphicFrame =
         graphicFrame != null ? graphicFrame : chart == null ? null : chart.getGraphicFrame();
     return contextSheet(resolvedGraphicFrame).orElse(null);
   }
 
-  static Optional<XSSFSheet> contextSheet(XSSFGraphicFrame graphicFrame) {
+  static Optional<XSSFSheet> contextSheet(@Nullable XSSFGraphicFrame graphicFrame) {
     if (graphicFrame == null) {
       return Optional.empty();
     }
@@ -273,7 +276,7 @@ final class ExcelChartSnapshotSupport {
   }
 
   private static String resolvedChartName(XSSFGraphicFrame graphicFrame) {
-    String name = ExcelChartSourceSupport.nullIfBlank(graphicFrame.getName());
+    String name = ExcelChartSourceSupport.blankAsOptional(graphicFrame.getName()).orElse(null);
     return name != null ? name : "Chart-" + graphicFrame.getId();
   }
 
@@ -317,13 +320,13 @@ final class ExcelChartSnapshotSupport {
     return Optional.empty();
   }
 
-  static Optional<NodeList> chartRelationNodes(XSSFGraphicFrame graphicFrame) {
+  static Optional<NodeList> chartRelationNodes(@Nullable XSSFGraphicFrame graphicFrame) {
     return chartRelationNodes(
         graphicFrame == null ? null : graphicFrame.getCTGraphicalObjectFrame());
   }
 
   static Optional<NodeList> chartRelationNodes(
-      org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame
+      org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.@Nullable CTGraphicalObjectFrame
           graphicFrame) {
     if (graphicFrame == null) {
       return Optional.empty();
@@ -361,7 +364,7 @@ final class ExcelChartSnapshotSupport {
   }
 
   private static Optional<XSSFChart> optionalChartForGraphicFrame(
-      XSSFDrawing drawing, XSSFGraphicFrame graphicFrame) {
+      XSSFDrawing drawing, @Nullable XSSFGraphicFrame graphicFrame) {
     if (graphicFrame == null) {
       return Optional.empty();
     }

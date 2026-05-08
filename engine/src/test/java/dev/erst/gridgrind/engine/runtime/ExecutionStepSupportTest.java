@@ -1,0 +1,44 @@
+package dev.erst.gridgrind.engine.runtime;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.contract.query.*;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+
+/** Coverage for executor-owned step helpers inside the engine runtime. */
+class ExecutionStepSupportTest {
+  @Test
+  void eventReadRejectsSurfaceQueriesBeforeTouchingTheWorkbookPath() {
+    WorkbookExecutionEngine workbookEngine = new WorkbookExecutionEngine();
+    SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(workbookEngine);
+    ExecutionStepSupport support =
+        new ExecutionStepSupport(
+            workbookEngine,
+            selectorResolver,
+            new AssertionExecutor(workbookEngine, selectorResolver),
+            (prefix, suffix) -> {
+              throw new AssertionError("temp file creation should not happen for this branch");
+            });
+    InspectionStep inspectionStep =
+        new InspectionStep(
+            "formula-surface",
+            new SheetSelector.All(),
+            new InspectionSurfaceQuery.GetFormulaSurface());
+
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> support.executeEventInspection(Path.of("unused.xlsx"), inspectionStep));
+
+    assertEquals(
+        GridGrindExecutionModeMetadata.eventRead()
+            .unsupportedQueryMessage(inspectionStep.query().queryType()),
+        failure.getMessage());
+  }
+}

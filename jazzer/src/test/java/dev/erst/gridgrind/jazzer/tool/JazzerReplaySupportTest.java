@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for replay-time classification of raw protocol-request fuzz inputs. */
@@ -164,7 +165,8 @@ class JazzerReplaySupportTest {
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
     assertEquals("InvalidRequestException", expectedInvalid.invalidKind());
-    assertEquals("Missing required field 'digestAlgorithm'", expectedInvalid.message());
+    assertEquals(
+        Optional.of("Missing required field 'digestAlgorithm'"), expectedInvalid.message());
     assertEquals(
         new ProtocolRequestDetails(
             input.length,
@@ -190,7 +192,7 @@ class JazzerReplaySupportTest {
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
     assertEquals("SheetNotFoundException", expectedInvalid.invalidKind());
-    assertEquals("Sheet does not exist: W", expectedInvalid.message());
+    assertEquals(Optional.of("Sheet does not exist: W"), expectedInvalid.message());
     assertEquals(
         new XlsxRoundTripDetails(
             83,
@@ -247,7 +249,8 @@ class JazzerReplaySupportTest {
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
     assertEquals("IllegalArgumentException", expectedInvalid.invalidKind());
-    assertEquals("protection must set at least one attribute", expectedInvalid.message());
+    assertEquals(
+        Optional.of("protection must set at least one attribute"), expectedInvalid.message());
     assertEquals(
         new ProtocolWorkflowDetails(
             314,

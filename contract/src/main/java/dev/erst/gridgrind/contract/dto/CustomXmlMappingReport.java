@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.dto;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual workbook custom-XML mapping metadata returned by inspection. */
 public record CustomXmlMappingReport(
@@ -15,11 +16,11 @@ public record CustomXmlMappingReport(
     boolean append,
     boolean preserveSortAfLayout,
     boolean preserveFormat,
-    String schemaNamespace,
-    String schemaLanguage,
-    String schemaReference,
-    String schemaXml,
-    CustomXmlDataBindingReport dataBinding,
+    @Nullable String schemaNamespace,
+    @Nullable String schemaLanguage,
+    @Nullable String schemaReference,
+    @Nullable String schemaXml,
+    @Nullable CustomXmlDataBindingReport dataBinding,
     List<CustomXmlLinkedCellReport> linkedCells,
     List<CustomXmlLinkedTableReport> linkedTables) {
   public CustomXmlMappingReport {
@@ -45,7 +46,7 @@ public record CustomXmlMappingReport(
     linkedTables = copyValues(linkedTables, "linkedTables");
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
+  private static String requireNonBlank(@Nullable String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Residual constructor and validation coverage for rebuilt XLSX value objects and commands. */
@@ -30,11 +31,11 @@ class ExcelResidualValidationCoverageTest {
             false,
             true,
             true,
-            null,
-            null,
-            null,
-            "<xsd:schema/>",
-            null,
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of("<xsd:schema/>"),
+            Optional.empty(),
             List.of(linkedCell),
             List.of(linkedTable));
     ExcelChartDefinition.DataSource.StringLiteral stringCategories =
@@ -99,12 +100,24 @@ class ExcelResidualValidationCoverageTest {
         IllegalArgumentException.class,
         () ->
             new ExcelChartDefinition.Series(
-                null, stringCategories, numericValues, null, null, (short) 1, null));
+                null,
+                stringCategories,
+                numericValues,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelChartDefinition.Series(
-                null, stringCategories, numericValues, null, null, (short) 73, null));
+                null,
+                stringCategories,
+                numericValues,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 73),
+                Optional.empty()));
     assertInstanceOf(
         ExcelChartDefinition.Title.None.class,
         new ExcelChartDefinition.Series(null, stringCategories, numericValues).title());
@@ -112,53 +125,70 @@ class ExcelResidualValidationCoverageTest {
         IllegalArgumentException.class,
         () ->
             new ExcelChartDefinition.Series(
-                null, stringCategories, numericValues, null, null, null, -1L));
+                null,
+                stringCategories,
+                numericValues,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1L)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelChartSnapshot.Series(
                 new ExcelChartSnapshot.Title.Text("Sales"),
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(null, List.of("10.0")),
-                null,
-                null,
-                (short) 1,
-                null));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelChartSnapshot.Series(
                 null,
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(null, List.of("10.0"))));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(
+                    Optional.empty(), List.of("10.0"))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelChartSnapshot.Series(
                 new ExcelChartSnapshot.Title.Text("Sales"),
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(null, List.of("10.0")),
-                null,
-                null,
-                null,
-                -1L));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(-1L)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelChartSnapshot.Series(
                 new ExcelChartSnapshot.Title.Text("Sales"),
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral(null, List.of("10.0")),
-                null,
-                null,
-                (short) 73,
-                null));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.empty(), List.of("10.0")),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of((short) 73),
+                Optional.empty()));
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelSignatureLineDefinition(
-                "OpsSignature", anchor, false, null, null, null, null, null, null, null, null));
+                "OpsSignature",
+                anchor,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -172,13 +202,23 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 "one\ntwo\nthree\nfour",
                 null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelSignatureLineDefinition(
-                "OpsSignature", anchor, false, " ", "Ada", null, null, null, null, null, null));
+                "OpsSignature",
+                anchor,
+                false,
+                " ",
+                "Ada",
+                null,
+                null,
+                null,
+                null,
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -192,8 +232,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -207,8 +247,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -222,8 +262,8 @@ class ExcelResidualValidationCoverageTest {
                 " ",
                 null,
                 null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -237,8 +277,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 " ",
                 null,
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -252,8 +292,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 " ",
-                null,
-                null));
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -267,8 +307,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                ExcelPictureFormat.PNG,
-                null));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -282,8 +322,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.empty(),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,
@@ -294,8 +334,8 @@ class ExcelResidualValidationCoverageTest {
         null,
         "caption",
         null,
-        null,
-        null);
+        Optional.empty(),
+        Optional.empty());
     new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,
@@ -306,8 +346,8 @@ class ExcelResidualValidationCoverageTest {
         "ada@example.com",
         null,
         null,
-        null,
-        null);
+        Optional.empty(),
+        Optional.empty());
     new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,
@@ -318,8 +358,8 @@ class ExcelResidualValidationCoverageTest {
         null,
         null,
         null,
-        null,
-        null);
+        Optional.empty(),
+        Optional.empty());
     new ExcelSignatureLineDefinition(
         "OpsSignature",
         anchor,
@@ -330,8 +370,8 @@ class ExcelResidualValidationCoverageTest {
         "ada@example.com",
         "one\ntwo\nthree",
         null,
-        null,
-        null);
+        Optional.empty(),
+        Optional.empty());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -349,8 +389,8 @@ class ExcelResidualValidationCoverageTest {
                 "image/png",
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -367,8 +407,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -385,8 +425,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -403,8 +443,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 4L,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -421,8 +461,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 " ",
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -476,8 +516,8 @@ class ExcelResidualValidationCoverageTest {
                 "image/png",
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -494,8 +534,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -512,8 +552,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -530,8 +570,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -548,8 +588,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -566,8 +606,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 4L,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -584,8 +624,8 @@ class ExcelResidualValidationCoverageTest {
                 null,
                 null,
                 " ",
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -668,8 +708,8 @@ class ExcelResidualValidationCoverageTest {
                 " ",
                 null,
                 null,
-                null,
-                null));
+                -1,
+                -1));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -702,7 +742,7 @@ class ExcelResidualValidationCoverageTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(new byte[] {1}));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(new byte[] {1})));
   }
 }

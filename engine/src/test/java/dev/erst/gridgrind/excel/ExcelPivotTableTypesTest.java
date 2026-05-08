@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for pivot-table value objects, validation helpers, and enum mappings. */
@@ -36,15 +37,18 @@ class ExcelPivotTableTypesTest {
             List.of("Owner"),
             List.of(
                 new ExcelPivotTableDefinition.DataField(
-                    "Amount", ExcelPivotDataConsolidateFunction.SUM, null, "#,##0.00")));
+                    "Amount",
+                    ExcelPivotDataConsolidateFunction.SUM,
+                    null,
+                    Optional.of("#,##0.00"))));
 
     assertEquals("Sales Pivot 2026", definition.name());
     assertEquals("Amount", definition.dataFields().getFirst().displayName());
-    assertEquals("#,##0.00", definition.dataFields().getFirst().valueFormat());
+    assertEquals(Optional.of("#,##0.00"), definition.dataFields().getFirst().valueFormat());
     assertEquals(
         "Amount",
         new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null)
+                "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", Optional.empty())
             .displayName());
     assertThrows(
         IllegalArgumentException.class,
@@ -65,12 +69,15 @@ class ExcelPivotTableTypesTest {
                 List.of("Owner"),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Region", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+                        "Region",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "));
+                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
 
     ExcelPivotTableSnapshot.Supported supported =
         new ExcelPivotTableSnapshot.Supported(
@@ -87,7 +94,7 @@ class ExcelPivotTableTypesTest {
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Total Amount",
-                    "#,##0.00")),
+                    Optional.of("#,##0.00"))),
             true);
     ExcelPivotTableSnapshot.Unsupported unsupported =
         new ExcelPivotTableSnapshot.Unsupported(
@@ -105,7 +112,7 @@ class ExcelPivotTableTypesTest {
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "));
+                0, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.of(" ")));
   }
 
   @Test
@@ -131,15 +138,15 @@ class ExcelPivotTableTypesTest {
         NullPointerException.class,
         () ->
             new ExcelPivotTableDefinition.DataField(
-                null, ExcelPivotDataConsolidateFunction.SUM, "Total", null));
+                null, ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableDefinition.DataField(
-                " ", ExcelPivotDataConsolidateFunction.SUM, "Total", null));
+                " ", ExcelPivotDataConsolidateFunction.SUM, "Total", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPivotTableDefinition.DataField("Amount", null, "Total", null));
+        () -> new ExcelPivotTableDefinition.DataField("Amount", null, "Total", Optional.empty()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -190,7 +197,10 @@ class ExcelPivotTableTypesTest {
                 List.of("region"),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -204,7 +214,10 @@ class ExcelPivotTableTypesTest {
                 List.of(),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -218,7 +231,10 @@ class ExcelPivotTableTypesTest {
                 List.of(),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -232,7 +248,10 @@ class ExcelPivotTableTypesTest {
                 List.of(),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))));
 
     assertThrows(NullPointerException.class, () -> new ExcelPivotTableSelection.ByNames(null));
     assertThrows(
@@ -249,7 +268,7 @@ class ExcelPivotTableTypesTest {
     ExcelPivotTableSnapshot.Field rowField = new ExcelPivotTableSnapshot.Field(0, "Region");
     ExcelPivotTableSnapshot.DataField dataField =
         new ExcelPivotTableSnapshot.DataField(
-            3, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null);
+            3, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty());
 
     assertThrows(
         NullPointerException.class,
@@ -281,12 +300,12 @@ class ExcelPivotTableTypesTest {
         NullPointerException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                3, "Amount", ExcelPivotDataConsolidateFunction.SUM, null, null));
+                3, "Amount", ExcelPivotDataConsolidateFunction.SUM, null, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                3, "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null));
+                3, "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelPivotTableSnapshot.Unsupported("Broken Pivot", "Report", anchor, " "));
@@ -294,19 +313,25 @@ class ExcelPivotTableTypesTest {
         NullPointerException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                3, null, ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null));
+                3, null, ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                3, " ", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null));
+                3, " ", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPivotTableSnapshot.DataField(3, "Amount", null, "Total Amount", null));
+        () ->
+            new ExcelPivotTableSnapshot.DataField(
+                3, "Amount", null, "Total Amount", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelPivotTableSnapshot.DataField(
-                -1, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null));
+                -1,
+                "Amount",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                Optional.empty()));
   }
 }

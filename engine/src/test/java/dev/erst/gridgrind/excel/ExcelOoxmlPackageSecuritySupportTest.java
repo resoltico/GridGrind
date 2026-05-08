@@ -8,6 +8,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** End-to-end tests for encrypted and signed OOXML package handling. */
@@ -46,7 +47,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
       assertTrue(securityResult.security().encryption().encrypted());
-      assertEquals(ExcelOoxmlEncryptionMode.AGILE, securityResult.security().encryption().mode());
+      assertEquals(
+          Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+          securityResult.security().encryption().mode());
       assertEquals(List.of(), securityResult.security().signatures());
     }
   }
@@ -131,14 +134,15 @@ class ExcelOoxmlPackageSecuritySupportTest {
       workbook.save(
           resignedOutput,
           new ExcelOoxmlPersistenceOptions(
-              null,
-              new ExcelOoxmlSignatureOptions(
-                  signedWorkbook.pkcs12Path(),
-                  signedWorkbook.keystorePassword(),
-                  signedWorkbook.keyPassword(),
-                  signedWorkbook.alias(),
-                  ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                  "GridGrind test signature")));
+              Optional.empty(),
+              Optional.of(
+                  new ExcelOoxmlSignatureOptions(
+                      signedWorkbook.pkcs12Path(),
+                      signedWorkbook.keystorePassword(),
+                      signedWorkbook.keyPassword(),
+                      signedWorkbook.alias(),
+                      ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                      "GridGrind test signature"))));
     }
 
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));

@@ -118,9 +118,8 @@ java -jar gridgrind.jar --help
 
 ## Legal
 
-GridGrind is MIT-licensed. Its executable JAR bundles Apache POI, Jackson, Apache Log4j, Apache
-Commons, Apache XMLBeans, SparseBitSet (Apache 2.0), and CurvesAPI (BSD 3-Clause). See
-[NOTICE](NOTICE) for the complete attribution list and [PATENTS.md](PATENTS.md) for patent
-considerations.
+GridGrind is MIT-licensed. Its executable JAR bundles third-party components under Apache 2.0,
+BSD 2-Clause, BSD 3-Clause, and EDL 1.0 licenses. See [NOTICE](NOTICE) for the complete
+attribution list and [PATENTS.md](PATENTS.md) for patent considerations.
 
-[LICENSE](LICENSE) | [NOTICE](NOTICE) | [PATENTS.md](PATENTS.md) | [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0) | [LICENSE-BSD-3-CLAUSE](LICENSE-BSD-3-CLAUSE)
+[LICENSE](LICENSE) | [NOTICE](NOTICE) | [PATENTS.md](PATENTS.md) | [LICENSE-APACHE-2.0](LICENSE-APACHE-2.0) | [LICENSE-BSD-2-CLAUSE](LICENSE-BSD-2-CLAUSE) | [LICENSE-BSD-3-CLAUSE](LICENSE-BSD-3-CLAUSE) | [LICENSE-EDL-1.0](LICENSE-EDL-1.0)

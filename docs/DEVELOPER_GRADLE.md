@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-05-01"
 route:
@@ -132,8 +132,9 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202604290352`, because that line is where official Java 26
-  support landed before the next JaCoCo release
+  official JaCoCo trunk build `0.8.15.202605061138` via Maven coordinate
+  `0.8.15-20260506.113836-98`, because that line is where official Java 26 support remains ahead
+  of the next JaCoCo release
 - the shared build conventions therefore add JaCoCo's documented snapshot repository narrowly for
   `org.jacoco` artifacts instead of widening the whole build to general snapshot resolution
 - do not "simplify" that repo wiring away unless JaCoCo Java 26 support is available in a normal

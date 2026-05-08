@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -53,30 +54,39 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertTrue(ExcelSheet.shouldPreview(CellType.BLANK, (short) 0, false, true));
       assertTrue(ExcelSheet.shouldPreview(CellType.STRING, (short) 0, false, false));
 
-      assertNull(ExcelSheet.hyperlink(blankCell));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(blankCell));
       assertEquals(
-          new ExcelHyperlink.Url("https://example.com/report"), ExcelSheet.hyperlink(urlCell));
-      assertEquals(new ExcelHyperlink.Email("team@example.com"), ExcelSheet.hyperlink(emailCell));
-      assertEquals(new ExcelHyperlink.File("/tmp/report.xlsx"), ExcelSheet.hyperlink(fileCell));
-      assertEquals(new ExcelHyperlink.Document("Budget!B4"), ExcelSheet.hyperlink(documentCell));
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.NONE, "ignored"));
-      assertNull(ExcelSheet.hyperlink((HyperlinkType) null, "ignored"));
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, null));
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, " "));
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.EMAIL, "mailto:"));
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.FILE, "https://example.com/report"));
+          Optional.of(new ExcelHyperlink.Url("https://example.com/report")),
+          ExcelSheet.hyperlink(urlCell));
+      assertEquals(
+          Optional.of(new ExcelHyperlink.Email("team@example.com")),
+          ExcelSheet.hyperlink(emailCell));
+      assertEquals(
+          Optional.of(new ExcelHyperlink.File("/tmp/report.xlsx")), ExcelSheet.hyperlink(fileCell));
+      assertEquals(
+          Optional.of(new ExcelHyperlink.Document("Budget!B4")),
+          ExcelSheet.hyperlink(documentCell));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.NONE, "ignored"));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink((HyperlinkType) null, "ignored"));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.URL, null));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.URL, " "));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.EMAIL, "mailto:"));
+      assertEquals(
+          Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.FILE, "https://example.com/report"));
 
-      assertEquals(new ExcelComment("Review", "GridGrind", false), ExcelSheet.comment(commentCell));
-      assertNull(ExcelSheet.comment(blankCell));
-      assertNull(ExcelSheet.comment(missingStringCommentCell));
-      assertNull(ExcelSheet.comment(blankCommentCell));
+      assertEquals(
+          Optional.of(new ExcelComment("Review", "GridGrind", false)),
+          ExcelSheet.comment(commentCell));
+      assertEquals(Optional.empty(), ExcelSheet.comment(blankCell));
+      assertEquals(Optional.empty(), ExcelSheet.comment(missingStringCommentCell));
+      assertEquals(Optional.empty(), ExcelSheet.comment(blankCommentCell));
       Cell nullAuthorCommentCell = row.createCell(11);
       nullAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", null, false));
-      assertNull(ExcelSheet.comment(nullAuthorCommentCell));
-      assertNull(ExcelSheet.comment((String) null, "GridGrind", false));
+      assertEquals(Optional.empty(), ExcelSheet.comment(nullAuthorCommentCell));
+      assertEquals(Optional.empty(), ExcelSheet.comment((String) null, "GridGrind", false));
       Cell blankAuthorCommentCell = row.createCell(12);
       blankAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", " ", false));
-      assertNull(ExcelSheet.comment(blankAuthorCommentCell));
+      assertEquals(Optional.empty(), ExcelSheet.comment(blankAuthorCommentCell));
 
       assertEquals(HyperlinkType.URL, ExcelSheet.toPoi(ExcelHyperlinkType.URL));
       assertEquals(HyperlinkType.EMAIL, ExcelSheet.toPoi(ExcelHyperlinkType.EMAIL));
@@ -117,15 +127,15 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       comment.setVisible(true);
       cell.setCellComment(comment);
 
-      ExcelCommentSnapshot snapshot = ExcelSheet.commentSnapshot(cell);
+      ExcelCommentSnapshot snapshot = ExcelSheet.commentSnapshot(cell).orElseThrow();
 
       assertEquals("Hi there", snapshot.text());
       assertEquals("GridGrind", snapshot.author());
-      assertEquals(new ExcelCommentAnchorSnapshot(0, 0, 3, 3), snapshot.anchor());
-      assertNotNull(snapshot.runs());
-      assertEquals(2, snapshot.runs().runs().size());
-      assertEquals("Hi ", snapshot.runs().runs().get(0).text());
-      assertEquals("there", snapshot.runs().runs().get(1).text());
+      assertEquals(new ExcelCommentAnchorSnapshot(0, 0, 3, 3), snapshot.anchor().orElseThrow());
+      assertTrue(snapshot.runs().isPresent());
+      assertEquals(2, snapshot.runs().orElseThrow().runs().size());
+      assertEquals("Hi ", snapshot.runs().orElseThrow().runs().get(0).text());
+      assertEquals("there", snapshot.runs().orElseThrow().runs().get(1).text());
     }
   }
 
@@ -146,26 +156,27 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       Cell nullAuthorCell = row.createCell(5);
       nullAuthorCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", null, false));
 
-      assertNull(ExcelSheet.commentSnapshot((Cell) null));
-      assertNull(ExcelSheet.commentSnapshot((Comment) null));
-      assertNull(ExcelSheet.commentSnapshot(blankCell));
-      assertNull(ExcelSheet.commentSnapshot(emptyStringCell));
-      assertNull(ExcelSheet.commentSnapshot(blankAuthorCell.getCellComment()));
-      assertNull(ExcelSheet.commentSnapshot(blankTextCell.getCellComment()));
-      assertNull(ExcelSheet.commentSnapshot(nullAuthorCell.getCellComment()));
+      assertTrue(ExcelSheet.commentSnapshot((Cell) null).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot((Comment) null).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(blankCell).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(emptyStringCell).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(blankAuthorCell.getCellComment()).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(blankTextCell.getCellComment()).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(nullAuthorCell.getCellComment()).isEmpty());
 
       ExcelCommentSnapshot directSnapshot =
-          ExcelSheet.commentSnapshot(validCommentCell.getCellComment());
+          ExcelSheet.commentSnapshot(validCommentCell.getCellComment()).orElseThrow();
       assertEquals("Review", directSnapshot.text());
       assertEquals("GridGrind", directSnapshot.author());
       assertTrue(directSnapshot.visible());
-      assertNull(directSnapshot.runs());
+      assertTrue(directSnapshot.runs().isEmpty());
 
       ExcelCommentSnapshot noAnchorSnapshot =
           ExcelSheet.commentSnapshot(
-              commentWithoutAnchor(poiSheet, validCommentCell.getCellComment()));
+                  commentWithoutAnchor(poiSheet, validCommentCell.getCellComment()))
+              .orElseThrow();
       assertEquals("Review", noAnchorSnapshot.text());
-      assertNull(noAnchorSnapshot.anchor());
+      assertTrue(noAnchorSnapshot.anchor().isEmpty());
     }
 
     try (var poiWorkbook = new org.apache.poi.hssf.usermodel.HSSFWorkbook()) {
@@ -178,8 +189,8 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       comment.setAuthor("GridGrind");
       cell.setCellComment(comment);
 
-      assertNull(ExcelSheet.commentSnapshot(comment));
-      assertNull(ExcelSheet.commentSnapshot(cell));
+      assertTrue(ExcelSheet.commentSnapshot(comment).isEmpty());
+      assertTrue(ExcelSheet.commentSnapshot(cell).isEmpty());
     }
   }
 
@@ -324,7 +335,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
       assertEquals(3, layout.rows().size());
       assertEquals(poiSheet.getDefaultRowHeightInPoints(), layout.rows().get(1).heightPoints());
 
-      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, "example.com/report"));
+      assertEquals(Optional.empty(), ExcelSheet.hyperlink(HyperlinkType.URL, "example.com/report"));
     }
   }
 
@@ -374,18 +385,18 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
               location, HyperlinkType.NONE, "ignored", new WorkbookLocation.UnsavedWorkbook()));
     }
 
-    assertNull(ExcelSheet.hyperlink((Cell) null));
+    assertEquals(Optional.empty(), ExcelSheet.hyperlink((Cell) null));
     assertFalse(ExcelSheet.hasUsableHyperlink((org.apache.poi.ss.usermodel.Hyperlink) null));
     assertFalse(ExcelSheet.hasUsableHyperlinkType(null));
     assertFalse(ExcelSheet.hasUsableHyperlinkType(HyperlinkType.NONE));
     assertTrue(ExcelSheet.hasUsableHyperlinkType(HyperlinkType.URL));
-    assertNull(ExcelSheet.hyperlink(hyperlinkWithNullType()));
+    assertEquals(Optional.empty(), ExcelSheet.hyperlink(hyperlinkWithNullType()));
 
     assertTrue(ExcelSheet.hasMissingHyperlinkTarget(null));
     assertTrue(ExcelSheet.hasMissingHyperlinkTarget(" "));
     assertFalse(ExcelSheet.hasMissingHyperlinkTarget("Budget!A1"));
-    assertNull(ExcelSheet.comment((Cell) null));
-    assertNull(ExcelSheet.comment((Comment) null));
+    assertEquals(Optional.empty(), ExcelSheet.comment((Cell) null));
+    assertEquals(Optional.empty(), ExcelSheet.comment((Comment) null));
   }
 
   @Test

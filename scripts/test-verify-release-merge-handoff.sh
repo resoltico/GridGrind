@@ -136,32 +136,36 @@ chmod +x "${fake_bin}/git"
 run_verify_expect_success() {
     local worktree_dir=$1
     local remote_head_sha=$2
-    shift
-    shift
+    local case_name="${3:-success}"
+    shift 3
     (
         cd "${worktree_dir}"
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
         PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
             FAKE_REMOTE_MAIN_SHA="${remote_head_sha}" \
             "$@" \
-            "${verify_script}" >/dev/null
+            "${verify_script}" >"${stdout_path}" 2>"${stderr_path}"
     )
 }
 
 run_verify_expect_failure() {
     local worktree_dir=$1
     local remote_head_sha=$2
-    shift
-    shift
+    local case_name="${3:-failure}"
+    shift 3
     (
         cd "${worktree_dir}"
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
         if PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
             FAKE_REMOTE_MAIN_SHA="${remote_head_sha}" \
             "$@" \
-            "${verify_script}" >/dev/null 2>&1; then
+            "${verify_script}" >"${stdout_path}" 2>"${stderr_path}"; then
             die "verifier unexpectedly succeeded"
         fi
     )
@@ -173,6 +177,7 @@ successful_checks="$(printf 'Gate\tcompleted\tsuccess')"
 run_verify_expect_success \
     "${success_repo}" \
     "${success_sha}" \
+    success \
     env \
     FAKE_GH_CHECK_RUNS_TSV="${successful_checks}" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0
@@ -188,6 +193,7 @@ printf 'Gate\tin_progress\t\n' > "${delayed_checks_file}"
 run_verify_expect_success \
     "${delayed_repo}" \
     "${delayed_sha}" \
+    delayed \
     env \
     FAKE_GH_CHECK_RUNS_FILE="${delayed_checks_file}" \
     GRIDGRIND_RELEASE_CHECK_POLL_INTERVAL_SECONDS=1 \
@@ -198,6 +204,7 @@ readonly failure_sha="$(git -C "${failure_repo}" rev-parse HEAD)"
 run_verify_expect_failure \
     "${failure_repo}" \
     "${failure_sha}" \
+    failure \
     env \
     FAKE_GH_CHECK_RUNS_TSV="$(printf 'Gate\tcompleted\tfailure')" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0
@@ -218,6 +225,7 @@ git -C "${stale_repo}" reset --hard "${stale_local_sha}" >/dev/null
 run_verify_expect_failure \
     "${stale_repo}" \
     "${stale_remote_sha}" \
+    stale \
     env \
     FAKE_GH_CHECK_RUNS_TSV="${successful_checks}" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0

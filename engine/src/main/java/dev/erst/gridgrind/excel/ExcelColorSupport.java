@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.Objects;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 
 /** Shared mutable-workbook color conversion helpers. */
 final class ExcelColorSupport {
@@ -33,7 +34,7 @@ final class ExcelColorSupport {
     return xssfColor;
   }
 
-  static ExcelColor copyOf(ExcelColorSnapshot color) {
+  static @Nullable ExcelColor copyOf(@Nullable ExcelColorSnapshot color) {
     return color == null
         ? null
         : switch (color) {
@@ -44,9 +45,7 @@ final class ExcelColorSupport {
         };
   }
 
-  private static void applyTint(XSSFColor color, Double tint) {
-    if (tint != null) {
-      color.setTint(tint);
-    }
+  private static void applyTint(XSSFColor color, java.util.Optional<Double> tint) {
+    tint.ifPresent(color::setTint);
   }
 }

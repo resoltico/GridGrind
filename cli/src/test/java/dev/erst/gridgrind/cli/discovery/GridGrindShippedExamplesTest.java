@@ -1,0 +1,162 @@
+package dev.erst.gridgrind.cli.discovery;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+
+/** Tests for generated-example metadata validation and accessors. */
+class GridGrindShippedExamplesTest {
+  @Test
+  void shippedExampleRejectsLowerCaseDiscoveryIds() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new GridGrindShippedExamples.ShippedExample(
+                    "workbook_health",
+                    "workbook-health-request.json",
+                    "summary",
+                    GridGrindProtocolCatalog.requestTemplate()));
+
+    assertEquals("id must use upper-case discovery tokens", failure.getMessage());
+  }
+
+  @Test
+  void shippedExampleRejectsNonJsonFileNames() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new GridGrindShippedExamples.ShippedExample(
+                    "WORKBOOK_HEALTH",
+                    "workbook-health-request.txt",
+                    "summary",
+                    GridGrindProtocolCatalog.requestTemplate()));
+
+    assertEquals("fileName must end with .json", failure.getMessage());
+  }
+
+  @Test
+  void shippedExampleRejectsBlankDiscoveryFields() {
+    IllegalArgumentException blankIdFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new GridGrindShippedExamples.ShippedExample(
+                    " ",
+                    "workbook-health-request.json",
+                    "summary",
+                    GridGrindProtocolCatalog.requestTemplate()));
+    assertEquals("id must not be blank", blankIdFailure.getMessage());
+
+    IllegalArgumentException blankSummaryFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new GridGrindShippedExamples.ShippedExample(
+                    "WORKBOOK_HEALTH",
+                    "workbook-health-request.json",
+                    " ",
+                    GridGrindProtocolCatalog.requestTemplate()));
+    assertEquals("summary must not be blank", blankSummaryFailure.getMessage());
+  }
+
+  @Test
+  void shippedExampleEntryRejectsNonJsonFileNames() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ShippedExampleEntry(
+                    "WORKBOOK_HEALTH",
+                    "workbook-health-request.txt",
+                    "summary",
+                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    java.util.List.of()));
+
+    assertEquals("fileName must end with .json", failure.getMessage());
+  }
+
+  @Test
+  void shippedExampleEntryCarriesOnlyPublicSummaryFields() {
+    ShippedExampleEntry entry =
+        new ShippedExampleEntry(
+            "WORKBOOK_HEALTH",
+            "workbook-health-request.json",
+            "summary",
+            ExampleWorkspaceMode.SELF_CONTAINED,
+            java.util.List.of());
+    assertEquals("WORKBOOK_HEALTH", entry.id());
+    assertEquals("workbook-health-request.json", entry.fileName());
+    assertEquals("summary", entry.summary());
+    assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, entry.workspaceMode());
+    assertEquals(java.util.List.of(), entry.requiredPaths());
+  }
+
+  @Test
+  void shippedExampleEntryTreatsMissingRequiredPathsAsEmpty() {
+    ShippedExampleEntry entry =
+        new ShippedExampleEntry(
+            "WORKBOOK_HEALTH",
+            "workbook-health-request.json",
+            "summary",
+            ExampleWorkspaceMode.SELF_CONTAINED,
+            null);
+
+    assertEquals(java.util.List.of(), entry.requiredPaths());
+  }
+
+  @Test
+  void selfContainedAndRepositoryAssetBackedPartitionsCoverEveryBuiltInExampleExactlyOnce() {
+    Set<String> allIds =
+        GridGrindShippedExamples.examples().stream()
+            .map(GridGrindShippedExamples.ShippedExample::id)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    Set<String> selfContainedIds =
+        GridGrindShippedExamples.selfContainedExamples().stream()
+            .map(GridGrindShippedExamples.ShippedExample::id)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    Set<String> repositoryAssetIds =
+        GridGrindShippedExamples.repositoryAssetBackedExamples().stream()
+            .map(GridGrindShippedExamples.ShippedExample::id)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    Set<String> partitionIds =
+        Stream.concat(selfContainedIds.stream(), repositoryAssetIds.stream())
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+
+    assertEquals(allIds, partitionIds);
+    assertTrue(
+        GridGrindShippedExamples.repositoryAssetBackedExamples().stream()
+            .map(GridGrindShippedExamples::requirementsFor)
+            .allMatch(entry -> !entry.requiredPaths().isEmpty()));
+  }
+
+  @Test
+  void internalCatalogEntryAndExampleRequirementsGuardsStayDefensive() {
+    IllegalStateException missingRequirementsFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                GridGrindShippedExamples.requirementsFor(
+                    new GridGrindShippedExamples.ShippedExample(
+                        "NO_REQUIREMENTS",
+                        "no-requirements.json",
+                        "summary",
+                        GridGrindProtocolCatalog.requestTemplate())));
+    assertEquals(
+        "Missing shipped-example requirements for NO_REQUIREMENTS",
+        missingRequirementsFailure.getMessage());
+
+    GridGrindShippedExamples.ExampleRequirements requirements =
+        new GridGrindShippedExamples.ExampleRequirements(ExampleWorkspaceMode.SELF_CONTAINED, null);
+    assertEquals(java.util.List.of(), requirements.requiredPaths());
+  }
+}

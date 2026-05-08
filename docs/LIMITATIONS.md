@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: LIMITATIONS
 updated: "2026-05-01"
 route:
@@ -433,7 +433,7 @@ product-owned `INVALID_REQUEST` message.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `zoomPercent must be between 10 and 400 inclusive: {n}` |
 | **Applies to** | `SET_SHEET_ZOOM` |
-| **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `GridGrindLayoutSurfaceReports.SheetLayoutReport` |
+| **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `SheetLayoutReport` |
 | **UX** | `--help` Limits section; `SET_SHEET_ZOOM` catalog summary |
 
 Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up

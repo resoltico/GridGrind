@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-05-01"
 route:
@@ -23,7 +23,7 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
 | `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 45 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production contract-plus-executor layer | Yes | Yes | 11 |
-| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
+| `engine-command-sequence` | `WorkbookExecutionEngine.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 26 |
 | `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 91 total across harnesses |
 
@@ -107,7 +107,7 @@ What it does not cover:
 
 Surface:
 - ordered `WorkbookCommand` sequences generated from raw bytes
-- direct `WorkbookCommandExecutor.apply(...)`
+- direct `WorkbookExecutionEngine.apply(...)`
 - workbook structural invariants
 - hyperlink, comment, named-range, data-validation, table, autofilter, and formula-lifecycle
   command execution paths

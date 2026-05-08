@@ -575,6 +575,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   void fallsBackToStdoutWhenResponsePathCannotBeWritten() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-response-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -583,11 +584,18 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
     GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
 
     assertEquals(1, exitCode);
+    assertEquals(
+        "Could not write response file "
+            + responseDirectory.toAbsolutePath()
+            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
@@ -595,6 +603,40 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(
         java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
         writeResponseContext(failure).responsePath());
+  }
+
+  @Test
+  void parseArgumentFailuresWriteStructuredResponsesToResponsePathAndPointStderrAtIt()
+      throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-parse-error-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--bogus-flag", "--response", responsePath.toString()},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class,
+            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+
+    assertEquals(2, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(
+        "GridGrind wrote the response to "
+            + responsePath.toAbsolutePath()
+            + "; inspect that file for failure."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
+    assertEquals("Unknown argument: --bogus-flag", failure.problem().message());
   }
 
   @Test

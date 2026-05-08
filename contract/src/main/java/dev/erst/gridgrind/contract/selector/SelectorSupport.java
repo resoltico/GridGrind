@@ -38,7 +38,8 @@ final class SelectorSupport {
       return ProtocolDefinedNameValidation.validateName(value);
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException(
-          prefixedValidationMessage(fieldName, exception.getMessage()), exception);
+          prefixedValidationMessage(fieldName, Objects.toString(exception.getMessage(), "")),
+          exception);
     }
   }
 
@@ -48,7 +49,8 @@ final class SelectorSupport {
       return ExcelPivotTableNaming.validateName(value);
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException(
-          prefixedValidationMessage(fieldName, exception.getMessage()), exception);
+          prefixedValidationMessage(fieldName, Objects.toString(exception.getMessage(), "")),
+          exception);
     }
   }
 
@@ -57,7 +59,8 @@ final class SelectorSupport {
       return ProtocolCellAddressValidation.validateAddress(value);
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException(
-          prefixedValidationMessage(fieldName, exception.getMessage()), exception);
+          prefixedValidationMessage(fieldName, Objects.toString(exception.getMessage(), "")),
+          exception);
     }
   }
 

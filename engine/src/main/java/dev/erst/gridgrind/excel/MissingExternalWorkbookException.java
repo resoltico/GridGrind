@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import org.jspecify.annotations.Nullable;
+
 /** Signals that formula evaluation required an external workbook that was missing or unbound. */
 public final class MissingExternalWorkbookException extends IllegalArgumentException
     implements FormulaException {
@@ -8,14 +10,14 @@ public final class MissingExternalWorkbookException extends IllegalArgumentExcep
   private final String sheetName;
   private final String address;
   private final String formula;
-  private final String workbookName;
+  private final @Nullable String workbookName;
 
   /** Creates the exception for one missing external workbook reference. */
   public MissingExternalWorkbookException(
       String sheetName,
       String address,
       String formula,
-      String workbookName,
+      @Nullable String workbookName,
       String message,
       Throwable cause) {
     super(message, cause);
@@ -41,7 +43,7 @@ public final class MissingExternalWorkbookException extends IllegalArgumentExcep
   }
 
   /** Returns the external workbook name referenced by the formula. */
-  public String workbookName() {
+  public @Nullable String workbookName() {
     return workbookName;
   }
 }

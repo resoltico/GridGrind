@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Resolves defined-name formulas into typed GridGrind range targets when normalization is possible.
@@ -43,7 +44,7 @@ public final class ExcelNamedRangeTargets {
               : new CellReference(firstCell.getRow(), firstCell.getCol()).formatAsString()
                   + ":"
                   + new CellReference(lastCell.getRow(), lastCell.getCol()).formatAsString();
-      return Optional.of(new ExcelNamedRangeTarget(sheetName, range));
+      return Optional.of(ExcelNamedRangeTarget.range(sheetName, range));
     } catch (RuntimeException exception) {
       return Optional.empty();
     }
@@ -69,7 +70,8 @@ public final class ExcelNamedRangeTargets {
     return firstReference + ":" + secondReference.substring(secondBangIndex + 1);
   }
 
-  private static String resolveSheetName(AreaReference areaReference, ExcelNamedRangeScope scope) {
+  private static @Nullable String resolveSheetName(
+      AreaReference areaReference, ExcelNamedRangeScope scope) {
     String sheetName = areaReference.getFirstCell().getSheetName();
     if (sheetName != null) {
       return sheetName;

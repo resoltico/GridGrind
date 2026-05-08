@@ -7,6 +7,7 @@ import org.apache.poi.openxml4j.opc.PackagePartName;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.openxml4j.opc.TargetMode;
+import org.jspecify.annotations.Nullable;
 
 /** Shared package-relationship traversal and cleanup helpers for OOXML package maintenance. */
 final class ExcelPackageRelationshipSupport {
@@ -20,7 +21,7 @@ final class ExcelPackageRelationshipSupport {
   }
 
   static boolean partIsStillReferenced(
-      Iterable<PackagePart> packageParts, PackagePartName partName) {
+      Iterable<PackagePart> packageParts, @Nullable PackagePartName partName) {
     if (partName == null) {
       return false;
     }
@@ -56,7 +57,7 @@ final class ExcelPackageRelationshipSupport {
     }
   }
 
-  static void cleanupPackagePartIfUnused(OPCPackage pkg, PackagePartName partName) {
+  static void cleanupPackagePartIfUnused(OPCPackage pkg, @Nullable PackagePartName partName) {
     if (partName == null) {
       return;
     }

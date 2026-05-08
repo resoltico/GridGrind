@@ -328,9 +328,10 @@ final class ExcelSheetCellReadSupport {
               metadata,
               cell.getStringCellValue(),
               ExcelRichTextSupport.snapshot(
-                  xssfSheet().getWorkbook(),
-                  (XSSFRichTextString) cell.getRichStringCellValue(),
-                  style.font()));
+                      xssfSheet().getWorkbook(),
+                      (XSSFRichTextString) cell.getRichStringCellValue(),
+                      style.font())
+                  .orElse(null));
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
               address, "NUMBER", displayValue, style, metadata, cell.getNumericCellValue());

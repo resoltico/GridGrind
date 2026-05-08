@@ -8,7 +8,8 @@ import org.junit.jupiter.api.Test;
 class ExcelNamedRangeTargetTest {
   @Test
   void canonicalizesReversedRanges() {
-    ExcelNamedRangeTarget target = new ExcelNamedRangeTarget("Budget", "B4:A1");
+    ExcelNamedRangeTarget.Range target =
+        (ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Budget", "B4:A1");
 
     assertEquals("A1:B4", target.range());
     assertEquals("Budget!$A$1:$B$4", target.refersToFormula());
@@ -16,28 +17,29 @@ class ExcelNamedRangeTargetTest {
 
   @Test
   void rendersAbsoluteNamedRangeFormulas() {
-    assertEquals("B4", new ExcelNamedRangeTarget("Budget", "B4").range());
-    assertEquals("Budget!$B$4", new ExcelNamedRangeTarget("Budget", "B4").refersToFormula());
-    assertEquals("B4:C4", new ExcelNamedRangeTarget("Budget", "B4:C4").range());
     assertEquals(
-        "Budget!$B$4:$C$4", new ExcelNamedRangeTarget("Budget", "B4:C4").refersToFormula());
+        "B4", ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Budget", "B4")).range());
+    assertEquals("Budget!$B$4", ExcelNamedRangeTarget.range("Budget", "B4").refersToFormula());
     assertEquals(
-        "Budget!$B$4:$C$5", new ExcelNamedRangeTarget("Budget", "B4:C5").refersToFormula());
+        "B4:C4",
+        ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Budget", "B4:C4")).range());
+    assertEquals(
+        "Budget!$B$4:$C$4", ExcelNamedRangeTarget.range("Budget", "B4:C4").refersToFormula());
+    assertEquals(
+        "Budget!$B$4:$C$5", ExcelNamedRangeTarget.range("Budget", "B4:C5").refersToFormula());
   }
 
   @Test
   void validatesNamedRangeTargetInputs() {
-    assertThrows(NullPointerException.class, () -> new ExcelNamedRangeTarget(null, "A1"));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelNamedRangeTarget(" ", "A1"));
-    assertThrows(NullPointerException.class, () -> new ExcelNamedRangeTarget("Budget", null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelNamedRangeTarget("Budget", " "));
+    assertThrows(NullPointerException.class, () -> ExcelNamedRangeTarget.range(null, "A1"));
+    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range(" ", "A1"));
+    assertThrows(NullPointerException.class, () -> ExcelNamedRangeTarget.range("Budget", null));
+    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range("Budget", " "));
+    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.formula(" "));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelNamedRangeTarget(null, "A1", "SUM(Budget!A1)"));
+        InvalidRangeAddressException.class, () -> ExcelNamedRangeTarget.range("Budget", "A1:"));
+    assertDoesNotThrow(() -> ExcelNamedRangeTarget.range("A".repeat(31), "A1"));
     assertThrows(
-        InvalidRangeAddressException.class, () -> new ExcelNamedRangeTarget("Budget", "A1:"));
-    assertDoesNotThrow(() -> new ExcelNamedRangeTarget("A".repeat(31), "A1"));
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelNamedRangeTarget("A".repeat(32), "A1"));
+        IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range("A".repeat(32), "A1"));
   }
 }

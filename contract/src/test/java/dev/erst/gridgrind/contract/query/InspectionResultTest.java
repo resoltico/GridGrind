@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.query;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
@@ -10,8 +11,6 @@ import dev.erst.gridgrind.contract.dto.CellFillReport;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
@@ -37,8 +36,8 @@ class InspectionResultTest {
             minimalStyle(),
             java.util.Optional.empty(),
             java.util.Optional.empty()));
-    InspectionResult.CellsResult result =
-        new InspectionResult.CellsResult("cells", "Budget", cells);
+    SheetInspectionResult.CellsResult result =
+        new SheetInspectionResult.CellsResult("cells", "Budget", cells);
 
     cells.clear();
 
@@ -47,39 +46,37 @@ class InspectionResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new InspectionResult.WorkbookProtectionResult(
+            new WorkbookInspectionResult.WorkbookProtectionResult(
                 " ", new WorkbookProtectionReport(false, false, false, false, false)));
   }
 
   @Test
   void analysisResultsRetainReportsAndRejectBlankStepIds() {
-    GridGrindAnalysisReports.AnalysisSummaryReport summary =
-        new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 0, 1);
-    GridGrindAnalysisReports.AnalysisFindingReport finding =
-        new GridGrindAnalysisReports.AnalysisFindingReport(
+    AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 0, 0, 1);
+    AnalysisFindingReport finding =
+        new AnalysisFindingReport(
             AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
             AnalysisSeverity.INFO,
             "Volatile formula",
             "Formula uses NOW().",
-            new GridGrindAnalysisReports.AnalysisLocationReport.Workbook(),
+            new AnalysisLocationReport.Workbook(),
             List.of("NOW()"));
-    InspectionResult.WorkbookFindingsResult findings =
-        new InspectionResult.WorkbookFindingsResult(
-            "workbook-findings",
-            new GridGrindAnalysisReports.WorkbookFindingsReport(summary, List.of(finding)));
+    WorkbookAnalysisResult.WorkbookFindingsResult findings =
+        new WorkbookAnalysisResult.WorkbookFindingsResult(
+            "workbook-findings", new WorkbookFindingsReport(summary, List.of(finding)));
 
     assertEquals(1, findings.analysis().summary().totalCount());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new InspectionResult.WorkbookFindingsResult(" ", findings.analysis()));
+        () -> new WorkbookAnalysisResult.WorkbookFindingsResult(" ", findings.analysis()));
     assertThrows(
         NullPointerException.class,
-        () -> new InspectionResult.HyperlinkHealthResult("hyperlink-health", null));
+        () -> new WorkbookAnalysisResult.HyperlinkHealthResult("hyperlink-health", null));
   }
 
-  private static GridGrindWorkbookSurfaceReports.CellStyleReport minimalStyle() {
+  private static CellStyleReport minimalStyle() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
+    return new CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),

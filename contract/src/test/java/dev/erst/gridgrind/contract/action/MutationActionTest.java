@@ -13,6 +13,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for action payload validation independent of step target selection. */
@@ -52,7 +53,9 @@ class MutationActionTest {
     assertEquals(
         "BudgetTotal",
         new StructuredMutationAction.SetNamedRange(
-                "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"))
+                "BudgetTotal",
+                new NamedRangeScope.Workbook(),
+                NamedRangeTarget.range("Budget", "B4"))
             .name());
 
     assertThrows(
@@ -63,7 +66,7 @@ class MutationActionTest {
         IllegalArgumentException.class,
         () ->
             new StructuredMutationAction.SetNamedRange(
-                " ", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4")));
+                " ", new NamedRangeScope.Workbook(), NamedRangeTarget.range("Budget", "B4")));
 
     assertThrows(
         NullPointerException.class,
@@ -73,7 +76,8 @@ class MutationActionTest {
     assertThrows(
         NullPointerException.class, () -> new WorkbookMutationAction.GroupColumns((Boolean) null));
     assertThrows(
-        NullPointerException.class, () -> new StructuredMutationAction.SetAutofilter(null, null));
+        NullPointerException.class,
+        () -> new StructuredMutationAction.SetAutofilter(null, Optional.empty()));
   }
 
   @Test
@@ -179,8 +183,13 @@ class MutationActionTest {
         assertThrows(NullPointerException.class, () -> MutationAction.Validation.copyRows(null))
             .getMessage());
     assertEquals(
-        java.util.Arrays.asList((List<CellInput>) null),
-        MutationAction.Validation.copyRows(java.util.Arrays.asList((List<CellInput>) null)));
+        "rows must not contain null rows",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    MutationAction.Validation.copyRows(
+                        java.util.Arrays.asList((List<CellInput>) null)))
+            .getMessage());
     MutationAction.Validation.requireDistinct(List.of("a", "b"), "sheetNames");
     assertEquals(
         List.of("Budget", "Ops"),
@@ -256,7 +265,7 @@ class MutationActionTest {
                     new StructuredMutationAction.SetAutofilter(
                         java.util.Arrays.asList(
                             (dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput) null),
-                        null))
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "values must not be null",

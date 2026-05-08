@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.63.0"
+version: "0.64.0"
 domain: LEGAL
-updated: "2026-04-25"
+updated: "2026-05-05"
 route:
   keywords: [gridgrind, patent, patents, legal, contributors, dependencies, non-assertion, mit, apache, bsd]
   questions: ["what is the patent posture for gridgrind", "does gridgrind include a patent non-assertion statement", "what do contributors need to know about patents"]
@@ -34,6 +34,10 @@ retaliation clause.
 | Apache Commons (Codec, Collections, Compress, IO, Lang, Math) | Apache 2.0 | Yes |
 | Jackson Databind / Core / Annotations | Apache 2.0 | Yes |
 | SparseBitSet | Apache 2.0 | Yes |
+| Woodstox Core | Apache 2.0 | Yes |
+| Stax2 API | BSD 2-Clause | No |
+| Jakarta Activation API | EDL 1.0 | No |
+| Jakarta XML Binding API | EDL 1.0 | No |
 | Bouncy Castle (bcpkix, bcprov, bcutil) | MIT variant | No |
 | SLF4J API | MIT | No |
 | CurvesAPI | BSD 3-Clause | No |
@@ -41,8 +45,9 @@ retaliation clause.
 ## Bundled Dependencies
 
 GridGrind's executable JAR bundles Apache POI, Apache XMLBeans, Apache Log4j, Apache Santuario
-xmlsec, Apache Commons libraries, Jackson, SparseBitSet, Bouncy Castle, SLF4J API, and
-CurvesAPI. See NOTICE for the complete list and attributions.
+xmlsec, Apache Commons libraries, Jackson, SparseBitSet, Woodstox Core, Stax2 API, Jakarta
+Activation API, Jakarta XML Binding API, Bouncy Castle, SLF4J API, and CurvesAPI. See NOTICE
+for the complete list and attributions.
 
 The Apache 2.0 components include an explicit patent grant in Section 3:
 
@@ -52,6 +57,12 @@ The Apache 2.0 components include an explicit patent grant in Section 3:
 
 This Apache 2.0 patent grant applies to contributions made by each respective project's
 contributors. It does not extend to GridGrind's own code, which is licensed separately under MIT.
+
+The Eclipse Distribution License 1.0 used by the Jakarta Activation API and Jakarta XML Binding
+API does not include an explicit patent grant.
+
+Stax2 API is licensed under the BSD 2-Clause License, which does not include an explicit patent
+grant.
 
 CurvesAPI is licensed under the BSD 3-Clause License, which does not include an explicit patent
 grant.
@@ -64,9 +75,10 @@ original work.
 
 For GridGrind users:
 
-1. The Apache 2.0 patent grant from Apache POI, XMLBeans, Log4j, Commons, Jackson, and
-   SparseBitSet contributors applies to those bundled components.
-2. CurvesAPI (BSD 3-Clause) and GridGrind's own MIT-licensed code do not carry explicit patent
+1. The Apache 2.0 patent grant from Apache POI, XMLBeans, Log4j, Commons, Jackson, SparseBitSet,
+   and Woodstox Core contributors applies to those bundled components.
+2. Jakarta Activation API and Jakarta XML Binding API (EDL 1.0), Stax2 API (BSD 2-Clause),
+   CurvesAPI (BSD 3-Clause), and GridGrind's own MIT-licensed code do not carry explicit patent
    grants.
 3. The copyright holder (Ervins Strauhmanis) makes no patent claims on GridGrind's implementation
    and is not aware of any patents this implementation infringes.

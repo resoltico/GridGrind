@@ -1,7 +1,10 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Factual workbook color preserving RGB, theme, indexed, and tint semantics. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
@@ -13,59 +16,62 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public sealed interface CellColorReport
     permits CellColorReport.Rgb, CellColorReport.Theme, CellColorReport.Indexed {
   /** Optional tint adjustment applied to the base color reference. */
-  Double tint();
+  Optional<Double> tint();
 
   /** Returns one color report carrying only explicit RGB data. */
   static Rgb rgb(String rgb) {
-    return new Rgb(rgb, null);
+    return new Rgb(rgb, Optional.empty());
   }
 
   /** Returns one RGB-backed report plus tint metadata. */
-  static Rgb rgb(String rgb, Double tint) {
-    return new Rgb(rgb, tint);
+  static Rgb rgb(String rgb, double tint) {
+    return new Rgb(rgb, Optional.of(tint));
   }
 
   /** Returns one theme-backed report with no tint adjustment. */
   static Theme theme(int theme) {
-    return new Theme(theme, null);
+    return new Theme(theme, Optional.empty());
   }
 
   /** Returns one theme-backed report plus tint metadata. */
-  static Theme theme(int theme, Double tint) {
-    return new Theme(theme, tint);
+  static Theme theme(int theme, double tint) {
+    return new Theme(theme, Optional.of(tint));
   }
 
   /** Returns one indexed-palette report with no tint adjustment. */
   static Indexed indexed(int indexed) {
-    return new Indexed(indexed, null);
+    return new Indexed(indexed, Optional.empty());
   }
 
   /** Returns one indexed-palette report plus tint metadata. */
-  static Indexed indexed(int indexed, Double tint) {
-    return new Indexed(indexed, tint);
+  static Indexed indexed(int indexed, double tint) {
+    return new Indexed(indexed, Optional.of(tint));
   }
 
   /** RGB-backed workbook color report. */
-  record Rgb(String rgb, Double tint) implements CellColorReport {
+  record Rgb(String rgb, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+      implements CellColorReport {
     public Rgb {
       rgb = ProtocolRgbColorSupport.requireRgbHex(rgb, "rgb");
-      requireFiniteOrNull(tint, "tint");
+      tint = requireFinite(tint, "tint");
     }
   }
 
   /** Theme-backed workbook color report. */
-  record Theme(int theme, Double tint) implements CellColorReport {
+  record Theme(int theme, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+      implements CellColorReport {
     public Theme {
       requireNonNegative(theme, "theme");
-      requireFiniteOrNull(tint, "tint");
+      tint = requireFinite(tint, "tint");
     }
   }
 
   /** Indexed-palette workbook color report. */
-  record Indexed(int indexed, Double tint) implements CellColorReport {
+  record Indexed(int indexed, @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> tint)
+      implements CellColorReport {
     public Indexed {
       requireNonNegative(indexed, "indexed");
-      requireFiniteOrNull(tint, "tint");
+      tint = requireFinite(tint, "tint");
     }
   }
 
@@ -75,9 +81,11 @@ public sealed interface CellColorReport
     }
   }
 
-  private static void requireFiniteOrNull(Double value, String fieldName) {
-    if (value != null && !Double.isFinite(value)) {
+  private static Optional<Double> requireFinite(Optional<Double> value, String fieldName) {
+    Optional<Double> normalized = Objects.requireNonNull(value, fieldName + " must not be null");
+    if (normalized.isPresent() && !Double.isFinite(normalized.orElseThrow())) {
       throw new IllegalArgumentException(fieldName + " must be finite");
     }
+    return normalized;
   }
 }

@@ -8,6 +8,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.ss.util.CellReference;
 
@@ -84,12 +85,13 @@ public record ExcelPivotTableDefinition(
       String sourceColumnName,
       ExcelPivotDataConsolidateFunction function,
       String displayName,
-      String valueFormat) {
+      Optional<String> valueFormat) {
     public DataField {
       sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");
       displayName = displayName == null || displayName.isBlank() ? sourceColumnName : displayName;
-      if (valueFormat != null && valueFormat.isBlank()) {
+      Objects.requireNonNull(valueFormat, "valueFormat must not be null");
+      if (valueFormat.isPresent() && valueFormat.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("valueFormat must not be blank");
       }
     }

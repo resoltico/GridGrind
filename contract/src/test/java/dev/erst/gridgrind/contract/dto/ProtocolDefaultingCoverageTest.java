@@ -50,7 +50,8 @@ class ProtocolDefaultingCoverageTest {
     HeaderFooterTextInput headerFooter = HeaderFooterTextInput.blank();
     SheetPresentationInput presentation = SheetPresentationInput.defaults();
     WorkbookProtectionInput protection =
-        new WorkbookProtectionInput(false, false, false, null, null);
+        new WorkbookProtectionInput(
+            false, false, false, java.util.Optional.empty(), java.util.Optional.empty());
     AutofilterSortConditionInput sortCondition =
         new AutofilterSortConditionInput.Value("A1:A2", true);
     AutofilterFilterColumnInput filterColumn =
@@ -378,10 +379,10 @@ class ProtocolDefaultingCoverageTest {
             new ChartTitleInput.None(),
             new ChartDataSourceInput.StringLiteral(List.of("Jan")),
             new ChartDataSourceInput.NumericLiteral(List.of(10.0d)),
-            true,
-            ExcelChartMarkerStyle.CIRCLE,
-            (short) 6,
-            null);
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.CIRCLE),
+            Optional.of((short) 6),
+            Optional.empty());
     ChartInput defaultedChart =
         ChartInput.withStandardDisplay(
             "BudgetChart",
@@ -611,18 +612,18 @@ class ProtocolDefaultingCoverageTest {
             new ChartTitleInput.None(),
             new ChartDataSourceInput.StringLiteral(List.of("Jan", "Feb")),
             new ChartDataSourceInput.NumericLiteral(List.of(10.0d, 18.0d)),
-            true,
-            ExcelChartMarkerStyle.DIAMOND,
-            (short) 8,
-            12L);
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.DIAMOND),
+            Optional.of((short) 8),
+            Optional.of(12L));
     ChartSeriesInput convenienceSeries =
         ChartSeriesInput.untitled(
             new ChartDataSourceInput.Reference("Categories"),
             new ChartDataSourceInput.Reference("Values"),
-            false,
-            ExcelChartMarkerStyle.CIRCLE,
-            (short) 6,
-            null);
+            Optional.of(false),
+            Optional.of(ExcelChartMarkerStyle.CIRCLE),
+            Optional.of((short) 6),
+            Optional.empty());
     ChartAxisInput defaultAxis =
         ChartAxisInput.visible(
             ExcelChartAxisKind.CATEGORY,
@@ -643,17 +644,22 @@ class ProtocolDefaultingCoverageTest {
         new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
     ChartPlotInput.Area3D explicitArea3D =
         new ChartPlotInput.Area3D(
-            false, ExcelChartGrouping.STACKED, 24, explicitAxes, List.of(explicitSeries));
+            false,
+            ExcelChartGrouping.STACKED,
+            Optional.of(24),
+            explicitAxes,
+            List.of(explicitSeries));
     ChartPlotInput.Area3D convenienceArea3D =
-        new ChartPlotInput.Area3D(false, ExcelChartGrouping.STANDARD, 16, List.of(explicitSeries));
+        new ChartPlotInput.Area3D(
+            false, ExcelChartGrouping.STANDARD, Optional.of(16), List.of(explicitSeries));
     ChartPlotInput.Bar3D explicitBar3D =
         new ChartPlotInput.Bar3D(
             false,
             ExcelChartBarDirection.BAR,
             ExcelChartBarGrouping.PERCENT_STACKED,
-            12,
-            64,
-            ExcelChartBarShape.CONE,
+            Optional.of(12),
+            Optional.of(64),
+            Optional.of(ExcelChartBarShape.CONE),
             explicitAxes,
             List.of(explicitSeries));
     ChartPlotInput.Bar3D convenienceBar3D =
@@ -661,9 +667,9 @@ class ProtocolDefaultingCoverageTest {
             false,
             ExcelChartBarDirection.COLUMN,
             ExcelChartBarGrouping.CLUSTERED,
-            18,
-            90,
-            ExcelChartBarShape.BOX,
+            Optional.of(18),
+            Optional.of(90),
+            Optional.of(ExcelChartBarShape.BOX),
             List.of(explicitSeries));
     ChartPlotInput.Line explicitLine =
         new ChartPlotInput.Line(
@@ -672,9 +678,14 @@ class ProtocolDefaultingCoverageTest {
         new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, List.of(explicitSeries));
     ChartPlotInput.Line3D explicitLine3D =
         new ChartPlotInput.Line3D(
-            true, ExcelChartGrouping.PERCENT_STACKED, 32, explicitAxes, List.of(explicitSeries));
+            true,
+            ExcelChartGrouping.PERCENT_STACKED,
+            Optional.of(32),
+            explicitAxes,
+            List.of(explicitSeries));
     ChartPlotInput.Line3D convenienceLine3D =
-        new ChartPlotInput.Line3D(false, ExcelChartGrouping.STANDARD, 8, List.of(explicitSeries));
+        new ChartPlotInput.Line3D(
+            false, ExcelChartGrouping.STANDARD, Optional.of(8), List.of(explicitSeries));
     ChartPlotInput.Radar explicitRadar =
         new ChartPlotInput.Radar(
             true, ExcelChartRadarStyle.MARKER, explicitAxes, List.of(explicitSeries));

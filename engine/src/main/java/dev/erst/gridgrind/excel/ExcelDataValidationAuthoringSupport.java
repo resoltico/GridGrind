@@ -25,21 +25,20 @@ final class ExcelDataValidationAuthoringSupport {
     DataValidation validation = helper.createValidation(constraint, regions);
     validation.setEmptyCellAllowed(validationDefinition.allowBlank());
     validation.setSuppressDropDownArrow(validationDefinition.suppressDropDownArrow());
-    if (validationDefinition.prompt() == null) {
+    if (validationDefinition.prompt().isEmpty()) {
       validation.setShowPromptBox(false);
     } else {
-      validation.setShowPromptBox(validationDefinition.prompt().showPromptBox());
-      validation.createPromptBox(
-          validationDefinition.prompt().title(), validationDefinition.prompt().text());
+      ExcelDataValidationPrompt prompt = validationDefinition.prompt().orElseThrow();
+      validation.setShowPromptBox(prompt.showPromptBox());
+      validation.createPromptBox(prompt.title(), prompt.text());
     }
-    if (validationDefinition.errorAlert() == null) {
+    if (validationDefinition.errorAlert().isEmpty()) {
       validation.setShowErrorBox(false);
     } else {
-      validation.setShowErrorBox(validationDefinition.errorAlert().showErrorBox());
-      validation.setErrorStyle(
-          ExcelDataValidationPoiBridge.toPoiErrorStyle(validationDefinition.errorAlert().style()));
-      validation.createErrorBox(
-          validationDefinition.errorAlert().title(), validationDefinition.errorAlert().text());
+      ExcelDataValidationErrorAlert errorAlert = validationDefinition.errorAlert().orElseThrow();
+      validation.setShowErrorBox(errorAlert.showErrorBox());
+      validation.setErrorStyle(ExcelDataValidationPoiBridge.toPoiErrorStyle(errorAlert.style()));
+      validation.createErrorBox(errorAlert.title(), errorAlert.text());
     }
     sheet.addValidationData(validation);
     ExcelDataValidationRangeSupport.syncValidationCount(sheet);
@@ -71,28 +70,28 @@ final class ExcelDataValidationAuthoringSupport {
           helper.createIntegerConstraint(
               ExcelComparisonOperatorPoiBridge.toPoi(wholeNumber.operator()),
               wholeNumber.formula1(),
-              wholeNumber.formula2());
+              wholeNumber.formula2().orElse(null));
       case ExcelDataValidationRule.DecimalNumber decimalNumber ->
           helper.createDecimalConstraint(
               ExcelComparisonOperatorPoiBridge.toPoi(decimalNumber.operator()),
               decimalNumber.formula1(),
-              decimalNumber.formula2());
+              decimalNumber.formula2().orElse(null));
       case ExcelDataValidationRule.DateRule dateRule ->
           helper.createDateConstraint(
               ExcelComparisonOperatorPoiBridge.toPoi(dateRule.operator()),
               dateRule.formula1(),
-              dateRule.formula2(),
+              dateRule.formula2().orElse(null),
               null);
       case ExcelDataValidationRule.TimeRule timeRule ->
           helper.createTimeConstraint(
               ExcelComparisonOperatorPoiBridge.toPoi(timeRule.operator()),
               timeRule.formula1(),
-              timeRule.formula2());
+              timeRule.formula2().orElse(null));
       case ExcelDataValidationRule.TextLength textLength ->
           helper.createTextLengthConstraint(
               ExcelComparisonOperatorPoiBridge.toPoi(textLength.operator()),
               textLength.formula1(),
-              textLength.formula2());
+              textLength.formula2().orElse(null));
       case ExcelDataValidationRule.CustomFormula customFormula ->
           helper.createCustomConstraint(customFormula.formula());
     };

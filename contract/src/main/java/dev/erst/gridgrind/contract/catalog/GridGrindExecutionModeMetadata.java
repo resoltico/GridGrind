@@ -7,6 +7,8 @@ import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
+import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,7 +20,9 @@ public final class GridGrindExecutionModeMetadata {
   private static final EventReadMode EVENT_READ =
       new EventReadMode(
           ExecutionModeInput.ReadMode.EVENT_READ,
-          List.of(InspectionQuery.GetWorkbookSummary.class, InspectionQuery.GetSheetSummary.class),
+          List.of(
+              WorkbookIntrospectionQuery.GetWorkbookSummary.class,
+              SheetIntrospectionQuery.GetSheetSummary.class),
           CalculationStrategyInput.DoNotCalculate.class,
           false);
   private static final StreamingWriteMode STREAMING_WRITE =

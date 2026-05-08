@@ -29,34 +29,68 @@ public final class WorkbookStyleInputs {
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
           new CellStyleInput(
-              data.consumeBoolean() ? "0.00" : "yyyy-mm-dd", null, null, null, null, null);
-      case 1 -> new CellStyleInput(null, nextAlignmentInput(data, true), null, null, null, null);
-      case 2 -> new CellStyleInput(null, null, nextFontInput(data, true), null, null, null);
+              Optional.of(data.consumeBoolean() ? "0.00" : "yyyy-mm-dd"),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 1 ->
+          new CellStyleInput(
+              Optional.empty(),
+              Optional.of(nextAlignmentInput(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 2 ->
+          new CellStyleInput(
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFontInput(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
       case 3 ->
           new CellStyleInput(
-              null,
-              nextAlignmentInput(data, true),
-              nextFontInput(data, true),
-              nextFillInput(data),
-              nextProtocolBorder(data),
-              nextProtectionInput(data));
+              Optional.empty(),
+              Optional.of(nextAlignmentInput(data, true)),
+              Optional.of(nextFontInput(data, true)),
+              Optional.of(nextFillInput(data)),
+              Optional.of(nextProtocolBorder(data)),
+              Optional.ofNullable(nextProtectionInput(data)));
       case 4 ->
           new CellStyleInput(
-              null,
-              null,
-              nextFontInput(data, false),
-              nextFillInput(data),
-              nextProtocolBorder(data),
-              null);
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFontInput(data, false)),
+              Optional.of(nextFillInput(data)),
+              Optional.of(nextProtocolBorder(data)),
+              Optional.empty());
       case 5 ->
           new CellStyleInput(
-              null, null, null, nextFillInput(data), null, nextProtectionInput(data));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFillInput(data)),
+              Optional.empty(),
+              Optional.ofNullable(nextProtectionInput(data)));
       case 6 ->
           new CellStyleInput(
-              null, nextAlignmentInput(data, true), null, null, nextProtocolBorder(data), null);
+              Optional.empty(),
+              Optional.of(nextAlignmentInput(data, true)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextProtocolBorder(data)),
+              Optional.empty());
       default ->
           new CellStyleInput(
-              null, null, nextFontInput(data, false), null, null, nextProtectionInput(data));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextFontInput(data, false)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.ofNullable(nextProtectionInput(data)));
     };
   }
 
@@ -76,13 +110,15 @@ public final class WorkbookStyleInputs {
 
   private static CellFontInput nextFontInput(GridGrindFuzzData data, boolean includeName) {
     return new CellFontInput(
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        data.consumeBoolean() ? Boolean.FALSE : null,
-        includeName ? (data.consumeBoolean() ? "Aptos" : "Aptos Display") : null,
-        data.consumeBoolean() ? nextFontHeightInput(data) : null,
-        data.consumeBoolean() ? nextColorInput(data) : null,
-        data.consumeBoolean() ? Boolean.TRUE : null,
-        data.consumeBoolean() ? Boolean.FALSE : null);
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty(),
+        includeName
+            ? Optional.of(data.consumeBoolean() ? "Aptos" : "Aptos Display")
+            : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextFontHeightInput(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(nextColorInput(data)) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.TRUE) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(Boolean.FALSE) : Optional.empty());
   }
 
   private static CellFillInput nextFillInput(GridGrindFuzzData data) {
@@ -131,27 +167,58 @@ public final class WorkbookStyleInputs {
 
   private static ColorInput nextColorInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
-      case 0 -> ColorInput.rgb(nextRgbHex(data), data.consumeBoolean() ? nextTint(data) : null);
+      case 0 ->
+          data.consumeBoolean()
+              ? ColorInput.rgb(nextRgbHex(data), nextTint(data))
+              : ColorInput.rgb(nextRgbHex(data));
       case 1 ->
-          ColorInput.theme(data.consumeInt(0, 9), data.consumeBoolean() ? nextTint(data) : null);
+          data.consumeBoolean()
+              ? ColorInput.theme(data.consumeInt(0, 9), nextTint(data))
+              : ColorInput.theme(data.consumeInt(0, 9));
       default ->
-          ColorInput.indexed(data.consumeInt(0, 64), data.consumeBoolean() ? nextTint(data) : null);
+          data.consumeBoolean()
+              ? ColorInput.indexed(data.consumeInt(0, 64), nextTint(data))
+              : ColorInput.indexed(data.consumeInt(0, 64));
     };
   }
 
   private static CellBorderInput nextProtocolBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
-      case 0 -> new CellBorderInput(nextBorderSide(data), null, null, null, null);
-      case 1 -> new CellBorderInput(nextBorderSide(data), null, nextBorderSide(data), null, null);
-      case 2 -> new CellBorderInput(null, nextBorderSide(data), null, null, nextBorderSide(data));
+      case 0 ->
+          new CellBorderInput(
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty());
+      case 1 ->
+          new CellBorderInput(
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty());
+      case 2 ->
+          new CellBorderInput(
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)));
       case 3 ->
           new CellBorderInput(
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data),
-              nextBorderSide(data));
-      default -> new CellBorderInput(null, nextBorderSide(data), null, nextBorderSide(data), null);
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)),
+              Optional.of(nextBorderSide(data)));
+      default ->
+          new CellBorderInput(
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty(),
+              Optional.of(nextBorderSide(data)),
+              Optional.empty());
     };
   }
 
@@ -159,14 +226,16 @@ public final class WorkbookStyleInputs {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
     return new CellBorderSideInput(
-        style,
-        style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextColorInput(data));
+        Optional.of(style),
+        style == ExcelBorderStyle.NONE || !data.consumeBoolean()
+            ? Optional.empty()
+            : Optional.of(nextColorInput(data)));
   }
 
   private static CellProtectionInput nextProtectionInput(GridGrindFuzzData data) {
     return new CellProtectionInput(
-        data.consumeBoolean() ? data.consumeBoolean() : null,
-        data.consumeBoolean() ? data.consumeBoolean() : null);
+        data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty(),
+        data.consumeBoolean() ? Optional.of(data.consumeBoolean()) : Optional.empty());
   }
 
   private static ExcelHorizontalAlignment nextHorizontalAlignment(GridGrindFuzzData data) {

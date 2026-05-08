@@ -1,7 +1,11 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.util.List;
-import java.util.stream.Stream;
 
 /** Owns the concrete protocol entry descriptors published by the public catalog. */
 final class GridGrindProtocolCatalogTypeDescriptors {
@@ -15,22 +19,31 @@ final class GridGrindProtocolCatalogTypeDescriptors {
       GridGrindProtocolCatalogPersistenceTypeDescriptors.PERSISTENCE_TYPES;
 
   static final List<CatalogTypeDescriptor> MUTATION_ACTION_TYPES =
-      GridGrindProtocolCatalogMutationActionTypeDescriptors.MUTATION_ACTION_TYPES;
+      ProtocolTypeMetadataSupport.catalogDescriptorsFor(MutationAction.class);
 
   static final List<CatalogTypeDescriptor> ASSERTION_TYPES =
-      GridGrindProtocolCatalogAssertionTypeDescriptors.ASSERTION_TYPES;
+      ProtocolTypeMetadataSupport.catalogDescriptorsFor(Assertion.class);
 
   static final List<CatalogTypeDescriptor> INSPECTION_QUERY_TYPES =
-      GridGrindProtocolCatalogInspectionQueryTypeDescriptors.INSPECTION_QUERY_TYPES;
+      ProtocolTypeMetadataSupport.catalogDescriptorsFor(InspectionQuery.class);
+
+  static final List<CatalogTopLevelTypeDescriptorGroup> TOP_LEVEL_GROUPS =
+      List.of(
+          new CatalogTopLevelTypeDescriptorGroup(
+              "sourceTypes", WorkbookPlan.WorkbookSource.class, SOURCE_TYPES),
+          new CatalogTopLevelTypeDescriptorGroup(
+              "persistenceTypes", WorkbookPlan.WorkbookPersistence.class, PERSISTENCE_TYPES),
+          new CatalogTopLevelTypeDescriptorGroup("stepTypes", WorkbookStep.class, STEP_TYPES),
+          new CatalogTopLevelTypeDescriptorGroup(
+              "mutationActionTypes", MutationAction.class, MUTATION_ACTION_TYPES),
+          new CatalogTopLevelTypeDescriptorGroup(
+              "assertionTypes", Assertion.class, ASSERTION_TYPES),
+          new CatalogTopLevelTypeDescriptorGroup(
+              "inspectionQueryTypes", InspectionQuery.class, INSPECTION_QUERY_TYPES));
 
   static final List<CatalogTypeDescriptor> ALL_TYPES =
-      Stream.of(
-              STEP_TYPES,
-              SOURCE_TYPES,
-              PERSISTENCE_TYPES,
-              MUTATION_ACTION_TYPES,
-              ASSERTION_TYPES,
-              INSPECTION_QUERY_TYPES)
+      TOP_LEVEL_GROUPS.stream()
+          .map(CatalogTopLevelTypeDescriptorGroup::typeDescriptors)
           .flatMap(List::stream)
           .toList();
 

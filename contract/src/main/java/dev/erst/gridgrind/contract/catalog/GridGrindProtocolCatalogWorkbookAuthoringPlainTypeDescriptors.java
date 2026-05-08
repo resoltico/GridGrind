@@ -22,7 +22,6 @@ import dev.erst.gridgrind.contract.dto.DifferentialBorderSideInput;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
 import dev.erst.gridgrind.contract.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.contract.dto.IgnoredErrorInput;
-import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
 import dev.erst.gridgrind.contract.dto.PrintMarginsInput;
@@ -60,13 +59,6 @@ final class GridGrindProtocolCatalogWorkbookAuthoringPlainTypeDescriptors {
               "CommentAnchorInput",
               "Explicit comment-anchor bounds measured in zero-based column and row indexes.",
               List.of()),
-          plainTypeDescriptor(
-              "namedRangeTargetType",
-              NamedRangeTarget.class,
-              "NamedRangeTarget",
-              "Named-range target payload."
-                  + " Supply either sheetName plus range, or formula by itself.",
-              List.of("sheetName", "range", "formula")),
           plainTypeDescriptor(
               "sheetProtectionSettingsType",
               SheetProtectionSettings.class,
@@ -353,7 +345,7 @@ final class GridGrindProtocolCatalogWorkbookAuthoringPlainTypeDescriptors {
       String id,
       String summary,
       List<String> optionalFields) {
-    return GridGrindProtocolCatalog.plainTypeDescriptor(
+    return CatalogTypeEntryFactory.plainTypeDescriptor(
         group, recordType, id, summary, optionalFields);
   }
 }

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct parser coverage for the canonical step envelope deserializer. */
@@ -151,11 +152,11 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals(
         "Target selector type 'WORKBOOK_CURRENT' is not allowed for this step; allowed targets: CellSelector(CELL_BY_ADDRESS); TableCellSelector(TABLE_CELL_BY_COLUMN_NAME)",
         wrongMutationTarget.getMessage());
-    assertEquals("steps[0].target", wrongMutationTarget.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), wrongMutationTarget.jsonPath());
     assertEquals(
         "Target selector type 'CELL_BY_ADDRESS' is not allowed for this step; allowed targets: RangeSelector(RANGE_RECTANGULAR_WINDOW)",
         wrongInspectionTarget.getMessage());
-    assertEquals("steps[0].target", wrongInspectionTarget.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), wrongInspectionTarget.jsonPath());
   }
 
   @Test
@@ -206,15 +207,15 @@ class WorkbookStepJsonDeserializerTest {
                         """)));
 
     assertEquals("Field 'target' must be a JSON object", nonObjectTarget.getMessage());
-    assertEquals("steps[0].target", nonObjectTarget.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), nonObjectTarget.jsonPath());
     assertEquals("Missing required field 'type'", missingTargetType.getMessage());
-    assertEquals("steps[0].target", missingTargetType.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), missingTargetType.jsonPath());
     assertEquals("Field 'type' must be a string", nonStringTargetType.getMessage());
-    assertEquals("steps[0].target", nonStringTargetType.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), nonStringTargetType.jsonPath());
     assertEquals(
         "Unknown target selector type 'BY_RIDDLE'; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
         unknownTargetType.getMessage());
-    assertEquals("steps[0].target", unknownTargetType.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), unknownTargetType.jsonPath());
   }
 
   @Test
@@ -233,7 +234,7 @@ class WorkbookStepJsonDeserializerTest {
 
     assertEquals(
         "zoomPercent must be between 10 and 400 inclusive: 401", invalidAction.getMessage());
-    assertEquals("steps[0].action", invalidAction.jsonPath());
+    assertEquals(Optional.of("steps[0].action"), invalidAction.jsonPath());
   }
 
   @Test
@@ -253,7 +254,7 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals(
         "Unknown target selector type 'BY_NAME'; target selector ids are family-specific; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
         legacyTargetType.getMessage());
-    assertEquals("steps[0].target", legacyTargetType.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), legacyTargetType.jsonPath());
   }
 
   @Test
@@ -271,7 +272,7 @@ class WorkbookStepJsonDeserializerTest {
                         """)));
 
     assertEquals("Missing required field 'name'", wrongShapeByName.getMessage());
-    assertEquals("steps[0].target", wrongShapeByName.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), wrongShapeByName.jsonPath());
   }
 
   @Test

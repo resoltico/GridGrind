@@ -1,136 +1,140 @@
 package dev.erst.gridgrind.authoring;
 
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
+import dev.erst.gridgrind.contract.query.InspectionSurfaceQuery;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
+import dev.erst.gridgrind.contract.query.WorkbookAssetIntrospectionQuery;
+import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
 
 /** Canonical inspection-query helpers kept internal to the focused Java authoring surface. */
 final class Queries {
   private Queries() {}
 
-  static InspectionQuery.GetWorkbookSummary workbookSummary() {
-    return new InspectionQuery.GetWorkbookSummary();
+  static WorkbookIntrospectionQuery.GetWorkbookSummary workbookSummary() {
+    return new WorkbookIntrospectionQuery.GetWorkbookSummary();
   }
 
-  static InspectionQuery.GetPackageSecurity packageSecurity() {
-    return new InspectionQuery.GetPackageSecurity();
+  static WorkbookIntrospectionQuery.GetPackageSecurity packageSecurity() {
+    return new WorkbookIntrospectionQuery.GetPackageSecurity();
   }
 
-  static InspectionQuery.GetWorkbookProtection workbookProtection() {
-    return new InspectionQuery.GetWorkbookProtection();
+  static WorkbookIntrospectionQuery.GetWorkbookProtection workbookProtection() {
+    return new WorkbookIntrospectionQuery.GetWorkbookProtection();
   }
 
-  static InspectionQuery.GetNamedRanges namedRanges() {
-    return new InspectionQuery.GetNamedRanges();
+  static WorkbookIntrospectionQuery.GetNamedRanges namedRanges() {
+    return new WorkbookIntrospectionQuery.GetNamedRanges();
   }
 
-  static InspectionQuery.GetSheetSummary sheetSummary() {
-    return new InspectionQuery.GetSheetSummary();
+  static SheetIntrospectionQuery.GetSheetSummary sheetSummary() {
+    return new SheetIntrospectionQuery.GetSheetSummary();
   }
 
-  static InspectionQuery.GetCells cells() {
-    return new InspectionQuery.GetCells();
+  static SheetIntrospectionQuery.GetCells cells() {
+    return new SheetIntrospectionQuery.GetCells();
   }
 
-  static InspectionQuery.GetWindow window() {
-    return new InspectionQuery.GetWindow();
+  static SheetIntrospectionQuery.GetWindow window() {
+    return new SheetIntrospectionQuery.GetWindow();
   }
 
-  static InspectionQuery.GetMergedRegions mergedRegions() {
-    return new InspectionQuery.GetMergedRegions();
+  static SheetIntrospectionQuery.GetMergedRegions mergedRegions() {
+    return new SheetIntrospectionQuery.GetMergedRegions();
   }
 
-  static InspectionQuery.GetHyperlinks hyperlinks() {
-    return new InspectionQuery.GetHyperlinks();
+  static SheetIntrospectionQuery.GetHyperlinks hyperlinks() {
+    return new SheetIntrospectionQuery.GetHyperlinks();
   }
 
-  static InspectionQuery.GetComments comments() {
-    return new InspectionQuery.GetComments();
+  static SheetIntrospectionQuery.GetComments comments() {
+    return new SheetIntrospectionQuery.GetComments();
   }
 
-  static InspectionQuery.GetDrawingObjects drawingObjects() {
-    return new InspectionQuery.GetDrawingObjects();
+  static WorkbookAssetIntrospectionQuery.GetDrawingObjects drawingObjects() {
+    return new WorkbookAssetIntrospectionQuery.GetDrawingObjects();
   }
 
-  static InspectionQuery.GetCharts charts() {
-    return new InspectionQuery.GetCharts();
+  static WorkbookAssetIntrospectionQuery.GetCharts charts() {
+    return new WorkbookAssetIntrospectionQuery.GetCharts();
   }
 
-  static InspectionQuery.GetPivotTables pivotTables() {
-    return new InspectionQuery.GetPivotTables();
+  static WorkbookAssetIntrospectionQuery.GetPivotTables pivotTables() {
+    return new WorkbookAssetIntrospectionQuery.GetPivotTables();
   }
 
-  static InspectionQuery.GetDrawingObjectPayload drawingObjectPayload() {
-    return new InspectionQuery.GetDrawingObjectPayload();
+  static WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload drawingObjectPayload() {
+    return new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload();
   }
 
-  static InspectionQuery.GetSheetLayout sheetLayout() {
-    return new InspectionQuery.GetSheetLayout();
+  static SheetIntrospectionQuery.GetSheetLayout sheetLayout() {
+    return new SheetIntrospectionQuery.GetSheetLayout();
   }
 
-  static InspectionQuery.GetPrintLayout printLayout() {
-    return new InspectionQuery.GetPrintLayout();
+  static SheetIntrospectionQuery.GetPrintLayout printLayout() {
+    return new SheetIntrospectionQuery.GetPrintLayout();
   }
 
-  static InspectionQuery.GetDataValidations dataValidations() {
-    return new InspectionQuery.GetDataValidations();
+  static SheetIntrospectionQuery.GetDataValidations dataValidations() {
+    return new SheetIntrospectionQuery.GetDataValidations();
   }
 
-  static InspectionQuery.GetConditionalFormatting conditionalFormatting() {
-    return new InspectionQuery.GetConditionalFormatting();
+  static SheetIntrospectionQuery.GetConditionalFormatting conditionalFormatting() {
+    return new SheetIntrospectionQuery.GetConditionalFormatting();
   }
 
-  static InspectionQuery.GetAutofilters autofilters() {
-    return new InspectionQuery.GetAutofilters();
+  static SheetIntrospectionQuery.GetAutofilters autofilters() {
+    return new SheetIntrospectionQuery.GetAutofilters();
   }
 
-  static InspectionQuery.GetTables tables() {
-    return new InspectionQuery.GetTables();
+  static WorkbookAssetIntrospectionQuery.GetTables tables() {
+    return new WorkbookAssetIntrospectionQuery.GetTables();
   }
 
-  static InspectionQuery.GetFormulaSurface formulaSurface() {
-    return new InspectionQuery.GetFormulaSurface();
+  static InspectionSurfaceQuery.GetFormulaSurface formulaSurface() {
+    return new InspectionSurfaceQuery.GetFormulaSurface();
   }
 
-  static InspectionQuery.GetSheetSchema sheetSchema() {
-    return new InspectionQuery.GetSheetSchema();
+  static InspectionSurfaceQuery.GetSheetSchema sheetSchema() {
+    return new InspectionSurfaceQuery.GetSheetSchema();
   }
 
-  static InspectionQuery.GetNamedRangeSurface namedRangeSurface() {
-    return new InspectionQuery.GetNamedRangeSurface();
+  static InspectionSurfaceQuery.GetNamedRangeSurface namedRangeSurface() {
+    return new InspectionSurfaceQuery.GetNamedRangeSurface();
   }
 
-  static InspectionQuery.AnalyzeFormulaHealth formulaHealth() {
-    return new InspectionQuery.AnalyzeFormulaHealth();
+  static InspectionAnalysisQuery.AnalyzeFormulaHealth formulaHealth() {
+    return new InspectionAnalysisQuery.AnalyzeFormulaHealth();
   }
 
-  static InspectionQuery.AnalyzeDataValidationHealth dataValidationHealth() {
-    return new InspectionQuery.AnalyzeDataValidationHealth();
+  static InspectionAnalysisQuery.AnalyzeDataValidationHealth dataValidationHealth() {
+    return new InspectionAnalysisQuery.AnalyzeDataValidationHealth();
   }
 
-  static InspectionQuery.AnalyzeConditionalFormattingHealth conditionalFormattingHealth() {
-    return new InspectionQuery.AnalyzeConditionalFormattingHealth();
+  static InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth conditionalFormattingHealth() {
+    return new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth();
   }
 
-  static InspectionQuery.AnalyzeAutofilterHealth autofilterHealth() {
-    return new InspectionQuery.AnalyzeAutofilterHealth();
+  static InspectionAnalysisQuery.AnalyzeAutofilterHealth autofilterHealth() {
+    return new InspectionAnalysisQuery.AnalyzeAutofilterHealth();
   }
 
-  static InspectionQuery.AnalyzeTableHealth tableHealth() {
-    return new InspectionQuery.AnalyzeTableHealth();
+  static InspectionAnalysisQuery.AnalyzeTableHealth tableHealth() {
+    return new InspectionAnalysisQuery.AnalyzeTableHealth();
   }
 
-  static InspectionQuery.AnalyzePivotTableHealth pivotTableHealth() {
-    return new InspectionQuery.AnalyzePivotTableHealth();
+  static InspectionAnalysisQuery.AnalyzePivotTableHealth pivotTableHealth() {
+    return new InspectionAnalysisQuery.AnalyzePivotTableHealth();
   }
 
-  static InspectionQuery.AnalyzeHyperlinkHealth hyperlinkHealth() {
-    return new InspectionQuery.AnalyzeHyperlinkHealth();
+  static InspectionAnalysisQuery.AnalyzeHyperlinkHealth hyperlinkHealth() {
+    return new InspectionAnalysisQuery.AnalyzeHyperlinkHealth();
   }
 
-  static InspectionQuery.AnalyzeNamedRangeHealth namedRangeHealth() {
-    return new InspectionQuery.AnalyzeNamedRangeHealth();
+  static InspectionAnalysisQuery.AnalyzeNamedRangeHealth namedRangeHealth() {
+    return new InspectionAnalysisQuery.AnalyzeNamedRangeHealth();
   }
 
-  static InspectionQuery.AnalyzeWorkbookFindings workbookFindings() {
-    return new InspectionQuery.AnalyzeWorkbookFindings();
+  static InspectionAnalysisQuery.AnalyzeWorkbookFindings workbookFindings() {
+    return new InspectionAnalysisQuery.AnalyzeWorkbookFindings();
   }
 }

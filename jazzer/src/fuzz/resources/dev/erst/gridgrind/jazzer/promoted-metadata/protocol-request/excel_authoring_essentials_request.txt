@@ -2,10 +2,10 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: Missing required field 'markRecalculateOnOpen'
+Kind: InvalidRequestShapeException
+Message: Missing required field 'kind'
 Input Bytes: 5434
-Decode Outcome: INVALID_REQUEST
+Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0

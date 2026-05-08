@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.junit.jupiter.api.Test;
@@ -208,7 +209,7 @@ class ExcelSheetCopyPictureSupportTest {
         new ExcelBinaryData(PNG_PIXEL_BYTES),
         ExcelPictureFormat.PNG,
         anchor(fromColumn, fromRow, toColumn, toRow),
-        "Queue preview");
+        Optional.of("Queue preview"));
   }
 
   private static XSSFPicture requiredPicture(XSSFSheet sheet, String objectName) {

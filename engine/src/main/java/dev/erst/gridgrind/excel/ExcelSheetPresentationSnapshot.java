@@ -2,16 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Factual sheet-presentation state loaded from one worksheet. */
 public record ExcelSheetPresentationSnapshot(
     ExcelSheetDisplay display,
-    ExcelColorSnapshot tabColor,
+    Optional<ExcelColorSnapshot> tabColor,
     ExcelSheetOutlineSummary outlineSummary,
     ExcelSheetDefaults sheetDefaults,
     List<ExcelIgnoredError> ignoredErrors) {
   public ExcelSheetPresentationSnapshot {
     Objects.requireNonNull(display, "display must not be null");
+    Objects.requireNonNull(tabColor, "tabColor must not be null");
     Objects.requireNonNull(outlineSummary, "outlineSummary must not be null");
     Objects.requireNonNull(sheetDefaults, "sheetDefaults must not be null");
     ignoredErrors =
@@ -23,6 +25,10 @@ public record ExcelSheetPresentationSnapshot(
    */
   public ExcelSheetPresentation toAuthoringPresentation() {
     return new ExcelSheetPresentation(
-        display, ExcelColorSupport.copyOf(tabColor), outlineSummary, sheetDefaults, ignoredErrors);
+        display,
+        tabColor.map(ExcelColorSupport::copyOf),
+        outlineSummary,
+        sheetDefaults,
+        ignoredErrors);
   }
 }

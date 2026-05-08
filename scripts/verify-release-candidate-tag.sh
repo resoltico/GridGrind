@@ -37,6 +37,40 @@ if [[ -z "${repo_root}" ]]; then
     repo_root="${script_repo_root}"
 fi
 readonly repo_root
+readonly temp_parent="${repo_root}/tmp/verify-release-candidate-tag"
+
+mkdir -p "${temp_parent}"
+temp_dir="$(mktemp -d "${temp_parent%/}/run.XXXXXX")"
+cleanup() {
+    rm -rf "${temp_dir}"
+}
+trap cleanup EXIT
+
+capture_command_output() {
+    local output_path=$1
+    shift
+    "$@" > "${output_path}"
+}
+
+format_observed_checks() {
+    local output_var_name=$1
+    local checks_tsv_path=$2
+    local formatted_checks=''
+    if [[ ! -s "${checks_tsv_path}" ]]; then
+        printf -v "${output_var_name}" '%s' 'none'
+        return 0
+    fi
+    formatted_checks="$(
+        awk -F '\t' '
+            BEGIN { separator = "" }
+            {
+                printf "%s%s[%s/%s]", separator, $1, $2, $3
+                separator = ", "
+            }
+        ' "${checks_tsv_path}"
+    )"
+    printf -v "${output_var_name}" '%s' "${formatted_checks}"
+}
 
 cd "${repo_root}"
 
@@ -54,23 +88,47 @@ readonly gradle_version="$(
 [[ "${expected_version}" == "${gradle_version}" ]] || die \
     "tag version ${expected_version} does not match gradle.properties version ${gradle_version}"
 
-readonly repo_full_name="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
-readonly default_branch="$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')"
+readonly repo_full_name_path="${temp_dir}/repo-full-name.txt"
+readonly default_branch_path="${temp_dir}/default-branch.txt"
+readonly remote_tag_object_type_path="${temp_dir}/remote-tag-object-type.txt"
+readonly remote_tag_object_sha_path="${temp_dir}/remote-tag-object-sha.txt"
+readonly tag_commit_sha_path="${temp_dir}/tag-commit-sha.txt"
+readonly check_runs_tsv_path="${temp_dir}/check-runs.tsv"
+
+capture_command_output \
+    "${repo_full_name_path}" \
+    gh repo view --json nameWithOwner --jq '.nameWithOwner'
+capture_command_output \
+    "${default_branch_path}" \
+    gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+
+IFS= read -r repo_full_name < "${repo_full_name_path}" || true
+IFS= read -r default_branch < "${default_branch_path}" || true
+readonly repo_full_name
+readonly default_branch
 readonly local_commit_sha="$(git rev-parse HEAD)"
 
 [[ -n "${repo_full_name}" ]] || die "failed to resolve repository name"
 [[ -n "${default_branch}" ]] || die "failed to resolve default branch"
 
 readonly tag_ref_api="/repos/${repo_full_name}/git/ref/tags/${tag_name}"
-readonly remote_tag_object_type="$(gh api "${tag_ref_api}" --jq '.object.type')"
-readonly remote_tag_object_sha="$(gh api "${tag_ref_api}" --jq '.object.sha')"
+capture_command_output "${remote_tag_object_type_path}" gh api "${tag_ref_api}" --jq '.object.type'
+capture_command_output "${remote_tag_object_sha_path}" gh api "${tag_ref_api}" --jq '.object.sha'
+IFS= read -r remote_tag_object_type < "${remote_tag_object_type_path}" || true
+IFS= read -r remote_tag_object_sha < "${remote_tag_object_sha_path}" || true
+readonly remote_tag_object_type
+readonly remote_tag_object_sha
 
 case "${remote_tag_object_type}" in
     commit)
         readonly tag_commit_sha="${remote_tag_object_sha}"
         ;;
     tag)
-        readonly tag_commit_sha="$(gh api "/repos/${repo_full_name}/git/tags/${remote_tag_object_sha}" --jq '.object.sha')"
+        capture_command_output \
+            "${tag_commit_sha_path}" \
+            gh api "/repos/${repo_full_name}/git/tags/${remote_tag_object_sha}" --jq '.object.sha'
+        IFS= read -r tag_commit_sha < "${tag_commit_sha_path}" || true
+        readonly tag_commit_sha
         ;;
     *)
         die "unsupported remote tag object type '${remote_tag_object_type}' for ${tag_name}"
@@ -93,9 +151,11 @@ git show-ref --verify --quiet "${default_branch_ref}" || die \
 git merge-base --is-ancestor "${tag_commit_sha}" "${default_branch_ref}" || die \
     "tag ${tag_name} commit ${tag_commit_sha} is not reachable from origin/${default_branch}"
 
-readonly check_runs_tsv="$(gh api \
-    "/repos/${repo_full_name}/commits/${tag_commit_sha}/check-runs?per_page=100" \
-    --jq '.check_runs[] | [.name, .status, .conclusion] | @tsv')"
+capture_command_output \
+    "${check_runs_tsv_path}" \
+    gh api \
+        "/repos/${repo_full_name}/commits/${tag_commit_sha}/check-runs?per_page=100" \
+        --jq '.check_runs[] | [.name, .status, .conclusion] | @tsv'
 
 blocking_check_names=()
 while IFS= read -r raw_check_name || [[ -n "${raw_check_name}" ]]; do
@@ -108,28 +168,17 @@ done < <(printf '%s' "${blocking_checks_csv}" | tr ',' '\n')
 
 missing_checks=()
 for blocking_check_name in "${blocking_check_names[@]}"; do
-    if ! printf '%s\n' "${check_runs_tsv}" | awk -F '\t' -v target="${blocking_check_name}" '
+    if ! awk -F '\t' -v target="${blocking_check_name}" '
         $1 == target && $2 == "completed" && $3 == "success" { found = 1 }
         END { exit found ? 0 : 1 }
-    '; then
+    ' "${check_runs_tsv_path}"; then
         missing_checks+=("${blocking_check_name}")
     fi
 done
 
 if ((${#missing_checks[@]} > 0)); then
-    observed_checks="$(
-        if [[ -n "${check_runs_tsv}" ]]; then
-            printf '%s\n' "${check_runs_tsv}" | awk -F '\t' '
-                BEGIN { separator = "" }
-                {
-                    printf "%s%s[%s/%s]", separator, $1, $2, $3
-                    separator = ", "
-                }
-            '
-        else
-            printf 'none'
-        fi
-    )"
+    observed_checks=''
+    format_observed_checks observed_checks "${check_runs_tsv_path}"
     die \
         "tag ${tag_name} commit ${tag_commit_sha} is missing successful release-blocking checks (${missing_checks[*]}). Observed check runs: ${observed_checks}"
 fi

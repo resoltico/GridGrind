@@ -169,7 +169,7 @@ print_usage() {
         '  --stacktrace, --full-stacktrace, -s, -S' \
         '  --info, --debug, --warn, --quiet, -i, -q' \
         '  --scan, --profile, --continue, --no-continue' \
-        '  --parallel, --no-parallel' \
+        '  --no-parallel' \
         '  --build-cache, --no-build-cache' \
         '  --configuration-cache, --no-configuration-cache' \
         '  --rerun-tasks, --refresh-dependencies, --offline' \
@@ -560,7 +560,13 @@ run_monitored_command() {
 
     (
         cd "${project_dir}"
-        "$@" > >(tee -a "${log_path}" | grep -Ev --line-buffered '^\[(GRADLE-TEST-PULSE|JAZZER-PULSE)\]') 2>&1
+        set -o pipefail
+        "$@" 2>&1 | tee -a "${log_path}" | awk '
+            $0 !~ /^\[(GRADLE-TEST-PULSE|JAZZER-PULSE)\]/ {
+                print
+                fflush()
+            }
+        '
     ) &
     local child_pid=$!
 
@@ -676,8 +682,11 @@ for gradle_arg in "$@"; do
             gradle_args+=("${gradle_arg}")
             expects_value='--warning-mode'
             ;;
-        --warning-mode=*|--dry-run|--stacktrace|--full-stacktrace|--info|--debug|--warn|--quiet|--scan|--profile|--continue|--no-continue|--parallel|--no-parallel|--build-cache|--no-build-cache|--configuration-cache|--no-configuration-cache|--rerun-tasks|--refresh-dependencies|--offline|-m|-q|-i|-s|-S|-D*|-P*)
+        --warning-mode=*|--dry-run|--stacktrace|--full-stacktrace|--info|--debug|--warn|--quiet|--scan|--profile|--continue|--no-continue|--no-parallel|--build-cache|--no-build-cache|--configuration-cache|--no-configuration-cache|--rerun-tasks|--refresh-dependencies|--offline|-m|-q|-i|-s|-S|-D*|-P*)
             gradle_args+=("${gradle_arg}")
+            ;;
+        --parallel)
+            die "./check.sh does not support --parallel; the deterministic gate runs Gradle serially to preserve module-artifact integrity"
             ;;
         -p|--project-dir|--project-dir=*|-b|--build-file|--build-file=*|-c|--settings-file|--settings-file=*)
             die "do not override the project location; this script always targets ${repo_root}"
@@ -696,7 +705,17 @@ done
 
 [[ -z "${expects_value}" ]] || die "option ${expects_value} requires a value"
 
-if ! printf '%s\n' "${gradle_args[@]}" | grep -Fx -- '--no-daemon' >/dev/null 2>&1; then
+has_no_daemon_flag=false
+if ((${#gradle_args[@]} > 0)); then
+    for gradle_arg in "${gradle_args[@]}"; do
+        if [[ "${gradle_arg}" == '--no-daemon' ]]; then
+            has_no_daemon_flag=true
+            break
+        fi
+    done
+fi
+
+if [[ "${has_no_daemon_flag}" == false ]]; then
     gradle_args+=(--no-daemon)
 fi
 
@@ -742,7 +761,8 @@ run_stage() {
         --project-dir "${project_dir}" \
         ${project_cache_args[@]+"${project_cache_args[@]}"} \
         "$@" \
-        ${gradle_args[@]+"${gradle_args[@]}"}
+        ${gradle_args[@]+"${gradle_args[@]}"} \
+        --no-parallel
 }
 
 run_shell_stage() {

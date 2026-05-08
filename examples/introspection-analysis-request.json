@@ -159,6 +159,7 @@
         "type" : "WORKBOOK"
       },
       "target" : {
+        "kind" : "RANGE",
         "sheetName" : "Dashboard",
         "range" : "B4"
       }

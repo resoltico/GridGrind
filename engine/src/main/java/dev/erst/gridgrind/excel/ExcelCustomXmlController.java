@@ -152,13 +152,17 @@ final class ExcelCustomXmlController {
         ctMap.getAppend(),
         ctMap.getPreserveSortAFLayout(),
         ctMap.getPreserveFormat(),
-        schema != null && schema.isSetNamespace() ? nullIfBlank(schema.getNamespace()) : null,
+        schema != null && schema.isSetNamespace()
+            ? blankAsOptional(schema.getNamespace())
+            : Optional.empty(),
         schema != null && schema.isSetSchemaLanguage()
-            ? nullIfBlank(schema.getSchemaLanguage())
-            : null,
-        schema != null && schema.isSetSchemaRef() ? nullIfBlank(schema.getSchemaRef()) : null,
-        schemaXml(mapping).orElse(null),
-        dataBinding(ctMap).orElse(null),
+            ? blankAsOptional(schema.getSchemaLanguage())
+            : Optional.empty(),
+        schema != null && schema.isSetSchemaRef()
+            ? blankAsOptional(schema.getSchemaRef())
+            : Optional.empty(),
+        schemaXml(mapping),
+        dataBinding(ctMap),
         linkedCells(mapping),
         linkedTables(mapping));
   }
@@ -171,13 +175,17 @@ final class ExcelCustomXmlController {
     return Optional.of(
         new ExcelCustomXmlDataBindingSnapshot(
             dataBinding.isSetDataBindingName()
-                ? nullIfBlank(dataBinding.getDataBindingName())
-                : null,
-            dataBinding.isSetFileBinding() ? dataBinding.getFileBinding() : null,
-            dataBinding.isSetConnectionID() ? dataBinding.getConnectionID() : null,
+                ? blankAsOptional(dataBinding.getDataBindingName())
+                : Optional.empty(),
+            dataBinding.isSetFileBinding()
+                ? Optional.of(dataBinding.getFileBinding())
+                : Optional.empty(),
+            dataBinding.isSetConnectionID()
+                ? Optional.of(dataBinding.getConnectionID())
+                : Optional.empty(),
             dataBinding.isSetFileBindingName()
-                ? nullIfBlank(dataBinding.getFileBindingName())
-                : null,
+                ? blankAsOptional(dataBinding.getFileBindingName())
+                : Optional.empty(),
             dataBinding.getDataBindingLoadMode()));
   }
 
@@ -215,7 +223,7 @@ final class ExcelCustomXmlController {
       return Optional.empty();
     }
     try {
-      return Optional.ofNullable(schemaXml(mapping, schema, XMLHelper.newTransformer()));
+      return blankAsOptional(schemaXml(mapping, schema, XMLHelper.newTransformer()));
     } catch (TransformerException exception) {
       throw new IllegalStateException(
           "Failed to serialize custom XML schema for mapping '" + mappingName(mapping) + "'",
@@ -228,7 +236,7 @@ final class ExcelCustomXmlController {
     if (schema == null) {
       return Optional.empty();
     }
-    return Optional.ofNullable(schemaXml(mapping, schema, transformer));
+    return blankAsOptional(schemaXml(mapping, schema, transformer));
   }
 
   private static String schemaXml(XSSFMap mapping, Node schema, Transformer transformer) {
@@ -238,7 +246,7 @@ final class ExcelCustomXmlController {
       transformer.setOutputProperty(OutputKeys.INDENT, "no");
       ByteArrayOutputStream output = new ByteArrayOutputStream();
       transformer.transform(new DOMSource(schema), new StreamResult(output));
-      return nullIfBlank(output.toString(StandardCharsets.UTF_8));
+      return output.toString(StandardCharsets.UTF_8);
     } catch (TransformerException exception) {
       throw new IllegalStateException(
           "Failed to serialize custom XML schema for mapping '" + mappingName(mapping) + "'",
@@ -250,7 +258,7 @@ final class ExcelCustomXmlController {
     return mapping.getCtMap().getName();
   }
 
-  static String nullIfBlank(String value) {
-    return value == null || value.isBlank() ? null : value;
+  static Optional<String> blankAsOptional(String value) {
+    return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
   }
 }

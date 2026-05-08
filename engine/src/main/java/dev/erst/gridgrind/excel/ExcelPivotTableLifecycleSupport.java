@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -9,6 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheRecords;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotCache;
 
 /** Owns destructive pivot-table lifecycle and package-part cleanup helpers. */
@@ -20,23 +22,24 @@ final class ExcelPivotTableLifecycleSupport {
       PivotHandle handle,
       List<PivotHandle> allPivotTables,
       BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> poiRelationRemover) {
-    XSSFPivotCacheDefinition cacheDefinition =
+    Optional<XSSFPivotCacheDefinition> cacheDefinition =
         ExcelPivotTableSnapshotSupport.cacheDefinition(handle.table());
     PackagePartName pivotTablePartName =
         handle.table().getPackagePart() == null
             ? null
             : handle.table().getPackagePart().getPartName();
     PackagePartName cacheDefinitionPartName =
-        cacheDefinition == null || cacheDefinition.getPackagePart() == null
+        cacheDefinition.isEmpty() || cacheDefinition.orElseThrow().getPackagePart() == null
             ? null
-            : cacheDefinition.getPackagePart().getPartName();
+            : cacheDefinition.orElseThrow().getPackagePart().getPartName();
     String cacheRelationId =
-        cacheDefinition == null
+        cacheDefinition.isEmpty()
             ? null
-            : handle.sheet().getWorkbook().getRelationId(cacheDefinition);
+            : handle.sheet().getWorkbook().getRelationId(cacheDefinition.orElseThrow());
     boolean sharedCache =
-        cacheDefinition != null
-            && cacheDefinitionShared(workbook, handle, cacheDefinition, allPivotTables);
+        cacheDefinition.isPresent()
+            && cacheDefinitionShared(
+                workbook, handle, cacheDefinition.orElseThrow(), allPivotTables);
 
     if (!removePoiRelation(handle.sheet(), handle.table(), poiRelationRemover)) {
       throw new IllegalStateException(
@@ -47,12 +50,13 @@ final class ExcelPivotTableLifecycleSupport {
     workbook.xssfWorkbook().getPivotTables().remove(handle.table());
     cleanupPackagePartIfUnused(workbook.xssfWorkbook().getPackage(), pivotTablePartName);
 
-    if (!sharedCache && cacheDefinition != null) {
+    if (!sharedCache && cacheDefinition.isPresent()) {
       removeWorkbookPivotCacheRegistration(
           workbook.xssfWorkbook(),
           handle.table().getCTPivotTableDefinition().getCacheId(),
           cacheRelationId);
-      if (!removePoiRelation(workbook.xssfWorkbook(), cacheDefinition, poiRelationRemover)) {
+      if (!removePoiRelation(
+          workbook.xssfWorkbook(), cacheDefinition.orElseThrow(), poiRelationRemover)) {
         throw new IllegalStateException(
             "Failed to remove pivot cache definition relation for '"
                 + ExcelPivotTableIdentitySupport.resolvedName(handle)
@@ -64,7 +68,7 @@ final class ExcelPivotTableLifecycleSupport {
   }
 
   static void removeWorkbookPivotCacheRegistration(
-      XSSFWorkbook workbook, long cacheId, String relationId) {
+      XSSFWorkbook workbook, long cacheId, @Nullable String relationId) {
     if (!workbook.getCTWorkbook().isSetPivotCaches()) {
       return;
     }
@@ -99,12 +103,17 @@ final class ExcelPivotTableLifecycleSupport {
       if (handle.table().getPackagePart().getPartName().getName().equals(currentPivotPartName)) {
         continue;
       }
-      XSSFPivotCacheDefinition otherCacheDefinition =
+      Optional<XSSFPivotCacheDefinition> otherCacheDefinition =
           ExcelPivotTableSnapshotSupport.cacheDefinition(handle.table());
-      if (otherCacheDefinition == null) {
+      if (otherCacheDefinition.isEmpty()) {
         continue;
       }
-      if (otherCacheDefinition.getPackagePart().getPartName().getName().equals(expectedPartName)) {
+      if (otherCacheDefinition
+          .orElseThrow()
+          .getPackagePart()
+          .getPartName()
+          .getName()
+          .equals(expectedPartName)) {
         return true;
       }
     }
@@ -119,7 +128,7 @@ final class ExcelPivotTableLifecycleSupport {
   }
 
   static void cleanupPackagePartIfUnused(
-      org.apache.poi.openxml4j.opc.OPCPackage pkg, PackagePartName partName) {
+      org.apache.poi.openxml4j.opc.OPCPackage pkg, @Nullable PackagePartName partName) {
     if (partName == null) {
       return;
     }
@@ -147,19 +156,20 @@ final class ExcelPivotTableLifecycleSupport {
     }
   }
 
-  static void primePivotTableAllocator(XSSFWorkbook workbook, XSSFPivotTable allocationSentinel) {
+  static void primePivotTableAllocator(
+      XSSFWorkbook workbook, Optional<XSSFPivotTable> allocationSentinel) {
     int highWaterMark = pivotTableIdHighWaterMark(workbook);
     List<XSSFPivotTable> registry = workbook.getPivotTables();
     if (registry.size() >= highWaterMark) {
       return;
     }
     if (registry.isEmpty()) {
-      if (allocationSentinel == null) {
+      if (allocationSentinel.isEmpty()) {
         throw new IllegalStateException(
             "Pivot table allocation cannot advance because the workbook still contains pivot package numbering without any live pivot relations.");
       }
       while (registry.size() < highWaterMark) {
-        registry.add(allocationSentinel);
+        registry.add(allocationSentinel.orElseThrow());
       }
       return;
     }
@@ -201,19 +211,22 @@ final class ExcelPivotTableLifecycleSupport {
           continue;
         }
         maximum = Math.max(maximum, packagePartIndex(pivotTable, "/xl/pivotTables/pivotTable"));
-        XSSFPivotCacheDefinition cacheDefinition =
+        Optional<XSSFPivotCacheDefinition> cacheDefinition =
             ExcelPivotTableSnapshotSupport.cacheDefinition(pivotTable);
-        if (cacheDefinition != null) {
+        if (cacheDefinition.isPresent()) {
           maximum =
               Math.max(
                   maximum,
-                  packagePartIndex(cacheDefinition, "/xl/pivotCache/pivotCacheDefinition"));
-          XSSFPivotCacheRecords cacheRecords =
-              ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition);
-          if (cacheRecords != null) {
+                  packagePartIndex(
+                      cacheDefinition.orElseThrow(), "/xl/pivotCache/pivotCacheDefinition"));
+          Optional<XSSFPivotCacheRecords> cacheRecords =
+              ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition.orElseThrow());
+          if (cacheRecords.isPresent()) {
             maximum =
                 Math.max(
-                    maximum, packagePartIndex(cacheRecords, "/xl/pivotCache/pivotCacheRecords"));
+                    maximum,
+                    packagePartIndex(
+                        cacheRecords.orElseThrow(), "/xl/pivotCache/pivotCacheRecords"));
           }
         }
       }

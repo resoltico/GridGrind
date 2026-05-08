@@ -3,8 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -39,7 +37,7 @@ class ExcelCustomXmlControllerTest {
       assertFalse(mapping.append());
       assertTrue(mapping.preserveSortAfLayout());
       assertTrue(mapping.preserveFormat());
-      assertTrue(mapping.schemaXml().contains("<xsd:element name=\"CORSO\""));
+      assertTrue(mapping.schemaXml().orElseThrow().contains("<xsd:element name=\"CORSO\""));
       assertEquals(8, mapping.linkedCells().size());
       assertEquals("Foglio1", mapping.linkedCells().getFirst().sheetName());
       assertEquals("A1", mapping.linkedCells().getFirst().address());
@@ -271,10 +269,10 @@ class ExcelCustomXmlControllerTest {
 
     ExcelCustomXmlDataBindingSnapshot dataBinding =
         ExcelCustomXmlController.dataBinding(ctMap).orElseThrow();
-    assertNull(dataBinding.dataBindingName());
-    assertNull(dataBinding.fileBinding());
-    assertNull(dataBinding.connectionId());
-    assertNull(dataBinding.fileBindingName());
+    assertEquals(Optional.empty(), dataBinding.dataBindingName());
+    assertEquals(Optional.empty(), dataBinding.fileBinding());
+    assertEquals(Optional.empty(), dataBinding.connectionId());
+    assertEquals(Optional.empty(), dataBinding.fileBindingName());
     assertEquals(7L, dataBinding.loadMode());
   }
 
@@ -293,10 +291,10 @@ class ExcelCustomXmlControllerTest {
     fullBinding.setDataBindingLoadMode(5L);
     ExcelCustomXmlDataBindingSnapshot fullDataBinding =
         ExcelCustomXmlController.dataBinding(boundCtMap).orElseThrow();
-    assertEquals("Binding", fullDataBinding.dataBindingName());
-    assertEquals(true, fullDataBinding.fileBinding());
-    assertEquals(9L, fullDataBinding.connectionId());
-    assertEquals("orders.xml", fullDataBinding.fileBindingName());
+    assertEquals(Optional.of("Binding"), fullDataBinding.dataBindingName());
+    assertEquals(Optional.of(true), fullDataBinding.fileBinding());
+    assertEquals(Optional.of(9L), fullDataBinding.connectionId());
+    assertEquals(Optional.of("orders.xml"), fullDataBinding.fileBindingName());
     assertEquals(5L, fullDataBinding.loadMode());
   }
 
@@ -325,18 +323,19 @@ class ExcelCustomXmlControllerTest {
 
       ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(map);
       assertEquals("OrdersMapping", snapshot.name());
-      assertNull(snapshot.schemaNamespace());
-      assertEquals("XSD", snapshot.schemaLanguage());
-      assertNull(snapshot.schemaReference());
-      assertNotNull(snapshot.schemaXml());
+      assertEquals(Optional.empty(), snapshot.schemaNamespace());
+      assertEquals(Optional.of("XSD"), snapshot.schemaLanguage());
+      assertEquals(Optional.empty(), snapshot.schemaReference());
+      assertTrue(snapshot.schemaXml().isPresent());
       assertEquals(List.of(), snapshot.linkedCells());
       assertEquals(1, snapshot.linkedTables().size());
       assertEquals("OrdersTable", snapshot.linkedTables().getFirst().tableName());
       assertEquals("Orders!A1:B2", snapshot.linkedTables().getFirst().range());
       assertEquals("OrdersMapping", ExcelCustomXmlController.mappingName(map));
-      assertNull(ExcelCustomXmlController.nullIfBlank(null));
-      assertNull(ExcelCustomXmlController.nullIfBlank(" "));
-      assertEquals("OrdersMapping", ExcelCustomXmlController.nullIfBlank("OrdersMapping"));
+      assertEquals(Optional.empty(), ExcelCustomXmlController.blankAsOptional(null));
+      assertEquals(Optional.empty(), ExcelCustomXmlController.blankAsOptional(" "));
+      assertEquals(
+          Optional.of("OrdersMapping"), ExcelCustomXmlController.blankAsOptional("OrdersMapping"));
       assertEquals(
           Optional.empty(),
           ExcelCustomXmlController.schemaXml(
@@ -348,17 +347,17 @@ class ExcelCustomXmlControllerTest {
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, emptySchema, schemaNode, List.of(), List.of(table)));
-      assertNull(emptySchemaSnapshot.schemaNamespace());
-      assertNull(emptySchemaSnapshot.schemaLanguage());
-      assertNull(emptySchemaSnapshot.schemaReference());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaNamespace());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaLanguage());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaReference());
 
       ExcelCustomXmlMappingSnapshot nullSchemaSnapshot =
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, null, schemaNode, List.of(), List.of(table)));
-      assertNull(nullSchemaSnapshot.schemaNamespace());
-      assertNull(nullSchemaSnapshot.schemaLanguage());
-      assertNull(nullSchemaSnapshot.schemaReference());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaNamespace());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaLanguage());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaReference());
 
       CTSchema richSchema = CTSchema.Factory.newInstance();
       richSchema.setNamespace("urn:orders");
@@ -367,9 +366,9 @@ class ExcelCustomXmlControllerTest {
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, richSchema, schemaNode, List.of(), List.of(table)));
-      assertEquals("urn:orders", richSchemaSnapshot.schemaNamespace());
-      assertNull(richSchemaSnapshot.schemaLanguage());
-      assertEquals("orders.xsd", richSchemaSnapshot.schemaReference());
+      assertEquals(Optional.of("urn:orders"), richSchemaSnapshot.schemaNamespace());
+      assertEquals(Optional.empty(), richSchemaSnapshot.schemaLanguage());
+      assertEquals(Optional.of("orders.xsd"), richSchemaSnapshot.schemaReference());
     }
   }
 

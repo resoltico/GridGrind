@@ -39,7 +39,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
 readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX")"
 readonly docker_run_user="$(id -u):$(id -g)"
-readonly cli_jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
+readonly cli_shadow_jar_support="${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
 readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
 readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
 readonly pid_file="${lock_dir}/pid"
@@ -58,8 +58,11 @@ prepare_project_cache_dir() {
 }
 
 project_cache_dir="$(prepare_project_cache_dir "${GRIDGRIND_PROJECT_CACHE_DIR:-}")"
+[[ -f "${cli_shadow_jar_support}" ]] || die "missing CLI shadow jar helper at ${cli_shadow_jar_support}"
 [[ -f "${repo_lock_support}" ]] || die "missing repo verification lock helper at ${repo_lock_support}"
 
+# shellcheck source=/dev/null
+source "${cli_shadow_jar_support}"
 # shellcheck source=/dev/null
 source "${repo_lock_support}"
 
@@ -145,7 +148,7 @@ if [[ -n "${project_cache_dir}" ]]; then
 fi
 gradle_command+=(:cli:shadowJar)
 "${gradle_command[@]}" >/dev/null
-[[ -f "${cli_jar_path}" ]] || die "missing CLI fat JAR at ${cli_jar_path} after :cli:shadowJar"
+readonly cli_jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 
 docker_endpoint="${DOCKER_HOST:-}"
 if [[ -z "${docker_endpoint}" ]]; then

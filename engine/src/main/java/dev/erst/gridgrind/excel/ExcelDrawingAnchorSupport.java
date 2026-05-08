@@ -1,12 +1,14 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.xmlbeans.XmlObject;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.main.STShapeType;
 
 /** Shared anchor, shape-XML, and name helpers for drawing read and mutation workflows. */
@@ -38,7 +40,7 @@ final class ExcelDrawingAnchorSupport {
   }
 
   static ExcelDrawingAnchor snapshotAnchor(XmlObject shapeXml) {
-    XmlObject parentAnchor = parentAnchor(shapeXml);
+    XmlObject parentAnchor = parentAnchor(shapeXml).orElse(null);
     return switch (parentAnchor) {
       case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTTwoCellAnchor
               twoCellAnchor ->
@@ -114,17 +116,20 @@ final class ExcelDrawingAnchorSupport {
   }
 
   @SuppressWarnings("PMD.UseTryWithResources")
-  static XmlObject parentAnchor(XmlObject shapeXml) {
+  static Optional<XmlObject> parentAnchor(@Nullable XmlObject shapeXml) {
+    if (shapeXml == null) {
+      return Optional.empty();
+    }
     org.apache.xmlbeans.XmlCursor cursor = shapeXml.newCursor();
     try {
-      return cursor.toParent() ? cursor.getObject() : null;
+      return cursor.toParent() ? Optional.of(cursor.getObject()) : Optional.empty();
     } finally {
       cursor.close();
     }
   }
 
   static String resolvedName(XSSFShape shape) {
-    return nullIfBlank(shape.getShapeName()) != null ? shape.getShapeName() : defaultName(shape);
+    return blankAsOptional(shape.getShapeName()).orElseGet(() -> defaultName(shape));
   }
 
   static int shapeType(String presetGeometryToken) {
@@ -138,7 +143,7 @@ final class ExcelDrawingAnchorSupport {
   static void updateAnchorInPlace(
       XSSFSheet sheet,
       String objectName,
-      XmlObject parentAnchor,
+      @Nullable XmlObject parentAnchor,
       ExcelDrawingAnchor.TwoCell anchor) {
     if (!(parentAnchor
         instanceof
@@ -201,7 +206,7 @@ final class ExcelDrawingAnchorSupport {
     };
   }
 
-  static String nullIfBlank(String value) {
-    return value == null || value.isBlank() ? null : value;
+  static Optional<String> blankAsOptional(String value) {
+    return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
   }
 }

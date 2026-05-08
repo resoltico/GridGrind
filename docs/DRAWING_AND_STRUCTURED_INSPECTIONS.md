@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
 updated: "2026-05-01"
 route:
@@ -489,7 +489,7 @@ Groups formula usage across one or more sheets.
 }
 ```
 
-Response shape: `{ "analysis": { "totalFormulaCellCount": ..., "sheets": [ { "sheetName": ...,`
+Response shape: `{ "surface": { "totalFormulaCellCount": ..., "sheets": [ { "sheetName": ...,`
 `"formulaCellCount": ..., "distinctFormulaCount": ..., "formulas": [ { "formula": ...,`
 `"occurrenceCount": ..., "addresses": [...] } ] } ] } }`.
 
@@ -576,6 +576,6 @@ Summarizes the scope and backing kind of selected named ranges.
 }
 ```
 
-Response shape: `{ "analysis": { "workbookScopedCount": ..., "sheetScopedCount": ...,`
+Response shape: `{ "surface": { "workbookScopedCount": ..., "sheetScopedCount": ...,`
 `"rangeBackedCount": ..., "formulaBackedCount": ..., "namedRanges": [ { "name": ..., "scope":`
 `..., "refersToFormula": ..., "kind": ... } ] } }`.

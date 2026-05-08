@@ -2,9 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -35,23 +35,13 @@ class ExcelDrawingAuthoringResidualCoverageTest extends ExcelDrawingCoverageTest
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(0, 0, 2, 2),
-              null));
+              Optional.empty()));
       controller.setShape(
           sheet,
-          new ExcelShapeDefinition(
-              "TextlessShape",
-              ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-              anchor(3, 0, 5, 2),
-              "rect",
-              null));
+          new ExcelShapeDefinition.SimpleShape(
+              "TextlessShape", anchor(3, 0, 5, 2), "rect", Optional.empty()));
       controller.setShape(
-          sheet,
-          new ExcelShapeDefinition(
-              "ConnectorOnly",
-              ExcelAuthoredDrawingShapeKind.CONNECTOR,
-              anchor(6, 0, 8, 2),
-              null,
-              null));
+          sheet, new ExcelShapeDefinition.Connector("ConnectorOnly", anchor(6, 0, 8, 2)));
       controller.setEmbeddedObject(
           sheet,
           new ExcelEmbeddedObjectDefinition(

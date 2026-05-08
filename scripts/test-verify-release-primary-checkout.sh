@@ -61,18 +61,26 @@ EOF
 run_verify_expect_success() {
     local primary_dir=$1
     local expected_version=$2
-    shift 2
+    local case_name="${3:-success}"
+    shift 3
     (
-        "$@" "${verify_script}" "${primary_dir}" "${expected_version}" >/dev/null
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
+        "$@" "${verify_script}" "${primary_dir}" "${expected_version}" \
+            >"${stdout_path}" 2>"${stderr_path}"
     )
 }
 
 run_verify_expect_failure() {
     local primary_dir=$1
     local expected_version=$2
-    shift 2
+    local case_name="${3:-failure}"
+    shift 3
     (
-        if "$@" "${verify_script}" "${primary_dir}" "${expected_version}" >/dev/null 2>&1; then
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
+        if "$@" "${verify_script}" "${primary_dir}" "${expected_version}" \
+            >"${stdout_path}" 2>"${stderr_path}"; then
             die "verifier unexpectedly succeeded"
         fi
     )
@@ -98,19 +106,19 @@ success_repo="$(create_repo "${test_root}/success" "9.9.9")"
 mkdir -p "${success_repo}/tmp/release scratch" "${success_repo}/generated"
 printf 'scratch\n' > "${success_repo}/tmp/release scratch/log.txt"
 printf 'scratch\n' > "${success_repo}/generated/example.txt"
-run_verify_expect_success "${success_repo}" "9.9.9" env
+run_verify_expect_success "${success_repo}" "9.9.9" success env
 
 unexpected_untracked_repo="$(create_repo "${test_root}/unexpected-untracked" "8.8.8")"
 printf 'oops\n' > "${unexpected_untracked_repo}/unexpected.txt"
-run_verify_expect_failure "${unexpected_untracked_repo}" "8.8.8" env
+run_verify_expect_failure "${unexpected_untracked_repo}" "8.8.8" unexpected-untracked env
 
 dirty_repo="$(create_repo "${test_root}/dirty" "7.7.7")"
 printf '\nreleaseNote=dirty\n' >> "${dirty_repo}/gradle.properties"
-run_verify_expect_failure "${dirty_repo}" "7.7.7" env
+run_verify_expect_failure "${dirty_repo}" "7.7.7" dirty env
 
 wrong_branch_repo="$(create_repo "${test_root}/wrong-branch" "6.6.6")"
 git -C "${wrong_branch_repo}" checkout -b feature/reconcile >/dev/null 2>&1
-run_verify_expect_failure "${wrong_branch_repo}" "6.6.6" env
+run_verify_expect_failure "${wrong_branch_repo}" "6.6.6" wrong-branch env
 
 stale_repo="$(create_repo "${test_root}/stale" "5.5.5")"
 peer_repo="${test_root}/stale-peer"
@@ -125,9 +133,9 @@ git clone "${test_root}/stale/origin.git" "${peer_repo}" >/dev/null 2>&1
     git commit -m "Advance origin" >/dev/null
     git push origin main >/dev/null 2>&1
 )
-run_verify_expect_failure "${stale_repo}" "5.5.5" env
+run_verify_expect_failure "${stale_repo}" "5.5.5" stale env
 
 version_repo="$(create_repo "${test_root}/version" "4.4.4")"
-run_verify_expect_failure "${version_repo}" "4.4.5" env
+run_verify_expect_failure "${version_repo}" "4.4.5" version env
 
 printf 'verify-release-primary-checkout regression: success\n'

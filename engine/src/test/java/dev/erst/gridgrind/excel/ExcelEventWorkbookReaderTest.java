@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook;
@@ -39,7 +40,7 @@ class ExcelEventWorkbookReaderTest {
           new ExcelSheetProtectionSettings(
               true, false, false, false, false, false, false, false, false, true, false, false,
               true, true, false),
-          "secret");
+          Optional.of("secret"));
       expectedWorkbookSummary = workbook.workbookSummary();
       expectedSheetSummary = workbook.sheetSummary("Ops");
       workbook.save(workbookPath);
@@ -51,13 +52,17 @@ class ExcelEventWorkbookReaderTest {
                 workbookPath,
                 List.of(
                     new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-                    new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
+                    new WorkbookReadCommand.GetSheetSummary("sheet", "Ops"),
+                    new WorkbookReadCommand.GetSheetSummary("sheet-again", "Ops")));
 
     assertEquals(
         new WorkbookCoreResult.WorkbookSummaryResult("workbook", expectedWorkbookSummary),
         reads.get(0));
     assertEquals(
         new WorkbookSheetResult.SheetSummaryResult("sheet", expectedSheetSummary), reads.get(1));
+    assertEquals(
+        new WorkbookSheetResult.SheetSummaryResult("sheet-again", expectedSheetSummary),
+        reads.get(2));
   }
 
   @Test
@@ -486,10 +491,7 @@ class ExcelEventWorkbookReaderTest {
       case WorkbookReadCommand.GetAutofilters _ -> "GET_AUTOFILTERS";
       case WorkbookReadCommand.GetTables _ -> "GET_TABLES";
       case WorkbookReadCommand.GetArrayFormulas _ -> "GET_ARRAY_FORMULAS";
-      case WorkbookReadCommand.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
-      case WorkbookReadCommand.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
-      case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
     };
   }
 

@@ -2,12 +2,12 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for step-based successful and failed protocol responses. */
@@ -26,9 +27,9 @@ class GridGrindResponseTest {
         new RequestWarning(0, "set-total", "SET_CELL", "Quote spaced sheet names in formulas."));
     List<InspectionResult> inspections = new ArrayList<>();
     inspections.add(
-        new InspectionResult.WorkbookSummaryResult(
+        new WorkbookInspectionResult.WorkbookSummaryResult(
             "summary",
-            new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
+            new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
     GridGrindResponse.Success success =
@@ -55,7 +56,6 @@ class GridGrindResponseTest {
   void failureBackfillConstructorCreatesFailedSyntheticJournal() {
     GridGrindResponse.Failure failure =
         GridGrindResponses.failure(
-            null,
             GridGrindProblemDetail.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "boom",
@@ -162,11 +162,10 @@ class GridGrindResponseTest {
 
   @Test
   void typedVariantsReplaceNullPaddingAndContextMergersPreserveExistingValues() {
-    GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport formulaOnly =
-        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
+    NamedRangeReport.FormulaReport formulaOnly =
+        new NamedRangeReport.FormulaReport(
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!A1:A3)");
-    GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected unprotected =
-        new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected();
+    SheetProtectionReport.Unprotected unprotected = new SheetProtectionReport.Unprotected();
     dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
             "A1",
@@ -184,12 +183,11 @@ class GridGrindResponseTest {
 
     assertEquals("BudgetExpr", formulaOnly.name());
     assertEquals("SUM(Budget!A1:A3)", formulaOnly.refersToFormula());
-    assertInstanceOf(
-        GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected.class, unprotected);
+    assertInstanceOf(SheetProtectionReport.Unprotected.class, unprotected);
     assertEquals("BLANK", blankCell.effectiveType());
     assertEquals(java.util.Optional.empty(), blankCell.hyperlink());
     assertEquals(java.util.Optional.empty(), blankCell.comment());
-    assertNull(new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
+    assertEquals(Optional.empty(), new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
     assertEquals(java.util.Optional.of("/tmp/request.json"), readRequest.requestPath());
     assertEquals(java.util.Optional.of("steps[0]"), readRequest.jsonPath());
     assertEquals(java.util.Optional.of(4), readRequest.jsonLine());
@@ -224,8 +222,7 @@ class GridGrindResponseTest {
   @Test
   void cellReportDefaultAccessorsDispatchAcrossEverySubtype() {
     HyperlinkTarget hyperlink = new HyperlinkTarget.Url("https://example.com/budget");
-    GridGrindWorkbookSurfaceReports.CommentReport comment =
-        new GridGrindWorkbookSurfaceReports.CommentReport("Reviewed", "Alice", true);
+    CommentReport comment = new CommentReport("Reviewed", "Alice", true);
     dev.erst.gridgrind.contract.dto.CellReport textCell =
         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
             "A1",
@@ -298,9 +295,10 @@ class GridGrindResponseTest {
     AutofilterSortStateReport sortState =
         AutofilterSortStateReport.withoutSortMethod("A1:B4", false, true, List.of());
     AutofilterEntryReport entry =
-        new AutofilterEntryReport.TableOwned("A1:B4", "BudgetTable", List.of(), sortState);
+        new AutofilterEntryReport.TableOwned(
+            "A1:B4", "BudgetTable", List.of(), Optional.of(sortState));
 
-    assertEquals(sortState, entry.sortState());
+    assertEquals(Optional.of(sortState), entry.sortState());
   }
 
   @Test
@@ -325,16 +323,14 @@ class GridGrindResponseTest {
         "sheetCount must be 0 for an empty workbook",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
-                        1, List.of("Budget"), 0, false))
+                () -> new WorkbookSummary.Empty(1, List.of("Budget"), 0, false))
             .getMessage());
     assertEquals(
         "selectedSheetNames must only contain values present in sheetNames",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
+                    new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Ops"), 0, false))
             .getMessage());
     assertEquals(
@@ -366,7 +362,7 @@ class GridGrindResponseTest {
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape
                         .known("NEW", "NONE")),
                 java.util.Optional.empty(),
-                null)
+                List.of())
             .causes());
   }
 
@@ -380,9 +376,9 @@ class GridGrindResponseTest {
             List.of(),
             assertions,
             List.of(
-                new InspectionResult.WorkbookSummaryResult(
+                new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
+                    new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     assertions.clear();
 
@@ -394,7 +390,7 @@ class GridGrindResponseTest {
             "assert-total",
             "EXPECT_CELL_VALUE",
             new dev.erst.gridgrind.contract.selector.CellSelector.ByAddress("Budget", "B4"),
-            new dev.erst.gridgrind.contract.assertion.Assertion.CellValue(
+            new dev.erst.gridgrind.contract.assertion.CellAssertion.CellValue(
                 new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.NumericValue(42.0d)),
             List.of());
     GridGrindProblemDetail.Problem problem =
@@ -487,9 +483,9 @@ class GridGrindResponseTest {
             .getMessage());
   }
 
-  private static GridGrindWorkbookSurfaceReports.CellStyleReport minimalStyle() {
+  private static CellStyleReport minimalStyle() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
+    return new CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),

@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual conditional-formatting rule metadata loaded from one workbook block. */
 public sealed interface ExcelConditionalFormattingRuleSnapshot
@@ -24,7 +25,10 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
   record FormulaRule(
-      int priority, boolean stopIfTrue, String formula, ExcelDifferentialStyleSnapshot style)
+      int priority,
+      boolean stopIfTrue,
+      String formula,
+      @Nullable ExcelDifferentialStyleSnapshot style)
       implements ExcelConditionalFormattingRuleSnapshot {
     public FormulaRule {
       requirePriority(priority);
@@ -38,8 +42,8 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
       boolean stopIfTrue,
       ExcelComparisonOperator operator,
       String formula1,
-      String formula2,
-      ExcelDifferentialStyleSnapshot style)
+      @Nullable String formula2,
+      @Nullable ExcelDifferentialStyleSnapshot style)
       implements ExcelConditionalFormattingRuleSnapshot {
     public CellValueRule {
       requirePriority(priority);
@@ -113,7 +117,7 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
       int rank,
       boolean percent,
       boolean bottom,
-      ExcelDifferentialStyleSnapshot style)
+      @Nullable ExcelDifferentialStyleSnapshot style)
       implements ExcelConditionalFormattingRuleSnapshot {
     public Top10Rule {
       requirePriority(priority);

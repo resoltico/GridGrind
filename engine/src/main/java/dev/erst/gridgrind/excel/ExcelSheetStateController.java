@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -54,10 +55,10 @@ final class ExcelSheetStateController {
   ExcelWorkbookProtectionSnapshot workbookProtection(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
-    CTWorkbookProtection protection =
+    Optional<CTWorkbookProtection> protection =
         workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()
-            ? workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection()
-            : null;
+            ? Optional.of(workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection())
+            : Optional.empty();
     return new ExcelWorkbookProtectionSnapshot(
         workbook.xssfWorkbook().isStructureLocked(),
         workbook.xssfWorkbook().isWindowsLocked(),
@@ -204,15 +205,16 @@ final class ExcelSheetStateController {
       ExcelWorkbook workbook,
       String sheetName,
       ExcelSheetProtectionSettings protection,
-      String password) {
+      Optional<String> password) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
     Objects.requireNonNull(protection, "protection must not be null");
+    Objects.requireNonNull(password, "password must not be null");
 
     XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
-    sheet.protectSheet(password == null ? "" : password);
-    if (password != null) {
-      sheet.setSheetPassword(password, HashAlgorithm.sha512);
+    sheet.protectSheet(password.orElse(""));
+    if (password.isPresent()) {
+      sheet.setSheetPassword(password.orElseThrow(), HashAlgorithm.sha512);
     }
     ExcelSheetProtectionSupport.apply(sheet, protection);
     return workbook;
@@ -245,15 +247,15 @@ final class ExcelSheetStateController {
     if (protection.revisionsLocked()) {
       workbook.xssfWorkbook().lockRevision();
     }
-    if (protection.workbookPassword() != null) {
+    if (protection.workbookPassword().isPresent()) {
       workbook
           .xssfWorkbook()
-          .setWorkbookPassword(protection.workbookPassword(), HashAlgorithm.sha512);
+          .setWorkbookPassword(protection.workbookPassword().orElseThrow(), HashAlgorithm.sha512);
     }
-    if (protection.revisionsPassword() != null) {
+    if (protection.revisionsPassword().isPresent()) {
       workbook
           .xssfWorkbook()
-          .setRevisionsPassword(protection.revisionsPassword(), HashAlgorithm.sha512);
+          .setRevisionsPassword(protection.revisionsPassword().orElseThrow(), HashAlgorithm.sha512);
     }
     normalizeWorkbookProtectionNode(workbook);
     return workbook;
@@ -267,8 +269,8 @@ final class ExcelSheetStateController {
   }
 
   private static void normalizeWorkbookProtectionNode(ExcelWorkbook workbook) {
-    CTWorkbookProtection protection =
-        workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection();
+    Optional<CTWorkbookProtection> protection =
+        Optional.ofNullable(workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection());
     boolean hasLocks =
         workbook.xssfWorkbook().isStructureLocked()
             || workbook.xssfWorkbook().isWindowsLocked()
@@ -280,21 +282,21 @@ final class ExcelSheetStateController {
     }
   }
 
-  private static boolean workbookPasswordHashPresent(CTWorkbookProtection protection) {
-    return protection != null
-        && (protection.isSetWorkbookPassword()
-            || protection.isSetWorkbookHashValue()
-            || protection.isSetWorkbookSaltValue()
-            || protection.isSetWorkbookSpinCount()
-            || protection.isSetWorkbookAlgorithmName());
+  private static boolean workbookPasswordHashPresent(Optional<CTWorkbookProtection> protection) {
+    return protection.isPresent()
+        && (protection.orElseThrow().isSetWorkbookPassword()
+            || protection.orElseThrow().isSetWorkbookHashValue()
+            || protection.orElseThrow().isSetWorkbookSaltValue()
+            || protection.orElseThrow().isSetWorkbookSpinCount()
+            || protection.orElseThrow().isSetWorkbookAlgorithmName());
   }
 
-  private static boolean revisionsPasswordHashPresent(CTWorkbookProtection protection) {
-    return protection != null
-        && (protection.isSetRevisionsPassword()
-            || protection.isSetRevisionsHashValue()
-            || protection.isSetRevisionsSaltValue()
-            || protection.isSetRevisionsSpinCount()
-            || protection.isSetRevisionsAlgorithmName());
+  private static boolean revisionsPasswordHashPresent(Optional<CTWorkbookProtection> protection) {
+    return protection.isPresent()
+        && (protection.orElseThrow().isSetRevisionsPassword()
+            || protection.orElseThrow().isSetRevisionsHashValue()
+            || protection.orElseThrow().isSetRevisionsSaltValue()
+            || protection.orElseThrow().isSetRevisionsSpinCount()
+            || protection.orElseThrow().isSetRevisionsAlgorithmName());
   }
 }

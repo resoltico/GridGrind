@@ -10,11 +10,11 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
-import dev.erst.gridgrind.executor.ExecutionInputBindings;
-import dev.erst.gridgrind.executor.GridGrindProblems;
-import dev.erst.gridgrind.executor.GridGrindRequestDoctor;
-import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
-import dev.erst.gridgrind.executor.SourceBackedPlanResolver;
+import dev.erst.gridgrind.engine.api.GridGrindProblems;
+import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
+import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
+import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
+import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,6 +28,7 @@ import java.util.function.BooleanSupplier;
 /** Executing and request-doctor CLI flows. */
 final class GridGrindCliExecutionCommands {
   private final GridGrindRequestExecutor requestExecutor;
+  private final GridGrindRequestDoctor requestDoctor;
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
   private final CliJournalWriter journalWriter;
@@ -35,11 +36,13 @@ final class GridGrindCliExecutionCommands {
 
   GridGrindCliExecutionCommands(
       GridGrindRequestExecutor requestExecutor,
+      GridGrindRequestDoctor requestDoctor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter,
       CliJournalWriter journalWriter,
       BooleanSupplier standardInputIsInteractive) {
     this.requestExecutor = GridGrindRequestExecutor.requireNonNull(requestExecutor);
+    this.requestDoctor = GridGrindRequestDoctor.requireNonNull(requestDoctor);
     this.requestReader = Objects.requireNonNull(requestReader, "requestReader must not be null");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
     this.journalWriter = Objects.requireNonNull(journalWriter, "journalWriter must not be null");
@@ -51,7 +54,7 @@ final class GridGrindCliExecutionCommands {
   Optional<InputStream> standardInputOrNullForImplicitHelp(
       CliCommand.Execute command, String[] args, InputStream stdin, OutputStream stdout)
       throws IOException {
-    if (command.requestPath() != null) {
+    if (command.requestPath().isPresent()) {
       return Optional.of(stdin);
     }
     if (args.length != 0) {
@@ -83,6 +86,7 @@ final class GridGrindCliExecutionCommands {
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           GridGrindResponses.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
@@ -95,6 +99,7 @@ final class GridGrindCliExecutionCommands {
       return responseWriter.write(
           command.responsePath(),
           stdout,
+          stderr,
           GridGrindResponses.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
@@ -106,7 +111,8 @@ final class GridGrindCliExecutionCommands {
     }
 
     GridGrindResponse response;
-    if (command.requestPath() == null && SourceBackedPlanResolver.requiresStandardInput(request)) {
+    if (command.requestPath().isEmpty()
+        && GridGrindRequestRequirements.requiresStandardInput(request)) {
       String message = GridGrindContractText.standardInputRequiresRequestMessage();
       response =
           failure(
@@ -116,10 +122,10 @@ final class GridGrindCliExecutionCommands {
                   dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
                       "--request")),
               new IllegalArgumentException(message));
-      return responseWriter.write(command.responsePath(), stdout, response);
+      return responseWriter.write(command.responsePath(), stdout, stderr, response);
     }
 
-    ExecutionInputBindings bindings =
+    GridGrindRequestInputs bindings =
         CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
     try {
       response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
@@ -133,10 +139,11 @@ final class GridGrindCliExecutionCommands {
                       requestShape(request))));
     }
 
-    return responseWriter.write(command.responsePath(), stdout, response);
+    return responseWriter.write(command.responsePath(), stdout, stderr, response);
   }
 
-  int doctorRequest(CliCommand.DoctorRequest command, InputStream stdin, OutputStream stdout)
+  int doctorRequest(
+      CliCommand.DoctorRequest command, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
     RequestDoctorReport report;
     WorkbookPlan request;
@@ -155,7 +162,7 @@ final class GridGrindCliExecutionCommands {
                       requestInput(command.requestPath()),
                       dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
                           .unavailable())));
-      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
     } catch (IOException exception) {
       report =
           RequestDoctorReport.invalid(
@@ -167,11 +174,12 @@ final class GridGrindCliExecutionCommands {
                       requestInput(command.requestPath()),
                       dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
                           .unavailable())));
-      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
     }
 
-    if (command.requestPath() == null && SourceBackedPlanResolver.requiresStandardInput(request)) {
-      report = new GridGrindRequestDoctor().diagnose(request);
+    if (command.requestPath().isEmpty()
+        && GridGrindRequestRequirements.requiresStandardInput(request)) {
+      report = requestDoctor.diagnose(request);
       String message = GridGrindContractText.standardInputRequiresRequestMessage();
       report =
           RequestDoctorReport.invalid(
@@ -184,22 +192,22 @@ final class GridGrindCliExecutionCommands {
                       dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument
                           .named("--request")),
                   new IllegalArgumentException(message)));
-      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
     }
 
-    ExecutionInputBindings bindings =
-        command.requestPath() == null
-            ? ExecutionInputBindings.processDefault()
+    GridGrindRequestInputs bindings =
+        command.requestPath().isEmpty()
+            ? GridGrindRequestInputs.processDefault()
             : CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
-    report = new GridGrindRequestDoctor().diagnose(request, bindings);
-    return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
+    report = requestDoctor.diagnose(request, bindings);
+    return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
   }
 
   private void writeHelp(OutputStream stdout) throws IOException {
     byte[] bytes =
         GridGrindCliProductInfo.helpText(GridGrindCliProductInfo.version())
             .getBytes(StandardCharsets.UTF_8);
-    responseWriter.writePayload(null, stdout, bytes, 0);
+    responseWriter.writePayload(Optional.empty(), stdout, bytes, 0);
   }
 
   private static GridGrindResponse.Failure failure(
@@ -213,11 +221,12 @@ final class GridGrindCliExecutionCommands {
   }
 
   private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput(
-      Path path) {
-    return path == null
+      Optional<Path> path) {
+    Objects.requireNonNull(path, "path must not be null");
+    return path.isEmpty()
         ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.standardInput()
         : dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.requestFile(
-            path.toAbsolutePath().toString());
+            path.orElseThrow().toAbsolutePath().toString());
   }
 
   private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape requestShape(

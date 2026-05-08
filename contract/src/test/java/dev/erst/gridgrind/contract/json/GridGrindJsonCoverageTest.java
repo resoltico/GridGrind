@@ -7,18 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.GoalPlanReport;
-import dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindTaskCatalog;
-import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
-import dev.erst.gridgrind.contract.catalog.TaskCatalog;
-import dev.erst.gridgrind.contract.catalog.TaskPlanTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -49,15 +43,10 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
-                    "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
-                        0, List.of(), 0, false))));
+                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
+                    .WorkbookSummaryResult(
+                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
-    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
-    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
-    GoalPlanReport goalPlanReport =
-        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
     RequestDoctorReport doctorReport =
         RequestDoctorReport.warnings(
             new RequestDoctorReport.Summary(
@@ -78,25 +67,13 @@ class GridGrindJsonCoverageTest {
             new TrackingInputStream(GridGrindJson.writeResponseBytes(response));
         TrackingInputStream catalogStream =
             new TrackingInputStream(GridGrindJson.writeProtocolCatalogBytes(catalog));
-        TrackingInputStream taskCatalogStream =
-            new TrackingInputStream(GridGrindJson.writeTaskCatalogBytes(taskCatalog));
-        TrackingInputStream taskPlanStream =
-            new TrackingInputStream(GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate));
-        TrackingInputStream goalPlanStream =
-            new TrackingInputStream(GridGrindJson.writeGoalPlanReportBytes(goalPlanReport));
         TrackingInputStream doctorReportStream =
             new TrackingInputStream(GridGrindJson.writeRequestDoctorReportBytes(doctorReport))) {
       assertEquals(response, GridGrindJson.readResponse(responseStream));
       assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
-      assertEquals(taskCatalog, GridGrindJson.readTaskCatalog(taskCatalogStream));
-      assertEquals(taskPlanTemplate, GridGrindJson.readTaskPlanTemplate(taskPlanStream));
-      assertEquals(goalPlanReport, GridGrindJson.readGoalPlanReport(goalPlanStream));
       assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
-      assertFalse(taskCatalogStream.closed);
-      assertFalse(taskPlanStream.closed);
-      assertFalse(goalPlanStream.closed);
       assertFalse(doctorReportStream.closed);
     }
   }
@@ -107,12 +84,6 @@ class GridGrindJsonCoverageTest {
     try (TrackingInputStream responseStream =
             new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
         TrackingInputStream catalogStream =
-            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
-        TrackingInputStream taskCatalogStream =
-            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
-        TrackingInputStream taskPlanStream =
-            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
-        TrackingInputStream goalPlanStream =
             new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
         TrackingInputStream doctorReportStream =
             new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8))) {
@@ -127,46 +98,12 @@ class GridGrindJsonCoverageTest {
       assertInstanceOf(
           InvalidJsonException.class,
           assertThrows(
-              InvalidJsonException.class, () -> GridGrindJson.readTaskCatalog(taskCatalogStream)));
-      assertInstanceOf(
-          InvalidJsonException.class,
-          assertThrows(
-              InvalidJsonException.class,
-              () -> GridGrindJson.readTaskPlanTemplate(taskPlanStream)));
-      assertInstanceOf(
-          InvalidJsonException.class,
-          assertThrows(
-              InvalidJsonException.class, () -> GridGrindJson.readGoalPlanReport(goalPlanStream)));
-      assertInstanceOf(
-          InvalidJsonException.class,
-          assertThrows(
               InvalidJsonException.class,
               () -> GridGrindJson.readRequestDoctorReport(doctorReportStream)));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
-      assertFalse(taskCatalogStream.closed);
-      assertFalse(taskPlanStream.closed);
-      assertFalse(goalPlanStream.closed);
       assertFalse(doctorReportStream.closed);
     }
-  }
-
-  @Test
-  void invalidTaskCatalogBytesSurfaceInvalidJson() {
-    assertInstanceOf(
-        InvalidJsonException.class,
-        assertThrows(
-            InvalidJsonException.class,
-            () -> GridGrindJson.readTaskCatalog("{".getBytes(StandardCharsets.UTF_8))));
-  }
-
-  @Test
-  void invalidTaskPlanTemplateBytesSurfaceInvalidJson() {
-    assertInstanceOf(
-        InvalidJsonException.class,
-        assertThrows(
-            InvalidJsonException.class,
-            () -> GridGrindJson.readTaskPlanTemplate("{".getBytes(StandardCharsets.UTF_8))));
   }
 
   @Test
@@ -176,15 +113,6 @@ class GridGrindJsonCoverageTest {
         assertThrows(
             InvalidJsonException.class,
             () -> GridGrindJson.readRequest("{".getBytes(StandardCharsets.UTF_8))));
-  }
-
-  @Test
-  void invalidGoalPlanReportBytesSurfaceInvalidJson() {
-    assertInstanceOf(
-        InvalidJsonException.class,
-        assertThrows(
-            InvalidJsonException.class,
-            () -> GridGrindJson.readGoalPlanReport("{".getBytes(StandardCharsets.UTF_8))));
   }
 
   @Test
@@ -264,15 +192,10 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
-                    "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
-                        0, List.of(), 0, false))));
+                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
+                    .WorkbookSummaryResult(
+                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
-    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
-    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
-    GoalPlanReport goalPlanReport =
-        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
             new RequestDoctorReport.Summary(
@@ -307,41 +230,13 @@ class GridGrindJsonCoverageTest {
                         withTopLevelNull(GridGrindJson.writeResponseBytes(response), "warnings")))
             .getMessage());
     assertEquals(
-        "Missing required field 'shippedExamples'",
+        "Missing required field 'plainTypes'",
         assertThrows(
                 InvalidRequestException.class,
                 () ->
                     GridGrindJson.readProtocolCatalog(
                         withTopLevelNull(
-                            GridGrindJson.writeProtocolCatalogBytes(catalog), "shippedExamples")))
-            .getMessage());
-    assertEquals(
-        "Missing required field 'tasks'",
-        assertThrows(
-                InvalidRequestException.class,
-                () ->
-                    GridGrindJson.readTaskCatalog(
-                        withTopLevelNull(
-                            GridGrindJson.writeTaskCatalogBytes(taskCatalog), "tasks")))
-            .getMessage());
-    assertEquals(
-        "Missing required field 'authoringNotes'",
-        assertThrows(
-                InvalidRequestException.class,
-                () ->
-                    GridGrindJson.readTaskPlanTemplate(
-                        withTopLevelNull(
-                            GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate),
-                            "authoringNotes")))
-            .getMessage());
-    assertEquals(
-        "Missing required field 'candidates'",
-        assertThrows(
-                InvalidRequestException.class,
-                () ->
-                    GridGrindJson.readGoalPlanReport(
-                        withTopLevelNull(
-                            GridGrindJson.writeGoalPlanReportBytes(goalPlanReport), "candidates")))
+                            GridGrindJson.writeProtocolCatalogBytes(catalog), "plainTypes")))
             .getMessage());
     assertEquals(
         "Missing required field 'warnings'",
@@ -370,23 +265,6 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readTaskCatalog((InputStream) null))
-            .getMessage());
-    assertEquals(
-        "inputStream must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> GridGrindJson.readTaskPlanTemplate((InputStream) null))
-            .getMessage());
-    assertEquals(
-        "inputStream must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> GridGrindJson.readGoalPlanReport((InputStream) null))
-            .getMessage());
-    assertEquals(
-        "inputStream must not be null",
-        assertThrows(
                 NullPointerException.class,
                 () -> GridGrindJson.readRequestDoctorReport((InputStream) null))
             .getMessage());
@@ -394,20 +272,6 @@ class GridGrindJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class, () -> GridGrindJson.readProtocolCatalog((byte[]) null))
-            .getMessage());
-    assertEquals(
-        "bytes must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJson.readTaskCatalog((byte[]) null))
-            .getMessage());
-    assertEquals(
-        "bytes must not be null",
-        assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readTaskPlanTemplate((byte[]) null))
-            .getMessage());
-    assertEquals(
-        "bytes must not be null",
-        assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readGoalPlanReport((byte[]) null))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -453,30 +317,6 @@ class GridGrindJsonCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () -> GridGrindJson.writeProtocolCatalog(null, GridGrindProtocolCatalog.catalog()))
-            .getMessage());
-    assertEquals(
-        "outputStream must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> GridGrindJson.writeTaskCatalog(null, GridGrindTaskCatalog.catalog()))
-            .getMessage());
-    assertEquals(
-        "outputStream must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    GridGrindJson.writeTaskPlanTemplate(
-                        null, GridGrindTaskPlanner.templateFor("DASHBOARD")))
-            .getMessage());
-    assertEquals(
-        "outputStream must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                    GridGrindJson.writeGoalPlanReport(
-                        null,
-                        GridGrindGoalPlanner.reportFor(
-                            "Create a monthly sales dashboard with charts")))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -581,17 +421,8 @@ class GridGrindJsonCoverageTest {
   @Test
   void typeEntryAndRequestReadersStayDeterministicThroughPublicRoundTrip() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ByteArrayOutputStream taskOutputStream = new ByteArrayOutputStream();
-    ByteArrayOutputStream taskCatalogOutputStream = new ByteArrayOutputStream();
-    ByteArrayOutputStream taskPlanOutputStream = new ByteArrayOutputStream();
-    ByteArrayOutputStream goalPlanOutputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream doctorReportOutputStream = new ByteArrayOutputStream();
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
-    var taskEntry = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
-    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
-    GoalPlanReport goalPlanReport =
-        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
             new RequestDoctorReport.Summary(
@@ -607,24 +438,11 @@ class GridGrindJsonCoverageTest {
                 0,
                 0));
     GridGrindJson.writeTypeEntry(outputStream, entry);
-    GridGrindJson.writeTaskEntry(taskOutputStream, taskEntry);
-    GridGrindJson.writeTaskCatalog(taskCatalogOutputStream, taskCatalog);
-    GridGrindJson.writeTaskPlanTemplate(taskPlanOutputStream, taskPlanTemplate);
-    GridGrindJson.writeGoalPlanReport(goalPlanOutputStream, goalPlanReport);
     GridGrindJson.writeRequestDoctorReport(doctorReportOutputStream, doctorReport);
     Catalog catalog =
         GridGrindJson.readProtocolCatalog(
             new ByteArrayInputStream(
                 GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog())));
-    TaskCatalog decodedTaskCatalog =
-        GridGrindJson.readTaskCatalog(
-            new ByteArrayInputStream(GridGrindJson.writeTaskCatalogBytes(taskCatalog)));
-    TaskPlanTemplate decodedTaskPlanTemplate =
-        GridGrindJson.readTaskPlanTemplate(
-            new ByteArrayInputStream(GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate)));
-    GoalPlanReport decodedGoalPlanReport =
-        GridGrindJson.readGoalPlanReport(
-            new ByteArrayInputStream(GridGrindJson.writeGoalPlanReportBytes(goalPlanReport)));
     RequestDoctorReport decodedDoctorReport =
         GridGrindJson.readRequestDoctorReport(
             new ByteArrayInputStream(GridGrindJson.writeRequestDoctorReportBytes(doctorReport)));
@@ -634,15 +452,8 @@ class GridGrindJsonCoverageTest {
                 GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate())));
 
     assertFalse(outputStream.toString(StandardCharsets.UTF_8).isBlank());
-    assertFalse(taskOutputStream.toString(StandardCharsets.UTF_8).isBlank());
-    assertFalse(taskCatalogOutputStream.toString(StandardCharsets.UTF_8).isBlank());
-    assertFalse(taskPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
-    assertFalse(goalPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertFalse(doctorReportOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
-    assertEquals(taskCatalog, decodedTaskCatalog);
-    assertEquals(taskPlanTemplate, decodedTaskPlanTemplate);
-    assertEquals(goalPlanReport, decodedGoalPlanReport);
     assertEquals(doctorReport, decodedDoctorReport);
     assertEquals(GridGrindProtocolCatalog.requestTemplate(), template);
   }
@@ -692,10 +503,9 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
-                    "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
-                        0, List.of(), 0, false))));
+                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
+                    .WorkbookSummaryResult(
+                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     assertStreamSerializationMatchesBytes(
         GridGrindJson.writeRequestBytes(request), out -> GridGrindJson.writeRequest(out, request));
@@ -731,10 +541,9 @@ class GridGrindJsonCoverageTest {
             List.of(),
             List.of(),
             List.of(
-                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
-                    "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty(
-                        0, List.of(), 0, false))));
+                new dev.erst.gridgrind.contract.query.WorkbookInspectionResult
+                    .WorkbookSummaryResult(
+                    "summary", new WorkbookSummary.Empty(0, List.of(), 0, false))));
 
     String requestJson =
         new String(GridGrindJson.writeRequestBytes(request), StandardCharsets.UTF_8);

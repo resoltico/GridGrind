@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -39,6 +40,7 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
@@ -252,7 +254,10 @@ public final class XlsxRoundTripVerifier {
     if (themes != null) {
       themes.inheritFromThemeAsRequired(color);
     }
-    return new ExcelGradientStopSnapshot(stop.getPosition(), toColorSnapshot(color));
+    ExcelColorSnapshot snapshot =
+        java.util.Objects.requireNonNull(
+            toColorSnapshot(color), "gradient stop color must resolve to one snapshot");
+    return new ExcelGradientStopSnapshot(stop.getPosition(), snapshot);
   }
 
   private static void requireColorShape(XSSFColor color, String label) {
@@ -264,7 +269,7 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  private static ExcelColorSnapshot toColorSnapshot(XSSFColor color) {
+  private static @Nullable ExcelColorSnapshot toColorSnapshot(@Nullable XSSFColor color) {
     if (color == null) {
       return null;
     }
@@ -278,7 +283,7 @@ public final class XlsxRoundTripVerifier {
     }
     Integer theme = color.isThemed() ? color.getTheme() : null;
     Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
-    Double tint = color.hasTint() ? color.getTint() : null;
+    Optional<Double> tint = color.hasTint() ? Optional.of(color.getTint()) : Optional.empty();
     if (theme != null || indexed != null) {
       rgbHex = null;
     }
@@ -291,7 +296,8 @@ public final class XlsxRoundTripVerifier {
     if (theme != null) {
       return ExcelColorSnapshot.theme(theme, tint);
     }
-    return ExcelColorSnapshot.indexed(indexed, tint);
+    return ExcelColorSnapshot.indexed(
+        java.util.Objects.requireNonNull(indexed, "indexed color must be present"), tint);
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
@@ -330,7 +336,7 @@ public final class XlsxRoundTripVerifier {
     };
   }
 
-  static ExcelHyperlink hyperlink(Cell cell) {
+  static @Nullable ExcelHyperlink hyperlink(Cell cell) {
     XSSFHyperlink hyperlink = (XSSFHyperlink) cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
       return null;
@@ -352,7 +358,7 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  static ExcelComment comment(Cell cell) {
+  static @Nullable ExcelComment comment(Cell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
       return null;

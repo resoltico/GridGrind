@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
@@ -57,7 +58,7 @@ class ExcelPivotTableControllerTest {
       assertEquals(
           ExcelPivotDataConsolidateFunction.SUM, snapshot.dataFields().getFirst().function());
       assertEquals("Total Amount", snapshot.dataFields().getFirst().displayName());
-      assertEquals("#,##0.00", snapshot.dataFields().getFirst().valueFormat());
+      assertEquals(Optional.of("#,##0.00"), snapshot.dataFields().getFirst().valueFormat());
       assertTrue(
           controller
               .pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All())
@@ -91,7 +92,7 @@ class ExcelPivotTableControllerTest {
           new ExcelNamedRangeDefinition(
               "PivotSource",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       workbook.setTable(
           new ExcelTableDefinition(
               "SalesTable", "Data", "A1:D5", false, new ExcelTableStyle.None()));
@@ -290,7 +291,10 @@ class ExcelPivotTableControllerTest {
         reportFilters,
         List.of(
             new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", "#,##0.00")));
+                "Amount",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                Optional.of("#,##0.00"))));
   }
 
   private void populatePivotSource(ExcelWorkbook workbook, String sheetName) {

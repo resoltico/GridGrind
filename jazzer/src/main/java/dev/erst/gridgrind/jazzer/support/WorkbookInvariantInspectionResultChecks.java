@@ -3,10 +3,17 @@ package dev.erst.gridgrind.jazzer.support;
 import static dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks.require;
 
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookAnalysisResult;
+import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookSurfaceInspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Owns inspection-query to inspection-result matching invariants for protocol workflows. */
 final class WorkbookInvariantInspectionResultChecks {
@@ -21,32 +28,33 @@ final class WorkbookInvariantInspectionResultChecks {
         "read result kind must match the requested read kind");
 
     switch (readOperation.query()) {
-      case InspectionQuery.GetWorkbookSummary _ -> {
-        InspectionResult.WorkbookSummaryResult result =
-            (InspectionResult.WorkbookSummaryResult) readResult;
+      case WorkbookIntrospectionQuery.GetWorkbookSummary _ -> {
+        WorkbookInspectionResult.WorkbookSummaryResult result =
+            (WorkbookInspectionResult.WorkbookSummaryResult) readResult;
         WorkbookInvariantResponseChecks.requireWorkbookSummaryShape(result.workbook());
       }
-      case InspectionQuery.GetPackageSecurity _ ->
+      case WorkbookIntrospectionQuery.GetPackageSecurity _ ->
           WorkbookInvariantResponseChecks.requirePackageSecurityShape(
-              ((InspectionResult.PackageSecurityResult) readResult).security());
-      case InspectionQuery.GetWorkbookProtection _ ->
+              ((WorkbookInspectionResult.PackageSecurityResult) readResult).security());
+      case WorkbookIntrospectionQuery.GetWorkbookProtection _ ->
           WorkbookInvariantResponseChecks.requireWorkbookProtectionShape(
-              ((InspectionResult.WorkbookProtectionResult) readResult).protection());
-      case InspectionQuery.GetCustomXmlMappings _ -> {
-        InspectionResult.CustomXmlMappingsResult result =
-            (InspectionResult.CustomXmlMappingsResult) readResult;
+              ((WorkbookInspectionResult.WorkbookProtectionResult) readResult).protection());
+      case WorkbookIntrospectionQuery.GetCustomXmlMappings _ -> {
+        WorkbookInspectionResult.CustomXmlMappingsResult result =
+            (WorkbookInspectionResult.CustomXmlMappingsResult) readResult;
         result.mappings().forEach(WorkbookInvariantResponseChecks::requireCustomXmlMappingShape);
       }
-      case InspectionQuery.ExportCustomXmlMapping _ ->
+      case WorkbookIntrospectionQuery.ExportCustomXmlMapping _ ->
           WorkbookInvariantResponseChecks.requireCustomXmlExportShape(
-              ((InspectionResult.CustomXmlExportResult) readResult).export());
-      case InspectionQuery.GetNamedRanges _ -> {
-        InspectionResult.NamedRangesResult result = (InspectionResult.NamedRangesResult) readResult;
+              ((WorkbookInspectionResult.CustomXmlExportResult) readResult).export());
+      case WorkbookIntrospectionQuery.GetNamedRanges _ -> {
+        WorkbookInspectionResult.NamedRangesResult result =
+            (WorkbookInspectionResult.NamedRangesResult) readResult;
         result.namedRanges().forEach(WorkbookInvariantResponseChecks::requireNamedRangeShape);
       }
-      case InspectionQuery.GetSheetSummary _ -> {
-        InspectionResult.SheetSummaryResult result =
-            (InspectionResult.SheetSummaryResult) readResult;
+      case SheetIntrospectionQuery.GetSheetSummary _ -> {
+        SheetInspectionResult.SheetSummaryResult result =
+            (SheetInspectionResult.SheetSummaryResult) readResult;
         WorkbookInvariantResponseChecks.requireSheetSummaryShape(result.sheet());
         require(
             ((SheetSelector.ByName) readOperation.target())
@@ -54,15 +62,16 @@ final class WorkbookInvariantInspectionResultChecks {
                 .equals(result.sheet().sheetName()),
             "sheet summary sheet mismatch");
       }
-      case InspectionQuery.GetArrayFormulas _ -> {
-        InspectionResult.ArrayFormulasResult result =
-            (InspectionResult.ArrayFormulasResult) readResult;
+      case SheetIntrospectionQuery.GetArrayFormulas _ -> {
+        SheetInspectionResult.ArrayFormulasResult result =
+            (SheetInspectionResult.ArrayFormulasResult) readResult;
         result.arrayFormulas().forEach(WorkbookInvariantResponseChecks::requireArrayFormulaShape);
       }
-      case InspectionQuery.GetCells _ -> {
-        InspectionResult.CellsResult result = (InspectionResult.CellsResult) readResult;
+      case SheetIntrospectionQuery.GetCells _ -> {
+        SheetInspectionResult.CellsResult result = (SheetInspectionResult.CellsResult) readResult;
         require(
-            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            Objects.equals(
+                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
             "cells sheet mismatch");
         if (readOperation.target() instanceof CellSelector.ByAddresses byAddresses) {
           require(
@@ -72,8 +81,8 @@ final class WorkbookInvariantInspectionResultChecks {
           require(result.cells().size() == 1, "single-cell result size must be 1");
         }
       }
-      case InspectionQuery.GetWindow _ -> {
-        InspectionResult.WindowResult result = (InspectionResult.WindowResult) readResult;
+      case SheetIntrospectionQuery.GetWindow _ -> {
+        SheetInspectionResult.WindowResult result = (SheetInspectionResult.WindowResult) readResult;
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
         require(selector.sheetName().equals(result.window().sheetName()), "window sheet mismatch");
@@ -84,28 +93,32 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             selector.columnCount() == result.window().columnCount(), "window columnCount mismatch");
       }
-      case InspectionQuery.GetMergedRegions _ -> {
-        InspectionResult.MergedRegionsResult result =
-            (InspectionResult.MergedRegionsResult) readResult;
+      case SheetIntrospectionQuery.GetMergedRegions _ -> {
+        SheetInspectionResult.MergedRegionsResult result =
+            (SheetInspectionResult.MergedRegionsResult) readResult;
         require(
             ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
             "merged regions sheet mismatch");
       }
-      case InspectionQuery.GetHyperlinks _ -> {
-        InspectionResult.HyperlinksResult result = (InspectionResult.HyperlinksResult) readResult;
+      case SheetIntrospectionQuery.GetHyperlinks _ -> {
+        SheetInspectionResult.HyperlinksResult result =
+            (SheetInspectionResult.HyperlinksResult) readResult;
         require(
-            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            Objects.equals(
+                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
             "hyperlinks sheet mismatch");
       }
-      case InspectionQuery.GetComments _ -> {
-        InspectionResult.CommentsResult result = (InspectionResult.CommentsResult) readResult;
+      case SheetIntrospectionQuery.GetComments _ -> {
+        SheetInspectionResult.CommentsResult result =
+            (SheetInspectionResult.CommentsResult) readResult;
         require(
-            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            Objects.equals(
+                sheetName((CellSelector) readOperation.target()).orElse(null), result.sheetName()),
             "comments sheet mismatch");
       }
-      case InspectionQuery.GetDrawingObjects _ -> {
-        InspectionResult.DrawingObjectsResult result =
-            (InspectionResult.DrawingObjectsResult) readResult;
+      case WorkbookAssetIntrospectionQuery.GetDrawingObjects _ -> {
+        WorkbookAssetInspectionResult.DrawingObjectsResult result =
+            (WorkbookAssetInspectionResult.DrawingObjectsResult) readResult;
         require(
             ((DrawingObjectSelector.AllOnSheet) readOperation.target())
                 .sheetName()
@@ -113,8 +126,9 @@ final class WorkbookInvariantInspectionResultChecks {
             "drawing objects sheet mismatch");
         result.drawingObjects().forEach(WorkbookInvariantResponseChecks::requireDrawingObjectShape);
       }
-      case InspectionQuery.GetCharts _ -> {
-        InspectionResult.ChartsResult result = (InspectionResult.ChartsResult) readResult;
+      case WorkbookAssetIntrospectionQuery.GetCharts _ -> {
+        WorkbookAssetInspectionResult.ChartsResult result =
+            (WorkbookAssetInspectionResult.ChartsResult) readResult;
         require(
             ((ChartSelector.AllOnSheet) readOperation.target())
                 .sheetName()
@@ -122,13 +136,14 @@ final class WorkbookInvariantInspectionResultChecks {
             "charts sheet mismatch");
         result.charts().forEach(WorkbookInvariantResponseChecks::requireChartReportShape);
       }
-      case InspectionQuery.GetPivotTables _ -> {
-        InspectionResult.PivotTablesResult result = (InspectionResult.PivotTablesResult) readResult;
+      case WorkbookAssetIntrospectionQuery.GetPivotTables _ -> {
+        WorkbookAssetInspectionResult.PivotTablesResult result =
+            (WorkbookAssetInspectionResult.PivotTablesResult) readResult;
         result.pivotTables().forEach(WorkbookInvariantResponseChecks::requirePivotTableShape);
       }
-      case InspectionQuery.GetDrawingObjectPayload _ -> {
-        InspectionResult.DrawingObjectPayloadResult result =
-            (InspectionResult.DrawingObjectPayloadResult) readResult;
+      case WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload _ -> {
+        WorkbookAssetInspectionResult.DrawingObjectPayloadResult result =
+            (WorkbookAssetInspectionResult.DrawingObjectPayloadResult) readResult;
         DrawingObjectSelector.ByName selector =
             (DrawingObjectSelector.ByName) readOperation.target();
         require(selector.sheetName().equals(result.sheetName()), "drawing payload sheet mismatch");
@@ -137,104 +152,107 @@ final class WorkbookInvariantInspectionResultChecks {
             selector.objectName().equals(result.payload().name()),
             "drawing payload objectName mismatch");
       }
-      case InspectionQuery.GetSheetLayout _ -> {
-        InspectionResult.SheetLayoutResult result = (InspectionResult.SheetLayoutResult) readResult;
+      case SheetIntrospectionQuery.GetSheetLayout _ -> {
+        SheetInspectionResult.SheetLayoutResult result =
+            (SheetInspectionResult.SheetLayoutResult) readResult;
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .equals(result.layout().sheetName()),
             "layout sheet mismatch");
       }
-      case InspectionQuery.GetPrintLayout _ -> {
-        InspectionResult.PrintLayoutResult result = (InspectionResult.PrintLayoutResult) readResult;
+      case SheetIntrospectionQuery.GetPrintLayout _ -> {
+        SheetInspectionResult.PrintLayoutResult result =
+            (SheetInspectionResult.PrintLayoutResult) readResult;
         require(
             ((SheetSelector.ByName) readOperation.target())
                 .name()
                 .equals(result.layout().sheetName()),
             "print layout sheet mismatch");
       }
-      case InspectionQuery.GetDataValidations _ -> {
-        InspectionResult.DataValidationsResult result =
-            (InspectionResult.DataValidationsResult) readResult;
+      case SheetIntrospectionQuery.GetDataValidations _ -> {
+        SheetInspectionResult.DataValidationsResult result =
+            (SheetInspectionResult.DataValidationsResult) readResult;
         require(
             sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
             "data validations sheet mismatch");
       }
-      case InspectionQuery.GetConditionalFormatting _ -> {
-        InspectionResult.ConditionalFormattingResult result =
-            (InspectionResult.ConditionalFormattingResult) readResult;
+      case SheetIntrospectionQuery.GetConditionalFormatting _ -> {
+        SheetInspectionResult.ConditionalFormattingResult result =
+            (SheetInspectionResult.ConditionalFormattingResult) readResult;
         require(
             sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
             "conditional formatting sheet mismatch");
       }
-      case InspectionQuery.GetAutofilters _ -> {
-        InspectionResult.AutofiltersResult result = (InspectionResult.AutofiltersResult) readResult;
+      case SheetIntrospectionQuery.GetAutofilters _ -> {
+        SheetInspectionResult.AutofiltersResult result =
+            (SheetInspectionResult.AutofiltersResult) readResult;
         require(
             ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
             "autofilters sheet mismatch");
       }
-      case InspectionQuery.GetTables _ -> {
-        InspectionResult.TablesResult result = (InspectionResult.TablesResult) readResult;
+      case WorkbookAssetIntrospectionQuery.GetTables _ -> {
+        WorkbookAssetInspectionResult.TablesResult result =
+            (WorkbookAssetInspectionResult.TablesResult) readResult;
         result.tables().forEach(WorkbookInvariantResponseChecks::requireTableEntryShape);
       }
-      case InspectionQuery.GetFormulaSurface _ -> {
-        InspectionResult.FormulaSurfaceResult result =
-            (InspectionResult.FormulaSurfaceResult) readResult;
-        require(result.analysis().sheets() != null, "formula surface sheets must not be null");
+      case InspectionSurfaceQuery.GetFormulaSurface _ -> {
+        WorkbookSurfaceInspectionResult.FormulaSurfaceResult result =
+            (WorkbookSurfaceInspectionResult.FormulaSurfaceResult) readResult;
+        require(result.surface().sheets() != null, "formula surface sheets must not be null");
       }
-      case InspectionQuery.GetSheetSchema _ -> {
-        InspectionResult.SheetSchemaResult result = (InspectionResult.SheetSchemaResult) readResult;
+      case InspectionSurfaceQuery.GetSheetSchema _ -> {
+        WorkbookSurfaceInspectionResult.SheetSchemaResult result =
+            (WorkbookSurfaceInspectionResult.SheetSchemaResult) readResult;
         RangeSelector.RectangularWindow selector =
             (RangeSelector.RectangularWindow) readOperation.target();
+        require(selector.sheetName().equals(result.surface().sheetName()), "schema sheet mismatch");
         require(
-            selector.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
-        require(
-            selector.topLeftAddress().equals(result.analysis().topLeftAddress()),
+            selector.topLeftAddress().equals(result.surface().topLeftAddress()),
             "schema topLeftAddress mismatch");
       }
-      case InspectionQuery.GetNamedRangeSurface _ -> {
-        InspectionResult.NamedRangeSurfaceResult result =
-            (InspectionResult.NamedRangeSurfaceResult) readResult;
+      case InspectionSurfaceQuery.GetNamedRangeSurface _ -> {
+        WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult result =
+            (WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult) readResult;
         require(
-            result.analysis().namedRanges() != null,
-            "named range surface entries must not be null");
+            result.surface().namedRanges() != null, "named range surface entries must not be null");
       }
-      case InspectionQuery.AnalyzeFormulaHealth _ ->
+      case InspectionAnalysisQuery.AnalyzeFormulaHealth _ ->
           WorkbookInvariantResponseChecks.requireFormulaHealthShape(
-              ((InspectionResult.FormulaHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeDataValidationHealth _ ->
+              ((WorkbookAnalysisResult.FormulaHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeDataValidationHealth _ ->
           WorkbookInvariantResponseChecks.requireDataValidationHealthShape(
-              ((InspectionResult.DataValidationHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeConditionalFormattingHealth _ ->
+              ((WorkbookAnalysisResult.DataValidationHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth _ ->
           WorkbookInvariantResponseChecks.requireConditionalFormattingHealthShape(
-              ((InspectionResult.ConditionalFormattingHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeAutofilterHealth _ ->
+              ((WorkbookAnalysisResult.ConditionalFormattingHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeAutofilterHealth _ ->
           WorkbookInvariantResponseChecks.requireAutofilterHealthShape(
-              ((InspectionResult.AutofilterHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeTableHealth _ ->
+              ((WorkbookAnalysisResult.AutofilterHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeTableHealth _ ->
           WorkbookInvariantResponseChecks.requireTableHealthShape(
-              ((InspectionResult.TableHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzePivotTableHealth _ ->
+              ((WorkbookAnalysisResult.TableHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzePivotTableHealth _ ->
           WorkbookInvariantResponseChecks.requirePivotTableHealthShape(
-              ((InspectionResult.PivotTableHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeHyperlinkHealth _ ->
+              ((WorkbookAnalysisResult.PivotTableHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeHyperlinkHealth _ ->
           WorkbookInvariantResponseChecks.requireHyperlinkHealthShape(
-              ((InspectionResult.HyperlinkHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeNamedRangeHealth _ ->
+              ((WorkbookAnalysisResult.HyperlinkHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeNamedRangeHealth _ ->
           WorkbookInvariantResponseChecks.requireNamedRangeHealthShape(
-              ((InspectionResult.NamedRangeHealthResult) readResult).analysis());
-      case InspectionQuery.AnalyzeWorkbookFindings _ ->
+              ((WorkbookAnalysisResult.NamedRangeHealthResult) readResult).analysis());
+      case InspectionAnalysisQuery.AnalyzeWorkbookFindings _ ->
           WorkbookInvariantResponseChecks.requireWorkbookFindingsShape(
-              ((InspectionResult.WorkbookFindingsResult) readResult).analysis());
+              ((WorkbookAnalysisResult.WorkbookFindingsResult) readResult).analysis());
     }
   }
 
-  private static String sheetName(CellSelector selector) {
+  private static Optional<String> sheetName(CellSelector selector) {
     return switch (selector) {
-      case CellSelector.AllUsedInSheet all -> all.sheetName();
-      case CellSelector.ByAddress byAddress -> byAddress.sheetName();
-      case CellSelector.ByAddresses byAddresses -> byAddresses.sheetName();
-      case CellSelector.ByQualifiedAddresses _ -> null;
+      case CellSelector.AllUsedInSheet all -> Optional.of(all.sheetName());
+      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
+      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
+      case CellSelector.ByQualifiedAddresses _ -> Optional.empty();
     };
   }
 
@@ -249,42 +267,43 @@ final class WorkbookInvariantInspectionResultChecks {
 
   private static String readResultKind(InspectionResult readResult) {
     return switch (readResult) {
-      case InspectionResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
-      case InspectionResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
-      case InspectionResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
-      case InspectionResult.CustomXmlMappingsResult _ -> "GET_CUSTOM_XML_MAPPINGS";
-      case InspectionResult.CustomXmlExportResult _ -> "EXPORT_CUSTOM_XML_MAPPING";
-      case InspectionResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
-      case InspectionResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
-      case InspectionResult.ArrayFormulasResult _ -> "GET_ARRAY_FORMULAS";
-      case InspectionResult.CellsResult _ -> "GET_CELLS";
-      case InspectionResult.WindowResult _ -> "GET_WINDOW";
-      case InspectionResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
-      case InspectionResult.HyperlinksResult _ -> "GET_HYPERLINKS";
-      case InspectionResult.CommentsResult _ -> "GET_COMMENTS";
-      case InspectionResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
-      case InspectionResult.ChartsResult _ -> "GET_CHARTS";
-      case InspectionResult.PivotTablesResult _ -> "GET_PIVOT_TABLES";
-      case InspectionResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
-      case InspectionResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
-      case InspectionResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
-      case InspectionResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
-      case InspectionResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
-      case InspectionResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
-      case InspectionResult.TablesResult _ -> "GET_TABLES";
-      case InspectionResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
-      case InspectionResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
-      case InspectionResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
-      case InspectionResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
-      case InspectionResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
-      case InspectionResult.ConditionalFormattingHealthResult _ ->
+      case WorkbookInspectionResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookInspectionResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
+      case WorkbookInspectionResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
+      case WorkbookInspectionResult.CustomXmlMappingsResult _ -> "GET_CUSTOM_XML_MAPPINGS";
+      case WorkbookInspectionResult.CustomXmlExportResult _ -> "EXPORT_CUSTOM_XML_MAPPING";
+      case WorkbookInspectionResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
+      case SheetInspectionResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
+      case SheetInspectionResult.ArrayFormulasResult _ -> "GET_ARRAY_FORMULAS";
+      case SheetInspectionResult.CellsResult _ -> "GET_CELLS";
+      case SheetInspectionResult.WindowResult _ -> "GET_WINDOW";
+      case SheetInspectionResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
+      case SheetInspectionResult.HyperlinksResult _ -> "GET_HYPERLINKS";
+      case SheetInspectionResult.CommentsResult _ -> "GET_COMMENTS";
+      case WorkbookAssetInspectionResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookAssetInspectionResult.ChartsResult _ -> "GET_CHARTS";
+      case WorkbookAssetInspectionResult.PivotTablesResult _ -> "GET_PIVOT_TABLES";
+      case WorkbookAssetInspectionResult.DrawingObjectPayloadResult _ ->
+          "GET_DRAWING_OBJECT_PAYLOAD";
+      case SheetInspectionResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
+      case SheetInspectionResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
+      case SheetInspectionResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
+      case SheetInspectionResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
+      case SheetInspectionResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
+      case WorkbookAssetInspectionResult.TablesResult _ -> "GET_TABLES";
+      case WorkbookSurfaceInspectionResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
+      case WorkbookSurfaceInspectionResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
+      case WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookAnalysisResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookAnalysisResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookAnalysisResult.ConditionalFormattingHealthResult _ ->
           "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
-      case InspectionResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
-      case InspectionResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
-      case InspectionResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
-      case InspectionResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
-      case InspectionResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
-      case InspectionResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
+      case WorkbookAnalysisResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
+      case WorkbookAnalysisResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
+      case WorkbookAnalysisResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
+      case WorkbookAnalysisResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
+      case WorkbookAnalysisResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
+      case WorkbookAnalysisResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
     };
   }
 }

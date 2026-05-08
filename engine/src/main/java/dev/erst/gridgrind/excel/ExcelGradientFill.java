@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authored gradient fill applied through mutable workbook cell styling. */
 public sealed interface ExcelGradientFill permits ExcelGradientFill.Linear, ExcelGradientFill.Path {
@@ -10,40 +11,58 @@ public sealed interface ExcelGradientFill permits ExcelGradientFill.Linear, Exce
   List<ExcelGradientStop> stops();
 
   /** Creates one linear authored gradient fill. */
-  static Linear linear(Double degree, List<ExcelGradientStop> stops) {
+  static Linear linear(Optional<Double> degree, List<ExcelGradientStop> stops) {
     return new Linear(degree, stops);
   }
 
   /** Creates one path authored gradient fill. */
   static Path path(
-      Double left, Double right, Double top, Double bottom, List<ExcelGradientStop> stops) {
+      Optional<Double> left,
+      Optional<Double> right,
+      Optional<Double> top,
+      Optional<Double> bottom,
+      List<ExcelGradientStop> stops) {
     return new Path(left, right, top, bottom, stops);
   }
 
   /** Linear gradient authored with one optional degree plus ordered stops. */
-  record Linear(Double degree, List<ExcelGradientStop> stops) implements ExcelGradientFill {
+  record Linear(Optional<Double> degree, List<ExcelGradientStop> stops)
+      implements ExcelGradientFill {
     public Linear {
-      requireFiniteOrNull(degree, "degree");
+      Objects.requireNonNull(degree, "degree must not be null");
+      requireFinite(degree, "degree");
       stops = copyStops(stops);
     }
   }
 
   /** Path gradient authored with optional edge offsets plus ordered stops. */
-  record Path(Double left, Double right, Double top, Double bottom, List<ExcelGradientStop> stops)
+  record Path(
+      Optional<Double> left,
+      Optional<Double> right,
+      Optional<Double> top,
+      Optional<Double> bottom,
+      List<ExcelGradientStop> stops)
       implements ExcelGradientFill {
     public Path {
-      requireFiniteOrNull(left, "left");
-      requireFiniteOrNull(right, "right");
-      requireFiniteOrNull(top, "top");
-      requireFiniteOrNull(bottom, "bottom");
+      Objects.requireNonNull(left, "left must not be null");
+      Objects.requireNonNull(right, "right must not be null");
+      Objects.requireNonNull(top, "top must not be null");
+      Objects.requireNonNull(bottom, "bottom must not be null");
+      requireFinite(left, "left");
+      requireFinite(right, "right");
+      requireFinite(top, "top");
+      requireFinite(bottom, "bottom");
       stops = copyStops(stops);
     }
   }
 
-  private static void requireFiniteOrNull(Double value, String fieldName) {
-    if (value != null && !Double.isFinite(value)) {
-      throw new IllegalArgumentException(fieldName + " must be finite");
-    }
+  private static void requireFinite(Optional<Double> value, String fieldName) {
+    value.ifPresent(
+        actual -> {
+          if (!Double.isFinite(actual)) {
+            throw new IllegalArgumentException(fieldName + " must be finite");
+          }
+        });
   }
 
   private static List<ExcelGradientStop> copyStops(List<ExcelGradientStop> stops) {

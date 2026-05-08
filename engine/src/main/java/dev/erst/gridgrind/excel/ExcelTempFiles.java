@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Package-owned temporary-file factory that avoids crowded shared temp roots. */
 final class ExcelTempFiles {
@@ -73,14 +74,14 @@ final class ExcelTempFiles {
     return candidateRoots;
   }
 
-  static Path systemTempRoot() {
+  static @Nullable Path systemTempRoot() {
     String systemTempDir = System.getProperty(TEMP_DIR_PROPERTY);
     return systemTempDir == null || systemTempDir.isBlank()
         ? null
         : Path.of(systemTempDir).resolve(GRIDGRIND_TEMP_DIR_NAME);
   }
 
-  static Path userHomeFallbackRoot() {
+  static @Nullable Path userHomeFallbackRoot() {
     String userHome = System.getProperty(USER_HOME_PROPERTY);
     return userHome == null || userHome.isBlank()
         ? null

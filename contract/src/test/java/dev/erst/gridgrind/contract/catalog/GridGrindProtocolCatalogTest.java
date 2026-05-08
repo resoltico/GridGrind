@@ -15,6 +15,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -40,20 +41,11 @@ class GridGrindProtocolCatalogTest {
     assertFalse(catalog.mutationActionTypes().isEmpty());
     assertFalse(catalog.assertionTypes().isEmpty());
     assertFalse(catalog.inspectionQueryTypes().isEmpty());
-    assertFalse(catalog.shippedExamples().isEmpty());
-    assertFalse(catalog.cliSurface().limits().entries().isEmpty());
-    assertEquals("Usage", catalog.cliSurface().usage().label());
-    assertEquals(
-        "gridgrind --print-example "
-            + GridGrindShippedExamples.examples().getFirst().id()
-            + " --response example.json",
-        catalog.cliSurface().discovery().printOneExampleCommand());
     assertTrue(GridGrindProtocolCatalog.entryFor("MUTATION").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("ASSERTION").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("SET_CELL").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("EXPECT_CELL_VALUE").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("GET_CELLS").isPresent());
-    assertTrue(GridGrindProtocolCatalog.exampleFor("WORKBOOK_HEALTH").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor("FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor(":FORMULA").isPresent());
@@ -105,7 +97,7 @@ class GridGrindProtocolCatalogTest {
         List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         GridGrindProtocolCatalog.entryFor("SET_TABLE").orElseThrow().targetSelectors());
     assertEquals(
-        "Matches the nested analysis query's target selectors.",
+        Optional.of("Matches the nested analysis query's target selectors."),
         GridGrindProtocolCatalog.entryFor("EXPECT_ANALYSIS_FINDING_PRESENT")
             .orElseThrow()
             .targetSelectorRule());
@@ -116,7 +108,7 @@ class GridGrindProtocolCatalogTest {
                 "TableSelector",
                 List.of("TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET"))),
         present.targetSelectors());
-    assertEquals(null, present.targetSelectorRule());
+    assertEquals(Optional.empty(), present.targetSelectorRule());
   }
 
   @Test
@@ -148,61 +140,26 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void shippedExamplesArePublishedInCatalogOrder() {
-    Catalog catalog = GridGrindProtocolCatalog.catalog();
-
-    assertEquals(GridGrindShippedExamples.examples(), GridGrindProtocolCatalog.shippedExamples());
-    assertEquals(
-        GridGrindShippedExamples.catalogEntries(),
-        catalog.shippedExamples(),
-        "catalog shippedExamples must mirror the contract-owned generated example registry");
-    assertTrue(
-        catalog.cliSurface().request().lines().stream()
-            .anyMatch(line -> line.contains("STANDARD_INPUT-authored values require --request")));
-    assertTrue(
-        catalog.cliSurface().request().lines().stream()
-            .anyMatch(line -> line.contains("do not send step.type")));
-    assertTrue(
-        catalog.cliSurface().discovery().lines().stream()
-            .anyMatch(line -> line.contains("--doctor-request")));
-    assertTrue(
-        catalog.cliSurface().discovery().lines().stream()
-            .anyMatch(line -> line.contains("--print-task-catalog")));
-    assertTrue(
-        catalog.cliSurface().discovery().lines().stream()
-            .anyMatch(line -> line.contains("--print-task-plan")));
-    assertTrue(
-        catalog.cliSurface().discovery().lines().stream()
-            .anyMatch(line -> line.contains("--print-goal-plan")));
-    assertTrue(
-        catalog.shippedExamples().stream()
-            .anyMatch(
-                example ->
-                    example.workspaceMode() == ShippedExampleEntry.WorkspaceMode.REPOSITORY_ASSETS
-                        && !example.requiredPaths().isEmpty()));
-  }
-
-  @Test
   void requiredFieldsFiltersOptionalRecordComponents() {
     assertEquals(
         List.of("stepId", "action"),
-        GridGrindProtocolCatalog.requiredFields(MutationStep.class, List.of("target")));
+        CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("target")));
   }
 
   @Test
   void requiredFieldsExcludeCatalogAndJsonIgnoredRecordComponents() {
     assertEquals(
         List.of("visible"),
-        GridGrindProtocolCatalog.requiredFields(CatalogIgnoredComponentRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredComponentRecord.class, List.of()));
     assertEquals(
         List.of("visible"),
-        GridGrindProtocolCatalog.requiredFields(CatalogIgnoredAccessorRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(CatalogIgnoredAccessorRecord.class, List.of()));
     assertEquals(
         List.of("visible"),
-        GridGrindProtocolCatalog.requiredFields(JsonIgnoredComponentRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(JsonIgnoredComponentRecord.class, List.of()));
     assertEquals(
         List.of("visible"),
-        GridGrindProtocolCatalog.requiredFields(JsonIgnoredAccessorRecord.class, List.of()));
+        CatalogTypeEntryFactory.requiredFields(JsonIgnoredAccessorRecord.class, List.of()));
   }
 
   @Test
@@ -220,7 +177,7 @@ class GridGrindProtocolCatalogTest {
     IllegalStateException missingOptionalField =
         assertThrows(
             IllegalStateException.class,
-            () -> GridGrindProtocolCatalog.requiredFields(MutationStep.class, List.of("missing")));
+            () -> CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("missing")));
     assertEquals(
         "Catalog optional field 'missing' does not exist on " + MutationStep.class.getName(),
         missingOptionalField.getMessage());
@@ -306,7 +263,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals("target", typeEntry.field("target").orElseThrow().name());
     assertTrue(typeEntry.field("missing").isEmpty());
     assertTrue(typeEntry.targetSelectors().isEmpty());
-    assertEquals(null, typeEntry.targetSelectorRule());
+    assertEquals(Optional.empty(), typeEntry.targetSelectorRule());
     assertEquals(
         "name must not be null",
         assertThrows(NullPointerException.class, () -> typeEntry.field(null)).getMessage());
@@ -320,17 +277,18 @@ class GridGrindProtocolCatalogTest {
             "summary",
             List.of(),
             List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
-            "Requires the table selector family.");
+            Optional.of("Requires the table selector family."));
 
     assertEquals(
         List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         typeEntry.targetSelectors());
-    assertEquals("Requires the table selector family.", typeEntry.targetSelectorRule());
+    assertEquals(
+        Optional.of("Requires the table selector family."), typeEntry.targetSelectorRule());
     assertEquals(
         "targetSelectorRule must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new TypeEntry("BROKEN", "summary", List.of(), List.of(), " "))
+                () -> new TypeEntry("BROKEN", "summary", List.of(), List.of(), Optional.of(" ")))
             .getMessage());
   }
 

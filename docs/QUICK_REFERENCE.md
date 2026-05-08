@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: QUICK_REFERENCE
 updated: "2026-05-01"
 route:
@@ -360,7 +360,8 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
 
 ## Response Anchors Worth Remembering
 
-- `GET_FORMULA_SURFACE`: `analysis.totalFormulaCellCount`
+- `GET_FORMULA_SURFACE`: `surface.totalFormulaCellCount`
+- `GET_NAMED_RANGE_SURFACE`: `surface.workbookScopedCount`, `surface.sheetScopedCount`
 - `ANALYZE_NAMED_RANGE_HEALTH`: `analysis.checkedNamedRangeCount`, `analysis.summary`, and
   `analysis.findings`
 - `ANALYZE_WORKBOOK_FINDINGS`: `analysis.summary` and `analysis.findings`

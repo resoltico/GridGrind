@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.ss.usermodel.Name;
@@ -77,7 +78,10 @@ class ExcelPivotTableCoverageTestSupport {
         reportFilters,
         List.of(
             new ExcelPivotTableDefinition.DataField(
-                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", "#,##0.00")));
+                "Amount",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                Optional.of("#,##0.00"))));
   }
 
   void populatePivotSource(ExcelWorkbook workbook, String sheetName) {
@@ -206,7 +210,8 @@ class ExcelPivotTableCoverageTestSupport {
         case "pivotTableIdHighWaterMark" ->
             controller.pivotTableIdHighWaterMark((XSSFWorkbook) args[0]);
         case "primePivotTableAllocator" -> {
-          controller.primePivotTableAllocator((XSSFWorkbook) args[0], (XSSFPivotTable) args[1]);
+          controller.primePivotTableAllocator(
+              (XSSFWorkbook) args[0], Optional.ofNullable((XSSFPivotTable) args[1]));
           yield null;
         }
         case "rawLocationRange" ->

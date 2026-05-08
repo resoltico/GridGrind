@@ -8,6 +8,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual drawing-object report returned by drawing reads. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -39,9 +40,9 @@ public sealed interface DrawingObjectReport
       String contentType,
       long byteSize,
       String sha256,
-      Integer widthPixels,
-      Integer heightPixels,
-      String description)
+      @Nullable Integer widthPixels,
+      @Nullable Integer heightPixels,
+      @Nullable String description)
       implements DrawingObjectReport {
     public Picture {
       validateCommon(name, anchor);
@@ -83,8 +84,8 @@ public sealed interface DrawingObjectReport
       String name,
       DrawingAnchorReport anchor,
       ExcelDrawingShapeKind kind,
-      String presetGeometryToken,
-      String text,
+      @Nullable String presetGeometryToken,
+      @Nullable String text,
       int childCount)
       implements DrawingObjectReport {
     public Shape {
@@ -107,15 +108,15 @@ public sealed interface DrawingObjectReport
       String name,
       DrawingAnchorReport anchor,
       ExcelEmbeddedObjectPackagingKind packagingKind,
-      String label,
-      String fileName,
-      String command,
+      @Nullable String label,
+      @Nullable String fileName,
+      @Nullable String command,
       String contentType,
       long byteSize,
       String sha256,
-      ExcelPictureFormat previewFormat,
-      Long previewByteSize,
-      String previewSha256)
+      @Nullable ExcelPictureFormat previewFormat,
+      @Nullable Long previewByteSize,
+      @Nullable String previewSha256)
       implements DrawingObjectReport {
     public EmbeddedObject {
       validateCommon(name, anchor);
@@ -153,18 +154,18 @@ public sealed interface DrawingObjectReport
   record SignatureLine(
       String name,
       DrawingAnchorReport anchor,
-      String setupId,
-      Boolean allowComments,
-      String signingInstructions,
-      String suggestedSigner,
-      String suggestedSigner2,
-      String suggestedSignerEmail,
-      ExcelPictureFormat previewFormat,
-      String previewContentType,
-      Long previewByteSize,
-      String previewSha256,
-      Integer previewWidthPixels,
-      Integer previewHeightPixels)
+      @Nullable String setupId,
+      @Nullable Boolean allowComments,
+      @Nullable String signingInstructions,
+      @Nullable String suggestedSigner,
+      @Nullable String suggestedSigner2,
+      @Nullable String suggestedSignerEmail,
+      @Nullable ExcelPictureFormat previewFormat,
+      @Nullable String previewContentType,
+      @Nullable Long previewByteSize,
+      @Nullable String previewSha256,
+      @Nullable Integer previewWidthPixels,
+      @Nullable Integer previewHeightPixels)
       implements DrawingObjectReport {
     public SignatureLine {
       validateCommon(name, anchor);

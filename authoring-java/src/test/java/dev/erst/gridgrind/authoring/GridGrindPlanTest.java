@@ -16,13 +16,13 @@ import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.executor.ExecutionInputBindings;
-import dev.erst.gridgrind.executor.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
+import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -139,11 +139,11 @@ class GridGrindPlanTest {
                 new InspectionStep(
                     "inspection-001",
                     Targets.cell("Budget", "A1").selector(),
-                    new dev.erst.gridgrind.contract.query.InspectionQuery.GetCells()),
+                    new dev.erst.gridgrind.contract.query.SheetIntrospectionQuery.GetCells()),
                 new AssertionStep(
                     "assertion-001",
                     Targets.cell("Budget", "A1").selector(),
-                    new dev.erst.gridgrind.contract.assertion.Assertion.CellValue(
+                    new dev.erst.gridgrind.contract.assertion.CellAssertion.CellValue(
                         Values.toExpectedCellValue(Values.expectedBlank())))));
 
     WorkbookPlan plan =
@@ -216,15 +216,16 @@ class GridGrindPlanTest {
     GridGrindResponse.Success response =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
+            GridGrindEngine.requestExecutor()
                 .execute(
-                    plan.toPlan(), new ExecutionInputBindings(tempDir), ExecutionJournalSink.NOOP));
+                    plan.toPlan(), new GridGrindRequestInputs(tempDir), GridGrindJournalSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
     assertEquals(1, response.assertions().size());
     assertNotNull(response.journal());
-    InspectionResult.CellsResult cellsResult =
-        assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
+    SheetInspectionResult.CellsResult cellsResult =
+        assertInstanceOf(
+            SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
     dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,

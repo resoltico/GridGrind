@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFConditionalFormattingRule;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -31,20 +32,21 @@ class ExcelConditionalFormattingStyleSupportTest {
 
       ExcelDifferentialStyle authoredStyle =
           new ExcelDifferentialStyle(
-              "0.00",
-              true,
-              false,
-              ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
-              "#102030",
-              true,
-              true,
-              "#E0F0AA",
-              new ExcelDifferentialBorder(
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
-                  null,
-                  null,
-                  null,
-                  null));
+              Optional.of("0.00"),
+              Optional.of(true),
+              Optional.of(false),
+              Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
+              Optional.of("#102030"),
+              Optional.of(true),
+              Optional.of(true),
+              Optional.of("#E0F0AA"),
+              Optional.ofNullable(
+                  new ExcelDifferentialBorder(
+                      new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#405060"),
+                      null,
+                      null,
+                      null,
+                      null)));
 
       ExcelConditionalFormattingStyleSupport.applyStyle(workbook, ctRule, authoredStyle);
 
@@ -480,20 +482,21 @@ class ExcelConditionalFormattingStyleSupportTest {
           workbook,
           ctRule,
           new ExcelDifferentialStyle(
-              null,
-              null,
-              null,
-              null,
-              null,
-              false,
-              null,
-              null,
-              new ExcelDifferentialBorder(
-                  null,
-                  new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, null),
-                  null,
-                  null,
-                  null)));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(false),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.ofNullable(
+                  new ExcelDifferentialBorder(
+                      null,
+                      new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, null),
+                      null,
+                      null,
+                      null))));
 
       ExcelDifferentialStyleSnapshot snapshot =
           ExcelConditionalFormattingStyleSupport.snapshotStyle(workbook.getStylesSource(), ctRule);

@@ -3,7 +3,7 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
@@ -15,12 +15,14 @@ class InspectionStepTest {
   void acceptsCompatibleTargetAndQueryPairs() {
     InspectionStep workbookSummary =
         new InspectionStep(
-            "summary", new WorkbookSelector.Current(), new InspectionQuery.GetWorkbookSummary());
+            "summary",
+            new WorkbookSelector.Current(),
+            new WorkbookIntrospectionQuery.GetWorkbookSummary());
     InspectionStep formulaHealth =
         new InspectionStep(
             "formula-health",
             new SheetSelector.ByNames(java.util.List.of("Budget")),
-            new InspectionQuery.AnalyzeFormulaHealth());
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth());
 
     assertEquals("INSPECTION", workbookSummary.stepKind());
     assertEquals("GET_WORKBOOK_SUMMARY", workbookSummary.query().queryType());
@@ -33,7 +35,9 @@ class InspectionStepTest {
         IllegalArgumentException.class,
         () ->
             new InspectionStep(
-                " ", new WorkbookSelector.Current(), new InspectionQuery.GetWorkbookSummary()));
+                " ",
+                new WorkbookSelector.Current(),
+                new WorkbookIntrospectionQuery.GetWorkbookSummary()));
     IllegalArgumentException incompatibleTargetFailure =
         assertThrows(
             IllegalArgumentException.class,
@@ -41,10 +45,11 @@ class InspectionStepTest {
                 new InspectionStep(
                     "bad-target",
                     new RangeSelector.ByRange("Budget", "A1:B2"),
-                    new InspectionQuery.GetWorkbookSummary()));
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary()));
 
     assertEquals(
-        "GET_WORKBOOK_SUMMARY requires target type WorkbookSelector but got ByRange",
+        "GET_WORKBOOK_SUMMARY requires target type WorkbookSelector but got"
+            + " RangeSelector.ByRange",
         incompatibleTargetFailure.getMessage());
   }
 }

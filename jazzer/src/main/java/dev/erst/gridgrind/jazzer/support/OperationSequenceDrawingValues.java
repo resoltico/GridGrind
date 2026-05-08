@@ -47,7 +47,9 @@ final class OperationSequenceDrawingValues {
         DRAWING_PICTURE_NAME,
         nextPictureDataInput(),
         nextDrawingAnchorInput(data),
-        data.consumeBoolean() ? TextSourceInput.inline("Queue preview") : null);
+        data.consumeBoolean()
+            ? Optional.of(TextSourceInput.inline("Queue preview"))
+            : Optional.empty());
   }
 
   static ChartInput nextChartInput(GridGrindFuzzData data) {
@@ -56,19 +58,13 @@ final class OperationSequenceDrawingValues {
 
   static ShapeInput nextShapeInput(GridGrindFuzzData data) {
     if (data.consumeBoolean()) {
-      return new ShapeInput(
+      return new ShapeInput.SimpleShape(
           DRAWING_SHAPE_NAME,
-          ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
           nextDrawingAnchorInput(data),
           data.consumeBoolean() ? "roundRect" : "rect",
-          data.consumeBoolean() ? TextSourceInput.inline("Queue") : null);
+          data.consumeBoolean() ? Optional.of(TextSourceInput.inline("Queue")) : Optional.empty());
     }
-    return new ShapeInput(
-        DRAWING_CONNECTOR_NAME,
-        ExcelAuthoredDrawingShapeKind.CONNECTOR,
-        nextDrawingAnchorInput(data),
-        null,
-        null);
+    return new ShapeInput.Connector(DRAWING_CONNECTOR_NAME, nextDrawingAnchorInput(data));
   }
 
   static EmbeddedObjectInput nextEmbeddedObjectInput(GridGrindFuzzData data) {
@@ -108,7 +104,7 @@ final class OperationSequenceDrawingValues {
         new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         ExcelPictureFormat.PNG,
         nextExcelDrawingAnchor(data),
-        data.consumeBoolean() ? "Queue preview" : null);
+        data.consumeBoolean() ? Optional.of("Queue preview") : Optional.empty());
   }
 
   static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
@@ -117,19 +113,13 @@ final class OperationSequenceDrawingValues {
 
   static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {
     if (data.consumeBoolean()) {
-      return new ExcelShapeDefinition(
+      return new ExcelShapeDefinition.SimpleShape(
           DRAWING_SHAPE_NAME,
-          ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
           nextExcelDrawingAnchor(data),
           data.consumeBoolean() ? "roundRect" : "rect",
-          data.consumeBoolean() ? "Queue" : null);
+          data.consumeBoolean() ? Optional.of("Queue") : Optional.empty());
     }
-    return new ExcelShapeDefinition(
-        DRAWING_CONNECTOR_NAME,
-        ExcelAuthoredDrawingShapeKind.CONNECTOR,
-        nextExcelDrawingAnchor(data),
-        null,
-        null);
+    return new ExcelShapeDefinition.Connector(DRAWING_CONNECTOR_NAME, nextExcelDrawingAnchor(data));
   }
 
   static ExcelEmbeddedObjectDefinition nextExcelEmbeddedObjectDefinition(GridGrindFuzzData data) {

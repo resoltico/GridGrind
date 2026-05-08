@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.authoring;
 
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
+import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import java.util.Objects;
@@ -69,7 +70,7 @@ public final class SheetTarget {
 
   /** Returns one chart inventory inspection step for this sheet. */
   public PlannedInspection charts() {
-    return new PlannedInspection(selector, Queries.charts());
+    return new PlannedInspection(new ChartSelector.AllOnSheet(selector.name()), Queries.charts());
   }
 
   /** Returns one drawing-object inventory inspection step for this sheet. */

@@ -23,6 +23,7 @@ import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTComment;
 
 /** Repairs authoritative sheet comment state after POI mutations that can corrupt OOXML. */
@@ -119,19 +120,21 @@ final class ExcelSheetCommentRepairSupport {
   private XSSFComment newRawComment(
       int rowIndex, int columnIndex, CommentRewriteSnapshot expectedComment) {
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    ExcelCommentAnchorSnapshot authoredAnchor = expectedComment.anchor();
-    anchor.setRow1(authoredAnchor == null ? rowIndex : authoredAnchor.firstRow());
-    anchor.setRow2(authoredAnchor == null ? rowIndex + 3 : authoredAnchor.lastRow());
-    anchor.setCol1(authoredAnchor == null ? columnIndex : authoredAnchor.firstColumn());
-    anchor.setCol2(authoredAnchor == null ? columnIndex + 3 : authoredAnchor.lastColumn());
+    Optional<ExcelCommentAnchorSnapshot> authoredAnchor = expectedComment.anchor();
+    anchor.setRow1(authoredAnchor.map(ExcelCommentAnchorSnapshot::firstRow).orElse(rowIndex));
+    anchor.setRow2(authoredAnchor.map(ExcelCommentAnchorSnapshot::lastRow).orElse(rowIndex + 3));
+    anchor.setCol1(authoredAnchor.map(ExcelCommentAnchorSnapshot::firstColumn).orElse(columnIndex));
+    anchor.setCol2(
+        authoredAnchor.map(ExcelCommentAnchorSnapshot::lastColumn).orElse(columnIndex + 3));
     XSSFComment poiComment = (XSSFComment) sheet.createDrawingPatriarch().createCellComment(anchor);
     poiComment.setAuthor(expectedComment.author());
     poiComment.setVisible(expectedComment.visible());
     poiComment.setString(
-        expectedComment.runs() == null
+        expectedComment.runs().isEmpty()
             ? new XSSFRichTextString(expectedComment.text())
             : ExcelRichTextSupport.toPoiRichText(
-                (XSSFWorkbook) sheet.getWorkbook(), toAuthoringRichText(expectedComment.runs())));
+                (XSSFWorkbook) sheet.getWorkbook(),
+                toAuthoringRichText(expectedComment.runs().orElseThrow())));
     return poiComment;
   }
 
@@ -150,7 +153,7 @@ final class ExcelSheetCommentRepairSupport {
   private void clearAllPersistedComments() {
     CommentsTable commentsTable = commentsTable(sheet).orElse(null);
     List<CellAddress> rawAddresses = rawCommentAddresses(commentsTable);
-    if (rawAddresses.isEmpty()) {
+    if (commentsTable == null || rawAddresses.isEmpty()) {
       return;
     }
 
@@ -256,7 +259,7 @@ final class ExcelSheetCommentRepairSupport {
     return Optional.empty();
   }
 
-  static List<CellAddress> rawCommentAddresses(CommentsTable commentsTable) {
+  static List<CellAddress> rawCommentAddresses(@Nullable CommentsTable commentsTable) {
     if (commentsTable == null || commentsTable.getCTComments().getCommentList() == null) {
       return List.of();
     }
@@ -315,18 +318,18 @@ final class ExcelSheetCommentRepairSupport {
   }
 
   private static ExcelRichTextRun toAuthoringRun(ExcelRichTextRunSnapshot run) {
-    return new ExcelRichTextRun(run.text(), toAuthoringFont(run.font()));
+    return new ExcelRichTextRun(run.text(), Optional.of(toAuthoringFont(run.font())));
   }
 
   private static ExcelCellFont toAuthoringFont(ExcelCellFontSnapshot font) {
     return new ExcelCellFont(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        font.fontHeight(),
-        ExcelColorSupport.copyOf(font.fontColor()),
-        font.underline(),
-        font.strikeout());
+        Optional.of(font.bold()),
+        Optional.of(font.italic()),
+        Optional.of(font.fontName()),
+        Optional.of(font.fontHeight()),
+        Optional.ofNullable(ExcelColorSupport.copyOf(font.fontColor())),
+        Optional.of(font.underline()),
+        Optional.of(font.strikeout()));
   }
 
   record CommentRewriteSnapshot(
@@ -334,12 +337,14 @@ final class ExcelSheetCommentRepairSupport {
       String text,
       String author,
       boolean visible,
-      ExcelRichTextSnapshot runs,
-      ExcelCommentAnchorSnapshot anchor) {
+      Optional<ExcelRichTextSnapshot> runs,
+      Optional<ExcelCommentAnchorSnapshot> anchor) {
     CommentRewriteSnapshot {
       Objects.requireNonNull(address, "address must not be null");
       text = text == null ? "" : text;
       author = author == null ? "" : author;
+      Objects.requireNonNull(runs, "runs must not be null");
+      Objects.requireNonNull(anchor, "anchor must not be null");
     }
 
     static CommentRewriteSnapshot from(WorkbookSheetResult.CellComment comment) {
@@ -354,19 +359,20 @@ final class ExcelSheetCommentRepairSupport {
 
     static CommentRewriteSnapshot from(
         CellAddress address, XSSFComment comment, XSSFWorkbook workbook) {
-      ExcelCommentAnchorSnapshot anchor = null;
+      Optional<ExcelCommentAnchorSnapshot> anchor = Optional.empty();
       if (comment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
         anchor =
-            new ExcelCommentAnchorSnapshot(
-                clientAnchor.getCol1(),
-                clientAnchor.getRow1(),
-                clientAnchor.getCol2(),
-                clientAnchor.getRow2());
+            Optional.of(
+                new ExcelCommentAnchorSnapshot(
+                    clientAnchor.getCol1(),
+                    clientAnchor.getRow1(),
+                    clientAnchor.getCol2(),
+                    clientAnchor.getRow2()));
       }
       XSSFRichTextString richText = comment.getString();
-      ExcelRichTextSnapshot runs =
+      Optional<ExcelRichTextSnapshot> runs =
           richText == null
-              ? null
+              ? Optional.empty()
               : ExcelRichTextSupport.snapshot(
                   workbook, richText, WorkbookStyleRegistry.snapshotFont(workbook.getFontAt(0)));
       return new CommentRewriteSnapshot(
@@ -392,11 +398,11 @@ final class ExcelSheetCommentRepairSupport {
           text,
           author,
           visible,
-          runs == null ? null : toAuthoringRichText(runs),
-          anchor == null
-              ? null
-              : new ExcelCommentAnchor(
-                  anchor.firstColumn(), anchor.firstRow(), anchor.lastColumn(), anchor.lastRow()));
+          runs.map(ExcelSheetCommentRepairSupport::toAuthoringRichText),
+          anchor.map(
+              value ->
+                  new ExcelCommentAnchor(
+                      value.firstColumn(), value.firstRow(), value.lastColumn(), value.lastRow())));
     }
 
     WorkbookSheetResult.CellComment toReadComment() {

@@ -109,30 +109,39 @@ class AdvancedReadEngineTypesTest {
       CTColor argb = CTColor.Factory.newInstance();
       argb.setRgb(new byte[] {(byte) 0xFF, 0x44, 0x55, 0x66});
 
-      assertNull(ExcelColorSnapshotSupport.snapshot((XSSFColor) null));
-      assertNull(ExcelColorSnapshotSupport.snapshot(new XSSFColor()));
-      assertEquals(ExcelColorSnapshot.rgb("#112233"), ExcelColorSnapshotSupport.snapshot(rgbColor));
+      assertEquals(Optional.empty(), ExcelColorSnapshotSupport.snapshot((XSSFColor) null));
+      assertThrows(
+          IllegalStateException.class, () -> ExcelColorSnapshotSupport.snapshot(new XSSFColor()));
       assertEquals(
-          ExcelColorSnapshot.indexed((int) IndexedColors.DARK_RED.getIndex()),
+          Optional.of(ExcelColorSnapshot.rgb("#112233")),
+          ExcelColorSnapshotSupport.snapshot(rgbColor));
+      assertEquals(
+          Optional.of(ExcelColorSnapshot.indexed((int) IndexedColors.DARK_RED.getIndex())),
           ExcelColorSnapshotSupport.snapshot(indexedColor));
       assertEquals(
-          ExcelColorSnapshot.theme(3, 0.25d), ExcelColorSnapshotSupport.snapshot(tintedTheme));
+          Optional.of(ExcelColorSnapshot.theme(3, 0.25d)),
+          ExcelColorSnapshotSupport.snapshot(tintedTheme));
       assertEquals(Optional.of("#112233"), ExcelRgbColorSupport.toRgbHex(rgbColor));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(null));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(tintedTheme));
       assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(malformedRgb));
-      assertNull(ExcelColorSnapshotSupport.snapshot(workbook, null));
+      assertEquals(Optional.empty(), ExcelColorSnapshotSupport.snapshot(workbook, null));
       assertEquals(
-          ExcelColorSnapshot.theme(2), ExcelColorSnapshotSupport.snapshot(workbook, themed));
+          Optional.of(ExcelColorSnapshot.theme(2)),
+          ExcelColorSnapshotSupport.snapshot(workbook, themed));
       assertEquals(
-          ExcelColorSnapshot.indexed(7), ExcelColorSnapshotSupport.snapshot(workbook, indexed));
+          Optional.of(ExcelColorSnapshot.indexed(7)),
+          ExcelColorSnapshotSupport.snapshot(workbook, indexed));
       assertEquals(
-          ExcelColorSnapshot.rgb("#445566"), ExcelColorSnapshotSupport.snapshot(workbook, argb));
+          Optional.of(ExcelColorSnapshot.rgb("#445566")),
+          ExcelColorSnapshotSupport.snapshot(workbook, argb));
       assertNull(ExcelColorSupport.copyOf(null));
       assertEquals(
           ExcelColor.theme(3, 0.25d), ExcelColorSupport.copyOf(ExcelColorSnapshot.theme(3, 0.25d)));
       assertEquals(ExcelColor.indexed(7), ExcelColorSupport.copyOf(ExcelColorSnapshot.indexed(7)));
-      assertNull(ExcelColorSnapshotSupport.snapshot(workbook, CTColor.Factory.newInstance()));
+      assertThrows(
+          IllegalStateException.class,
+          () -> ExcelColorSnapshotSupport.snapshot(workbook, CTColor.Factory.newInstance()));
     }
   }
 
@@ -145,13 +154,15 @@ class AdvancedReadEngineTypesTest {
             List.of(
                 new ExcelRichTextRunSnapshot("Hi ", baseFont),
                 new ExcelRichTextRunSnapshot("there", font(ExcelColorSnapshot.theme(5, 0.2d)))));
-    ExcelCommentSnapshot comment = new ExcelCommentSnapshot("Hi there", "Ada", true, runs, anchor);
+    ExcelCommentSnapshot comment =
+        new ExcelCommentSnapshot("Hi there", "Ada", true, Optional.of(runs), Optional.of(anchor));
 
-    assertEquals(anchor, comment.anchor());
+    assertEquals(Optional.of(anchor), comment.anchor());
     assertEquals(new ExcelComment("Hi there", "Ada", true), comment.toPlainComment());
     assertEquals(
         new ExcelComment("Ok", "Ada", false),
-        new ExcelCommentSnapshot("Ok", "Ada", false, null, null).toPlainComment());
+        new ExcelCommentSnapshot("Ok", "Ada", false, Optional.empty(), Optional.empty())
+            .toPlainComment());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -159,14 +170,16 @@ class AdvancedReadEngineTypesTest {
                 "Mismatch",
                 "Ada",
                 true,
-                new ExcelRichTextSnapshot(List.of(new ExcelRichTextRunSnapshot("Other", baseFont))),
-                null));
+                Optional.of(
+                    new ExcelRichTextSnapshot(
+                        List.of(new ExcelRichTextRunSnapshot("Other", baseFont)))),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCommentSnapshot(" ", "Ada", true, null, null));
+        () -> new ExcelCommentSnapshot(" ", "Ada", true, Optional.empty(), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCommentSnapshot("Hi there", " ", true, null, null));
+        () -> new ExcelCommentSnapshot("Hi there", " ", true, Optional.empty(), Optional.empty()));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(2, 0, 1, 0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(0, 2, 0, 1));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchorSnapshot(-1, 0, 1, 1));

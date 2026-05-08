@@ -7,11 +7,11 @@ import java.util.List;
 final class GridGrindProtocolCatalogPersistenceTypeDescriptors {
   static final List<CatalogTypeDescriptor> PERSISTENCE_TYPES =
       List.of(
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               WorkbookPlan.WorkbookPersistence.None.class,
               "NONE",
               "Keep the workbook in memory only." + " The response persistence.type echoes NONE."),
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               WorkbookPlan.WorkbookPersistence.OverwriteSource.class,
               "OVERWRITE",
               "Overwrite the opened source workbook at source.path."
@@ -23,7 +23,7 @@ final class GridGrindProtocolCatalogPersistenceTypeDescriptors {
                   + " The response persistence.type echoes OVERWRITE and includes sourcePath"
                   + " (the original source path string) and executionPath (absolute normalized).",
               "security"),
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               WorkbookPlan.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
               "Save the workbook to a new .xlsx path."

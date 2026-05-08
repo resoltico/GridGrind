@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
@@ -37,27 +38,29 @@ final class ExcelTableCalculatedColumnCanonicalizer {
   }
 
   private static void canonicalizeTable(XSSFSheet sheet, XSSFTable table) {
-    ExcelRange range =
-        ExcelSheetStructureSupport.parseRangeOrNull(
+    Optional<ExcelRange> range =
+        ExcelSheetStructureSupport.parseOptionalRange(
             Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
-    if (range == null) {
+    if (range.isEmpty()) {
       return;
     }
-    int firstBodyRow = range.firstRow() + 1;
-    int lastBodyRow = range.lastRow() - totalsRowCount(table.getCTTable());
+    ExcelRange parsedRange = range.orElseThrow();
+    int firstBodyRow = parsedRange.firstRow() + 1;
+    int lastBodyRow = parsedRange.lastRow() - totalsRowCount(table.getCTTable());
     if (firstBodyRow > lastBodyRow) {
       return;
     }
 
     CTTableColumn[] columns = table.getCTTable().getTableColumns().getTableColumnArray();
     for (int columnOffset = 0; columnOffset < columns.length; columnOffset++) {
-      String calculatedFormula = calculatedColumnFormula(columns[columnOffset]);
-      if (calculatedFormula == null) {
+      Optional<String> calculatedFormula = calculatedColumnFormula(columns[columnOffset]);
+      if (calculatedFormula.isEmpty()) {
         continue;
       }
-      int columnIndex = range.firstColumn() + columnOffset;
+      int columnIndex = parsedRange.firstColumn() + columnOffset;
       for (int rowIndex = firstBodyRow; rowIndex <= lastBodyRow; rowIndex++) {
-        clearMaterializedCalculatedFormulaCell(sheet, rowIndex, columnIndex, calculatedFormula);
+        clearMaterializedCalculatedFormulaCell(
+            sheet, rowIndex, columnIndex, calculatedFormula.orElseThrow());
       }
     }
   }
@@ -66,13 +69,13 @@ final class ExcelTableCalculatedColumnCanonicalizer {
     return table.getTotalsRowCount() > 0 ? Math.toIntExact(table.getTotalsRowCount()) : 0;
   }
 
-  static String calculatedColumnFormula(CTTableColumn column) {
+  static Optional<String> calculatedColumnFormula(CTTableColumn column) {
     if (!column.isSetCalculatedColumnFormula()) {
-      return null;
+      return Optional.empty();
     }
     String formula =
         Objects.requireNonNullElse(column.getCalculatedColumnFormula().getStringValue(), "");
-    return formula.isBlank() ? null : formula;
+    return formula.isBlank() ? Optional.empty() : Optional.of(formula);
   }
 
   private static void clearMaterializedCalculatedFormulaCell(

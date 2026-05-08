@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Objects;
 
 /** Executes validated workbook read commands in order against one workbook instance. */
-public final class WorkbookReadExecutor {
+final class WorkbookReadExecutor {
   private final ExcelWorkbookIntrospector workbookIntrospector;
   private final WorkbookAnalyzer analyzer;
 
   /** Creates the production workbook read executor. */
-  public WorkbookReadExecutor() {
+  WorkbookReadExecutor() {
     this(new ExcelWorkbookIntrospector(), new WorkbookAnalyzer());
   }
 
@@ -22,26 +22,25 @@ public final class WorkbookReadExecutor {
   }
 
   /** Executes one or more read commands in order and returns their immutable results. */
-  public List<WorkbookReadResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
+  List<WorkbookReadResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
   }
 
   /** Executes one or more read commands using the workbook filesystem location for analysis. */
-  public List<WorkbookReadResult> apply(
+  List<WorkbookReadResult> apply(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
     return apply(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source in order. */
-  public List<WorkbookReadResult> apply(
-      ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
+  List<WorkbookReadResult> apply(ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
     return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
   }
 
   /** Executes read commands from any iterable source with explicit workbook-location context. */
-  public List<WorkbookReadResult> apply(
+  List<WorkbookReadResult> apply(
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
       Iterable<WorkbookReadCommand> commands) {
@@ -62,6 +61,7 @@ public final class WorkbookReadExecutor {
     return switch (command) {
       case WorkbookReadCommand.Introspection introspection ->
           workbookIntrospector.execute(workbook, introspection);
+      case WorkbookReadCommand.Surface surface -> workbookIntrospector.execute(workbook, surface);
       case WorkbookReadCommand.Analysis analysis ->
           analyzer.execute(workbook, workbookLocation, analysis);
     };

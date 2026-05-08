@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBooleanProperty;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorder;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBorderPr;
@@ -38,10 +39,10 @@ final class ExcelConditionalFormattingStyleSupport {
     Objects.requireNonNull(style, "style must not be null");
 
     CTDxf dxf = CTDxf.Factory.newInstance();
-    applyNumberFormat(workbook.getStylesSource(), dxf, style.numberFormat());
+    applyNumberFormat(workbook.getStylesSource(), dxf, style.numberFormat().orElse(null));
     applyFont(dxf, style);
-    applyFill(dxf, style.fillColor());
-    applyBorder(dxf, style.border());
+    applyFill(dxf, style.fillColor().orElse(null));
+    applyBorder(dxf, style.border().orElse(null));
     attachStyle(workbook.getStylesSource(), rule, dxf);
   }
 
@@ -58,7 +59,8 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns the factual differential-style snapshot attached to one conditional-formatting rule.
    */
-  static ExcelDifferentialStyleSnapshot snapshotStyle(StylesTable stylesTable, CTCfRule rule) {
+  static @Nullable ExcelDifferentialStyleSnapshot snapshotStyle(
+      StylesTable stylesTable, CTCfRule rule) {
     return optionalSnapshotStyle(stylesTable, rule).orElse(null);
   }
 
@@ -108,7 +110,8 @@ final class ExcelConditionalFormattingStyleSupport {
     return Optional.of(stylesTable.getDxfAt(Math.toIntExact(dxfId)));
   }
 
-  private static void applyNumberFormat(StylesTable stylesTable, CTDxf dxf, String numberFormat) {
+  private static void applyNumberFormat(
+      StylesTable stylesTable, CTDxf dxf, @Nullable String numberFormat) {
     if (numberFormat == null) {
       return;
     }
@@ -120,35 +123,35 @@ final class ExcelConditionalFormattingStyleSupport {
 
   private static void applyFont(CTDxf dxf, ExcelDifferentialStyle style) {
     if (java.util.stream.Stream.of(
-            style.bold(),
-            style.italic(),
-            style.fontHeight(),
-            style.fontColor(),
-            style.underline(),
-            style.strikeout())
+            style.bold().orElse(null),
+            style.italic().orElse(null),
+            style.fontHeight().orElse(null),
+            style.fontColor().orElse(null),
+            style.underline().orElse(null),
+            style.strikeout().orElse(null))
         .allMatch(Objects::isNull)) {
       return;
     }
 
     CTFont font = dxf.addNewFont();
-    setBooleanProperty(style.bold(), font::addNewB);
-    setBooleanProperty(style.italic(), font::addNewI);
-    setBooleanProperty(style.strikeout(), font::addNewStrike);
-    if (style.fontHeight() != null) {
+    setBooleanProperty(style.bold().orElse(null), font::addNewB);
+    setBooleanProperty(style.italic().orElse(null), font::addNewI);
+    setBooleanProperty(style.strikeout().orElse(null), font::addNewStrike);
+    if (style.fontHeight().isPresent()) {
       CTFontSize fontSize = font.addNewSz();
-      fontSize.setVal(style.fontHeight().points().doubleValue());
+      fontSize.setVal(style.fontHeight().orElseThrow().points().doubleValue());
     }
-    if (style.fontColor() != null) {
-      setColor(font.addNewColor(), style.fontColor());
+    if (style.fontColor().isPresent()) {
+      setColor(font.addNewColor(), style.fontColor().orElseThrow());
     }
-    if (style.underline() != null) {
+    if (style.underline().isPresent()) {
       CTUnderlineProperty underlineProperty = font.addNewU();
       underlineProperty.setVal(
-          style.underline() ? STUnderlineValues.SINGLE : STUnderlineValues.NONE);
+          style.underline().orElseThrow() ? STUnderlineValues.SINGLE : STUnderlineValues.NONE);
     }
   }
 
-  private static void applyFill(CTDxf dxf, String fillColor) {
+  private static void applyFill(CTDxf dxf, @Nullable String fillColor) {
     if (fillColor == null) {
       return;
     }
@@ -158,7 +161,7 @@ final class ExcelConditionalFormattingStyleSupport {
     setColor(patternFill.addNewFgColor(), fillColor);
   }
 
-  private static void applyBorder(CTDxf dxf, ExcelDifferentialBorder border) {
+  private static void applyBorder(CTDxf dxf, @Nullable ExcelDifferentialBorder border) {
     if (border == null) {
       return;
     }
@@ -170,7 +173,8 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   private static void applyBorderSide(
-      java.util.function.Supplier<CTBorderPr> borderPrFactory, ExcelDifferentialBorderSide side) {
+      java.util.function.Supplier<CTBorderPr> borderPrFactory,
+      @Nullable ExcelDifferentialBorderSide side) {
     Objects.requireNonNull(borderPrFactory, "borderPrFactory must not be null");
     if (side == null) {
       return;
@@ -182,13 +186,14 @@ final class ExcelConditionalFormattingStyleSupport {
     }
   }
 
-  private static ExcelDifferentialBorderSide resolvedSide(
-      ExcelDifferentialBorderSide defaultSide, ExcelDifferentialBorderSide explicitSide) {
+  private static @Nullable ExcelDifferentialBorderSide resolvedSide(
+      @Nullable ExcelDifferentialBorderSide defaultSide,
+      @Nullable ExcelDifferentialBorderSide explicitSide) {
     return explicitSide == null ? defaultSide : explicitSide;
   }
 
   private static Optional<ExcelDifferentialStyleSnapshot> optionalStyleSnapshot(
-      String numberFormat,
+      @Nullable String numberFormat,
       FontSnapshot font,
       FillSnapshot fill,
       BorderSnapshot border,
@@ -219,7 +224,7 @@ final class ExcelConditionalFormattingStyleSupport {
             unsupportedFeatures));
   }
 
-  private static FontSnapshot snapshotFont(CTFont font) {
+  private static FontSnapshot snapshotFont(@Nullable CTFont font) {
     if (font == null) {
       return FontSnapshot.empty();
     }
@@ -247,7 +252,7 @@ final class ExcelConditionalFormattingStyleSupport {
     return Optional.of(ExcelFontHeight.fromPoints(BigDecimal.valueOf(font.getSzArray(0).getVal())));
   }
 
-  private static String fontColor(
+  private static @Nullable String fontColor(
       CTFont font, List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     String fontColor = optionalFontColor(font).orElse(null);
     if (fontColor == null && font.sizeOfColorArray() > 0) {
@@ -257,7 +262,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   /** Returns the factual fill metadata modeled by one differential fill payload. */
-  static FillSnapshot snapshotFill(CTFill fill) {
+  static FillSnapshot snapshotFill(@Nullable CTFill fill) {
     if (fill == null) {
       return FillSnapshot.empty();
     }
@@ -281,7 +286,7 @@ final class ExcelConditionalFormattingStyleSupport {
     return fill.xmlText().contains("gradientFill");
   }
 
-  private static BorderSnapshot snapshotBorder(CTBorder border) {
+  private static BorderSnapshot snapshotBorder(@Nullable CTBorder border) {
     if (border == null) {
       return BorderSnapshot.empty();
     }
@@ -326,7 +331,7 @@ final class ExcelConditionalFormattingStyleSupport {
   /**
    * Returns one modeled solid-fill foreground color, recording unsupported fill states as needed.
    */
-  static String patternForegroundColor(
+  static @Nullable String patternForegroundColor(
       CTPatternFill patternFill,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
     String fillColor = optionalPatternForegroundColor(patternFill).orElse(null);
@@ -353,10 +358,10 @@ final class ExcelConditionalFormattingStyleSupport {
   /** Reports whether one differential border references a side payload GridGrind cannot read. */
   static boolean hasUnsupportedSideReference(
       CTBorder border,
-      ExcelDifferentialBorderSide top,
-      ExcelDifferentialBorderSide right,
-      ExcelDifferentialBorderSide bottom,
-      ExcelDifferentialBorderSide left) {
+      @Nullable ExcelDifferentialBorderSide top,
+      @Nullable ExcelDifferentialBorderSide right,
+      @Nullable ExcelDifferentialBorderSide bottom,
+      @Nullable ExcelDifferentialBorderSide left) {
     return java.util.stream.Stream.of(
             border.isSetTop() && top == null,
             border.isSetRight() && right == null,
@@ -365,34 +370,34 @@ final class ExcelConditionalFormattingStyleSupport {
         .anyMatch(Boolean.TRUE::equals);
   }
 
-  private static ExcelDifferentialBorderSide borderSide(
+  private static @Nullable ExcelDifferentialBorderSide borderSide(
       boolean present, java.util.function.Supplier<CTBorderPr> sideSupplier) {
     return present ? snapshotBorderSide(sideSupplier.get()) : null;
   }
 
   /** Collapses the four explicit sides of one differential border into the public border record. */
-  static ExcelDifferentialBorder borderValue(
-      ExcelDifferentialBorderSide top,
-      ExcelDifferentialBorderSide right,
-      ExcelDifferentialBorderSide bottom,
-      ExcelDifferentialBorderSide left) {
+  static @Nullable ExcelDifferentialBorder borderValue(
+      @Nullable ExcelDifferentialBorderSide top,
+      @Nullable ExcelDifferentialBorderSide right,
+      @Nullable ExcelDifferentialBorderSide bottom,
+      @Nullable ExcelDifferentialBorderSide left) {
     return optionalBorderValue(top, right, bottom, left).orElse(null);
   }
 
   /** Returns the factual border side modeled by one differential border-side XML payload. */
-  static ExcelDifferentialBorderSide snapshotBorderSide(CTBorderPr side) {
+  static @Nullable ExcelDifferentialBorderSide snapshotBorderSide(@Nullable CTBorderPr side) {
     return optionalSnapshotBorderSide(side).orElse(null);
   }
 
   /** Returns the effective boolean value represented by one optional OOXML boolean property. */
-  static Boolean booleanProperty(CTBooleanProperty property) {
+  static @Nullable Boolean booleanProperty(@Nullable CTBooleanProperty property) {
     return property == null ? null : !property.isSetVal() || property.getVal();
   }
 
   /**
    * Returns the effective underline flag represented by one differential-font underline payload.
    */
-  static boolean underline(CTUnderlineProperty property) {
+  static boolean underline(@Nullable CTUnderlineProperty property) {
     if (property == null || !property.isSetVal()) {
       return true;
     }
@@ -415,7 +420,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   private static void setBooleanProperty(
-      Boolean value, java.util.function.Supplier<CTBooleanProperty> propertyFactory) {
+      @Nullable Boolean value, java.util.function.Supplier<CTBooleanProperty> propertyFactory) {
     if (value == null) {
       return;
     }
@@ -441,7 +446,7 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   /** Converts one raw OOXML color payload into {@code #RRGGBB}, or null when RGB is unavailable. */
-  static String rgbHexFromCtColor(CTColor color) {
+  static @Nullable String rgbHexFromCtColor(@Nullable CTColor color) {
     return optionalRgbHexFromCtColor(color).orElse(null);
   }
 
@@ -459,17 +464,18 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   private static Optional<ExcelDifferentialBorder> optionalBorderValue(
-      ExcelDifferentialBorderSide top,
-      ExcelDifferentialBorderSide right,
-      ExcelDifferentialBorderSide bottom,
-      ExcelDifferentialBorderSide left) {
+      @Nullable ExcelDifferentialBorderSide top,
+      @Nullable ExcelDifferentialBorderSide right,
+      @Nullable ExcelDifferentialBorderSide bottom,
+      @Nullable ExcelDifferentialBorderSide left) {
     if (top == null && right == null && bottom == null && left == null) {
       return Optional.empty();
     }
     return Optional.of(new ExcelDifferentialBorder(null, top, right, bottom, left));
   }
 
-  private static Optional<ExcelDifferentialBorderSide> optionalSnapshotBorderSide(CTBorderPr side) {
+  private static Optional<ExcelDifferentialBorderSide> optionalSnapshotBorderSide(
+      @Nullable CTBorderPr side) {
     if (side == null) {
       return Optional.empty();
     }
@@ -485,7 +491,7 @@ final class ExcelConditionalFormattingStyleSupport {
     return Optional.of(new ExcelDifferentialBorderSide(style, color));
   }
 
-  private static Optional<String> optionalRgbHexFromCtColor(CTColor color) {
+  private static Optional<String> optionalRgbHexFromCtColor(@Nullable CTColor color) {
     if (color == null || !color.isSetRgb()) {
       return Optional.empty();
     }
@@ -564,28 +570,41 @@ final class ExcelConditionalFormattingStyleSupport {
   }
 
   record FillSnapshot(
-      String fillColor, List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
+      @Nullable String fillColor,
+      List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
+    FillSnapshot {
+      unsupportedFeatures = List.copyOf(unsupportedFeatures);
+    }
+
     private static FillSnapshot empty() {
       return new FillSnapshot(null, List.of());
     }
   }
 
   private record BorderSnapshot(
-      ExcelDifferentialBorder border,
+      @Nullable ExcelDifferentialBorder border,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
+    private BorderSnapshot {
+      unsupportedFeatures = List.copyOf(unsupportedFeatures);
+    }
+
     private static BorderSnapshot empty() {
       return new BorderSnapshot(null, List.of());
     }
   }
 
   private record FontSnapshot(
-      Boolean bold,
-      Boolean italic,
-      ExcelFontHeight fontHeight,
-      String fontColor,
-      Boolean underline,
-      Boolean strikeout,
+      @Nullable Boolean bold,
+      @Nullable Boolean italic,
+      @Nullable ExcelFontHeight fontHeight,
+      @Nullable String fontColor,
+      @Nullable Boolean underline,
+      @Nullable Boolean strikeout,
       List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
+    private FontSnapshot {
+      unsupportedFeatures = List.copyOf(unsupportedFeatures);
+    }
+
     private static FontSnapshot empty() {
       return new FontSnapshot(null, null, null, null, null, null, List.of());
     }

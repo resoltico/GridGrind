@@ -1,90 +1,98 @@
 package dev.erst.gridgrind.authoring;
 
+import dev.erst.gridgrind.contract.assertion.AnalysisAssertion;
 import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.CellAssertion;
+import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
+import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Canonical assertion helpers kept internal to the focused Java authoring surface. */
 final class Checks {
   private Checks() {}
 
-  static Assertion.NamedRangePresent namedRangePresent() {
-    return new Assertion.NamedRangePresent();
+  static PresenceAssertion.NamedRangePresent namedRangePresent() {
+    return new PresenceAssertion.NamedRangePresent();
   }
 
-  static Assertion.NamedRangeAbsent namedRangeAbsent() {
-    return new Assertion.NamedRangeAbsent();
+  static PresenceAssertion.NamedRangeAbsent namedRangeAbsent() {
+    return new PresenceAssertion.NamedRangeAbsent();
   }
 
-  static Assertion.TablePresent tablePresent() {
-    return new Assertion.TablePresent();
+  static PresenceAssertion.TablePresent tablePresent() {
+    return new PresenceAssertion.TablePresent();
   }
 
-  static Assertion.TableAbsent tableAbsent() {
-    return new Assertion.TableAbsent();
+  static PresenceAssertion.TableAbsent tableAbsent() {
+    return new PresenceAssertion.TableAbsent();
   }
 
-  static Assertion.PivotTablePresent pivotTablePresent() {
-    return new Assertion.PivotTablePresent();
+  static PresenceAssertion.PivotTablePresent pivotTablePresent() {
+    return new PresenceAssertion.PivotTablePresent();
   }
 
-  static Assertion.PivotTableAbsent pivotTableAbsent() {
-    return new Assertion.PivotTableAbsent();
+  static PresenceAssertion.PivotTableAbsent pivotTableAbsent() {
+    return new PresenceAssertion.PivotTableAbsent();
   }
 
-  static Assertion.ChartPresent chartPresent() {
-    return new Assertion.ChartPresent();
+  static PresenceAssertion.ChartPresent chartPresent() {
+    return new PresenceAssertion.ChartPresent();
   }
 
-  static Assertion.ChartAbsent chartAbsent() {
-    return new Assertion.ChartAbsent();
+  static PresenceAssertion.ChartAbsent chartAbsent() {
+    return new PresenceAssertion.ChartAbsent();
   }
 
-  static Assertion.CellValue cellValue(Values.ExpectedValue expectedValue) {
-    return new Assertion.CellValue(Values.toExpectedCellValue(expectedValue));
+  static CellAssertion.CellValue cellValue(Values.ExpectedValue expectedValue) {
+    return new CellAssertion.CellValue(Values.toExpectedCellValue(expectedValue));
   }
 
-  static Assertion.DisplayValue displayValue(String displayValue) {
-    return new Assertion.DisplayValue(displayValue);
+  static CellAssertion.DisplayValue displayValue(String displayValue) {
+    return new CellAssertion.DisplayValue(displayValue);
   }
 
-  static Assertion.FormulaText formulaText(String formula) {
-    return new Assertion.FormulaText(formula);
+  static CellAssertion.FormulaText formulaText(String formula) {
+    return new CellAssertion.FormulaText(formula);
   }
 
-  static Assertion.AnalysisMaxSeverity analysisMaxSeverity(
+  static AnalysisAssertion.AnalysisMaxSeverity analysisMaxSeverity(
       InspectionQuery.Analysis query, AnalysisSeverity maximumSeverity) {
-    return new Assertion.AnalysisMaxSeverity(query, maximumSeverity);
+    return new AnalysisAssertion.AnalysisMaxSeverity(query, maximumSeverity);
   }
 
-  static Assertion.AnalysisFindingPresent analysisFindingPresent(
+  static AnalysisAssertion.AnalysisFindingPresent analysisFindingPresent(
       InspectionQuery.Analysis query,
       AnalysisFindingCode code,
       AnalysisSeverity severity,
       String messageContains) {
-    return new Assertion.AnalysisFindingPresent(query, code, severity, messageContains);
+    return new AnalysisAssertion.AnalysisFindingPresent(
+        query, code, Optional.ofNullable(severity), Optional.ofNullable(messageContains));
   }
 
-  static Assertion.AnalysisFindingAbsent analysisFindingAbsent(
+  static AnalysisAssertion.AnalysisFindingAbsent analysisFindingAbsent(
       InspectionQuery.Analysis query,
       AnalysisFindingCode code,
       AnalysisSeverity severity,
       String messageContains) {
-    return new Assertion.AnalysisFindingAbsent(query, code, severity, messageContains);
+    return new AnalysisAssertion.AnalysisFindingAbsent(
+        query, code, Optional.ofNullable(severity), Optional.ofNullable(messageContains));
   }
 
-  static Assertion.AllOf allOf(Assertion... assertions) {
-    return new Assertion.AllOf(List.of(assertions));
+  static CompositeAssertion.AllOf allOf(Assertion... assertions) {
+    return new CompositeAssertion.AllOf(List.of(assertions));
   }
 
-  static Assertion.AnyOf anyOf(Assertion... assertions) {
-    return new Assertion.AnyOf(List.of(assertions));
+  static CompositeAssertion.AnyOf anyOf(Assertion... assertions) {
+    return new CompositeAssertion.AnyOf(List.of(assertions));
   }
 
-  static Assertion.Not not(Assertion assertion) {
-    return new Assertion.Not(Objects.requireNonNull(assertion, "assertion must not be null"));
+  static CompositeAssertion.Not not(Assertion assertion) {
+    return new CompositeAssertion.Not(
+        Objects.requireNonNull(assertion, "assertion must not be null"));
   }
 }

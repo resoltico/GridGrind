@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
@@ -96,7 +96,7 @@ class WorkbookPlanTest {
                         new InspectionStep(
                             "duplicate",
                             new WorkbookSelector.Current(),
-                            new InspectionQuery.GetWorkbookSummary()))));
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
 
     assertEquals(
         "steps must not contain duplicate stepId values: duplicate",
@@ -261,11 +261,11 @@ class WorkbookPlanTest {
                 new AssertionStep(
                     "assert-cell",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetWorkbookSummary())));
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
 
     assertEquals(1, plan.stepPartition().mutations().size());
     assertEquals(1, plan.stepPartition().assertions().size());

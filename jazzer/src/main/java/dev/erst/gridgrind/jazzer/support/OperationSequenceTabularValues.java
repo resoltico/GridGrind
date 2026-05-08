@@ -110,7 +110,10 @@ final class OperationSequenceTabularValues {
         List.of(),
         List.of(
             new PivotTableInput.DataField(
-                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+                "Actual",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Actual",
+                Optional.empty())));
   }
 
   static PivotTableInput.Source nextPivotTableSource(
@@ -152,7 +155,10 @@ final class OperationSequenceTabularValues {
         List.of(),
         List.of(
             new ExcelPivotTableDefinition.DataField(
-                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+                "Actual",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Actual",
+                Optional.empty())));
   }
 
   static ExcelPivotTableDefinition.Source nextExcelPivotTableSource(

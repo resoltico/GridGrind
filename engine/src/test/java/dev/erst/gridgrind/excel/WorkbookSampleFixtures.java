@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
@@ -19,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 /** Representative workbook command and read-command samples for exhaustive coverage tests. */
 final class WorkbookSampleFixtures {
@@ -49,7 +49,7 @@ final class WorkbookSampleFixtures {
         new WorkbookReadCommand.GetComments(
             "comments", "Budget", new ExcelCellSelection.Selected(List.of("A1"))),
         new WorkbookReadCommand.GetDrawingObjects("drawings", "Budget"),
-        new WorkbookReadCommand.GetCharts("charts", "Budget"),
+        new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet("Budget")),
         new WorkbookReadCommand.GetPivotTables("pivots", new ExcelPivotTableSelection.All()),
         new WorkbookReadCommand.GetDrawingObjectPayload("payload", "Budget", "Object 1"),
         new WorkbookReadCommand.GetSheetLayout("layout", "Budget"),
@@ -61,12 +61,7 @@ final class WorkbookSampleFixtures {
         new WorkbookReadCommand.GetAutofilters("autofilters", "Budget"),
         new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()),
         new WorkbookReadCommand.GetArrayFormulas(
-            "arrayFormulas", new ExcelSheetSelection.Selected(List.of("Budget"))),
-        new WorkbookReadCommand.GetFormulaSurface(
-            "formula", new ExcelSheetSelection.Selected(List.of("Budget"))),
-        new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 1, 1),
-        new WorkbookReadCommand.GetNamedRangeSurface(
-            "namedSurface", new ExcelNamedRangeSelection.All()));
+            "arrayFormulas", new ExcelSheetSelection.Selected(List.of("Budget"))));
   }
 
   static List<WorkbookCommand> workbookCommands() {
@@ -90,7 +85,8 @@ final class WorkbookSampleFixtures {
         new WorkbookSheetCommand.SetSheetProtection("Budget", protectionSettings()),
         new WorkbookSheetCommand.ClearSheetProtection("Budget"),
         new WorkbookSheetCommand.SetWorkbookProtection(
-            new ExcelWorkbookProtectionSettings(true, false, true, "book", "review")),
+            new ExcelWorkbookProtectionSettings(
+                true, false, true, Optional.of("book"), Optional.of("review"))),
         new WorkbookSheetCommand.ClearWorkbookProtection(),
         new WorkbookStructureCommand.MergeCells("Budget", "A1:B2"),
         new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B2"),
@@ -142,7 +138,7 @@ final class WorkbookSampleFixtures {
                 new ExcelBinaryData(PNG_PIXEL_BYTES),
                 ExcelPictureFormat.PNG,
                 firstAnchor,
-                "Queue preview")),
+                Optional.of("Queue preview"))),
         new WorkbookDrawingCommand.SetSignatureLine(
             "Budget",
             new ExcelSignatureLineDefinition(
@@ -155,8 +151,8 @@ final class WorkbookSampleFixtures {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(PNG_PIXEL_BYTES))),
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)))),
         new WorkbookDrawingCommand.SetChart("Budget", chartDefinition(firstAnchor)),
         new WorkbookTabularCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
@@ -169,15 +165,14 @@ final class WorkbookSampleFixtures {
                 List.of(),
                 List.of(
                     new ExcelPivotTableDefinition.DataField(
-                        "Tax", ExcelPivotDataConsolidateFunction.SUM, "Total Tax", "#,##0.00")))),
+                        "Tax",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total Tax",
+                        Optional.of("#,##0.00"))))),
         new WorkbookDrawingCommand.SetShape(
             "Budget",
-            new ExcelShapeDefinition(
-                "BudgetShape",
-                ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                firstAnchor,
-                "rect",
-                "Queue")),
+            new ExcelShapeDefinition.SimpleShape(
+                "BudgetShape", firstAnchor, "rect", Optional.of("Queue"))),
         new WorkbookDrawingCommand.SetEmbeddedObject(
             "Budget",
             new ExcelEmbeddedObjectDefinition(
@@ -203,8 +198,17 @@ final class WorkbookSampleFixtures {
                     new ExcelConditionalFormattingRule.FormulaRule(
                         "A2>0",
                         true,
-                        new ExcelDifferentialStyle(
-                            "0.00", null, null, null, null, null, null, null, null))))),
+                        Optional.of(
+                            new ExcelDifferentialStyle(
+                                Optional.of("0.00"),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty())))))),
         new WorkbookFormattingCommand.ClearConditionalFormatting(
             "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
         new WorkbookTabularCommand.SetAutofilter(
@@ -213,12 +217,13 @@ final class WorkbookSampleFixtures {
             List.of(
                 new ExcelAutofilterFilterColumn(
                     0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true))),
-            new ExcelAutofilterSortState(
-                "A1:C4",
-                true,
-                false,
-                java.util.Optional.empty(),
-                List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false)))),
+            Optional.of(
+                new ExcelAutofilterSortState(
+                    "A1:C4",
+                    true,
+                    false,
+                    Optional.empty(),
+                    List.of(new ExcelAutofilterSortCondition.Value("A2:A4", false))))),
         new WorkbookTabularCommand.ClearAutofilter("Budget"),
         new WorkbookTabularCommand.SetTable(
             new ExcelTableDefinition(
@@ -233,7 +238,7 @@ final class WorkbookSampleFixtures {
             new ExcelNamedRangeDefinition(
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Budget", "B4"))),
+                ExcelNamedRangeTarget.range("Budget", "B4"))),
         new WorkbookMetadataCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
         new WorkbookCellCommand.AppendRow("Budget", List.of(ExcelCellValue.text("Item"))),
@@ -266,23 +271,38 @@ final class WorkbookSampleFixtures {
 
   private static ExcelDataValidationDefinition validationDefinition() {
     return new ExcelDataValidationDefinition(
-        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        new ExcelDataValidationRule.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
         true,
         false,
-        new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true),
-        new ExcelDataValidationErrorAlert(
-            ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true));
+        Optional.of(new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true)),
+        Optional.of(
+            new ExcelDataValidationErrorAlert(
+                ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true)));
   }
 
   private static ExcelCellStyle defaultStyle() {
     return new ExcelCellStyle(
-        "#,##0.00",
-        new ExcelCellAlignment(
-            true, ExcelHorizontalAlignment.RIGHT, ExcelVerticalAlignment.CENTER, null, null),
-        new ExcelCellFont(true, false, null, null, null, null, null),
-        null,
-        null,
-        null);
+        Optional.of("#,##0.00"),
+        Optional.of(
+            new ExcelCellAlignment(
+                Optional.of(true),
+                Optional.of(ExcelHorizontalAlignment.RIGHT),
+                Optional.of(ExcelVerticalAlignment.CENTER),
+                Optional.empty(),
+                Optional.empty())),
+        Optional.of(
+            new ExcelCellFont(
+                Optional.of(true),
+                Optional.of(false),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
   private static ExcelPrintLayout defaultPrintLayout() {

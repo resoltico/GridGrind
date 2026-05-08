@@ -256,7 +256,7 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
       String id,
       String summary,
       List<String> optionalFields) {
-    return GridGrindProtocolCatalog.plainTypeDescriptor(
+    return CatalogTypeEntryFactory.plainTypeDescriptor(
         group, recordType, id, summary, optionalFields);
   }
 }

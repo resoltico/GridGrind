@@ -13,12 +13,12 @@ final class ExcelPivotTableIdentitySupport {
   private ExcelPivotTableIdentitySupport() {}
 
   static Optional<PivotLocation> safeLocation(PivotHandle handle) {
-    String rawRange = rawLocationRange(handle);
-    if (rawRange == null) {
+    Optional<String> rawRange = rawLocationRange(handle);
+    if (rawRange.isEmpty()) {
       return Optional.empty();
     }
     try {
-      AreaReference area = new AreaReference(rawRange, SpreadsheetVersion.EXCEL2007);
+      AreaReference area = new AreaReference(rawRange.orElseThrow(), SpreadsheetVersion.EXCEL2007);
       String locationRange = normalizeArea(area);
       return Optional.of(new PivotLocation(area.getFirstCell().formatAsString(), locationRange));
     } catch (RuntimeException exception) {
@@ -26,24 +26,24 @@ final class ExcelPivotTableIdentitySupport {
     }
   }
 
-  static String rawLocationRange(PivotHandle handle) {
+  static Optional<String> rawLocationRange(PivotHandle handle) {
     var location = handle.table().getCTPivotTableDefinition().getLocation();
-    return location == null ? null : nullIfBlank(location.getRef());
+    return location == null ? Optional.empty() : blankAsOptional(location.getRef());
   }
 
   static String resolvedName(PivotHandle handle) {
-    String actualName = actualName(handle);
-    if (actualName != null) {
-      return actualName;
-    }
-    PivotLocation location = safeLocation(handle).orElse(null);
-    return syntheticName(
-        handle.sheetName(),
-        location == null ? "PIVOT_" + (handle.ordinalOnSheet() + 1) : location.topLeftAddress());
+    return actualName(handle)
+        .orElseGet(
+            () ->
+                syntheticName(
+                    handle.sheetName(),
+                    safeLocation(handle)
+                        .map(PivotLocation::topLeftAddress)
+                        .orElse("PIVOT_" + (handle.ordinalOnSheet() + 1))));
   }
 
-  static String actualName(PivotHandle handle) {
-    return nullIfBlank(handle.table().getCTPivotTableDefinition().getName());
+  static Optional<String> actualName(PivotHandle handle) {
+    return blankAsOptional(handle.table().getCTPivotTableDefinition().getName());
   }
 
   static String syntheticName(String sheetName, String topLeftAddress) {
@@ -98,7 +98,7 @@ final class ExcelPivotTableIdentitySupport {
     return resolvedName(handle).toUpperCase(Locale.ROOT);
   }
 
-  private static String nullIfBlank(String value) {
-    return value == null || value.isBlank() ? null : value;
+  private static Optional<String> blankAsOptional(String value) {
+    return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
   }
 }

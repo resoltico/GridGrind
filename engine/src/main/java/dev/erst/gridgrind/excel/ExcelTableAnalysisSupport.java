@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
@@ -22,13 +23,14 @@ final class ExcelTableAnalysisSupport {
     Objects.requireNonNull(table, "table must not be null");
 
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    ExcelRange parsedRange = ExcelSheetStructureSupport.parseRangeOrNull(table.range());
+    Optional<ExcelRange> parsedRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
     WorkbookAnalysis.AnalysisLocation location =
-        parsedRange == null
+        parsedRange.isEmpty()
             ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
             : new WorkbookAnalysis.AnalysisLocation.Range(
-                table.sheetName(), ExcelSheetStructureSupport.formatRange(parsedRange));
-    if (parsedRange == null) {
+                table.sheetName(),
+                ExcelSheetStructureSupport.formatRange(parsedRange.orElseThrow()));
+    if (parsedRange.isEmpty()) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
@@ -41,7 +43,8 @@ final class ExcelTableAnalysisSupport {
     }
 
     int minimumRows = table.headerRowCount() + table.totalsRowCount() + 1;
-    if (table.headerRowCount() < 1 || parsedRange.rowCount() < minimumRows) {
+    ExcelRange range = parsedRange.orElseThrow();
+    if (table.headerRowCount() < 1 || range.rowCount() < minimumRows) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
@@ -50,7 +53,7 @@ final class ExcelTableAnalysisSupport {
               "Table metadata requires at least "
                   + minimumRows
                   + " rows but the stored range contains only "
-                  + parsedRange.rowCount()
+                  + range.rowCount()
                   + ".",
               location,
               List.of(table.range())));
@@ -115,8 +118,8 @@ final class ExcelTableAnalysisSupport {
     Objects.requireNonNull(table, "table must not be null");
     Objects.requireNonNull(allTables, "allTables must not be null");
 
-    ExcelRange tableRange = ExcelSheetStructureSupport.parseRangeOrNull(table.range());
-    if (tableRange == null) {
+    Optional<ExcelRange> tableRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    if (tableRange.isEmpty()) {
       return List.of();
     }
     List<String> overlaps = new ArrayList<>();
@@ -124,8 +127,11 @@ final class ExcelTableAnalysisSupport {
       if (other.equals(table) || !other.sheetName().equals(table.sheetName())) {
         continue;
       }
-      ExcelRange otherRange = ExcelSheetStructureSupport.parseRangeOrNull(other.range());
-      if (otherRange != null && ExcelSheetStructureSupport.intersects(tableRange, otherRange)) {
+      Optional<ExcelRange> otherRange =
+          ExcelSheetStructureSupport.parseOptionalRange(other.range());
+      if (otherRange.isPresent()
+          && ExcelSheetStructureSupport.intersects(
+              tableRange.orElseThrow(), otherRange.orElseThrow())) {
         overlaps.add(other.name() + "@" + other.range());
       }
     }
@@ -151,9 +157,9 @@ final class ExcelTableAnalysisSupport {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(table, "table must not be null");
 
-    ExcelRange tableRange = ExcelSheetStructureSupport.parseRangeOrNull(table.range());
+    Optional<ExcelRange> tableRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
     WorkbookAnalysis.AnalysisLocation location =
-        tableRange == null
+        tableRange.isEmpty()
             ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
             : new WorkbookAnalysis.AnalysisLocation.Range(
                 table.sheetName(), ExcelTableStructureSupport.expectedAutofilterRangeText(table));
@@ -161,8 +167,9 @@ final class ExcelTableAnalysisSupport {
     XSSFTable xssfTable = ExcelTableCatalogSupport.requiredTableByName(sheet, table.name());
     String rawFilterRange =
         Objects.requireNonNullElse(xssfTable.getCTTable().getAutoFilter().getRef(), "");
-    ExcelRange parsedFilterRange = ExcelSheetStructureSupport.parseRangeOrNull(rawFilterRange);
-    if (parsedFilterRange == null) {
+    Optional<ExcelRange> parsedFilterRange =
+        ExcelSheetStructureSupport.parseOptionalRange(rawFilterRange);
+    if (parsedFilterRange.isEmpty()) {
       return List.of(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
@@ -174,7 +181,7 @@ final class ExcelTableAnalysisSupport {
     }
 
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    if (ExcelSheetStructureSupport.headerRowMissing(sheet, parsedFilterRange)) {
+    if (ExcelSheetStructureSupport.headerRowMissing(sheet, parsedFilterRange.orElseThrow())) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
@@ -185,7 +192,8 @@ final class ExcelTableAnalysisSupport {
               List.of(rawFilterRange, table.name())));
     }
     String expectedRange = ExcelTableStructureSupport.expectedAutofilterRangeText(table);
-    if (!ExcelSheetStructureSupport.formatRange(parsedFilterRange).equals(expectedRange)) {
+    if (!ExcelSheetStructureSupport.formatRange(parsedFilterRange.orElseThrow())
+        .equals(expectedRange)) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,

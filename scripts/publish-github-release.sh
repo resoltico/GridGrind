@@ -24,8 +24,13 @@ resolve_script_dir() {
 
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
+readonly cli_shadow_jar_support="${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
 readonly tag_name="${1:-${RELEASE_TAG:-${GITHUB_REF_NAME:-}}}"
-readonly asset_path="${repo_root}/cli/build/libs/gridgrind.jar"
+
+# shellcheck source=/dev/null
+source "${cli_shadow_jar_support}"
+
+readonly asset_path="$(ensure_cli_shadow_jar "${repo_root}")"
 readonly asset_name="$(basename -- "${asset_path}")"
 
 [[ -n "${GH_TOKEN:-}" ]] || die "GH_TOKEN is required"

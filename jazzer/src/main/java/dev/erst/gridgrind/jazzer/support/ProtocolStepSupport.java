@@ -2,7 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
@@ -11,7 +11,7 @@ import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;

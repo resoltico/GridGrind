@@ -9,15 +9,15 @@ import java.util.List;
 final class GridGrindProtocolCatalogStepTypeDescriptors {
   static final List<CatalogTypeDescriptor> STEP_TYPES =
       List.of(
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               MutationStep.class,
               "MUTATION",
               "Execute one mutation action against the selected workbook target."),
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               AssertionStep.class,
               "ASSERTION",
               "Verify one authored expectation against the selected workbook target."),
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               InspectionStep.class,
               "INSPECTION",
               "Run one factual or analytical inspection query against the selected workbook"

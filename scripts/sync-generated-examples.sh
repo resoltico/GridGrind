@@ -19,7 +19,7 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd "${script_dir}/.." && pwd)"
 readonly gradlew="${repo_root}/gradlew"
-readonly jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
+readonly cli_shadow_jar_support="${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
 readonly scratch_root="${repo_root}/tmp/sync-generated-examples"
 readonly request_path="${scratch_root}/package-security-asset-request.json"
 readonly response_path="${scratch_root}/package-security-asset-response.json"
@@ -27,12 +27,17 @@ readonly verify_response_path="${scratch_root}/package-security-example-response
 readonly asset_directory="${repo_root}/examples/package-security-assets"
 readonly asset_path="${asset_directory}/gridgrind-package-security.xlsx"
 
+# shellcheck source=/dev/null
+source "${cli_shadow_jar_support}"
+
 mkdir -p "${scratch_root}" "${asset_directory}"
 
 "${gradlew}" \
-    :contract:writeRepositoryExamples \
+    :cli:writeRepositoryExamples \
     :cli:shadowJar \
     "$@"
+
+readonly jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 
 cat > "${request_path}" <<EOF
 {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -33,8 +34,8 @@ class ExcelSheetMetadataSupportTest {
                           new ExcelDataValidationRule.ExplicitList(List.of("Open")),
                           false,
                           false,
-                          null,
-                          null),
+                          Optional.empty(),
+                          Optional.empty()),
                       null));
       assertEquals("range must not be blank", validationFailure.getMessage());
 

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Typed data-validation rule families supported by GridGrind. */
 public sealed interface ExcelDataValidationRule
@@ -30,62 +31,57 @@ public sealed interface ExcelDataValidationRule
   }
 
   /** Whole-number validation driven by one comparison operator and one or two operands. */
-  record WholeNumber(ExcelComparisonOperator operator, String formula1, String formula2)
+  record WholeNumber(ExcelComparisonOperator operator, String formula1, Optional<String> formula2)
       implements ExcelDataValidationRule {
     public WholeNumber {
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
   /** Decimal-number validation driven by one comparison operator and one or two operands. */
-  record DecimalNumber(ExcelComparisonOperator operator, String formula1, String formula2)
+  record DecimalNumber(ExcelComparisonOperator operator, String formula1, Optional<String> formula2)
       implements ExcelDataValidationRule {
     public DecimalNumber {
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
   /** Date validation driven by one comparison operator and one or two operands. */
-  record DateRule(ExcelComparisonOperator operator, String formula1, String formula2)
+  record DateRule(ExcelComparisonOperator operator, String formula1, Optional<String> formula2)
       implements ExcelDataValidationRule {
     public DateRule {
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
   /** Time validation driven by one comparison operator and one or two operands. */
-  record TimeRule(ExcelComparisonOperator operator, String formula1, String formula2)
+  record TimeRule(ExcelComparisonOperator operator, String formula1, Optional<String> formula2)
       implements ExcelDataValidationRule {
     public TimeRule {
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
   /** Text-length validation driven by one comparison operator and one or two operands. */
-  record TextLength(ExcelComparisonOperator operator, String formula1, String formula2)
+  record TextLength(ExcelComparisonOperator operator, String formula1, Optional<String> formula2)
       implements ExcelDataValidationRule {
     public TextLength {
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 

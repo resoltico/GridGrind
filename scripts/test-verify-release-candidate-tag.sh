@@ -165,9 +165,12 @@ run_verify_expect_success() {
     local tag_name=$2
     local tag_sha=$3
     local remote_main_sha=$4
-    shift 4
+    local case_name="${5:-success}"
+    shift 5
     (
         cd "${worktree_dir}"
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
         PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
@@ -176,7 +179,7 @@ run_verify_expect_success() {
             FAKE_GH_TAG_COMMIT_SHA="${tag_sha}" \
             FAKE_REMOTE_MAIN_SHA="${remote_main_sha}" \
             FAKE_GH_CHECK_RUNS_TSV="$1" \
-            "${verify_script}" "${tag_name}" >/dev/null
+            "${verify_script}" "${tag_name}" >"${stdout_path}" 2>"${stderr_path}"
     )
 }
 
@@ -186,8 +189,11 @@ run_verify_expect_failure() {
     local tag_sha=$3
     local remote_main_sha=$4
     local check_runs_tsv=$5
+    local case_name="${6:-failure}"
     (
         cd "${worktree_dir}"
+        local stdout_path="${test_root}/${case_name}.stdout"
+        local stderr_path="${test_root}/${case_name}.stderr"
         if PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
@@ -196,7 +202,7 @@ run_verify_expect_failure() {
             FAKE_GH_TAG_COMMIT_SHA="${tag_sha}" \
             FAKE_REMOTE_MAIN_SHA="${remote_main_sha}" \
             FAKE_GH_CHECK_RUNS_TSV="${check_runs_tsv}" \
-            "${verify_script}" "${tag_name}" >/dev/null 2>&1; then
+            "${verify_script}" "${tag_name}" >"${stdout_path}" 2>"${stderr_path}"; then
             die "verifier unexpectedly succeeded"
         fi
     )
@@ -210,6 +216,7 @@ run_verify_expect_success \
     "v9.9.9" \
     "${success_sha}" \
     "${success_sha}" \
+    success \
     "${successful_checks}"
 
 (
@@ -224,7 +231,8 @@ run_verify_expect_failure \
     "v9.9.9" \
     "${success_sha}" \
     "${success_sha}" \
-    "${successful_checks}"
+    "${successful_checks}" \
+    version-mismatch
 
 branch_repo="$(create_repo "${test_root}/branch" "8.8.8")"
 branch_main_sha="$(git -C "${branch_repo}" rev-parse HEAD)"
@@ -244,7 +252,8 @@ run_verify_expect_failure \
     "v8.8.8" \
     "${branch_sha}" \
     "${branch_main_sha}" \
-    "${successful_checks}"
+    "${successful_checks}" \
+    branch-detour
 
 checks_repo="$(create_repo "${test_root}/checks" "7.7.7")"
 checks_sha="$(git -C "${checks_repo}" rev-parse HEAD)"
@@ -253,6 +262,7 @@ run_verify_expect_failure \
     "v7.7.7" \
     "${checks_sha}" \
     "${checks_sha}" \
-    "$(printf 'Gate\tcompleted\tfailure')"
+    "$(printf 'Gate\tcompleted\tfailure')" \
+    failed-checks
 
 printf 'verify-release-candidate-tag regression: success\n'

@@ -5,11 +5,7 @@ import static dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks.requireN
 
 import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindAnalysisReports;
-import dev.erst.gridgrind.contract.dto.GridGrindLayoutSurfaceReports;
 import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
-import dev.erst.gridgrind.contract.dto.GridGrindSchemaAndFormulaReports;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.*;
@@ -187,28 +183,29 @@ final class WorkbookInvariantResponseChecks {
     require(!readResult.stepId().isBlank(), "read stepId must not be blank");
 
     switch (readResult) {
-      case InspectionResult.WorkbookSummaryResult result ->
+      case WorkbookInspectionResult.WorkbookSummaryResult result ->
           requireWorkbookSummaryShape(result.workbook());
-      case InspectionResult.PackageSecurityResult result ->
+      case WorkbookInspectionResult.PackageSecurityResult result ->
           requirePackageSecurityShape(result.security());
-      case InspectionResult.WorkbookProtectionResult result ->
+      case WorkbookInspectionResult.WorkbookProtectionResult result ->
           requireWorkbookProtectionShape(result.protection());
-      case InspectionResult.CustomXmlMappingsResult result ->
+      case WorkbookInspectionResult.CustomXmlMappingsResult result ->
           result.mappings().forEach(WorkbookInvariantResponseChecks::requireCustomXmlMappingShape);
-      case InspectionResult.CustomXmlExportResult result ->
+      case WorkbookInspectionResult.CustomXmlExportResult result ->
           requireCustomXmlExportShape(result.export());
-      case InspectionResult.NamedRangesResult result ->
+      case WorkbookInspectionResult.NamedRangesResult result ->
           result.namedRanges().forEach(WorkbookInvariantResponseChecks::requireNamedRangeShape);
-      case InspectionResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
-      case InspectionResult.ArrayFormulasResult result ->
+      case SheetInspectionResult.SheetSummaryResult result ->
+          requireSheetSummaryShape(result.sheet());
+      case SheetInspectionResult.ArrayFormulasResult result ->
           result.arrayFormulas().forEach(WorkbookInvariantResponseChecks::requireArrayFormulaShape);
-      case InspectionResult.CellsResult result -> {
+      case SheetInspectionResult.CellsResult result -> {
         require(result.sheetName() != null, "cells sheetName must not be null");
         require(!result.sheetName().isBlank(), "cells sheetName must not be blank");
         result.cells().forEach(WorkbookInvariantResponseChecks::requireCellReportShape);
       }
-      case InspectionResult.WindowResult result -> requireWindowShape(result.window());
-      case InspectionResult.MergedRegionsResult result -> {
+      case SheetInspectionResult.WindowResult result -> requireWindowShape(result.window());
+      case SheetInspectionResult.MergedRegionsResult result -> {
         require(result.sheetName() != null, "merged regions sheetName must not be null");
         require(!result.sheetName().isBlank(), "merged regions sheetName must not be blank");
         result
@@ -217,43 +214,45 @@ final class WorkbookInvariantResponseChecks {
                 region ->
                     require(!region.range().isBlank(), "merged region range must not be blank"));
       }
-      case InspectionResult.HyperlinksResult result -> {
+      case SheetInspectionResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");
         require(!result.sheetName().isBlank(), "hyperlinks sheetName must not be blank");
         result.hyperlinks().forEach(WorkbookInvariantResponseChecks::requireHyperlinkEntryShape);
       }
-      case InspectionResult.CommentsResult result -> {
+      case SheetInspectionResult.CommentsResult result -> {
         require(result.sheetName() != null, "comments sheetName must not be null");
         require(!result.sheetName().isBlank(), "comments sheetName must not be blank");
         result.comments().forEach(WorkbookInvariantResponseChecks::requireCommentEntryShape);
       }
-      case InspectionResult.DrawingObjectsResult result -> {
+      case WorkbookAssetInspectionResult.DrawingObjectsResult result -> {
         require(result.sheetName() != null, "drawing objects sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing objects sheetName must not be blank");
         result.drawingObjects().forEach(WorkbookInvariantResponseChecks::requireDrawingObjectShape);
       }
-      case InspectionResult.ChartsResult result -> {
+      case WorkbookAssetInspectionResult.ChartsResult result -> {
         require(result.sheetName() != null, "charts sheetName must not be null");
         require(!result.sheetName().isBlank(), "charts sheetName must not be blank");
         result.charts().forEach(WorkbookInvariantResponseChecks::requireChartReportShape);
       }
-      case InspectionResult.PivotTablesResult result ->
+      case WorkbookAssetInspectionResult.PivotTablesResult result ->
           result.pivotTables().forEach(WorkbookInvariantResponseChecks::requirePivotTableShape);
-      case InspectionResult.DrawingObjectPayloadResult result -> {
+      case WorkbookAssetInspectionResult.DrawingObjectPayloadResult result -> {
         require(result.sheetName() != null, "drawing payload sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing payload sheetName must not be blank");
         requireDrawingObjectPayloadShape(result.payload());
       }
-      case InspectionResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
-      case InspectionResult.PrintLayoutResult result -> requirePrintLayoutShape(result.layout());
-      case InspectionResult.DataValidationsResult result -> {
+      case SheetInspectionResult.SheetLayoutResult result ->
+          requireSheetLayoutShape(result.layout());
+      case SheetInspectionResult.PrintLayoutResult result ->
+          requirePrintLayoutShape(result.layout());
+      case SheetInspectionResult.DataValidationsResult result -> {
         require(result.sheetName() != null, "data validations sheetName must not be null");
         require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
         result
             .validations()
             .forEach(WorkbookInvariantResponseChecks::requireDataValidationEntryShape);
       }
-      case InspectionResult.ConditionalFormattingResult result -> {
+      case SheetInspectionResult.ConditionalFormattingResult result -> {
         require(result.sheetName() != null, "conditional formatting sheetName must not be null");
         require(
             !result.sheetName().isBlank(), "conditional formatting sheetName must not be blank");
@@ -261,44 +260,48 @@ final class WorkbookInvariantResponseChecks {
             .conditionalFormattingBlocks()
             .forEach(WorkbookInvariantResponseChecks::requireConditionalFormattingEntryShape);
       }
-      case InspectionResult.AutofiltersResult result -> {
+      case SheetInspectionResult.AutofiltersResult result -> {
         require(result.sheetName() != null, "autofilters sheetName must not be null");
         require(!result.sheetName().isBlank(), "autofilters sheetName must not be blank");
         result.autofilters().forEach(WorkbookInvariantResponseChecks::requireAutofilterEntryShape);
       }
-      case InspectionResult.TablesResult result ->
+      case WorkbookAssetInspectionResult.TablesResult result ->
           result.tables().forEach(WorkbookInvariantResponseChecks::requireTableEntryShape);
-      case InspectionResult.FormulaSurfaceResult result ->
-          requireFormulaSurfaceShape(result.analysis());
-      case InspectionResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
-      case InspectionResult.NamedRangeSurfaceResult result ->
-          requireNamedRangeSurfaceShape(result.analysis());
-      case InspectionResult.FormulaHealthResult result ->
+      case WorkbookSurfaceInspectionResult.FormulaSurfaceResult result ->
+          requireFormulaSurfaceShape(result.surface());
+      case WorkbookSurfaceInspectionResult.SheetSchemaResult result ->
+          requireSheetSchemaShape(result.surface());
+      case WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult result ->
+          requireNamedRangeSurfaceShape(result.surface());
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.FormulaHealthResult result ->
           requireFormulaHealthShape(result.analysis());
-      case InspectionResult.DataValidationHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.DataValidationHealthResult
+              result ->
           requireDataValidationHealthShape(result.analysis());
-      case InspectionResult.ConditionalFormattingHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult
+                  .ConditionalFormattingHealthResult
+              result ->
           requireConditionalFormattingHealthShape(result.analysis());
-      case InspectionResult.AutofilterHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.AutofilterHealthResult result ->
           requireAutofilterHealthShape(result.analysis());
-      case InspectionResult.TableHealthResult result -> requireTableHealthShape(result.analysis());
-      case InspectionResult.PivotTableHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.TableHealthResult result ->
+          requireTableHealthShape(result.analysis());
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.PivotTableHealthResult result ->
           requirePivotTableHealthShape(result.analysis());
-      case InspectionResult.HyperlinkHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
-      case InspectionResult.NamedRangeHealthResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.NamedRangeHealthResult result ->
           requireNamedRangeHealthShape(result.analysis());
-      case InspectionResult.WorkbookFindingsResult result ->
+      case dev.erst.gridgrind.contract.query.WorkbookAnalysisResult.WorkbookFindingsResult result ->
           requireWorkbookFindingsShape(result.analysis());
     }
   }
 
-  static void requireWorkbookSummaryShape(
-      GridGrindWorkbookSurfaceReports.WorkbookSummary workbook) {
+  static void requireWorkbookSummaryShape(WorkbookSummary workbook) {
     WorkbookInvariantWorkbookSurfaceChecks.requireWorkbookSummaryShape(workbook);
   }
 
-  static void requireSheetSummaryShape(GridGrindWorkbookSurfaceReports.SheetSummaryReport sheet) {
+  static void requireSheetSummaryShape(SheetSummaryReport sheet) {
     WorkbookInvariantWorkbookSurfaceChecks.requireSheetSummaryShape(sheet);
   }
 
@@ -314,22 +317,19 @@ final class WorkbookInvariantResponseChecks {
     WorkbookInvariantWorkbookSurfaceChecks.requireChartReportShape(chart);
   }
 
-  private static void requireWindowShape(GridGrindLayoutSurfaceReports.WindowReport window) {
+  private static void requireWindowShape(WindowReport window) {
     WorkbookInvariantAnalysisSurfaceChecks.requireWindowShape(window);
   }
 
-  private static void requireHyperlinkEntryShape(
-      GridGrindLayoutSurfaceReports.CellHyperlinkReport hyperlink) {
+  private static void requireHyperlinkEntryShape(CellHyperlinkReport hyperlink) {
     WorkbookInvariantAnalysisSurfaceChecks.requireHyperlinkEntryShape(hyperlink);
   }
 
-  private static void requireCommentEntryShape(
-      GridGrindLayoutSurfaceReports.CellCommentReport comment) {
+  private static void requireCommentEntryShape(CellCommentReport comment) {
     WorkbookInvariantAnalysisSurfaceChecks.requireCommentEntryShape(comment);
   }
 
-  private static void requireSheetLayoutShape(
-      GridGrindLayoutSurfaceReports.SheetLayoutReport layout) {
+  private static void requireSheetLayoutShape(SheetLayoutReport layout) {
     WorkbookInvariantAnalysisSurfaceChecks.requireSheetLayoutShape(layout);
   }
 
@@ -360,22 +360,19 @@ final class WorkbookInvariantResponseChecks {
     WorkbookInvariantAnalysisSurfaceChecks.requirePivotTableShape(pivotTable);
   }
 
-  private static void requireFormulaSurfaceShape(
-      GridGrindSchemaAndFormulaReports.FormulaSurfaceReport analysis) {
+  private static void requireFormulaSurfaceShape(FormulaSurfaceReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireFormulaSurfaceShape(analysis);
   }
 
-  private static void requireSheetSchemaShape(
-      GridGrindSchemaAndFormulaReports.SheetSchemaReport analysis) {
+  private static void requireSheetSchemaShape(SheetSchemaReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireSheetSchemaShape(analysis);
   }
 
-  private static void requireNamedRangeSurfaceShape(
-      GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport analysis) {
+  private static void requireNamedRangeSurfaceShape(NamedRangeSurfaceReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireNamedRangeSurfaceShape(analysis);
   }
 
-  static void requireFormulaHealthShape(GridGrindAnalysisReports.FormulaHealthReport analysis) {
+  static void requireFormulaHealthShape(FormulaHealthReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireFormulaHealthShape(analysis);
   }
 
@@ -400,17 +397,15 @@ final class WorkbookInvariantResponseChecks {
     WorkbookInvariantAnalysisSurfaceChecks.requirePivotTableHealthShape(analysis);
   }
 
-  static void requireHyperlinkHealthShape(GridGrindAnalysisReports.HyperlinkHealthReport analysis) {
+  static void requireHyperlinkHealthShape(HyperlinkHealthReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireHyperlinkHealthShape(analysis);
   }
 
-  static void requireNamedRangeHealthShape(
-      GridGrindAnalysisReports.NamedRangeHealthReport analysis) {
+  static void requireNamedRangeHealthShape(NamedRangeHealthReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireNamedRangeHealthShape(analysis);
   }
 
-  static void requireWorkbookFindingsShape(
-      GridGrindAnalysisReports.WorkbookFindingsReport analysis) {
+  static void requireWorkbookFindingsShape(WorkbookFindingsReport analysis) {
     WorkbookInvariantAnalysisSurfaceChecks.requireWorkbookFindingsShape(analysis);
   }
 
@@ -419,7 +414,7 @@ final class WorkbookInvariantResponseChecks {
     WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cellReport);
   }
 
-  static void requireNamedRangeShape(GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange) {
+  static void requireNamedRangeShape(NamedRangeReport namedRange) {
     WorkbookInvariantCellSurfaceChecks.requireNamedRangeShape(namedRange);
   }
 

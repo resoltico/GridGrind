@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.junit.jupiter.api.Test;
@@ -160,56 +161,67 @@ class ExcelDataValidationModelTest {
   @Test
   void comparisonRulesNormalizeFormulasAcrossFamilies() {
     assertEquals(
-        new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", "10"),
-        new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.BETWEEN, "=1", " =10 "));
-    assertEquals(
-        new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.NOT_BETWEEN, "1", "10"),
         new ExcelDataValidationRule.WholeNumber(
-            ExcelComparisonOperator.NOT_BETWEEN, "=1", " =10 "));
+            ExcelComparisonOperator.BETWEEN, "1", Optional.of("10")),
+        new ExcelDataValidationRule.WholeNumber(
+            ExcelComparisonOperator.BETWEEN, "=1", Optional.of(" =10 ")));
+    assertEquals(
+        new ExcelDataValidationRule.WholeNumber(
+            ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of("10")),
+        new ExcelDataValidationRule.WholeNumber(
+            ExcelComparisonOperator.NOT_BETWEEN, "=1", Optional.of(" =10 ")));
     assertEquals(
         new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", null),
+            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
         new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "=0.5", null));
+            ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.empty()));
     assertEquals(
         new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "0.5", null),
+            ExcelComparisonOperator.GREATER_THAN, "0.5", Optional.empty()),
         new ExcelDataValidationRule.DecimalNumber(
-            ExcelComparisonOperator.GREATER_THAN, "=0.5", "   "));
+            ExcelComparisonOperator.GREATER_THAN, "=0.5", Optional.of("   ")));
     assertEquals(
-        new ExcelDataValidationRule.DateRule(ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", null),
         new ExcelDataValidationRule.DateRule(
-            ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", null));
+            ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", Optional.empty()),
+        new ExcelDataValidationRule.DateRule(
+            ExcelComparisonOperator.EQUAL, "=DATE(2026,4,1)", Optional.empty()));
     assertEquals(
         new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", null),
+            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", Optional.empty()),
         new ExcelDataValidationRule.TimeRule(
-            ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", null));
+            ExcelComparisonOperator.GREATER_THAN, "=TIME(9,0,0)", Optional.empty()));
     assertEquals(
-        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
-        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "=20", null));
+        new ExcelDataValidationRule.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
+        new ExcelDataValidationRule.TextLength(
+            ExcelComparisonOperator.LESS_OR_EQUAL, "=20", Optional.empty()));
   }
 
   @Test
   void comparisonRulesRejectInvalidOperandShapes() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", null));
+        () ->
+            new ExcelDataValidationRule.WholeNumber(
+                ExcelComparisonOperator.BETWEEN, "1", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelDataValidationRule.DecimalNumber(
-                ExcelComparisonOperator.GREATER_THAN, "1", "2"));
+                ExcelComparisonOperator.GREATER_THAN, "1", Optional.of("2")));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelDataValidationRule.DateRule(null, "DATE(2026,4,1)", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelDataValidationRule.TimeRule(ExcelComparisonOperator.EQUAL, " ", null));
+        () -> new ExcelDataValidationRule.DateRule(null, "DATE(2026,4,1)", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.NOT_BETWEEN, "1", " "));
+            new ExcelDataValidationRule.TimeRule(
+                ExcelComparisonOperator.EQUAL, " ", Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelDataValidationRule.TextLength(
+                ExcelComparisonOperator.NOT_BETWEEN, "1", Optional.of(" ")));
   }
 
   @Test
@@ -219,8 +231,9 @@ class ExcelDataValidationModelTest {
             new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
             true,
             false,
-            new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true),
-            null);
+            Optional.of(
+                new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true)),
+            Optional.empty());
 
     ExcelDataValidationSnapshot.Supported supported =
         new ExcelDataValidationSnapshot.Supported(List.of("A1:A3"), definition);

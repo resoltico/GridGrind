@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
@@ -12,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.zip.ZipFile;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -38,16 +38,22 @@ class ExcelSheetCommentRepairSupportTest {
         ExcelSheetCommentRepairSupport.commentsAfterShiftColumns(
             List.of(
                 new WorkbookSheetResult.CellComment(
-                    "A2", new ExcelCommentSnapshot("stationary", "GridGrind", true, null, null)),
+                    "A2",
+                    new ExcelCommentSnapshot(
+                        "stationary", "GridGrind", true, Optional.empty(), Optional.empty())),
                 new WorkbookSheetResult.CellComment(
-                    "B2", new ExcelCommentSnapshot("moving", "GridGrind", true, null, null))),
+                    "B2",
+                    new ExcelCommentSnapshot(
+                        "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
             new ExcelColumnSpan(1, 1),
             -1);
 
     assertEquals(
         List.of(
             new WorkbookSheetResult.CellComment(
-                "A2", new ExcelCommentSnapshot("moving", "GridGrind", true, null, null))),
+                "A2",
+                new ExcelCommentSnapshot(
+                    "moving", "GridGrind", true, Optional.empty(), Optional.empty()))),
         shifted);
   }
 
@@ -173,9 +179,9 @@ class ExcelSheetCommentRepairSupportTest {
       support.replaceComments(
           List.of(
               new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-                  "B4", "Plain raw", "", true, null, null),
+                  "B4", "Plain raw", "", true, Optional.empty(), Optional.empty()),
               new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-                  "C3", null, "", false, richText, explicitAnchor)));
+                  "C3", null, "", false, Optional.of(richText), Optional.of(explicitAnchor))));
 
       assertEquals(
           Map.of(
@@ -185,11 +191,16 @@ class ExcelSheetCommentRepairSupportTest {
                       "Plain raw",
                       "",
                       true,
-                      null,
-                      new ExcelCommentAnchorSnapshot(1, 3, 4, 6)),
+                      Optional.empty(),
+                      Optional.of(new ExcelCommentAnchorSnapshot(1, 3, 4, 6))),
               "C3",
                   new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-                      "C3", "Raw rich", "", false, readbackRichText, explicitAnchor)),
+                      "C3",
+                      "Raw rich",
+                      "",
+                      false,
+                      Optional.of(readbackRichText),
+                      Optional.of(explicitAnchor))),
           rawCommentSnapshots(workbook, "Ops"));
     }
   }
@@ -214,19 +225,19 @@ class ExcelSheetCommentRepairSupportTest {
       assertEquals("", snapshot.text());
       assertEquals("GridGrind", snapshot.author());
       assertFalse(snapshot.visible());
-      assertNull(snapshot.runs());
-      assertNull(snapshot.anchor());
+      assertEquals(Optional.empty(), snapshot.runs());
+      assertEquals(Optional.empty(), snapshot.anchor());
     }
 
     ExcelSheetCommentRepairSupport.CommentRewriteSnapshot normalized =
         new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-            "B2", null, null, true, null, null);
+            "B2", null, null, true, Optional.empty(), Optional.empty());
     ExcelSheetCommentRepairSupport.CommentRewriteSnapshot missingAuthor =
         new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-            "B2", "Text", "", true, null, null);
+            "B2", "Text", "", true, Optional.empty(), Optional.empty());
     ExcelSheetCommentRepairSupport.CommentRewriteSnapshot compatible =
         new ExcelSheetCommentRepairSupport.CommentRewriteSnapshot(
-            "B2", "Text", "GridGrind", true, null, null);
+            "B2", "Text", "GridGrind", true, Optional.empty(), Optional.empty());
 
     assertEquals("", normalized.text());
     assertEquals("", normalized.author());
@@ -234,7 +245,8 @@ class ExcelSheetCommentRepairSupportTest {
     assertFalse(missingAuthor.isAuthoringCompatible());
     assertTrue(compatible.isAuthoringCompatible());
     assertEquals(
-        new ExcelComment("Text", "GridGrind", true, null, null), compatible.toAuthoringComment());
+        new ExcelComment("Text", "GridGrind", true, Optional.empty(), Optional.empty()),
+        compatible.toAuthoringComment());
   }
 
   @Test
@@ -434,7 +446,8 @@ class ExcelSheetCommentRepairSupportTest {
 
   private static WorkbookSheetResult.CellComment comment(String address, String text) {
     return new WorkbookSheetResult.CellComment(
-        address, new ExcelCommentSnapshot(text, "GridGrind", true, null, null));
+        address,
+        new ExcelCommentSnapshot(text, "GridGrind", true, Optional.empty(), Optional.empty()));
   }
 
   @SuppressWarnings("PMD.UseConcurrentHashMap")

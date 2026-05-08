@@ -115,16 +115,19 @@ final class ExcelAutofilterOoxmlSupport {
   }
 
   static void replaceSortState(
-      XSSFWorkbook workbook, CTAutoFilter autoFilter, ExcelAutofilterSortState sortState) {
+      XSSFWorkbook workbook,
+      CTAutoFilter autoFilter,
+      Optional<ExcelAutofilterSortState> sortState) {
     if (autoFilter.isSetSortState()) {
       autoFilter.unsetSortState();
     }
-    if (sortState == null) {
+    if (sortState.isEmpty()) {
       return;
     }
     CTSortState ctSortState = autoFilter.addNewSortState();
-    applySortStateSettings(ctSortState, sortState);
-    for (ExcelAutofilterSortCondition condition : sortState.conditions()) {
+    ExcelAutofilterSortState authoredSortState = sortState.orElseThrow();
+    applySortStateSettings(ctSortState, authoredSortState);
+    for (ExcelAutofilterSortCondition condition : authoredSortState.conditions()) {
       applySortCondition(workbook, ctSortState, condition);
     }
   }
@@ -323,10 +326,11 @@ final class ExcelAutofilterOoxmlSupport {
       throw new IllegalArgumentException("autofilter sort condition is missing ref");
     }
     boolean descending = sortCondition.isSetDescending() && sortCondition.getDescending();
-    if (!sortCondition.isSetSortBy() || sortCondition.getSortBy() == STSortBy.VALUE) {
+    STSortBy.Enum sortBy = sortCondition.getSortBy();
+    if (!sortCondition.isSetSortBy() || sortBy == STSortBy.VALUE) {
       return new ExcelAutofilterSortConditionSnapshot.Value(range, descending);
     }
-    if (sortCondition.getSortBy() == STSortBy.CELL_COLOR) {
+    if (sortBy == STSortBy.CELL_COLOR) {
       return new ExcelAutofilterSortConditionSnapshot.CellColor(
           range,
           descending,
@@ -336,7 +340,7 @@ final class ExcelAutofilterOoxmlSupport {
                       new IllegalArgumentException(
                           "autofilter cell-color sort condition is missing dxf color")));
     }
-    if (sortCondition.getSortBy() == STSortBy.FONT_COLOR) {
+    if (sortBy == STSortBy.FONT_COLOR) {
       return new ExcelAutofilterSortConditionSnapshot.FontColor(
           range,
           descending,
@@ -346,19 +350,15 @@ final class ExcelAutofilterOoxmlSupport {
                       new IllegalArgumentException(
                           "autofilter font-color sort condition is missing dxf color")));
     }
-    if (sortCondition.getSortBy() == STSortBy.ICON) {
-      return new ExcelAutofilterSortConditionSnapshot.Icon(
-          range, descending, Math.toIntExact(sortCondition.getIconId()));
-    }
-    throw new IllegalArgumentException(
-        "unsupported autofilter sortBy value: " + sortCondition.getSortBy().toString());
+    return new ExcelAutofilterSortConditionSnapshot.Icon(
+        range, descending, Math.toIntExact(sortCondition.getIconId()));
   }
 
   private static STSortMethod.Enum toOoxmlSortMethod(ExcelAutofilterSortMethod sortMethod) {
-    return switch (sortMethod) {
-      case PINYIN -> STSortMethod.PIN_YIN;
-      case STROKE -> STSortMethod.STROKE;
-    };
+    if (sortMethod == ExcelAutofilterSortMethod.PINYIN) {
+      return STSortMethod.PIN_YIN;
+    }
+    return STSortMethod.STROKE;
   }
 
   static Optional<ExcelColorSnapshot> dxfColor(
@@ -371,24 +371,20 @@ final class ExcelAutofilterOoxmlSupport {
         && dxf.isSetFill()
         && dxf.getFill().isSetPatternFill()
         && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return Optional.of(
-          ExcelColorSnapshotSupport.snapshot(
-              workbook, dxf.getFill().getPatternFill().getFgColor()));
+      return ExcelColorSnapshotSupport.snapshot(
+          workbook, dxf.getFill().getPatternFill().getFgColor());
     }
     if (!cellColor && dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return Optional.of(
-          ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0)));
+      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
     }
     if (dxf.isSetFill()
         && dxf.getFill().isSetPatternFill()
         && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return Optional.of(
-          ExcelColorSnapshotSupport.snapshot(
-              workbook, dxf.getFill().getPatternFill().getFgColor()));
+      return ExcelColorSnapshotSupport.snapshot(
+          workbook, dxf.getFill().getPatternFill().getFgColor());
     }
     if (dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return Optional.of(
-          ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0)));
+      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
     }
     return Optional.empty();
   }

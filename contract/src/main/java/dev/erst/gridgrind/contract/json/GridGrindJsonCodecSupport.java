@@ -82,7 +82,11 @@ final class GridGrindJsonCodecSupport {
       throw failureMapper.apply(exception);
     } catch (IllegalArgumentException exception) {
       throw new InvalidRequestException(
-          GridGrindJsonMessageSupport.message(exception), null, null, null, exception);
+          GridGrindJsonMessageSupport.message(exception),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          exception);
     }
   }
 
@@ -111,7 +115,12 @@ final class GridGrindJsonCodecSupport {
 
   private static void requireNonNullRoot(JsonNode node) {
     if (node.isNull()) {
-      throw new InvalidRequestException("problem: <root> must not be null", null, null, null, null);
+      throw new InvalidRequestException(
+          "problem: <root> must not be null",
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          null);
     }
   }
 
@@ -122,6 +131,7 @@ final class GridGrindJsonCodecSupport {
   }
 
   private static InvalidJsonException invalidJsonPayloadException() {
-    return new InvalidJsonException("Invalid JSON payload", null, null, null, null);
+    return new InvalidJsonException(
+        "Invalid JSON payload", Optional.empty(), Optional.empty(), Optional.empty(), null);
   }
 }

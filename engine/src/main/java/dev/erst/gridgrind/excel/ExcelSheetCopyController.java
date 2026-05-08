@@ -196,13 +196,13 @@ final class ExcelSheetCopyController {
   }
 
   /** Converts one supported differential style into its copyable authoring form. */
-  static ExcelDifferentialStyle copyableStyle(
+  static Optional<ExcelDifferentialStyle> copyableStyle(
       ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     return ExcelSheetCopySupport.copyableStyle(style, sourceSheetName);
   }
 
-  /** Returns the one sheet-owned autofilter snapshot, or null when absent. */
-  static ExcelAutofilterSnapshot.SheetOwned sheetOwnedAutofilter(
+  /** Returns the one sheet-owned autofilter snapshot when present. */
+  static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
       List<ExcelAutofilterSnapshot> autofilters) {
     return ExcelSheetCopySupport.sheetOwnedAutofilter(autofilters);
   }
@@ -221,7 +221,7 @@ final class ExcelSheetCopyController {
       List<WorkbookSheetResult.CellComment> comments,
       List<CTDataValidation> dataValidations,
       List<ExcelConditionalFormattingBlockDefinition> conditionalFormattingBlocks,
-      ExcelAutofilterSnapshot.SheetOwned sheetAutofilter,
+      Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter,
       List<ExcelTableSnapshot> tables) {
     private ExcelSheetCopySnapshot {
       localNamedRanges = List.copyOf(localNamedRanges);
@@ -231,6 +231,7 @@ final class ExcelSheetCopyController {
       comments = List.copyOf(comments);
       dataValidations = List.copyOf(dataValidations);
       conditionalFormattingBlocks = List.copyOf(conditionalFormattingBlocks);
+      Objects.requireNonNull(sheetAutofilter, "sheetAutofilter must not be null");
       tables = List.copyOf(tables);
     }
   }

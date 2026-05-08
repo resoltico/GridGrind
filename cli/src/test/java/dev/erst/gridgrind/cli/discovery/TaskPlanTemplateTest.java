@@ -1,0 +1,128 @@
+package dev.erst.gridgrind.cli.discovery;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import java.util.ArrayList;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+
+/** Tests for task-plan templates emitted by the planner surface. */
+class TaskPlanTemplateTest {
+  @Test
+  void constructorRequiresExplicitProtocolVersionAndCopiesAuthoringNotes() {
+    TaskEntry task =
+        new TaskEntry(
+            "TASK",
+            "summary",
+            profile(),
+            List.of(),
+            List.of(),
+            List.of("office"),
+            List.of("outcome"),
+            List.of("input"),
+            List.of("feature"),
+            List.of(
+                new TaskPhase(
+                    TaskPhasePurpose.AUTHOR,
+                    "Phase",
+                    "Objective",
+                    List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                    List.of("note"))),
+            List.of("pitfall"));
+    WorkbookPlan requestTemplate =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of());
+    List<String> mutableNotes = new ArrayList<>(List.of("note one"));
+
+    TaskPlanTemplate defaultVersionTemplate =
+        new TaskPlanTemplate(
+            GridGrindProtocolVersion.current(), task, requestTemplate, mutableNotes);
+    TaskPlanTemplate explicitVersionTemplate =
+        new TaskPlanTemplate(
+            GridGrindProtocolVersion.current(), task, requestTemplate, mutableNotes);
+    mutableNotes.add("note two");
+
+    assertEquals(GridGrindProtocolVersion.current(), defaultVersionTemplate.protocolVersion());
+    assertEquals(List.of("note one"), defaultVersionTemplate.authoringNotes());
+    assertEquals(GridGrindProtocolVersion.current(), explicitVersionTemplate.protocolVersion());
+    assertThrows(
+        UnsupportedOperationException.class,
+        () -> defaultVersionTemplate.authoringNotes().add("nope"));
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> new TaskPlanTemplate(null, task, requestTemplate, mutableNotes))
+            .getMessage());
+  }
+
+  @Test
+  void constructorRejectsNullTaskAndRequestTemplate() {
+    WorkbookPlan requestTemplate =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
+            dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
+            List.of());
+    TaskEntry task =
+        new TaskEntry(
+            "TASK",
+            "summary",
+            profile(),
+            List.of(),
+            List.of(),
+            List.of("office"),
+            List.of("outcome"),
+            List.of("input"),
+            List.of("feature"),
+            List.of(
+                new TaskPhase(
+                    TaskPhasePurpose.AUTHOR,
+                    "Phase",
+                    "Objective",
+                    List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                    List.of("note"))),
+            List.of("pitfall"));
+
+    NullPointerException nullTask =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                new TaskPlanTemplate(
+                    GridGrindProtocolVersion.current(), null, requestTemplate, List.of("note")));
+    assertEquals("task must not be null", nullTask.getMessage());
+
+    NullPointerException nullRequestTemplate =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                new TaskPlanTemplate(
+                    GridGrindProtocolVersion.current(), task, null, List.of("note")));
+    assertEquals("requestTemplate must not be null", nullRequestTemplate.getMessage());
+
+    IllegalArgumentException blankNote =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskPlanTemplate(
+                    GridGrindProtocolVersion.current(), task, requestTemplate, List.of(" ")));
+    assertTrue(blankNote.getMessage().contains("authoringNotes"));
+  }
+
+  private static TaskExecutionProfile profile() {
+    return new TaskExecutionProfile(
+        TaskSourceMode.NEW_WORKBOOK,
+        TaskPersistenceMode.NONE,
+        TaskMutationMode.MUTATING,
+        TaskAssetMode.SELF_CONTAINED);
+  }
+}

@@ -2,13 +2,17 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.junit.jupiter.api.Test;
@@ -58,19 +62,19 @@ class ExcelOoxmlPackageSecurityTypesTest {
     ExcelOoxmlEncryptionSnapshot encryption =
         new ExcelOoxmlEncryptionSnapshot(
             true,
-            ExcelOoxmlEncryptionMode.AGILE,
-            "AES256",
-            "SHA512",
-            "ChainingModeCBC",
-            256,
-            16,
-            100_000);
+            Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+            Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+            Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+            Optional.of(ExcelOoxmlChainingMode.CBC),
+            Optional.of(256),
+            Optional.of(16),
+            Optional.of(100_000));
     ExcelOoxmlSignatureSnapshot signature =
         new ExcelOoxmlSignatureSnapshot(
             "/_xmlsignatures/sig1.xml",
-            "CN=GridGrind Signing Test",
-            "CN=GridGrind Signing Test",
-            "01AB",
+            Optional.of("CN=GridGrind Signing Test"),
+            Optional.of("CN=GridGrind Signing Test"),
+            Optional.of("01AB"),
             ExcelOoxmlSignatureState.VALID);
     ExcelOoxmlPackageSecuritySnapshot packageSecurity =
         new ExcelOoxmlPackageSecuritySnapshot(encryption, List.of(signature));
@@ -85,17 +89,35 @@ class ExcelOoxmlPackageSecurityTypesTest {
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                false, ExcelOoxmlEncryptionMode.AGILE, null, null, null, null, null, null));
+                false,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 0, 16, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(0),
+                Optional.of(16),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlSignatureSnapshot(
-                " ", "CN=GridGrind Signing Test", null, null, ExcelOoxmlSignatureState.VALID));
+                " ",
+                Optional.of("CN=GridGrind Signing Test"),
+                Optional.empty(),
+                Optional.empty(),
+                ExcelOoxmlSignatureState.VALID));
     assertThrows(
         NullPointerException.class,
         () -> new ExcelOoxmlPackageSecuritySnapshot(encryption, Arrays.asList(signature, null)));
@@ -136,71 +158,177 @@ class ExcelOoxmlPackageSecurityTypesTest {
 
     ExcelOoxmlEncryptionSnapshot none = ExcelOoxmlEncryptionSnapshot.none();
     assertFalse(none.encrypted());
-    assertNull(none.mode());
+    assertTrue(none.mode().isEmpty());
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, null, "SHA512", "CBC", 256, 16, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                null,
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.of(16),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", " ", "CBC", 256, 16, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.empty(),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.of(16),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", " ", 256, 16, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.empty(),
+                Optional.of(256),
+                Optional.of(16),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 0, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.of(0),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, -1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.of(16),
+                Optional.of(-1)));
     // !encrypted compound-OR: each condition needs to be the "first true" to cover its branch.
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelOoxmlEncryptionSnapshot(false, null, "AES256", null, null, null, null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelOoxmlEncryptionSnapshot(false, null, null, "SHA512", null, null, null, null));
+            new ExcelOoxmlEncryptionSnapshot(
+                false,
+                Optional.empty(),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                false, null, null, null, "ChainingModeCBC", null, null, null));
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, 256, null, null));
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, null, 16, null));
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(256),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, null, null, 100_000));
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(16),
+                Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(100_000)));
     // encrypted path: null keyBits, null blockSize, null spinCount.
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", null, 16, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.empty(),
+                Optional.of(16),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, null, 1));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.empty(),
+                Optional.of(1)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelOoxmlEncryptionSnapshot(
-                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, null));
+                true,
+                Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                Optional.of(ExcelOoxmlChainingMode.CBC),
+                Optional.of(256),
+                Optional.of(16),
+                Optional.empty()));
 
     ExcelOoxmlPackageSecuritySnapshot plainSecurity = ExcelOoxmlPackageSecuritySnapshot.none();
     assertSame(plainSecurity, plainSecurity.afterMutation());

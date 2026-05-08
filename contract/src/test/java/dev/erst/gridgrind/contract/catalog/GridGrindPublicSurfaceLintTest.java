@@ -27,13 +27,6 @@ class GridGrindPublicSurfaceLintTest {
 
     collectUnknown(
         unknownBySurface,
-        "CLI help",
-        GridGrindCliHelp.helpText(
-            "dev", "Contract lint surface", "https://example.invalid/gridgrind", "gridgrind:test"),
-        registeredIds,
-        candidatePattern);
-    collectUnknown(
-        unknownBySurface,
         "Protocol catalog summaries",
         catalogSummaries(),
         registeredIds,
@@ -136,13 +129,6 @@ class GridGrindPublicSurfaceLintTest {
     List<SurfaceText> surfaces =
         List.of(
             new SurfaceText("catalogSummaries", catalogSummaries()),
-            new SurfaceText(
-                "cliHelp",
-                GridGrindCliHelp.helpText(
-                    "dev",
-                    "Contract lint surface",
-                    "https://example.invalid/gridgrind",
-                    "gridgrind:test")),
             new SurfaceText(
                 "requestAndExecutionReference",
                 Files.readString(
@@ -297,7 +283,6 @@ class GridGrindPublicSurfaceLintTest {
         .map(PlainTypeGroup::type)
         .map(TypeEntry::summary)
         .forEach(summaries::add);
-    catalog.shippedExamples().stream().map(ShippedExampleEntry::summary).forEach(summaries::add);
     return String.join("\n", summaries);
   }
 }

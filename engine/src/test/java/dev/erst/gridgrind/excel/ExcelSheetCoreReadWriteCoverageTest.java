@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -343,13 +344,26 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet.applyStyle(
           "A1:B1",
           new ExcelCellStyle(
-              "#,##0.00",
-              new ExcelCellAlignment(
-                  true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
-              new ExcelCellFont(true, null, null, null, null, null, null),
-              null,
-              null,
-              null));
+              Optional.of("#,##0.00"),
+              Optional.of(
+                  new ExcelCellAlignment(
+                      Optional.of(true),
+                      Optional.of(ExcelHorizontalAlignment.CENTER),
+                      Optional.of(ExcelVerticalAlignment.TOP),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.of(true),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty()));
       sheet.applyStyle("C1", ExcelCellStyle.emphasis(null, true));
 
       ExcelCellSnapshot styledValue = sheet.snapshotCell("A1");
@@ -435,29 +449,57 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
-              null,
-              new ExcelCellAlignment(
-                  true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
-              new ExcelCellFont(
-                  true,
-                  false,
-                  "Aptos",
-                  new ExcelFontHeight(280),
-                  ExcelColor.rgb("#1F4E78"),
-                  true,
-                  false),
-              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC")),
-              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
-              null));
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellAlignment(
+                      Optional.of(true),
+                      Optional.of(ExcelHorizontalAlignment.CENTER),
+                      Optional.of(ExcelVerticalAlignment.TOP),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.of(true),
+                      Optional.of(false),
+                      Optional.of("Aptos"),
+                      Optional.of(new ExcelFontHeight(280)),
+                      Optional.of(ExcelColor.rgb("#1F4E78")),
+                      Optional.of(true),
+                      Optional.of(false))),
+              Optional.of(
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty()));
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
-              null,
-              null,
-              new ExcelCellFont(null, null, null, null, null, null, true),
-              null,
-              new ExcelBorder(null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null),
-              null));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.of(true))),
+              Optional.empty(),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty()));
 
       ExcelCellSnapshot styled = sheet.snapshotCell("A1");
       assertTrue(styled.style().font().bold());
@@ -541,7 +583,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       Cell cell = poiSheet.getRow(0).getCell(0);
       assertEquals("support/budget%20backup.xlsx", cell.getHyperlink().getAddress());
       assertEquals(
-          new ExcelHyperlink.File("support/budget backup.xlsx"), ExcelSheet.hyperlink(cell));
+          Optional.of(new ExcelHyperlink.File("support/budget backup.xlsx")),
+          ExcelSheet.hyperlink(cell));
     }
   }
 
@@ -613,7 +656,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       sheet.setPresentation(
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              ExcelColor.rgb("#112233"),
+              Optional.of(ExcelColor.rgb("#112233")),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(11, 18.5d),
               List.of(
@@ -651,7 +694,8 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(
           new ExcelSheetDisplay(false, false, false, true, true),
           unfrozenLayout.presentation().display());
-      assertEquals(ExcelColorSnapshot.rgb("#112233"), unfrozenLayout.presentation().tabColor());
+      assertEquals(
+          Optional.of(ExcelColorSnapshot.rgb("#112233")), unfrozenLayout.presentation().tabColor());
       assertEquals(
           new ExcelSheetOutlineSummary(false, false),
           unfrozenLayout.presentation().outlineSummary());

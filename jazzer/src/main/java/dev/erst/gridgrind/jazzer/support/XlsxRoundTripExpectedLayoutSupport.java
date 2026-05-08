@@ -1,8 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.excel.WorkbookSheetResult;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,14 +16,14 @@ final class XlsxRoundTripExpectedLayoutSupport {
       expectedSheetLayouts(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState>
         expectedLayouts = new LinkedHashMap<>();
     for (String sheetName : workbook.sheetNames()) {
       WorkbookSheetResult.SheetLayoutResult layoutResult =
           (WorkbookSheetResult.SheetLayoutResult)
               readExecutor
-                  .apply(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
+                  .read(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
                   .getFirst();
       expectedLayouts.put(sheetName, expectedSheetLayout(layoutResult.layout()));
     }

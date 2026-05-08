@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.junit.jupiter.api.Test;
 
@@ -186,7 +187,15 @@ class ExcelChartSourceResolutionTest {
         ExcelChartDisplayBlanksAs.GAP,
         true,
         false,
-        List.of(new ExcelChartDefinition.Series(null, categories, values, null, null, null, null)));
+        List.of(
+            new ExcelChartDefinition.Series(
+                null,
+                categories,
+                values,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())));
   }
 
   private static void assertFailureMessage(
@@ -212,12 +221,12 @@ class ExcelChartSourceResolutionTest {
             new ExcelNamedRangeDefinition(
                 "NumericCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "B2:B4")))
+                ExcelNamedRangeTarget.range("Charts", "B2:B4")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "SparseCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "D2:D4")));
+                ExcelNamedRangeTarget.range("Charts", "D2:D4")));
 
     var localCategories = workbook.xssfWorkbook().createName();
     localCategories.setNameName("LocalCategories");
@@ -241,22 +250,22 @@ class ExcelChartSourceResolutionTest {
             new ExcelNamedRangeDefinition(
                 "FormulaCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "E2:E5")))
+                ExcelNamedRangeTarget.range("Charts", "E2:E5")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "FormulaValues",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "C2:C5")))
+                ExcelNamedRangeTarget.range("Charts", "C2:C5")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ErrorFormulaCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "F2:F4")))
+                ExcelNamedRangeTarget.range("Charts", "F2:F4")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ErrorCellCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Charts", "G2:G4")));
+                ExcelNamedRangeTarget.range("Charts", "G2:G4")));
 
     xssfSheet.getRow(1).createCell(5).setCellFormula("1/0");
     xssfSheet.getRow(2).createCell(5).setCellFormula("1/0");

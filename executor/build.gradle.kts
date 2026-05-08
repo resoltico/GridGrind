@@ -13,7 +13,7 @@ plugins {
     id("gridgrind.java-conventions")
 }
 
-description = "GridGrind contract execution bridge and parity surface"
+description = "GridGrind parity and execution-regression verification surface"
 
 val sourceSets = extensions.getByType<SourceSetContainer>()
 val mainSourceSet = sourceSets.getByName("main")
@@ -33,8 +33,8 @@ configurations.named(parityTestSourceSet.runtimeOnlyConfigurationName) {
 }
 
 dependencies {
-    api(project(":contract"))
-    implementation(project(":engine"))
+    testImplementation(project(":engine"))
+    testImplementation(project(":cli"))
     testImplementation(libs.jackson.databind)
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
@@ -42,6 +42,7 @@ dependencies {
     testImplementation(libs.poi.ooxml.full)
     testRuntimeOnly(libs.junit.platform.launcher)
     testRuntimeOnly(libs.log4j.core)
+    add(parityTestSourceSet.implementationConfigurationName, project(":engine"))
     add(parityTestSourceSet.implementationConfigurationName, testFixtures(project(":engine")))
     add(parityTestSourceSet.implementationConfigurationName, libs.jackson.databind)
     add(parityTestSourceSet.implementationConfigurationName, libs.junit.jupiter)

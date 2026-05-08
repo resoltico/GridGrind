@@ -6,21 +6,23 @@ import java.util.function.Supplier;
 
 /** Lazily resolves one BooleanSupplier delegate and reuses it for later calls. */
 final class LazyBooleanSupplier implements BooleanSupplier {
-  private final Supplier<BooleanSupplier> delegateFactory;
   private BooleanSupplier delegate;
 
   LazyBooleanSupplier(Supplier<BooleanSupplier> delegateFactory) {
-    this.delegateFactory =
+    Supplier<BooleanSupplier> requiredFactory =
         Objects.requireNonNull(delegateFactory, "delegateFactory must not be null");
+    this.delegate =
+        () -> {
+          BooleanSupplier resolved =
+              Objects.requireNonNull(
+                  requiredFactory.get(), "delegateFactory must not return a null supplier");
+          delegate = resolved;
+          return resolved.getAsBoolean();
+        };
   }
 
   @Override
   public boolean getAsBoolean() {
-    if (delegate == null) {
-      delegate =
-          Objects.requireNonNull(
-              delegateFactory.get(), "delegateFactory must not return a null supplier");
-    }
     return delegate.getAsBoolean();
   }
 }

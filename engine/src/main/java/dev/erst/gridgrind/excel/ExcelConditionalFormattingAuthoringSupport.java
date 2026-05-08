@@ -39,17 +39,21 @@ final class ExcelConditionalFormattingAuthoringSupport {
       switch (block.rules().get(ruleIndex)) {
         case ExcelConditionalFormattingRule.FormulaRule formulaRule -> {
           ctRule.setStopIfTrue(formulaRule.stopIfTrue());
-          if (formulaRule.style() != null) {
-            ExcelConditionalFormattingStyleSupport.applyStyle(
-                sheet.getWorkbook(), ctRule, formulaRule.style());
-          }
+          formulaRule
+              .style()
+              .ifPresent(
+                  style ->
+                      ExcelConditionalFormattingStyleSupport.applyStyle(
+                          sheet.getWorkbook(), ctRule, style));
         }
         case ExcelConditionalFormattingRule.CellValueRule cellValueRule -> {
           ctRule.setStopIfTrue(cellValueRule.stopIfTrue());
-          if (cellValueRule.style() != null) {
-            ExcelConditionalFormattingStyleSupport.applyStyle(
-                sheet.getWorkbook(), ctRule, cellValueRule.style());
-          }
+          cellValueRule
+              .style()
+              .ifPresent(
+                  style ->
+                      ExcelConditionalFormattingStyleSupport.applyStyle(
+                          sheet.getWorkbook(), ctRule, style));
         }
         case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->
             ctRule.setStopIfTrue(colorScaleRule.stopIfTrue());
@@ -59,10 +63,12 @@ final class ExcelConditionalFormattingAuthoringSupport {
             ctRule.setStopIfTrue(iconSetRule.stopIfTrue());
         case ExcelConditionalFormattingRule.Top10Rule top10Rule -> {
           ctRule.setStopIfTrue(top10Rule.stopIfTrue());
-          if (top10Rule.style() != null) {
-            ExcelConditionalFormattingStyleSupport.applyStyle(
-                sheet.getWorkbook(), ctRule, top10Rule.style());
-          }
+          top10Rule
+              .style()
+              .ifPresent(
+                  style ->
+                      ExcelConditionalFormattingStyleSupport.applyStyle(
+                          sheet.getWorkbook(), ctRule, style));
           applyTop10Rule(ctRule, top10Rule);
         }
       }
@@ -88,7 +94,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
               .getSheetConditionalFormatting()
               .createConditionalFormattingRule(formulaRule.formula());
       case ExcelConditionalFormattingRule.CellValueRule cellValueRule ->
-          cellValueRule.formula2() == null
+          cellValueRule.formula2().isEmpty()
               ? sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
@@ -99,7 +105,7 @@ final class ExcelConditionalFormattingAuthoringSupport {
                   .createConditionalFormattingRule(
                       ExcelComparisonOperatorPoiBridge.toPoi(cellValueRule.operator()),
                       cellValueRule.formula1(),
-                      cellValueRule.formula2());
+                      cellValueRule.formula2().orElseThrow());
       case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->
           createColorScaleRule(sheet, colorScaleRule);
       case ExcelConditionalFormattingRule.DataBarRule dataBarRule ->

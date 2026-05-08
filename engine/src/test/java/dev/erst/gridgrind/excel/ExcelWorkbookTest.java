@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Name;
@@ -298,11 +299,11 @@ class ExcelWorkbookTest {
               "C2:C4",
               new ExcelDataValidationDefinition(
                   new ExcelDataValidationRule.WholeNumber(
-                      ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                      ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
                   false,
                   false,
-                  null,
-                  null));
+                  Optional.empty(),
+                  Optional.empty()));
       workbook
           .sheet("Source")
           .setConditionalFormatting(
@@ -312,8 +313,17 @@ class ExcelWorkbookTest {
                       new ExcelConditionalFormattingRule.FormulaRule(
                           "B2>0",
                           true,
-                          new ExcelDifferentialStyle(
-                              "0.00", true, null, null, "#102030", null, null, "#E0F0AA", null)))));
+                          Optional.of(
+                              new ExcelDifferentialStyle(
+                                  Optional.of("0.00"),
+                                  Optional.of(true),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of("#102030"),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of("#E0F0AA"),
+                                  Optional.empty()))))));
       workbook.sheet("Source").mergeCells("A1:B1");
       workbook.sheet("Source").setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
       workbook.sheet("Source").setZoom(140);
@@ -332,7 +342,7 @@ class ExcelWorkbookTest {
           new ExcelNamedRangeDefinition(
               "LocalBudget",
               new ExcelNamedRangeScope.SheetScope("Source"),
-              new ExcelNamedRangeTarget("Source", "A1:B3")));
+              ExcelNamedRangeTarget.range("Source", "A1:B3")));
       workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
       workbook.save(workbookPath);
     }
@@ -349,12 +359,12 @@ class ExcelWorkbookTest {
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Source"),
                 "Source!$A$1:$B$3",
-                new ExcelNamedRangeTarget("Source", "A1:B3")),
+                ExcelNamedRangeTarget.range("Source", "A1:B3")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Replica"),
                 "Replica!$A$1:$B$3",
-                new ExcelNamedRangeTarget("Replica", "A1:B3"))),
+                ExcelNamedRangeTarget.range("Replica", "A1:B3"))),
         XlsxRoundTrip.namedRanges(workbookPath));
     assertEquals(
         List.of(
@@ -362,11 +372,11 @@ class ExcelWorkbookTest {
                 List.of("C2:C4"),
                 new ExcelDataValidationDefinition(
                     new ExcelDataValidationRule.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
                     false,
                     true,
-                    null,
-                    null))),
+                    Optional.empty(),
+                    Optional.empty()))),
         XlsxRoundTrip.dataValidations(workbookPath, "Replica"));
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
@@ -750,7 +760,7 @@ class ExcelWorkbookTest {
     try {
       try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
         workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Hello"));
-        workbook.save(workbookPath, new ExcelOoxmlPersistenceOptions(null, null));
+        workbook.save(workbookPath, ExcelOoxmlPersistenceOptions.none());
       }
       try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
         assertEquals("Hello", reopened.sheet("Alpha").text("A1"));
@@ -809,30 +819,34 @@ class ExcelWorkbookTest {
           .applyStyle(
               "A1",
               new ExcelCellStyle(
-                  null,
-                  new ExcelCellAlignment(
-                      true,
-                      ExcelHorizontalAlignment.CENTER,
-                      ExcelVerticalAlignment.TOP,
-                      null,
-                      null),
-                  new ExcelCellFont(
-                      true,
-                      false,
-                      "Aptos",
-                      ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                      ExcelColor.rgb("#1F4E78"),
-                      true,
-                      true),
-                  ExcelCellFill.patternForeground(
-                      ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC")),
-                  new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN),
-                      null,
-                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE),
-                      null,
-                      null),
-                  null));
+                  Optional.empty(),
+                  Optional.of(
+                      new ExcelCellAlignment(
+                          Optional.of(true),
+                          Optional.of(ExcelHorizontalAlignment.CENTER),
+                          Optional.of(ExcelVerticalAlignment.TOP),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.of(
+                      new ExcelCellFont(
+                          Optional.of(true),
+                          Optional.of(false),
+                          Optional.of("Aptos"),
+                          Optional.of(ExcelFontHeight.fromPoints(new BigDecimal("11.5"))),
+                          Optional.of(ExcelColor.rgb("#1F4E78")),
+                          Optional.of(true),
+                          Optional.of(true))),
+                  Optional.of(
+                      ExcelCellFill.patternForeground(
+                          ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+                  Optional.of(
+                      new ExcelBorder(
+                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                          Optional.empty(),
+                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty()));
       workbook.save(workbookPath);
     }
 
@@ -864,17 +878,18 @@ class ExcelWorkbookTest {
       budget.applyStyle(
           "A1",
           new ExcelCellStyle(
-              null,
-              null,
-              null,
-              ExcelCellFill.gradient(
-                  ExcelGradientFill.linear(
-                      42.5d,
-                      List.of(
-                          new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
-                          new ExcelGradientStop(1.0d, ExcelColor.theme(3))))),
-              null,
-              new ExcelCellProtection(true, true)));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(
+                  ExcelCellFill.gradient(
+                      ExcelGradientFill.linear(
+                          Optional.of(42.5d),
+                          List.of(
+                              new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
+                              new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
+              Optional.empty(),
+              Optional.of(new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
       workbook.save(workbookPath);
     }
 
@@ -907,12 +922,12 @@ class ExcelWorkbookTest {
           new ExcelNamedRangeDefinition(
               "BudgetTotal",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "B4")));
+              ExcelNamedRangeTarget.range("Budget", "B4")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "LocalItem",
               new ExcelNamedRangeScope.SheetScope("Budget"),
-              new ExcelNamedRangeTarget("Budget", "A1:B2")));
+              ExcelNamedRangeTarget.range("Budget", "A1:B2")));
       workbook.save(workbookPath);
     }
 
@@ -934,7 +949,7 @@ class ExcelWorkbookTest {
                     .findFirst()
                     .orElseThrow()
                     .refersToFormula(),
-                new ExcelNamedRangeTarget("Budget", "B4"))));
+                ExcelNamedRangeTarget.range("Budget", "B4"))));
     assertTrue(
         namedRanges.contains(
             new ExcelNamedRangeSnapshot.RangeSnapshot(
@@ -945,7 +960,7 @@ class ExcelWorkbookTest {
                     .findFirst()
                     .orElseThrow()
                     .refersToFormula(),
-                new ExcelNamedRangeTarget("Budget", "A1:B2"))));
+                ExcelNamedRangeTarget.range("Budget", "A1:B2"))));
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       assertEquals(2, workbook.namedRangeCount());
@@ -985,12 +1000,12 @@ class ExcelWorkbookTest {
           new ExcelNamedRangeDefinition(
               "BudgetTotal",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "B4")));
+              ExcelNamedRangeTarget.range("Budget", "B4")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "BudgetTotal",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "C1")));
+              ExcelNamedRangeTarget.range("Budget", "C1")));
 
       Name formulaName = poiWorkbook.createName();
       formulaName.setNameName("BudgetRollup");
@@ -1030,7 +1045,7 @@ class ExcelWorkbookTest {
                   "BudgetTotal",
                   new ExcelNamedRangeScope.WorkbookScope(),
                   "Budget!$C$1",
-                  new ExcelNamedRangeTarget("Budget", "C1")),
+                  ExcelNamedRangeTarget.range("Budget", "C1")),
               new ExcelNamedRangeSnapshot.FormulaSnapshot(
                   "BudgetRollup",
                   new ExcelNamedRangeScope.WorkbookScope(),
@@ -1039,7 +1054,7 @@ class ExcelWorkbookTest {
                   "LocalItem",
                   new ExcelNamedRangeScope.SheetScope("Budget"),
                   "Budget!$A$1",
-                  new ExcelNamedRangeTarget("Budget", "A1"))),
+                  ExcelNamedRangeTarget.range("Budget", "A1"))),
           workbook.namedRanges());
     }
   }
@@ -1057,7 +1072,7 @@ class ExcelWorkbookTest {
                   new ExcelNamedRangeDefinition(
                       "A1",
                       new ExcelNamedRangeScope.WorkbookScope(),
-                      new ExcelNamedRangeTarget("Budget", "B4"))));
+                      ExcelNamedRangeTarget.range("Budget", "B4"))));
       assertThrows(
           NullPointerException.class,
           () -> workbook.deleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
@@ -1073,7 +1088,7 @@ class ExcelWorkbookTest {
                   new ExcelNamedRangeDefinition(
                       "BudgetTotal",
                       new ExcelNamedRangeScope.SheetScope("Missing"),
-                      new ExcelNamedRangeTarget("Missing", "A1"))));
+                      ExcelNamedRangeTarget.range("Missing", "A1"))));
     }
   }
 

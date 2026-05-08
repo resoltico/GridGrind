@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
@@ -66,19 +67,19 @@ final class ExcelDataValidationController {
     return ExcelDataValidationSnapshotSupport.toSnapshot(validation, ranges);
   }
 
-  static ExcelDataValidationPrompt prompt(XSSFDataValidation validation) {
+  static Optional<ExcelDataValidationPrompt> prompt(XSSFDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.prompt(validation);
   }
 
-  static ExcelDataValidationPrompt prompt(CTDataValidation validation) {
+  static Optional<ExcelDataValidationPrompt> prompt(CTDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.prompt(validation);
   }
 
-  static ExcelDataValidationErrorAlert errorAlert(XSSFDataValidation validation) {
+  static Optional<ExcelDataValidationErrorAlert> errorAlert(XSSFDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.errorAlert(validation);
   }
 
-  static ExcelDataValidationErrorAlert errorAlert(CTDataValidation validation) {
+  static Optional<ExcelDataValidationErrorAlert> errorAlert(CTDataValidation validation) {
     return ExcelDataValidationSnapshotSupport.errorAlert(validation);
   }
 

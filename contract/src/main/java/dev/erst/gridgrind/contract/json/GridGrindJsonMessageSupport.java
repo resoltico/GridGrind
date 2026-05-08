@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.core.exc.StreamConstraintsException;
@@ -29,32 +30,32 @@ final class GridGrindJsonMessageSupport {
     if (exception instanceof StreamReadException) {
       return new InvalidJsonException(
           message(exception),
-          metadata.jsonPath().orElse(null),
-          metadata.jsonLine().orElse(null),
-          metadata.jsonColumn().orElse(null),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
           exception);
     }
     if (validationCause.isPresent()) {
       return new InvalidRequestException(
           message(validationCause.orElseThrow()),
-          metadata.jsonPath().orElse(null),
-          metadata.jsonLine().orElse(null),
-          metadata.jsonColumn().orElse(null),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
           exception);
     }
     if (exception instanceof DatabindException) {
       return new InvalidRequestShapeException(
           message(exception),
-          metadata.jsonPath().orElse(null),
-          metadata.jsonLine().orElse(null),
-          metadata.jsonColumn().orElse(null),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
           exception);
     }
     return new InvalidJsonException(
         message(exception),
-        metadata.jsonPath().orElse(null),
-        metadata.jsonLine().orElse(null),
-        metadata.jsonColumn().orElse(null),
+        metadata.jsonPath(),
+        metadata.jsonLine(),
+        metadata.jsonColumn(),
         exception);
   }
 
@@ -98,7 +99,7 @@ final class GridGrindJsonMessageSupport {
     return productOwnedJacksonMessage(cleanJacksonMessage(original));
   }
 
-  static String cleanJacksonMessage(String message) {
+  static String cleanJacksonMessage(@Nullable String message) {
     if (message == null || message.isBlank()) {
       return "Invalid JSON payload";
     }
@@ -231,12 +232,12 @@ final class GridGrindJsonMessageSupport {
 
   private static PayloadMetadata payloadMetadata(JacksonException exception) {
     return new PayloadMetadata(
-        Optional.ofNullable(jsonPath(exception)),
+        jsonPath(exception),
         jsonLine(exception.getLocation()),
         jsonColumn(exception.getLocation()));
   }
 
-  private static String jsonPath(JacksonException exception) {
+  private static Optional<String> jsonPath(JacksonException exception) {
     StringBuilder path = new StringBuilder();
     for (JacksonException.Reference reference : exception.getPath()) {
       String propertyName = reference.getPropertyName();
@@ -249,7 +250,7 @@ final class GridGrindJsonMessageSupport {
       }
       path.append('[').append(reference.getIndex()).append(']');
     }
-    return path.isEmpty() ? null : path.toString();
+    return path.isEmpty() ? Optional.empty() : Optional.of(path.toString());
   }
 
   private record PayloadMetadata(

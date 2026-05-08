@@ -22,6 +22,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /** Dedicated chart payload generator shared by protocol and engine-side Jazzer sequences. */
 final class OperationSequenceChartFactory {
@@ -177,7 +178,7 @@ final class OperationSequenceChartFactory {
               nextChartBarGrouping(data),
               nextOptionalInt(data, 0, 500),
               nextOptionalInt(data, 0, 500),
-              nextChartBarShape(data),
+              Optional.of(nextChartBarShape(data)),
               nextChartAxesInputCategory(),
               nextChartSeriesInputs(data, false));
       case 4 ->
@@ -262,7 +263,7 @@ final class OperationSequenceChartFactory {
               nextChartBarGrouping(data),
               nextOptionalInt(data, 0, 500),
               nextOptionalInt(data, 0, 500),
-              nextChartBarShape(data),
+              Optional.of(nextChartBarShape(data)),
               nextExcelChartAxesCategory(),
               nextExcelChartSeries(data, false));
       case 4 ->
@@ -315,8 +316,11 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static Integer nextOptionalInt(GridGrindFuzzData data, int minimum, int maximum) {
-    return data.consumeBoolean() ? data.consumeInt(minimum, maximum) : null;
+  private static Optional<Integer> nextOptionalInt(
+      GridGrindFuzzData data, int minimum, int maximum) {
+    return data.consumeBoolean()
+        ? Optional.of(data.consumeInt(minimum, maximum))
+        : Optional.empty();
   }
 
   private static List<ChartAxisInput> nextChartAxesInputCategory() {
@@ -441,10 +445,12 @@ final class OperationSequenceChartFactory {
             : new ChartTitleInput.Text(TextSourceInput.inline("Series " + data.consumeInt(0, 9))),
         nextChartDataSourceInput(data, "A2:A4", data.consumeBoolean()),
         nextChartDataSourceInput(data, valuesFormula, true),
-        null,
-        null,
-        null,
-        data.consumeBoolean() ? Long.valueOf(data.consumeInt(0, 50)) : null);
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        data.consumeBoolean()
+            ? Optional.of(Long.valueOf(data.consumeInt(0, 50)))
+            : Optional.empty());
   }
 
   private static ExcelChartDefinition.Series nextExcelChartSeries(
@@ -455,10 +461,12 @@ final class OperationSequenceChartFactory {
             : new ExcelChartDefinition.Title.Text("Series " + data.consumeInt(0, 9)),
         nextExcelChartDataSource(data, "A2:A4", data.consumeBoolean()),
         nextExcelChartDataSource(data, valuesFormula, true),
-        null,
-        null,
-        null,
-        data.consumeBoolean() ? Long.valueOf(data.consumeInt(0, 50)) : null);
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        data.consumeBoolean()
+            ? Optional.of(Long.valueOf(data.consumeInt(0, 50)))
+            : Optional.empty());
   }
 
   private static ChartDataSourceInput nextChartDataSourceInput(

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
+import java.util.Optional;
 
 /** Shared chart-authoring and chart-readback helpers for engine tests. */
 final class ExcelChartTestSupport {
@@ -68,8 +69,8 @@ final class ExcelChartTestSupport {
                 varyColors,
                 barDirection,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 axes(),
                 series)));
   }
@@ -91,7 +92,9 @@ final class ExcelChartTestSupport {
         legend,
         displayBlanksAs,
         plotOnlyVisibleCells,
-        List.of(new ExcelChartDefinition.Pie(varyColors, firstSliceAngle, series)));
+        List.of(
+            new ExcelChartDefinition.Pie(
+                varyColors, Optional.ofNullable(firstSliceAngle), series)));
   }
 
   static ExcelChartSnapshot chart(List<ExcelChartSnapshot> charts, String name) {
@@ -160,16 +163,16 @@ final class ExcelChartTestSupport {
             new ExcelNamedRangeDefinition(
                 "ChartCategories",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget(sheetName, "A2:A4")))
+                ExcelNamedRangeTarget.range(sheetName, "A2:A4")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ChartPlan",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget(sheetName, "B2:B4")))
+                ExcelNamedRangeTarget.range(sheetName, "B2:B4")))
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ChartActual",
                 new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget(sheetName, "C2:C4")));
+                ExcelNamedRangeTarget.range(sheetName, "C2:C4")));
   }
 }

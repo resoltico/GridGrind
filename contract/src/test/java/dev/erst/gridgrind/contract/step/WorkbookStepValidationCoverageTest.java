@@ -3,9 +3,9 @@ package dev.erst.gridgrind.contract.step;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
@@ -13,19 +13,22 @@ import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Additional branch coverage for selector-family inference across assertion workflows. */
 class WorkbookStepValidationCoverageTest {
   @Test
   void resolvesCompositeAndNegatedAssertionTargetFamilies() {
-    Assertion.AllOf allOf =
-        new Assertion.AllOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
-    Assertion.AnyOf anyOf =
-        new Assertion.AnyOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
-    Assertion.Not not =
-        new Assertion.Not(new Assertion.CellValue(new ExpectedCellValue.Text("Owner")));
+    CompositeAssertion.AllOf allOf =
+        new CompositeAssertion.AllOf(
+            List.of(new PresenceAssertion.TablePresent(), new PresenceAssertion.TableAbsent()));
+    CompositeAssertion.AnyOf anyOf =
+        new CompositeAssertion.AnyOf(
+            List.of(new PresenceAssertion.TablePresent(), new PresenceAssertion.TableAbsent()));
+    CompositeAssertion.Not not =
+        new CompositeAssertion.Not(
+            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")));
 
     assertEquals(
         List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(allOf)));
@@ -45,26 +48,27 @@ class WorkbookStepValidationCoverageTest {
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new Assertion.AnalysisMaxSeverity(
-                    new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING))));
+                new AnalysisAssertion.AnalysisMaxSeverity(
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
+                    AnalysisSeverity.WARNING))));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new Assertion.AnalysisFindingPresent(
-                    new InspectionQuery.AnalyzeFormulaHealth(),
+                new AnalysisAssertion.AnalysisFindingPresent(
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                    AnalysisSeverity.ERROR,
-                    null))));
+                    Optional.of(AnalysisSeverity.ERROR),
+                    Optional.empty()))));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new Assertion.AnalysisFindingAbsent(
-                    new InspectionQuery.AnalyzeFormulaHealth(),
+                new AnalysisAssertion.AnalysisFindingAbsent(
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                     AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                    null,
-                    null))));
+                    Optional.empty(),
+                    Optional.empty()))));
   }
 
   @Test
@@ -74,23 +78,12 @@ class WorkbookStepValidationCoverageTest {
             IllegalArgumentException.class,
             () ->
                 WorkbookStepValidation.allowedTargetTypes(
-                    new Assertion.AnyOf(
+                    new CompositeAssertion.AnyOf(
                         List.of(
-                            new Assertion.TablePresent(),
-                            new Assertion.CellValue(new ExpectedCellValue.Text("Owner"))))));
+                            new PresenceAssertion.TablePresent(),
+                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))))));
 
     assertEquals(
         "ANY_OF requires nested assertions with compatible target families", failure.getMessage());
-  }
-
-  @Test
-  void rejectsEmptyNestedAssertionCollectionsAtCommonTargetInferenceBoundary() {
-    IllegalArgumentException failure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> AssertionTargetingSupport.commonTargetTypes(List.of(), "ALL_OF", Map.of()));
-
-    assertEquals(
-        "ALL_OF requires nested assertions with compatible target families", failure.getMessage());
   }
 }

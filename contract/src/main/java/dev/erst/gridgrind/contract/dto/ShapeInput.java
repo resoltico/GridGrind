@@ -1,50 +1,75 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authoritative simple-shape or connector creation or replacement payload. */
-public record ShapeInput(
-    String name,
-    ExcelAuthoredDrawingShapeKind kind,
-    DrawingAnchorInput anchor,
-    String presetGeometryToken,
-    TextSourceInput text) {
-  public ShapeInput {
-    name = requireNonBlank(name, "name");
-    Objects.requireNonNull(kind, "kind must not be null");
-    anchor = requireTwoCellAnchor(anchor);
-    if (presetGeometryToken != null) {
-      presetGeometryToken = presetGeometryToken.trim();
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = ShapeInput.SimpleShape.class, name = "SIMPLE_SHAPE"),
+  @JsonSubTypes.Type(value = ShapeInput.Connector.class, name = "CONNECTOR")
+})
+public sealed interface ShapeInput permits ShapeInput.SimpleShape, ShapeInput.Connector {
+  /** Stable drawing object name that replaces or creates the target shape. */
+  String name();
+
+  /** Anchor describing where the shape is positioned on the sheet. */
+  DrawingAnchorInput anchor();
+
+  /** Concrete authored drawing-shape family represented by this payload. */
+  ExcelAuthoredDrawingShapeKind kind();
+
+  /** Simple shape with required preset geometry and optional text. */
+  record SimpleShape(
+      String name,
+      DrawingAnchorInput anchor,
+      String presetGeometryToken,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<TextSourceInput> text)
+      implements ShapeInput {
+    public SimpleShape {
+      name = requireNonBlank(name, "name");
+      anchor = requireTwoCellAnchor(anchor);
+      Objects.requireNonNull(text, "text must not be null");
+      presetGeometryToken = requirePresetGeometryToken(presetGeometryToken);
+      text.ifPresent(
+          value -> {
+            if (value instanceof TextSourceInput.Inline inline && inline.text().isBlank()) {
+              throw new IllegalArgumentException("text must not be blank");
+            }
+          });
     }
-    presetGeometryToken = requirePresetGeometryToken(kind, presetGeometryToken);
-    validateConnectorConfiguration(kind, presetGeometryToken, text);
-    if (text instanceof TextSourceInput.Inline inline && inline.text().isBlank()) {
-      throw new IllegalArgumentException("text must not be blank");
+
+    @Override
+    public ExcelAuthoredDrawingShapeKind kind() {
+      return ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE;
     }
   }
 
-  private static String requirePresetGeometryToken(
-      ExcelAuthoredDrawingShapeKind kind, String presetGeometryToken) {
-    if (kind == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
-        && (presetGeometryToken == null || presetGeometryToken.isBlank())) {
+  /** Connector drawing with no geometry token and no text payload. */
+  record Connector(String name, DrawingAnchorInput anchor) implements ShapeInput {
+    public Connector {
+      name = requireNonBlank(name, "name");
+      anchor = requireTwoCellAnchor(anchor);
+    }
+
+    @Override
+    public ExcelAuthoredDrawingShapeKind kind() {
+      return ExcelAuthoredDrawingShapeKind.CONNECTOR;
+    }
+  }
+
+  private static String requirePresetGeometryToken(String presetGeometryToken) {
+    Objects.requireNonNull(presetGeometryToken, "presetGeometryToken must not be null");
+    String normalized = presetGeometryToken.trim();
+    if (normalized.isBlank()) {
       throw new IllegalArgumentException("presetGeometryToken must not be blank");
     }
-    return presetGeometryToken;
-  }
-
-  private static void validateConnectorConfiguration(
-      ExcelAuthoredDrawingShapeKind kind, String presetGeometryToken, TextSourceInput text) {
-    if (kind != ExcelAuthoredDrawingShapeKind.CONNECTOR) {
-      return;
-    }
-    if (presetGeometryToken != null) {
-      throw new IllegalArgumentException("presetGeometryToken is only supported for SIMPLE_SHAPE");
-    }
-    if (text != null) {
-      throw new IllegalArgumentException("text is only supported for SIMPLE_SHAPE");
-    }
+    return normalized;
   }
 
   private static String requireNonBlank(String value, String fieldName) {

@@ -2,10 +2,10 @@ package dev.erst.gridgrind.contract.assertion;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
 import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
@@ -14,14 +14,14 @@ import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -40,98 +40,105 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Exhaustive assertion-type coverage for the canonical Phase-4 verification contract. */
 class AssertionCoverageTest {
   @Test
   void exposesStableDiscriminatorsAcrossEveryAssertionLeaf() {
-    GridGrindWorkbookSurfaceReports.CellStyleReport style = style();
-    GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange =
-        new GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport(
+    CellStyleReport style = style();
+    NamedRangeReport namedRange =
+        new NamedRangeReport.RangeReport(
             "BudgetTotal",
             new NamedRangeScope.Workbook(),
             "Budget!B2",
-            new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "B2"));
+            dev.erst.gridgrind.contract.dto.NamedRangeTarget.range("Budget", "B2"));
 
-    assertEquals("EXPECT_NAMED_RANGE_PRESENT", new Assertion.NamedRangePresent().assertionType());
-    assertEquals("EXPECT_NAMED_RANGE_ABSENT", new Assertion.NamedRangeAbsent().assertionType());
-    assertEquals("EXPECT_TABLE_PRESENT", new Assertion.TablePresent().assertionType());
-    assertEquals("EXPECT_TABLE_ABSENT", new Assertion.TableAbsent().assertionType());
-    assertEquals("EXPECT_PIVOT_TABLE_PRESENT", new Assertion.PivotTablePresent().assertionType());
-    assertEquals("EXPECT_PIVOT_TABLE_ABSENT", new Assertion.PivotTableAbsent().assertionType());
-    assertEquals("EXPECT_CHART_PRESENT", new Assertion.ChartPresent().assertionType());
-    assertEquals("EXPECT_CHART_ABSENT", new Assertion.ChartAbsent().assertionType());
+    assertEquals(
+        "EXPECT_NAMED_RANGE_PRESENT", new PresenceAssertion.NamedRangePresent().assertionType());
+    assertEquals(
+        "EXPECT_NAMED_RANGE_ABSENT", new PresenceAssertion.NamedRangeAbsent().assertionType());
+    assertEquals("EXPECT_TABLE_PRESENT", new PresenceAssertion.TablePresent().assertionType());
+    assertEquals("EXPECT_TABLE_ABSENT", new PresenceAssertion.TableAbsent().assertionType());
+    assertEquals(
+        "EXPECT_PIVOT_TABLE_PRESENT", new PresenceAssertion.PivotTablePresent().assertionType());
+    assertEquals(
+        "EXPECT_PIVOT_TABLE_ABSENT", new PresenceAssertion.PivotTableAbsent().assertionType());
+    assertEquals("EXPECT_CHART_PRESENT", new PresenceAssertion.ChartPresent().assertionType());
+    assertEquals("EXPECT_CHART_ABSENT", new PresenceAssertion.ChartAbsent().assertionType());
     assertEquals(
         "EXPECT_CELL_VALUE",
-        new Assertion.CellValue(new ExpectedCellValue.Text("Owner")).assertionType());
-    assertEquals("EXPECT_DISPLAY_VALUE", new Assertion.DisplayValue("Owner").assertionType());
-    assertEquals("EXPECT_FORMULA_TEXT", new Assertion.FormulaText("2+3").assertionType());
-    assertEquals("EXPECT_CELL_STYLE", new Assertion.CellStyle(style).assertionType());
+        new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")).assertionType());
+    assertEquals("EXPECT_DISPLAY_VALUE", new CellAssertion.DisplayValue("Owner").assertionType());
+    assertEquals("EXPECT_FORMULA_TEXT", new CellAssertion.FormulaText("2+3").assertionType());
+    assertEquals("EXPECT_CELL_STYLE", new CellAssertion.CellStyle(style).assertionType());
     assertEquals(
         "EXPECT_WORKBOOK_PROTECTION",
-        new Assertion.WorkbookProtectionFacts(
+        new WorkbookFactAssertion.WorkbookProtectionFacts(
                 new WorkbookProtectionReport(true, false, false, false, false))
             .assertionType());
     assertEquals(
         "EXPECT_SHEET_STRUCTURE",
-        new Assertion.SheetStructureFacts(
-                new GridGrindWorkbookSurfaceReports.SheetSummaryReport(
+        new WorkbookFactAssertion.SheetStructureFacts(
+                new SheetSummaryReport(
                     "Budget",
                     ExcelSheetVisibility.VISIBLE,
-                    new GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected(),
+                    new SheetProtectionReport.Unprotected(),
                     2,
                     1,
                     1))
             .assertionType());
     assertEquals(
         "EXPECT_NAMED_RANGE_FACTS",
-        new Assertion.NamedRangeFacts(List.of(namedRange)).assertionType());
+        new WorkbookFactAssertion.NamedRangeFacts(List.of(namedRange)).assertionType());
     assertEquals(
-        "EXPECT_TABLE_FACTS", new Assertion.TableFacts(List.of(tableReport())).assertionType());
+        "EXPECT_TABLE_FACTS",
+        new WorkbookFactAssertion.TableFacts(List.of(tableReport())).assertionType());
     assertEquals(
         "EXPECT_PIVOT_TABLE_FACTS",
-        new Assertion.PivotTableFacts(List.of(pivotReport())).assertionType());
+        new WorkbookFactAssertion.PivotTableFacts(List.of(pivotReport())).assertionType());
     assertEquals(
-        "EXPECT_CHART_FACTS", new Assertion.ChartFacts(List.of(chartReport())).assertionType());
+        "EXPECT_CHART_FACTS",
+        new WorkbookFactAssertion.ChartFacts(List.of(chartReport())).assertionType());
     assertEquals(
         "EXPECT_ANALYSIS_MAX_SEVERITY",
-        new Assertion.AnalysisMaxSeverity(
-                new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING)
+        new AnalysisAssertion.AnalysisMaxSeverity(
+                new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING)
             .assertionType());
     assertEquals(
         "EXPECT_ANALYSIS_FINDING_PRESENT",
-        new Assertion.AnalysisFindingPresent(
-                new InspectionQuery.AnalyzeFormulaHealth(),
+        new AnalysisAssertion.AnalysisFindingPresent(
+                new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                 AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                AnalysisSeverity.ERROR,
-                "error")
+                Optional.of(AnalysisSeverity.ERROR),
+                Optional.of("error"))
             .assertionType());
     assertEquals(
         "EXPECT_ANALYSIS_FINDING_ABSENT",
-        new Assertion.AnalysisFindingAbsent(
-                new InspectionQuery.AnalyzeFormulaHealth(),
+        new AnalysisAssertion.AnalysisFindingAbsent(
+                new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                 AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-                null,
-                null)
+                Optional.empty(),
+                Optional.empty())
             .assertionType());
     assertEquals(
         "ALL_OF",
-        new Assertion.AllOf(
+        new CompositeAssertion.AllOf(
                 List.of(
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner")),
-                    new Assertion.DisplayValue("Owner")))
+                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                    new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "ANY_OF",
-        new Assertion.AnyOf(
+        new CompositeAssertion.AnyOf(
                 List.of(
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner")),
-                    new Assertion.DisplayValue("Owner")))
+                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                    new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "NOT",
-        new Assertion.Not(new Assertion.CellValue(new ExpectedCellValue.Text("Owner")))
+        new CompositeAssertion.Not(new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))
             .assertionType());
   }
 
@@ -145,18 +152,19 @@ class AssertionCoverageTest {
 
   @Test
   void assertionSupportCoversCollectionAndAnalysisValidationBranches() {
-    GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange =
-        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
+    NamedRangeReport namedRange =
+        new NamedRangeReport.FormulaReport(
             "BudgetExpr", new NamedRangeScope.Workbook(), "SUM(Budget!B2:B4)");
     InspectionResult observation =
-        new InspectionResult.WorkbookSummaryResult(
+        new WorkbookInspectionResult.WorkbookSummaryResult(
             "summary",
-            new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
+            new WorkbookSummary.WithSheets(
                 1, List.of("Budget"), "Budget", List.of("Budget"), 1, false));
 
     assertEquals(
-        List.of(new Assertion.TablePresent()),
-        AssertionSupport.copyAssertions(List.of(new Assertion.TablePresent()), "assertions"));
+        List.of(new PresenceAssertion.TablePresent()),
+        AssertionSupport.copyAssertions(
+            List.of(new PresenceAssertion.TablePresent()), "assertions"));
     assertEquals(
         List.of(namedRange), AssertionSupport.copyNamedRanges(List.of(namedRange), "namedRanges"));
     assertEquals(
@@ -170,15 +178,17 @@ class AssertionCoverageTest {
         List.of(observation),
         AssertionSupport.copyObservations(List.of(observation), "observations"));
     InspectionQuery.Analysis analysis =
-        AssertionSupport.requireAnalysisQuery(new InspectionQuery.AnalyzeFormulaHealth(), "query");
-    assertInstanceOf(InspectionQuery.AnalyzeFormulaHealth.class, analysis);
+        AssertionSupport.requireAnalysisQuery(
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth(), "query");
+    assertInstanceOf(InspectionAnalysisQuery.AnalyzeFormulaHealth.class, analysis);
 
     assertEquals(
         "query must be an analysis query",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    AssertionSupport.requireAnalysisQuery(new InspectionQuery.GetCells(), "query"))
+                    AssertionSupport.requireAnalysisQuery(
+                        new SheetIntrospectionQuery.GetCells(), "query"))
             .getMessage());
     assertEquals(
         "assertions must not be empty",
@@ -202,37 +212,37 @@ class AssertionCoverageTest {
 
   @Test
   void analysisFindingConstructorsCoverOptionalMessageBranches() {
-    Assertion.AnalysisFindingPresent findingPresent =
-        new Assertion.AnalysisFindingPresent(
-            new InspectionQuery.AnalyzeFormulaHealth(),
+    AnalysisAssertion.AnalysisFindingPresent findingPresent =
+        new AnalysisAssertion.AnalysisFindingPresent(
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
             AnalysisFindingCode.FORMULA_ERROR_RESULT,
-            AnalysisSeverity.ERROR,
-            null);
-    Assertion.AnalysisFindingAbsent findingAbsent =
-        new Assertion.AnalysisFindingAbsent(
-            new InspectionQuery.AnalyzeFormulaHealth(),
+            Optional.of(AnalysisSeverity.ERROR),
+            Optional.empty());
+    AnalysisAssertion.AnalysisFindingAbsent findingAbsent =
+        new AnalysisAssertion.AnalysisFindingAbsent(
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
             AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
-            AnalysisSeverity.INFO,
-            "volatile");
+            Optional.of(AnalysisSeverity.INFO),
+            Optional.of("volatile"));
 
-    assertNull(findingPresent.messageContains());
-    assertEquals("volatile", findingAbsent.messageContains());
+    assertEquals(Optional.empty(), findingPresent.messageContains());
+    assertEquals(Optional.of("volatile"), findingAbsent.messageContains());
     assertEquals(
         "messageContains must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new Assertion.AnalysisFindingPresent(
-                        new InspectionQuery.AnalyzeFormulaHealth(),
+                    new AnalysisAssertion.AnalysisFindingPresent(
+                        new InspectionAnalysisQuery.AnalyzeFormulaHealth(),
                         AnalysisFindingCode.FORMULA_ERROR_RESULT,
-                        AnalysisSeverity.ERROR,
-                        " "))
+                        Optional.of(AnalysisSeverity.ERROR),
+                        Optional.of(" ")))
             .getMessage());
   }
 
-  private static GridGrindWorkbookSurfaceReports.CellStyleReport style() {
+  private static CellStyleReport style() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
+    return new CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
@@ -272,7 +282,11 @@ class AssertionCoverageTest {
         List.of(new PivotTableReport.Field(2, "Owner")),
         List.of(
             new PivotTableReport.DataField(
-                3, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", "#,##0.00")),
+                3,
+                "Amount",
+                ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                Optional.of("#,##0.00"))),
         true);
   }
 
@@ -290,8 +304,8 @@ class AssertionCoverageTest {
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.CLUSTERED,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
                 List.of(
                     new ChartReport.Axis(
                         ExcelChartAxisKind.CATEGORY,
@@ -302,10 +316,11 @@ class AssertionCoverageTest {
                     new ChartReport.Series(
                         new ChartReport.Title.Text("Series 1"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
-                        new ChartReport.DataSource.NumericLiteral("#,##0", List.of("1", "2")),
-                        null,
-                        null,
-                        null,
-                        null)))));
+                        new ChartReport.DataSource.NumericLiteral(
+                            Optional.of("#,##0"), List.of("1", "2")),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty())))));
   }
 }

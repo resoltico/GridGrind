@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
@@ -46,19 +47,30 @@ class ExcelDrawingEmbeddedPreviewCoverageTest extends ExcelDrawingCoverageTestSu
               .containPart(picture.getPictureData().getPackagePart().getPartName()));
 
       assertNotNull(
-          invoke(controller, "previewSheetRelationId", String.class, secondObject.getOleObject()));
-      assertNull(
+          invoke(
+              controller, "previewSheetRelationId", Optional.class, secondObject.getOleObject()));
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "previewSheetRelationId",
-              String.class,
+              Optional.class,
               org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject.Factory
                   .newInstance()));
-      assertNotNull(invoke(controller, "previewDrawingRelationId", String.class, secondObject));
+      assertNotNull(invoke(controller, "previewDrawingRelationId", Optional.class, secondObject));
       String previewSheetRelationId =
-          invoke(controller, "previewSheetRelationId", String.class, secondObject.getOleObject());
+          ((Optional<String>)
+                  invoke(
+                      controller,
+                      "previewSheetRelationId",
+                      Optional.class,
+                      secondObject.getOleObject()))
+              .orElseThrow();
       sheet.getPackagePart().removeRelationship(previewSheetRelationId);
-      assertNotNull(invoke(controller, "previewImagePart", PackagePart.class, secondObject));
+      assertNotNull(
+          ((Optional<PackagePart>)
+                  invoke(controller, "previewImagePart", Optional.class, secondObject))
+              .orElseThrow());
 
       XSSFObjectData noObjectPr =
           createEmbeddedObject(workbook, drawing, "NoObjectPr", 11, 0, 14, 4);
@@ -68,8 +80,9 @@ class ExcelDrawingEmbeddedPreviewCoverageTest extends ExcelDrawingCoverageTestSu
                 org.apache.poi.xssf.usermodel.XSSFRelation.NS_SPREADSHEETML, "objectPr"));
         cursor.removeXml();
       }
-      assertNull(
-          invoke(controller, "previewSheetRelationId", String.class, noObjectPr.getOleObject()));
+      assertEquals(
+          Optional.empty(),
+          invoke(controller, "previewSheetRelationId", Optional.class, noObjectPr.getOleObject()));
 
       XSSFObjectData noPreviewAttribute =
           createEmbeddedObject(workbook, drawing, "NoPreviewAttribute", 11, 5, 14, 9);
@@ -81,11 +94,12 @@ class ExcelDrawingEmbeddedPreviewCoverageTest extends ExcelDrawingCoverageTestSu
             new javax.xml.namespace.QName(
                 "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id", "r"));
       }
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "previewSheetRelationId",
-              String.class,
+              Optional.class,
               noPreviewAttribute.getOleObject()));
 
       noObjectPr.getCTShape().getSpPr().unsetBlipFill();
@@ -107,14 +121,18 @@ class ExcelDrawingEmbeddedPreviewCoverageTest extends ExcelDrawingCoverageTestSu
       XSSFObjectData noBlipFill =
           createEmbeddedObject(workbook, drawing, "NoBlipFill", 15, 0, 18, 4);
       noBlipFill.getCTShape().getSpPr().unsetBlipFill();
-      assertNull(invoke(controller, "previewDrawingRelationId", String.class, noBlipFill));
+      assertEquals(
+          Optional.empty(),
+          invoke(controller, "previewDrawingRelationId", Optional.class, noBlipFill));
 
       XSSFObjectData noBlip = createEmbeddedObject(workbook, drawing, "NoBlip", 19, 0, 22, 4);
       noBlip.getCTShape().getSpPr().unsetBlipFill();
       noBlip.getCTShape().getSpPr().addNewBlipFill();
-      assertNull(invoke(controller, "previewDrawingRelationId", String.class, noBlip));
+      assertEquals(
+          Optional.empty(), invoke(controller, "previewDrawingRelationId", Optional.class, noBlip));
 
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "parentAnchor",

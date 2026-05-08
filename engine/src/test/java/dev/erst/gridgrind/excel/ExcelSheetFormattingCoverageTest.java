@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -52,12 +53,34 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
-              null,
-              new ExcelCellAlignment(null, ExcelHorizontalAlignment.CENTER, null, null, null),
-              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#AABBCC")),
-              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
-              null));
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellAlignment(
+                      Optional.empty(),
+                      Optional.of(ExcelHorizontalAlignment.CENTER),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.of(Boolean.TRUE),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#AABBCC"))),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty()));
       sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
       sheet.setComment("A1", new ExcelComment("Review", "GridGrind", false));
 
@@ -100,12 +123,34 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
 
       ExcelCellStyle style =
           new ExcelCellStyle(
-              null,
-              new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.TOP, null, null),
-              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#DDEBF7")),
-              new ExcelBorder(null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null),
-              null);
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellAlignment(
+                      Optional.of(Boolean.TRUE),
+                      Optional.empty(),
+                      Optional.of(ExcelVerticalAlignment.TOP),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.of(Boolean.TRUE),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#DDEBF7"))),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty());
       sheet.applyStyle("A1:B1", style);
 
       ExcelCellSnapshot.NumberSnapshot dateSnapshot =
@@ -150,33 +195,35 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
           ExcelCellValue.richText(
               new ExcelRichText(
                   List.of(
-                      new ExcelRichTextRun("Quarterly", null),
+                      new ExcelRichTextRun("Quarterly", Optional.empty()),
                       new ExcelRichTextRun(
                           " Report",
-                          new ExcelCellFont(
-                              Boolean.TRUE,
-                              null,
-                              null,
-                              null,
-                              ExcelColor.rgb("#FF0000"),
-                              null,
-                              null))))));
+                          Optional.of(
+                              new ExcelCellFont(
+                                  Optional.of(Boolean.TRUE),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.of(ExcelColor.rgb("#FF0000")),
+                                  Optional.empty(),
+                                  Optional.empty())))))));
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
-              null,
-              null,
-              new ExcelCellFont(
-                  null,
-                  Boolean.TRUE,
-                  "Aptos",
-                  new ExcelFontHeight(260),
-                  ExcelColor.rgb("#112233"),
-                  null,
-                  null),
-              null,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.empty(),
+                      Optional.of(Boolean.TRUE),
+                      Optional.of("Aptos"),
+                      Optional.of(new ExcelFontHeight(260)),
+                      Optional.of(ExcelColor.rgb("#112233")),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty(),
+              Optional.empty(),
+              Optional.empty()));
 
       ExcelCellSnapshot.TextSnapshot textSnapshot =
           (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
@@ -215,20 +262,28 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet.applyStyle(
           "A1:B2",
           new ExcelCellStyle(
-              null,
-              null,
-              new ExcelCellFont(
-                  null,
-                  null,
-                  "Aptos",
-                  ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
-                  ExcelColor.rgb("#A3A3A3"),
-                  null,
-                  Boolean.TRUE),
-              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#CDCDCD")),
-              new ExcelBorder(
-                  new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null),
-              null));
+              Optional.empty(),
+              Optional.empty(),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.of("Aptos"),
+                      Optional.of(ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2"))),
+                      Optional.of(ExcelColor.rgb("#A3A3A3")),
+                      Optional.empty(),
+                      Optional.of(Boolean.TRUE))),
+              Optional.of(
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#CDCDCD"))),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DASH_DOT)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty()));
 
       sheet.appendRow(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false));
 
@@ -265,17 +320,34 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       sheet.applyStyle(
           "A1:B2",
           new ExcelCellStyle(
-              "0.00",
-              new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
-              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
-              ExcelCellFill.patternForeground(ExcelFillPattern.SOLID, ExcelColor.rgb("#603A79")),
-              new ExcelBorder(
-                  new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
-                  null,
-                  new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
-                  null,
-                  null),
-              null));
+              Optional.of("0.00"),
+              Optional.of(
+                  new ExcelCellAlignment(
+                      Optional.of(Boolean.TRUE),
+                      Optional.empty(),
+                      Optional.of(ExcelVerticalAlignment.CENTER),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  new ExcelCellFont(
+                      Optional.of(Boolean.TRUE),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.of(
+                  ExcelCellFill.patternForeground(
+                      ExcelFillPattern.SOLID, ExcelColor.rgb("#603A79"))),
+              Optional.of(
+                  new ExcelBorder(
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED)),
+                      Optional.empty(),
+                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED)),
+                      Optional.empty(),
+                      Optional.empty())),
+              Optional.empty()));
 
       sheet.appendRow(
           ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 58)),

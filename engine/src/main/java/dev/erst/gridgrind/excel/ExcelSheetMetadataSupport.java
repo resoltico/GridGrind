@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
@@ -64,16 +65,17 @@ final class ExcelSheetMetadataSupport {
   }
 
   ExcelSheet setAutofilter(String range, ExcelSheet owner) {
-    return setAutofilter(range, List.of(), null, owner);
+    return setAutofilter(range, List.of(), Optional.empty(), owner);
   }
 
   ExcelSheet setAutofilter(
       String range,
       List<ExcelAutofilterFilterColumn> criteria,
-      ExcelAutofilterSortState sortState,
+      Optional<ExcelAutofilterSortState> sortState,
       ExcelSheet owner) {
     requireNonBlank(range, "range");
     Objects.requireNonNull(criteria, "criteria must not be null");
+    Objects.requireNonNull(sortState, "sortState must not be null");
     autofilterController.setSheetAutofilter(xssfSheet(), range, criteria, sortState);
     return owner;
   }

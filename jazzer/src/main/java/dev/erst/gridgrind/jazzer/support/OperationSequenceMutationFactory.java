@@ -23,6 +23,7 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import java.util.List;
+import java.util.Optional;
 
 /** Builds bounded mutation steps for protocol-workflow Jazzer generation. */
 final class OperationSequenceMutationFactory {
@@ -277,7 +278,7 @@ final class OperationSequenceMutationFactory {
                         data.consumeBoolean()
                             ? new NamedRangeScope.Workbook()
                             : new NamedRangeScope.Sheet(targetSheet),
-                        new NamedRangeTarget(
+                        NamedRangeTarget.range(
                             targetSheet,
                             validRange
                                 ? "A1:B2"
@@ -357,7 +358,8 @@ final class OperationSequenceMutationFactory {
                 mutate(
                     new WorkbookSelector.Current(),
                     new WorkbookMutationAction.SetWorkbookProtection(
-                        new WorkbookProtectionInput(true, false, false, null, null)));
+                        new WorkbookProtectionInput(
+                            true, false, false, Optional.empty(), Optional.empty())));
             case 0x2 ->
                 mutate(
                     new WorkbookSelector.Current(),

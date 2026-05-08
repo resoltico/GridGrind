@@ -85,7 +85,7 @@ class ExcelSheetCopyControllerTest {
   void copySheetPreservesSheetProtectionPasswordHashes() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.setSheetProtection("Source", protectionSettings(), "gridgrind-copy");
+      workbook.setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
 
       workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
@@ -147,7 +147,7 @@ class ExcelSheetCopyControllerTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               ExcelChartTestSupport.anchor(0, 5, 3, 9),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       source.setChart(
           ExcelChartTestSupport.barChart(
               "OpsChart",
@@ -468,7 +468,11 @@ class ExcelSheetCopyControllerTest {
                           && rangeSnapshot.refersToFormula().contains("Replica")
                           && rangeSnapshot.refersToFormula().contains("$A$2")
                           && rangeSnapshot.refersToFormula().contains("$A$3")
-                          && "A2:A3".equals(rangeSnapshot.target().range())));
+                          && "A2:A3"
+                              .equals(
+                                  assertInstanceOf(
+                                          ExcelNamedRangeTarget.Range.class, rangeSnapshot.target())
+                                      .range())));
       assertTrue(
           replicaNames.stream()
               .anyMatch(
@@ -556,7 +560,7 @@ class ExcelSheetCopyControllerTest {
           List.of(
               new ExcelAutofilterFilterColumn(
                   0L, true, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), false))),
-          null);
+          Optional.empty());
       var rawValidations = source.xssfSheet().getCTWorksheet().addNewDataValidations();
       CTDataValidation rawValidation = rawValidations.addNewDataValidation();
       rawValidation.setSqref(List.of("C2:C3"));
@@ -567,13 +571,13 @@ class ExcelSheetCopyControllerTest {
               List.of("C2:C3"),
               List.of(
                   new ExcelConditionalFormattingRule.FormulaRule(
-                      "SUM(Source!$B$2:$B$3)>0", false, null),
+                      "SUM(Source!$B$2:$B$3)>0", false, Optional.empty()),
                   new ExcelConditionalFormattingRule.CellValueRule(
                       ExcelComparisonOperator.GREATER_THAN,
                       "SUM(Source!$B$2:$B$3)",
-                      null,
+                      Optional.empty(),
                       false,
-                      null),
+                      Optional.empty()),
                   new ExcelConditionalFormattingRule.ColorScaleRule(
                       List.of(
                           new ExcelConditionalFormattingThreshold(
@@ -604,7 +608,8 @@ class ExcelSheetCopyControllerTest {
                           new ExcelConditionalFormattingThreshold(
                               ExcelConditionalFormattingThresholdType.MAX, null, null)),
                       false),
-                  new ExcelConditionalFormattingRule.Top10Rule(5, false, false, false, null))));
+                  new ExcelConditionalFormattingRule.Top10Rule(
+                      5, false, false, false, Optional.empty()))));
       workbook.setTable(
           new ExcelTableDefinition(
               "Queue",
@@ -715,17 +720,17 @@ class ExcelSheetCopyControllerTest {
                 "WorkbookBudget",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 "Source!$A$1",
-                new ExcelNamedRangeTarget("Source", "A1")),
+                ExcelNamedRangeTarget.range("Source", "A1")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Source"),
                 "Source!$A$1:$A$2",
-                new ExcelNamedRangeTarget("Source", "A1:A2")),
+                ExcelNamedRangeTarget.range("Source", "A1:A2")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "OtherLocal",
                 new ExcelNamedRangeScope.SheetScope("Other"),
                 "Other!$B$1",
-                new ExcelNamedRangeTarget("Other", "B1")),
+                ExcelNamedRangeTarget.range("Other", "B1")),
             new ExcelNamedRangeSnapshot.FormulaSnapshot(
                 "OtherFormula", new ExcelNamedRangeScope.SheetScope("Other"), "SUM(Other!$A$1)"),
             new ExcelNamedRangeSnapshot.FormulaSnapshot(
@@ -738,7 +743,7 @@ class ExcelSheetCopyControllerTest {
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Source"),
                 "Source!$A$1:$A$2",
-                new ExcelNamedRangeTarget("Source", "A1:A2"))),
+                ExcelNamedRangeTarget.range("Source", "A1:A2"))),
         ExcelSheetCopyController.copyableLocalRangeNames(namedRanges, "Source"));
     assertDoesNotThrow(
         () -> ExcelSheetCopyController.requireNoUncopyableLocalNamedRanges(namedRanges, "Source"));
@@ -748,7 +753,7 @@ class ExcelSheetCopyControllerTest {
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Source"),
                 "Source!$A$1:$A$2",
-                new ExcelNamedRangeTarget("Source", "A1:A2")),
+                ExcelNamedRangeTarget.range("Source", "A1:A2")),
             localFormula),
         ExcelSheetCopyController.copyableLocalNames(namedRanges, "Source"));
   }
@@ -765,8 +770,8 @@ class ExcelSheetCopyControllerTest {
                   new ExcelDataValidationRule.FormulaList("Source!$D$1:$D$3"),
                   false,
                   false,
-                  null,
-                  null));
+                  Optional.empty(),
+                  Optional.empty()));
       addRawValidation(
           workbook.xssfWorkbook().getSheet("Source"), "B1:B3", STDataValidationType.LIST, "\"\"");
       addRawValidation(
@@ -977,9 +982,9 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void sheetOwnedAutofilterRangeHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
-    assertNull(ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
+    assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
     assertEquals(
-        new ExcelAutofilterSnapshot.SheetOwned("A1:B3"),
+        Optional.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3")),
         ExcelSheetCopyController.sheetOwnedAutofilter(
             List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3"))));
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilterRange(List.of()));
@@ -1060,28 +1065,41 @@ class ExcelSheetCopyControllerTest {
             "Quarterly Review",
             "GridGrind",
             true,
-            new ExcelRichText(
-                List.of(
-                    new ExcelRichTextRun("Quarterly", null),
-                    new ExcelRichTextRun(
-                        " Review",
-                        new ExcelCellFont(
-                            true, false, "Aptos", null, ExcelColor.rgb("#112233"), null, null)))),
-            new ExcelCommentAnchor(1, 1, 4, 5)));
-    source.setAutofilter("A1:F3", advancedAutofilterCriteria(), advancedAutofilterSortState());
+            Optional.of(
+                new ExcelRichText(
+                    List.of(
+                        new ExcelRichTextRun("Quarterly", Optional.empty()),
+                        new ExcelRichTextRun(
+                            " Review",
+                            Optional.of(
+                                new ExcelCellFont(
+                                    Optional.of(true),
+                                    Optional.of(false),
+                                    Optional.of("Aptos"),
+                                    Optional.empty(),
+                                    Optional.of(ExcelColor.rgb("#112233")),
+                                    Optional.empty(),
+                                    Optional.empty())))))),
+            Optional.of(new ExcelCommentAnchor(1, 1, 4, 5))));
+    source.setAutofilter(
+        "A1:F3", advancedAutofilterCriteria(), Optional.of(advancedAutofilterSortState()));
     source.setDataValidation(
         "G2:G3",
         new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.FormulaList("Source!$J$2:$J$3"), false, false, null, null));
+            new ExcelDataValidationRule.FormulaList("Source!$J$2:$J$3"),
+            false,
+            false,
+            Optional.empty(),
+            Optional.empty()));
     source.setDataValidation(
         "H2:H3",
         new ExcelDataValidationDefinition(
             new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.BETWEEN, "1", "SUM(Source!$B$2:$B$3)"),
+                ExcelComparisonOperator.BETWEEN, "1", Optional.of("SUM(Source!$B$2:$B$3)")),
             false,
             false,
-            null,
-            null));
+            Optional.empty(),
+            Optional.empty()));
     source.setConditionalFormatting(
         new ExcelConditionalFormattingBlockDefinition(
             List.of("I2:I3"),
@@ -1093,19 +1111,19 @@ class ExcelSheetCopyControllerTest {
                 new ExcelConditionalFormattingRule.CellValueRule(
                     ExcelComparisonOperator.BETWEEN,
                     "1",
-                    "SUM(Source!$B$2:$B$3)",
+                    Optional.of("SUM(Source!$B$2:$B$3)"),
                     false,
                     ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")))));
     workbook.setNamedRange(
         new ExcelNamedRangeDefinition(
             "LocalRange",
             new ExcelNamedRangeScope.SheetScope("Source"),
-            new ExcelNamedRangeTarget("Source", "A2:A3")));
+            ExcelNamedRangeTarget.range("Source", "A2:A3")));
     workbook.setNamedRange(
         new ExcelNamedRangeDefinition(
             "LocalFormula",
             new ExcelNamedRangeScope.SheetScope("Source"),
-            new ExcelNamedRangeTarget("SUM(Source!$B$2:$B$3)")));
+            ExcelNamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
     source.setCell("L1", ExcelCellValue.text("Region"));
     source.setCell("M1", ExcelCellValue.text("Desk"));
     source.setCell("L2", ExcelCellValue.text("North"));
@@ -1130,7 +1148,7 @@ class ExcelSheetCopyControllerTest {
             List.of(
                 new ExcelTableColumnDefinition(0, "Region", "", "", ""),
                 new ExcelTableColumnDefinition(1, "Desk", "", "", "UPPER([@Desk])"))));
-    workbook.setSheetProtection("Source", protectionSettings(), "gridgrind-copy");
+    workbook.setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
     return source;
   }
 

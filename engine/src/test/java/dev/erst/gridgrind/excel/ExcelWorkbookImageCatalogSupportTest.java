@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ooxml.POIXMLRelation;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
@@ -244,7 +245,7 @@ class ExcelWorkbookImageCatalogSupportTest {
         new ExcelBinaryData(PNG_PIXEL_BYTES),
         ExcelPictureFormat.PNG,
         anchor(fromColumn, fromRow, toColumn, toRow),
-        "preview");
+        Optional.of("preview"));
   }
 
   private static ExcelSignatureLineDefinition signatureDefinition(
@@ -259,8 +260,8 @@ class ExcelWorkbookImageCatalogSupportTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(PNG_PIXEL_BYTES));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)));
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

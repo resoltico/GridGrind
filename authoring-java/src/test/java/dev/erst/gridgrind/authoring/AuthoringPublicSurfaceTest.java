@@ -18,7 +18,8 @@ import org.junit.jupiter.api.Test;
 class AuthoringPublicSurfaceTest {
   private static final Set<String> BLOCKED_PUBLIC_TYPES =
       Set.of(
-          "dev.erst.gridgrind.executor.",
+          "dev.erst.gridgrind.engine.api.",
+          "dev.erst.gridgrind.engine.runtime.",
           "dev.erst.gridgrind.contract.dto.CellInput",
           "dev.erst.gridgrind.contract.dto.ChartInput",
           "dev.erst.gridgrind.contract.dto.CommentInput",
@@ -37,7 +38,7 @@ class AuthoringPublicSurfaceTest {
           "dev.erst.gridgrind.contract.source.TextSourceInput");
 
   @Test
-  void compiledAuthoringModuleNoLongerRequiresExecutorTransitively() throws Exception {
+  void compiledAuthoringModuleNoLongerRequiresEngineTransitively() throws Exception {
     Path compiledOutput =
         Path.of(GridGrindPlan.class.getProtectionDomain().getCodeSource().getLocation().toURI());
     ModuleDescriptor descriptor =
@@ -50,7 +51,7 @@ class AuthoringPublicSurfaceTest {
         descriptor.requires().stream().map(ModuleDescriptor.Requires::name).toList();
 
     assertTrue(requiredModules.contains("dev.erst.gridgrind.contract"));
-    assertFalse(requiredModules.contains("dev.erst.gridgrind.executor"));
+    assertFalse(requiredModules.contains("dev.erst.gridgrind.engine"));
   }
 
   @Test

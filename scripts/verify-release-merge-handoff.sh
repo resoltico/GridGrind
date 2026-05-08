@@ -30,24 +30,32 @@ trimmed_csv_entries() {
 }
 
 format_observed_checks() {
-    local checks_tsv=$1
-    if [[ -z "${checks_tsv}" ]]; then
-        printf 'none'
-        return
+    local output_var_name=$1
+    local checks_tsv_path=$2
+    local formatted_checks=''
+    if [[ ! -s "${checks_tsv_path}" ]]; then
+        printf -v "${output_var_name}" '%s' 'none'
+        return 0
     fi
-    printf '%s\n' "${checks_tsv}" | awk -F '\t' '
+    formatted_checks="$(
+        awk -F '\t' '
         BEGIN { separator = "" }
         {
             printf "%s%s[%s/%s]", separator, $1, $2, $3
             separator = ", "
         }
-    '
+        ' "${checks_tsv_path}"
+    )"
+    printf -v "${output_var_name}" '%s' "${formatted_checks}"
 }
 
 blocking_check_state() {
-    local checks_tsv=$1
-    local blocking_check_name=$2
-    printf '%s\n' "${checks_tsv}" | awk -F '\t' -v target="${blocking_check_name}" '
+    local output_var_name=$1
+    local checks_tsv_path=$2
+    local blocking_check_name=$3
+    local resolved_state=''
+    resolved_state="$(
+        awk -F '\t' -v target="${blocking_check_name}" '
         BEGIN {
             has_success = 0
             has_pending = 0
@@ -73,7 +81,9 @@ blocking_check_state() {
                 print "missing"
             }
         }
-    '
+        ' "${checks_tsv_path}"
+    )"
+    printf -v "${output_var_name}" '%s' "${resolved_state}"
 }
 
 require_non_negative_integer() {
@@ -96,6 +106,20 @@ if [[ -z "${repo_root}" ]]; then
     repo_root="${script_repo_root}"
 fi
 readonly repo_root
+readonly temp_parent="${repo_root}/tmp/verify-release-merge-handoff"
+
+mkdir -p "${temp_parent}"
+temp_dir="$(mktemp -d "${temp_parent%/}/run.XXXXXX")"
+cleanup() {
+    rm -rf "${temp_dir}"
+}
+trap cleanup EXIT
+
+capture_command_output() {
+    local output_path=$1
+    shift
+    "$@" > "${output_path}"
+}
 
 cd "${repo_root}"
 
@@ -113,8 +137,21 @@ done < <(trimmed_csv_entries "${blocking_checks_csv}")
 
 ((${#blocking_check_names[@]} > 0)) || die "no release-blocking merge-handoff checks configured"
 
-readonly repo_full_name="$(gh repo view --json nameWithOwner --jq '.nameWithOwner')"
-readonly default_branch="$(gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name')"
+readonly repo_full_name_path="${temp_dir}/repo-full-name.txt"
+readonly default_branch_path="${temp_dir}/default-branch.txt"
+readonly check_runs_tsv_path="${temp_dir}/check-runs.tsv"
+
+capture_command_output \
+    "${repo_full_name_path}" \
+    gh repo view --json nameWithOwner --jq '.nameWithOwner'
+capture_command_output \
+    "${default_branch_path}" \
+    gh repo view --json defaultBranchRef --jq '.defaultBranchRef.name'
+
+IFS= read -r repo_full_name < "${repo_full_name_path}" || true
+IFS= read -r default_branch < "${default_branch_path}" || true
+readonly repo_full_name
+readonly default_branch
 
 [[ -n "${repo_full_name}" ]] || die "failed to resolve repository name"
 [[ -n "${default_branch}" ]] || die "failed to resolve default branch"
@@ -133,16 +170,18 @@ readonly remote_default_sha="$(git rev-parse "${remote_default_ref}")"
 readonly deadline_epoch="$((SECONDS + timeout_seconds))"
 
 while true; do
-    check_runs_tsv="$(
+    capture_command_output \
+        "${check_runs_tsv_path}" \
         gh api \
             "/repos/${repo_full_name}/commits/${target_commit_sha}/check-runs?per_page=100" \
             --jq '.check_runs[]? | [.name, .status, .conclusion] | @tsv'
-    )"
 
     pending_checks=()
     failed_checks=()
+    blocking_state=''
     for blocking_check_name in "${blocking_check_names[@]}"; do
-        case "$(blocking_check_state "${check_runs_tsv}" "${blocking_check_name}")" in
+        blocking_check_state blocking_state "${check_runs_tsv_path}" "${blocking_check_name}"
+        case "${blocking_state}" in
             success) ;;
             pending|missing)
                 pending_checks+=("${blocking_check_name}")
@@ -156,7 +195,8 @@ while true; do
         esac
     done
 
-    observed_checks="$(format_observed_checks "${check_runs_tsv}")"
+    observed_checks=''
+    format_observed_checks observed_checks "${check_runs_tsv_path}"
 
     if ((${#failed_checks[@]} > 0)); then
         die \

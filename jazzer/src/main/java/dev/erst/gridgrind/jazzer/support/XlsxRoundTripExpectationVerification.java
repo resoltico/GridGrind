@@ -18,8 +18,8 @@ import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -36,6 +36,7 @@ import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
 
@@ -240,8 +241,8 @@ final class XlsxRoundTripExpectationVerification {
           expectedWorkbookState.expectedSheetSummaries().entrySet()) {
         var actualSheetSummary =
             ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
-                    new WorkbookReadExecutor()
-                        .apply(
+                    new WorkbookExecutionEngine()
+                        .read(
                             workbook,
                             new WorkbookReadCommand.GetSheetSummary(
                                 "sheet-summary-" + entry.getKey(), entry.getKey()))
@@ -314,8 +315,8 @@ final class XlsxRoundTripExpectationVerification {
       }
       List<ExcelPivotTableSnapshot> actualPivots =
           ((dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
-                  new WorkbookReadExecutor()
-                      .apply(
+                  new WorkbookExecutionEngine()
+                      .read(
                           workbook,
                           new WorkbookReadCommand.GetPivotTables(
                               "pivots", new ExcelPivotTableSelection.All()))
@@ -435,13 +436,13 @@ final class XlsxRoundTripExpectationVerification {
       return;
     }
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
           expectedConditionalFormatting.entrySet()) {
         var actual =
             ((dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
                     readExecutor
-                        .apply(
+                        .read(
                             workbook,
                             new WorkbookReadCommand.GetConditionalFormatting(
                                 "conditionalFormatting",
@@ -469,13 +470,13 @@ final class XlsxRoundTripExpectationVerification {
       return;
     }
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
           expectedAutofilters.entrySet()) {
         var actual =
             ((dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
                     readExecutor
-                        .apply(
+                        .read(
                             workbook,
                             new WorkbookReadCommand.GetAutofilters("autofilters", entry.getKey()))
                         .getFirst())
@@ -499,11 +500,11 @@ final class XlsxRoundTripExpectationVerification {
       return;
     }
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       var actual =
           ((dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
                   readExecutor
-                      .apply(
+                      .read(
                           workbook,
                           new WorkbookReadCommand.GetTables(
                               "tables", new ExcelTableSelection.All()))
@@ -615,8 +616,8 @@ final class XlsxRoundTripExpectationVerification {
       String sheetName,
       XlsxRoundTripExpectedStateSupport.CellCoordinate coordinate,
       String fieldName,
-      Object expected,
-      Object actual) {
+      @Nullable Object expected,
+      @Nullable Object actual) {
     if (expected == null) {
       return;
     }

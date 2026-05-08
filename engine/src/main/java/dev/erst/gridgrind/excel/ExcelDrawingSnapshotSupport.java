@@ -8,6 +8,7 @@ import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.main.STShapeType;
 
 /** Snapshot helpers for drawing-object inventories and shape summaries. */
@@ -19,7 +20,7 @@ final class ExcelDrawingSnapshotSupport {
   }
 
   static ExcelDrawingObjectSnapshot snapshot(
-      XSSFDrawing drawing, XSSFShape shape, ExcelFormulaRuntime formulaRuntime) {
+      XSSFDrawing drawing, XSSFShape shape, @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (shape instanceof XSSFPicture picture) {
       return ExcelDrawingPictureSupport.snapshotPicture(picture);
     }
@@ -57,7 +58,7 @@ final class ExcelDrawingSnapshotSupport {
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(shape)),
         ExcelDrawingShapeKind.SIMPLE_SHAPE,
         preset == null ? null : preset.toString(),
-        ExcelDrawingBinarySupport.nullIfBlank(shape.getText()),
+        ExcelDrawingBinarySupport.blankAsOptional(shape.getText()).orElse(null),
         0);
   }
 
@@ -105,7 +106,7 @@ final class ExcelDrawingSnapshotSupport {
     }
   }
 
-  record RasterDimensions(Integer widthPixels, Integer heightPixels) {
+  record RasterDimensions(@Nullable Integer widthPixels, @Nullable Integer heightPixels) {
     static RasterDimensions none() {
       return new RasterDimensions(null, null);
     }

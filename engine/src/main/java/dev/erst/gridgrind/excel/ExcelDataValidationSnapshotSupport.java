@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import javax.xml.namespace.QName;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
@@ -164,8 +165,8 @@ final class ExcelDataValidationSnapshotSupport {
           "UNKNOWN_OPERATOR",
           family.label + " validation uses an unsupported comparison operator.");
     }
-    String formula2 = constraint.getFormula2();
-    if (requiresUpperBound(operator) && (formula2 == null || formula2.isBlank())) {
+    Optional<String> formula2 = Optional.ofNullable(constraint.getFormula2());
+    if (requiresUpperBound(operator) && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
       return new ExcelDataValidationSnapshot.Unsupported(
           ranges,
           "MISSING_FORMULA",
@@ -198,8 +199,9 @@ final class ExcelDataValidationSnapshotSupport {
           "UNKNOWN_OPERATOR",
           family.label + " validation uses an unsupported comparison operator.");
     }
-    String formula2 = validation.isSetFormula2() ? validation.getFormula2() : null;
-    if (requiresUpperBound(operator) && (formula2 == null || formula2.isBlank())) {
+    Optional<String> formula2 =
+        validation.isSetFormula2() ? Optional.of(validation.getFormula2()) : Optional.empty();
+    if (requiresUpperBound(operator) && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
       return new ExcelDataValidationSnapshot.Unsupported(
           ranges,
           "MISSING_FORMULA",
@@ -250,49 +252,54 @@ final class ExcelDataValidationSnapshotSupport {
             errorAlert(validation)));
   }
 
-  static ExcelDataValidationPrompt prompt(XSSFDataValidation validation) {
+  static java.util.Optional<ExcelDataValidationPrompt> prompt(XSSFDataValidation validation) {
     String title = validation.getPromptBoxTitle();
     String text = validation.getPromptBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.empty();
     }
-    return new ExcelDataValidationPrompt(title, text, validation.getShowPromptBox());
+    return java.util.Optional.of(
+        new ExcelDataValidationPrompt(title, text, validation.getShowPromptBox()));
   }
 
-  static ExcelDataValidationPrompt prompt(CTDataValidation validation) {
+  static java.util.Optional<ExcelDataValidationPrompt> prompt(CTDataValidation validation) {
     String title = validation.isSetPromptTitle() ? validation.getPromptTitle() : null;
     String text = validation.isSetPrompt() ? validation.getPrompt() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.empty();
     }
-    return new ExcelDataValidationPrompt(
-        title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage());
+    return java.util.Optional.of(
+        new ExcelDataValidationPrompt(
+            title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage()));
   }
 
-  static ExcelDataValidationErrorAlert errorAlert(XSSFDataValidation validation) {
+  static java.util.Optional<ExcelDataValidationErrorAlert> errorAlert(
+      XSSFDataValidation validation) {
     String title = validation.getErrorBoxTitle();
     String text = validation.getErrorBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.empty();
     }
-    return new ExcelDataValidationErrorAlert(
-        ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
-        title,
-        text,
-        validation.getShowErrorBox());
+    return java.util.Optional.of(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
+            title,
+            text,
+            validation.getShowErrorBox()));
   }
 
-  static ExcelDataValidationErrorAlert errorAlert(CTDataValidation validation) {
+  static java.util.Optional<ExcelDataValidationErrorAlert> errorAlert(CTDataValidation validation) {
     String title = validation.isSetErrorTitle() ? validation.getErrorTitle() : null;
     String text = validation.isSetError() ? validation.getError() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.empty();
     }
-    return new ExcelDataValidationErrorAlert(
-        errorStyle(validation),
-        title,
-        text,
-        validation.isSetShowErrorMessage() && validation.getShowErrorMessage());
+    return java.util.Optional.of(
+        new ExcelDataValidationErrorAlert(
+            errorStyle(validation),
+            title,
+            text,
+            validation.isSetShowErrorMessage() && validation.getShowErrorMessage()));
   }
 
   static ExcelComparisonOperator comparisonOperator(CTDataValidation validation) {
@@ -337,7 +344,10 @@ final class ExcelDataValidationSnapshotSupport {
   }
 
   private static ExcelDataValidationRule comparisonRule(
-      ComparisonFamily family, ExcelComparisonOperator operator, String formula1, String formula2) {
+      ComparisonFamily family,
+      ExcelComparisonOperator operator,
+      String formula1,
+      Optional<String> formula2) {
     return switch (family) {
       case INTEGER -> new ExcelDataValidationRule.WholeNumber(operator, formula1, formula2);
       case DECIMAL -> new ExcelDataValidationRule.DecimalNumber(operator, formula1, formula2);

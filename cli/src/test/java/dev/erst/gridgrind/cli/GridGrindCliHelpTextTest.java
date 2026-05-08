@@ -2,10 +2,10 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.contract.catalog.CliSurface;
+import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
+import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.catalog.ShippedExampleEntry;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
@@ -15,13 +15,27 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Properties;
 import org.junit.jupiter.api.Test;
 
 /** Help, version, and documentation integration tests for GridGrindCli. */
 class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
-  void versionFrom_returnsUnknown_whenImplementationVersionIsAbsent() {
-    assertEquals("unknown", GridGrindCli.versionFrom(null));
+  void versionFrom_returnsBundledVersion_whenImplementationVersionIsAbsent() throws IOException {
+    assertEquals(bundledVersion(), GridGrindCli.versionFrom(null));
+  }
+
+  @Test
+  void versionFrom_returnsUnknown_whenBundledVersionIsUnavailable() {
+    assertEquals("unknown", GridGrindCliProductInfo.versionFrom(null, Object.class));
+  }
+
+  @Test
+  void versionFrom_ignoresBlankImplementationVersionAndBlankBundledVersion() {
+    assertEquals(
+        "unknown",
+        GridGrindCliProductInfo.versionFrom(
+            "   ", new ByteArrayInputStream("version=\n".getBytes(StandardCharsets.UTF_8))));
   }
 
   @Test
@@ -38,11 +52,10 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
             .run(new String[] {"--version"}, new ByteArrayInputStream(new byte[0]), stdout);
 
     assertEquals(0, exitCode);
-    // Version reads from the JAR manifest Implementation-Version attribute.
-    // When running from the test classpath (no JAR), the attribute is absent and "unknown" is used.
-    // The description comes from the processed gridgrind.properties resource on the test classpath.
     String output = stdout.toString(StandardCharsets.UTF_8);
-    assertTrue(output.startsWith("GridGrind unknown\n"), "must start with GridGrind unknown");
+    assertTrue(
+        output.startsWith("GridGrind " + bundledVersion() + "\n"),
+        "must start with the bundled GridGrind version");
     assertTrue(output.endsWith("\n"), "must end with newline");
     assertTrue(output.lines().count() >= 2, "must have at least two lines");
   }
@@ -62,11 +75,20 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void descriptionFrom_returnsFallbackWhenPropertiesAreUnavailableOrBlank() throws IOException {
+    assertEquals("GridGrind", GridGrindCli.descriptionFrom(Object.class));
+    assertEquals(
+        "GridGrind",
+        GridGrindCli.descriptionFrom(
+            new ByteArrayInputStream("description=\n".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
   void licenseText_containsMitLicense_whenResourcePresent() {
     String mit = "MIT License\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
     InputStream own = new ByteArrayInputStream(mit.getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, null, null, null);
+    String result = GridGrindCli.licenseText(own, null, null, null, null, null);
 
     assertTrue(result.contains("MIT License"));
     assertTrue(result.contains("Ervins Strauhmanis"));
@@ -80,20 +102,25 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     InputStream notice = new ByteArrayInputStream("NOTICE info\n".getBytes(StandardCharsets.UTF_8));
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
-    InputStream bsd = new ByteArrayInputStream("BSD License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream bsd2 =
+        new ByteArrayInputStream("BSD 2-Clause License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream bsd3 = new ByteArrayInputStream("BSD License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream edl = new ByteArrayInputStream("EDL License\n".getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, notice, apache, bsd);
+    String result = GridGrindCli.licenseText(own, notice, apache, bsd2, bsd3, edl);
 
     assertTrue(result.contains("MIT License"));
     assertTrue(result.contains("Third-party notices and licenses:"));
     assertTrue(result.contains("NOTICE info"));
     assertTrue(result.contains("Apache License"));
+    assertTrue(result.contains("BSD 2-Clause License"));
     assertTrue(result.contains("BSD License"));
+    assertTrue(result.contains("EDL License"));
   }
 
   @Test
   void licenseText_returnsFallback_whenAllResourcesAbsent() {
-    String result = GridGrindCli.licenseText(null, null, null, null);
+    String result = GridGrindCli.licenseText(null, null, null, null, null, null);
 
     assertFalse(result.isBlank());
     assertTrue(result.contains("not available"));
@@ -111,7 +138,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     InputStream apache =
         new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(null, null, apache, null);
+    String result = GridGrindCli.licenseText(null, null, apache, null, null, null);
 
     assertTrue(result.contains("Apache License"));
     assertFalse(result.contains("---"), "no separator when own license is absent");
@@ -121,7 +148,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void licenseText_ensuresTrailingNewline_whenContentLacksIt() {
     InputStream own = new ByteArrayInputStream("MIT License".getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, null, null, null);
+    String result = GridGrindCli.licenseText(own, null, null, null, null, null);
 
     assertTrue(result.endsWith("\n"), "must end with newline even when source text does not");
   }
@@ -145,6 +172,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
             },
             null,
             null,
+            null,
+            null,
             null);
 
     // The broken stream is skipped; all streams absent triggers the fallback.
@@ -157,7 +186,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     InputStream notice =
         new ByteArrayInputStream("NOTICE content\n".getBytes(StandardCharsets.UTF_8));
 
-    String result = GridGrindCli.licenseText(own, notice, null, null);
+    String result = GridGrindCli.licenseText(own, notice, null, null, null, null);
 
     assertTrue(result.contains("Third-party notices and licenses:"));
     assertTrue(result.contains("NOTICE content"));
@@ -171,22 +200,45 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   @Test
   void helpFlagsPrintUsageAndReturnExitCodeZero() throws IOException {
+    String help = assertHelpInvocationPrintsUsage("--help");
+    assertStandardHelpContent(help);
+    assertStandardHelpSectionOrder(help);
+
+    ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
+    int shortExitCode =
+        new GridGrindCli()
+            .run(new String[] {"-h"}, new ByteArrayInputStream(new byte[0]), shortStdout);
+    assertEquals(0, shortExitCode);
+    assertEquals(help, shortStdout.toString(StandardCharsets.UTF_8));
+
+    ByteArrayOutputStream bareStdout = new ByteArrayOutputStream();
+    int bareExitCode =
+        new GridGrindCli()
+            .run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), bareStdout);
+    assertEquals(0, bareExitCode);
+    assertEquals(help, bareStdout.toString(StandardCharsets.UTF_8));
+  }
+
+  private String assertHelpInvocationPrintsUsage(String... args) throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
-    int longExitCode =
-        new GridGrindCli()
-            .run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout);
+    int exitCode = new GridGrindCli().run(args, new ByteArrayInputStream(new byte[0]), stdout);
 
-    assertEquals(0, longExitCode);
-    String help = stdout.toString(StandardCharsets.UTF_8);
+    assertEquals(0, exitCode);
+    return stdout.toString(StandardCharsets.UTF_8);
+  }
+
+  private void assertStandardHelpContent(String help) throws IOException {
     assertTrue(help.contains("GridGrind"));
     assertTrue(help.contains("Usage:"));
+    assertTrue(help.contains("Protocol Grammar:"));
+    assertTrue(help.contains("Operator Guidance:"));
     assertTrue(help.contains("Minimal Valid Request:"));
     assertTrue(help.contains("--request <path>"));
     assertTrue(help.contains("--print-request-template"));
     assertTrue(help.contains("--print-task-catalog"));
     assertTrue(help.contains("--print-task-plan <id>"));
-    assertTrue(help.contains("--print-goal-plan <goal>"));
+    assertTrue(help.contains("--print-task-keyword-match <query>"));
     assertTrue(help.contains("--doctor-request"));
     assertTrue(help.contains("gridgrind --doctor-request [--request <path>] [--response <path>]"));
     assertTrue(help.contains("Workflows:"));
@@ -203,17 +255,17 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--help, -h, help"));
     assertTrue(help.contains("gridgrind --license [--response <path>]"));
     assertTrue(help.contains("--license"));
-    assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
+    assertTrue(help.contains("blob/v" + bundledVersion() + "/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("Coordinate Systems:"));
     assertTrue(
         help.contains(
-            GridGrindProtocolCatalog.catalog()
-                .cliSurface()
+            GridGrindProtocolCatalogCliSurface.CLI_SURFACE
                 .fileWorkflow()
                 .entries()
                 .getLast()
                 .value()));
-    assertTrue(help.contains("source.type is required; use NEW to create a blank workbook"));
+    assertTrue(help.contains("source.type is required. NEW creates a blank workbook."));
+    assertTrue(help.contains("steps is required. [] represents an empty no-op plan."));
     assertTrue(help.contains("Every authored step requires a stable caller-defined stepId."));
     assertTrue(
         help.contains("type group accepted by polymorphic fields"),
@@ -225,31 +277,62 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         help.contains("cellInputTypes:FORMULA"),
         "help must explain how to qualify duplicate catalog ids");
     assertTrue(help.endsWith("\n"), "help must end with a newline");
+  }
+
+  private void assertStandardHelpSectionOrder(String help) {
     int usagePos = help.indexOf("Usage:");
     int flagsPos = help.indexOf("Flags:");
+    int protocolGrammarPos = help.indexOf("Protocol Grammar:");
+    int operatorGuidancePos = help.indexOf("Operator Guidance:");
     int workflowsPos = help.indexOf("Workflows:");
     assertTrue(usagePos >= 0, "help must contain Usage:");
     assertTrue(flagsPos >= 0, "help must contain Flags:");
+    assertTrue(protocolGrammarPos >= 0, "help must contain Protocol Grammar:");
+    assertTrue(operatorGuidancePos >= 0, "help must contain Operator Guidance:");
     assertTrue(workflowsPos >= 0, "help must contain Workflows:");
     assertTrue(
-        usagePos < flagsPos, "Flags must appear after Usage so grammar sections cluster together");
+        usagePos < flagsPos, "Flags must appear after Usage so core CLI sections cluster together");
     assertTrue(
-        flagsPos < workflowsPos,
-        "Flags must appear before Workflows so grammar precedes operator guidance");
+        flagsPos < protocolGrammarPos, "Protocol grammar must appear after the core CLI block");
+    assertTrue(
+        protocolGrammarPos < operatorGuidancePos,
+        "Operator guidance must be explicitly separated from protocol grammar");
+    assertTrue(
+        operatorGuidancePos < workflowsPos,
+        "Workflows must render inside the operator-guidance block");
+  }
 
-    ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
-    int shortExitCode =
-        new GridGrindCli()
-            .run(new String[] {"-h"}, new ByteArrayInputStream(new byte[0]), shortStdout);
-    assertEquals(0, shortExitCode);
-    assertEquals(help, shortStdout.toString(StandardCharsets.UTF_8));
+  @Test
+  void protocolGrammarBlockStaysNormativeWhileOperatorGuidanceCarriesPlaybooks() {
+    String help = GridGrindCli.helpText("1.0.0");
+    int protocolGrammarPos = help.indexOf("Protocol Grammar:");
+    int operatorGuidancePos = help.indexOf("Operator Guidance:");
+    String protocolGrammar = help.substring(protocolGrammarPos, operatorGuidancePos);
+    String operatorGuidance = help.substring(operatorGuidancePos);
 
-    ByteArrayOutputStream bareStdout = new ByteArrayOutputStream();
-    int bareExitCode =
-        new GridGrindCli()
-            .run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), bareStdout);
-    assertEquals(0, bareExitCode);
-    assertEquals(help, bareStdout.toString(StandardCharsets.UTF_8));
+    assertFalse(
+        protocolGrammar.contains("ExecutionPolicyInput.defaults()"),
+        "normative grammar must not embed execution-policy playbook shortcuts");
+    assertFalse(
+        protocolGrammar.contains("FormulaEnvironmentInput.empty()"),
+        "normative grammar must not embed helper-constructor shortcuts");
+    assertFalse(
+        protocolGrammar.contains("Start from the minimal request"),
+        "operator playbooks must not render inside protocol grammar");
+    assertTrue(
+        operatorGuidance.contains("Start from the minimal request"),
+        "operator guidance must carry the playbook text");
+    assertTrue(
+        operatorGuidance.contains("Use persistence.type=SAVE_AS"),
+        "operator guidance must carry usage recommendations");
+  }
+
+  @Test
+  void helpText_usesMainAndLatestReferencesWhenVersionIsUnknown() {
+    String help = GridGrindCli.helpText("unknown");
+
+    assertTrue(help.contains("ghcr.io/resoltico/gridgrind:latest"));
+    assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
   }
 
   @Test
@@ -312,7 +395,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
   void helpTextExplainsFileWorkflow() {
     String help = GridGrindCli.helpText("1.0.0");
-    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
+    CliSurface cliSurface = GridGrindProtocolCatalogCliSurface.CLI_SURFACE;
 
     assertTrue(help.contains("File Workflow:"));
     for (CliSurface.DefinitionEntry entry : cliSurface.fileWorkflow().entries()) {
@@ -328,7 +411,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
   void helpTextIncludesWorkflowEntriesFromTheContractSurface() {
     String help = GridGrindCli.helpText("1.0.0");
-    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
+    CliSurface cliSurface = GridGrindProtocolCatalogCliSurface.CLI_SURFACE;
 
     assertTrue(help.contains("Workflows:"));
     for (CliSurface.WorkflowEntry entry : cliSurface.workflows().entries()) {
@@ -343,7 +426,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
   void helpTextIncludesCoordinateSystemsTable() {
     String help = GridGrindCli.helpText("1.0.0");
-    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
+    CliSurface cliSurface = GridGrindProtocolCatalogCliSurface.CLI_SURFACE;
 
     assertTrue(help.contains("Coordinate Systems:"));
     for (CliSurface.CoordinateSystemEntry entry : cliSurface.coordinateSystems().entries()) {
@@ -359,17 +442,22 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   @Test
   void helpTextListsBuiltInGeneratedExamples() {
     String help = GridGrindCli.helpText("1.0.0");
-    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
+    CliSurface cliSurface = GridGrindProtocolCatalogCliSurface.CLI_SURFACE;
 
     assertTrue(help.contains("Built-in generated examples:"));
     assertTrue(help.contains(cliSurface.discovery().printOneExampleCommand()));
     assertTrue(help.contains(GridGrindContractText.workbookFindingsDiscoverySummary()));
-    assertTrue(help.contains(GridGrindContractText.stepKindSummary()));
-    for (ShippedExampleEntry example : GridGrindProtocolCatalog.catalog().shippedExamples()) {
+    assertTrue(help.contains("Every authored step requires a stable caller-defined stepId."));
+    for (ShippedExampleEntry example : GridGrindShippedExamples.catalog().examples()) {
       assertTrue(help.contains(example.id()), () -> "help must include example id " + example.id());
       assertTrue(
           help.contains("examples/" + example.fileName()),
           () -> "help must include example file " + example.fileName());
+      for (String requiredPath : example.requiredPaths()) {
+        assertTrue(
+            help.contains(requiredPath),
+            () -> "help must include required example asset path " + requiredPath);
+      }
     }
   }
 
@@ -388,7 +476,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void helpTextIncludesStructuralEditLimitNotes() {
     String help = GridGrindCli.helpText("1.0.0");
     for (CliSurface.DefinitionEntry entry :
-        GridGrindProtocolCatalog.catalog().cliSurface().limits().entries()) {
+        GridGrindProtocolCatalogCliSurface.CLI_SURFACE.limits().entries()) {
       if ("Row structural edits".equals(entry.label())
           || "Column structural edits".equals(entry.label())
           || "Chart mutations".equals(entry.label())
@@ -532,11 +620,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
         "help must mention that formulaEnvironment is required");
     assertTrue(help.contains("steps is required"), "help must mention that steps is required");
     assertTrue(
-        help.contains("ASSERTION steps for first-class verification"),
-        "help must mention assertion steps");
-    assertTrue(
-        help.contains("do not send step.type"),
-        "help must explain that step kind is inferred instead of authored as step.type");
+        help.contains(GridGrindContractText.stepKindSummary()),
+        "help must use the canonical step-kind summary");
     assertTrue(
         help.contains("mutations, assertions, and inspections may be interleaved"),
         "help must describe the ordered step model");
@@ -552,5 +637,14 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertFalse(
         help.contains("FORCE_FORMULA_RECALC_ON_OPEN"),
         "help must not expose the rejected legacy shorthand");
+  }
+
+  private static String bundledVersion() throws IOException {
+    try (InputStream stream = GridGrindCli.class.getResourceAsStream("/gridgrind.properties")) {
+      assertNotNull(stream, "gridgrind.properties must be on the test classpath");
+      Properties properties = new Properties();
+      properties.load(stream);
+      return properties.getProperty("version");
+    }
   }
 }

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Extracted binary drawing-object payload surfaced through read operations. */
 public sealed interface ExcelDrawingObjectPayload
@@ -28,7 +29,7 @@ public sealed interface ExcelDrawingObjectPayload
       String fileName,
       String sha256,
       ExcelBinaryData data,
-      String description)
+      @Nullable String description)
       implements ExcelDrawingObjectPayload {
     public Picture {
       validateCommon(name, contentType, sha256, data);
@@ -45,11 +46,11 @@ public sealed interface ExcelDrawingObjectPayload
       String name,
       ExcelEmbeddedObjectPackagingKind packagingKind,
       String contentType,
-      String fileName,
+      @Nullable String fileName,
       String sha256,
       ExcelBinaryData data,
-      String label,
-      String command)
+      @Nullable String label,
+      @Nullable String command)
       implements ExcelDrawingObjectPayload {
     public EmbeddedObject {
       validateCommon(name, contentType, sha256, data);

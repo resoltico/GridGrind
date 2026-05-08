@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -9,6 +8,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.IgnoredErrorType;
 import org.junit.jupiter.api.Test;
 
@@ -39,24 +39,25 @@ class ExcelSheetPresentationValueObjectTest {
     ExcelSheetPresentation presentation =
         new ExcelSheetPresentation(
             new ExcelSheetDisplay(false, false, false, true, true),
-            ExcelColor.rgb("#112233"),
+            Optional.of(ExcelColor.rgb("#112233")),
             new ExcelSheetOutlineSummary(false, false),
             new ExcelSheetDefaults(11, 18.5d),
             List.of(ignoredError));
     ExcelSheetPresentationSnapshot snapshot =
         new ExcelSheetPresentationSnapshot(
             presentation.display(),
-            ExcelColorSnapshot.rgb("#112233"),
+            Optional.of(ExcelColorSnapshot.rgb("#112233")),
             presentation.outlineSummary(),
             presentation.sheetDefaults(),
             presentation.ignoredErrors());
 
     assertEquals("A1:B2", ignoredError.range());
     assertEquals(presentation, snapshot.toAuthoringPresentation());
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         new ExcelSheetPresentationSnapshot(
                 ExcelSheetDisplay.defaults(),
-                null,
+                Optional.empty(),
                 ExcelSheetOutlineSummary.defaults(),
                 ExcelSheetDefaults.defaults(),
                 List.of())

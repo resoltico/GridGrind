@@ -9,16 +9,18 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Reads a GridGrind protocol request from stdin or an explicit request file path. */
 final class CliRequestReader {
-  /** Reads the request from stdin when the path is null, otherwise from the given file path. */
-  WorkbookPlan read(Path requestPath, InputStream stdin) throws IOException {
+  /** Reads the request from stdin when no path is present, otherwise from the given file path. */
+  WorkbookPlan read(Optional<Path> requestPath, InputStream stdin) throws IOException {
+    Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
-    if (requestPath == null) {
+    if (requestPath.isEmpty()) {
       return GridGrindJson.readRequest(stdin);
     }
-    Path normalizedRequestPath = requestPath.toAbsolutePath().normalize();
+    Path normalizedRequestPath = requestPath.orElseThrow().toAbsolutePath().normalize();
     validateReadableRequestPath(normalizedRequestPath);
     GridGrindJson.requireSupportedRequestLength(Files.size(normalizedRequestPath));
     try (InputStream requestInput = Files.newInputStream(normalizedRequestPath)) {
