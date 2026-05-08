@@ -312,6 +312,12 @@ after the merge, delete it manually with:
 git branch -d release/X.Y.Z
 ```
 
+`./scripts/verify-release-merge-handoff.sh` carries its own wait budget for the merged `main`
+`Gate` run. The default budget is intentionally longer than the combined `Check` plus
+`Docker smoke` path on healthy GitHub runners, including normal GitHub post-step and job-start
+latency. Only override `GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS` when GitHub-side queueing is
+abnormally slow.
+
 ### Step 5 — Create the tag, push it, and verify the tag handoff
 
 ```bash
