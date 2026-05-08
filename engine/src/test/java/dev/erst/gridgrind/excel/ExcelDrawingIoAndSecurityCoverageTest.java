@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Provider;
 import java.security.Security;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
@@ -72,7 +73,9 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
       XSSFObjectData objectData = createEmbeddedObject(workbook, drawing, "OpsEmbed", 3, 0, 6, 4);
 
       PackagePart previewPart =
-          invoke(controller, "previewImagePart", PackagePart.class, objectData);
+          ((Optional<PackagePart>)
+                  invoke(controller, "previewImagePart", Optional.class, objectData))
+              .orElseThrow();
       assertTrue(
           invoke(
               controller,
@@ -90,7 +93,7 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(0, 0, 2, 2),
-              "replacement"));
+              Optional.of("replacement")));
       assertEquals(
           1L,
           controller.drawingObjects(sheet).stream()

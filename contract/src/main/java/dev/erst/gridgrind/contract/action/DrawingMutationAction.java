@@ -1,16 +1,23 @@
 package dev.erst.gridgrind.contract.action;
 
+import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SignatureLineInput;
+import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
 import java.util.Objects;
 
 /** Mutation family for drawing-backed workbook objects. */
 public sealed interface DrawingMutationAction extends MutationAction {
   /** Creates or replaces one picture-backed drawing object on one sheet. */
+  @ProtocolTypeMetadata(
+      id = "SET_PICTURE",
+      summary = "Create or replace one picture-backed drawing object on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class})
   record SetPicture(PictureInput picture) implements DrawingMutationAction {
     public SetPicture {
       Objects.requireNonNull(picture, "picture must not be null");
@@ -18,6 +25,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Creates or replaces one signature-line drawing object on one sheet. */
+  @ProtocolTypeMetadata(
+      id = "SET_SIGNATURE_LINE",
+      summary = "Create or replace one signature-line drawing object on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class})
   record SetSignatureLine(SignatureLineInput signatureLine) implements DrawingMutationAction {
     public SetSignatureLine {
       Objects.requireNonNull(signatureLine, "signatureLine must not be null");
@@ -25,6 +36,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Creates or mutates one supported simple chart on one sheet. */
+  @ProtocolTypeMetadata(
+      id = "SET_CHART",
+      summary = "Create or mutate one supported simple chart on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class})
   record SetChart(ChartInput chart) implements DrawingMutationAction {
     public SetChart {
       Objects.requireNonNull(chart, "chart must not be null");
@@ -32,6 +47,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Creates or replaces one simple-shape or connector drawing object on one sheet. */
+  @ProtocolTypeMetadata(
+      id = "SET_SHAPE",
+      summary = "Create or replace one simple-shape or connector drawing object on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class})
   record SetShape(ShapeInput shape) implements DrawingMutationAction {
     public SetShape {
       Objects.requireNonNull(shape, "shape must not be null");
@@ -39,6 +58,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Creates or replaces one embedded-object drawing object on one sheet. */
+  @ProtocolTypeMetadata(
+      id = "SET_EMBEDDED_OBJECT",
+      summary = "Create or replace one embedded-object drawing object on one sheet.",
+      targetSelectors = {SheetSelector.ByName.class})
   record SetEmbeddedObject(EmbeddedObjectInput embeddedObject) implements DrawingMutationAction {
     public SetEmbeddedObject {
       Objects.requireNonNull(embeddedObject, "embeddedObject must not be null");
@@ -46,6 +69,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Moves one existing drawing object by replacing its anchor authoritatively. */
+  @ProtocolTypeMetadata(
+      id = "SET_DRAWING_OBJECT_ANCHOR",
+      summary = "Move one existing drawing object by replacing its anchor authoritatively.",
+      targetSelectors = {DrawingObjectSelector.ByName.class})
   record SetDrawingObjectAnchor(DrawingAnchorInput anchor) implements DrawingMutationAction {
     public SetDrawingObjectAnchor {
       Objects.requireNonNull(anchor, "anchor must not be null");
@@ -53,6 +80,10 @@ public sealed interface DrawingMutationAction extends MutationAction {
   }
 
   /** Deletes one existing drawing object by sheet-local name. */
+  @ProtocolTypeMetadata(
+      id = "DELETE_DRAWING_OBJECT",
+      summary = "Delete one existing drawing object by sheet-local name.",
+      targetSelectors = {DrawingObjectSelector.ByName.class})
   record DeleteDrawingObject() implements DrawingMutationAction {
     public DeleteDrawingObject {}
   }

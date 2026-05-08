@@ -16,7 +16,7 @@ class CliArgumentsTest {
             CliArguments.parse(new String[] {"--print-protocol-catalog", "--search", "sheet"}));
 
     assertEquals("sheet", command.searchQuery());
-    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
+    assertEquals(java.util.Optional.empty(), command.responsePath());
   }
 
   @Test
@@ -28,7 +28,7 @@ class CliArgumentsTest {
                 new String[] {"--print-protocol-catalog", "--operation", "SET_CELL"}));
 
     assertEquals("SET_CELL", command.operationFilter());
-    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
+    assertEquals(java.util.Optional.empty(), command.responsePath());
   }
 
   @Test
@@ -42,7 +42,8 @@ class CliArgumentsTest {
                 }));
 
     assertEquals("sheet", command.searchQuery());
-    assertEquals("catalog.json", command.responsePath().toString());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("catalog.json")), command.responsePath());
   }
 
   @Test
@@ -134,18 +135,39 @@ class CliArgumentsTest {
                     new String[] {"--print-protocol-catalog", "--search", "sheet", "--version"}));
 
     assertEquals("--version", exception.argument());
-    assertEquals("Unknown argument: --version", exception.getMessage());
+    assertEquals(
+        "Only one primary command may be used per invocation; --print-protocol-catalog cannot"
+            + " be combined with --version",
+        exception.getMessage());
   }
 
   @Test
-  void printGoalPlanParsesIntoItsDedicatedCommand() {
-    CliCommand.PrintGoalPlan command =
-        assertInstanceOf(
-            CliCommand.PrintGoalPlan.class,
-            CliArguments.parse(
-                new String[] {"--print-goal-plan", "monthly sales dashboard with charts"}));
+  void immediateCommandsRejectCompetingPrimaryCommandsWithExplicitConflictMessage() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--print-example", "BUDGET", "--print-task-catalog"}));
 
-    assertEquals("monthly sales dashboard with charts", command.goal());
+    assertEquals("--print-task-catalog", exception.argument());
+    assertEquals(
+        "Only one primary command may be used per invocation; --print-example cannot be"
+            + " combined with --print-task-catalog",
+        exception.getMessage());
+  }
+
+  @Test
+  void printTaskKeywordMatchParsesIntoItsDedicatedCommand() {
+    CliCommand.PrintTaskKeywordMatch command =
+        assertInstanceOf(
+            CliCommand.PrintTaskKeywordMatch.class,
+            CliArguments.parse(
+                new String[] {
+                  "--print-task-keyword-match", "monthly sales dashboard with charts"
+                }));
+
+    assertEquals("monthly sales dashboard with charts", command.query());
   }
 
   @Test
@@ -153,7 +175,7 @@ class CliArgumentsTest {
     CliCommand.Help command =
         assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
 
-    org.junit.jupiter.api.Assertions.assertNull(command.responsePath());
+    assertEquals(java.util.Optional.empty(), command.responsePath());
   }
 
   @Test
@@ -163,7 +185,7 @@ class CliArgumentsTest {
             CliCommand.Help.class,
             CliArguments.parse(new String[] {"--help", "--response", "help.txt"}));
 
-    assertEquals("help.txt", command.responsePath().toString());
+    assertEquals(java.util.Optional.of(java.nio.file.Path.of("help.txt")), command.responsePath());
   }
 
   @Test
@@ -172,13 +194,16 @@ class CliArgumentsTest {
         assertInstanceOf(
             CliCommand.Help.class,
             CliArguments.parse(new String[] {"--response", "help.txt", "--help"}));
-    assertEquals("help.txt", helpCommand.responsePath().toString());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("help.txt")), helpCommand.responsePath());
 
     CliCommand.Version versionCommand =
         assertInstanceOf(
             CliCommand.Version.class,
             CliArguments.parse(new String[] {"--response", "version.json", "--version"}));
-    assertEquals("version.json", versionCommand.responsePath().toString());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("version.json")),
+        versionCommand.responsePath());
 
     CliCommand.PrintProtocolCatalogSearch searchCommand =
         assertInstanceOf(
@@ -187,7 +212,8 @@ class CliArgumentsTest {
                 new String[] {
                   "--response", "catalog.json", "--print-protocol-catalog", "--search", "sheet"
                 }));
-    assertEquals("catalog.json", searchCommand.responsePath().toString());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("catalog.json")), searchCommand.responsePath());
     assertEquals("sheet", searchCommand.searchQuery());
   }
 
@@ -210,8 +236,9 @@ class CliArgumentsTest {
             CliArguments.parse(
                 new String[] {"--doctor-request", "--response", "doctor-report.json"}));
 
-    org.junit.jupiter.api.Assertions.assertNull(command.requestPath());
-    assertEquals("doctor-report.json", command.responsePath().toString());
+    assertEquals(java.util.Optional.empty(), command.requestPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("doctor-report.json")), command.responsePath());
   }
 
   @Test
@@ -224,8 +251,8 @@ class CliArgumentsTest {
                   "--print-task-catalog", "--task", "DASHBOARD", "--response", "task.json"
                 }));
 
-    assertEquals("DASHBOARD", command.taskFilter());
-    assertEquals("task.json", command.responsePath().toString());
+    assertEquals(java.util.Optional.of("DASHBOARD"), command.taskFilter());
+    assertEquals(java.util.Optional.of(java.nio.file.Path.of("task.json")), command.responsePath());
   }
 
   @Test
@@ -358,7 +385,7 @@ class CliArgumentsTest {
             CliArgumentsException.class,
             () -> CliArguments.parse(new String[] {"--version", "--request", "ignored.json"}));
     assertEquals("--request", versionFailure.argument());
-    assertEquals("Unknown argument: --request", versionFailure.getMessage());
+    assertEquals("--version does not allow --request", versionFailure.getMessage());
 
     CliArgumentsException taskFailure =
         assertThrows(
@@ -367,7 +394,29 @@ class CliArgumentsTest {
                 CliArguments.parse(
                     new String[] {"--print-task-plan", "DASHBOARD", "--request", "ignored.json"}));
     assertEquals("--request", taskFailure.argument());
-    assertEquals("Unknown argument: --request", taskFailure.getMessage());
+    assertEquals("--print-task-plan does not allow --request", taskFailure.getMessage());
+  }
+
+  @Test
+  void immediateCommandsRejectTrailingDoctorFlagWithExplicitPrimaryCommandMessage() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-example-catalog", "--doctor-request"}));
+
+    assertEquals("--doctor-request", exception.argument());
+    assertEquals("--print-example-catalog does not allow --doctor-request", exception.getMessage());
+  }
+
+  @Test
+  void immediateCommandsRejectUnknownTrailingArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--help", "--goal"}));
+
+    assertEquals("--goal", exception.argument());
+    assertEquals("Unknown argument: --goal", exception.getMessage());
   }
 
   @Test

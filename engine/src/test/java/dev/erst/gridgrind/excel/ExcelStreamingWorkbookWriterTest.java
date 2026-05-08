@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipFile;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -34,7 +35,7 @@ class ExcelStreamingWorkbookWriterTest {
                   ExcelCellValue.blank(),
                   ExcelCellValue.text("Item"),
                   ExcelCellValue.richText(
-                      new ExcelRichText(List.of(new ExcelRichTextRun("Rich", null)))),
+                      new ExcelRichText(List.of(new ExcelRichTextRun("Rich", Optional.empty())))),
                   ExcelCellValue.number(42.5d),
                   ExcelCellValue.bool(true),
                   ExcelCellValue.date(LocalDate.of(2026, 4, 13)),
@@ -112,7 +113,8 @@ class ExcelStreamingWorkbookWriterTest {
     assertEquals(
         "SET_WORKBOOK_PROTECTION",
         new WorkbookSheetCommand.SetWorkbookProtection(
-                new ExcelWorkbookProtectionSettings(true, false, false, null, null))
+                new ExcelWorkbookProtectionSettings(
+                    true, false, false, Optional.empty(), Optional.empty()))
             .commandType());
   }
 

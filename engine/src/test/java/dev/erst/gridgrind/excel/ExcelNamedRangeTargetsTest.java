@@ -15,7 +15,7 @@ class ExcelNamedRangeTargetsTest {
         ExcelNamedRangeTargets.resolveTarget(
             "Budget!$A$1:Budget!$B$4", new ExcelNamedRangeScope.WorkbookScope());
 
-    assertEquals(Optional.of(new ExcelNamedRangeTarget("Budget", "A1:B4")), target);
+    assertEquals(Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")), target);
   }
 
   @Test
@@ -24,17 +24,17 @@ class ExcelNamedRangeTargetsTest {
         ExcelNamedRangeTargets.resolveTarget(
             "Budget!$A$1:Budget!$B$4", new ExcelNamedRangeScope.SheetScope("Budget"));
 
-    assertEquals(Optional.of(new ExcelNamedRangeTarget("Budget", "A1:B4")), target);
+    assertEquals(Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")), target);
   }
 
   @Test
   void resolvesSingleCellAndSingleRowRangeTargets() {
     assertEquals(
-        Optional.of(new ExcelNamedRangeTarget("Budget", "A1")),
+        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1")),
         ExcelNamedRangeTargets.resolveTarget(
             "Budget!$A$1", new ExcelNamedRangeScope.WorkbookScope()));
     assertEquals(
-        Optional.of(new ExcelNamedRangeTarget("Budget", "A1:B1")),
+        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B1")),
         ExcelNamedRangeTargets.resolveTarget(
             "Budget!$A$1:Budget!$B$1", new ExcelNamedRangeScope.WorkbookScope()));
   }
@@ -72,7 +72,7 @@ class ExcelNamedRangeTargetsTest {
   @Test
   void resolvesSheetScopedSheetlessRangesAndRejectsMismatchedSheetPrefixes() {
     assertEquals(
-        Optional.of(new ExcelNamedRangeTarget("Budget", "A1:B4")),
+        Optional.of(ExcelNamedRangeTarget.range("Budget", "A1:B4")),
         ExcelNamedRangeTargets.resolveTarget(
             "A1:B4", new ExcelNamedRangeScope.SheetScope("Budget")));
     assertTrue(

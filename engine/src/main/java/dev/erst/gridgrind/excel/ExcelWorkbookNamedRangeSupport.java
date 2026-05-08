@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Name;
+import org.jspecify.annotations.Nullable;
 
 /** Named-range ownership and projection support for {@link ExcelWorkbook}. */
 final class ExcelWorkbookNamedRangeSupport {
@@ -79,7 +80,7 @@ final class ExcelWorkbookNamedRangeSupport {
     return existingName;
   }
 
-  private static Name existingName(
+  private static @Nullable Name existingName(
       ExcelWorkbook workbook, String name, ExcelNamedRangeScope scope) {
     String validatedName = ExcelNamedRangeDefinition.validateName(name);
     Objects.requireNonNull(scope, "scope must not be null");

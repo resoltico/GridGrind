@@ -10,8 +10,8 @@
       "inputBytes" : 57,
       "commandCount" : 4,
       "commandKinds" : {
-        "AUTO_SIZE_COLUMNS" : 2,
         "APPEND_ROW" : 1,
+        "AUTO_SIZE_COLUMNS" : 2,
         "CREATE_SHEET" : 1
       },
       "styleKinds" : { }

@@ -1,11 +1,13 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing factual report for one conditional-formatting rule loaded from a workbook. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -47,11 +49,15 @@ public sealed interface ConditionalFormattingRuleReport
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
   record FormulaRule(
-      int priority, boolean stopIfTrue, String formula, DifferentialStyleReport style)
+      int priority,
+      boolean stopIfTrue,
+      String formula,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public FormulaRule {
       requirePriority(priority);
       Objects.requireNonNull(formula, "formula must not be null");
+      Objects.requireNonNull(style, "style must not be null");
       if (formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
@@ -64,18 +70,20 @@ public sealed interface ConditionalFormattingRuleReport
       boolean stopIfTrue,
       ExcelComparisonOperator operator,
       String formula1,
-      String formula2,
-      DifferentialStyleReport style)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public CellValueRule {
       requirePriority(priority);
       Objects.requireNonNull(operator, "operator must not be null");
       Objects.requireNonNull(formula1, "formula1 must not be null");
+      Objects.requireNonNull(formula2, "formula2 must not be null");
+      Objects.requireNonNull(style, "style must not be null");
       if (formula1.isBlank()) {
         throw new IllegalArgumentException("formula1 must not be blank");
       }
-      if (formula2 != null && formula2.isBlank()) {
-        throw new IllegalArgumentException("formula2 must not be blank");
+      if (formula2.isPresent() && formula2.orElseThrow().isBlank()) {
+        throw new IllegalArgumentException("formula2 must not be blank when provided");
       }
     }
   }
@@ -142,10 +150,11 @@ public sealed interface ConditionalFormattingRuleReport
       int rank,
       boolean percent,
       boolean bottom,
-      DifferentialStyleReport style)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleReport> style)
       implements ConditionalFormattingRuleReport {
     public Top10Rule {
       requirePriority(priority);
+      Objects.requireNonNull(style, "style must not be null");
       if (rank < 0) {
         throw new IllegalArgumentException("rank must not be negative");
       }

@@ -1,17 +1,22 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.executor.GridGrindProblems;
+import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AccessDeniedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Writes GridGrind responses to stdout or an explicit response file with structured fallback. */
 final class CliResponseWriter {
@@ -21,57 +26,96 @@ final class CliResponseWriter {
    * <p>When the response file cannot be written, a structured failure response is emitted to stdout
    * so every command family keeps the same fallback contract.
    */
-  int writePayload(Path responsePath, OutputStream stdout, byte[] payload, int successExitCode)
+  int writePayload(
+      Optional<Path> responsePath, OutputStream stdout, byte[] payload, int successExitCode)
       throws IOException {
+    return writePayload(
+        responsePath, stdout, OutputStream.nullOutputStream(), payload, successExitCode);
+  }
+
+  /**
+   * Writes one arbitrary command payload to stdout or a configured response file while also
+   * reporting response-file fallback details on stderr.
+   */
+  int writePayload(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      byte[] payload,
+      int successExitCode)
+      throws IOException {
+    Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(payload, "payload must not be null");
-    if (responsePath == null) {
+    if (responsePath.isEmpty()) {
       writePayload(stdout, payload);
       return successExitCode;
     }
 
-    Path targetPath = responseTargetPath(responsePath);
+    Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
       writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem =
-          GridGrindProblems.fromException(
-              exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                      .responseFile(targetPath.toString())));
+      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
       return 1;
     }
   }
 
   /** Writes the response to the configured destination and returns the corresponding exit code. */
-  int write(Path responsePath, OutputStream stdout, GridGrindResponse response) throws IOException {
-    return write(responsePath, stdout, response, exitCodeFor(response));
+  int write(Optional<Path> responsePath, OutputStream stdout, GridGrindResponse response)
+      throws IOException {
+    return write(responsePath, stdout, OutputStream.nullOutputStream(), response);
   }
 
   /** Writes the response and returns one caller-chosen logical exit code on success. */
-  int write(Path responsePath, OutputStream stdout, GridGrindResponse response, int logicalExitCode)
+  int write(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      GridGrindResponse response,
+      int logicalExitCode)
       throws IOException {
+    return write(responsePath, stdout, OutputStream.nullOutputStream(), response, logicalExitCode);
+  }
+
+  /** Writes the response to the configured destination and returns the corresponding exit code. */
+  int write(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      GridGrindResponse response)
+      throws IOException {
+    return write(responsePath, stdout, stderr, response, exitCodeFor(response));
+  }
+
+  /** Writes the response and returns one caller-chosen logical exit code on success. */
+  int write(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      GridGrindResponse response,
+      int logicalExitCode)
+      throws IOException {
+    Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(response, "response must not be null");
-    if (responsePath == null) {
+    if (responsePath.isEmpty()) {
       write(stdout, response);
       return logicalExitCode;
     }
 
-    Path targetPath = responseTargetPath(responsePath);
+    Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
       writePayload(targetPath, GridGrindJson.writeResponseBytes(response));
+      writeNonSuccessPointerIfNeeded(stderr, logicalExitCode, targetPath, "response", "failure");
       return logicalExitCode;
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem =
-          GridGrindProblems.fromException(
-              exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                      .responseFile(targetPath.toString())));
+      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
@@ -98,26 +142,37 @@ final class CliResponseWriter {
   }
 
   /** Writes one doctor report to stdout or a configured response file. */
-  int writeDoctorReport(Path responsePath, OutputStream stdout, RequestDoctorReport report)
+  int writeDoctorReport(
+      Optional<Path> responsePath, OutputStream stdout, RequestDoctorReport report)
       throws IOException {
+    return writeDoctorReport(responsePath, stdout, OutputStream.nullOutputStream(), report);
+  }
+
+  /** Writes one doctor report to stdout or a configured response file. */
+  int writeDoctorReport(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      RequestDoctorReport report)
+      throws IOException {
+    Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(report, "report must not be null");
-    if (responsePath == null) {
+    if (responsePath.isEmpty()) {
       writeDoctorReport(stdout, report);
       return doctorExitCodeFor(report);
     }
 
-    Path targetPath = responseTargetPath(responsePath);
+    Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
       writePayload(targetPath, GridGrindJson.writeRequestDoctorReportBytes(report));
+      writeNonSuccessPointerIfNeeded(
+          stderr, doctorExitCodeFor(report), targetPath, "doctor report", "problems");
       return doctorExitCodeFor(report);
     } catch (IOException exception) {
-      GridGrindProblemDetail.Problem problem =
-          GridGrindProblems.fromException(
-              exception,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
-                      .responseFile(targetPath.toString())));
+      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (report.problem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(
@@ -161,5 +216,81 @@ final class CliResponseWriter {
       outputStream.write('\n');
     }
     outputStream.flush();
+  }
+
+  private static void writeNonSuccessPointerIfNeeded(
+      OutputStream stderr, int exitCode, Path targetPath, String payloadName, String problemNoun)
+      throws IOException {
+    if (exitCode == 0) {
+      return;
+    }
+    String line =
+        "GridGrind wrote the "
+            + payloadName
+            + " to "
+            + targetPath
+            + "; inspect that file for "
+            + problemNoun
+            + '.'
+            + System.lineSeparator();
+    stderr.write(line.getBytes(StandardCharsets.UTF_8));
+    stderr.flush();
+  }
+
+  private static void writeStdoutFallbackNotice(
+      OutputStream stderr, IOException exception, Path targetPath) throws IOException {
+    String line =
+        responseWriteMessage(exception, targetPath)
+            + ". Wrote a structured failure response to stdout instead."
+            + System.lineSeparator();
+    stderr.write(line.getBytes(StandardCharsets.UTF_8));
+    stderr.flush();
+  }
+
+  static GridGrindProblemDetail.Problem writeResponseProblem(
+      IOException exception, Path targetPath) {
+    var context =
+        new dev.erst.gridgrind.contract.dto.ProblemContext.WriteResponse(
+            dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput
+                .responseFile(targetPath.toString()));
+    String message = responseWriteMessage(exception, targetPath);
+    return GridGrindProblems.problem(
+        GridGrindProblemCode.IO_ERROR,
+        message,
+        context,
+        java.util.List.of(
+            new GridGrindProblemDetail.ProblemCause(
+                GridGrindProblemCode.IO_ERROR, message, context.stage())));
+  }
+
+  static String responseWriteMessage(IOException exception, Path targetPath) {
+    Objects.requireNonNull(exception, "exception must not be null");
+    Objects.requireNonNull(targetPath, "targetPath must not be null");
+    return switch (exception) {
+      case AccessDeniedException _ ->
+          "Could not write response file " + targetPath + ": permission denied";
+      case FileSystemException fileSystemException ->
+          fileSystemReason(fileSystemException)
+              .map(reason -> "Could not write response file " + targetPath + ": " + reason)
+              .orElse("Could not write response file " + targetPath);
+      default -> {
+        String message = exception.getMessage();
+        yield message == null || message.isBlank()
+            ? "Could not write response file " + targetPath
+            : "Could not write response file " + targetPath + ": " + message;
+      }
+    };
+  }
+
+  private static java.util.Optional<String> fileSystemReason(FileSystemException exception) {
+    String reason = exception.getReason();
+    if (reason != null && !reason.isBlank()) {
+      return java.util.Optional.of(reason);
+    }
+    String otherFile = exception.getOtherFile();
+    if (otherFile != null && !otherFile.isBlank()) {
+      return java.util.Optional.of("conflict with " + otherFile);
+    }
+    return java.util.Optional.empty();
   }
 }

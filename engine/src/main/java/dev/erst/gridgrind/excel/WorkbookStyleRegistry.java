@@ -8,6 +8,8 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -110,7 +112,7 @@ final class WorkbookStyleRegistry {
         font.getItalic(),
         font.getFontName(),
         new ExcelFontHeight(font.getFontHeight()),
-        ExcelColorSnapshotSupport.snapshot(font.getXSSFColor()),
+        ExcelColorSnapshotSupport.snapshot(font.getXSSFColor()).orElse(null),
         font.getUnderline() != FontUnderline.NONE.getByteValue(),
         font.getStrikeout());
   }
@@ -161,49 +163,37 @@ final class WorkbookStyleRegistry {
     XSSFCellStyle cellStyle = workbook.createCellStyle();
     cellStyle.cloneStyleFrom(baseStyle);
 
-    if (stylePatch.numberFormat() != null) {
-      cellStyle.setDataFormat(dataFormat.getFormat(stylePatch.numberFormat()));
-    }
+    stylePatch
+        .numberFormat()
+        .ifPresent(numberFormat -> cellStyle.setDataFormat(dataFormat.getFormat(numberFormat)));
     applyAlignmentPatch(cellStyle, stylePatch.alignment());
     applyFillPatch(cellStyle, stylePatch.fill());
-    if (stylePatch.border() != null) {
-      applyBorderPatch(cellStyle, stylePatch.border());
-    }
-    if (stylePatch.protection() != null) {
-      applyProtectionPatch(cellStyle, stylePatch.protection());
-    }
-    if (stylePatch.font() != null) {
-      cellStyle.setFont(fontFor(baseStyle.getFont(), stylePatch.font()));
-    }
+    stylePatch.border().ifPresent(border -> applyBorderPatch(cellStyle, border));
+    stylePatch.protection().ifPresent(protection -> applyProtectionPatch(cellStyle, protection));
+    stylePatch
+        .font()
+        .ifPresent(fontPatch -> cellStyle.setFont(fontFor(baseStyle.getFont(), fontPatch)));
     return cellStyle;
   }
 
-  private void applyAlignmentPatch(XSSFCellStyle cellStyle, ExcelCellAlignment alignmentPatch) {
-    if (alignmentPatch == null) {
+  private void applyAlignmentPatch(
+      XSSFCellStyle cellStyle, Optional<ExcelCellAlignment> alignmentPatch) {
+    if (alignmentPatch.isEmpty()) {
       return;
     }
-    if (alignmentPatch.wrapText() != null) {
-      cellStyle.setWrapText(alignmentPatch.wrapText());
-    }
-    if (alignmentPatch.horizontalAlignment() != null) {
-      cellStyle.setAlignment(toPoi(alignmentPatch.horizontalAlignment()));
-    }
-    if (alignmentPatch.verticalAlignment() != null) {
-      cellStyle.setVerticalAlignment(toPoi(alignmentPatch.verticalAlignment()));
-    }
-    if (alignmentPatch.textRotation() != null) {
-      cellStyle.setRotation(alignmentPatch.textRotation().shortValue());
-    }
-    if (alignmentPatch.indentation() != null) {
-      cellStyle.setIndention(alignmentPatch.indentation().shortValue());
-    }
+    ExcelCellAlignment patch = alignmentPatch.orElseThrow();
+    patch.wrapText().ifPresent(cellStyle::setWrapText);
+    patch.horizontalAlignment().ifPresent(value -> cellStyle.setAlignment(toPoi(value)));
+    patch.verticalAlignment().ifPresent(value -> cellStyle.setVerticalAlignment(toPoi(value)));
+    patch.textRotation().ifPresent(value -> cellStyle.setRotation(value.shortValue()));
+    patch.indentation().ifPresent(value -> cellStyle.setIndention(value.shortValue()));
   }
 
-  private void applyFillPatch(XSSFCellStyle cellStyle, ExcelCellFill fillPatch) {
-    if (fillPatch == null) {
+  private void applyFillPatch(XSSFCellStyle cellStyle, Optional<ExcelCellFill> fillPatch) {
+    if (fillPatch.isEmpty()) {
       return;
     }
-    switch (fillPatch) {
+    switch (fillPatch.orElseThrow()) {
       case ExcelCellFill.Gradient gradient -> {
         applyGradientFillPatch(cellStyle, gradient.gradient());
         return;
@@ -249,24 +239,12 @@ final class WorkbookStyleRegistry {
         gradient.setType(
             org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
                 "path"));
-        if (path.left() != null) {
-          gradient.setLeft(path.left());
-        }
-        if (path.right() != null) {
-          gradient.setRight(path.right());
-        }
-        if (path.top() != null) {
-          gradient.setTop(path.top());
-        }
-        if (path.bottom() != null) {
-          gradient.setBottom(path.bottom());
-        }
+        path.left().ifPresent(gradient::setLeft);
+        path.right().ifPresent(gradient::setRight);
+        path.top().ifPresent(gradient::setTop);
+        path.bottom().ifPresent(gradient::setBottom);
       }
-      case ExcelGradientFill.Linear linear -> {
-        if (linear.degree() != null) {
-          gradient.setDegree(linear.degree());
-        }
-      }
+      case ExcelGradientFill.Linear linear -> linear.degree().ifPresent(gradient::setDegree);
     }
     for (ExcelGradientStop stop : gradientPatch.stops()) {
       CTGradientStop ctStop = gradient.addNewStop();
@@ -314,12 +292,8 @@ final class WorkbookStyleRegistry {
   }
 
   private void applyProtectionPatch(XSSFCellStyle cellStyle, ExcelCellProtection protectionPatch) {
-    if (protectionPatch.locked() != null) {
-      cellStyle.setLocked(protectionPatch.locked());
-    }
-    if (protectionPatch.hiddenFormula() != null) {
-      cellStyle.setHidden(protectionPatch.hiddenFormula());
-    }
+    protectionPatch.locked().ifPresent(cellStyle::setLocked);
+    protectionPatch.hiddenFormula().ifPresent(cellStyle::setHidden);
   }
 
   private XSSFFont fontFor(XSSFFont baseFont, ExcelCellFont fontPatch) {
@@ -331,27 +305,18 @@ final class WorkbookStyleRegistry {
   private XSSFFont createMergedFont(XSSFFont baseFont, ExcelCellFont fontPatch) {
     XSSFFont font = workbook.createFont();
     font.getCTFont().set(baseFont.getCTFont());
-    if (fontPatch.bold() != null) {
-      font.setBold(fontPatch.bold());
-    }
-    if (fontPatch.italic() != null) {
-      font.setItalic(fontPatch.italic());
-    }
-    if (fontPatch.fontName() != null) {
-      font.setFontName(fontPatch.fontName());
-    }
-    if (fontPatch.fontHeight() != null) {
-      font.setFontHeight(fontPatch.fontHeight().points().doubleValue());
-    }
-    if (fontPatch.fontColor() != null) {
-      applyFontColor(font, fontPatch.fontColor());
-    }
-    if (fontPatch.underline() != null) {
-      font.setUnderline(fontPatch.underline() ? FontUnderline.SINGLE : FontUnderline.NONE);
-    }
-    if (fontPatch.strikeout() != null) {
-      font.setStrikeout(fontPatch.strikeout());
-    }
+    fontPatch.bold().ifPresent(font::setBold);
+    fontPatch.italic().ifPresent(font::setItalic);
+    fontPatch.fontName().ifPresent(font::setFontName);
+    fontPatch
+        .fontHeight()
+        .ifPresent(fontHeight -> font.setFontHeight(fontHeight.points().doubleValue()));
+    fontPatch.fontColor().ifPresent(color -> applyFontColor(font, color));
+    fontPatch
+        .underline()
+        .ifPresent(
+            underline -> font.setUnderline(underline ? FontUnderline.SINGLE : FontUnderline.NONE));
+    fontPatch.strikeout().ifPresent(font::setStrikeout);
     return font;
   }
 
@@ -385,52 +350,62 @@ final class WorkbookStyleRegistry {
         cellStyle::setLeftBorderColor);
   }
 
-  private ExcelBorderSide mergedBorderSide(
-      ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
+  private Optional<ExcelBorderSide> mergedBorderSide(
+      Optional<ExcelBorderSide> defaultSide, Optional<ExcelBorderSide> explicitSide) {
     return effectiveBorderSide(
         mergedBorderStyle(defaultSide, explicitSide), mergedBorderColor(defaultSide, explicitSide));
   }
 
-  private ExcelBorderStyle mergedBorderStyle(
-      ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
-    if (explicitSide != null && explicitSide.style() != null) {
-      return explicitSide.style();
-    }
-    return defaultSide != null ? defaultSide.style() : null;
+  private Optional<ExcelBorderStyle> mergedBorderStyle(
+      Optional<ExcelBorderSide> defaultSide, Optional<ExcelBorderSide> explicitSide) {
+    Objects.requireNonNull(defaultSide, "defaultSide must not be null");
+    Objects.requireNonNull(explicitSide, "explicitSide must not be null");
+    Optional<ExcelBorderStyle> explicitStyle = explicitSide.flatMap(ExcelBorderSide::style);
+    return explicitStyle.isPresent() ? explicitStyle : defaultSide.flatMap(ExcelBorderSide::style);
   }
 
-  private ExcelColor mergedBorderColor(ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
-    if (explicitSide != null && explicitSide.color() != null) {
-      return explicitSide.color();
+  private Optional<ExcelColor> mergedBorderColor(
+      Optional<ExcelBorderSide> defaultSide, Optional<ExcelBorderSide> explicitSide) {
+    Objects.requireNonNull(defaultSide, "defaultSide must not be null");
+    Objects.requireNonNull(explicitSide, "explicitSide must not be null");
+    if (explicitSide.isPresent() && explicitSide.orElseThrow().color().isPresent()) {
+      return explicitSide.orElseThrow().color();
     }
-    return defaultSide != null ? defaultSide.color() : null;
+    return defaultSide.isEmpty() || defaultSide.orElseThrow().color().isEmpty()
+        ? Optional.empty()
+        : defaultSide.orElseThrow().color();
   }
 
-  private ExcelBorderSide effectiveBorderSide(ExcelBorderStyle style, ExcelColor color) {
-    if (style == null && color == null) {
-      return null;
+  private Optional<ExcelBorderSide> effectiveBorderSide(
+      Optional<ExcelBorderStyle> style, Optional<ExcelColor> color) {
+    Objects.requireNonNull(style, "style must not be null");
+    Objects.requireNonNull(color, "color must not be null");
+    if (style.isEmpty() && color.isEmpty()) {
+      return Optional.empty();
     }
-    if (color != null && (style == null || style == ExcelBorderStyle.NONE)) {
+    if (color.isPresent() && (style.isEmpty() || style.orElseThrow() == ExcelBorderStyle.NONE)) {
       throw new IllegalArgumentException("border side color requires an effective border style");
     }
-    return new ExcelBorderSide(style, color);
+    return Optional.of(new ExcelBorderSide(style, color));
   }
 
   private void applyBorderSidePatch(
-      ExcelBorderSide sidePatch,
+      Optional<ExcelBorderSide> sidePatch,
       Consumer<BorderStyle> styleSetter,
       Consumer<XSSFColor> colorSetter) {
-    if (sidePatch == null) {
+    Objects.requireNonNull(sidePatch, "sidePatch must not be null");
+    if (sidePatch.isEmpty()) {
       return;
     }
-    styleSetter.accept(toPoi(sidePatch.style()));
-    if (sidePatch.style() == ExcelBorderStyle.NONE) {
+    ExcelBorderSide resolved = sidePatch.orElseThrow();
+    styleSetter.accept(toPoi(resolved.style().orElseThrow()));
+    if (resolved.style().orElseThrow() == ExcelBorderStyle.NONE) {
       // POI clears the side color as part of resetting the border style to NONE. An additional
       // explicit null-color clear is redundant and can crash when the XML <color> child is absent.
       return;
     }
-    if (sidePatch.color() != null) {
-      colorSetter.accept(ExcelColorSupport.toXssfColor(workbook, sidePatch.color()));
+    if (resolved.color().isPresent()) {
+      colorSetter.accept(ExcelColorSupport.toXssfColor(workbook, resolved.color().orElseThrow()));
     }
   }
 
@@ -444,20 +419,21 @@ final class WorkbookStyleRegistry {
     if (pattern == ExcelFillPattern.NONE) {
       return ExcelCellFillSnapshot.pattern(pattern);
     }
-    ExcelColorSnapshot foreground =
+    Optional<ExcelColorSnapshot> foreground =
         ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor());
-    ExcelColorSnapshot background =
+    Optional<ExcelColorSnapshot> background =
         pattern == ExcelFillPattern.SOLID
-            ? null
+            ? Optional.empty()
             : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor());
-    if (foreground != null && background != null) {
-      return ExcelCellFillSnapshot.patternColors(pattern, foreground, background);
+    if (foreground.isPresent() && background.isPresent()) {
+      return ExcelCellFillSnapshot.patternColors(
+          pattern, foreground.orElseThrow(), background.orElseThrow());
     }
-    if (foreground != null) {
-      return ExcelCellFillSnapshot.patternForeground(pattern, foreground);
+    if (foreground.isPresent()) {
+      return ExcelCellFillSnapshot.patternForeground(pattern, foreground.orElseThrow());
     }
-    if (background != null) {
-      return ExcelCellFillSnapshot.patternBackground(pattern, background);
+    if (background.isPresent()) {
+      return ExcelCellFillSnapshot.patternBackground(pattern, background.orElseThrow());
     }
     return ExcelCellFillSnapshot.pattern(pattern);
   }
@@ -483,14 +459,22 @@ final class WorkbookStyleRegistry {
   }
 
   private ExcelGradientStopSnapshot gradientStopSnapshot(CTGradientStop stop) {
-    return new ExcelGradientStopSnapshot(
-        stop.getPosition(), ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor()));
+    ExcelColorSnapshot color =
+        ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor())
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Gradient stop at position "
+                            + stop.getPosition()
+                            + " is missing its color definition."));
+    return new ExcelGradientStopSnapshot(stop.getPosition(), color);
   }
 
   private static ExcelBorderSideSnapshot borderSideSnapshot(
       BorderStyle borderStyle, XSSFColor borderColor) {
     ExcelBorderStyle style = fromPoi(borderStyle);
-    return new ExcelBorderSideSnapshot(style, ExcelColorSnapshotSupport.snapshot(borderColor));
+    return new ExcelBorderSideSnapshot(
+        style, ExcelColorSnapshotSupport.snapshot(borderColor).orElse(null));
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

@@ -10,12 +10,12 @@ final class GridGrindProtocolCatalogNestedTypeGroupSupport {
 
   static CatalogNestedTypeDescriptor nestedTypeGroup(
       String group, Class<?> sealedType, List<CatalogTypeDescriptor> typeDescriptors) {
-    return GridGrindProtocolCatalog.nestedTypeGroup(group, sealedType, typeDescriptors);
+    return CatalogTypeEntryFactory.nestedTypeGroup(group, sealedType, typeDescriptors);
   }
 
   static CatalogTypeDescriptor descriptor(
       Class<? extends Record> recordType, String id, String summary, String... optionalFields) {
-    return GridGrindProtocolCatalog.descriptor(recordType, id, summary, optionalFields);
+    return CatalogTypeEntryFactory.descriptor(recordType, id, summary, optionalFields);
   }
 
   static <T extends Record & Selector> CatalogTypeDescriptor selectorDescriptor(

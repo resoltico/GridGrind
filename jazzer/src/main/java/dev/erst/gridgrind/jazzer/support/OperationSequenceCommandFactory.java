@@ -12,6 +12,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
+import java.util.Optional;
 
 /** Builds bounded workbook-core command sequences for Jazzer generation. */
 final class OperationSequenceCommandFactory {
@@ -195,7 +196,7 @@ final class OperationSequenceCommandFactory {
                         data.consumeBoolean()
                             ? new ExcelNamedRangeScope.WorkbookScope()
                             : new ExcelNamedRangeScope.SheetScope(targetSheet),
-                        new ExcelNamedRangeTarget(
+                        ExcelNamedRangeTarget.range(
                             targetSheet,
                             validRange
                                 ? "A1:B2"
@@ -263,7 +264,8 @@ final class OperationSequenceCommandFactory {
             case 0x0 -> new WorkbookLayoutCommand.AutoSizeColumns(targetSheet);
             case 0x1 ->
                 new WorkbookSheetCommand.SetWorkbookProtection(
-                    new ExcelWorkbookProtectionSettings(true, false, false, null, null));
+                    new ExcelWorkbookProtectionSettings(
+                        true, false, false, Optional.empty(), Optional.empty()));
             case 0x2 -> new WorkbookSheetCommand.ClearWorkbookProtection();
             case 0x3 ->
                 new WorkbookLayoutCommand.SetSheetPresentation(

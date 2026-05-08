@@ -243,16 +243,20 @@ final class WorkbookInvariantEngineShapeChecks {
         bar3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Doughnut doughnut -> {
-        if (doughnut.firstSliceAngle() != null) {
-          WorkbookInvariantChecks.require(
-              doughnut.firstSliceAngle() >= 0 && doughnut.firstSliceAngle() <= 360,
-              "engine doughnut chart firstSliceAngle must be between 0 and 360");
-        }
-        if (doughnut.holeSize() != null) {
-          WorkbookInvariantChecks.require(
-              doughnut.holeSize() >= 10 && doughnut.holeSize() <= 90,
-              "engine doughnut chart holeSize must be between 10 and 90");
-        }
+        doughnut
+            .firstSliceAngle()
+            .ifPresent(
+                firstSliceAngle ->
+                    WorkbookInvariantChecks.require(
+                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                        "engine doughnut chart firstSliceAngle must be between 0 and 360"));
+        doughnut
+            .holeSize()
+            .ifPresent(
+                holeSize ->
+                    WorkbookInvariantChecks.require(
+                        holeSize >= 10 && holeSize <= 90,
+                        "engine doughnut chart holeSize must be between 10 and 90"));
         doughnut
             .series()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
@@ -270,11 +274,12 @@ final class WorkbookInvariantEngineShapeChecks {
         line3D.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie pie -> {
-        if (pie.firstSliceAngle() != null) {
-          WorkbookInvariantChecks.require(
-              pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
-              "engine pie chart firstSliceAngle must be between 0 and 360");
-        }
+        pie.firstSliceAngle()
+            .ifPresent(
+                firstSliceAngle ->
+                    WorkbookInvariantChecks.require(
+                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                        "engine pie chart firstSliceAngle must be between 0 and 360"));
         pie.series().forEach(WorkbookInvariantEngineShapeChecks::requireEngineChartSeriesShape);
       }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie3D pie3D ->
@@ -398,10 +403,12 @@ final class WorkbookInvariantEngineShapeChecks {
         dataField.function() != null, "engine pivot dataField function must not be null");
     WorkbookInvariantChecks.requireNonBlank(
         dataField.displayName(), "engine pivot dataField displayName");
-    if (dataField.valueFormat() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          dataField.valueFormat(), "engine pivot dataField valueFormat");
-    }
+    dataField
+        .valueFormat()
+        .ifPresent(
+            valueFormat ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    valueFormat, "engine pivot dataField valueFormat"));
   }
 
   static void requireEngineChartAxisShape(dev.erst.gridgrind.excel.ExcelChartSnapshot.Axis axis) {
@@ -454,11 +461,13 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             reference.cachedValues() != null,
             "engine chart numeric-reference cachedValues must not be null");
-        if (reference.formatCode() != null) {
-          WorkbookInvariantChecks.require(
-              !reference.formatCode().isBlank(),
-              "engine chart numeric-reference formatCode must not be blank");
-        }
+        reference
+            .formatCode()
+            .ifPresent(
+                formatCode ->
+                    WorkbookInvariantChecks.require(
+                        !formatCode.isBlank(),
+                        "engine chart numeric-reference formatCode must not be blank"));
       }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.StringLiteral literal ->
           WorkbookInvariantChecks.require(
@@ -466,11 +475,13 @@ final class WorkbookInvariantEngineShapeChecks {
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.NumericLiteral literal -> {
         WorkbookInvariantChecks.require(
             literal.values() != null, "engine chart numeric-literal values must not be null");
-        if (literal.formatCode() != null) {
-          WorkbookInvariantChecks.require(
-              !literal.formatCode().isBlank(),
-              "engine chart numeric-literal formatCode must not be blank");
-        }
+        literal
+            .formatCode()
+            .ifPresent(
+                formatCode ->
+                    WorkbookInvariantChecks.require(
+                        !formatCode.isBlank(),
+                        "engine chart numeric-literal formatCode must not be blank"));
       }
     }
   }

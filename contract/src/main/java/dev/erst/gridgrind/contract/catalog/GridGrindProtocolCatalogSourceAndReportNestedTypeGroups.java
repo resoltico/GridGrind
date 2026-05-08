@@ -5,8 +5,9 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
+import dev.erst.gridgrind.contract.dto.NamedRangeReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.contract.dto.SheetProtectionReport;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -82,26 +83,26 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                           + " bytes."))),
           nestedTypeGroup(
               "namedRangeReportTypes",
-              GridGrindWorkbookSurfaceReports.NamedRangeReport.class,
+              NamedRangeReport.class,
               List.of(
                   descriptor(
-                      GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport.class,
+                      NamedRangeReport.RangeReport.class,
                       "RANGE",
                       "Exact named-range report that resolves to one typed workbook target."),
                   descriptor(
-                      GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport.class,
+                      NamedRangeReport.FormulaReport.class,
                       "FORMULA",
                       "Exact named-range report that remains formula-backed."))),
           nestedTypeGroup(
               "sheetProtectionReportTypes",
-              GridGrindWorkbookSurfaceReports.SheetProtectionReport.class,
+              SheetProtectionReport.class,
               List.of(
                   descriptor(
-                      GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected.class,
+                      SheetProtectionReport.Unprotected.class,
                       "UNPROTECTED",
                       "Expect the sheet to have no protection."),
                   descriptor(
-                      GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected.class,
+                      SheetProtectionReport.Protected.class,
                       "PROTECTED",
                       "Expect the sheet to be protected with explicit lock settings."))),
           nestedTypeGroup(

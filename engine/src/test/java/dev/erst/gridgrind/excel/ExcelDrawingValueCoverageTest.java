@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Drawing value-object and authored command coverage. */
@@ -117,68 +118,60 @@ class ExcelDrawingValueCoverageTest extends ExcelDrawingCoverageTestSupport {
         () -> ExcelPictureFormat.fromContentType("application/x-gridgrind"));
 
     ExcelPictureDefinition pictureDefinition =
-        new ExcelPictureDefinition("Picture", data, ExcelPictureFormat.PNG, twoCell, "preview");
+        new ExcelPictureDefinition(
+            "Picture", data, ExcelPictureFormat.PNG, twoCell, Optional.of("preview"));
     assertEquals("Picture", pictureDefinition.name());
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPictureDefinition(null, data, ExcelPictureFormat.PNG, twoCell, null));
+        () ->
+            new ExcelPictureDefinition(
+                null, data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelPictureDefinition(" ", data, ExcelPictureFormat.PNG, twoCell, null));
+        () ->
+            new ExcelPictureDefinition(
+                " ", data, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPictureDefinition("Picture", null, ExcelPictureFormat.PNG, twoCell, null));
+        () ->
+            new ExcelPictureDefinition(
+                "Picture", null, ExcelPictureFormat.PNG, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPictureDefinition("Picture", data, null, twoCell, null));
+        () -> new ExcelPictureDefinition("Picture", data, null, twoCell, Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelPictureDefinition("Picture", data, ExcelPictureFormat.PNG, null, null));
+        () ->
+            new ExcelPictureDefinition(
+                "Picture", data, ExcelPictureFormat.PNG, null, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelPictureDefinition("Picture", data, ExcelPictureFormat.PNG, twoCell, " "));
+        () ->
+            new ExcelPictureDefinition(
+                "Picture", data, ExcelPictureFormat.PNG, twoCell, Optional.of(" ")));
 
     ExcelShapeDefinition defaultShape =
-        new ExcelShapeDefinition(
-            "Shape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, " ", "Queue");
-    assertEquals("rect", defaultShape.presetGeometryToken());
-    ExcelShapeDefinition connectorShape =
-        new ExcelShapeDefinition(
-            "Connector", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, null, null);
+        new ExcelShapeDefinition.SimpleShape("Shape", twoCell, " rect ", Optional.of("Queue"));
+    assertEquals("rect", ((ExcelShapeDefinition.SimpleShape) defaultShape).presetGeometryToken());
+    ExcelShapeDefinition connectorShape = new ExcelShapeDefinition.Connector("Connector", twoCell);
     assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connectorShape.kind());
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ExcelShapeDefinition(
-                null, ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, null, null));
+        () -> new ExcelShapeDefinition.SimpleShape(null, twoCell, "rect", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelShapeDefinition(
-                " ", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, null, null));
+        () -> new ExcelShapeDefinition.SimpleShape(" ", twoCell, "rect", Optional.empty()));
     assertThrows(
         NullPointerException.class,
-        () -> new ExcelShapeDefinition("Shape", null, twoCell, null, null));
+        () -> new ExcelShapeDefinition.SimpleShape("Shape", null, "rect", Optional.empty()));
     assertThrows(
-        NullPointerException.class,
-        () ->
-            new ExcelShapeDefinition(
-                "Shape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, null, null, null));
+        NullPointerException.class, () -> new ExcelShapeDefinition.Connector("Connector", null));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelShapeDefinition(
-                "Connector", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, "rect", null));
+        () -> new ExcelShapeDefinition.SimpleShape("Shape", twoCell, " ", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelShapeDefinition(
-                "Connector", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, null, "text"));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelShapeDefinition(
-                "Shape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, "rect", " "));
+        () -> new ExcelShapeDefinition.SimpleShape("Shape", twoCell, "rect", Optional.of(" ")));
 
     ExcelEmbeddedObjectDefinition embeddedDefinition =
         new ExcelEmbeddedObjectDefinition(

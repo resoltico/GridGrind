@@ -18,7 +18,7 @@ final class GridGrindResponseSupport {
       List<AssertionResult> assertions,
       List<InspectionResult> inspections) {
     return new GridGrindResponse.Success(
-        protocolVersionOrCurrent(protocolVersion),
+        Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
         syntheticSuccessJournal(),
         CalculationReport.notRequested(),
         Objects.requireNonNull(persistence, "persistence must not be null"),
@@ -32,7 +32,7 @@ final class GridGrindResponseSupport {
       GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new GridGrindResponse.Failure(
-        protocolVersionOrCurrent(protocolVersion),
+        Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
         problem);
@@ -76,11 +76,6 @@ final class GridGrindResponseSupport {
         new ExecutionJournal.Outcome(
             status, 0, 0, 0, Optional.empty(), Optional.empty(), normalizedFailureCode),
         List.of());
-  }
-
-  static GridGrindProtocolVersion protocolVersionOrCurrent(
-      GridGrindProtocolVersion protocolVersion) {
-    return protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
   }
 
   static List<String> copyDistinctStrings(List<String> values, String fieldName) {
@@ -143,9 +138,7 @@ final class GridGrindResponseSupport {
 
   static List<GridGrindProblemDetail.ProblemCause> copyProblemCauses(
       List<GridGrindProblemDetail.ProblemCause> causes) {
-    if (causes == null) {
-      return List.of();
-    }
+    Objects.requireNonNull(causes, "causes must not be null");
     List<GridGrindProblemDetail.ProblemCause> copy = new ArrayList<>(causes.size());
     for (GridGrindProblemDetail.ProblemCause cause : causes) {
       copy.add(Objects.requireNonNull(cause, "causes must not contain nulls"));

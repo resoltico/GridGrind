@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
@@ -19,6 +18,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
@@ -37,10 +37,10 @@ class ExcelChartValueObjectTest {
             new ExcelChartDefinition.Title.None(),
             ExcelChartTestSupport.ref("A2:A4"),
             ExcelChartTestSupport.ref("B2:B4"),
-            null,
-            ExcelChartMarkerStyle.CIRCLE,
-            (short) 8,
-            45L);
+            Optional.empty(),
+            Optional.of(ExcelChartMarkerStyle.CIRCLE),
+            Optional.of((short) 8),
+            Optional.of(45L));
 
     ExcelChartDefinition pieDefinition =
         ExcelChartTestSupport.pieChart(
@@ -55,7 +55,7 @@ class ExcelChartValueObjectTest {
             List.of(definitionSeries));
     ExcelChartDefinition.Pie piePlot =
         assertInstanceOf(ExcelChartDefinition.Pie.class, pieDefinition.plots().getFirst());
-    assertEquals(45, piePlot.firstSliceAngle());
+    assertEquals(Optional.of(45), piePlot.firstSliceAngle());
 
     ExcelChartDefinition noAnglePie =
         ExcelChartTestSupport.pieChart(
@@ -68,7 +68,8 @@ class ExcelChartValueObjectTest {
             false,
             null,
             List.of(definitionSeries));
-    assertNull(
+    assertEquals(
+        Optional.empty(),
         assertInstanceOf(ExcelChartDefinition.Pie.class, noAnglePie.plots().getFirst())
             .firstSliceAngle());
 
@@ -96,12 +97,15 @@ class ExcelChartValueObjectTest {
     assertThrows(
         NullPointerException.class, () -> new WorkbookDrawingCommand.SetChart("Charts", null));
 
-    WorkbookReadCommand.GetCharts getCharts = new WorkbookReadCommand.GetCharts("charts", "Charts");
+    WorkbookReadCommand.GetCharts getCharts =
+        new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet("Charts"));
     assertEquals("charts", getCharts.stepId());
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadCommand.GetCharts(" ", "Charts"));
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetCharts(" ", new ExcelChartSelection.AllOnSheet("Charts")));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadCommand.GetCharts("charts", " "));
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetCharts("charts", new ExcelChartSelection.AllOnSheet(" ")));
   }
 
   @Test
@@ -125,11 +129,11 @@ class ExcelChartValueObjectTest {
             new ExcelChartSnapshot.DataSource.StringReference(
                 "Charts!$A$2:$A$4", List.of("Jan", "Feb")),
             new ExcelChartSnapshot.DataSource.NumericReference(
-                "Charts!$B$2:$B$4", "0.0", List.of("10", "18")),
-            true,
-            ExcelChartMarkerStyle.CIRCLE,
-            (short) 8,
-            null);
+                "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18")),
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.CIRCLE),
+            Optional.of((short) 8),
+            Optional.empty());
     ExcelChartSnapshot lineSnapshot =
         new ExcelChartSnapshot(
             "OpsLine",
@@ -169,10 +173,12 @@ class ExcelChartValueObjectTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelChartSnapshot.DataSource.NumericReference("B2:B4", " ", List.of("1")));
+        () ->
+            new ExcelChartSnapshot.DataSource.NumericReference(
+                "B2:B4", Optional.of(" "), List.of("1")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelChartSnapshot.DataSource.NumericLiteral(" ", List.of("1")));
+        () -> new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of(" "), List.of("1")));
     assertThrows(
         NullPointerException.class,
         () -> new ExcelChartSnapshot.Title.Formula("Charts!$B$1", null));
@@ -239,10 +245,10 @@ class ExcelChartValueObjectTest {
             new ExcelChartDefinition.Title.Text("Plan"),
             ExcelChartTestSupport.ref("A2:A4"),
             ExcelChartTestSupport.ref("B2:B4"),
-            true,
-            ExcelChartMarkerStyle.TRIANGLE,
-            (short) 10,
-            25L);
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.TRIANGLE),
+            Optional.of((short) 10),
+            Optional.of(25L));
 
     List<ExcelChartDefinition.Plot> definitionPlots =
         List.of(
@@ -251,32 +257,37 @@ class ExcelChartValueObjectTest {
             new ExcelChartDefinition.Area3D(
                 false,
                 ExcelChartGrouping.PERCENT_STACKED,
-                120,
+                Optional.of(120),
                 dateAxes,
                 List.of(definitionSeries)),
             new ExcelChartDefinition.Bar(
                 true,
                 ExcelChartBarDirection.BAR,
                 ExcelChartBarGrouping.STACKED,
-                90,
-                40,
+                Optional.of(90),
+                Optional.of(40),
                 categoryAxes,
                 List.of(definitionSeries)),
             new ExcelChartDefinition.Bar3D(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.PERCENT_STACKED,
-                110,
-                85,
-                ExcelChartBarShape.CYLINDER,
+                Optional.of(110),
+                Optional.of(85),
+                Optional.of(ExcelChartBarShape.CYLINDER),
                 categoryAxes,
                 List.of(definitionSeries)),
-            new ExcelChartDefinition.Doughnut(true, 30, 65, List.of(definitionSeries)),
+            new ExcelChartDefinition.Doughnut(
+                true, Optional.of(30), Optional.of(65), List.of(definitionSeries)),
             new ExcelChartDefinition.Line(
                 false, ExcelChartGrouping.STANDARD, categoryAxes, List.of(definitionSeries)),
             new ExcelChartDefinition.Line3D(
-                true, ExcelChartGrouping.STACKED, 175, categoryAxes, List.of(definitionSeries)),
-            new ExcelChartDefinition.Pie(true, 120, List.of(definitionSeries)),
+                true,
+                ExcelChartGrouping.STACKED,
+                Optional.of(175),
+                categoryAxes,
+                List.of(definitionSeries)),
+            new ExcelChartDefinition.Pie(true, Optional.of(120), List.of(definitionSeries)),
             new ExcelChartDefinition.Pie3D(false, List.of(definitionSeries)),
             new ExcelChartDefinition.Radar(
                 true, ExcelChartRadarStyle.MARKER, categoryAxes, List.of(definitionSeries)),
@@ -297,11 +308,11 @@ class ExcelChartValueObjectTest {
             new ExcelChartSnapshot.DataSource.StringReference(
                 "Charts!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
             new ExcelChartSnapshot.DataSource.NumericReference(
-                "Charts!$B$2:$B$4", "0.0", List.of("10", "18", "15")),
-            true,
-            ExcelChartMarkerStyle.STAR,
-            (short) 11,
-            50L);
+                "Charts!$B$2:$B$4", Optional.of("0.0"), List.of("10", "18", "15")),
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.STAR),
+            Optional.of((short) 11),
+            Optional.of(50L));
     List<ExcelChartSnapshot.Axis> snapshotCategoryAxes =
         List.of(
             new ExcelChartSnapshot.Axis(
@@ -338,27 +349,28 @@ class ExcelChartValueObjectTest {
             new ExcelChartSnapshot.Area3D(
                 false,
                 ExcelChartGrouping.STACKED,
-                110,
+                Optional.of(110),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
             new ExcelChartSnapshot.Bar(
                 true,
                 ExcelChartBarDirection.BAR,
                 ExcelChartBarGrouping.CLUSTERED,
-                75,
-                15,
+                Optional.of(75),
+                Optional.of(15),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
             new ExcelChartSnapshot.Bar3D(
                 false,
                 ExcelChartBarDirection.COLUMN,
                 ExcelChartBarGrouping.PERCENT_STACKED,
-                130,
-                80,
-                ExcelChartBarShape.PYRAMID,
+                Optional.of(130),
+                Optional.of(80),
+                Optional.of(ExcelChartBarShape.PYRAMID),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Doughnut(true, 45, 55, List.of(snapshotSeries)),
+            new ExcelChartSnapshot.Doughnut(
+                true, Optional.of(45), Optional.of(55), List.of(snapshotSeries)),
             new ExcelChartSnapshot.Line(
                 false,
                 ExcelChartGrouping.PERCENT_STACKED,
@@ -367,10 +379,10 @@ class ExcelChartValueObjectTest {
             new ExcelChartSnapshot.Line3D(
                 true,
                 ExcelChartGrouping.STACKED,
-                150,
+                Optional.of(150),
                 snapshotCategoryAxes,
                 List.of(snapshotSeries)),
-            new ExcelChartSnapshot.Pie(true, 90, List.of(snapshotSeries)),
+            new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(snapshotSeries)),
             new ExcelChartSnapshot.Pie3D(false, List.of(snapshotSeries)),
             new ExcelChartSnapshot.Radar(
                 true, ExcelChartRadarStyle.FILLED, snapshotCategoryAxes, List.of(snapshotSeries)),

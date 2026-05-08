@@ -97,12 +97,14 @@ Requirements for protocol wire types:
 
 ### 3.1 JPMS: Module Boundaries Are Architectural
 
-The `module-info.java` descriptors in `excel-foundation`, `engine`, `contract`, `executor`,
-`authoring-java`, and `cli` are part of the enforced architecture, not packaging trivia. Preserve
-the current product graph from `docs/DEVELOPER_CONTRACT_REPLACEMENT_ADR.md`:
+The `module-info.java` descriptors in `excel-foundation`, `engine`, `contract`, `authoring-java`,
+and `cli` are part of the enforced architecture, not packaging trivia. Preserve the current
+product graph from `docs/DEVELOPER_CONTRACT_REPLACEMENT_ADR.md`:
 - `authoring-java -> contract -> excel-foundation`
-- `cli -> executor -> contract -> excel-foundation`
-- `executor -> engine -> excel-foundation`
+- `cli -> engine -> contract -> excel-foundation`
+- `engine -> excel-foundation`
+The `executor` Gradle project remains part of the build as a parity and regression-verification
+surface, not as a runtime bridge. Do not reintroduce a separate runtime `executor` module.
 Do not bypass module boundaries with broadened exports, transitive leaks, or classpath-only
 workarounds when the correct fix is to move ownership to the right module.
 

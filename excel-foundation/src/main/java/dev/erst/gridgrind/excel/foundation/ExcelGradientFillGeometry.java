@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.foundation;
 
 import java.util.Locale;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Shared normalization and geometry rules for authored gradient fills.
@@ -25,7 +26,11 @@ public final class ExcelGradientFillGeometry {
 
   /** Returns the effective factual gradient type after considering path-offset geometry. */
   public static String effectiveType(
-      String explicitType, Double left, Double right, Double top, Double bottom) {
+      @Nullable String explicitType,
+      @Nullable Double left,
+      @Nullable Double right,
+      @Nullable Double top,
+      @Nullable Double bottom) {
     if (explicitType != null) {
       return normalizeType(explicitType);
     }
@@ -44,7 +49,11 @@ public final class ExcelGradientFillGeometry {
     }
   }
 
-  private static boolean hasPathOffsets(Double left, Double right, Double top, Double bottom) {
+  private static boolean hasPathOffsets(
+      @Nullable Double left,
+      @Nullable Double right,
+      @Nullable Double top,
+      @Nullable Double bottom) {
     return left != null || right != null || top != null || bottom != null;
   }
 }

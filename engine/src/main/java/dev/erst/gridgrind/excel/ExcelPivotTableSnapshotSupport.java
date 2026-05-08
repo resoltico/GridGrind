@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.DataConsolidateFunction;
@@ -14,6 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFPivotCacheRecords;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageField;
@@ -47,23 +49,33 @@ final class ExcelPivotTableSnapshotSupport {
         return unsupportedSnapshot(
             handle, name, anchor, "Pivot table does not contain any data fields.");
       }
+      List<ExcelPivotTableSnapshot.Field> rowFields =
+          definition.getRowFields() == null
+              ? List.of()
+              : snapshotFields(
+                  Objects.requireNonNull(
+                      definition.getRowFields().getFieldArray(),
+                      "pivot row field array must not be null"),
+                  sourceColumnNames);
+      List<ExcelPivotTableSnapshot.Field> pageFields =
+          definition.getPageFields() == null
+              ? List.of()
+              : snapshotPageFields(
+                  Objects.requireNonNull(
+                      definition.getPageFields().getPageFieldArray(),
+                      "pivot page field array must not be null"),
+                  sourceColumnNames);
       return new ExcelPivotTableSnapshot.Supported(
           name,
           handle.sheetName(),
           anchor,
           snapshotSource(workbook, handle.table()),
-          snapshotFields(
-              definition.getRowFields() == null ? null : definition.getRowFields().getFieldArray(),
-              sourceColumnNames),
+          rowFields,
           columns.columnLabels(),
-          snapshotPageFields(
-              definition.getPageFields() == null
-                  ? null
-                  : definition.getPageFields().getPageFieldArray(),
-              sourceColumnNames),
+          pageFields,
           dataFields,
           columns.valuesAxisOnColumns());
-    } catch (RuntimeException exception) {
+    } catch (IllegalArgumentException exception) {
       return unsupportedSnapshot(
           handle,
           name,
@@ -91,24 +103,26 @@ final class ExcelPivotTableSnapshotSupport {
   }
 
   static List<ExcelPivotTableSnapshot.Field> snapshotFields(
-      CTField[] fields, List<String> sourceColumnNames) {
+      @Nullable CTField[] fields, List<String> sourceColumnNames) {
     if (fields == null || fields.length == 0) {
       return List.of();
     }
     List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(fields.length);
     for (CTField field : fields) {
+      Objects.requireNonNull(field, "pivot field entries must not be null");
       snapshots.add(sourceField(sourceColumnNames, field.getX()));
     }
     return List.copyOf(snapshots);
   }
 
   static List<ExcelPivotTableSnapshot.Field> snapshotPageFields(
-      CTPageField[] pageFields, List<String> sourceColumnNames) {
+      @Nullable CTPageField[] pageFields, List<String> sourceColumnNames) {
     if (pageFields == null || pageFields.length == 0) {
       return List.of();
     }
     List<ExcelPivotTableSnapshot.Field> snapshots = new ArrayList<>(pageFields.length);
     for (CTPageField pageField : pageFields) {
+      Objects.requireNonNull(pageField, "pivot page-field entries must not be null");
       snapshots.add(sourceField(sourceColumnNames, pageField.getFld()));
     }
     return List.copyOf(snapshots);
@@ -183,15 +197,16 @@ final class ExcelPivotTableSnapshotSupport {
               + "' is ambiguous because multiple matching named ranges exist.");
     }
 
-    XSSFTable table = ExcelPivotTableSourceSupport.tableByName(workbook, sourceName, sheetName);
-    if (table != null) {
+    Optional<XSSFTable> table =
+        ExcelPivotTableSourceSupport.tableByName(workbook, sourceName, sheetName);
+    if (table.isPresent()) {
       return new ExcelPivotTableSnapshot.Source.Table(
           sourceName,
-          table.getSheetName(),
+          table.orElseThrow().getSheetName(),
           ExcelPivotTableIdentitySupport.normalizeArea(
               new AreaReference(
-                  table.getStartCellReference(),
-                  table.getEndCellReference(),
+                  table.orElseThrow().getStartCellReference(),
+                  table.orElseThrow().getEndCellReference(),
                   SpreadsheetVersion.EXCEL2007)));
     }
     throw new IllegalArgumentException(
@@ -232,52 +247,48 @@ final class ExcelPivotTableSnapshotSupport {
         "Unsupported pivot data consolidate function value: " + subtotalValue);
   }
 
-  static String numberFormat(XSSFWorkbook workbook, Long numFmtId) {
+  static Optional<String> numberFormat(XSSFWorkbook workbook, @Nullable Long numFmtId) {
     if (numFmtId == null) {
-      return null;
+      return Optional.empty();
     }
     short formatIndex = numFmtId > Short.MAX_VALUE ? Short.MAX_VALUE : (short) numFmtId.longValue();
     String format = workbook.createDataFormat().getFormat(formatIndex);
-    return format == null || format.isBlank() ? null : format;
+    return format == null || format.isBlank() ? Optional.empty() : Optional.of(format);
   }
 
   static XSSFPivotCacheDefinition requiredCacheDefinition(XSSFPivotTable pivotTable) {
-    XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(pivotTable);
-    if (cacheDefinition == null) {
-      throw new IllegalArgumentException("Pivot table is missing its cache definition relation.");
-    }
-    return cacheDefinition;
+    return cacheDefinition(pivotTable)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Pivot table is missing its cache definition relation."));
   }
 
-  static XSSFPivotCacheDefinition cacheDefinition(XSSFPivotTable pivotTable) {
-    try {
-      return pivotTable.getPivotCacheDefinition();
-    } catch (RuntimeException exception) {
-      return null;
-    }
+  static Optional<XSSFPivotCacheDefinition> cacheDefinition(XSSFPivotTable pivotTable) {
+    return Optional.ofNullable(pivotTable.getPivotCacheDefinition());
   }
 
-  static XSSFPivotCacheRecords cacheRecords(XSSFPivotCacheDefinition cacheDefinition) {
+  static Optional<XSSFPivotCacheRecords> cacheRecords(XSSFPivotCacheDefinition cacheDefinition) {
     return firstRelation(cacheDefinition, XSSFPivotCacheRecords.class);
   }
 
-  static <T extends POIXMLDocumentPart> T firstRelation(
+  static <T extends POIXMLDocumentPart> Optional<T> firstRelation(
       POIXMLDocumentPart parent, Class<T> relationType) {
     for (POIXMLDocumentPart relation : parent.getRelations()) {
       if (relationType.isInstance(relation)) {
-        return relationType.cast(relation);
+        return Optional.of(relationType.cast(relation));
       }
     }
-    return null;
+    return Optional.empty();
   }
 
-  static CTPivotCache workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
+  static Optional<CTPivotCache> workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
     for (CTPivotCache cache : workbookPivotCaches(workbook)) {
       if (cache.getCacheId() == cacheId) {
-        return cache;
+        return Optional.of(cache);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   static List<CTPivotCache> workbookPivotCaches(XSSFWorkbook workbook) {

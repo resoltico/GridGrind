@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: JAVA_AUTHORING
 updated: "2026-05-01"
 route:
@@ -42,9 +42,8 @@ only want to emit plan JSON do not inherit the in-process runtime graph.
 
 `Checks` and `Queries` still exist internally, but they are not part of the public authoring API.
 The public Java surface stays selector-first and hides raw request/response DTO plumbing such as
-`TableInput`, `HyperlinkTarget`, and the report namespaces under
-`GridGrindWorkbookSurfaceReports`, `GridGrindLayoutSurfaceReports`,
-`GridGrindSchemaAndFormulaReports`, and `GridGrindAnalysisReports`.
+`TableInput`, `HyperlinkTarget`, and report DTOs such as `WorkbookSummary`,
+`SheetLayoutReport`, `SheetSchemaReport`, and `WorkbookFindingsReport`.
 
 ## Optional Explicit Execution Types
 
@@ -53,8 +52,8 @@ adds these types:
 
 | Type | Owns |
 |:-----|:-----|
-| `ExecutionInputBindings` | Working directory plus optional `STANDARD_INPUT` bytes for explicit in-process execution |
-| `GridGrindRequestExecutor` | Transport-neutral execution port; `DefaultGridGrindRequestExecutor` is the production implementation |
+| `GridGrindRequestInputs` | Working directory plus optional `STANDARD_INPUT` bytes for explicit in-process execution |
+| `GridGrindRequestExecutor` | Transport-neutral execution port returned by `GridGrindEngine.requestExecutor()` |
 
 Unnamed authored steps receive generated ids such as `mutation-001`, `inspection-001`, and
 `assertion-001`. If you need stable caller-owned ids, call `.named("...")` on a
@@ -126,11 +125,11 @@ Typical in-process execution:
 
 ```java
 GridGrindResponse response =
-    new DefaultGridGrindRequestExecutor()
+    GridGrindEngine.requestExecutor()
         .execute(
             plan.toPlan(),
-            new ExecutionInputBindings(workspace),
-            ExecutionJournalSink.NOOP);
+            new GridGrindRequestInputs(workspace),
+            GridGrindJournalSink.NOOP);
 ```
 
 ## Source-Backed Inputs From Java
@@ -141,10 +140,10 @@ The Java layer emits the same source-backed payload contract as JSON requests:
   `UTF8_FILE` or `FILE` sources
 - `Values.textFromStandardInput()`, `Values.formulaFromStandardInput()`, and
   `Values.binaryFromStandardInput()` emit `STANDARD_INPUT` sources
-- relative source-backed paths resolve from `ExecutionInputBindings.workingDirectory()`, not from
+- relative source-backed paths resolve from `GridGrindRequestInputs.workingDirectory()`, not from
   the Java source file location
 - `STANDARD_INPUT` values are only usable in-process when the bound
-  `ExecutionInputBindings` carries stdin bytes
+  `GridGrindRequestInputs` carries stdin bytes
 
 Use explicit bindings whenever the plan depends on relative authored-input files or caller-supplied
 stdin content.

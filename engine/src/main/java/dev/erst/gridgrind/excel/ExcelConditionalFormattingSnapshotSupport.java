@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import javax.xml.namespace.QName;
 import org.apache.poi.ss.usermodel.ConditionType;
 import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
@@ -12,6 +13,7 @@ import org.apache.poi.xssf.usermodel.XSSFConditionalFormatting;
 import org.apache.poi.xssf.usermodel.XSSFConditionalFormattingRule;
 import org.apache.poi.xssf.usermodel.XSSFEvaluationWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCfRule;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting;
 
@@ -55,12 +57,12 @@ final class ExcelConditionalFormattingSnapshotSupport {
 
   static boolean intersectsAny(List<String> rawRanges, List<ExcelRange> targetRanges) {
     for (String rawRange : rawRanges) {
-      ExcelRange existingRange = ExcelSheetStructureSupport.parseRangeOrNull(rawRange);
-      if (existingRange == null) {
+      Optional<ExcelRange> existingRange = ExcelSheetStructureSupport.parseOptionalRange(rawRange);
+      if (existingRange.isEmpty()) {
         continue;
       }
       for (ExcelRange targetRange : targetRanges) {
-        if (ExcelSheetStructureSupport.intersects(existingRange, targetRange)) {
+        if (ExcelSheetStructureSupport.intersects(existingRange.orElseThrow(), targetRange)) {
           return true;
         }
       }
@@ -232,7 +234,9 @@ final class ExcelConditionalFormattingSnapshotSupport {
   }
 
   private static ExcelConditionalFormattingRuleSnapshot formulaRuleSnapshot(
-      XSSFConditionalFormattingRule rule, CTCfRule ctRule, ExcelDifferentialStyleSnapshot style) {
+      XSSFConditionalFormattingRule rule,
+      CTCfRule ctRule,
+      @Nullable ExcelDifferentialStyleSnapshot style) {
     String formula = Objects.requireNonNullElse(rule.getFormula1(), "");
     if (formula.isBlank()) {
       return unsupportedRule(ctRule, "FORMULA", "Formula rule is missing formula text.");
@@ -242,7 +246,9 @@ final class ExcelConditionalFormattingSnapshotSupport {
   }
 
   private static ExcelConditionalFormattingRuleSnapshot cellValueRuleSnapshot(
-      XSSFConditionalFormattingRule rule, CTCfRule ctRule, ExcelDifferentialStyleSnapshot style) {
+      XSSFConditionalFormattingRule rule,
+      CTCfRule ctRule,
+      @Nullable ExcelDifferentialStyleSnapshot style) {
     String formula1 = Objects.requireNonNullElse(rule.getFormula1(), "");
     if (formula1.isBlank()) {
       return unsupportedRule(ctRule, "CELL_VALUE_IS", "Cell-value rule is missing formula1.");
@@ -333,7 +339,7 @@ final class ExcelConditionalFormattingSnapshotSupport {
   }
 
   private static ExcelConditionalFormattingRuleSnapshot top10RuleSnapshot(
-      CTCfRule ctRule, ExcelDifferentialStyleSnapshot style) {
+      CTCfRule ctRule, @Nullable ExcelDifferentialStyleSnapshot style) {
     return new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
         ctRule.getPriority(),
         ctRule.getStopIfTrue(),

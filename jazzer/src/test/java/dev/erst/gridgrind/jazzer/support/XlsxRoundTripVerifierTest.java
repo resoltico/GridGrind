@@ -35,7 +35,7 @@ import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
@@ -46,6 +46,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Regression tests for the `.xlsx` round-trip verifier itself. */
@@ -67,17 +68,19 @@ class XlsxRoundTripVerifierTest {
                         "Budget",
                         "A1",
                         new ExcelCellStyle(
-                            null,
-                            null,
-                            null,
-                            ExcelCellFill.gradient(
-                                ExcelGradientFill.linear(
-                                    42.5d,
-                                    List.of(
-                                        new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
-                                        new ExcelGradientStop(1.0d, ExcelColor.theme(3))))),
-                            null,
-                            new ExcelCellProtection(true, true))))));
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.of(
+                                ExcelCellFill.gradient(
+                                    ExcelGradientFill.linear(
+                                        Optional.of(42.5d),
+                                        List.of(
+                                            new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
+                                            new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
+                            Optional.empty(),
+                            Optional.of(
+                                new ExcelCellProtection(Optional.of(true), Optional.of(true))))))));
   }
 
   @Test
@@ -94,30 +97,33 @@ class XlsxRoundTripVerifierTest {
                         ExcelCellValue.richText(
                             new ExcelRichText(
                                 List.of(
-                                    new ExcelRichTextRun("Quarterly", null),
+                                    new ExcelRichTextRun("Quarterly", Optional.empty()),
                                     new ExcelRichTextRun(
                                         " Report",
-                                        new ExcelCellFont(
-                                            true,
-                                            null,
-                                            null,
-                                            null,
-                                            ExcelColor.rgb("#C0504D"),
-                                            null,
-                                            null)))))),
+                                        Optional.of(
+                                            new ExcelCellFont(
+                                                Optional.of(true),
+                                                Optional.empty(),
+                                                Optional.empty(),
+                                                Optional.empty(),
+                                                Optional.of(ExcelColor.rgb("#C0504D")),
+                                                Optional.empty(),
+                                                Optional.empty()))))))),
                     new WorkbookFormattingCommand.ApplyStyle(
                         "Budget",
                         "A1",
                         new ExcelCellStyle(
-                            null,
-                            null,
-                            null,
-                            ExcelCellFill.patternColors(
-                                ExcelFillPattern.BRICKS,
-                                ExcelColor.rgb("#102030"),
-                                ExcelColor.rgb("#405060")),
-                            null,
-                            new ExcelCellProtection(false, true))),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.empty(),
+                            Optional.of(
+                                ExcelCellFill.patternColors(
+                                    ExcelFillPattern.BRICKS,
+                                    ExcelColor.rgb("#102030"),
+                                    ExcelColor.rgb("#405060"))),
+                            Optional.empty(),
+                            Optional.of(
+                                new ExcelCellProtection(Optional.of(false), Optional.of(true))))),
                     new WorkbookAnnotationCommand.SetHyperlink(
                         "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
                     new WorkbookAnnotationCommand.SetComment(
@@ -126,7 +132,7 @@ class XlsxRoundTripVerifierTest {
                         new ExcelNamedRangeDefinition(
                             "BudgetTitle",
                             new ExcelNamedRangeScope.WorkbookScope(),
-                            new ExcelNamedRangeTarget("Budget", "A1"))))));
+                            ExcelNamedRangeTarget.range("Budget", "A1"))))));
   }
 
   @Test
@@ -154,16 +160,18 @@ class XlsxRoundTripVerifierTest {
                         "B2:B4",
                         new ExcelDataValidationDefinition(
                             new ExcelDataValidationRule.TextLength(
-                                ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                                ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
                             true,
                             false,
-                            new ExcelDataValidationPrompt(
-                                "Reason", "Use 20 characters or fewer.", true),
-                            new ExcelDataValidationErrorAlert(
-                                ExcelDataValidationErrorStyle.STOP,
-                                "Too long",
-                                "Use a shorter reason.",
-                                true))),
+                            Optional.of(
+                                new ExcelDataValidationPrompt(
+                                    "Reason", "Use 20 characters or fewer.", true)),
+                            Optional.of(
+                                new ExcelDataValidationErrorAlert(
+                                    ExcelDataValidationErrorStyle.STOP,
+                                    "Too long",
+                                    "Use a shorter reason.",
+                                    true)))),
                     new WorkbookFormattingCommand.SetConditionalFormatting(
                         "Budget",
                         new ExcelConditionalFormattingBlockDefinition(
@@ -172,8 +180,17 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelConditionalFormattingRule.FormulaRule(
                                     "B2>0",
                                     true,
-                                    new ExcelDifferentialStyle(
-                                        "0.00", null, null, null, null, null, null, null, null))))),
+                                    Optional.of(
+                                        new ExcelDifferentialStyle(
+                                            Optional.of("0.00"),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty(),
+                                            Optional.empty())))))),
                     new WorkbookTabularCommand.SetAutofilter("Budget", "A1:B4"),
                     new WorkbookTabularCommand.SetTable(
                         new ExcelTableDefinition(
@@ -217,7 +234,7 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(1, 1, 0, 0),
                                 new ExcelDrawingMarker(4, 6, 0, 0),
                                 null),
-                            "Queue preview")),
+                            Optional.of("Queue preview"))),
                     new WorkbookDrawingCommand.SetPicture(
                         "Queue",
                         new ExcelPictureDefinition(
@@ -228,7 +245,7 @@ class XlsxRoundTripVerifierTest {
                                 new ExcelDrawingMarker(6, 1, 0, 0),
                                 new ExcelDrawingMarker(9, 6, 0, 0),
                                 null),
-                            null)),
+                            Optional.empty())),
                     new WorkbookSheetCommand.CopySheet(
                         "Queue",
                         "Queue Copy",
@@ -306,7 +323,7 @@ class XlsxRoundTripVerifierTest {
     Files.deleteIfExists(workbookPath);
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      new WorkbookCommandExecutor().apply(workbook, commands);
+      new WorkbookExecutionEngine().apply(workbook, commands);
       workbook.save(workbookPath);
       XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
     }
@@ -324,7 +341,7 @@ class XlsxRoundTripVerifierTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64))));
   }
 }

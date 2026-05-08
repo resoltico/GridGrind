@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for WorkbookReadResult constructor invariants and defensive copies. */
@@ -229,7 +230,7 @@ class WorkbookReadResultTest {
                     "Amount",
                     ExcelPivotDataConsolidateFunction.SUM,
                     "Total Amount",
-                    "#,##0.00")),
+                    Optional.of("#,##0.00"))),
             false);
     WorkbookAnalysis.AnalysisFinding finding =
         new WorkbookAnalysis.AnalysisFinding(
@@ -415,7 +416,7 @@ class WorkbookReadResultTest {
                     "BudgetTotal",
                     new ExcelNamedRangeScope.WorkbookScope(),
                     "Budget!$B$4",
-                    new ExcelNamedRangeTarget("Budget", "B4"))));
+                    ExcelNamedRangeTarget.range("Budget", "B4"))));
     List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
     List<WorkbookSheetResult.WindowRow> rows =
         new ArrayList<>(List.of(new WorkbookSheetResult.WindowRow(0, List.of(blank))));
@@ -430,7 +431,9 @@ class WorkbookReadResultTest {
         new ArrayList<>(
             List.of(
                 new WorkbookSheetResult.CellComment(
-                    "A1", new ExcelCommentSnapshot("Review", "GridGrind", false, null, null))));
+                    "A1",
+                    new ExcelCommentSnapshot(
+                        "Review", "GridGrind", false, Optional.empty(), Optional.empty()))));
     List<WorkbookSheetResult.ColumnLayout> columns =
         new ArrayList<>(List.of(new WorkbookSheetResult.ColumnLayout(0, 12.5, false, 0, false)));
     List<WorkbookSheetResult.RowLayout> resultRows =
@@ -442,12 +445,13 @@ class WorkbookReadResultTest {
                     List.of("A2:A5"),
                     new ExcelDataValidationDefinition(
                         new ExcelDataValidationRule.TextLength(
-                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", Optional.empty()),
                         true,
                         false,
-                        new ExcelDataValidationPrompt(
-                            "Reason", "Use 20 characters or fewer.", true),
-                        null))));
+                        Optional.of(
+                            new ExcelDataValidationPrompt(
+                                "Reason", "Use 20 characters or fewer.", true)),
+                        Optional.empty()))));
     List<ExcelAutofilterSnapshot> autofilters =
         new ArrayList<>(
             List.of(
@@ -575,12 +579,12 @@ class WorkbookReadResultTest {
         "conditionalFormattingHealth", fixture.conditionalFormattingHealthResult().stepId());
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
-    assertEquals(1, fixture.formulaSurfaceResult().analysis().totalFormulaCellCount());
+    assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
     assertEquals(
-        "STRING", fixture.sheetSchemaResult().analysis().columns().getFirst().dominantType());
+        "STRING", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
     assertEquals(
         WorkbookSurfaceResult.NamedRangeBackingKind.RANGE,
-        fixture.namedRangeSurfaceResult().analysis().namedRanges().getFirst().kind());
+        fixture.namedRangeSurfaceResult().surface().namedRanges().getFirst().kind());
   }
 
   private record ReadResultFixture(
@@ -667,7 +671,7 @@ class WorkbookReadResultTest {
   private static ExcelSheetPresentationSnapshot defaultSheetPresentationSnapshot() {
     return new ExcelSheetPresentationSnapshot(
         ExcelSheetDisplay.defaults(),
-        null,
+        Optional.empty(),
         ExcelSheetOutlineSummary.defaults(),
         ExcelSheetDefaults.defaults(),
         List.of());

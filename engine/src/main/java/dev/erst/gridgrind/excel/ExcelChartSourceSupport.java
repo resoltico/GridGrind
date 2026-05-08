@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -11,14 +12,15 @@ import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 
 /** Chart source-formula resolution and scalar decoding helpers. */
 final class ExcelChartSourceSupport {
   private ExcelChartSourceSupport() {}
 
-  static Name resolveDefinedNameReference(XSSFSheet contextSheet, String formula) {
+  static Optional<Name> resolveDefinedNameReference(XSSFSheet contextSheet, String formula) {
     if (!formula.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
-      return null;
+      return Optional.empty();
     }
 
     int contextSheetIndex = contextSheet.getWorkbook().getSheetIndex(contextSheet);
@@ -28,13 +30,13 @@ final class ExcelChartSourceSupport {
         continue;
       }
       if (name.getSheetIndex() == contextSheetIndex) {
-        return name;
+        return Optional.of(name);
       }
       if (name.getSheetIndex() < 0) {
         workbookScopedMatch = name;
       }
     }
-    return workbookScopedMatch;
+    return Optional.ofNullable(workbookScopedMatch);
   }
 
   static String normalizeAreaFormulaForPoi(String formula) {
@@ -83,7 +85,9 @@ final class ExcelChartSourceSupport {
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> toCategoryDataSource(
-      XSSFSheet sheet, ExcelChartDefinition.DataSource source, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition.DataSource source,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return switch (source) {
       case ExcelChartDefinition.DataSource.Reference reference -> {
@@ -113,7 +117,7 @@ final class ExcelChartSourceSupport {
       toValueDataSource(
           XSSFSheet sheet,
           ExcelChartDefinition.DataSource source,
-          ExcelFormulaRuntime formulaRuntime) {
+          @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return switch (source) {
       case ExcelChartDefinition.DataSource.Reference reference -> {
@@ -139,7 +143,7 @@ final class ExcelChartSourceSupport {
   }
 
   static ResolvedChartSource resolveChartSource(
-      XSSFSheet sheet, String formula, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, String formula, @Nullable ExcelFormulaRuntime formulaRuntime) {
     String normalizedFormula = normalizeFormula(formula);
     ResolvedAreaReference resolved = resolveAreaReference(sheet, normalizedFormula);
     List<String> stringValues = new ArrayList<>();
@@ -156,7 +160,7 @@ final class ExcelChartSourceSupport {
         numericValues.add(scalar.number());
       } else {
         numeric = false;
-        stringValues.add(scalar.text());
+        stringValues.add(Objects.requireNonNull(scalar.text(), "scalar text must not be null"));
       }
     }
     return new ResolvedChartSource(
@@ -169,9 +173,9 @@ final class ExcelChartSourceSupport {
   }
 
   static ResolvedAreaReference resolveAreaReference(XSSFSheet contextSheet, String formula) {
-    Name definedName = resolveDefinedNameReference(contextSheet, formula);
-    if (definedName != null) {
-      return resolveDefinedName(contextSheet, definedName);
+    Optional<Name> definedName = resolveDefinedNameReference(contextSheet, formula);
+    if (definedName.isPresent()) {
+      return resolveDefinedName(contextSheet, definedName.orElseThrow());
     }
 
     AreaReference[] references =
@@ -203,7 +207,7 @@ final class ExcelChartSourceSupport {
   }
 
   static String scalarText(
-      XSSFSheet sheet, CellReference reference, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet, CellReference reference, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Cell cell =
         sheet.getWorkbook().getSheet(reference.getSheetName()).getRow(reference.getRow()) == null
             ? null
@@ -215,7 +219,7 @@ final class ExcelChartSourceSupport {
     ExcelDrawingController.CellScalar scalar = scalar(cell, formulaRuntime);
     return scalar.kind() == ExcelDrawingController.CellScalarKind.NUMERIC
         ? Double.toString(scalar.number())
-        : scalar.text();
+        : Objects.requireNonNull(scalar.text(), "scalar text must not be null");
   }
 
   static String normalizeFormula(String formula) {
@@ -231,8 +235,8 @@ final class ExcelChartSourceSupport {
     return value;
   }
 
-  static String nullIfBlank(String value) {
-    return value == null || value.isBlank() ? null : value;
+  static Optional<String> blankAsOptional(String value) {
+    return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
   }
 
   private static ResolvedAreaReference resolveDefinedName(
@@ -290,7 +294,7 @@ final class ExcelChartSourceSupport {
   }
 
   private static ExcelDrawingController.CellScalar scalar(
-      Cell cell, ExcelFormulaRuntime formulaRuntime) {
+      @Nullable Cell cell, @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (cell == null) {
       return new ExcelDrawingController.CellScalar(
           ExcelDrawingController.CellScalarKind.STRING, "", 0d);
@@ -317,7 +321,7 @@ final class ExcelChartSourceSupport {
   }
 
   static ExcelDrawingController.CellScalar scalarFromFormula(
-      Cell cell, ExcelFormulaRuntime formulaRuntime) {
+      Cell cell, @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(cell, "cell must not be null");
     if (formulaRuntime == null) {
       return scalarFromFormula(cell);

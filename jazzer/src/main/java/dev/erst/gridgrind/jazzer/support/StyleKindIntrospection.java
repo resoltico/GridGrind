@@ -10,13 +10,18 @@ import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
+import dev.erst.gridgrind.excel.ExcelCellFont;
+import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** Extracts stable style-attribute coverage labels from style patches. */
 public final class StyleKindIntrospection {
@@ -26,7 +31,7 @@ public final class StyleKindIntrospection {
   public static Map<String, Long> styleKinds(CellStyleInput style) {
     Objects.requireNonNull(style, "style must not be null");
     LinkedHashMap<String, Long> kinds = new LinkedHashMap<>();
-    increment(kinds, "number_format", style.numberFormat() != null);
+    increment(kinds, "number_format", style.numberFormat().isPresent());
     appendProtocolAlignmentKinds(kinds, style.alignment());
     appendProtocolFontKinds(kinds, style.font());
     appendProtocolFillKinds(kinds, style.fill());
@@ -39,7 +44,7 @@ public final class StyleKindIntrospection {
   public static Map<String, Long> styleKinds(ExcelCellStyle style) {
     Objects.requireNonNull(style, "style must not be null");
     LinkedHashMap<String, Long> kinds = new LinkedHashMap<>();
-    increment(kinds, "number_format", style.numberFormat() != null);
+    increment(kinds, "number_format", style.numberFormat().isPresent());
     appendEngineAlignmentKinds(kinds, style);
     appendEngineFontKinds(kinds, style);
     appendEngineFillKinds(kinds, style);
@@ -49,11 +54,124 @@ public final class StyleKindIntrospection {
   }
 
   private static void appendProtocolAlignmentKinds(
-      Map<String, Long> kinds, CellAlignmentInput alignment) {
-    increment(kinds, "alignment", alignment != null);
-    if (alignment == null) {
+      Map<String, Long> kinds, Optional<CellAlignmentInput> alignment) {
+    increment(kinds, "alignment", alignment.isPresent());
+    if (alignment.isEmpty()) {
       return;
     }
+    CellAlignmentInput required = alignment.orElseThrow();
+    increment(kinds, "wrap_text", required.wrapText().isPresent());
+    increment(kinds, "horizontal_alignment", required.horizontalAlignment().isPresent());
+    increment(kinds, "vertical_alignment", required.verticalAlignment().isPresent());
+    increment(kinds, "text_rotation", required.textRotation().isPresent());
+    increment(kinds, "indentation", required.indentation().isPresent());
+  }
+
+  private static void appendProtocolFontKinds(
+      Map<String, Long> kinds, Optional<CellFontInput> font) {
+    increment(kinds, "font", font.isPresent());
+    if (font.isEmpty()) {
+      return;
+    }
+    CellFontInput required = font.orElseThrow();
+    increment(kinds, "bold", required.bold().isPresent());
+    increment(kinds, "italic", required.italic().isPresent());
+    increment(kinds, "font_name", required.fontName().isPresent());
+    increment(kinds, "font_height", required.fontHeight().isPresent());
+    increment(
+        kinds,
+        "font_height_points",
+        required.fontHeight().filter(FontHeightInput.Points.class::isInstance).isPresent());
+    increment(
+        kinds,
+        "font_height_twips",
+        required.fontHeight().filter(FontHeightInput.Twips.class::isInstance).isPresent());
+    increment(kinds, "font_color", required.fontColor().isPresent());
+    increment(kinds, "underline", required.underline().isPresent());
+    increment(kinds, "strikeout", required.strikeout().isPresent());
+  }
+
+  private static void appendProtocolFillKinds(
+      Map<String, Long> kinds, Optional<CellFillInput> fill) {
+    increment(kinds, "fill", fill.isPresent());
+    if (fill.isEmpty()) {
+      return;
+    }
+    CellFillInput required = fill.orElseThrow();
+    ExcelFillPattern pattern = protocolFillPattern(required);
+    increment(kinds, "fill_pattern", pattern != null);
+    increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
+    increment(kinds, "fill_patterned", isPatterned(pattern));
+    increment(kinds, "fill_foreground_color", protocolForegroundColor(required) != null);
+    increment(kinds, "fill_background_color", protocolBackgroundColor(required) != null);
+    increment(kinds, "fill_color", protocolForegroundColor(required) != null);
+  }
+
+  private static void appendProtocolBorderKinds(
+      Map<String, Long> kinds, Optional<CellBorderInput> border) {
+    increment(kinds, "border", border.isPresent());
+    if (border.isEmpty()) {
+      return;
+    }
+    CellBorderInput required = border.orElseThrow();
+    increment(kinds, "border_all", required.all().isPresent());
+    increment(kinds, "border_top", required.top().isPresent());
+    increment(kinds, "border_right", required.right().isPresent());
+    increment(kinds, "border_bottom", required.bottom().isPresent());
+    increment(kinds, "border_left", required.left().isPresent());
+    increment(kinds, "border_all_none", isProtocolNone(required.all()));
+    increment(kinds, "border_top_none", isProtocolNone(required.top()));
+    increment(kinds, "border_right_none", isProtocolNone(required.right()));
+    increment(kinds, "border_bottom_none", isProtocolNone(required.bottom()));
+    increment(kinds, "border_left_none", isProtocolNone(required.left()));
+    increment(kinds, "border_all_color", hasProtocolColor(required.all()));
+    increment(kinds, "border_top_color", hasProtocolColor(required.top()));
+    increment(kinds, "border_right_color", hasProtocolColor(required.right()));
+    increment(kinds, "border_bottom_color", hasProtocolColor(required.bottom()));
+    increment(kinds, "border_left_color", hasProtocolColor(required.left()));
+  }
+
+  private static void appendEngineBorderKinds(
+      Map<String, Long> kinds, Optional<ExcelBorder> border) {
+    increment(kinds, "border", border.isPresent());
+    if (border.isEmpty()) {
+      return;
+    }
+    ExcelBorder required = border.orElseThrow();
+    increment(kinds, "border_all", required.all().isPresent());
+    increment(kinds, "border_top", required.top().isPresent());
+    increment(kinds, "border_right", required.right().isPresent());
+    increment(kinds, "border_bottom", required.bottom().isPresent());
+    increment(kinds, "border_left", required.left().isPresent());
+    increment(kinds, "border_all_none", isEngineNone(required.all()));
+    increment(kinds, "border_top_none", isEngineNone(required.top()));
+    increment(kinds, "border_right_none", isEngineNone(required.right()));
+    increment(kinds, "border_bottom_none", isEngineNone(required.bottom()));
+    increment(kinds, "border_left_none", isEngineNone(required.left()));
+    increment(kinds, "border_all_color", hasEngineColor(required.all()));
+    increment(kinds, "border_top_color", hasEngineColor(required.top()));
+    increment(kinds, "border_right_color", hasEngineColor(required.right()));
+    increment(kinds, "border_bottom_color", hasEngineColor(required.bottom()));
+    increment(kinds, "border_left_color", hasEngineColor(required.left()));
+  }
+
+  private static void appendProtocolProtectionKinds(
+      Map<String, Long> kinds, Optional<CellProtectionInput> protection) {
+    increment(kinds, "protection", protection.isPresent());
+    if (protection.isEmpty()) {
+      return;
+    }
+    CellProtectionInput required = protection.orElseThrow();
+    increment(kinds, "locked", required.locked().isPresent());
+    increment(kinds, "hidden_formula", required.hiddenFormula().isPresent());
+  }
+
+  private static void appendEngineAlignmentKinds(Map<String, Long> kinds, ExcelCellStyle style) {
+    increment(kinds, "alignment", style.alignment().isPresent());
+    if (style.alignment().isEmpty()) {
+      return;
+    }
+    ExcelCellAlignment alignment = style.alignment().orElseThrow();
     increment(kinds, "wrap_text", alignment.wrapText().isPresent());
     increment(kinds, "horizontal_alignment", alignment.horizontalAlignment().isPresent());
     increment(kinds, "vertical_alignment", alignment.verticalAlignment().isPresent());
@@ -61,157 +179,65 @@ public final class StyleKindIntrospection {
     increment(kinds, "indentation", alignment.indentation().isPresent());
   }
 
-  private static void appendProtocolFontKinds(Map<String, Long> kinds, CellFontInput font) {
-    increment(kinds, "font", font != null);
-    if (font == null) {
-      return;
-    }
-    increment(kinds, "bold", font.bold() != null);
-    increment(kinds, "italic", font.italic() != null);
-    increment(kinds, "font_name", font.fontName() != null);
-    increment(kinds, "font_height", font.fontHeight() != null);
-    increment(kinds, "font_height_points", font.fontHeight() instanceof FontHeightInput.Points);
-    increment(kinds, "font_height_twips", font.fontHeight() instanceof FontHeightInput.Twips);
-    increment(kinds, "font_color", font.fontColor() != null);
-    increment(kinds, "underline", font.underline() != null);
-    increment(kinds, "strikeout", font.strikeout() != null);
-  }
-
-  private static void appendProtocolFillKinds(Map<String, Long> kinds, CellFillInput fill) {
-    increment(kinds, "fill", fill != null);
-    if (fill == null) {
-      return;
-    }
-    ExcelFillPattern pattern = protocolFillPattern(fill);
-    increment(kinds, "fill_pattern", pattern != null);
-    increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
-    increment(kinds, "fill_patterned", isPatterned(pattern));
-    increment(kinds, "fill_foreground_color", protocolForegroundColor(fill) != null);
-    increment(kinds, "fill_background_color", protocolBackgroundColor(fill) != null);
-    increment(kinds, "fill_color", protocolForegroundColor(fill) != null);
-  }
-
-  private static void appendProtocolBorderKinds(Map<String, Long> kinds, CellBorderInput border) {
-    increment(kinds, "border", border != null);
-    if (border == null) {
-      return;
-    }
-    increment(kinds, "border_all", border.all() != null);
-    increment(kinds, "border_top", border.top() != null);
-    increment(kinds, "border_right", border.right() != null);
-    increment(kinds, "border_bottom", border.bottom() != null);
-    increment(kinds, "border_left", border.left() != null);
-    increment(kinds, "border_all_none", isNone(border.all()));
-    increment(kinds, "border_top_none", isNone(border.top()));
-    increment(kinds, "border_right_none", isNone(border.right()));
-    increment(kinds, "border_bottom_none", isNone(border.bottom()));
-    increment(kinds, "border_left_none", isNone(border.left()));
-    increment(kinds, "border_all_color", hasColor(border.all()));
-    increment(kinds, "border_top_color", hasColor(border.top()));
-    increment(kinds, "border_right_color", hasColor(border.right()));
-    increment(kinds, "border_bottom_color", hasColor(border.bottom()));
-    increment(kinds, "border_left_color", hasColor(border.left()));
-  }
-
-  private static void appendEngineBorderKinds(Map<String, Long> kinds, ExcelBorder border) {
-    increment(kinds, "border", border != null);
-    if (border == null) {
-      return;
-    }
-    increment(kinds, "border_all", border.all() != null);
-    increment(kinds, "border_top", border.top() != null);
-    increment(kinds, "border_right", border.right() != null);
-    increment(kinds, "border_bottom", border.bottom() != null);
-    increment(kinds, "border_left", border.left() != null);
-    increment(kinds, "border_all_none", isNone(border.all()));
-    increment(kinds, "border_top_none", isNone(border.top()));
-    increment(kinds, "border_right_none", isNone(border.right()));
-    increment(kinds, "border_bottom_none", isNone(border.bottom()));
-    increment(kinds, "border_left_none", isNone(border.left()));
-    increment(kinds, "border_all_color", hasColor(border.all()));
-    increment(kinds, "border_top_color", hasColor(border.top()));
-    increment(kinds, "border_right_color", hasColor(border.right()));
-    increment(kinds, "border_bottom_color", hasColor(border.bottom()));
-    increment(kinds, "border_left_color", hasColor(border.left()));
-  }
-
-  private static void appendProtocolProtectionKinds(
-      Map<String, Long> kinds, CellProtectionInput protection) {
-    increment(kinds, "protection", protection != null);
-    if (protection == null) {
-      return;
-    }
-    increment(kinds, "locked", protection.locked() != null);
-    increment(kinds, "hidden_formula", protection.hiddenFormula() != null);
-  }
-
-  private static void appendEngineAlignmentKinds(Map<String, Long> kinds, ExcelCellStyle style) {
-    increment(kinds, "alignment", style.alignment() != null);
-    if (style.alignment() == null) {
-      return;
-    }
-    increment(kinds, "wrap_text", style.alignment().wrapText() != null);
-    increment(kinds, "horizontal_alignment", style.alignment().horizontalAlignment() != null);
-    increment(kinds, "vertical_alignment", style.alignment().verticalAlignment() != null);
-    increment(kinds, "text_rotation", style.alignment().textRotation() != null);
-    increment(kinds, "indentation", style.alignment().indentation() != null);
-  }
-
   private static void appendEngineFontKinds(Map<String, Long> kinds, ExcelCellStyle style) {
-    increment(kinds, "font", style.font() != null);
-    if (style.font() == null) {
+    increment(kinds, "font", style.font().isPresent());
+    if (style.font().isEmpty()) {
       return;
     }
-    increment(kinds, "bold", style.font().bold() != null);
-    increment(kinds, "italic", style.font().italic() != null);
-    increment(kinds, "font_name", style.font().fontName() != null);
-    increment(kinds, "font_height", style.font().fontHeight() != null);
-    increment(kinds, "font_color", style.font().fontColor() != null);
-    increment(kinds, "underline", style.font().underline() != null);
-    increment(kinds, "strikeout", style.font().strikeout() != null);
+    ExcelCellFont font = style.font().orElseThrow();
+    increment(kinds, "bold", font.bold().isPresent());
+    increment(kinds, "italic", font.italic().isPresent());
+    increment(kinds, "font_name", font.fontName().isPresent());
+    increment(kinds, "font_height", font.fontHeight().isPresent());
+    increment(kinds, "font_color", font.fontColor().isPresent());
+    increment(kinds, "underline", font.underline().isPresent());
+    increment(kinds, "strikeout", font.strikeout().isPresent());
   }
 
   private static void appendEngineFillKinds(Map<String, Long> kinds, ExcelCellStyle style) {
-    increment(kinds, "fill", style.fill() != null);
-    if (style.fill() == null) {
+    increment(kinds, "fill", style.fill().isPresent());
+    if (style.fill().isEmpty()) {
       return;
     }
-    ExcelFillPattern pattern = engineFillPattern(style.fill());
+    ExcelCellFill fill = style.fill().orElseThrow();
+    ExcelFillPattern pattern = engineFillPattern(fill);
     increment(kinds, "fill_pattern", pattern != null);
     increment(kinds, "fill_pattern_solid", pattern == ExcelFillPattern.SOLID);
     increment(kinds, "fill_patterned", isPatterned(pattern));
-    increment(kinds, "fill_foreground_color", engineForegroundColor(style.fill()) != null);
-    increment(kinds, "fill_background_color", engineBackgroundColor(style.fill()) != null);
-    increment(kinds, "fill_color", engineForegroundColor(style.fill()) != null);
+    increment(kinds, "fill_foreground_color", engineForegroundColor(fill) != null);
+    increment(kinds, "fill_background_color", engineBackgroundColor(fill) != null);
+    increment(kinds, "fill_color", engineForegroundColor(fill) != null);
   }
 
   private static void appendEngineProtectionKinds(Map<String, Long> kinds, ExcelCellStyle style) {
-    increment(kinds, "protection", style.protection() != null);
-    if (style.protection() == null) {
+    increment(kinds, "protection", style.protection().isPresent());
+    if (style.protection().isEmpty()) {
       return;
     }
-    increment(kinds, "locked", style.protection().locked() != null);
-    increment(kinds, "hidden_formula", style.protection().hiddenFormula() != null);
+    ExcelCellProtection protection = style.protection().orElseThrow();
+    increment(kinds, "locked", protection.locked().isPresent());
+    increment(kinds, "hidden_formula", protection.hiddenFormula().isPresent());
   }
 
-  private static boolean isNone(CellBorderSideInput side) {
-    return side != null && side.style() == ExcelBorderStyle.NONE;
+  private static boolean isProtocolNone(Optional<CellBorderSideInput> side) {
+    return side.isPresent() && side.orElseThrow().style().orElseThrow() == ExcelBorderStyle.NONE;
   }
 
-  private static boolean isNone(ExcelBorderSide side) {
-    return side != null
-        && side.style() == dev.erst.gridgrind.excel.foundation.ExcelBorderStyle.NONE;
+  private static boolean isEngineNone(Optional<ExcelBorderSide> side) {
+    return side.isPresent()
+        && side.orElseThrow().style().orElseThrow()
+            == dev.erst.gridgrind.excel.foundation.ExcelBorderStyle.NONE;
   }
 
-  private static boolean hasColor(CellBorderSideInput side) {
-    return side != null && side.color() != null;
+  private static boolean hasProtocolColor(Optional<CellBorderSideInput> side) {
+    return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
-  private static boolean hasColor(ExcelBorderSide side) {
-    return side != null && side.color() != null;
+  private static boolean hasEngineColor(Optional<ExcelBorderSide> side) {
+    return side.isPresent() && side.orElseThrow().color().isPresent();
   }
 
-  private static ExcelFillPattern protocolFillPattern(CellFillInput fill) {
+  private static @Nullable ExcelFillPattern protocolFillPattern(CellFillInput fill) {
     return switch (fill) {
       case CellFillInput.PatternOnly pattern -> pattern.pattern();
       case CellFillInput.PatternForeground pattern -> pattern.pattern();
@@ -221,7 +247,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static Object protocolForegroundColor(CellFillInput fill) {
+  private static @Nullable Object protocolForegroundColor(CellFillInput fill) {
     return switch (fill) {
       case CellFillInput.PatternForeground pattern -> pattern.foregroundColor();
       case CellFillInput.PatternForegroundBackground pattern -> pattern.foregroundColor();
@@ -229,7 +255,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static Object protocolBackgroundColor(CellFillInput fill) {
+  private static @Nullable Object protocolBackgroundColor(CellFillInput fill) {
     return switch (fill) {
       case CellFillInput.PatternBackground pattern -> pattern.backgroundColor();
       case CellFillInput.PatternForegroundBackground pattern -> pattern.backgroundColor();
@@ -237,7 +263,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static ExcelFillPattern engineFillPattern(ExcelCellFill fill) {
+  private static @Nullable ExcelFillPattern engineFillPattern(ExcelCellFill fill) {
     return switch (fill) {
       case ExcelCellFill.PatternOnly pattern -> pattern.pattern();
       case ExcelCellFill.PatternForeground pattern -> pattern.pattern();
@@ -247,7 +273,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static Object engineForegroundColor(ExcelCellFill fill) {
+  private static @Nullable Object engineForegroundColor(ExcelCellFill fill) {
     return switch (fill) {
       case ExcelCellFill.PatternForeground pattern -> pattern.foregroundColor();
       case ExcelCellFill.PatternForegroundBackground pattern -> pattern.foregroundColor();
@@ -255,7 +281,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static Object engineBackgroundColor(ExcelCellFill fill) {
+  private static @Nullable Object engineBackgroundColor(ExcelCellFill fill) {
     return switch (fill) {
       case ExcelCellFill.PatternBackground pattern -> pattern.backgroundColor();
       case ExcelCellFill.PatternForegroundBackground pattern -> pattern.backgroundColor();
@@ -263,7 +289,7 @@ public final class StyleKindIntrospection {
     };
   }
 
-  private static boolean isPatterned(ExcelFillPattern pattern) {
+  private static boolean isPatterned(@Nullable ExcelFillPattern pattern) {
     return pattern != null && pattern != ExcelFillPattern.NONE && pattern != ExcelFillPattern.SOLID;
   }
 

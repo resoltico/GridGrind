@@ -10,10 +10,12 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 
 /** Binary drawing payload, preview-image, and embedded-object package helpers. */
 final class ExcelDrawingBinarySupport {
@@ -56,63 +58,65 @@ final class ExcelDrawingBinarySupport {
         readback.command());
   }
 
-  static org.apache.poi.openxml4j.opc.PackagePart previewImagePart(
+  static Optional<org.apache.poi.openxml4j.opc.PackagePart> previewImagePart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-    org.apache.poi.openxml4j.opc.PackagePart previewPart = previewSheetImagePart(objectData);
-    if (previewPart != null) {
+    Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart =
+        previewSheetImagePart(objectData);
+    if (previewPart.isPresent()) {
       return previewPart;
     }
-    String drawingRelationId = previewDrawingRelationId(objectData);
-    org.apache.poi.openxml4j.opc.PackagePart drawingPreviewPart =
-        drawingRelationId == null
-            ? null
-            : relatedInternalPart(objectData.getDrawing().getPackagePart(), drawingRelationId);
-    return supportedPreviewImagePart(drawingPreviewPart) ? drawingPreviewPart : null;
+    Optional<String> drawingRelationId = previewDrawingRelationId(objectData);
+    Optional<org.apache.poi.openxml4j.opc.PackagePart> drawingPreviewPart =
+        drawingRelationId.flatMap(
+            relationId ->
+                relatedInternalPart(objectData.getDrawing().getPackagePart(), relationId));
+    return drawingPreviewPart.filter(ExcelDrawingBinarySupport::supportedPreviewImagePart);
   }
 
-  static org.apache.poi.openxml4j.opc.PackagePart previewSheetImagePart(
+  static Optional<org.apache.poi.openxml4j.opc.PackagePart> previewSheetImagePart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-    String sheetRelationId = previewSheetRelationId(objectData.getOleObject());
-    if (sheetRelationId == null) {
-      return null;
+    Optional<String> sheetRelationId = previewSheetRelationId(objectData.getOleObject());
+    if (sheetRelationId.isEmpty()) {
+      return Optional.empty();
     }
-    org.apache.poi.openxml4j.opc.PackagePart previewPart =
-        relatedInternalPart(sheetPart(objectData), sheetRelationId);
-    return supportedPreviewImagePart(previewPart) ? previewPart : null;
+    Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart =
+        relatedInternalPart(sheetPart(objectData), sheetRelationId.orElseThrow());
+    return previewPart.filter(ExcelDrawingBinarySupport::supportedPreviewImagePart);
   }
 
-  static String previewSheetImageRelationId(
+  static Optional<String> previewSheetImageRelationId(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-    return previewSheetImagePart(objectData) == null
-        ? null
-        : previewSheetRelationId(objectData.getOleObject());
+    return previewImagePart(objectData).isPresent()
+        ? previewSheetRelationId(objectData.getOleObject())
+        : Optional.empty();
   }
 
-  static org.apache.poi.openxml4j.opc.PackagePart relatedInternalPart(
-      org.apache.poi.openxml4j.opc.PackagePart sourcePart, String relationshipId) {
+  static Optional<org.apache.poi.openxml4j.opc.PackagePart> relatedInternalPart(
+      org.apache.poi.openxml4j.opc.PackagePart sourcePart, @Nullable String relationshipId) {
     if (relationshipId == null || relationshipId.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     org.apache.poi.openxml4j.opc.PackageRelationship relationship =
         sourcePart.getRelationship(relationshipId);
     if (relationship == null
         || relationship.getTargetMode() == org.apache.poi.openxml4j.opc.TargetMode.EXTERNAL) {
-      return null;
+      return Optional.empty();
     }
     try {
-      return sourcePart
-          .getPackage()
-          .getPart(
-              org.apache.poi.openxml4j.opc.PackagingURIHelper.createPartName(
-                  org.apache.poi.openxml4j.opc.PackagingURIHelper.resolvePartUri(
-                      sourcePart.getPartName().getURI(), relationship.getTargetURI())));
+      return Optional.ofNullable(
+          sourcePart
+              .getPackage()
+              .getPart(
+                  org.apache.poi.openxml4j.opc.PackagingURIHelper.createPartName(
+                      org.apache.poi.openxml4j.opc.PackagingURIHelper.resolvePartUri(
+                          sourcePart.getPartName().getURI(), relationship.getTargetURI()))));
     } catch (InvalidFormatException exception) {
       throw new IllegalStateException("Failed to resolve related package part", exception);
     }
   }
 
   static void cleanupWorkbookImagePartIfUnused(
-      XSSFWorkbook workbook, org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
+      XSSFWorkbook workbook, org.apache.poi.openxml4j.opc.@Nullable PackagePartName imagePartName) {
     if (imagePartName == null) {
       return;
     }
@@ -143,14 +147,14 @@ final class ExcelDrawingBinarySupport {
     }
   }
 
-  static String previewSheetRelationId(
+  static Optional<String> previewSheetRelationId(
       org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject oleObject) {
     if (!oleObject.isSetObjectPr()) {
-      return null;
+      return Optional.empty();
     }
     org.openxmlformats.schemas.spreadsheetml.x2006.main.CTObjectPr objectPr =
         oleObject.getObjectPr();
-    return objectPr.isSetId() ? nullIfBlank(objectPr.getId()) : null;
+    return objectPr.isSetId() ? blankAsOptional(objectPr.getId()) : Optional.empty();
   }
 
   static void setPreviewSheetRelationId(
@@ -166,12 +170,13 @@ final class ExcelDrawingBinarySupport {
     objectPr.setId(relationId);
   }
 
-  static String previewDrawingRelationId(org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
+  static Optional<String> previewDrawingRelationId(
+      org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     if (objectData.getCTShape().getSpPr().getBlipFill() == null
         || objectData.getCTShape().getSpPr().getBlipFill().getBlip() == null) {
-      return null;
+      return Optional.empty();
     }
-    return objectData.getCTShape().getSpPr().getBlipFill().getBlip().getEmbed();
+    return blankAsOptional(objectData.getCTShape().getSpPr().getBlipFill().getBlip().getEmbed());
   }
 
   static ExcelBinaryData binary(byte[] bytes, String label) {
@@ -196,13 +201,13 @@ final class ExcelDrawingBinarySupport {
     }
   }
 
-  static String nullIfBlank(String value) {
-    return value == null || value.isBlank() ? null : value;
+  static Optional<String> blankAsOptional(@Nullable String value) {
+    return value == null || value.isBlank() ? Optional.empty() : Optional.of(value);
   }
 
-  static String firstNonBlank(String first, String second) {
-    String normalizedFirst = nullIfBlank(first);
-    return normalizedFirst != null ? normalizedFirst : nullIfBlank(second);
+  static Optional<String> firstNonBlank(String first, String second) {
+    Optional<String> normalizedFirst = blankAsOptional(first);
+    return normalizedFirst.isPresent() ? normalizedFirst : blankAsOptional(second);
   }
 
   static boolean looksLikeOle2Storage(byte[] bytes) throws IOException {
@@ -235,22 +240,25 @@ final class ExcelDrawingBinarySupport {
 
   private static EmbeddedObjectReadback embeddedObjectReadback(
       String objectName, org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-    org.apache.poi.openxml4j.opc.PackagePart previewPart = previewImagePart(objectData);
+    Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart = previewImagePart(objectData);
     ExcelBinaryData previewImage =
-        previewPart == null ? null : binary(partBytes(previewPart), "preview image");
+        previewPart.isPresent()
+            ? binary(partBytes(previewPart.orElseThrow()), "preview image")
+            : null;
     ExcelPictureFormat previewFormat =
-        previewPart == null
-            ? null
-            : ExcelPictureFormat.fromContentType(previewPart.getContentType());
-    org.apache.poi.openxml4j.opc.PackagePart objectPart = oleObjectPart(objectData);
-    if (objectPart == null) {
+        previewPart.isPresent()
+            ? ExcelPictureFormat.fromContentType(previewPart.orElseThrow().getContentType())
+            : null;
+    Optional<org.apache.poi.openxml4j.opc.PackagePart> objectPart = oleObjectPart(objectData);
+    if (objectPart.isEmpty()) {
       throw new IllegalStateException(
           "Embedded object '" + objectName + "' is missing its package relationship");
     }
-    ExcelBinaryData rawPackage = binary(partBytes(objectPart), "embedded object package");
-    String contentType = objectPart.getContentType();
+    org.apache.poi.openxml4j.opc.PackagePart resolvedObjectPart = objectPart.orElseThrow();
+    ExcelBinaryData rawPackage = binary(partBytes(resolvedObjectPart), "embedded object package");
+    String contentType = resolvedObjectPart.getContentType();
     String label = null;
-    String fileName = partFileName(objectPart);
+    String fileName = partFileName(resolvedObjectPart);
     String command = null;
     ExcelEmbeddedObjectPackagingKind packagingKind = ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE;
     ExcelBinaryData payload = rawPackage;
@@ -258,9 +266,9 @@ final class ExcelDrawingBinarySupport {
       if (looksLikeOle2Storage(rawPackage.bytes())) {
         org.apache.poi.poifs.filesystem.Ole10Native nativeData = ole10Native(rawPackage.bytes());
         payload = ExcelBinaryData.readback(nativeData.getDataBuffer());
-        label = firstNonBlank(nativeData.getLabel2(), nativeData.getLabel());
-        fileName = firstNonBlank(nativeData.getFileName2(), nativeData.getFileName());
-        command = firstNonBlank(nativeData.getCommand2(), nativeData.getCommand());
+        label = firstNonBlank(nativeData.getLabel2(), nativeData.getLabel()).orElse(null);
+        fileName = firstNonBlank(nativeData.getFileName2(), nativeData.getFileName()).orElse(null);
+        command = firstNonBlank(nativeData.getCommand2(), nativeData.getCommand()).orElse(null);
         packagingKind = ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE;
         contentType = "application/octet-stream";
       }
@@ -273,7 +281,7 @@ final class ExcelDrawingBinarySupport {
         packagingKind, label, fileName, command, contentType, payload, previewFormat, previewImage);
   }
 
-  private static org.apache.poi.openxml4j.opc.PackagePart oleObjectPart(
+  private static Optional<org.apache.poi.openxml4j.opc.PackagePart> oleObjectPart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     return relatedInternalPart(sheetPart(objectData), objectData.getOleObject().getId());
   }
@@ -296,8 +304,10 @@ final class ExcelDrawingBinarySupport {
             return true;
           }
           if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-            org.apache.poi.openxml4j.opc.PackagePart previewPart = previewImagePart(objectData);
-            if (previewPart != null && previewPart.getPartName().equals(imagePartName)) {
+            Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart =
+                previewImagePart(objectData);
+            if (previewPart.isPresent()
+                && previewPart.orElseThrow().getPartName().equals(imagePartName)) {
               return true;
             }
           }
@@ -361,11 +371,11 @@ final class ExcelDrawingBinarySupport {
 
   private record EmbeddedObjectReadback(
       ExcelEmbeddedObjectPackagingKind packagingKind,
-      String label,
+      @Nullable String label,
       String fileName,
-      String command,
+      @Nullable String command,
       String contentType,
       ExcelBinaryData payload,
-      ExcelPictureFormat previewFormat,
-      ExcelBinaryData previewImage) {}
+      @Nullable ExcelPictureFormat previewFormat,
+      @Nullable ExcelBinaryData previewImage) {}
 }

@@ -62,7 +62,10 @@ final class ExcelFileHyperlinkTargets {
     try {
       normalizedPath = normalizePath(path);
     } catch (IllegalArgumentException exception) {
-      return new FileHyperlinkResolution.MalformedPath(path, exception.getMessage());
+      return new FileHyperlinkResolution.MalformedPath(
+          path,
+          Objects.requireNonNullElse(
+              exception.getMessage(), "path must be a valid local file path"));
     }
 
     Path candidate;

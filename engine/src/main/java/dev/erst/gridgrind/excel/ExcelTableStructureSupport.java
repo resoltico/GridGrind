@@ -3,10 +3,12 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFTable;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableStyleInfo;
@@ -37,7 +39,7 @@ final class ExcelTableStructureSupport {
   }
 
   /** Returns the normalized header text contributed by one candidate header cell. */
-  static String headerText(Cell cell) {
+  static String headerText(@Nullable Cell cell) {
     if (cell == null) {
       return "";
     }
@@ -93,13 +95,18 @@ final class ExcelTableStructureSupport {
   static String expectedAutofilterRangeText(ExcelTableSnapshot table) {
     Objects.requireNonNull(table, "table must not be null");
 
-    ExcelRange range = ExcelSheetStructureSupport.parseRangeOrNull(table.range());
-    if (range == null) {
+    Optional<ExcelRange> range = ExcelSheetStructureSupport.parseOptionalRange(table.range());
+    if (range.isEmpty()) {
       return table.range();
     }
-    int lastFilterRow = range.lastRow() - Math.min(table.totalsRowCount(), range.rowCount() - 1);
+    ExcelRange parsedRange = range.orElseThrow();
+    int lastFilterRow =
+        parsedRange.lastRow() - Math.min(table.totalsRowCount(), parsedRange.rowCount() - 1);
     return new CellRangeAddress(
-            range.firstRow(), lastFilterRow, range.firstColumn(), range.lastColumn())
+            parsedRange.firstRow(),
+            lastFilterRow,
+            parsedRange.firstColumn(),
+            parsedRange.lastColumn())
         .formatAsString();
   }
 }

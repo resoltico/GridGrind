@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Optional;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -184,7 +185,7 @@ class JazzerRegressionRunnerTest {
           new ReplayOutcome.UnexpectedFailure(
               JazzerHarness.protocolRequest().key(),
               "IllegalStateException",
-              "boom",
+              Optional.of("boom"),
               "stack-trace-line",
               metadata.expectation().details());
 

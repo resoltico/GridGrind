@@ -1,13 +1,14 @@
 package dev.erst.gridgrind.contract.dto;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual workbook custom-XML data-binding metadata returned by inspection. */
 public record CustomXmlDataBindingReport(
-    String dataBindingName,
-    Boolean fileBinding,
-    Long connectionId,
-    String fileBindingName,
+    @Nullable String dataBindingName,
+    @Nullable Boolean fileBinding,
+    @Nullable Long connectionId,
+    @Nullable String fileBindingName,
     long loadMode) {
   public CustomXmlDataBindingReport {
     if (dataBindingName != null) {
@@ -24,7 +25,7 @@ public record CustomXmlDataBindingReport(
     }
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
+  private static String requireNonBlank(@Nullable String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");

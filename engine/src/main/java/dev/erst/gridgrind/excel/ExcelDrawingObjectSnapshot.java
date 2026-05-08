@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Immutable factual drawing-object snapshot returned by workbook reads. */
 public sealed interface ExcelDrawingObjectSnapshot
@@ -28,9 +29,9 @@ public sealed interface ExcelDrawingObjectSnapshot
       String contentType,
       long byteSize,
       String sha256,
-      Integer widthPixels,
-      Integer heightPixels,
-      String description)
+      @Nullable Integer widthPixels,
+      @Nullable Integer heightPixels,
+      @Nullable String description)
       implements ExcelDrawingObjectSnapshot {
     public Picture {
       validateCommon(name, anchor);
@@ -76,8 +77,8 @@ public sealed interface ExcelDrawingObjectSnapshot
       String name,
       ExcelDrawingAnchor anchor,
       ExcelDrawingShapeKind kind,
-      String presetGeometryToken,
-      String text,
+      @Nullable String presetGeometryToken,
+      @Nullable String text,
       int childCount)
       implements ExcelDrawingObjectSnapshot {
     public Shape {
@@ -100,15 +101,15 @@ public sealed interface ExcelDrawingObjectSnapshot
       String name,
       ExcelDrawingAnchor anchor,
       ExcelEmbeddedObjectPackagingKind packagingKind,
-      String label,
-      String fileName,
-      String command,
+      @Nullable String label,
+      @Nullable String fileName,
+      @Nullable String command,
       String contentType,
       long byteSize,
       String sha256,
-      ExcelPictureFormat previewFormat,
-      Long previewByteSize,
-      String previewSha256)
+      @Nullable ExcelPictureFormat previewFormat,
+      @Nullable Long previewByteSize,
+      @Nullable String previewSha256)
       implements ExcelDrawingObjectSnapshot {
     public EmbeddedObject {
       validateCommon(name, anchor);
@@ -146,18 +147,18 @@ public sealed interface ExcelDrawingObjectSnapshot
   record SignatureLine(
       String name,
       ExcelDrawingAnchor anchor,
-      String setupId,
-      Boolean allowComments,
-      String signingInstructions,
-      String suggestedSigner,
-      String suggestedSigner2,
-      String suggestedSignerEmail,
-      ExcelPictureFormat previewFormat,
-      String previewContentType,
-      Long previewByteSize,
-      String previewSha256,
-      Integer previewWidthPixels,
-      Integer previewHeightPixels)
+      @Nullable String setupId,
+      @Nullable Boolean allowComments,
+      @Nullable String signingInstructions,
+      @Nullable String suggestedSigner,
+      @Nullable String suggestedSigner2,
+      @Nullable String suggestedSignerEmail,
+      @Nullable ExcelPictureFormat previewFormat,
+      @Nullable String previewContentType,
+      @Nullable Long previewByteSize,
+      @Nullable String previewSha256,
+      @Nullable Integer previewWidthPixels,
+      @Nullable Integer previewHeightPixels)
       implements ExcelDrawingObjectSnapshot {
     public SignatureLine {
       validateCommon(name, anchor);

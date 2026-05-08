@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Validation coverage for selector-first protocol targeting types. */
@@ -254,7 +255,8 @@ class SelectorTypesTest {
             new TableRowSelector.ByKeyCell(
                 table,
                 "Item",
-                new CellInput.RichText(List.of(new RichTextRunInput(text("Ada"), null)))));
+                new CellInput.RichText(
+                    List.of(new RichTextRunInput(text("Ada"), Optional.empty())))));
     assertThrows(
         IllegalArgumentException.class,
         () ->

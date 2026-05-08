@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.contract.action;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
@@ -16,131 +17,6 @@ import java.util.Objects;
 
 /** One validated mutation action expressed in protocol form. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-  @JsonSubTypes.Type(value = WorkbookMutationAction.EnsureSheet.class, name = "ENSURE_SHEET"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.RenameSheet.class, name = "RENAME_SHEET"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteSheet.class, name = "DELETE_SHEET"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.MoveSheet.class, name = "MOVE_SHEET"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.CopySheet.class, name = "COPY_SHEET"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetActiveSheet.class,
-      name = "SET_ACTIVE_SHEET"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetSelectedSheets.class,
-      name = "SET_SELECTED_SHEETS"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetSheetVisibility.class,
-      name = "SET_SHEET_VISIBILITY"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetSheetProtection.class,
-      name = "SET_SHEET_PROTECTION"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.ClearSheetProtection.class,
-      name = "CLEAR_SHEET_PROTECTION"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetWorkbookProtection.class,
-      name = "SET_WORKBOOK_PROTECTION"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.ClearWorkbookProtection.class,
-      name = "CLEAR_WORKBOOK_PROTECTION"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.MergeCells.class, name = "MERGE_CELLS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.UnmergeCells.class, name = "UNMERGE_CELLS"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetColumnWidth.class,
-      name = "SET_COLUMN_WIDTH"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.InsertRows.class, name = "INSERT_ROWS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteRows.class, name = "DELETE_ROWS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.ShiftRows.class, name = "SHIFT_ROWS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.InsertColumns.class, name = "INSERT_COLUMNS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.DeleteColumns.class, name = "DELETE_COLUMNS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.ShiftColumns.class, name = "SHIFT_COLUMNS"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetRowVisibility.class,
-      name = "SET_ROW_VISIBILITY"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetColumnVisibility.class,
-      name = "SET_COLUMN_VISIBILITY"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.GroupRows.class, name = "GROUP_ROWS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.UngroupRows.class, name = "UNGROUP_ROWS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.GroupColumns.class, name = "GROUP_COLUMNS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.UngroupColumns.class, name = "UNGROUP_COLUMNS"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.SetSheetPane.class, name = "SET_SHEET_PANE"),
-  @JsonSubTypes.Type(value = WorkbookMutationAction.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetSheetPresentation.class,
-      name = "SET_SHEET_PRESENTATION"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.SetPrintLayout.class,
-      name = "SET_PRINT_LAYOUT"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.ClearPrintLayout.class,
-      name = "CLEAR_PRINT_LAYOUT"),
-  @JsonSubTypes.Type(value = CellMutationAction.SetCell.class, name = "SET_CELL"),
-  @JsonSubTypes.Type(value = CellMutationAction.SetRange.class, name = "SET_RANGE"),
-  @JsonSubTypes.Type(value = CellMutationAction.ClearRange.class, name = "CLEAR_RANGE"),
-  @JsonSubTypes.Type(value = CellMutationAction.SetArrayFormula.class, name = "SET_ARRAY_FORMULA"),
-  @JsonSubTypes.Type(
-      value = CellMutationAction.ClearArrayFormula.class,
-      name = "CLEAR_ARRAY_FORMULA"),
-  @JsonSubTypes.Type(value = CellMutationAction.SetHyperlink.class, name = "SET_HYPERLINK"),
-  @JsonSubTypes.Type(value = CellMutationAction.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
-  @JsonSubTypes.Type(value = CellMutationAction.SetComment.class, name = "SET_COMMENT"),
-  @JsonSubTypes.Type(value = CellMutationAction.ClearComment.class, name = "CLEAR_COMMENT"),
-  @JsonSubTypes.Type(value = CellMutationAction.ApplyStyle.class, name = "APPLY_STYLE"),
-  @JsonSubTypes.Type(value = CellMutationAction.AppendRow.class, name = "APPEND_ROW"),
-  @JsonSubTypes.Type(value = DrawingMutationAction.SetPicture.class, name = "SET_PICTURE"),
-  @JsonSubTypes.Type(
-      value = DrawingMutationAction.SetSignatureLine.class,
-      name = "SET_SIGNATURE_LINE"),
-  @JsonSubTypes.Type(value = DrawingMutationAction.SetChart.class, name = "SET_CHART"),
-  @JsonSubTypes.Type(value = DrawingMutationAction.SetShape.class, name = "SET_SHAPE"),
-  @JsonSubTypes.Type(
-      value = DrawingMutationAction.SetEmbeddedObject.class,
-      name = "SET_EMBEDDED_OBJECT"),
-  @JsonSubTypes.Type(
-      value = DrawingMutationAction.SetDrawingObjectAnchor.class,
-      name = "SET_DRAWING_OBJECT_ANCHOR"),
-  @JsonSubTypes.Type(
-      value = DrawingMutationAction.DeleteDrawingObject.class,
-      name = "DELETE_DRAWING_OBJECT"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.ImportCustomXmlMapping.class,
-      name = "IMPORT_CUSTOM_XML_MAPPING"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.SetPivotTable.class,
-      name = "SET_PIVOT_TABLE"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.SetDataValidation.class,
-      name = "SET_DATA_VALIDATION"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.ClearDataValidations.class,
-      name = "CLEAR_DATA_VALIDATIONS"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.SetConditionalFormatting.class,
-      name = "SET_CONDITIONAL_FORMATTING"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.ClearConditionalFormatting.class,
-      name = "CLEAR_CONDITIONAL_FORMATTING"),
-  @JsonSubTypes.Type(value = StructuredMutationAction.SetAutofilter.class, name = "SET_AUTOFILTER"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.ClearAutofilter.class,
-      name = "CLEAR_AUTOFILTER"),
-  @JsonSubTypes.Type(value = StructuredMutationAction.SetTable.class, name = "SET_TABLE"),
-  @JsonSubTypes.Type(value = StructuredMutationAction.DeleteTable.class, name = "DELETE_TABLE"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.DeletePivotTable.class,
-      name = "DELETE_PIVOT_TABLE"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.SetNamedRange.class,
-      name = "SET_NAMED_RANGE"),
-  @JsonSubTypes.Type(
-      value = StructuredMutationAction.DeleteNamedRange.class,
-      name = "DELETE_NAMED_RANGE"),
-  @JsonSubTypes.Type(
-      value = WorkbookMutationAction.AutoSizeColumns.class,
-      name = "AUTO_SIZE_COLUMNS")
-})
 public sealed interface MutationAction
     permits WorkbookMutationAction,
         CellMutationAction,
@@ -150,6 +26,28 @@ public sealed interface MutationAction
   default String actionType() {
     return GridGrindProtocolTypeNames.mutationActionTypeName(
         getClass().asSubclass(MutationAction.class));
+  }
+
+  /** Returns the selector types accepted by one concrete mutation action instance. */
+  static Class<? extends Selector>[] allowedTargetTypes(MutationAction action) {
+    Objects.requireNonNull(action, "action must not be null");
+    return allowedTargetTypesForType(action.getClass().asSubclass(MutationAction.class));
+  }
+
+  /** Returns the selector types accepted by one concrete mutation action type. */
+  static Class<? extends Selector>[] allowedTargetTypesForType(
+      Class<? extends MutationAction> actionType) {
+    Objects.requireNonNull(actionType, "actionType must not be null");
+    if (!actionType.isRecord()) {
+      throw new IllegalArgumentException(
+          "No target-type mapping configured for action class " + actionType.getName());
+    }
+    try {
+      return ProtocolTypeMetadataSupport.staticTargetSelectors(actionType);
+    } catch (IllegalStateException exception) {
+      throw new IllegalArgumentException(
+          "No target-type mapping configured for action class " + actionType.getName(), exception);
+    }
   }
 
   /** Shared validation helpers for MutationAction compact constructors. */
@@ -238,7 +136,7 @@ public sealed interface MutationAction
       Objects.requireNonNull(rows, "rows must not be null");
       List<List<CellInput>> copy = new ArrayList<>(rows.size());
       for (List<CellInput> row : rows) {
-        copy.add(row == null ? null : new ArrayList<>(row));
+        copy.add(new ArrayList<>(Objects.requireNonNull(row, "rows must not contain null rows")));
       }
       return java.util.Collections.unmodifiableList(copy);
     }

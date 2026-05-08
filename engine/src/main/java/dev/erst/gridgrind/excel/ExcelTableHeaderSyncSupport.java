@@ -25,7 +25,7 @@ final class ExcelTableHeaderSyncSupport {
     Objects.requireNonNull(changedRange, "changedRange must not be null");
 
     for (XSSFTable table : sheet.getTables()) {
-      Optional<ExcelRange> headerRange = headerRangeOrNull(table);
+      Optional<ExcelRange> headerRange = headerRange(table);
       if (headerRange.isPresent()
           && ExcelSheetStructureSupport.intersects(headerRange.orElseThrow(), changedRange)) {
         syncHeader(table);
@@ -44,28 +44,29 @@ final class ExcelTableHeaderSyncSupport {
   private static void syncHeader(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
-    if (headerRangeOrNull(table).isPresent()) {
+    if (headerRange(table).isPresent()) {
       table.updateHeaders();
     }
   }
 
-  private static Optional<ExcelRange> headerRangeOrNull(XSSFTable table) {
+  private static Optional<ExcelRange> headerRange(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
     if (table.getHeaderRowCount() < 1) {
       return Optional.empty();
     }
-    ExcelRange tableRange =
-        ExcelSheetStructureSupport.parseRangeOrNull(
+    Optional<ExcelRange> tableRange =
+        ExcelSheetStructureSupport.parseOptionalRange(
             Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
-    if (tableRange == null) {
+    if (tableRange.isEmpty()) {
       return Optional.empty();
     }
+    ExcelRange resolved = tableRange.orElseThrow();
     return Optional.of(
         new ExcelRange(
-            tableRange.firstRow(),
-            Math.min(tableRange.lastRow(), tableRange.firstRow() + table.getHeaderRowCount() - 1),
-            tableRange.firstColumn(),
-            tableRange.lastColumn()));
+            resolved.firstRow(),
+            Math.min(resolved.lastRow(), resolved.firstRow() + table.getHeaderRowCount() - 1),
+            resolved.firstColumn(),
+            resolved.lastColumn()));
   }
 }

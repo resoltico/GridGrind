@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Effective font facts reported with every analyzed cell. */
 public record CellFontReport(
@@ -8,7 +9,7 @@ public record CellFontReport(
     boolean italic,
     String fontName,
     FontHeightReport fontHeight,
-    CellColorReport fontColor,
+    @Nullable CellColorReport fontColor,
     boolean underline,
     boolean strikeout) {
   public CellFontReport {

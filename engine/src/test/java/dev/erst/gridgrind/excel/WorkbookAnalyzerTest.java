@@ -38,8 +38,17 @@ class WorkbookAnalyzerTest {
                   new ExcelConditionalFormattingRule.FormulaRule(
                       "B2>0",
                       false,
-                      new ExcelDifferentialStyle(
-                          "0.00", null, null, null, null, null, null, null, null)))));
+                      Optional.of(
+                          new ExcelDifferentialStyle(
+                              Optional.of("0.00"),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty(),
+                              Optional.empty()))))));
       workbook.setTable(
           new ExcelTableDefinition("Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
@@ -55,7 +64,10 @@ class WorkbookAnalyzerTest {
               List.of(),
               List.of(
                   new ExcelPivotTableDefinition.DataField(
-                      "Task", ExcelPivotDataConsolidateFunction.COUNT, "Task Count", null))));
+                      "Task",
+                      ExcelPivotDataConsolidateFunction.COUNT,
+                      "Task Count",
+                      Optional.empty()))));
       workbook.xssfWorkbook().getPivotTables().getFirst().getCTPivotTableDefinition().setName(null);
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
@@ -211,7 +223,7 @@ class WorkbookAnalyzerTest {
           new ExcelNamedRangeDefinition(
               "BudgetTotal",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "B1")));
+              ExcelNamedRangeTarget.range("Budget", "B1")));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -320,12 +332,12 @@ class WorkbookAnalyzerTest {
                 "SharedName",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 "Budget!$A$1",
-                new ExcelNamedRangeTarget("Budget", "A1")),
+                ExcelNamedRangeTarget.range("Budget", "A1")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "SharedName",
                 new ExcelNamedRangeScope.SheetScope("Budget"),
                 "Budget!$B$2",
-                new ExcelNamedRangeTarget("Budget", "B2")));
+                ExcelNamedRangeTarget.range("Budget", "B2")));
 
     List<WorkbookAnalysis.AnalysisFinding> findings =
         WorkbookAnalyzer.scopeShadowingFindings(namedRanges);
@@ -345,12 +357,12 @@ class WorkbookAnalyzerTest {
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 "Budget!$A$1",
-                new ExcelNamedRangeTarget("Budget", "A1")),
+                ExcelNamedRangeTarget.range("Budget", "A1")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "ForecastTotal",
                 new ExcelNamedRangeScope.SheetScope("Forecast"),
                 "Forecast!$B$2",
-                new ExcelNamedRangeTarget("Forecast", "B2")));
+                ExcelNamedRangeTarget.range("Forecast", "B2")));
 
     assertEquals(List.of(), WorkbookAnalyzer.scopeShadowingFindings(namedRanges));
   }

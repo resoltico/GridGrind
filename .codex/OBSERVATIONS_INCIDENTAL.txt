@@ -109,3 +109,38 @@ FIX: Update the docs to describe omission semantics truthfully and state that re
 must omit absent fields rather than sending explicit nulls.
 EFFORT: MINOR
 ------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: T5M8Q2R
+DATE: 2026-05-05
+STATUS: ACTIONED
+FILE: NOTICE:1-220
+CATEGORY: DEFECT
+OBSERVATION: The bundled-dependency legal inventory still omits the pre-existing `woodstox-core`
+and `stax2-api` runtime libraries that Apache Santuario xmlsec already pulls onto GridGrind's
+runtime classpath, so NOTICE and the derivative patent summary are not yet a complete inventory of
+the shipped third-party surface.
+CURRENT: xmlsec runtime dependency chain listed without its existing StAX runtime companions
+FIX: Add Woodstox Core and StAX2 API to NOTICE and any derivative bundled-dependency summaries,
+with the correct license family and attribution text derived from the canonical upstream artifacts.
+EFFORT: MINOR
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: X2W5F9K
+DATE: 2026-05-08
+STATUS: ACTIONED
+FILE: .github/workflows/container.yml:93
+CATEGORY: DEFECT
+OBSERVATION: The container.yml metadata-action OCI license label was still
+`MIT AND Apache-2.0 AND BSD-3-Clause` while every other distribution surface
+(Dockerfile, fat JAR META-INF/, cli embedded resources, NOTICE, PATENTS.md,
+README.md, .dockerignore) had already been updated to the full 5-family
+expression `MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0`.
+The test-publication-contract.sh also enforced the old 3-license value,
+so the regression guard was checking the wrong expected state.
+CURRENT: container.yml line 93 had MIT AND Apache-2.0 AND BSD-3-Clause;
+test checked for that same stale string as the correct value
+FIX: Update container.yml label to full 5-license SPDX expression; update
+test to check for the complete expression and add negative guard for the
+old incomplete 3-license string.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------

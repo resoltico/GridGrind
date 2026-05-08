@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,8 +95,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     GridGrindResponse.Success response =
         assertInstanceOf(
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    InspectionResult.CellsResult cells =
-        assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
+    SheetInspectionResult.CellsResult cells =
+        assertInstanceOf(
+            SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
 
     assertEquals(0, exitCode);
     assertEquals(
@@ -155,8 +156,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     GridGrindResponse.Success response =
         assertInstanceOf(
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    InspectionResult.CellsResult cells =
-        assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
+    SheetInspectionResult.CellsResult cells =
+        assertInstanceOf(
+            SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
 
     assertEquals(0, exitCode);
     assertEquals(
@@ -207,8 +209,9 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     GridGrindResponse.Success response =
         assertInstanceOf(
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    InspectionResult.CellsResult cells =
-        assertInstanceOf(InspectionResult.CellsResult.class, response.inspections().getFirst());
+    SheetInspectionResult.CellsResult cells =
+        assertInstanceOf(
+            SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,

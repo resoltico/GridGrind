@@ -12,6 +12,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagePartName;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
@@ -53,7 +54,8 @@ class ExcelSignatureLineControllerTest {
       CTShape shape = signatureShapes(vmlDrawing).getFirst();
       PackagePart previewPart =
           ExcelDrawingBinarySupport.relatedInternalPart(
-              vmlDrawing.getPackagePart(), shape.getImagedataArray(0).getRelid());
+                  vmlDrawing.getPackagePart(), shape.getImagedataArray(0).getRelid())
+              .orElseThrow();
       PackagePartName previewPartName = previewPart.getPartName();
       assertTrue(ExcelSignatureLineController.usesImagePart(sheet, previewPartName));
       assertFalse(
@@ -208,8 +210,8 @@ class ExcelSignatureLineControllerTest {
               null,
               null,
               null,
-              null,
-              null));
+              Optional.empty(),
+              Optional.empty()));
 
       CTShape shape = signatureShapes(sheet.getVMLDrawing(false)).getFirst();
       shape.removeImagedata(0);
@@ -238,8 +240,8 @@ class ExcelSignatureLineControllerTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(PNG_PIXEL_BYTES));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES)));
   }
 
   private static List<CTShape> signatureShapes(XSSFVMLDrawing vmlDrawing) {

@@ -53,7 +53,7 @@ class ExcelSheetStructureSupportTest {
 
   @Test
   void parseAndIntersectHandleInvalidAndBoundaryRanges() {
-    assertNull(ExcelSheetStructureSupport.parseRangeOrNull("A0:B2"));
+    assertTrue(ExcelSheetStructureSupport.parseOptionalRange("A0:B2").isEmpty());
     assertEquals("A1:B2", ExcelSheetStructureSupport.formatRange(ExcelRange.parse("A1:B2")));
 
     ExcelRange first = ExcelRange.parse("A1:B2");

@@ -226,8 +226,7 @@ public final class JazzerCli {
   private static void refreshPromotedMetadata(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
     int refreshed =
-        PromotionMetadataRefresher.refresh(
-            projectDirectory, optionalValue(args, "--target").orElse(null));
+        PromotionMetadataRefresher.refresh(projectDirectory, optionalValue(args, "--target"));
     System.out.println("Refreshed " + refreshed + " promoted metadata entries.");
   }
 

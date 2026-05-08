@@ -1,34 +1,44 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;
 
-/** Protocol-facing explicit cell or rectangular range target for named-range authoring. */
-public record NamedRangeTarget(String sheetName, String range, String formula) {
+/** Protocol-facing explicit sheet range or formula target for named-range authoring. */
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = NamedRangeTarget.Range.class, name = "RANGE"),
+  @JsonSubTypes.Type(value = NamedRangeTarget.Formula.class, name = "FORMULA")
+})
+public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRangeTarget.Formula {
   /** Creates a sheet-local cell or rectangular range target. */
-  public NamedRangeTarget(String sheetName, String range) {
-    this(sheetName, range, null);
+  static Range range(String sheetName, String range) {
+    return new Range(sheetName, range);
   }
 
   /** Creates a formula-defined target that is stored exactly as authored. */
-  public NamedRangeTarget(String formula) {
-    this(null, null, formula);
+  static Formula formula(String formula) {
+    return new Formula(formula);
   }
 
-  public NamedRangeTarget {
-    if (formula != null) {
-      if (formula.isBlank()) {
-        throw new IllegalArgumentException("formula must not be blank");
-      }
-      if (sheetName != null || range != null) {
-        throw new IllegalArgumentException(
-            "formula-defined named-range targets must not also set sheetName or range");
-      }
-    } else {
+  /** Sheet-qualified explicit cell or rectangular range target. */
+  record Range(String sheetName, String range) implements NamedRangeTarget {
+    public Range {
       ExcelSheetNames.requireValid(sheetName, "sheetName");
       Objects.requireNonNull(range, "range must not be null");
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  /** Formula-defined named-range target stored exactly as authored. */
+  record Formula(String formula) implements NamedRangeTarget {
+    public Formula {
+      Objects.requireNonNull(formula, "formula must not be null");
+      if (formula.isBlank()) {
+        throw new IllegalArgumentException("formula must not be blank");
       }
     }
   }

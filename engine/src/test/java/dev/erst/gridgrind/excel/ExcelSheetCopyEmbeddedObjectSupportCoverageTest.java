@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.xml.namespace.QName;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -184,7 +185,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       if (copiedObject.getCTShape().getSpPr().isSetBlipFill()) {
         copiedObject.getCTShape().getSpPr().unsetBlipFill();
       }
-      assertNull(ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject));
+      assertEquals(
+          Optional.empty(), ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject));
 
       support.repairCopiedEmbeddedObjects(replica, snapshot);
 
@@ -207,8 +209,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
 
       XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
       String previewDrawingRelationId =
-          ExcelDrawingBinarySupport.previewDrawingRelationId(sourceObject);
-      assertNotNull(previewDrawingRelationId);
+          ExcelDrawingBinarySupport.previewDrawingRelationId(sourceObject).orElseThrow();
       sourceObject.getCTShape().getSpPr().unsetBlipFill();
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
@@ -224,7 +225,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           .cloneSheet(workbook.xssfWorkbook().getSheetIndex("Source"), "Replica");
       ExcelSheet replica = workbook.sheet("Replica");
       XSSFObjectData copiedObject = requiredEmbeddedObject(replica.xssfSheet(), "OpsEmbed");
-      assertNotNull(ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject));
+      assertTrue(ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject).isPresent());
 
       support.repairCopiedEmbeddedObjects(replica, snapshot);
 
@@ -338,8 +339,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           "embedded object package",
           "OpsEmbed");
       PackagePart copiedPart =
-          ExcelDrawingBinarySupport.relatedInternalPart(sheet.getPackagePart(), "rIdPayload");
-      assertNotNull(copiedPart);
+          ExcelDrawingBinarySupport.relatedInternalPart(sheet.getPackagePart(), "rIdPayload")
+              .orElseThrow();
       assertArrayEquals(
           "payload".getBytes(StandardCharsets.UTF_8), copiedPart.getInputStream().readAllBytes());
 
@@ -364,8 +365,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           "embedded object package",
           "OpsEmbed");
       PackagePart repairedBrokenPart =
-          ExcelDrawingBinarySupport.relatedInternalPart(sheet.getPackagePart(), "rIdBrokenPayload");
-      assertNotNull(repairedBrokenPart);
+          ExcelDrawingBinarySupport.relatedInternalPart(sheet.getPackagePart(), "rIdBrokenPayload")
+              .orElseThrow();
       assertArrayEquals(
           "payload".getBytes(StandardCharsets.UTF_8),
           repairedBrokenPart.getInputStream().readAllBytes());
@@ -474,13 +475,15 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               poiSheet,
               firstObject,
               ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
-              ExcelDrawingBinarySupport.nullIfBlank(secondObject.getOleObject().getId())));
+              ExcelDrawingBinarySupport.blankAsOptional(secondObject.getOleObject().getId())
+                  .orElse(null)));
       assertTrue(
           worksheetRelationIdReferencedElsewhere(
               poiSheet,
               firstObject,
               ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.PREVIEW_SHEET,
-              ExcelDrawingBinarySupport.previewSheetRelationId(secondObject.getOleObject())));
+              ExcelDrawingBinarySupport.previewSheetRelationId(secondObject.getOleObject())
+                  .orElse(null)));
     }
   }
 
@@ -533,6 +536,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       assertEquals(
           drawingPatriarch.getPackagePart().getPartName(),
           ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), conflictingId)
+              .orElseThrow()
               .getPartName());
     }
 
@@ -562,6 +566,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           targetDrawing.getPackagePart().getPartName(),
           ExcelDrawingBinarySupport.relatedInternalPart(
                   targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .orElseThrow()
               .getPartName());
 
       targetSheet.getCTWorksheet().getDrawing().setId(targetDrawingRelationId + "Missing");
@@ -570,6 +575,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           targetDrawing.getPackagePart().getPartName(),
           ExcelDrawingBinarySupport.relatedInternalPart(
                   targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .orElseThrow()
               .getPartName());
 
       targetSheet
@@ -585,6 +591,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           targetDrawing.getPackagePart().getPartName(),
           ExcelDrawingBinarySupport.relatedInternalPart(
                   targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .orElseThrow()
               .getPartName());
     }
   }
@@ -604,7 +611,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               poiSheet.getPackagePart(), relationId, "OpsEmbed", "embedded object package");
 
       PackagePart existingPart =
-          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), relationId);
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), relationId)
+              .orElseThrow();
       PackagePartName existingPartName = existingPart.getPartName();
       try (var outputStream = existingPart.getOutputStream()) {
         outputStream.write("wrong".getBytes(StandardCharsets.UTF_8));
@@ -621,8 +629,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               "OpsEmbed");
       assertEquals(relationId, repairedId);
       PackagePart repairedPart =
-          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId);
-      assertNotNull(repairedPart);
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId)
+              .orElseThrow();
       assertNotEquals(existingPartName, repairedPart.getPartName());
       assertArrayEquals(sourcePart.bytes().bytes(), repairedPart.getInputStream().readAllBytes());
       assertFalse(workbook.xssfWorkbook().getPackage().containPart(existingPartName));
@@ -638,9 +646,10 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               "embedded object package",
               "OpsEmbed");
       assertEquals(repairedId, restoredMissingId);
-      assertNotNull(
+      assertTrue(
           ExcelDrawingBinarySupport.relatedInternalPart(
-              poiSheet.getPackagePart(), restoredMissingId));
+                  poiSheet.getPackagePart(), restoredMissingId)
+              .isPresent());
     }
   }
 
@@ -679,8 +688,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               "embedded object package",
               "OpsEmbed");
       assertEquals("rIdMissingPart", repairedId);
-      assertNotNull(
-          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId));
+      assertTrue(
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId)
+              .isPresent());
     }
   }
 
@@ -734,6 +744,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       assertArrayEquals(
           sourcePart.bytes().bytes(),
           ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), imageRepairedId)
+              .orElseThrow()
               .getInputStream()
               .readAllBytes());
 
@@ -770,6 +781,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
           sourcePart.bytes().bytes(),
           ExcelDrawingBinarySupport.relatedInternalPart(
                   poiSheet.getPackagePart(), contentTypeRepairedId)
+              .orElseThrow()
               .getInputStream()
               .readAllBytes());
     }
@@ -804,6 +816,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       assertArrayEquals(
           secondSourcePart.bytes().bytes(),
           ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId)
+              .orElseThrow()
               .getInputStream()
               .readAllBytes());
     }

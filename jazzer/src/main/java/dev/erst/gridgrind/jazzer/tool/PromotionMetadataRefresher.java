@@ -6,21 +6,22 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Refreshes committed replay metadata from the current deterministic replay engine. */
 final class PromotionMetadataRefresher {
   private PromotionMetadataRefresher() {}
 
-  static int refresh(Path projectDirectory, String targetKey) throws IOException {
+  static int refresh(Path projectDirectory, Optional<String> targetKey) throws IOException {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    Objects.requireNonNull(targetKey, "targetKey must not be null");
     List<Path> metadataPaths;
     try (var stream = Files.walk(JazzerHarness.promotedMetadataRoot(projectDirectory))) {
       metadataPaths =
           stream
               .filter(path -> path.getFileName().toString().endsWith(".json"))
-              .filter(
-                  path ->
-                      targetKey == null
-                          || path.getParent().getFileName().toString().equals(targetKey))
+              .filter(path -> matchesTarget(path, targetKey))
               .sorted()
               .toList();
     }
@@ -29,6 +30,16 @@ final class PromotionMetadataRefresher {
       refreshEntry(projectDirectory, metadataPath);
     }
     return metadataPaths.size();
+  }
+
+  private static boolean matchesTarget(Path path, Optional<String> targetKey) {
+    if (targetKey.isEmpty()) {
+      return true;
+    }
+    Path parent = path.getParent();
+    return parent != null
+        && parent.getFileName() != null
+        && parent.getFileName().toString().equals(targetKey.orElseThrow());
   }
 
   static void refreshEntry(Path projectDirectory, Path metadataPath) throws IOException {

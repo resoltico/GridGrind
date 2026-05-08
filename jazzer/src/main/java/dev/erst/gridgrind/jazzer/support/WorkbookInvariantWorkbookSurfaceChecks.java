@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import java.util.HashSet;
 
@@ -15,8 +15,7 @@ import java.util.HashSet;
 final class WorkbookInvariantWorkbookSurfaceChecks {
   private WorkbookInvariantWorkbookSurfaceChecks() {}
 
-  static void requireWorkbookSummaryShape(
-      GridGrindWorkbookSurfaceReports.WorkbookSummary workbook) {
+  static void requireWorkbookSummaryShape(WorkbookSummary workbook) {
     WorkbookInvariantChecks.require(workbook != null, "workbook summary must not be null");
     WorkbookInvariantChecks.require(workbook.sheetCount() >= 0, "sheetCount must not be negative");
     WorkbookInvariantChecks.require(
@@ -32,13 +31,13 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
                 WorkbookInvariantChecks.require(
                     sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
     switch (workbook) {
-      case GridGrindWorkbookSurfaceReports.WorkbookSummary.Empty empty -> {
+      case WorkbookSummary.Empty empty -> {
         WorkbookInvariantChecks.require(
             empty.sheetCount() == 0, "empty workbook summary must have sheetCount 0");
         WorkbookInvariantChecks.require(
             empty.sheetNames().isEmpty(), "empty workbook summary must have no sheet names");
       }
-      case GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets withSheets -> {
+      case WorkbookSummary.WithSheets withSheets -> {
         WorkbookInvariantChecks.require(
             withSheets.sheetCount() > 0,
             "non-empty workbook summary must have positive sheetCount");
@@ -67,7 +66,7 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     }
   }
 
-  static void requireSheetSummaryShape(GridGrindWorkbookSurfaceReports.SheetSummaryReport sheet) {
+  static void requireSheetSummaryShape(SheetSummaryReport sheet) {
     WorkbookInvariantChecks.require(sheet.sheetName() != null, "sheetName must not be null");
     WorkbookInvariantChecks.require(!sheet.sheetName().isBlank(), "sheetName must not be blank");
     WorkbookInvariantChecks.require(sheet.visibility() != null, "visibility must not be null");
@@ -79,8 +78,8 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(
         sheet.lastColumnIndex() >= -1, "lastColumnIndex must be greater than or equal to -1");
     switch (sheet.protection()) {
-      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Unprotected _ -> {}
-      case GridGrindWorkbookSurfaceReports.SheetProtectionReport.Protected protectedReport ->
+      case SheetProtectionReport.Unprotected _ -> {}
+      case SheetProtectionReport.Protected protectedReport ->
           WorkbookInvariantChecks.require(
               protectedReport.settings() != null, "protected sheet settings must not be null");
     }
@@ -350,16 +349,20 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         bar3D.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Doughnut doughnut -> {
-        if (doughnut.firstSliceAngle() != null) {
-          WorkbookInvariantChecks.require(
-              doughnut.firstSliceAngle() >= 0 && doughnut.firstSliceAngle() <= 360,
-              "doughnut chart firstSliceAngle must be between 0 and 360");
-        }
-        if (doughnut.holeSize() != null) {
-          WorkbookInvariantChecks.require(
-              doughnut.holeSize() >= 10 && doughnut.holeSize() <= 90,
-              "doughnut chart holeSize must be between 10 and 90");
-        }
+        doughnut
+            .firstSliceAngle()
+            .ifPresent(
+                firstSliceAngle ->
+                    WorkbookInvariantChecks.require(
+                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                        "doughnut chart firstSliceAngle must be between 0 and 360"));
+        doughnut
+            .holeSize()
+            .ifPresent(
+                holeSize ->
+                    WorkbookInvariantChecks.require(
+                        holeSize >= 10 && holeSize <= 90,
+                        "doughnut chart holeSize must be between 10 and 90"));
         doughnut.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Line line -> {
@@ -375,11 +378,12 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         line3D.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Pie pie -> {
-        if (pie.firstSliceAngle() != null) {
-          WorkbookInvariantChecks.require(
-              pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
-              "pie chart firstSliceAngle must be between 0 and 360");
-        }
+        pie.firstSliceAngle()
+            .ifPresent(
+                firstSliceAngle ->
+                    WorkbookInvariantChecks.require(
+                        firstSliceAngle >= 0 && firstSliceAngle <= 360,
+                        "pie chart firstSliceAngle must be between 0 and 360"));
         pie.series().forEach(WorkbookInvariantWorkbookSurfaceChecks::requireChartSeriesShape);
       }
       case ChartReport.Pie3D pie3D ->
@@ -457,11 +461,13 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
         WorkbookInvariantChecks.require(
             reference.cachedValues() != null,
             "chart numeric-reference cachedValues must not be null");
-        if (reference.formatCode() != null) {
-          WorkbookInvariantChecks.require(
-              !reference.formatCode().isBlank(),
-              "chart numeric-reference formatCode must not be blank");
-        }
+        reference
+            .formatCode()
+            .ifPresent(
+                formatCode ->
+                    WorkbookInvariantChecks.require(
+                        !formatCode.isBlank(),
+                        "chart numeric-reference formatCode must not be blank"));
       }
       case ChartReport.DataSource.StringLiteral literal ->
           WorkbookInvariantChecks.require(
@@ -469,11 +475,13 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
       case ChartReport.DataSource.NumericLiteral literal -> {
         WorkbookInvariantChecks.require(
             literal.values() != null, "chart numeric-literal values must not be null");
-        if (literal.formatCode() != null) {
-          WorkbookInvariantChecks.require(
-              !literal.formatCode().isBlank(),
-              "chart numeric-literal formatCode must not be blank");
-        }
+        literal
+            .formatCode()
+            .ifPresent(
+                formatCode ->
+                    WorkbookInvariantChecks.require(
+                        !formatCode.isBlank(),
+                        "chart numeric-literal formatCode must not be blank"));
       }
     }
   }
@@ -554,9 +562,11 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
     WorkbookInvariantChecks.require(
         dataField.function() != null, "pivot dataField function must not be null");
     WorkbookInvariantChecks.requireNonBlank(dataField.displayName(), "pivot dataField displayName");
-    if (dataField.valueFormat() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          dataField.valueFormat(), "pivot dataField valueFormat");
-    }
+    dataField
+        .valueFormat()
+        .ifPresent(
+            valueFormat ->
+                WorkbookInvariantChecks.requireNonBlank(
+                    valueFormat, "pivot dataField valueFormat"));
   }
 }

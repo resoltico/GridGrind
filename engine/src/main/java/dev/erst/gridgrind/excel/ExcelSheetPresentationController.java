@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import org.apache.poi.ss.usermodel.IgnoredErrorType;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -61,17 +62,18 @@ final class ExcelSheetPresentationController {
         sheet.isRightToLeft());
   }
 
-  private static void applyTabColor(XSSFSheet sheet, ExcelColor tabColor) {
-    if (tabColor == null) {
+  private static void applyTabColor(XSSFSheet sheet, Optional<ExcelColor> tabColor) {
+    Objects.requireNonNull(tabColor, "tabColor must not be null");
+    if (tabColor.isEmpty()) {
       clearTabColor(sheet);
       return;
     }
-    sheet.setTabColor(ExcelColorSupport.toXssfColor(sheet.getWorkbook(), tabColor));
+    sheet.setTabColor(ExcelColorSupport.toXssfColor(sheet.getWorkbook(), tabColor.orElseThrow()));
   }
 
-  private static ExcelColorSnapshot tabColor(XSSFSheet sheet) {
+  private static Optional<ExcelColorSnapshot> tabColor(XSSFSheet sheet) {
     XSSFColor color = sheet.getTabColor();
-    return color == null ? null : ExcelColorSnapshotSupport.snapshot(color);
+    return ExcelColorSnapshotSupport.snapshot(color);
   }
 
   static void clearTabColor(XSSFSheet sheet) {

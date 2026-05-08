@@ -4,9 +4,9 @@ import dev.erst.gridgrind.authoring.Targets;
 import dev.erst.gridgrind.authoring.Values;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.executor.ExecutionInputBindings;
-import dev.erst.gridgrind.executor.ExecutionJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
+import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
+import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -63,10 +63,10 @@ final class JavaAuthoringWorkflowExample {
 
   /** Executes the authored workflow in-process against the canonical executor. */
   public static GridGrindResponse run(Path workspace) throws Exception {
-    return new DefaultGridGrindRequestExecutor()
+    return GridGrindEngine.requestExecutor()
         .execute(
             build(workspace).toPlan(),
-            new ExecutionInputBindings(workspace),
-            ExecutionJournalSink.NOOP);
+            new GridGrindRequestInputs(workspace),
+            GridGrindJournalSink.NOOP);
   }
 }

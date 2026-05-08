@@ -3,26 +3,29 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** Authoritative signature-line creation or replacement payload. */
 public record ExcelSignatureLineDefinition(
     String name,
     ExcelDrawingAnchor.TwoCell anchor,
     boolean allowComments,
-    String signingInstructions,
-    String suggestedSigner,
-    String suggestedSigner2,
-    String suggestedSignerEmail,
-    String caption,
-    String invalidStamp,
-    ExcelPictureFormat plainSignatureFormat,
-    ExcelBinaryData plainSignature) {
+    @Nullable String signingInstructions,
+    @Nullable String suggestedSigner,
+    @Nullable String suggestedSigner2,
+    @Nullable String suggestedSignerEmail,
+    @Nullable String caption,
+    @Nullable String invalidStamp,
+    Optional<ExcelPictureFormat> plainSignatureFormat,
+    Optional<ExcelBinaryData> plainSignature) {
   public ExcelSignatureLineDefinition {
     Objects.requireNonNull(name, "name must not be null");
     if (name.isBlank()) {
       throw new IllegalArgumentException("name must not be blank");
     }
     Objects.requireNonNull(anchor, "anchor must not be null");
+    Objects.requireNonNull(plainSignatureFormat, "plainSignatureFormat must not be null");
+    Objects.requireNonNull(plainSignature, "plainSignature must not be null");
     signingInstructions =
         normalizeOptional(signingInstructions, "signingInstructions").orElse(null);
     suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner").orElse(null);
@@ -41,15 +44,15 @@ public record ExcelSignatureLineDefinition(
       throw new IllegalArgumentException(
           "caption or at least one suggested signer field must be provided");
     }
-    if (plainSignature == null && plainSignatureFormat != null) {
+    if (plainSignature.isEmpty() && plainSignatureFormat.isPresent()) {
       throw new IllegalArgumentException("plainSignatureFormat requires plainSignature");
     }
-    if (plainSignature != null && plainSignatureFormat == null) {
+    if (plainSignature.isPresent() && plainSignatureFormat.isEmpty()) {
       throw new IllegalArgumentException("plainSignature requires plainSignatureFormat");
     }
   }
 
-  private static Optional<String> normalizeOptional(String value, String fieldName) {
+  private static Optional<String> normalizeOptional(@Nullable String value, String fieldName) {
     if (value == null) {
       return Optional.empty();
     }

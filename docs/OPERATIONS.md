@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: OPERATIONS
 updated: "2026-05-01"
 route:
@@ -43,7 +43,7 @@ placeholders, so the machine-readable surface is easier for agents and shell too
 directly.
 Task discovery is layered on top of that same catalog surface:
 `--print-task-catalog --response tasks.json`, `--print-task-plan <id> --response task-plan.json`,
-and `--print-goal-plan "<goal>" --response goal-plan.json` now emit
+and `--print-task-keyword-match "<query>" --response task-keyword-match.json` now emit
 starter scaffolds for dashboards, tabular reports, data-entry flows, pivot reports, custom XML
 workflows, workbook maintenance, and drawing/signature workflows.
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits,
@@ -123,7 +123,9 @@ step shapes live in [ASSERTIONS.md](./ASSERTIONS.md),
 [ANALYSIS_QUERIES.md](./ANALYSIS_QUERIES.md).
 
 Common response anchors:
-- `GET_FORMULA_SURFACE` returns `analysis.totalFormulaCellCount` plus grouped sheet summaries.
+- `GET_FORMULA_SURFACE` returns `surface.totalFormulaCellCount` plus grouped sheet summaries.
+- `GET_NAMED_RANGE_SURFACE` returns `surface.workbookScopedCount`,
+  `surface.sheetScopedCount`, backing counts, and per-name entries.
 - `ANALYZE_NAMED_RANGE_HEALTH` returns `analysis.checkedNamedRangeCount`, `analysis.summary`, and
   `analysis.findings`.
 - `ANALYZE_WORKBOOK_FINDINGS` returns workbook-wide `analysis.summary` plus one flat

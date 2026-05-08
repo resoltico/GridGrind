@@ -2,23 +2,24 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Immutable factual signature-line snapshot returned by workbook reads. */
 public record ExcelSignatureLineSnapshot(
     String name,
     ExcelDrawingAnchor.TwoCell anchor,
-    String setupId,
-    Boolean allowComments,
-    String signingInstructions,
-    String suggestedSigner,
-    String suggestedSigner2,
-    String suggestedSignerEmail,
-    ExcelPictureFormat previewFormat,
-    String previewContentType,
-    Long previewByteSize,
-    String previewSha256,
-    Integer previewWidthPixels,
-    Integer previewHeightPixels) {
+    @Nullable String setupId,
+    @Nullable Boolean allowComments,
+    @Nullable String signingInstructions,
+    @Nullable String suggestedSigner,
+    @Nullable String suggestedSigner2,
+    @Nullable String suggestedSignerEmail,
+    @Nullable ExcelPictureFormat previewFormat,
+    @Nullable String previewContentType,
+    @Nullable Long previewByteSize,
+    @Nullable String previewSha256,
+    @Nullable Integer previewWidthPixels,
+    @Nullable Integer previewHeightPixels) {
   public ExcelSignatureLineSnapshot {
     Objects.requireNonNull(name, "name must not be null");
     if (name.isBlank()) {

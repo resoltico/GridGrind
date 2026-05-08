@@ -24,13 +24,47 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly process_support="${repo_root}/scripts/check-process-support.sh"
+readonly temp_parent="${repo_root}/tmp/test-check-process-support"
+readonly process_timeout_seconds=1
 
 [[ -f "${process_support}" ]] || die "missing process support helper"
 
 # shellcheck source=/dev/null
 source "${process_support}"
 
-tmp_dir="$(mktemp -d)"
+resolve_process_test_python() {
+    local candidates=()
+    local candidate=''
+    if [[ -x /usr/bin/python3 ]]; then
+        candidates+=(/usr/bin/python3)
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        candidate="$(command -v python3)"
+        if [[ "${candidate}" != /usr/bin/python3 ]]; then
+            candidates+=("${candidate}")
+        fi
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        if "${candidate}" - <<'PY' >/dev/null 2>&1
+import os
+import signal
+import subprocess
+import sys
+import time
+PY
+        then
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+    done
+
+    die "python3 with the standard library process modules is required"
+}
+
+mkdir -p "${temp_parent}"
+tmp_dir="$(mktemp -d "${temp_parent%/}/run.XXXXXX")"
+readonly process_test_python="$(resolve_process_test_python)"
 parent_pid=''
 child_pid=''
 cleanup() {
@@ -74,8 +108,8 @@ PY
 CHECK_PROCESS_TIMEOUT_TERM_GRACE_SECONDS=0.2 \
     capture_with_timeout \
     "${output_path}" \
-    0.2 \
-    python3 "${worker_path}" "${parent_pid_path}" "${child_pid_path}"
+    "${process_timeout_seconds}" \
+    "${process_test_python}" "${worker_path}" "${parent_pid_path}" "${child_pid_path}"
 
 [[ -s "${parent_pid_path}" ]] || die "timeout regression did not publish the parent pid"
 [[ -s "${child_pid_path}" ]] || die "timeout regression did not publish the child pid"

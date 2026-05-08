@@ -9,6 +9,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -44,13 +45,7 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
-                  null,
-                  null,
-                  new ExcelCellFont(null, null, null, null, null, true, null),
-                  null,
-                  null,
-                  null)));
+              style(null, null, font(null, null, null, null, null, true, null), null, null, null)));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
       assertEquals("Aptos", snapshot.font().fontName());
@@ -76,18 +71,18 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.patternForeground(
                       ExcelFillPattern.SOLID, ExcelColor.rgb("#DDEBF7")),
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN),
-                      null,
-                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE),
-                      null,
-                      null),
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.THIN)),
+                      Optional.empty(),
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.DOUBLE)),
+                      Optional.empty(),
+                      Optional.empty()),
                   null)));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
@@ -109,13 +104,17 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(null, null, "Aptos Display", null, null, false, null),
+                  font(null, null, "Aptos Display", null, null, false, null),
                   null,
                   new ExcelBorder(
-                      null, new ExcelBorderSide(ExcelBorderStyle.THICK), null, null, null),
+                      Optional.empty(),
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.THICK)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()),
                   null)));
       ExcelCellStyleSnapshot fontNameSnapshot = styleRegistry.snapshot(cell);
       assertEquals("Aptos Display", fontNameSnapshot.font().fontName());
@@ -126,10 +125,10 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(
+                  font(
                       null,
                       null,
                       null,
@@ -146,10 +145,10 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(null, null, null, null, ExcelColor.rgb("#445566"), null, null),
+                  font(null, null, null, null, ExcelColor.rgb("#445566"), null, null),
                   null,
                   null,
                   null)));
@@ -166,11 +165,10 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(
-                      null, true, null, null, ExcelColor.theme(6, -0.35d), null, null),
+                  font(null, true, null, null, ExcelColor.theme(6, -0.35d), null, null),
                   null,
                   null,
                   null)));
@@ -180,10 +178,10 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(
+                  font(
                       null,
                       null,
                       null,
@@ -210,17 +208,16 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(
-                      null, null, null, null, ExcelColor.theme(6, -0.35d), null, null),
+                  font(null, null, null, null, ExcelColor.theme(6, -0.35d), null, null),
                   ExcelCellFill.gradient(
                       ExcelGradientFill.path(
-                          0.1d,
-                          0.2d,
-                          0.3d,
-                          0.4d,
+                          Optional.of(0.1d),
+                          Optional.of(0.2d),
+                          Optional.of(0.3d),
+                          Optional.of(0.4d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.indexed(5))))),
@@ -246,14 +243,16 @@ class WorkbookStyleRegistryTest {
           assertInstanceOf(
                   ExcelColorSnapshot.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
-                      workbook, gradientFill.getStopArray(0).getColor()))
+                          workbook, gradientFill.getStopArray(0).getColor())
+                      .orElseThrow())
               .rgb());
       assertEquals(
           5,
           assertInstanceOf(
                   ExcelColorSnapshot.Indexed.class,
                   ExcelColorSnapshotSupport.snapshot(
-                      workbook, gradientFill.getStopArray(1).getColor()))
+                          workbook, gradientFill.getStopArray(1).getColor())
+                      .orElseThrow())
               .indexed());
     }
   }
@@ -277,13 +276,13 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(null, null, null, null, ExcelColor.rgb("#445566"), null, null),
+                  font(null, null, null, null, ExcelColor.rgb("#445566"), null, null),
                   ExcelCellFill.gradient(
                       ExcelGradientFill.linear(
-                          37.5d,
+                          Optional.of(37.5d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566"))))),
@@ -305,7 +304,8 @@ class WorkbookStyleRegistryTest {
           assertInstanceOf(
                   ExcelColorSnapshot.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
-                      workbook, mergedFont.getCTFont().getColorArray(0)))
+                          workbook, mergedFont.getCTFont().getColorArray(0))
+                      .orElseThrow())
               .rgb());
       assertNotNull(gradientFill);
       assertFalse(gradientFill.isSetType());
@@ -331,10 +331,10 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
-                  new ExcelCellFont(null, null, null, null, ExcelColor.rgb("#102030"), null, null),
+                  font(null, null, null, null, ExcelColor.rgb("#102030"), null, null),
                   null,
                   null,
                   null)));
@@ -347,7 +347,8 @@ class WorkbookStyleRegistryTest {
           assertInstanceOf(
                   ExcelColorSnapshot.Rgb.class,
                   ExcelColorSnapshotSupport.snapshot(
-                      workbook, mergedFont.getCTFont().getColorArray(0)))
+                          workbook, mergedFont.getCTFont().getColorArray(0))
+                      .orElseThrow())
               .rgb());
     }
   }
@@ -368,13 +369,13 @@ class WorkbookStyleRegistryTest {
       nonRgbFillStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
       nonRgbFillStyle.setFillForegroundColor(new XSSFColor());
       cell.setCellStyle(nonRgbFillStyle);
-      assertNull(fillForegroundColor(styleRegistry.snapshot(cell).fill()));
+      assertThrows(IllegalStateException.class, () -> styleRegistry.snapshot(cell).fill());
 
       XSSFCellStyle malformedRgbFillStyle = workbook.createCellStyle();
       malformedRgbFillStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
       malformedRgbFillStyle.setFillForegroundColor(new XSSFColor(new byte[] {0x11, 0x22}));
       cell.setCellStyle(malformedRgbFillStyle);
-      assertNull(fillForegroundColor(styleRegistry.snapshot(cell).fill()));
+      assertThrows(IllegalStateException.class, () -> styleRegistry.snapshot(cell).fill());
     }
   }
 
@@ -408,11 +409,11 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
-                  new ExcelCellAlignment(
+                  alignment(
                       true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, 45, 3),
-                  new ExcelCellFont(
+                  font(
                       true,
                       false,
                       "Aptos",
@@ -425,12 +426,14 @@ class WorkbookStyleRegistryTest {
                       ExcelColor.rgb("#FFF2CC"),
                       ExcelColor.rgb("#DDEBF7")),
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#203040")),
-                      null,
-                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE, ExcelColor.rgb("#304050")),
-                      null,
-                      null),
-                  new ExcelCellProtection(false, true))));
+                      Optional.ofNullable(
+                          borderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#203040"))),
+                      Optional.empty(),
+                      Optional.ofNullable(
+                          borderSide(ExcelBorderStyle.DOUBLE, ExcelColor.rgb("#304050"))),
+                      Optional.empty(),
+                      Optional.empty()),
+                  new ExcelCellProtection(Optional.of(false), Optional.of(true)))));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
       assertTrue(snapshot.alignment().wrapText());
@@ -529,11 +532,12 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#112233")),
-                      new ExcelBorderSide(null, ExcelColor.rgb("#445566")),
-                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE, null),
-                      null,
-                      null))));
+                      Optional.ofNullable(
+                          borderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#112233"))),
+                      Optional.ofNullable(borderSide(null, ExcelColor.rgb("#445566"))),
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.DOUBLE, null)),
+                      Optional.empty(),
+                      Optional.empty()))));
       ExcelCellStyleSnapshot mergedBorderSnapshot = styleRegistry.snapshot(cell);
       assertEquals(ExcelBorderStyle.THIN, mergedBorderSnapshot.border().top().style());
       assertEquals(rgb("#445566"), mergedBorderSnapshot.border().top().color());
@@ -546,7 +550,11 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      null, new ExcelBorderSide(ExcelBorderStyle.NONE), null, null, null))));
+                      Optional.empty(),
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.NONE)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
       ExcelCellStyleSnapshot clearedBorderSnapshot = styleRegistry.snapshot(cell);
       assertEquals(ExcelBorderStyle.NONE, clearedBorderSnapshot.border().top().style());
       assertNull(clearedBorderSnapshot.border().top().color());
@@ -560,11 +568,11 @@ class WorkbookStyleRegistryTest {
                   cell,
                   borderPatch(
                       new ExcelBorder(
-                          null,
-                          new ExcelBorderSide(null, ExcelColor.rgb("#778899")),
-                          null,
-                          null,
-                          null))));
+                          Optional.empty(),
+                          Optional.ofNullable(borderSide(null, ExcelColor.rgb("#778899"))),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
 
       Cell blankCell = workbook.getSheet("Budget").createRow(1).createCell(0);
       assertThrows(
@@ -574,11 +582,11 @@ class WorkbookStyleRegistryTest {
                   blankCell,
                   borderPatch(
                       new ExcelBorder(
-                          null,
-                          new ExcelBorderSide(null, ExcelColor.rgb("#99AABB")),
-                          null,
-                          null,
-                          null))));
+                          Optional.empty(),
+                          Optional.ofNullable(borderSide(null, ExcelColor.rgb("#99AABB"))),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -587,11 +595,11 @@ class WorkbookStyleRegistryTest {
                   blankCell,
                   borderPatch(
                       new ExcelBorder(
-                          new ExcelBorderSide(ExcelBorderStyle.NONE),
-                          new ExcelBorderSide(null, ExcelColor.rgb("#CC8844")),
-                          null,
-                          null,
-                          null))));
+                          Optional.ofNullable(borderSide(ExcelBorderStyle.NONE)),
+                          Optional.ofNullable(borderSide(null, ExcelColor.rgb("#CC8844"))),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
     }
   }
 
@@ -606,7 +614,11 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.NONE), null, null, null, null))));
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.NONE)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
       assertEquals(ExcelBorderStyle.NONE, snapshot.border().top().style());
@@ -631,11 +643,12 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#112233")),
-                      null,
-                      null,
-                      null,
-                      null))));
+                      Optional.ofNullable(
+                          borderSide(ExcelBorderStyle.THIN, ExcelColor.rgb("#112233"))),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
       assertEquals(rgb("#112233"), styleRegistry.snapshot(cell).border().top().color());
 
       cell.setCellStyle(
@@ -643,7 +656,11 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.NONE), null, null, null, null))));
+                      Optional.ofNullable(borderSide(ExcelBorderStyle.NONE)),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
       assertEquals(ExcelBorderStyle.NONE, snapshot.border().top().style());
@@ -658,13 +675,16 @@ class WorkbookStyleRegistryTest {
       Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
 
       cell.setCellStyle(
-          styleRegistry.mergedStyle(cell, protectionPatch(new ExcelCellProtection(false, null))));
+          styleRegistry.mergedStyle(
+              cell,
+              protectionPatch(new ExcelCellProtection(Optional.of(false), Optional.empty()))));
       ExcelCellStyleSnapshot lockedSnapshot = styleRegistry.snapshot(cell);
       assertFalse(lockedSnapshot.protection().locked());
       assertFalse(lockedSnapshot.protection().hiddenFormula());
 
       cell.setCellStyle(
-          styleRegistry.mergedStyle(cell, protectionPatch(new ExcelCellProtection(null, true))));
+          styleRegistry.mergedStyle(
+              cell, protectionPatch(new ExcelCellProtection(Optional.empty(), Optional.of(true)))));
       ExcelCellStyleSnapshot hiddenSnapshot = styleRegistry.snapshot(cell);
       assertFalse(hiddenSnapshot.protection().locked());
       assertTrue(hiddenSnapshot.protection().hiddenFormula());
@@ -706,6 +726,24 @@ class WorkbookStyleRegistryTest {
       assertEquals(ExcelFillPattern.BRICKS, fillPattern(snapshot));
       assertNull(fillForegroundColor(snapshot));
       assertEquals(ExcelColorSnapshot.indexed(10), fillBackgroundColor(snapshot));
+    }
+  }
+
+  @Test
+  void snapshot_readsPatternWithoutColorsAsPatternOnly() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell, fillPatch(ExcelCellFill.pattern(ExcelFillPattern.BRICKS))));
+
+      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+
+      assertEquals(ExcelFillPattern.BRICKS, fillPattern(snapshot));
+      assertNull(fillForegroundColor(snapshot));
+      assertNull(fillBackgroundColor(snapshot));
     }
   }
 
@@ -906,6 +944,24 @@ class WorkbookStyleRegistryTest {
   }
 
   @Test
+  void gradientFillSnapshotRejectsStopsWithoutColorDefinition() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var gradient =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill.Factory.newInstance();
+      var stop = gradient.addNewStop();
+      stop.setPosition(0.5d);
+
+      IllegalStateException failure =
+          assertThrows(
+              IllegalStateException.class, () -> styleRegistry.gradientFillSnapshot(gradient));
+
+      assertEquals(
+          "Gradient stop at position 0.5 is missing its color definition.", failure.getMessage());
+    }
+  }
+
+  @Test
   void snapshotReportsPathGradientGeometryForStyledCells() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
@@ -915,21 +971,21 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.path(
-                          0.1d,
-                          0.2d,
-                          0.3d,
-                          0.4d,
+                          Optional.of(0.1d),
+                          Optional.of(0.2d),
+                          Optional.of(0.3d),
+                          Optional.of(0.4d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.indexed(10))))),
                   null,
-                  new ExcelCellProtection(false, true))));
+                  new ExcelCellProtection(Optional.of(false), Optional.of(true)))));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
 
@@ -958,36 +1014,36 @@ class WorkbookStyleRegistryTest {
       linearCell.setCellStyle(
           styleRegistry.mergedStyle(
               linearCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.linear(
-                          45.0d,
+                          Optional.of(45.0d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#1F497D")),
                               new ExcelGradientStop(1.0d, ExcelColor.theme(4, 0.45d))))),
                   null,
-                  new ExcelCellProtection(true, true))));
+                  new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
       pathCell.setCellStyle(
           styleRegistry.mergedStyle(
               pathCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.path(
-                          0.1d,
-                          0.2d,
-                          0.3d,
-                          0.4d,
+                          Optional.of(0.1d),
+                          Optional.of(0.2d),
+                          Optional.of(0.3d),
+                          Optional.of(0.4d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.indexed(10))))),
                   null,
-                  new ExcelCellProtection(false, true))));
+                  new ExcelCellProtection(Optional.of(false), Optional.of(true)))));
 
       ExcelCellStyleSnapshot linearSnapshot = styleRegistry.snapshot(linearCell);
       ExcelCellStyleSnapshot pathSnapshot = styleRegistry.snapshot(pathCell);
@@ -1015,7 +1071,7 @@ class WorkbookStyleRegistryTest {
       secondCell.setCellValue("Unlocked");
       ExcelGradientFill sharedGradient =
           ExcelGradientFill.linear(
-              45.0d,
+              Optional.of(45.0d),
               List.of(
                   new ExcelGradientStop(0.0d, ExcelColor.rgb("#1F497D")),
                   new ExcelGradientStop(1.0d, ExcelColor.theme(4, 0.45d))));
@@ -1023,23 +1079,23 @@ class WorkbookStyleRegistryTest {
       firstCell.setCellStyle(
           styleRegistry.mergedStyle(
               firstCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(sharedGradient),
                   null,
-                  new ExcelCellProtection(true, true))));
+                  new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
       secondCell.setCellStyle(
           styleRegistry.mergedStyle(
               secondCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(sharedGradient),
                   null,
-                  new ExcelCellProtection(false, true))));
+                  new ExcelCellProtection(Optional.of(false), Optional.of(true)))));
 
       long firstFillId = ((XSSFCellStyle) firstCell.getCellStyle()).getCoreXf().getFillId();
       long secondFillId = ((XSSFCellStyle) secondCell.getCellStyle()).getCoreXf().getFillId();
@@ -1061,16 +1117,16 @@ class WorkbookStyleRegistryTest {
       leftBottomCell.setCellStyle(
           styleRegistry.mergedStyle(
               leftBottomCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.path(
-                          0.1d,
-                          null,
-                          null,
-                          0.4d,
+                          Optional.of(0.1d),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.of(0.4d),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.indexed(10))))),
@@ -1079,16 +1135,16 @@ class WorkbookStyleRegistryTest {
       rightTopCell.setCellStyle(
           styleRegistry.mergedStyle(
               rightTopCell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.path(
-                          null,
-                          0.2d,
-                          0.3d,
-                          null,
+                          Optional.empty(),
+                          Optional.of(0.2d),
+                          Optional.of(0.3d),
+                          Optional.empty(),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#223344")),
                               new ExcelGradientStop(1.0d, ExcelColor.theme(3))))),
@@ -1130,13 +1186,13 @@ class WorkbookStyleRegistryTest {
       cell.setCellStyle(
           styleRegistry.mergedStyle(
               cell,
-              new ExcelCellStyle(
+              style(
                   null,
                   null,
                   null,
                   ExcelCellFill.gradient(
                       ExcelGradientFill.linear(
-                          null,
+                          Optional.empty(),
                           List.of(
                               new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                               new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566"))))),
@@ -1159,16 +1215,72 @@ class WorkbookStyleRegistryTest {
     }
   }
 
+  private ExcelCellStyle style(
+      String numberFormat,
+      ExcelCellAlignment alignment,
+      ExcelCellFont font,
+      ExcelCellFill fill,
+      ExcelBorder border,
+      ExcelCellProtection protection) {
+    return new ExcelCellStyle(
+        Optional.ofNullable(numberFormat),
+        Optional.ofNullable(alignment),
+        Optional.ofNullable(font),
+        Optional.ofNullable(fill),
+        Optional.ofNullable(border),
+        Optional.ofNullable(protection));
+  }
+
+  private ExcelCellFont font(
+      Boolean bold,
+      Boolean italic,
+      String fontName,
+      ExcelFontHeight fontHeight,
+      ExcelColor fontColor,
+      Boolean underline,
+      Boolean strikeout) {
+    return new ExcelCellFont(
+        Optional.ofNullable(bold),
+        Optional.ofNullable(italic),
+        Optional.ofNullable(fontName),
+        Optional.ofNullable(fontHeight),
+        Optional.ofNullable(fontColor),
+        Optional.ofNullable(underline),
+        Optional.ofNullable(strikeout));
+  }
+
+  private ExcelCellAlignment alignment(
+      Boolean wrapText,
+      ExcelHorizontalAlignment horizontalAlignment,
+      ExcelVerticalAlignment verticalAlignment,
+      Integer textRotation,
+      Integer indentation) {
+    return new ExcelCellAlignment(
+        Optional.ofNullable(wrapText),
+        Optional.ofNullable(horizontalAlignment),
+        Optional.ofNullable(verticalAlignment),
+        Optional.ofNullable(textRotation),
+        Optional.ofNullable(indentation));
+  }
+
+  private ExcelBorderSide borderSide(ExcelBorderStyle style, ExcelColor color) {
+    return new ExcelBorderSide(Optional.ofNullable(style), Optional.ofNullable(color));
+  }
+
+  private ExcelBorderSide borderSide(ExcelBorderStyle style) {
+    return borderSide(style, null);
+  }
+
   private ExcelCellStyle fillPatch(ExcelCellFill fill) {
-    return new ExcelCellStyle(null, null, null, fill, null, null);
+    return style(null, null, null, fill, null, null);
   }
 
   private ExcelCellStyle borderPatch(ExcelBorder border) {
-    return new ExcelCellStyle(null, null, null, null, border, null);
+    return style(null, null, null, null, border, null);
   }
 
   private ExcelCellStyle protectionPatch(ExcelCellProtection protection) {
-    return new ExcelCellStyle(null, null, null, null, null, protection);
+    return style(null, null, null, null, null, protection);
   }
 
   private ExcelCellFill fillFor(ExcelFillPattern pattern) {

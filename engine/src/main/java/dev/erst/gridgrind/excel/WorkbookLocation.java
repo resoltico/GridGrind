@@ -19,7 +19,7 @@ public sealed interface WorkbookLocation
 
     @Override
     public Optional<Path> baseDirectory() {
-      return Optional.of(workbookPath.getParent());
+      return Optional.ofNullable(workbookPath.getParent());
     }
   }
 

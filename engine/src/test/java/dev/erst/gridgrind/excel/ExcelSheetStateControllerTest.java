@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.junit.jupiter.api.Test;
 
@@ -141,7 +142,8 @@ class ExcelSheetStateControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Alpha");
       ExcelWorkbookProtectionSettings protectedSettings =
-          new ExcelWorkbookProtectionSettings(true, true, true, "secret", "review");
+          new ExcelWorkbookProtectionSettings(
+              true, true, true, Optional.of("secret"), Optional.of("review"));
 
       controller.setWorkbookProtection(workbook, protectedSettings);
 
@@ -158,7 +160,9 @@ class ExcelSheetStateControllerTest {
       assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
 
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, false, false, Optional.empty(), Optional.empty()));
 
       assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
@@ -169,7 +173,8 @@ class ExcelSheetStateControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Alpha");
       ExcelWorkbookProtectionSettings settings =
-          new ExcelWorkbookProtectionSettings(true, false, true, "secret", null);
+          new ExcelWorkbookProtectionSettings(
+              true, false, true, Optional.of("secret"), Optional.empty());
 
       workbook.setWorkbookProtection(settings);
 
@@ -207,7 +212,9 @@ class ExcelSheetStateControllerTest {
       protection.setRevisionsSpinCount(100000L);
 
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(true, false, true, null, null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              true, false, true, Optional.empty(), Optional.empty()));
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(true, false, true, false, false),
@@ -251,7 +258,9 @@ class ExcelSheetStateControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Alpha");
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, true, false, null, null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, true, false, Optional.empty(), Optional.empty()));
       assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
 
@@ -259,7 +268,9 @@ class ExcelSheetStateControllerTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Alpha");
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, false, true, null, null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, false, true, Optional.empty(), Optional.empty()));
       assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
 
@@ -319,7 +330,9 @@ class ExcelSheetStateControllerTest {
       workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
 
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, false, false, Optional.empty(), Optional.empty()));
 
       assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
@@ -333,7 +346,9 @@ class ExcelSheetStateControllerTest {
       workbook.getOrCreateSheet("Alpha");
 
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, false, false, "secret", null));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, false, false, Optional.of("secret"), Optional.empty()));
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(false, false, false, true, false),
@@ -345,7 +360,9 @@ class ExcelSheetStateControllerTest {
       workbook.getOrCreateSheet("Alpha");
 
       controller.setWorkbookProtection(
-          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, "review"));
+          workbook,
+          new ExcelWorkbookProtectionSettings(
+              false, false, false, Optional.empty(), Optional.of("review")));
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(false, false, false, false, true),

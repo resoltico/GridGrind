@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Immutable workbook-owned context shared across workbook façades and controller seams. */
@@ -9,23 +10,25 @@ final class ExcelWorkbookContext {
   private final XSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
-  private final Path sourcePath;
+  private final Optional<Path> sourcePath;
   private final ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity;
-  private final String sourceEncryptionPassword;
+  private final Optional<String> sourceEncryptionPassword;
 
   ExcelWorkbookContext(
       XSSFWorkbook workbook,
       ExcelFormulaRuntime formulaRuntime,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword) {
+      Optional<String> sourceEncryptionPassword) {
     this.workbook = Objects.requireNonNull(workbook, "workbook must not be null");
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
-    this.sourcePath = sourcePath;
+    this.sourcePath = Objects.requireNonNull(sourcePath, "sourcePath must not be null");
     this.loadedPackageSecurity =
         Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
-    this.sourceEncryptionPassword = sourceEncryptionPassword;
+    this.sourceEncryptionPassword =
+        Objects.requireNonNull(
+            sourceEncryptionPassword, "sourceEncryptionPassword must not be null");
   }
 
   XSSFWorkbook workbook() {
@@ -40,7 +43,7 @@ final class ExcelWorkbookContext {
     return formulaRuntime;
   }
 
-  Path sourcePath() {
+  Optional<Path> sourcePath() {
     return sourcePath;
   }
 
@@ -48,7 +51,7 @@ final class ExcelWorkbookContext {
     return loadedPackageSecurity;
   }
 
-  String sourceEncryptionPassword() {
+  Optional<String> sourceEncryptionPassword() {
     return sourceEncryptionPassword;
   }
 }

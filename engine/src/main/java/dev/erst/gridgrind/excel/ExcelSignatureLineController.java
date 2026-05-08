@@ -9,6 +9,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 import javax.xml.namespace.QName;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -18,6 +19,7 @@ import org.apache.poi.xssf.usermodel.XSSFSignatureLine;
 import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 
 /** Reads and mutates VML-backed Excel signature lines. */
@@ -61,11 +63,11 @@ final class ExcelSignatureLineController {
     requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
-    LocatedSignatureLine located = find(sheet, objectName);
-    if (located == null) {
+    Optional<LocatedSignatureLine> located = find(sheet, objectName);
+    if (located.isEmpty()) {
       return false;
     }
-    CTClientData clientData = requiredClientData(sheet, located.shape(), objectName);
+    CTClientData clientData = requiredClientData(sheet, located.orElseThrow().shape(), objectName);
     clientData.setAnchorArray(0, anchorString(anchor));
     return true;
   }
@@ -79,17 +81,18 @@ final class ExcelSignatureLineController {
       return false;
     }
 
-    LocatedSignatureLine located = find(sheet, objectName);
-    if (located == null) {
+    Optional<LocatedSignatureLine> located = find(sheet, objectName);
+    if (located.isEmpty()) {
       return false;
     }
 
-    PackagePart previewPart = previewPart(vmlDrawing, located.shape());
-    String previewRelationId = previewRelationId(located.shape());
+    LocatedSignatureLine resolved = located.orElseThrow();
+    PackagePart previewPart = previewPart(vmlDrawing, resolved.shape());
+    String previewRelationId = previewRelationId(resolved.shape());
     if (previewRelationId != null) {
       vmlDrawing.getPackagePart().removeRelationship(previewRelationId);
     }
-    located.cursor().removeXml();
+    resolved.cursor().removeXml();
     if (previewPart != null) {
       ExcelDrawingBinarySupport.cleanupWorkbookImagePartIfUnused(
           sheet.getWorkbook(), previewPart.getPartName());
@@ -98,7 +101,7 @@ final class ExcelSignatureLineController {
   }
 
   boolean hasNamedSignatureLine(XSSFSheet sheet, String objectName) {
-    return find(sheet, objectName) != null;
+    return find(sheet, objectName).isPresent();
   }
 
   private ExcelSignatureLineSnapshot snapshot(XSSFVMLDrawing vmlDrawing, CTShape shape, int index) {
@@ -115,22 +118,24 @@ final class ExcelSignatureLineController {
             ? ExcelDrawingSnapshotSupport.RasterDimensions.none()
             : ExcelDrawingSnapshotSupport.rasterDimensions(previewBytes);
     CTSignatureLine signatureLine = shape.getSignaturelineArray(0);
-    String signingInstructions;
+    @Nullable String signingInstructions;
     try (XmlCursor cursor = signatureLine.newCursor()) {
       signingInstructions =
-          ExcelDrawingBinarySupport.nullIfBlank(cursor.getAttributeText(SIGNING_INSTRUCTIONS));
+          ExcelDrawingBinarySupport.blankAsOptional(cursor.getAttributeText(SIGNING_INSTRUCTIONS))
+              .orElse(null);
     }
     return new ExcelSignatureLineSnapshot(
         objectName,
         anchor(shape, objectName),
-        ExcelDrawingBinarySupport.nullIfBlank(signatureLine.getId()),
+        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getId()).orElse(null),
         signatureLine.isSetAllowcomments()
             ? STTrueFalse.TRUE.equals(signatureLine.getAllowcomments())
             : null,
         signingInstructions,
-        ExcelDrawingBinarySupport.nullIfBlank(signatureLine.getSuggestedsigner()),
-        ExcelDrawingBinarySupport.nullIfBlank(signatureLine.getSuggestedsigner2()),
-        ExcelDrawingBinarySupport.nullIfBlank(signatureLine.getSuggestedsigneremail()),
+        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigner()).orElse(null),
+        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigner2()).orElse(null),
+        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigneremail())
+            .orElse(null),
         previewFormat,
         previewPart == null ? null : previewPart.getContentType(),
         previewBytes == null ? null : (long) previewBytes.length,
@@ -139,10 +144,10 @@ final class ExcelSignatureLineController {
         previewDimensions.heightPixels());
   }
 
-  private LocatedSignatureLine find(XSSFSheet sheet, String objectName) {
+  private Optional<LocatedSignatureLine> find(XSSFSheet sheet, String objectName) {
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
-      return null;
+      return Optional.empty();
     }
 
     CTShape matchedShape = null;
@@ -174,8 +179,12 @@ final class ExcelSignatureLineController {
       }
     }
     return matchedShape == null
-        ? null
-        : new LocatedSignatureLine(matchedShape, matchedCursor, matchedIndex);
+        ? Optional.empty()
+        : Optional.of(
+            new LocatedSignatureLine(
+                matchedShape,
+                Objects.requireNonNull(matchedCursor, "matchedCursor must not be null"),
+                matchedIndex));
   }
 
   private static XSSFSignatureLine configuredSignatureLine(
@@ -198,11 +207,12 @@ final class ExcelSignatureLineController {
 
   private static void applyPlainSignature(
       XSSFSignatureLine signatureLine, ExcelSignatureLineDefinition definition) {
-    if (definition.plainSignature() == null) {
+    if (definition.plainSignature().isEmpty()) {
       return;
     }
-    signatureLine.setPlainSignature(definition.plainSignature().bytes());
-    signatureLine.setContentType(definition.plainSignatureFormat().defaultContentType());
+    signatureLine.setPlainSignature(definition.plainSignature().orElseThrow().bytes());
+    signatureLine.setContentType(
+        definition.plainSignatureFormat().orElseThrow().defaultContentType());
   }
 
   private static void applyNameAndCommentMetadata(
@@ -221,7 +231,8 @@ final class ExcelSignatureLineController {
     shape.getImagedataArray(0).setTitle(name);
   }
 
-  private static void applyIfPresent(String value, java.util.function.Consumer<String> consumer) {
+  private static void applyIfPresent(
+      @Nullable String value, java.util.function.Consumer<String> consumer) {
     if (value != null) {
       consumer.accept(value);
     }
@@ -257,18 +268,20 @@ final class ExcelSignatureLineController {
     return false;
   }
 
-  private static PackagePart previewPart(XSSFVMLDrawing vmlDrawing, CTShape shape) {
+  private static @Nullable PackagePart previewPart(XSSFVMLDrawing vmlDrawing, CTShape shape) {
     String previewRelationId = previewRelationId(shape);
     return previewRelationId == null
         ? null
         : ExcelDrawingBinarySupport.relatedInternalPart(
-            vmlDrawing.getPackagePart(), previewRelationId);
+                vmlDrawing.getPackagePart(), previewRelationId)
+            .orElse(null);
   }
 
-  private static String previewRelationId(CTShape shape) {
+  private static @Nullable String previewRelationId(CTShape shape) {
     return shape.sizeOfImagedataArray() == 0
         ? null
-        : ExcelDrawingBinarySupport.nullIfBlank(shape.getImagedataArray(0).getRelid());
+        : ExcelDrawingBinarySupport.blankAsOptional(shape.getImagedataArray(0).getRelid())
+            .orElse(null);
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(CTShape shape, String objectName) {
@@ -299,7 +312,7 @@ final class ExcelSignatureLineController {
   }
 
   private static CTClientData requiredClientData(
-      XSSFSheet sheet, CTShape shape, String objectName) {
+      @Nullable XSSFSheet sheet, CTShape shape, String objectName) {
     if (shape.sizeOfClientDataArray() == 0) {
       throw new IllegalStateException(missingClientDataMessage(sheet, objectName));
     }
@@ -310,7 +323,7 @@ final class ExcelSignatureLineController {
     return clientData;
   }
 
-  private static String missingClientDataMessage(XSSFSheet sheet, String objectName) {
+  private static String missingClientDataMessage(@Nullable XSSFSheet sheet, String objectName) {
     return sheet == null
         ? "Signature line '" + objectName + "' is missing VML clientData"
         : "Signature line '"
@@ -320,7 +333,7 @@ final class ExcelSignatureLineController {
             + "' is missing VML clientData";
   }
 
-  private static String missingAnchorMessage(XSSFSheet sheet, String objectName) {
+  private static String missingAnchorMessage(@Nullable XSSFSheet sheet, String objectName) {
     return sheet == null
         ? "Signature line '" + objectName + "' is missing its VML anchor"
         : "Signature line '"
@@ -333,17 +346,18 @@ final class ExcelSignatureLineController {
   private static String resolvedName(CTShape shape, int index) {
     if (shape.sizeOfImagedataArray() > 0) {
       CTImageData imageData = shape.getImagedataArray(0);
-      String titledName = ExcelDrawingBinarySupport.nullIfBlank(imageData.getTitle());
+      String titledName =
+          ExcelDrawingBinarySupport.blankAsOptional(imageData.getTitle()).orElse(null);
       if (titledName != null) {
         return titledName;
       }
     }
-    String alt = ExcelDrawingBinarySupport.nullIfBlank(shape.getAlt());
+    String alt = ExcelDrawingBinarySupport.blankAsOptional(shape.getAlt()).orElse(null);
     if (alt != null && !DEFAULT_ALT_TEXT.equals(alt)) {
       return alt;
     }
     CTSignatureLine signatureLine = shape.getSignaturelineArray(0);
-    String setupId = ExcelDrawingBinarySupport.nullIfBlank(signatureLine.getId());
+    String setupId = ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getId()).orElse(null);
     return setupId == null ? "SignatureLine-" + index : "SignatureLine-" + setupId;
   }
 

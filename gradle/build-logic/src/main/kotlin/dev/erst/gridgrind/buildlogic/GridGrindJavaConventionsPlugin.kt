@@ -3,12 +3,14 @@ package dev.erst.gridgrind.buildlogic
 import com.diffplug.gradle.spotless.SpotlessExtension
 import java.io.File
 import java.math.BigDecimal
+import net.ltgt.gradle.errorprone.CheckSeverity
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
+import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.bundling.Jar
@@ -46,9 +48,15 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 javaExtension.toolchain.languageVersion.set(JavaLanguageVersion.of(gridgrindJavaVersion))
                 javaExtension.modularity.inferModulePath.set(true)
                 javaExtension.withSourcesJar()
+                val cleanJarOutputs =
+                    tasks.register("cleanJarOutputs", Delete::class.java) { delete(layout.buildDirectory.dir("libs")) }
                 dependencies.add(
                     "testRuntimeOnly",
                     libs.findLibrary("junit-platform-launcher").get().get(),
+                )
+                dependencies.add(
+                    "compileOnly",
+                    libs.findLibrary("jspecify").get().get(),
                 )
 
                 val mainSourceSet = javaExtension.sourceSets.named("main")
@@ -90,6 +98,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
+            dependencies.add("errorprone", libs.findLibrary("nullaway").get().get())
 
             extensions.configure<SpotlessExtension> {
                 java { formatExtension ->
@@ -114,6 +123,7 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(Jar::class.java).configureEach(
                 object : Action<Jar> {
                     override fun execute(jar: Jar) {
+                        jar.dependsOn("cleanJarOutputs")
                         jar.manifest.attributes(
                             mapOf(
                                 "Implementation-Title" to project.name,
@@ -130,10 +140,14 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 object : Action<JavaCompile> {
                     override fun execute(javaCompile: JavaCompile) {
                         javaCompile.options.isIncremental = false
+                        javaCompile.options.release.set(gridgrindJavaVersion)
                         javaCompile.doFirst {
                             cleanDirectoryContents(javaCompile.destinationDirectory.get().asFile)
                         }
                         javaCompile.options.errorprone.disableWarningsInGeneratedCode.set(true)
+                        javaCompile.options.errorprone.check("NullAway", CheckSeverity.ERROR)
+                        javaCompile.options.errorprone.option("NullAway:OnlyNullMarked", "true")
+                        javaCompile.options.errorprone.option("NullAway:JSpecifyMode", "true")
                         javaCompile.options.errorprone.error(
                             "BadImport",
                             "BoxedPrimitiveConstructor",
@@ -145,6 +159,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                             "ReferenceEquality",
                             "StringCaseLocaleUsage",
                         )
+                        if (javaCompile.name.lowercase().contains("test")) {
+                            javaCompile.options.errorprone.disable("NullAway")
+                        }
                     }
                 },
             )

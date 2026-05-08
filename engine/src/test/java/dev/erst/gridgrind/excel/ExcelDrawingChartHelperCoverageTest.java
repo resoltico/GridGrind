@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -31,15 +32,18 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       org.apache.poi.ss.usermodel.Name workbookScoped = workbook.createName();
       workbookScoped.setNameName("ScopedSource");
       workbookScoped.setRefersToFormula("Ops!$A$1");
-      assertSame(
-          workbookScoped,
+      assertEquals(
+          Optional.of(workbookScoped),
           ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "ScopedSource"));
       org.apache.poi.ss.usermodel.Name otherSheetScoped = workbook.createName();
       otherSheetScoped.setNameName("OtherOnly");
       otherSheetScoped.setSheetIndex(workbook.getSheetIndex("Other"));
       otherSheetScoped.setRefersToFormula("Other!$A$1");
-      assertNull(ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "OtherOnly"));
-      assertNull(ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "Bad-1"));
+      assertEquals(
+          Optional.empty(),
+          ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "OtherOnly"));
+      assertEquals(
+          Optional.empty(), ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "Bad-1"));
 
       XSSFDrawing drawing = sheet.createDrawingPatriarch();
       org.apache.poi.xssf.usermodel.XSSFChart firstChart =

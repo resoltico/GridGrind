@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.poi.ss.util.CellReference;
+import org.jspecify.annotations.Nullable;
 
 /** Reads workbook facts and sheet introspection data from one workbook wrapper. */
 final class ExcelWorkbookIntrospector {
@@ -99,8 +100,8 @@ final class ExcelWorkbookIntrospector {
       case WorkbookReadCommand.GetCharts getCharts ->
           new WorkbookDrawingResult.ChartsResult(
               getCharts.stepId(),
-              getCharts.sheetName(),
-              documentIntrospector.charts(workbook, getCharts.sheetName()));
+              getCharts.selection().sheetName(),
+              documentIntrospector.charts(workbook, getCharts.selection()));
       case WorkbookReadCommand.GetPivotTables getPivotTables ->
           new WorkbookDrawingResult.PivotTablesResult(
               getPivotTables.stepId(),
@@ -143,6 +144,15 @@ final class ExcelWorkbookIntrospector {
       case WorkbookReadCommand.GetTables getTables ->
           new WorkbookRuleResult.TablesResult(
               getTables.stepId(), documentIntrospector.tables(workbook, getTables.selection()));
+    };
+  }
+
+  /** Executes one derived factual surface-summary read command against the workbook. */
+  WorkbookReadSurfaceResult execute(ExcelWorkbook workbook, WorkbookReadCommand.Surface command) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(command, "command must not be null");
+
+    return switch (command) {
       case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
           new WorkbookSurfaceResult.FormulaSurfaceResult(
               getFormulaSurface.stepId(), formulaSurface(workbook, getFormulaSurface.selection()));
@@ -401,7 +411,7 @@ final class ExcelWorkbookIntrospector {
     };
   }
 
-  private String dominantType(Map<String, Integer> typeCounts) {
+  private @Nullable String dominantType(Map<String, Integer> typeCounts) {
     String dominantType = null;
     int dominantCount = -1;
     boolean tie = false;

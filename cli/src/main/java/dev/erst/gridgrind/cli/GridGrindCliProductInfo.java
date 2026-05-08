@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindCliHelp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 /** Product metadata, help text, and license rendering for the CLI surface. */
@@ -12,11 +12,12 @@ final class GridGrindCliProductInfo {
   private GridGrindCliProductInfo() {}
 
   static String version() {
-    return versionFrom(GridGrindCli.class.getPackage().getImplementationVersion());
+    return versionFrom(
+        GridGrindCli.class.getPackage().getImplementationVersion(), GridGrindCli.class);
   }
 
   static String helpText(String implementationVersion) {
-    String version = versionFrom(implementationVersion);
+    String version = versionFrom(implementationVersion, GridGrindCli.class);
     return GridGrindCliHelp.helpText(
         version, description(), documentRef(version), containerImageRef(version));
   }
@@ -26,10 +27,22 @@ final class GridGrindCliProductInfo {
   }
 
   static String versionFrom(String implementationVersion) {
-    if (implementationVersion == null) {
-      return "unknown";
+    return versionFrom(implementationVersion, GridGrindCli.class);
+  }
+
+  static String versionFrom(String implementationVersion, Class<?> anchor) {
+    Objects.requireNonNull(anchor, "anchor must not be null");
+    return versionFrom(implementationVersion, anchor.getResourceAsStream("/gridgrind.properties"));
+  }
+
+  static String versionFrom(String implementationVersion, InputStream stream) {
+    if (implementationVersion != null && !implementationVersion.isBlank()) {
+      return implementationVersion;
     }
-    return implementationVersion;
+    return readProperties(stream)
+        .map(properties -> properties.getProperty("version", ""))
+        .filter(version -> !version.isBlank())
+        .orElse("unknown");
   }
 
   static String description() {
@@ -37,21 +50,15 @@ final class GridGrindCliProductInfo {
   }
 
   static String descriptionFrom(Class<?> anchor) {
+    Objects.requireNonNull(anchor, "anchor must not be null");
     return descriptionFrom(anchor.getResourceAsStream("/gridgrind.properties"));
   }
 
   static String descriptionFrom(InputStream stream) {
-    if (stream == null) {
-      return "GridGrind";
-    }
-    try (stream) {
-      Properties properties = new Properties();
-      properties.load(stream);
-      String description = properties.getProperty("description", "");
-      return description.isBlank() ? "GridGrind" : description;
-    } catch (IOException exception) {
-      return "GridGrind";
-    }
+    return readProperties(stream)
+        .map(properties -> properties.getProperty("description", ""))
+        .filter(description -> !description.isBlank())
+        .orElse("GridGrind");
   }
 
   static String licenseText(Class<?> anchor) {
@@ -59,13 +66,20 @@ final class GridGrindCliProductInfo {
         anchor.getResourceAsStream("/licenses/LICENSE"),
         anchor.getResourceAsStream("/licenses/NOTICE"),
         anchor.getResourceAsStream("/licenses/LICENSE-APACHE-2.0"),
-        anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"));
+        anchor.getResourceAsStream("/licenses/LICENSE-BSD-2-CLAUSE"),
+        anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"),
+        anchor.getResourceAsStream("/licenses/LICENSE-EDL-1.0"));
   }
 
   static String licenseText(
-      InputStream own, InputStream notice, InputStream apache, InputStream bsd) {
+      InputStream own,
+      InputStream notice,
+      InputStream apache,
+      InputStream bsd2,
+      InputStream bsd3,
+      InputStream edl) {
     String ownText = readLicenseStream(own);
-    String thirdParty = buildThirdParty(notice, apache, bsd);
+    String thirdParty = buildThirdParty(notice, apache, bsd2, bsd3, edl);
     if (ownText.isEmpty() && thirdParty.isEmpty()) {
       return "License information not available in this distribution.\n";
     }
@@ -100,11 +114,19 @@ final class GridGrindCliProductInfo {
     return "https://github.com/resoltico/GridGrind/blob/" + gitRef;
   }
 
-  private static String buildThirdParty(InputStream notice, InputStream apache, InputStream bsd) {
+  private static String buildThirdParty(
+      InputStream notice, InputStream apache, InputStream bsd2, InputStream bsd3, InputStream edl) {
     String noticeText = readLicenseStream(notice);
     String apacheText = readLicenseStream(apache);
-    String bsdText = readLicenseStream(bsd);
-    int capacity = noticeText.length() + apacheText.length() + bsdText.length() + 2;
+    String bsd2Text = readLicenseStream(bsd2);
+    String bsd3Text = readLicenseStream(bsd3);
+    String edlText = readLicenseStream(edl);
+    int capacity =
+        noticeText.length()
+            + apacheText.length()
+            + bsd2Text.length()
+            + bsd3Text.length()
+            + edlText.length();
     StringBuilder result = new StringBuilder(capacity);
     String sep = "";
     if (!noticeText.isEmpty()) {
@@ -115,8 +137,16 @@ final class GridGrindCliProductInfo {
       result.append(sep).append(apacheText);
       sep = "\n";
     }
-    if (!bsdText.isEmpty()) {
-      result.append(sep).append(bsdText);
+    if (!bsd2Text.isEmpty()) {
+      result.append(sep).append(bsd2Text);
+      sep = "\n";
+    }
+    if (!bsd3Text.isEmpty()) {
+      result.append(sep).append(bsd3Text);
+      sep = "\n";
+    }
+    if (!edlText.isEmpty()) {
+      result.append(sep).append(edlText);
     }
     return result.toString();
   }
@@ -129,6 +159,19 @@ final class GridGrindCliProductInfo {
       return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
     } catch (IOException ignored) {
       return "";
+    }
+  }
+
+  private static Optional<Properties> readProperties(InputStream stream) {
+    if (stream == null) {
+      return Optional.empty();
+    }
+    try (stream) {
+      Properties properties = new Properties();
+      properties.load(stream);
+      return Optional.of(properties);
+    } catch (IOException ignored) {
+      return Optional.empty();
     }
   }
 }

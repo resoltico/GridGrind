@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
@@ -11,7 +12,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
 final class ExcelAutofilterController {
   /** Creates or replaces one sheet-level autofilter range. */
   void setSheetAutofilter(XSSFSheet sheet, String range) {
-    setSheetAutofilter(sheet, range, List.of(), null);
+    setSheetAutofilter(sheet, range, List.of(), Optional.empty());
   }
 
   /** Creates or replaces one sheet-level autofilter range. */
@@ -19,11 +20,12 @@ final class ExcelAutofilterController {
       XSSFSheet sheet,
       String range,
       List<ExcelAutofilterFilterColumn> criteria,
-      ExcelAutofilterSortState sortState) {
+      Optional<ExcelAutofilterSortState> sortState) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(range, "range must not be null");
     List<ExcelAutofilterFilterColumn> filterCriteria =
         List.copyOf(Objects.requireNonNull(criteria, "criteria must not be null"));
+    Objects.requireNonNull(sortState, "sortState must not be null");
 
     ExcelRange targetRange = ExcelRange.parse(range);
     if (ExcelSheetStructureSupport.headerRowMissing(sheet, targetRange)) {
@@ -91,9 +93,9 @@ final class ExcelAutofilterController {
 
     String rawRange =
         Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), "");
-    ExcelRange targetRange = ExcelSheetStructureSupport.parseRangeOrNull(rawRange);
+    Optional<ExcelRange> targetRange = ExcelSheetStructureSupport.parseOptionalRange(rawRange);
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    if (targetRange == null) {
+    if (targetRange.isEmpty()) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
@@ -105,10 +107,11 @@ final class ExcelAutofilterController {
       return List.copyOf(findings);
     }
 
-    String normalizedRange = ExcelSheetStructureSupport.formatRange(targetRange);
+    ExcelRange parsedTargetRange = targetRange.orElseThrow();
+    String normalizedRange = ExcelSheetStructureSupport.formatRange(parsedTargetRange);
     WorkbookAnalysis.AnalysisLocation.Range location =
         new WorkbookAnalysis.AnalysisLocation.Range(sheetName, normalizedRange);
-    if (ExcelSheetStructureSupport.headerRowMissing(sheet, targetRange)) {
+    if (ExcelSheetStructureSupport.headerRowMissing(sheet, parsedTargetRange)) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.AUTOFILTER_MISSING_HEADER_ROW,
@@ -121,8 +124,10 @@ final class ExcelAutofilterController {
 
     List<String> overlappingTables = new ArrayList<>();
     for (ExcelTableSnapshot table : tablesOnSheet) {
-      ExcelRange tableRange = ExcelSheetStructureSupport.parseRangeOrNull(table.range());
-      if (tableRange != null && ExcelSheetStructureSupport.intersects(targetRange, tableRange)) {
+      Optional<ExcelRange> tableRange =
+          ExcelSheetStructureSupport.parseOptionalRange(table.range());
+      if (tableRange.isPresent()
+          && ExcelSheetStructureSupport.intersects(parsedTargetRange, tableRange.orElseThrow())) {
         overlappingTables.add(table.name() + "@" + table.range());
       }
     }
@@ -146,10 +151,11 @@ final class ExcelAutofilterController {
   private void requireNoTableOverlap(XSSFSheet sheet, ExcelRange targetRange) {
     List<String> overlaps = new ArrayList<>();
     for (var table : sheet.getTables()) {
-      ExcelRange tableRange =
-          ExcelSheetStructureSupport.parseRangeOrNull(
+      Optional<ExcelRange> tableRange =
+          ExcelSheetStructureSupport.parseOptionalRange(
               Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
-      if (tableRange != null && ExcelSheetStructureSupport.intersects(targetRange, tableRange)) {
+      if (tableRange.isPresent()
+          && ExcelSheetStructureSupport.intersects(targetRange, tableRange.orElseThrow())) {
         overlaps.add(table.getName() + "@" + table.getCTTable().getRef());
       }
     }

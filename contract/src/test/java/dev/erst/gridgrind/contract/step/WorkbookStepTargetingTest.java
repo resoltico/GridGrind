@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import java.util.List;
 import java.util.Optional;
@@ -28,7 +28,7 @@ class WorkbookStepTargetingTest {
   @Test
   void exposesDerivedRulesForDynamicAssertions() {
     WorkbookStepTargeting.TargetSurface targetSurface =
-        WorkbookStepTargeting.forAssertionType(Assertion.AnalysisFindingPresent.class);
+        WorkbookStepTargeting.forAssertionType(AnalysisAssertion.AnalysisFindingPresent.class);
 
     assertTrue(targetSurface.selectorFamilies().isEmpty());
     assertEquals(
@@ -38,7 +38,7 @@ class WorkbookStepTargetingTest {
   @Test
   void exposesFamiliesForDirectSelectorAssertionsWithoutDisambiguationNotes() {
     WorkbookStepTargeting.TargetSurface targetSurface =
-        WorkbookStepTargeting.forAssertionType(Assertion.TablePresent.class);
+        WorkbookStepTargeting.forAssertionType(PresenceAssertion.TablePresent.class);
 
     assertEquals(
         List.of(

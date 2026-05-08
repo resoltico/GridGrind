@@ -7,7 +7,9 @@ import java.util.Objects;
 
 /** Workbook-core read commands executed after mutations and before persistence. */
 public sealed interface WorkbookReadCommand
-    permits WorkbookReadCommand.Introspection, WorkbookReadCommand.Analysis {
+    permits WorkbookReadCommand.Introspection,
+        WorkbookReadCommand.Surface,
+        WorkbookReadCommand.Analysis {
 
   /** Stable caller-provided identifier used to correlate one read command with its result. */
   String stepId();
@@ -36,10 +38,11 @@ public sealed interface WorkbookReadCommand
           GetDataValidations,
           GetConditionalFormatting,
           GetAutofilters,
-          GetTables,
-          GetFormulaSurface,
-          GetSheetSchema,
-          GetNamedRangeSurface {}
+          GetTables {}
+
+  /** Marker for derived factual surface-summary reads. */
+  sealed interface Surface extends WorkbookReadCommand
+      permits GetFormulaSurface, GetSheetSchema, GetNamedRangeSurface {}
 
   /** Marker for derived analysis commands. */
   sealed interface Analysis extends WorkbookReadCommand
@@ -184,11 +187,11 @@ public sealed interface WorkbookReadCommand
     }
   }
 
-  /** Returns factual chart metadata for one sheet. */
-  record GetCharts(String stepId, String sheetName) implements Introspection {
+  /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
+  record GetCharts(String stepId, ExcelChartSelection selection) implements Introspection {
     public GetCharts {
       stepId = requireNonBlank(stepId, "stepId");
-      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(selection, "selection must not be null");
     }
   }
 
@@ -264,7 +267,7 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Groups formula usage patterns across one or more sheets. */
-  record GetFormulaSurface(String stepId, ExcelSheetSelection selection) implements Introspection {
+  record GetFormulaSurface(String stepId, ExcelSheetSelection selection) implements Surface {
     public GetFormulaSurface {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(selection, "selection must not be null");
@@ -274,7 +277,7 @@ public sealed interface WorkbookReadCommand
   /** Infers a simple column schema from a rectangular window on one sheet. */
   record GetSheetSchema(
       String stepId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
-      implements Introspection {
+      implements Surface {
     public GetSheetSchema {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
@@ -287,7 +290,7 @@ public sealed interface WorkbookReadCommand
 
   /** Summarizes the scope and backing kind of selected named ranges. */
   record GetNamedRangeSurface(String stepId, ExcelNamedRangeSelection selection)
-      implements Introspection {
+      implements Surface {
     public GetNamedRangeSurface {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(selection, "selection must not be null");

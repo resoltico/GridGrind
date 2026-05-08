@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.ss.SpreadsheetVersion;
@@ -81,23 +82,27 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
           IllegalArgumentException.class,
           () -> invoke(controller, "fromSubtotal", ExcelPivotDataConsolidateFunction.class, -999));
 
-      assertNull(invoke(controller, "numberFormat", String.class, workbook.xssfWorkbook(), null));
       assertEquals(
-          "General", invoke(controller, "numberFormat", String.class, workbook.xssfWorkbook(), 0L));
-      assertNull(
+          Optional.empty(),
+          invoke(controller, "numberFormat", Optional.class, workbook.xssfWorkbook(), null));
+      assertEquals(
+          Optional.of("General"),
+          invoke(controller, "numberFormat", Optional.class, workbook.xssfWorkbook(), 0L));
+      assertEquals(
+          Optional.empty(),
           invoke(
-              controller, "numberFormat", String.class, workbook.xssfWorkbook(), Long.MAX_VALUE));
+              controller, "numberFormat", Optional.class, workbook.xssfWorkbook(), Long.MAX_VALUE));
 
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "ScopedRange",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "ScopedRange",
               new ExcelNamedRangeScope.SheetScope("Data"),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       assertEquals(
           2,
           invoke(
@@ -264,7 +269,7 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
           invoke(
               controller,
               "tableByName",
-              XSSFTable.class,
+              Optional.class,
               workbook.xssfWorkbook(),
               "SalesTableA",
               "TableDataA"));
@@ -407,26 +412,27 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                   syntheticDefinition,
                   List.of("Region", "Amount"));
       assertEquals("Amount", syntheticDataSnapshots.getFirst().displayName());
-      assertNull(syntheticDataSnapshots.getFirst().valueFormat());
+      assertEquals(Optional.empty(), syntheticDataSnapshots.getFirst().valueFormat());
       assertEquals(
           ExcelPivotDataConsolidateFunction.MAX, syntheticDataSnapshots.getFirst().function());
 
-      ExcelPivotTableSnapshot.Unsupported unsupportedSnapshot =
-          assertInstanceOf(
-              ExcelPivotTableSnapshot.Unsupported.class,
-              invoke(
-                  controller,
-                  "snapshot",
-                  ExcelPivotTableSnapshot.class,
-                  workbook.xssfWorkbook(),
-                  newPivotHandle(
-                      workbook.xssfWorkbook().getSheetIndex("Report"),
-                      0,
-                      "Report",
-                      workbook.xssfWorkbook().getSheet("Report"),
-                      new ThrowingPivotTable(
-                          pivotTableDefinition("Broken Snapshot", "C5:F9", 42L)))));
-      assertTrue(unsupportedSnapshot.detail().contains("missing its cache definition relation"));
+      IllegalStateException brokenSnapshotFailure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () ->
+                  invoke(
+                      controller,
+                      "snapshot",
+                      ExcelPivotTableSnapshot.class,
+                      workbook.xssfWorkbook(),
+                      newPivotHandle(
+                          workbook.xssfWorkbook().getSheetIndex("Report"),
+                          0,
+                          "Report",
+                          workbook.xssfWorkbook().getSheet("Report"),
+                          new ThrowingPivotTable(
+                              pivotTableDefinition("Broken Snapshot", "C5:F9", 42L)))));
+      assertTrue(brokenSnapshotFailure.getMessage().contains("broken cache relation"));
       ExcelPivotTableSnapshot.Unsupported missingLocationSnapshot =
           assertInstanceOf(
               ExcelPivotTableSnapshot.Unsupported.class,
@@ -539,21 +545,24 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
               Object.class,
               secondPivot.getPivotCacheDefinition(),
               XSSFPivotCacheRecords.class));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "firstRelation",
               Object.class,
               secondPivot.getPivotCacheDefinition(),
               XSSFPivotTable.class));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "firstRelation",
               Object.class,
               new NullDocumentPart(),
               XSSFPivotCacheRecords.class));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(controller, "workbookPivotCache", Object.class, workbook.xssfWorkbook(), 9999L));
 
       assertEquals(
@@ -670,17 +679,24 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
 
       ExcelPivotTableController permissiveController =
           new ExcelPivotTableController((parent, child) -> true);
-      invokeVoid(
-          permissiveController,
-          "deletePivotHandle",
-          workbook,
-          newPivotHandle(
-              workbook.xssfWorkbook().getSheetIndex("Report"),
-              0,
-              "Report",
-              workbook.xssfWorkbook().getSheet("Report"),
-              new ThrowingPivotTable(pivotTableDefinition("Deleted Broken Pivot", "C5:F9", 9L))));
-      assertNull(
+      IllegalStateException deleteFailure =
+          assertInvocationFailure(
+              IllegalStateException.class,
+              () ->
+                  invokeVoid(
+                      permissiveController,
+                      "deletePivotHandle",
+                      workbook,
+                      newPivotHandle(
+                          workbook.xssfWorkbook().getSheetIndex("Report"),
+                          0,
+                          "Report",
+                          workbook.xssfWorkbook().getSheet("Report"),
+                          new ThrowingPivotTable(
+                              pivotTableDefinition("Deleted Broken Pivot", "C5:F9", 9L)))));
+      assertTrue(deleteFailure.getMessage().contains("broken cache relation"));
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "rawLocationRange",

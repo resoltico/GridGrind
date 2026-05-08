@@ -92,7 +92,7 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
           new ExcelNamedRangeDefinition(
               "DupReadSource",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       controller.setPivotTable(
           workbook,
           definition(
@@ -107,7 +107,7 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
           new ExcelNamedRangeDefinition(
               "DupReadSource",
               new ExcelNamedRangeScope.SheetScope("Data"),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
 
       IllegalArgumentException failure =
           assertInvocationFailure(

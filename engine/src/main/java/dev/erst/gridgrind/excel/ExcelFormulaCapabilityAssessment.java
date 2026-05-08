@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Engine-side assessment of one formula cell under the current evaluation environment. */
 public record ExcelFormulaCapabilityAssessment(
@@ -8,8 +9,8 @@ public record ExcelFormulaCapabilityAssessment(
     String address,
     String formula,
     ExcelFormulaCapabilityKind capability,
-    ExcelFormulaCapabilityIssue issue,
-    String message) {
+    @Nullable ExcelFormulaCapabilityIssue issue,
+    @Nullable String message) {
   public ExcelFormulaCapabilityAssessment {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     if (sheetName.isBlank()) {

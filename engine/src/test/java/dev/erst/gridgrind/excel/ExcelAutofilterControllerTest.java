@@ -80,15 +80,16 @@ class ExcelAutofilterControllerTest {
                   new ExcelAutofilterFilterCriterion.Color(false, ExcelColor.rgb("#AABBCC"))),
               new ExcelAutofilterFilterColumn(
                   5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2))),
-          new ExcelAutofilterSortState(
-              "A1:F3",
-              true,
-              true,
-              Optional.of(ExcelAutofilterSortMethod.STROKE),
-              List.of(
-                  new ExcelAutofilterSortCondition.CellColor(
-                      "A2:A3", true, ExcelColor.rgb("#102030")),
-                  new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4))));
+          Optional.of(
+              new ExcelAutofilterSortState(
+                  "A1:F3",
+                  true,
+                  true,
+                  Optional.of(ExcelAutofilterSortMethod.STROKE),
+                  List.of(
+                      new ExcelAutofilterSortCondition.CellColor(
+                          "A2:A3", true, ExcelColor.rgb("#102030")),
+                      new ExcelAutofilterSortCondition.Icon("B2:B3", false, 4)))));
 
       ExcelAutofilterSnapshot.SheetOwned snapshot =
           assertInstanceOf(
@@ -151,7 +152,7 @@ class ExcelAutofilterControllerTest {
                                       List.of(
                                           new ExcelAutofilterFilterCriterion.CustomCondition(
                                               "nope", "1"))))),
-                          null))
+                          Optional.empty()))
               .getMessage());
       assertEquals(
           "unsupported autofilter dynamic type: tomorrowish",
@@ -167,7 +168,7 @@ class ExcelAutofilterControllerTest {
                                   true,
                                   new ExcelAutofilterFilterCriterion.Dynamic(
                                       "tomorrowish", null, null))),
-                          null))
+                          Optional.empty()))
               .getMessage());
       assertEquals(
           "unsupported autofilter icon set: unknown",
@@ -180,7 +181,7 @@ class ExcelAutofilterControllerTest {
                           List.of(
                               new ExcelAutofilterFilterColumn(
                                   0L, true, new ExcelAutofilterFilterCriterion.Icon("unknown", 0))),
-                          null))
+                          Optional.empty()))
               .getMessage());
     }
   }
@@ -661,12 +662,13 @@ class ExcelAutofilterControllerTest {
           sheet,
           "A1:B3",
           List.of(),
-          new ExcelAutofilterSortState(
-              "A1:B3",
-              false,
-              false,
-              Optional.empty(),
-              List.of(new ExcelAutofilterSortCondition.Value("A2:A3", false))));
+          Optional.of(
+              new ExcelAutofilterSortState(
+                  "A1:B3",
+                  false,
+                  false,
+                  Optional.empty(),
+                  List.of(new ExcelAutofilterSortCondition.Value("A2:A3", false)))));
 
       var snapshot = controller.sheetOwnedAutofilters(sheet).getFirst();
       assertEquals(
@@ -690,7 +692,7 @@ class ExcelAutofilterControllerTest {
           List.of(
               new ExcelAutofilterFilterColumn(
                   0L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", null, null))),
-          null);
+          Optional.empty());
 
       ExcelAutofilterSnapshot.SheetOwned snapshot =
           assertInstanceOf(

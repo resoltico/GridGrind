@@ -260,7 +260,7 @@ class ExcelChartFallbackCoverageTest {
   }
 
   @Test
-  void titleFormulaFallbackReturnsEmptyForMalformedReferencesAndRuntimeFailures()
+  void titleFormulaFallbackReturnsEmptyForMalformedReferencesAndPropagatesRuntimeFailures()
       throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
@@ -276,13 +276,16 @@ class ExcelChartFallbackCoverageTest {
           Optional.empty(),
           ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
               chart, null, "not-a-cell-reference", null));
-      assertEquals(
-          Optional.empty(),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
-              chart,
-              null,
-              "B1",
-              FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom"))));
+      IllegalStateException runtimeFailure =
+          assertThrows(
+              IllegalStateException.class,
+              () ->
+                  ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+                      chart,
+                      null,
+                      "B1",
+                      FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom"))));
+      assertEquals("boom", runtimeFailure.getMessage());
     }
   }
 
@@ -310,10 +313,10 @@ class ExcelChartFallbackCoverageTest {
                       null,
                       ExcelChartTestSupport.ref("A2:A4"),
                       ExcelChartTestSupport.ref("B2:B4"),
-                      null,
-                      null,
-                      null,
-                      null))));
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
 
       assertEquals(1, chart.getChartSeries().size());
       assertEquals(1, chart.getChartSeries().getFirst().getSeriesCount());

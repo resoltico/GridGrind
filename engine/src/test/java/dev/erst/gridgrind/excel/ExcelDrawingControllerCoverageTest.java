@@ -2,10 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.ss.usermodel.ShapeTypes;
 import org.apache.poi.xssf.usermodel.XSSFConnector;
@@ -93,12 +93,8 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
           () ->
               controller.setShape(
                   sheet,
-                  new ExcelShapeDefinition(
-                      "OpsBrokenShape",
-                      ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                      anchor(1, 1, 2, 2),
-                      "invalid-shape",
-                      null)));
+                  new ExcelShapeDefinition.SimpleShape(
+                      "OpsBrokenShape", anchor(1, 1, 2, 2), "invalid-shape", Optional.empty())));
 
       String pictureDefaultName = invoke(controller, "defaultName", String.class, picture);
       String connectorDefaultName = invoke(controller, "defaultName", String.class, connector);
@@ -306,9 +302,12 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
     assertInvocationFailure(
         IllegalArgumentException.class,
         () -> invoke(controller, "requireNonBlank", String.class, " ", "fieldName"));
-    assertEquals("first", invoke(controller, "firstNonBlank", String.class, "first", "second"));
-    assertEquals("second", invoke(controller, "firstNonBlank", String.class, " ", "second"));
-    assertNull(invoke(controller, "firstNonBlank", String.class, " ", " "));
+    assertEquals(
+        Optional.of("first"),
+        invoke(controller, "firstNonBlank", Optional.class, "first", "second"));
+    assertEquals(
+        Optional.of("second"), invoke(controller, "firstNonBlank", Optional.class, " ", "second"));
+    assertEquals(Optional.empty(), invoke(controller, "firstNonBlank", Optional.class, " ", " "));
     assertEquals(ShapeTypes.RECT, invoke(controller, "shapeType", Integer.class, "rect"));
     assertInvocationFailure(
         IllegalArgumentException.class,
@@ -400,18 +399,22 @@ class ExcelDrawingControllerCoverageTest extends ExcelDrawingCoverageTestSupport
               Object.class,
               sheet.getPackagePart(),
               objectData.getOleObject().getId()));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(controller, "relatedInternalPart", Object.class, sheet.getPackagePart(), null));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(controller, "relatedInternalPart", Object.class, sheet.getPackagePart(), " "));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller, "relatedInternalPart", Object.class, sheet.getPackagePart(), "missing"));
       sheet
           .getPackagePart()
           .addExternalRelationship(
               "https://example.com/resource", "urn:gridgrind:test", "rIdExternal");
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "relatedInternalPart",

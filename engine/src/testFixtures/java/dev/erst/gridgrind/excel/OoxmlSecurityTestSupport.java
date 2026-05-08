@@ -119,7 +119,7 @@ public final class OoxmlSecurityTestSupport {
   /** Returns whether the OOXML package signature validates. */
   public static boolean signatureValid(Path workbookPath) throws IOException {
     try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
-      SignatureInfo signatureInfo = new SignatureInfo();
+      SignatureInfo signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
       signatureInfo.setSignatureConfig(new SignatureConfig());
       signatureInfo.setOpcPackage(pkg);
       return signatureInfo.verifySignature();
@@ -174,7 +174,7 @@ public final class OoxmlSecurityTestSupport {
       signatureConfig.setKey(signingMaterial.keyPair().getPrivate());
       signatureConfig.setSigningCertificateChain(List.of(signingMaterial.certificate()));
 
-      SignatureInfo signatureInfo = new SignatureInfo();
+      SignatureInfo signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
       signatureInfo.setSignatureConfig(signatureConfig);
       signatureInfo.setOpcPackage(pkg);
       signatureInfo.confirmSignature();

@@ -34,7 +34,7 @@ verify_implicit_interactive_help() {
     local expected_help_path=$1
     shift
 
-    python3 - "${expected_help_path}" "$@" <<'PY'
+    "${cli_contract_python}" - "${expected_help_path}" "$@" <<'PY'
 import errno
 import os
 import pty
@@ -139,14 +139,44 @@ resolve_script_dir() {
     cd -P -- "$(dirname -- "${source_path}")" && pwd
 }
 
+resolve_cli_contract_python() {
+    local candidates=()
+    local candidate=''
+    if [[ -x /usr/bin/python3 ]]; then
+        candidates+=(/usr/bin/python3)
+    fi
+    if command -v python3 >/dev/null 2>&1; then
+        candidate="$(command -v python3)"
+        if [[ "${candidate}" != /usr/bin/python3 ]]; then
+            candidates+=("${candidate}")
+        fi
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        if "${candidate}" - <<'PY' >/dev/null 2>&1
+import json
+import pty
+import select
+PY
+        then
+            printf '%s\n' "${candidate}"
+            return 0
+        fi
+    done
+
+    die "python3 with json, pty, and select support is required for CLI contract verification"
+}
+
 readonly mode="${1:-}"
 readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
+readonly cli_contract_python="$(resolve_cli_contract_python)"
 catalog_path=''
+example_catalog_path=''
 task_catalog_path=''
 task_plan_path=''
-goal_plan_path=''
+task_keyword_match_report_path=''
 doctor_report_path=''
 request_template_path=''
 help_path=''
@@ -191,8 +221,6 @@ case "${mode}" in
         ;;
 esac
 
-command -v python3 >/dev/null 2>&1 || die "python3 is required for CLI contract verification"
-
 temp_parent="${repo_root}/tmp/verify-cli-contract"
 mkdir -p "${temp_parent}"
 temp_dir="${temp_parent}/run.$$.${RANDOM}"
@@ -201,9 +229,10 @@ mkdir -p "${temp_dir}"
 help_path="${temp_dir}/help.txt"
 help_stderr_path="${temp_dir}/help.stderr"
 catalog_path="${temp_dir}/protocol-catalog.json"
+example_catalog_path="${temp_dir}/example-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"
 task_plan_path="${temp_dir}/task-plan.json"
-goal_plan_path="${temp_dir}/goal-plan.json"
+task_keyword_match_report_path="${temp_dir}/task-keyword-match.json"
 doctor_report_path="${temp_dir}/doctor-report.json"
 request_template_path="${temp_dir}/request-template.json"
 
@@ -232,12 +261,16 @@ require_contains \
     "${label} help output no longer advertises task-plan printing"
 require_contains \
     "${help_output}" \
-    '--print-goal-plan <goal>' \
-    "${label} help output no longer advertises goal-plan printing"
+    '--print-task-keyword-match <query>' \
+    "${label} help output no longer advertises task-keyword-match printing"
 require_contains \
     "${help_output}" \
     '--print-example <id>' \
     "${label} help output no longer advertises built-in example printing"
+require_contains \
+    "${help_output}" \
+    '--print-example-catalog' \
+    "${label} help output no longer advertises built-in example catalog printing"
 require_contains \
     "${help_output}" \
     '--license' \
@@ -256,25 +289,27 @@ verify_implicit_interactive_help "${help_path}" "${interactive_launcher[@]}"
 
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
+"${launcher[@]}" --print-example-catalog | tr -d '\r' > "${example_catalog_path}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"
 "${launcher[@]}" --print-task-plan DASHBOARD | tr -d '\r' > "${task_plan_path}"
-"${launcher[@]}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r' > "${goal_plan_path}"
+"${launcher[@]}" --print-task-keyword-match "monthly sales dashboard with charts" | tr -d '\r' > "${task_keyword_match_report_path}"
 cat "${request_template_path}" \
     | "${doctor_launcher[@]}" --doctor-request | tr -d '\r' > "${doctor_report_path}"
 
-python3 - "${catalog_path}" "${help_path}" "${task_catalog_path}" "${task_plan_path}" "${goal_plan_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
+"${cli_contract_python}" - "${catalog_path}" "${example_catalog_path}" "${help_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
 import json
 import re
 import sys
 from pathlib import Path
 
 catalog = json.loads(Path(sys.argv[1]).read_text())
-help_output = Path(sys.argv[2]).read_text()
-task_catalog = json.loads(Path(sys.argv[3]).read_text())
-task_plan = json.loads(Path(sys.argv[4]).read_text())
-goal_plan = json.loads(Path(sys.argv[5]).read_text())
-doctor_report = json.loads(Path(sys.argv[6]).read_text())
-request_template = json.loads(Path(sys.argv[7]).read_text())
+example_catalog = json.loads(Path(sys.argv[2]).read_text())
+help_output = Path(sys.argv[3]).read_text()
+task_catalog = json.loads(Path(sys.argv[4]).read_text())
+task_plan = json.loads(Path(sys.argv[5]).read_text())
+task_keyword_match_report = json.loads(Path(sys.argv[6]).read_text())
+doctor_report = json.loads(Path(sys.argv[7]).read_text())
+request_template = json.loads(Path(sys.argv[8]).read_text())
 
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
@@ -283,63 +318,105 @@ def die(message: str) -> None:
 plain_types = {entry["group"]: entry["type"] for entry in catalog["plainTypes"]}
 inspection_query_types = {entry["id"]: entry for entry in catalog["inspectionQueryTypes"]}
 assertion_types = {entry["id"]: entry for entry in catalog["assertionTypes"]}
-cli_surface = catalog["cliSurface"]
-shipped_examples = catalog["shippedExamples"]
+shipped_examples = example_catalog["examples"]
 
-for entry in cli_surface["limits"]["entries"]:
-    label = entry["label"]
-    value = entry["value"]
-    if label == "STREAMING_WRITE mode":
-        if f"{label}:" not in help_output or value not in help_output:
-            die("help output no longer includes the catalog-owned STREAMING_WRITE limit entry")
-    if label == "Formula authoring":
-        if f"{label}:" not in help_output or value not in help_output:
-            die("help output no longer includes the catalog-owned formula authoring limit entry")
-
-for line in cli_surface["request"]["lines"]:
-    if "ASSERTION steps for first-class verification" in line and line not in help_output:
-        die("help output no longer includes the catalog-owned step-kind summary")
-    if "do not send step.type" in line and line not in help_output:
-        die("help output no longer explains that step kind is inferred without step.type")
-
-for line in cli_surface["discovery"]["lines"]:
-    if "ANALYZE_WORKBOOK_FINDINGS" in line and line not in help_output:
-        die("help output no longer includes the catalog-owned workbook findings discovery line")
-
-featured_example_command = cli_surface["discovery"]["printOneExampleCommand"]
-if featured_example_command not in help_output:
-    die("help output no longer includes the catalog-owned featured example command")
+required_help_snippets = (
+    (
+        "STREAMING_WRITE mode:",
+        "help output no longer includes the CLI-owned STREAMING_WRITE limit label",
+    ),
+    (
+        "source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW",
+        "help output no longer includes the CLI-owned STREAMING_WRITE limit summary",
+    ),
+    (
+        "Formula authoring:",
+        "help output no longer includes the CLI-owned formula authoring limit label",
+    ),
+    (
+        "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA",
+        "help output no longer includes the CLI-owned formula authoring limit summary",
+    ),
+    (
+        "ASSERTION steps for first-class verification",
+        "help output no longer includes the CLI-owned step-kind summary",
+    ),
+    (
+        "do not send step.type",
+        "help output no longer explains that step kind is inferred without step.type",
+    ),
+    (
+        "ANALYZE_WORKBOOK_FINDINGS aggregates",
+        "help output no longer includes the CLI-owned workbook findings discovery line",
+    ),
+    (
+        "gridgrind --print-example BUDGET --response example.json",
+        "help output no longer includes the CLI-owned featured example command",
+    ),
+    (
+        "REQUIRES_EXAMPLE_ASSETS needs copied examples/ assets beside the request",
+        "help output no longer explains asset-backed built-in example portability",
+    ),
+)
+for snippet, message in required_help_snippets:
+    if snippet not in help_output:
+        die(message)
 if "--print-task-catalog" not in help_output:
     die("help output no longer advertises task-catalog discovery")
 if "--doctor-request" not in help_output:
     die("help output no longer advertises request doctoring")
 if "--print-task-plan <id>" not in help_output:
     die("help output no longer advertises task-plan discovery")
-if "--print-goal-plan <goal>" not in help_output:
-    die("help output no longer advertises goal-plan discovery")
+if "--print-task-keyword-match <query>" not in help_output:
+    die("help output no longer advertises task-keyword-match discovery")
+if "--print-example-catalog" not in help_output:
+    die("help output no longer advertises example-catalog discovery")
 
+if example_catalog.get("protocolVersion") != "V1":
+    die("example catalog no longer emits protocolVersion=V1")
 if not shipped_examples:
-    die("catalog shippedExamples is empty")
+    die("example catalog examples is empty")
 for example in shipped_examples:
     example_id = example["id"]
     file_name = example["fileName"]
     summary = example["summary"]
-    workspace_mode = example.get("workspaceMode")
-    required_paths = example.get("requiredPaths")
     pattern = re.compile(
-        rf"^\s*{re.escape(example_id)}\s+examples/{re.escape(file_name)}\s+{re.escape(summary)}\s*$",
+        rf"^\s*{re.escape(example_id)}\s+examples/{re.escape(file_name)}\s+{re.escape(example['workspaceMode'])}\s+{re.escape(summary)}\s*$",
         re.MULTILINE,
     )
     if not pattern.search(help_output):
         die(f"help output no longer lists the built-in example line for {example_id}")
-    if workspace_mode not in {"BLANK_WORKSPACE", "REPOSITORY_ASSETS"}:
-        die(f"catalog shipped example {example_id} no longer declares a valid workspaceMode")
-    if not isinstance(required_paths, list):
-        die(f"catalog shipped example {example_id} no longer declares requiredPaths as a list")
-    if workspace_mode == "BLANK_WORKSPACE" and required_paths != []:
-        die(f"catalog shipped example {example_id} must keep requiredPaths empty for blank workspaces")
-    if workspace_mode == "REPOSITORY_ASSETS" and not required_paths:
-        die(f"catalog shipped example {example_id} must list requiredPaths for repository assets")
+    if set(example.keys()) != {"id", "fileName", "summary", "workspaceMode", "requiredPaths"}:
+        die(
+            f"example catalog entry {example_id} exposes unexpected public fields: "
+            + f"{sorted(example.keys())}"
+        )
+    if example["workspaceMode"] == "SELF_CONTAINED" and example["requiredPaths"]:
+        die(f"self-contained example {example_id} must not publish requiredPaths")
+    if example["workspaceMode"] == "REQUIRES_EXAMPLE_ASSETS" and not example["requiredPaths"]:
+        die(f"asset-backed example {example_id} must publish requiredPaths")
+
+expected_required_paths = {
+    "CUSTOM_XML": [
+        "custom-xml-assets/custom-xml-mapping.xlsx",
+        "custom-xml-assets/custom-xml-update.xml",
+    ],
+    "SOURCE_BACKED_INPUT": [
+        "source-backed-input-assets/title.txt",
+        "source-backed-input-assets/total-formula.txt",
+        "source-backed-input-assets/payload.bin",
+    ],
+    "PACKAGE_SECURITY_INSPECTION": [
+        "package-security-assets/gridgrind-package-security.xlsx",
+    ],
+}
+for example_id, required_paths in expected_required_paths.items():
+    entry = next(example for example in shipped_examples if example["id"] == example_id)
+    if entry["requiredPaths"] != required_paths:
+        die(
+            f"example catalog requiredPaths drifted for {example_id}: "
+            + f"{entry['requiredPaths']}"
+        )
 
 execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
 if "execution.journal" not in execution_policy_summary:
@@ -387,7 +464,7 @@ if "presentation" not in sheet_layout:
     die("catalog GET_SHEET_LAYOUT summary no longer advertises layout.presentation")
 
 formula_surface = inspection_query_types["GET_FORMULA_SURFACE"]["summary"]
-if "analysis.totalFormulaCellCount" not in formula_surface:
+if "surface.totalFormulaCellCount" not in formula_surface:
     die("catalog GET_FORMULA_SURFACE summary no longer describes grouped formula output")
 
 formula_health = inspection_query_types["ANALYZE_FORMULA_HEALTH"]["summary"]
@@ -395,7 +472,7 @@ if "analysis.checkedFormulaCellCount" not in formula_health:
     die("catalog ANALYZE_FORMULA_HEALTH summary no longer advertises checked-count output")
 
 named_range_surface = inspection_query_types["GET_NAMED_RANGE_SURFACE"]["summary"]
-if "analysis.workbookScopedCount" not in named_range_surface:
+if "surface.workbookScopedCount" not in named_range_surface:
     die("catalog GET_NAMED_RANGE_SURFACE summary no longer advertises scope/count output")
 
 named_range_health = inspection_query_types["ANALYZE_NAMED_RANGE_HEALTH"]["summary"]
@@ -468,35 +545,33 @@ if task_plan_request.get("persistence", {}).get("type") != "SAVE_AS":
 if not task_plan_request.get("persistence", {}).get("path", "").endswith(".xlsx"):
     die("task plan no longer emits a syntactically valid SAVE_AS .xlsx path")
 task_plan_steps = task_plan_request.get("steps", [])
-if not isinstance(task_plan_steps, list) or not task_plan_steps:
-    die("task plan no longer emits a runnable starter scaffold with steps")
-if not all(isinstance(step.get("stepId"), str) and step["stepId"] for step in task_plan_steps):
-    die("task plan contains a step without a stable stepId")
-if not any(step.get("action", {}).get("type") == "SET_CHART" for step in task_plan_steps):
-    die("task plan no longer seeds the expected DASHBOARD chart authoring step")
-if not any(step.get("query", {}).get("type") == "GET_CHARTS" for step in task_plan_steps):
-    die("task plan no longer seeds the expected DASHBOARD chart verification step")
+if not isinstance(task_plan_steps, list):
+    die("task plan no longer emits steps as a JSON array")
+if task_plan_steps != []:
+    die("task plan no longer emits the descriptor-derived empty step scaffold")
 authoring_notes = task_plan.get("authoringNotes", [])
 if not authoring_notes:
     die("task plan no longer publishes authoring notes")
-if not any("--print-protocol-catalog --operation mutationActionTypes:SET_CHART" in note for note in authoring_notes):
-    die("task plan no longer points authors back to exact chart capability lookups")
-if not any("--print-protocol-catalog --search chart" in note for note in authoring_notes):
-    die("task plan no longer points authors back to broader chart discovery")
+if not any("source and persistence are scaffolded" in note for note in authoring_notes):
+    die("task plan no longer explains that the starter scaffold only seeds source and persistence")
+if not any("--print-protocol-catalog --operation <group>:<id>" in note for note in authoring_notes):
+    die("task plan no longer points authors back to exact protocol capability lookups")
+if not any("Replace the placeholder output workbook path before execution." == note for note in authoring_notes):
+    die("task plan no longer reminds authors to replace the placeholder output workbook path")
 
-if goal_plan.get("goal") != "monthly sales dashboard with charts":
-    die("goal plan no longer preserves the requested goal text")
-if goal_plan.get("candidates", []) == []:
-    die("goal plan no longer returns ranked candidates")
-first_candidate = goal_plan["candidates"][0]
+if task_keyword_match_report.get("query") != "monthly sales dashboard with charts":
+    die("task keyword match report no longer preserves the requested query text")
+if task_keyword_match_report.get("candidates", []) == []:
+    die("task keyword match report no longer returns ranked candidates")
+first_candidate = task_keyword_match_report["candidates"][0]
 if first_candidate.get("task", {}).get("id") != "DASHBOARD":
-    die("goal plan no longer ranks DASHBOARD first for a charted dashboard goal")
+    die("task keyword match report no longer ranks DASHBOARD first for a charted dashboard query")
 if "dashboard" not in first_candidate.get("matchedTerms", []):
-    die("goal plan no longer reports dashboard as a matched term")
+    die("task keyword match report no longer reports dashboard as a matched term")
 if "chart" not in first_candidate.get("matchedTerms", []):
-    die("goal plan no longer reports chart as a matched term")
+    die("task keyword match report no longer reports chart as a matched term")
 if first_candidate.get("starterTemplate", {}).get("task", {}).get("id") != "DASHBOARD":
-    die("goal plan no longer embeds the matching starter template")
+    die("task keyword match report no longer embeds the matching starter template")
 
 if doctor_report.get("valid") is not True:
     die("doctor report no longer marks the minimal request as valid")

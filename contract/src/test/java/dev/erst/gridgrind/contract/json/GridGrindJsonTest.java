@@ -7,11 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
@@ -21,11 +22,10 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.query.*;
+import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -167,11 +167,11 @@ class GridGrindJsonTest {
                 new AssertionStep(
                     "assert-owner",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetWorkbookSummary())));
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
     GridGrindResponse response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
@@ -179,9 +179,9 @@ class GridGrindJsonTest {
             List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
             List.of(new AssertionResult("assert-owner", "EXPECT_CELL_VALUE")),
             List.of(
-                new InspectionResult.WorkbookSummaryResult(
+                new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindWorkbookSurfaceReports.WorkbookSummary.WithSheets(
+                    new WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
 
@@ -422,7 +422,7 @@ class GridGrindJsonTest {
 
     assertEquals("Unknown type value 'NO_SUCH_QUERY'", unknownType.getMessage());
     assertEquals("Field 'rowCount' must be an integer value", fractionalInteger.getMessage());
-    assertEquals("steps[0].target.rowCount", fractionalInteger.jsonPath());
+    assertEquals(Optional.of("steps[0].target.rowCount"), fractionalInteger.jsonPath());
   }
 
   @Test
@@ -547,7 +547,7 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals("Missing required field 'type'", missingAssertionType.getMessage());
-    assertEquals("steps[0].assertion", missingAssertionType.jsonPath());
+    assertEquals(Optional.of("steps[0].assertion"), missingAssertionType.jsonPath());
   }
 
   @Test
@@ -577,7 +577,7 @@ class GridGrindJsonTest {
     assertEquals(
         "Each step must contain exactly one of 'action', 'assertion', or 'query'",
         invalidStep.getMessage());
-    assertEquals("steps[0]", invalidStep.jsonPath());
+    assertEquals(Optional.of("steps[0]"), invalidStep.jsonPath());
   }
 
   @Test
@@ -647,13 +647,14 @@ class GridGrindJsonTest {
 
     assertEquals("Missing required field 'allowBlank'", missingAllowBlank.getMessage());
     assertEquals(
-        "steps[0].action.validation",
+        Optional.of("steps[0].action.validation"),
         missingAllowBlank.jsonPath(),
         "missing fields must point at the validation object");
     assertEquals(
         "Missing required field 'suppressDropDownArrow'",
         missingSuppressDropDownArrow.getMessage());
-    assertEquals("steps[0].action.validation", missingSuppressDropDownArrow.jsonPath());
+    assertEquals(
+        Optional.of("steps[0].action.validation"), missingSuppressDropDownArrow.jsonPath());
   }
 
   @Test
@@ -745,8 +746,8 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals(1, invalidResponse.jsonLine());
-    assertEquals(2, invalidResponse.jsonColumn());
+    assertEquals(Optional.of(1), invalidResponse.jsonLine());
+    assertEquals(Optional.of(2), invalidResponse.jsonColumn());
     org.junit.jupiter.api.Assertions.assertTrue(
         invalidCatalog.getMessage().startsWith("Missing required field '"));
   }

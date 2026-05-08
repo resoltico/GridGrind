@@ -3,18 +3,19 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual differential-style metadata loaded from a conditional-formatting rule. */
 public record ExcelDifferentialStyleSnapshot(
-    String numberFormat,
-    Boolean bold,
-    Boolean italic,
-    ExcelFontHeight fontHeight,
-    String fontColor,
-    Boolean underline,
-    Boolean strikeout,
-    String fillColor,
-    ExcelDifferentialBorder border,
+    @Nullable String numberFormat,
+    @Nullable Boolean bold,
+    @Nullable Boolean italic,
+    @Nullable ExcelFontHeight fontHeight,
+    @Nullable String fontColor,
+    @Nullable Boolean underline,
+    @Nullable Boolean strikeout,
+    @Nullable String fillColor,
+    @Nullable ExcelDifferentialBorder border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public ExcelDifferentialStyleSnapshot {
     if (numberFormat != null && numberFormat.isBlank()) {

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -25,16 +25,37 @@ class GridGrindContractTextTest {
             WorkbookMutationAction.ClearWorkbookProtection.class));
     assertEquals(
         "GET_SHEET_SUMMARY",
-        GridGrindContractText.inspectionQueryTypeName(InspectionQuery.GetSheetSummary.class));
+        GridGrindContractText.inspectionQueryTypeName(
+            SheetIntrospectionQuery.GetSheetSummary.class));
     assertEquals(
         Set.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class),
         GridGrindContractText.streamingWriteMutationActionClasses());
     assertEquals(
-        Set.of(InspectionQuery.GetWorkbookSummary.class, InspectionQuery.GetSheetSummary.class),
+        Set.of(
+            WorkbookIntrospectionQuery.GetWorkbookSummary.class,
+            SheetIntrospectionQuery.GetSheetSummary.class),
         GridGrindContractText.eventReadInspectionQueryClasses());
     assertTrue(GridGrindContractText.executionModeInputSummary().contains("markRecalculateOnOpen"));
     assertTrue(GridGrindContractText.sheetLayoutReadSummary().contains("presentation"));
+    assertEquals(
+        GridGrindContractText.FORMULA_SURFACE_READ_SUMMARY,
+        GridGrindContractText.formulaSurfaceReadSummary());
+    assertEquals(
+        GridGrindContractText.NAMED_RANGE_SURFACE_READ_SUMMARY,
+        GridGrindContractText.namedRangeSurfaceReadSummary());
+    assertEquals(
+        GridGrindContractText.FORMULA_HEALTH_READ_SUMMARY,
+        GridGrindContractText.formulaHealthReadSummary());
+    assertEquals(
+        GridGrindContractText.NAMED_RANGE_HEALTH_READ_SUMMARY,
+        GridGrindContractText.namedRangeHealthReadSummary());
+    assertEquals(
+        GridGrindContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
+        GridGrindContractText.workbookFindingsReadSummary());
     assertTrue(GridGrindContractText.stepKindSummary().contains("stable caller-defined stepId"));
+    assertTrue(
+        GridGrindContractText.requestDocumentLimitSummary().contains("16777216 bytes"),
+        "request-document summary must publish the canonical byte ceiling");
     assertTrue(
         GridGrindContractText.workbookFindingsDiscoverySummary()
             .contains("ANALYZE_WORKBOOK_FINDINGS"));

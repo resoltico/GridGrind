@@ -1,26 +1,39 @@
 package dev.erst.gridgrind.contract.query;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
-import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-/** Covers request-defaulting branches for inspection queries that deserialize through creators. */
+/** Edge-path coverage for inspection-query selector metadata lookup. */
 class InspectionQueryCoverageTest {
   @Test
-  void exportCustomXmlMappingCreatorSuppliesDefaultsAndPreservesExplicitValues() {
-    InspectionQuery.ExportCustomXmlMapping defaulted =
-        new InspectionQuery.ExportCustomXmlMapping(new CustomXmlMappingLocator(1L, null), false);
-    InspectionQuery.ExportCustomXmlMapping explicit =
-        new InspectionQuery.ExportCustomXmlMapping(
-            new CustomXmlMappingLocator(null, "BudgetMapping"), true, "UTF-16");
+  void rejectsUnmappedAndMetadataFreeInspectionQueryTypes() {
+    @SuppressWarnings("unchecked")
+    Class<? extends InspectionQuery> nonRecordQueryType =
+        (Class<? extends InspectionQuery>) InspectionQuery.class;
 
-    assertFalse(defaulted.validateSchema());
-    assertEquals(StandardCharsets.UTF_8.name(), defaulted.encoding());
-    assertTrue(explicit.validateSchema());
-    assertEquals("UTF-16", explicit.encoding());
+    IllegalArgumentException nonRecordFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> InspectionQuery.allowedTargetTypesForType(nonRecordQueryType));
+    assertEquals(
+        "No target-type mapping configured for query class dev.erst.gridgrind.contract.query.InspectionQuery",
+        nonRecordFailure.getMessage());
+
+    @SuppressWarnings("unchecked")
+    Class<? extends InspectionQuery> missingMetadataQueryType =
+        (Class<? extends InspectionQuery>) (Class<?>) MissingMetadataQueryRecord.class;
+
+    IllegalArgumentException missingMetadataFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> InspectionQuery.allowedTargetTypesForType(missingMetadataQueryType));
+    assertEquals(
+        "No target-type mapping configured for query class "
+            + MissingMetadataQueryRecord.class.getName(),
+        missingMetadataFailure.getMessage());
   }
+
+  private record MissingMetadataQueryRecord() {}
 }

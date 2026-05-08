@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import org.jspecify.annotations.Nullable;
+
 /** Immutable snapshot of a cell after formatting and, when needed, formula evaluation. */
 public sealed interface ExcelCellSnapshot {
   /** A1-style address of the cell, such as {@code B4}. */
@@ -43,7 +45,7 @@ public sealed interface ExcelCellSnapshot {
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       String stringValue,
-      ExcelRichTextSnapshot richText)
+      @Nullable ExcelRichTextSnapshot richText)
       implements ExcelCellSnapshot {
     public TextSnapshot {
       java.util.Objects.requireNonNull(address, "address must not be null");

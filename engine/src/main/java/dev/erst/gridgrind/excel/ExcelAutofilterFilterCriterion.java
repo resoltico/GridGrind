@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /** Authored autofilter criterion for a mutable workbook filter column. */
 public sealed interface ExcelAutofilterFilterCriterion
@@ -33,7 +34,7 @@ public sealed interface ExcelAutofilterFilterCriterion
     }
   }
 
-  record Dynamic(String type, Double value, Double maxValue)
+  record Dynamic(String type, @Nullable Double value, @Nullable Double maxValue)
       implements ExcelAutofilterFilterCriterion {
     public Dynamic {
       Objects.requireNonNull(type, "type must not be null");
@@ -93,7 +94,7 @@ public sealed interface ExcelAutofilterFilterCriterion
     return copy;
   }
 
-  private static Optional<Double> finiteOrNull(Double value, String fieldName) {
+  private static Optional<Double> finiteOrNull(@Nullable Double value, String fieldName) {
     if (value == null) {
       return Optional.empty();
     }

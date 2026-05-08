@@ -17,6 +17,8 @@ class ArchitectureSeamAuditTest {
   private static final Pattern CONTRACT_ENGINE_IMPORT_PATTERN =
       Pattern.compile(
           "^import dev\\.erst\\.gridgrind\\.excel\\.(?!foundation\\.)", Pattern.MULTILINE);
+  private static final Pattern QUALIFIED_ENGINE_EXPORT_PATTERN =
+      Pattern.compile("exports dev\\.erst\\.gridgrind\\.engine\\.api;");
   private static final Pattern POI_PRIVATE_ACCESS_PATTERN =
       Pattern.compile("privateLookupIn|getDeclaredField|getDeclaredMethod|setAccessible\\(");
   private static final String STALE_MODULE_GRAPH = "`cli -> protocol -> engine`";
@@ -24,6 +26,10 @@ class ArchitectureSeamAuditTest {
   private static final String STALE_NULL_DEFAULT_GUIDANCE = "The sole sanctioned null-return site";
   private static final String STALE_PMD_PROTOCOL_ORCHESTRATOR = "GridGrindService";
   private static final String STALE_PMD_EXCEPTION_HELPER = "withExceptionData()";
+  private static final String STALE_EXECUTOR_RUNTIME_GUIDANCE =
+      "executor/   The only execution bridge from the canonical contract into the";
+  private static final String STALE_CLI_EXECUTOR_GUIDANCE =
+      "or --request file, delegates to executor, writes the response,";
 
   @Test
   void contractModuleOnlyImportsExcelFoundationTypes() throws IOException {
@@ -88,10 +94,6 @@ class ArchitectureSeamAuditTest {
         100);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalogNestedTypeGroups.java"),
-        950);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
             "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalogStyleTypeGroups.java"),
         200);
     assertLineCountAtMost(
@@ -103,21 +105,40 @@ class ArchitectureSeamAuditTest {
             "contract/src/main/java/dev/erst/gridgrind/contract/dto/ProblemContext.java"),
         998);
     assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "engine/src/main/java/dev/erst/gridgrind/excel/WorkbookCommand.java"),
-        975);
+        repositoryRoot.resolve("engine/src/main/java/dev/erst/gridgrind/excel/ExcelSheet.java"),
+        700);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "executor/src/main/java/dev/erst/gridgrind/executor/WorkbookCommandStructuredInputConverter.java"),
-        875);
+            "engine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCopySupport.java"),
+        700);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/OperationSequenceModel.java"),
-        150);
+            "engine/src/main/java/dev/erst/gridgrind/excel/ExcelOoxmlPackageSecuritySupport.java"),
+        700);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/OperationSequenceValueFactory.java"),
-        925);
+            "engine/src/main/java/dev/erst/gridgrind/engine/runtime/WorkbookCommandStructuredInputConverter.java"),
+        350);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/examples/GridGrindShippedExamples.java"),
+        220);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookAuthoringExamples.java"),
+        300);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookAuditExamples.java"),
+        300);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookVisualizationExamples.java"),
+        300);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/WorkbookInvariantAnalysisSurfaceChecks.java"),
+        700);
   }
 
   @Test
@@ -177,6 +198,7 @@ class ArchitectureSeamAuditTest {
   void currentArchitectureGuidanceDoesNotReintroduceTheDeletedProtocolModule() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
     String agentsExtra = Files.readString(repositoryRoot.resolve(".codex/AGENTS_EXTRA.md"));
+    String developerGuide = Files.readString(repositoryRoot.resolve("docs/DEVELOPER.md"));
     String developerJazzer = Files.readString(repositoryRoot.resolve("docs/DEVELOPER_JAZZER.md"));
 
     assertTrue(
@@ -186,21 +208,45 @@ class ArchitectureSeamAuditTest {
         !agentsExtra.contains(STALE_NULL_DEFAULT_GUIDANCE),
         ".codex/AGENTS_EXTRA.md must not permit null-return protocol default methods");
     assertTrue(
-        agentsExtra.contains("`cli -> executor -> contract -> excel-foundation`"),
+        agentsExtra.contains("`cli -> engine -> contract -> excel-foundation`"),
         ".codex/AGENTS_EXTRA.md must teach the current CLI graph");
     assertTrue(
-        agentsExtra.contains("`executor -> engine -> excel-foundation`"),
-        ".codex/AGENTS_EXTRA.md must teach the executor/engine boundary");
+        agentsExtra.contains("`engine -> excel-foundation`"),
+        ".codex/AGENTS_EXTRA.md must teach the engine/foundation boundary");
     assertTrue(
         agentsExtra.contains(
             "Protocol request, response, and discovery DTOs must encode alternative state"),
         ".codex/AGENTS_EXTRA.md must require typed protocol variants instead of null padding");
     assertTrue(
+        !developerGuide.contains(STALE_EXECUTOR_RUNTIME_GUIDANCE),
+        "docs/DEVELOPER.md must not describe executor as the live runtime bridge");
+    assertTrue(
+        !developerGuide.contains(STALE_CLI_EXECUTOR_GUIDANCE),
+        "docs/DEVELOPER.md must not teach CLI -> executor as the live runtime path");
+    assertTrue(
+        developerGuide.contains("exported `dev.erst.gridgrind.engine.api` seam"),
+        "docs/DEVELOPER.md must name the narrow exported engine API seam");
+    assertTrue(
         !developerJazzer.contains(STALE_JAZZER_MODULES),
         "docs/DEVELOPER_JAZZER.md must not claim Jazzer consumes a live protocol module");
     assertTrue(
-        developerJazzer.contains("local `engine`, `contract`, and `executor` modules"),
+        developerJazzer.contains(
+            "local `engine` and `contract` modules, plus the verification-only `executor` project"),
         "docs/DEVELOPER_JAZZER.md must point at the current local module set");
+  }
+
+  @Test
+  void engineModuleExportsRequestExecutionWithoutWorkbookCore() throws IOException {
+    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
+    String moduleInfo =
+        Files.readString(repositoryRoot.resolve("engine/src/main/java/module-info.java"));
+
+    assertTrue(
+        QUALIFIED_ENGINE_EXPORT_PATTERN.matcher(moduleInfo).find(),
+        "engine module must export the narrow request-execution API package");
+    assertTrue(
+        !moduleInfo.contains("exports dev.erst.gridgrind.excel;"),
+        "engine module must not expose the low-level workbook package");
   }
 
   private static List<String> matchingFiles(Path root, BiPredicate<Path, String> matcher)

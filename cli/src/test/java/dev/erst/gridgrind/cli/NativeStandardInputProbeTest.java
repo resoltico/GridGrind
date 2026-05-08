@@ -2,8 +2,10 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.foreign.FunctionDescriptor;
@@ -231,7 +233,8 @@ class NativeStandardInputProbeTest {
             () ->
                 NativeStandardInputProbe.unixCurrentProcess(
                     name -> {
-                      throw new IllegalArgumentException("missing " + name);
+                      throw new NativeStandardInputProbe.NativeProbeUnavailableException(
+                          "missing " + name);
                     },
                     (symbol, descriptor) -> {
                       throw new AssertionError("must not request a downcall handle");
@@ -245,7 +248,8 @@ class NativeStandardInputProbeTest {
     NativeStandardInputProbe probe =
         NativeStandardInputProbe.currentProcessProbe(
             () -> {
-              throw new IllegalArgumentException("missing symbol");
+              throw new NativeStandardInputProbe.NativeProbeUnavailableException(
+                  "missing native symbol");
             });
 
     assertFalse(probe.getAsBoolean());
@@ -266,7 +270,7 @@ class NativeStandardInputProbeTest {
   void windowsCurrentProcessReportsInteractiveWhenConsoleModeSucceeds() throws Throwable {
     NativeStandardInputProbe probe =
         NativeStandardInputProbe.windowsCurrentProcessFromLookup(
-            symbolLookup(),
+            Optional.of(symbolLookup()),
             (symbol, descriptor) ->
                 symbol.address() == 11L
                     ? getStdHandleHandle(MemorySegment.ofAddress(99L))
@@ -292,7 +296,7 @@ class NativeStandardInputProbeTest {
   void windowsCurrentProcessReturnsUnsupportedWhenLookupIsUnavailable() {
     NativeStandardInputProbe probe =
         NativeStandardInputProbe.windowsCurrentProcessFromLookup(
-            (SymbolLookup) null,
+            Optional.empty(),
             (symbol, descriptor) -> {
               throw new AssertionError("must not request a downcall handle");
             });
@@ -304,7 +308,7 @@ class NativeStandardInputProbeTest {
   void windowsCurrentProcessReturnsUnsupportedWhenLookupOmitsRequiredSymbols() {
     NativeStandardInputProbe probe =
         NativeStandardInputProbe.windowsCurrentProcessFromLookup(
-            name -> Optional.empty(),
+            Optional.of(name -> Optional.empty()),
             (symbol, descriptor) -> {
               throw new AssertionError("must not request a downcall handle");
             });
@@ -345,13 +349,52 @@ class NativeStandardInputProbeTest {
             () ->
                 NativeStandardInputProbe.windowsCurrentProcess(
                     name -> {
-                      throw new IllegalArgumentException("missing " + name);
+                      throw new NativeStandardInputProbe.NativeProbeUnavailableException(
+                          "missing " + name);
                     },
                     (symbol, descriptor) -> {
                       throw new AssertionError("must not request a downcall handle");
                     }));
 
     assertFalse(probe.getAsBoolean());
+  }
+
+  @Test
+  void propagatesUnexpectedProbeFailuresInsteadOfMaskingThemAsNonInteractive() {
+    NativeStandardInputProbe probe =
+        NativeStandardInputProbe.of(
+            () -> {
+              throw new IllegalStateException("unexpected failure");
+            });
+
+    IllegalStateException failure = assertThrows(IllegalStateException.class, probe::getAsBoolean);
+    assertEquals("unexpected failure", failure.getMessage());
+  }
+
+  @Test
+  void propagatesErrorsInsteadOfNormalizingThemToNonInteractive() {
+    NativeStandardInputProbe probe =
+        NativeStandardInputProbe.of(
+            () -> {
+              throw new AssertionError("boom");
+            });
+
+    AssertionError failure = assertThrows(AssertionError.class, probe::getAsBoolean);
+    assertEquals("boom", failure.getMessage());
+  }
+
+  @Test
+  void wrapsCheckedFailuresInIllegalStateException() {
+    NativeStandardInputProbe probe =
+        NativeStandardInputProbe.of(
+            () -> {
+              throw new java.io.IOException("checked boom");
+            });
+
+    IllegalStateException failure = assertThrows(IllegalStateException.class, probe::getAsBoolean);
+    assertEquals("Native standard-input probe threw a checked failure", failure.getMessage());
+    assertInstanceOf(java.io.IOException.class, failure.getCause());
+    assertEquals("checked boom", failure.getCause().getMessage());
   }
 
   private static NativeStandardInputProbe.SymbolResolver symbolResolver() {

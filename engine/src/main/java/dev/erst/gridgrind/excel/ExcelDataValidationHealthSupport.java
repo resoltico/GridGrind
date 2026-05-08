@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 
 /** Derives workbook-health findings from canonical data-validation snapshots. */
 final class ExcelDataValidationHealthSupport {
@@ -43,40 +44,52 @@ final class ExcelDataValidationHealthSupport {
       }
       case ExcelDataValidationRule.FormulaList formulaList ->
           addBrokenFormulaFindingIfNeeded(
-              findings, location, formulaList.formula(), "list validation formula");
+              findings, location, Optional.of(formulaList.formula()), "list validation formula");
       case ExcelDataValidationRule.WholeNumber wholeNumber -> {
         addBrokenFormulaFindingIfNeeded(
-            findings, location, wholeNumber.formula1(), "whole-number validation formula");
+            findings,
+            location,
+            Optional.of(wholeNumber.formula1()),
+            "whole-number validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, wholeNumber.formula2(), "whole-number validation formula");
       }
       case ExcelDataValidationRule.DecimalNumber decimalNumber -> {
         addBrokenFormulaFindingIfNeeded(
-            findings, location, decimalNumber.formula1(), "decimal validation formula");
+            findings,
+            location,
+            Optional.of(decimalNumber.formula1()),
+            "decimal validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, decimalNumber.formula2(), "decimal validation formula");
       }
       case ExcelDataValidationRule.DateRule dateRule -> {
         addBrokenFormulaFindingIfNeeded(
-            findings, location, dateRule.formula1(), "date validation formula");
+            findings, location, Optional.of(dateRule.formula1()), "date validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, dateRule.formula2(), "date validation formula");
       }
       case ExcelDataValidationRule.TimeRule timeRule -> {
         addBrokenFormulaFindingIfNeeded(
-            findings, location, timeRule.formula1(), "time validation formula");
+            findings, location, Optional.of(timeRule.formula1()), "time validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, timeRule.formula2(), "time validation formula");
       }
       case ExcelDataValidationRule.TextLength textLength -> {
         addBrokenFormulaFindingIfNeeded(
-            findings, location, textLength.formula1(), "text-length validation formula");
+            findings,
+            location,
+            Optional.of(textLength.formula1()),
+            "text-length validation formula");
         addBrokenFormulaFindingIfNeeded(
             findings, location, textLength.formula2(), "text-length validation formula");
       }
       case ExcelDataValidationRule.CustomFormula customFormula ->
           addBrokenFormulaFindingIfNeeded(
-              findings, location, customFormula.formula(), "custom validation formula");
+              findings,
+              location,
+              Optional.of(customFormula.formula()),
+              "custom validation formula");
     }
     return List.copyOf(findings);
   }
@@ -106,12 +119,13 @@ final class ExcelDataValidationHealthSupport {
   private static void addBrokenFormulaFindingIfNeeded(
       List<WorkbookAnalysis.AnalysisFinding> findings,
       WorkbookAnalysis.AnalysisLocation.Range location,
-      String formula,
+      Optional<String> formula,
       String label) {
-    if (formula == null) {
+    if (formula.isEmpty()) {
       return;
     }
-    if (formula.toUpperCase(Locale.ROOT).contains("#REF!")) {
+    String actualFormula = formula.orElseThrow();
+    if (actualFormula.toUpperCase(Locale.ROOT).contains("#REF!")) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
@@ -119,7 +133,7 @@ final class ExcelDataValidationHealthSupport {
               "Broken data-validation formula",
               "Data-validation " + label + " contains a broken reference.",
               location,
-              List.of(formula)));
+              List.of(actualFormula)));
     }
   }
 

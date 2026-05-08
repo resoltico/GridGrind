@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: EXAMPLES
 updated: "2026-05-01"
 route:
@@ -26,7 +26,7 @@ GridGrind ships the same example workflows in two forms:
   most are self-contained in a blank working directory, while a few are intentionally
   repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
-  the same contract-owned registry, but their relative paths are rooted from the request file's own
+  the same CLI-owned registry, but their relative paths are rooted from the request file's own
   directory so they run in place from a repository checkout.
 
 ## Path Rules
@@ -71,12 +71,16 @@ Repo-asset-backed built-ins still use `--print-example <ID>`, but they also requ
 | `SOURCE_BACKED_INPUT` | [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/) |
 | `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
 
-The CLI help summaries already label those three built-ins as repo-asset-backed so artifact-only
-workspaces do not silently assume every example is self-contained.
+The CLI help now prints each built-in example with its `workspaceMode`, and asset-backed entries
+also print their exact `requiredPaths`, so artifact-only workspaces do not silently assume every
+example is self-contained.
 
-The machine-readable protocol catalog exposes that same portability split through
-`shippedExamples[*].workspaceMode` and `shippedExamples[*].requiredPaths`, so agents do not have to
-infer prerequisites from prose alone.
+The machine-readable CLI example catalog exposes stable example ids, file names, summaries, a
+portable `workspaceMode` contract, and exact `requiredPaths` for asset-backed examples.
+`SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
+`REQUIRES_EXAMPLE_ASSETS` means the request expects copied `examples/` assets beside the request
+file, and `requiredPaths` names those files directly.
+Print it directly with `gridgrind --print-example-catalog --response example-catalog.json`.
 
 ## JSON Request Fixtures
 
@@ -117,8 +121,8 @@ Refresh the checkout-rooted request fixtures and the generated package-security 
 The authoritative verification loop for the shipped examples is:
 
 ```bash
-./gradlew :contract:test --tests dev.erst.gridgrind.contract.json.ExampleRequestFixturesTest
-./gradlew :executor:test --tests dev.erst.gridgrind.executor.ExampleExecutionFixturesTest
+./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest
+./gradlew :executor:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
 ./gradlew :authoring-java:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
 ```
 

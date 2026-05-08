@@ -7,12 +7,12 @@ import java.util.List;
 final class GridGrindProtocolCatalogSourceTypeDescriptors {
   static final List<CatalogTypeDescriptor> SOURCE_TYPES =
       List.of(
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               WorkbookPlan.WorkbookSource.New.class,
               "NEW",
               "Create a brand-new empty workbook. A new workbook starts with zero sheets;"
                   + " use ENSURE_SHEET to create the first sheet."),
-          GridGrindProtocolCatalog.descriptor(
+          CatalogTypeEntryFactory.descriptor(
               WorkbookPlan.WorkbookSource.ExistingFile.class,
               "EXISTING",
               "Open an existing .xlsx workbook from disk."

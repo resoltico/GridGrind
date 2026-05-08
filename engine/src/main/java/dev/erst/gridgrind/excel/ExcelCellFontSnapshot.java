@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Immutable snapshot of the font currently applied to a cell. */
 public record ExcelCellFontSnapshot(
@@ -8,7 +9,7 @@ public record ExcelCellFontSnapshot(
     boolean italic,
     String fontName,
     ExcelFontHeight fontHeight,
-    ExcelColorSnapshot fontColor,
+    @Nullable ExcelColorSnapshot fontColor,
     boolean underline,
     boolean strikeout) {
   public ExcelCellFontSnapshot {

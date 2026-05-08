@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
@@ -21,7 +22,6 @@ import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
@@ -31,6 +31,7 @@ import dev.erst.gridgrind.contract.dto.TableColumnReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import org.jspecify.annotations.Nullable;
 
 /** Owns cell-surface invariant checks for reports, styles, security, and XML-linked metadata. */
 final class WorkbookInvariantCellSurfaceChecks {
@@ -91,7 +92,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireCommentReportShape(GridGrindWorkbookSurfaceReports.CommentReport comment) {
+  static void requireCommentReportShape(CommentReport comment) {
     WorkbookInvariantChecks.require(comment.text() != null, "comment text must not be null");
     WorkbookInvariantChecks.require(comment.author() != null, "comment author must not be null");
     WorkbookInvariantChecks.require(!comment.text().isBlank(), "comment text must not be blank");
@@ -117,7 +118,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireNamedRangeShape(GridGrindWorkbookSurfaceReports.NamedRangeReport namedRange) {
+  static void requireNamedRangeShape(NamedRangeReport namedRange) {
     WorkbookInvariantChecks.require(namedRange.name() != null, "namedRange name must not be null");
     WorkbookInvariantChecks.require(
         !namedRange.name().isBlank(), "namedRange name must not be blank");
@@ -127,19 +128,23 @@ final class WorkbookInvariantCellSurfaceChecks {
         namedRange.refersToFormula() != null, "namedRange formula must not be null");
 
     switch (namedRange) {
-      case GridGrindWorkbookSurfaceReports.NamedRangeReport.RangeReport range -> {
+      case NamedRangeReport.RangeReport range -> {
         WorkbookInvariantChecks.require(
             range.target() != null, "namedRange target must not be null");
         WorkbookInvariantChecks.require(
-            range.target().sheetName() != null, "namedRange target sheet must not be null");
+            range.target() instanceof NamedRangeTarget.Range,
+            "namedRange range report must use a range target");
+        NamedRangeTarget.Range target = (NamedRangeTarget.Range) range.target();
         WorkbookInvariantChecks.require(
-            range.target().range() != null, "namedRange target range must not be null");
+            target.sheetName() != null, "namedRange target sheet must not be null");
         WorkbookInvariantChecks.require(
-            !range.target().sheetName().isBlank(), "namedRange target sheet must not be blank");
+            target.range() != null, "namedRange target range must not be null");
         WorkbookInvariantChecks.require(
-            !range.target().range().isBlank(), "namedRange target range must not be blank");
+            !target.sheetName().isBlank(), "namedRange target sheet must not be blank");
+        WorkbookInvariantChecks.require(
+            !target.range().isBlank(), "namedRange target range must not be blank");
       }
-      case GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport _ -> {}
+      case NamedRangeReport.FormulaReport _ -> {}
     }
   }
 
@@ -181,7 +186,7 @@ final class WorkbookInvariantCellSurfaceChecks {
     }
   }
 
-  static void requireCellStyleShape(GridGrindWorkbookSurfaceReports.CellStyleReport style) {
+  static void requireCellStyleShape(CellStyleReport style) {
     WorkbookInvariantChecks.require(style != null, "style must not be null");
     WorkbookInvariantChecks.require(style.numberFormat() != null, "numberFormat must not be null");
     requireCellAlignmentShape(style.alignment());
@@ -269,22 +274,28 @@ final class WorkbookInvariantCellSurfaceChecks {
     WorkbookInvariantChecks.require(
         security.encryption() != null, "package encryption must not be null");
     if (security.encryption().encrypted()) {
-      WorkbookInvariantChecks.require(
-          security.encryption().mode() != null, "encrypted package mode must not be null");
-      WorkbookInvariantChecks.requireNonBlank(
+      WorkbookInvariantChecks.requirePresent(
+          security.encryption().mode(), "encrypted package mode");
+      WorkbookInvariantChecks.requirePresent(
           security.encryption().cipherAlgorithm(), "encrypted package cipherAlgorithm");
-      WorkbookInvariantChecks.requireNonBlank(
+      WorkbookInvariantChecks.requirePresent(
           security.encryption().hashAlgorithm(), "encrypted package hashAlgorithm");
-      WorkbookInvariantChecks.requireNonBlank(
+      WorkbookInvariantChecks.requirePresent(
           security.encryption().chainingMode(), "encrypted package chainingMode");
       WorkbookInvariantChecks.require(
-          security.encryption().keyBits() != null && security.encryption().keyBits() > 0,
+          WorkbookInvariantChecks.requirePresent(
+                  security.encryption().keyBits(), "encrypted package keyBits")
+              > 0,
           "encrypted package keyBits must be positive");
       WorkbookInvariantChecks.require(
-          security.encryption().blockSize() != null && security.encryption().blockSize() > 0,
+          WorkbookInvariantChecks.requirePresent(
+                  security.encryption().blockSize(), "encrypted package blockSize")
+              > 0,
           "encrypted package blockSize must be positive");
       WorkbookInvariantChecks.require(
-          security.encryption().spinCount() != null && security.encryption().spinCount() >= 0,
+          WorkbookInvariantChecks.requirePresent(
+                  security.encryption().spinCount(), "encrypted package spinCount")
+              >= 0,
           "encrypted package spinCount must be zero or positive");
     }
     WorkbookInvariantChecks.require(
@@ -586,10 +597,10 @@ final class WorkbookInvariantCellSurfaceChecks {
           WorkbookInvariantChecks.require(
               indexed.indexed() >= 0, label + " indexed must not be negative");
     }
-    requireFiniteOrNull(color.tint(), label + " tint");
+    color.tint().ifPresent(tint -> requireFiniteOrNull(tint, label + " tint"));
   }
 
-  private static void requireFiniteOrNull(Double value, String label) {
+  private static void requireFiniteOrNull(@Nullable Double value, String label) {
     if (value != null) {
       WorkbookInvariantChecks.require(Double.isFinite(value), label + " must be finite");
     }

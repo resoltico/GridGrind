@@ -12,7 +12,7 @@ class ExcelNamedRangeDefinitionTest {
         new ExcelNamedRangeDefinition(
             "BudgetTotal",
             new ExcelNamedRangeScope.WorkbookScope(),
-            new ExcelNamedRangeTarget("Budget", "B4"));
+            ExcelNamedRangeTarget.range("Budget", "B4"));
 
     assertEquals("BudgetTotal", definition.name());
   }
@@ -37,7 +37,7 @@ class ExcelNamedRangeDefinitionTest {
         NullPointerException.class,
         () ->
             new ExcelNamedRangeDefinition(
-                "BudgetTotal", null, new ExcelNamedRangeTarget("Budget", "B4")));
+                "BudgetTotal", null, ExcelNamedRangeTarget.range("Budget", "B4")));
     assertThrows(
         NullPointerException.class,
         () ->

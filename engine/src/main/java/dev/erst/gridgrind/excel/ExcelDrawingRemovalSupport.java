@@ -2,12 +2,14 @@ package dev.erst.gridgrind.excel;
 
 import java.util.function.BiPredicate;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
+import org.apache.poi.openxml4j.opc.PackagePartName;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.xmlbeans.XmlObject;
+import org.jspecify.annotations.Nullable;
 
 /** Removal helpers for drawings, charts, pictures, and embedded objects. */
 final class ExcelDrawingRemovalSupport {
@@ -73,17 +75,18 @@ final class ExcelDrawingRemovalSupport {
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     org.apache.poi.openxml4j.opc.PackagePart objectPart =
         ExcelDrawingBinarySupport.relatedInternalPart(
-            sheetPart(objectData), objectData.getOleObject().getId());
+                sheetPart(objectData), objectData.getOleObject().getId())
+            .orElse(null);
     org.apache.poi.openxml4j.opc.PackagePart previewPart =
-        ExcelDrawingBinarySupport.previewImagePart(objectData);
+        ExcelDrawingBinarySupport.previewImagePart(objectData).orElse(null);
     org.apache.poi.openxml4j.opc.PackagePartName olePartName =
         objectPart == null ? null : objectPart.getPartName();
     org.apache.poi.openxml4j.opc.PackagePartName previewPartName =
         previewPart == null ? null : previewPart.getPartName();
     String drawingPreviewRelationId =
-        ExcelDrawingBinarySupport.previewDrawingRelationId(objectData);
+        ExcelDrawingBinarySupport.previewDrawingRelationId(objectData).orElse(null);
     String sheetPreviewRelationId =
-        ExcelDrawingBinarySupport.previewSheetImageRelationId(objectData);
+        ExcelDrawingBinarySupport.previewSheetImageRelationId(objectData).orElse(null);
     String oleRelationId = objectData.getOleObject().getId();
 
     if (drawingPreviewRelationId != null) {
@@ -103,12 +106,11 @@ final class ExcelDrawingRemovalSupport {
   }
 
   static void cleanupPackagePartIfUnused(
-      org.apache.poi.openxml4j.opc.OPCPackage pkg,
-      org.apache.poi.openxml4j.opc.PackagePartName partName) {
+      org.apache.poi.openxml4j.opc.OPCPackage pkg, @Nullable PackagePartName partName) {
     ExcelPackageRelationshipSupport.cleanupPackagePartIfUnused(pkg, partName);
   }
 
-  static void removeParentAnchor(XSSFDrawing drawing, XmlObject parentAnchor) {
+  static void removeParentAnchor(XSSFDrawing drawing, @Nullable XmlObject parentAnchor) {
     switch (parentAnchor) {
       case org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTTwoCellAnchor
               twoCellAnchor ->

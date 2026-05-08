@@ -13,7 +13,7 @@ class ExcelNamedRangeSnapshotTest {
             "BudgetTotal",
             new ExcelNamedRangeScope.WorkbookScope(),
             "Budget!$B$4",
-            new ExcelNamedRangeTarget("Budget", "B4"));
+            ExcelNamedRangeTarget.range("Budget", "B4"));
     ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot =
         new ExcelNamedRangeSnapshot.FormulaSnapshot(
             "BudgetRollup", new ExcelNamedRangeScope.SheetScope("Budget"), "SUM(Budget!$B$2:$B$3)");
@@ -30,7 +30,7 @@ class ExcelNamedRangeSnapshotTest {
         NullPointerException.class,
         () ->
             new ExcelNamedRangeSnapshot.RangeSnapshot(
-                "BudgetTotal", null, "Budget!$B$4", new ExcelNamedRangeTarget("Budget", "B4")));
+                "BudgetTotal", null, "Budget!$B$4", ExcelNamedRangeTarget.range("Budget", "B4")));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -38,7 +38,7 @@ class ExcelNamedRangeSnapshotTest {
                 "BudgetTotal",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 null,
-                new ExcelNamedRangeTarget("Budget", "B4")));
+                ExcelNamedRangeTarget.range("Budget", "B4")));
     assertThrows(
         NullPointerException.class,
         () ->

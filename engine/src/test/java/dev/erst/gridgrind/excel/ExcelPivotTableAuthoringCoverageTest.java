@@ -91,12 +91,12 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
           new ExcelNamedRangeDefinition(
               "AmbiguousSource",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "AmbiguousSource",
               new ExcelNamedRangeScope.SheetScope("Data"),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
 
       assertThrows(
           IllegalArgumentException.class,

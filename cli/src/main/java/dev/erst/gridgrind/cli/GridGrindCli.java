@@ -4,9 +4,10 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.executor.GridGrindProblems;
-import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
+import dev.erst.gridgrind.engine.api.GridGrindProblems;
+import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
+import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -22,7 +23,8 @@ public final class GridGrindCli {
   /** Creates the production CLI backed by the default request executor and transport helpers. */
   public GridGrindCli() {
     this(
-        new DefaultGridGrindRequestExecutor(),
+        GridGrindEngine.requestExecutor(),
+        GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
         new CliJournalWriter(),
@@ -32,8 +34,23 @@ public final class GridGrindCli {
   GridGrindCli(GridGrindRequestExecutor requestExecutor) {
     this(
         requestExecutor,
+        GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
+        new CliJournalWriter(),
+        StandardInputInteractivity.never());
+  }
+
+  GridGrindCli(
+      GridGrindRequestExecutor requestExecutor,
+      GridGrindRequestDoctor requestDoctor,
+      CliRequestReader requestReader,
+      CliResponseWriter responseWriter) {
+    this(
+        requestExecutor,
+        requestDoctor,
+        requestReader,
+        responseWriter,
         new CliJournalWriter(),
         StandardInputInteractivity.never());
   }
@@ -44,6 +61,7 @@ public final class GridGrindCli {
       CliResponseWriter responseWriter) {
     this(
         requestExecutor,
+        GridGrindEngine.requestDoctor(),
         requestReader,
         responseWriter,
         new CliJournalWriter(),
@@ -57,6 +75,22 @@ public final class GridGrindCli {
       CliJournalWriter journalWriter) {
     this(
         requestExecutor,
+        GridGrindEngine.requestDoctor(),
+        requestReader,
+        responseWriter,
+        journalWriter,
+        StandardInputInteractivity.never());
+  }
+
+  GridGrindCli(
+      GridGrindRequestExecutor requestExecutor,
+      GridGrindRequestDoctor requestDoctor,
+      CliRequestReader requestReader,
+      CliResponseWriter responseWriter,
+      CliJournalWriter journalWriter) {
+    this(
+        requestExecutor,
+        requestDoctor,
         requestReader,
         responseWriter,
         journalWriter,
@@ -69,10 +103,27 @@ public final class GridGrindCli {
       CliResponseWriter responseWriter,
       CliJournalWriter journalWriter,
       BooleanSupplier standardInputIsInteractive) {
+    this(
+        requestExecutor,
+        GridGrindEngine.requestDoctor(),
+        requestReader,
+        responseWriter,
+        journalWriter,
+        standardInputIsInteractive);
+  }
+
+  GridGrindCli(
+      GridGrindRequestExecutor requestExecutor,
+      GridGrindRequestDoctor requestDoctor,
+      CliRequestReader requestReader,
+      CliResponseWriter responseWriter,
+      CliJournalWriter journalWriter,
+      BooleanSupplier standardInputIsInteractive) {
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
     this.executionCommands =
         new GridGrindCliExecutionCommands(
             GridGrindRequestExecutor.requireNonNull(requestExecutor),
+            GridGrindRequestDoctor.requireNonNull(requestDoctor),
             requestReader,
             this.responseWriter,
             journalWriter,
@@ -94,57 +145,65 @@ public final class GridGrindCli {
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
 
+    Optional<java.nio.file.Path> responsePathHint = responsePathHint(args);
     CliCommand command;
     try {
       command = CliArguments.parse(args);
     } catch (CliArgumentsException exception) {
-      responseWriter.write(
+      return responseWriter.write(
+          responsePathHint,
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
-              exception.getMessage(),
+              argumentFailureMessage(exception),
               new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
                   dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
                       exception.argument())),
-              exception));
-      return 2;
+              exception),
+          2);
     } catch (IllegalArgumentException exception) {
-      responseWriter.write(
+      return responseWriter.write(
+          responsePathHint,
           stdout,
+          stderr,
           failure(
               GridGrindProblemCode.INVALID_ARGUMENTS,
-              exception.getMessage(),
+              argumentFailureMessage(exception),
               new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
                   dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument
                       .unknown()),
-              exception));
-      return 2;
+              exception),
+          2);
     }
 
     return switch (command) {
-      case CliCommand.Help cmd -> GridGrindCliCatalogCommands.help(cmd, stdout, responseWriter);
+      case CliCommand.Help cmd ->
+          GridGrindCliCatalogCommands.help(cmd, stdout, stderr, responseWriter);
       case CliCommand.Version cmd ->
-          GridGrindCliCatalogCommands.version(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.version(cmd, stdout, stderr, responseWriter);
       case CliCommand.License cmd ->
-          GridGrindCliCatalogCommands.license(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.license(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintRequestTemplate cmd ->
-          GridGrindCliCatalogCommands.requestTemplate(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintExample cmd ->
-          GridGrindCliCatalogCommands.example(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.example(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintExampleCatalog cmd ->
+          GridGrindCliCatalogCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskCatalog cmd ->
-          GridGrindCliCatalogCommands.taskCatalog(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskPlan cmd ->
-          GridGrindCliCatalogCommands.taskPlan(cmd, stdout, responseWriter);
-      case CliCommand.PrintGoalPlan cmd ->
-          GridGrindCliCatalogCommands.goalPlan(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.taskPlan(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintTaskKeywordMatch cmd ->
+          GridGrindCliCatalogCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
       case CliCommand.DoctorRequest doctor ->
-          executionCommands.doctorRequest(doctor, stdin, stdout);
+          executionCommands.doctorRequest(doctor, stdin, stdout, stderr);
       case CliCommand.PrintProtocolCatalogAll cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogAll(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.protocolCatalogAll(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogSearch cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogSearch(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.protocolCatalogSearch(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogLookup cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, responseWriter);
+          GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, stderr, responseWriter);
       case CliCommand.Execute execute -> {
         Optional<InputStream> requestInput =
             executionCommands.standardInputOrNullForImplicitHelp(execute, args, stdin, stdout);
@@ -181,8 +240,8 @@ public final class GridGrindCli {
   }
 
   /**
-   * Returns the given implementation version string, or {@code "unknown"} when the JAR manifest
-   * attribute is absent (e.g. when running from the test classpath without a packaged JAR).
+   * Returns the given implementation version string, or the bundled product-resource version when
+   * the JAR manifest attribute is absent.
    */
   static String versionFrom(String implementationVersion) {
     return GridGrindCliProductInfo.versionFrom(implementationVersion);
@@ -222,8 +281,13 @@ public final class GridGrindCli {
    * streams are absent.
    */
   static String licenseText(
-      InputStream own, InputStream notice, InputStream apache, InputStream bsd) {
-    return GridGrindCliProductInfo.licenseText(own, notice, apache, bsd);
+      InputStream own,
+      InputStream notice,
+      InputStream apache,
+      InputStream bsd2,
+      InputStream bsd3,
+      InputStream edl) {
+    return GridGrindCliProductInfo.licenseText(own, notice, apache, bsd2, bsd3, edl);
   }
 
   /**
@@ -243,6 +307,29 @@ public final class GridGrindCli {
     return GridGrindResponses.failure(
         GridGrindProtocolVersion.current(),
         GridGrindProblems.problem(code, message, context, cause));
+  }
+
+  private static String argumentFailureMessage(RuntimeException exception) {
+    Objects.requireNonNull(exception, "exception must not be null");
+    return Objects.requireNonNullElse(exception.getMessage(), "Invalid command-line arguments");
+  }
+
+  private static Optional<java.nio.file.Path> responsePathHint(String[] args) {
+    try {
+      Optional<java.nio.file.Path> responsePath = CliArguments.responsePath(args);
+      Optional<java.nio.file.Path> requestPath = CliArguments.requestPath(args);
+      if (responsePath.isPresent()
+          && requestPath.isPresent()
+          && responsePath
+              .orElseThrow()
+              .toAbsolutePath()
+              .equals(requestPath.orElseThrow().toAbsolutePath())) {
+        return Optional.empty();
+      }
+      return responsePath;
+    } catch (IllegalArgumentException exception) {
+      return Optional.empty();
+    }
   }
 
   /** Supplies request-template bytes for help rendering. */

@@ -13,6 +13,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** One authored chart plot. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -68,12 +69,13 @@ public sealed interface ChartPlotInput
   record Area3D(
       boolean varyColors,
       ExcelChartGrouping grouping,
-      Integer gapDepth,
+      Optional<Integer> gapDepth,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Area3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
       axes = copyAxes(axes, "axes");
       series = copySeries(series);
     }
@@ -82,7 +84,7 @@ public sealed interface ChartPlotInput
     public Area3D(
         boolean varyColors,
         ExcelChartGrouping grouping,
-        Integer gapDepth,
+        Optional<Integer> gapDepth,
         List<ChartSeriesInput> series) {
       this(varyColors, grouping, gapDepth, defaultCategoryAxes(), series);
     }
@@ -93,15 +95,17 @@ public sealed interface ChartPlotInput
       boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
-      Integer gapWidth,
-      Integer overlap,
+      Optional<Integer> gapWidth,
+      Optional<Integer> overlap,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Bar {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
-      if (overlap != null && (overlap < -100 || overlap > 100)) {
+      Objects.requireNonNull(gapWidth, "gapWidth must not be null");
+      Objects.requireNonNull(overlap, "overlap must not be null");
+      if (overlap.isPresent() && (overlap.orElseThrow() < -100 || overlap.orElseThrow() > 100)) {
         throw new IllegalArgumentException("overlap must be between -100 and 100");
       }
       axes = copyAxes(axes, "axes");
@@ -113,8 +117,8 @@ public sealed interface ChartPlotInput
         boolean varyColors,
         ExcelChartBarDirection barDirection,
         ExcelChartBarGrouping grouping,
-        Integer gapWidth,
-        Integer overlap,
+        Optional<Integer> gapWidth,
+        Optional<Integer> overlap,
         List<ChartSeriesInput> series) {
       this(varyColors, barDirection, grouping, gapWidth, overlap, defaultCategoryAxes(), series);
     }
@@ -125,15 +129,18 @@ public sealed interface ChartPlotInput
       boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
-      Integer gapDepth,
-      Integer gapWidth,
-      ExcelChartBarShape shape,
+      Optional<Integer> gapDepth,
+      Optional<Integer> gapWidth,
+      Optional<ExcelChartBarShape> shape,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Bar3D {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
+      Objects.requireNonNull(gapWidth, "gapWidth must not be null");
+      Objects.requireNonNull(shape, "shape must not be null");
       axes = copyAxes(axes, "axes");
       series = copySeries(series);
     }
@@ -143,9 +150,9 @@ public sealed interface ChartPlotInput
         boolean varyColors,
         ExcelChartBarDirection barDirection,
         ExcelChartBarGrouping grouping,
-        Integer gapDepth,
-        Integer gapWidth,
-        ExcelChartBarShape shape,
+        Optional<Integer> gapDepth,
+        Optional<Integer> gapWidth,
+        Optional<ExcelChartBarShape> shape,
         List<ChartSeriesInput> series) {
       this(
           varyColors,
@@ -161,11 +168,16 @@ public sealed interface ChartPlotInput
 
   /** Doughnut chart plot. */
   record Doughnut(
-      boolean varyColors, Integer firstSliceAngle, Integer holeSize, List<ChartSeriesInput> series)
+      boolean varyColors,
+      Optional<Integer> firstSliceAngle,
+      Optional<Integer> holeSize,
+      List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Doughnut {
+      Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
+      Objects.requireNonNull(holeSize, "holeSize must not be null");
       validateAngle(firstSliceAngle);
-      if (holeSize != null && (holeSize < 10 || holeSize > 90)) {
+      if (holeSize.isPresent() && (holeSize.orElseThrow() < 10 || holeSize.orElseThrow() > 90)) {
         throw new IllegalArgumentException("holeSize must be between 10 and 90");
       }
       series = copySeries(series);
@@ -195,12 +207,13 @@ public sealed interface ChartPlotInput
   record Line3D(
       boolean varyColors,
       ExcelChartGrouping grouping,
-      Integer gapDepth,
+      Optional<Integer> gapDepth,
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Line3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
       axes = copyAxes(axes, "axes");
       series = copySeries(series);
     }
@@ -209,16 +222,17 @@ public sealed interface ChartPlotInput
     public Line3D(
         boolean varyColors,
         ExcelChartGrouping grouping,
-        Integer gapDepth,
+        Optional<Integer> gapDepth,
         List<ChartSeriesInput> series) {
       this(varyColors, grouping, gapDepth, defaultCategoryAxes(), series);
     }
   }
 
   /** Pie chart plot. */
-  record Pie(boolean varyColors, Integer firstSliceAngle, List<ChartSeriesInput> series)
+  record Pie(boolean varyColors, Optional<Integer> firstSliceAngle, List<ChartSeriesInput> series)
       implements ChartPlotInput {
     public Pie {
+      Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
       validateAngle(firstSliceAngle);
       series = copySeries(series);
     }
@@ -361,8 +375,8 @@ public sealed interface ChartPlotInput
     return ChartInput.copyNonEmptyValues(axes, fieldName);
   }
 
-  private static void validateAngle(Integer angle) {
-    if (angle != null && (angle < 0 || angle > 360)) {
+  private static void validateAngle(Optional<Integer> angle) {
+    if (angle.isPresent() && (angle.orElseThrow() < 0 || angle.orElseThrow() > 360)) {
       throw new IllegalArgumentException("firstSliceAngle must be between 0 and 360");
     }
   }

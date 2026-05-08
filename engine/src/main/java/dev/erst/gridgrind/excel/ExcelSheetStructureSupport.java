@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -293,11 +294,11 @@ final class ExcelSheetStructureSupport {
         excelRange.lastColumn());
   }
 
-  static ExcelRange parseRangeOrNull(String range) {
+  static Optional<ExcelRange> parseOptionalRange(String range) {
     try {
-      return ExcelRange.parse(range);
+      return Optional.of(ExcelRange.parse(range));
     } catch (IllegalArgumentException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 

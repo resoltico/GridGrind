@@ -1,56 +1,77 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Immutable factual snapshot of one workbook package's OOXML encryption state. */
 public record ExcelOoxmlEncryptionSnapshot(
     boolean encrypted,
-    ExcelOoxmlEncryptionMode mode,
-    String cipherAlgorithm,
-    String hashAlgorithm,
-    String chainingMode,
-    Integer keyBits,
-    Integer blockSize,
-    Integer spinCount) {
+    Optional<ExcelOoxmlEncryptionMode> mode,
+    Optional<ExcelOoxmlCipherAlgorithm> cipherAlgorithm,
+    Optional<ExcelOoxmlHashAlgorithm> hashAlgorithm,
+    Optional<ExcelOoxmlChainingMode> chainingMode,
+    Optional<Integer> keyBits,
+    Optional<Integer> blockSize,
+    Optional<Integer> spinCount) {
   public ExcelOoxmlEncryptionSnapshot {
+    Objects.requireNonNull(mode, "mode must not be null");
+    Objects.requireNonNull(cipherAlgorithm, "cipherAlgorithm must not be null");
+    Objects.requireNonNull(hashAlgorithm, "hashAlgorithm must not be null");
+    Objects.requireNonNull(chainingMode, "chainingMode must not be null");
+    Objects.requireNonNull(keyBits, "keyBits must not be null");
+    Objects.requireNonNull(blockSize, "blockSize must not be null");
+    Objects.requireNonNull(spinCount, "spinCount must not be null");
     if (!encrypted) {
-      if (mode != null
-          || cipherAlgorithm != null
-          || hashAlgorithm != null
-          || chainingMode != null
-          || keyBits != null
-          || blockSize != null
-          || spinCount != null) {
+      if (mode.isPresent()
+          || cipherAlgorithm.isPresent()
+          || hashAlgorithm.isPresent()
+          || chainingMode.isPresent()
+          || keyBits.isPresent()
+          || blockSize.isPresent()
+          || spinCount.isPresent()) {
         throw new IllegalArgumentException(
             "Unencrypted package snapshots must not include encryption detail fields");
       }
     } else {
-      Objects.requireNonNull(mode, "mode must not be null when encrypted");
-      cipherAlgorithm = requireNonBlank(cipherAlgorithm, "cipherAlgorithm");
-      hashAlgorithm = requireNonBlank(hashAlgorithm, "hashAlgorithm");
-      chainingMode = requireNonBlank(chainingMode, "chainingMode");
-      if (keyBits == null || keyBits <= 0) {
+      if (mode.isEmpty()) {
+        throw new IllegalArgumentException("mode must not be absent when encrypted");
+      }
+      requirePresent(cipherAlgorithm, "cipherAlgorithm");
+      requirePresent(hashAlgorithm, "hashAlgorithm");
+      requirePresent(chainingMode, "chainingMode");
+      if (keyBits.isEmpty() || keyBits.orElseThrow() <= 0) {
         throw new IllegalArgumentException("keyBits must be positive when encrypted");
       }
-      if (blockSize == null || blockSize <= 0) {
+      if (blockSize.isEmpty() || blockSize.orElseThrow() <= 0) {
         throw new IllegalArgumentException("blockSize must be positive when encrypted");
       }
-      if (spinCount == null || spinCount < 0) {
+      if (spinCount.isEmpty() || spinCount.orElseThrow() < 0) {
         throw new IllegalArgumentException("spinCount must be zero or positive when encrypted");
       }
     }
   }
 
   static ExcelOoxmlEncryptionSnapshot none() {
-    return new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, null, null, null);
+    return new ExcelOoxmlEncryptionSnapshot(
+        false,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
+  private static <T> Optional<T> requirePresent(Optional<T> value, String fieldName) {
+    Optional<T> required = Objects.requireNonNull(value, fieldName + " must not be null");
+    if (required.isEmpty()) {
+      throw new IllegalArgumentException(fieldName + " must not be absent");
     }
-    return value;
+    return required;
   }
 }

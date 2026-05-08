@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,8 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   new ExcelDataValidationRule.CustomFormula("LEN(A2)>0"),
                   false,
                   false,
-                  null,
-                  null));
+                  Optional.empty(),
+                  Optional.empty()));
       setString(formulaSheet, "A2", "Ready");
 
       controller.insertRows(formulaSheet, 1, 1);
@@ -65,8 +66,8 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
                   false,
                   false,
-                  null,
-                  null));
+                  Optional.empty(),
+                  Optional.empty()));
 
       controller.insertColumns(formulaSheet, 0, 1);
 

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
@@ -10,10 +9,8 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Canonical subtype-id resolver for the public GridGrind wire contract.
@@ -89,13 +86,7 @@ public final class GridGrindProtocolTypeNames {
 
   /** Returns the annotation-owned subtype id map for one sealed wire family. */
   static Map<Class<?>, String> typeNamesByClass(Class<?> rootType) {
-    Objects.requireNonNull(rootType, "rootType must not be null");
-    JsonSubTypes jsonSubTypes = rootType.getAnnotation(JsonSubTypes.class);
-    if (jsonSubTypes == null) {
-      throw new IllegalArgumentException(rootType + " is missing @JsonSubTypes");
-    }
-    return Arrays.stream(jsonSubTypes.value())
-        .collect(Collectors.toUnmodifiableMap(JsonSubTypes.Type::value, JsonSubTypes.Type::name));
+    return ProtocolTypeMetadataSupport.typeIdsByClass(rootType);
   }
 
   private static String requiredTypeName(

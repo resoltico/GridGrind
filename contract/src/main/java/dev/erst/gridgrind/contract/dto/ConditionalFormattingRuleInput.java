@@ -1,12 +1,15 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing authored conditional-formatting rule families. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -37,10 +40,14 @@ public sealed interface ConditionalFormattingRuleInput
         ConditionalFormattingRuleInput.Top10Rule {
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
-  record FormulaRule(String formula, boolean stopIfTrue, DifferentialStyleInput style)
+  record FormulaRule(
+      String formula,
+      boolean stopIfTrue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public FormulaRule {
       Objects.requireNonNull(formula, "formula must not be null");
+      Objects.requireNonNull(style, "style must not be null");
       if (formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
@@ -51,16 +58,19 @@ public sealed interface ConditionalFormattingRuleInput
   record CellValueRule(
       ExcelComparisonOperator operator,
       String formula1,
-      String formula2,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula2,
       boolean stopIfTrue,
-      DifferentialStyleInput style)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public CellValueRule {
       Objects.requireNonNull(operator, "operator must not be null");
       Objects.requireNonNull(formula1, "formula1 must not be null");
+      Objects.requireNonNull(formula2, "formula2 must not be null");
+      Objects.requireNonNull(style, "style must not be null");
       if (formula1.isBlank()) {
         throw new IllegalArgumentException("formula1 must not be blank");
       }
+      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -131,9 +141,14 @@ public sealed interface ConditionalFormattingRuleInput
 
   /** Top-N or bottom-N conditional-format rule with a differential style. */
   record Top10Rule(
-      boolean stopIfTrue, int rank, boolean percent, boolean bottom, DifferentialStyleInput style)
+      boolean stopIfTrue,
+      int rank,
+      boolean percent,
+      boolean bottom,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialStyleInput> style)
       implements ConditionalFormattingRuleInput {
     public Top10Rule {
+      Objects.requireNonNull(style, "style must not be null");
       if (rank <= 0) {
         throw new IllegalArgumentException("rank must be greater than 0");
       }
@@ -158,5 +173,23 @@ public sealed interface ConditionalFormattingRuleInput
       Objects.requireNonNull(color, fieldName + " must not contain null values");
     }
     return List.copyOf(copy);
+  }
+
+  private static Optional<String> normalizeOptionalComparisonUpperBound(
+      ExcelComparisonOperator operator, Optional<String> formula2) {
+    if (operator == ExcelComparisonOperator.BETWEEN
+        || operator == ExcelComparisonOperator.NOT_BETWEEN) {
+      String upperBound = Objects.requireNonNullElse(formula2.orElse(null), "").trim();
+      if (upperBound.isBlank()) {
+        throw new IllegalArgumentException(
+            "formula2 must not be blank for " + operator.name().toLowerCase(Locale.ROOT));
+      }
+      return Optional.of(upperBound);
+    }
+    if (formula2.isPresent()) {
+      throw new IllegalArgumentException(
+          "formula2 must be omitted unless operator is BETWEEN or NOT_BETWEEN");
+    }
+    return Optional.empty();
   }
 }

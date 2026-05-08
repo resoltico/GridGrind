@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Immutable factual chart snapshot returned by workbook reads. */
 public record ExcelChartSnapshot(
@@ -88,25 +89,37 @@ public record ExcelChartSnapshot(
       Title title,
       DataSource categories,
       DataSource values,
-      Boolean smooth,
-      ExcelChartMarkerStyle markerStyle,
-      Short markerSize,
-      Long explosion) {
+      Optional<Boolean> smooth,
+      Optional<ExcelChartMarkerStyle> markerStyle,
+      Optional<Short> markerSize,
+      Optional<Long> explosion) {
     public Series {
       Objects.requireNonNull(title, "title must not be null");
       Objects.requireNonNull(categories, "categories must not be null");
       Objects.requireNonNull(values, "values must not be null");
-      if (markerSize != null && (markerSize < 2 || markerSize > 72)) {
+      Objects.requireNonNull(smooth, "smooth must not be null");
+      Objects.requireNonNull(markerStyle, "markerStyle must not be null");
+      Objects.requireNonNull(markerSize, "markerSize must not be null");
+      Objects.requireNonNull(explosion, "explosion must not be null");
+      if (markerSize.isPresent()
+          && (markerSize.orElseThrow() < 2 || markerSize.orElseThrow() > 72)) {
         throw new IllegalArgumentException("markerSize must be between 2 and 72");
       }
-      if (explosion != null && explosion < 0L) {
+      if (explosion.isPresent() && explosion.orElseThrow() < 0L) {
         throw new IllegalArgumentException("explosion must not be negative");
       }
     }
 
     /** Convenience overload for factual series that only need title, categories, and values. */
     public Series(Title title, DataSource categories, DataSource values) {
-      this(title, categories, values, null, null, null, null);
+      this(
+          title,
+          categories,
+          values,
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty());
     }
   }
 
@@ -126,11 +139,12 @@ public record ExcelChartSnapshot(
     }
 
     /** Formula-backed numeric source with cached points. */
-    record NumericReference(String formula, String formatCode, List<String> cachedValues)
+    record NumericReference(String formula, Optional<String> formatCode, List<String> cachedValues)
         implements DataSource {
       public NumericReference {
         formula = requireNonBlank(formula, "formula");
-        if (formatCode != null && formatCode.isBlank()) {
+        Objects.requireNonNull(formatCode, "formatCode must not be null");
+        if (formatCode.isPresent() && formatCode.orElseThrow().isBlank()) {
           throw new IllegalArgumentException("formatCode must not be blank");
         }
         cachedValues = copyValues(cachedValues, "cachedValues");
@@ -145,9 +159,10 @@ public record ExcelChartSnapshot(
     }
 
     /** Literal numeric source stored directly inside the chart part. */
-    record NumericLiteral(String formatCode, List<String> values) implements DataSource {
+    record NumericLiteral(Optional<String> formatCode, List<String> values) implements DataSource {
       public NumericLiteral {
-        if (formatCode != null && formatCode.isBlank()) {
+        Objects.requireNonNull(formatCode, "formatCode must not be null");
+        if (formatCode.isPresent() && formatCode.orElseThrow().isBlank()) {
           throw new IllegalArgumentException("formatCode must not be blank");
         }
         values = copyValues(values, "values");
@@ -185,12 +200,13 @@ public record ExcelChartSnapshot(
   public record Area3D(
       boolean varyColors,
       ExcelChartGrouping grouping,
-      Integer gapDepth,
+      Optional<Integer> gapDepth,
       List<Axis> axes,
       List<Series> series)
       implements Plot {
     public Area3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
       axes = copyNonEmptyValues(axes, "axes");
       series = copyNonEmptyValues(series, "series");
     }
@@ -200,14 +216,16 @@ public record ExcelChartSnapshot(
       boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
-      Integer gapWidth,
-      Integer overlap,
+      Optional<Integer> gapWidth,
+      Optional<Integer> overlap,
       List<Axis> axes,
       List<Series> series)
       implements Plot {
     public Bar {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapWidth, "gapWidth must not be null");
+      Objects.requireNonNull(overlap, "overlap must not be null");
       axes = copyNonEmptyValues(axes, "axes");
       series = copyNonEmptyValues(series, "series");
     }
@@ -217,24 +235,32 @@ public record ExcelChartSnapshot(
       boolean varyColors,
       ExcelChartBarDirection barDirection,
       ExcelChartBarGrouping grouping,
-      Integer gapDepth,
-      Integer gapWidth,
-      ExcelChartBarShape shape,
+      Optional<Integer> gapDepth,
+      Optional<Integer> gapWidth,
+      Optional<ExcelChartBarShape> shape,
       List<Axis> axes,
       List<Series> series)
       implements Plot {
     public Bar3D {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
+      Objects.requireNonNull(gapWidth, "gapWidth must not be null");
+      Objects.requireNonNull(shape, "shape must not be null");
       axes = copyNonEmptyValues(axes, "axes");
       series = copyNonEmptyValues(series, "series");
     }
   }
 
   public record Doughnut(
-      boolean varyColors, Integer firstSliceAngle, Integer holeSize, List<Series> series)
+      boolean varyColors,
+      Optional<Integer> firstSliceAngle,
+      Optional<Integer> holeSize,
+      List<Series> series)
       implements Plot {
     public Doughnut {
+      Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
+      Objects.requireNonNull(holeSize, "holeSize must not be null");
       series = copyNonEmptyValues(series, "series");
     }
   }
@@ -252,20 +278,22 @@ public record ExcelChartSnapshot(
   public record Line3D(
       boolean varyColors,
       ExcelChartGrouping grouping,
-      Integer gapDepth,
+      Optional<Integer> gapDepth,
       List<Axis> axes,
       List<Series> series)
       implements Plot {
     public Line3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
+      Objects.requireNonNull(gapDepth, "gapDepth must not be null");
       axes = copyNonEmptyValues(axes, "axes");
       series = copyNonEmptyValues(series, "series");
     }
   }
 
-  public record Pie(boolean varyColors, Integer firstSliceAngle, List<Series> series)
+  public record Pie(boolean varyColors, Optional<Integer> firstSliceAngle, List<Series> series)
       implements Plot {
     public Pie {
+      Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
       series = copyNonEmptyValues(series, "series");
     }
   }

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import org.jspecify.annotations.Nullable;
+
 /** Signals that formula evaluation required a user-defined function that was not registered. */
 public final class UnregisteredUserDefinedFunctionException extends java.util.NoSuchElementException
     implements FormulaException {
@@ -8,14 +10,14 @@ public final class UnregisteredUserDefinedFunctionException extends java.util.No
   private final String sheetName;
   private final String address;
   private final String formula;
-  private final String functionName;
+  private final @Nullable String functionName;
 
   /** Creates the exception for one missing user-defined function registration. */
   public UnregisteredUserDefinedFunctionException(
       String sheetName,
       String address,
       String formula,
-      String functionName,
+      @Nullable String functionName,
       String message,
       Throwable cause) {
     super(message, cause);
@@ -41,7 +43,7 @@ public final class UnregisteredUserDefinedFunctionException extends java.util.No
   }
 
   /** Returns the missing user-defined function name. */
-  public String functionName() {
+  public @Nullable String functionName() {
     return functionName;
   }
 }

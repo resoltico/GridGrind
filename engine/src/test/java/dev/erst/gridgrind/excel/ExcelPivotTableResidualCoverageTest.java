@@ -3,11 +3,13 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.AreaReference;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheRecords;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
@@ -61,8 +63,68 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
           invoke(controller, "requiredCacheDefinition", XSSFPivotCacheDefinition.class, pivot);
       assertSame(pivot.getPivotCacheDefinition(), cacheDefinition);
       XSSFPivotCacheRecords cacheRecords =
-          invoke(controller, "cacheRecords", XSSFPivotCacheRecords.class, cacheDefinition);
+          ((Optional<XSSFPivotCacheRecords>)
+                  invoke(controller, "cacheRecords", Optional.class, cacheDefinition))
+              .orElseThrow();
       assertNotNull(cacheRecords);
+    }
+  }
+
+  @Test
+  void createPivotTableRejectsMissingNamedRangeAndTablePayloads() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Report");
+      var sheet = workbook.xssfWorkbook().getSheet("Report");
+      var area = new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007);
+      CellReference anchor = new CellReference("D4");
+
+      IllegalArgumentException missingNamedRange =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.createPivotTable(
+                      workbook,
+                      definition(
+                          "NamedRange Pivot",
+                          "Report",
+                          new ExcelPivotTableDefinition.Source.NamedRange("BudgetRange"),
+                          "D4",
+                          List.of(),
+                          List.of("Region"),
+                          List.of()),
+                      new ResolvedAuthoringSource(
+                          ResolvedAuthoringSourceKind.NAMED_RANGE,
+                          sheet,
+                          area,
+                          "named range BudgetRange",
+                          Optional.empty(),
+                          Optional.empty()),
+                      anchor));
+      assertEquals("namedRange must not be absent", missingNamedRange.getMessage());
+
+      IllegalArgumentException missingTable =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.createPivotTable(
+                      workbook,
+                      definition(
+                          "Table Pivot",
+                          "Report",
+                          new ExcelPivotTableDefinition.Source.Table("BudgetTable"),
+                          "D4",
+                          List.of(),
+                          List.of("Region"),
+                          List.of()),
+                      new ResolvedAuthoringSource(
+                          ResolvedAuthoringSourceKind.TABLE,
+                          sheet,
+                          area,
+                          "table BudgetTable",
+                          Optional.empty(),
+                          Optional.empty()),
+                      anchor));
+      assertEquals("table must not be absent", missingTable.getMessage());
     }
   }
 
@@ -223,7 +285,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
           new ExcelNamedRangeDefinition(
               "SalesTableA",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Data", "A1:D5")));
+              ExcelNamedRangeTarget.range("Data", "A1:D5")));
       worksheetSource.setRef(" ");
       worksheetSource.setName("SalesTableA");
       assertDoesNotThrow(
@@ -330,17 +392,18 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
           () -> invoke(controller, "sourceColumnName", String.class, List.of("Only"), -1));
 
       short blankFormatId = workbook.xssfWorkbook().createDataFormat().getFormat(" ");
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           invoke(
               controller,
               "numberFormat",
-              String.class,
+              Optional.class,
               workbook.xssfWorkbook(),
               (long) blankFormatId));
 
       Object handle = allPivotHandles(workbook).getFirst();
       workbook.xssfWorkbook().getPivotTables().getFirst().getCTPivotTableDefinition().setName(" ");
-      assertNull(invoke(controller, "actualName", String.class, handle));
+      assertEquals(Optional.empty(), invoke(controller, "actualName", Object.class, handle));
 
       assertEquals("Pivot_1", invoke(controller, "sanitize", String.class, "Pivot_1"));
       assertEquals(

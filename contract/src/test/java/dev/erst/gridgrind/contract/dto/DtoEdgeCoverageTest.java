@@ -10,7 +10,10 @@ import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
@@ -412,12 +415,13 @@ class DtoEdgeCoverageTest {
                 () ->
                     new ChartReport.Pie(
                         false,
-                        -1,
+                        Optional.of(-1),
                         List.of(
                             chartSeries(
                                 new ChartReport.Title.Text("S1"),
                                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
-                                new ChartReport.DataSource.NumericLiteral(null, List.of("1"))))))
+                                new ChartReport.DataSource.NumericLiteral(
+                                    Optional.empty(), List.of("1"))))))
             .getMessage());
     assertEquals(
         "detail must not be blank",
@@ -433,13 +437,15 @@ class DtoEdgeCoverageTest {
         "formatCode must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ChartReport.DataSource.NumericReference("A1:A2", " ", List.of("1")))
+                () ->
+                    new ChartReport.DataSource.NumericReference(
+                        "A1:A2", Optional.of(" "), List.of("1")))
             .getMessage());
     assertEquals(
         "formatCode must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ChartReport.DataSource.NumericLiteral(" ", List.of("1")))
+                () -> new ChartReport.DataSource.NumericLiteral(Optional.of(" "), List.of("1")))
             .getMessage());
 
     assertEquals(
@@ -500,7 +506,14 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, "AES", "SHA-512", "CBC", 0, 16, 100))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(0),
+                        Optional.of(16),
+                        Optional.of(100)))
             .getMessage());
     assertEquals(
         "blockSize must be positive when encrypted",
@@ -508,7 +521,14 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, "AES", "SHA-512", "CBC", 128, 0, 100))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(0),
+                        Optional.of(100)))
             .getMessage());
     assertEquals(
         "spinCount must be zero or positive when encrypted",
@@ -516,7 +536,14 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new OoxmlEncryptionReport(
-                        true, ExcelOoxmlEncryptionMode.AGILE, "AES", "SHA-512", "CBC", 128, 16, -1))
+                        true,
+                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
+                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
+                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
+                        Optional.of(ExcelOoxmlChainingMode.CBC),
+                        Optional.of(128),
+                        Optional.of(16),
+                        Optional.of(-1)))
             .getMessage());
     assertEquals(
         "theme must not be negative",
@@ -555,7 +582,11 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new PivotTableReport.DataField(
-                        -1, "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))
+                        -1,
+                        "Amount",
+                        ExcelPivotDataConsolidateFunction.SUM,
+                        "Total",
+                        Optional.empty()))
             .getMessage());
     assertEquals(
         "detail must not be blank",
@@ -785,7 +816,12 @@ class DtoEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlSignatureReport(" ", null, null, null, ExcelOoxmlSignatureState.VALID))
+                    new OoxmlSignatureReport(
+                        " ",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        ExcelOoxmlSignatureState.VALID))
             .getMessage());
     assertEquals(
         "text must not be empty",
@@ -805,9 +841,7 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new DataValidationHealthReport(
-                        -1,
-                        new GridGrindAnalysisReports.AnalysisSummaryReport(0, 0, 0, 0),
-                        List.of()))
+                        -1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))
             .getMessage());
     assertEquals(
         "checkedPivotTableCount must not be negative",
@@ -815,14 +849,11 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new PivotTableHealthReport(
-                        -1,
-                        new GridGrindAnalysisReports.AnalysisSummaryReport(0, 0, 0, 0),
-                        List.of()))
+                        -1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))
             .getMessage());
     assertInstanceOf(
-        GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport.class,
-        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
-            "Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+        NamedRangeReport.FormulaReport.class,
+        new NamedRangeReport.FormulaReport("Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
     assertEquals(
         "color must not be null",
         assertThrows(NullPointerException.class, () -> new CellGradientStopReport(0.0d, null))
@@ -844,7 +875,8 @@ class DtoEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ConditionalFormattingRuleReport.Top10Rule(1, false, -1, false, false, null))
+                    new ConditionalFormattingRuleReport.Top10Rule(
+                        1, false, -1, false, false, Optional.empty()))
             .getMessage());
   }
 
@@ -861,6 +893,13 @@ class DtoEdgeCoverageTest {
 
   private static ChartReport.Series chartSeries(
       ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
-    return new ChartReport.Series(title, categories, values, null, null, null, null);
+    return new ChartReport.Series(
+        title,
+        categories,
+        values,
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
   }
 }

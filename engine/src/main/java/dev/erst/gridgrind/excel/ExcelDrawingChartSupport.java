@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.excel;
 
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /** Facade over the split chart source, snapshot, and mutation support helpers. */
 final class ExcelDrawingChartSupport {
@@ -18,7 +20,7 @@ final class ExcelDrawingChartSupport {
   static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartSnapshotSupport.snapshotChartDrawingObject(
         chart, graphicFrame, formulaRuntime);
   }
@@ -31,7 +33,7 @@ final class ExcelDrawingChartSupport {
   static ExcelChartSnapshot snapshotChart(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame, formulaRuntime);
   }
 
@@ -40,7 +42,9 @@ final class ExcelDrawingChartSupport {
   }
 
   static void createChart(
-      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition definition,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartMutationSupport.createChart(sheet, definition, formulaRuntime);
   }
 
@@ -49,11 +53,13 @@ final class ExcelDrawingChartSupport {
   }
 
   static void validateChart(
-      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition definition,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartMutationSupport.validateChart(sheet, definition, formulaRuntime);
   }
 
-  static Name resolveDefinedNameReference(XSSFSheet contextSheet, String formula) {
+  static Optional<Name> resolveDefinedNameReference(XSSFSheet contextSheet, String formula) {
     return ExcelChartSourceSupport.resolveDefinedNameReference(contextSheet, formula);
   }
 
@@ -69,7 +75,7 @@ final class ExcelDrawingChartSupport {
     return ExcelChartSourceSupport.requiredDefinedNameFormula(definedName);
   }
 
-  static XSSFChart chartForGraphicFrame(
+  static @Nullable XSSFChart chartForGraphicFrame(
       XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return ExcelChartSnapshotSupport.chartForGraphicFrame(drawing, graphicFrame);
   }
@@ -103,7 +109,9 @@ final class ExcelDrawingChartSupport {
   }
 
   static PreparedSeriesTitle prepareSeriesTitle(
-      XSSFSheet sheet, ExcelChartDefinition.Title title, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition.Title title,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartMutationSupport.prepareSeriesTitle(sheet, title, formulaRuntime);
   }
 
@@ -133,7 +141,7 @@ final class ExcelDrawingChartSupport {
   static ExcelChartSnapshot.Title snapshotSeriesTitle(
       XSSFSheet contextSheet,
       org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx title,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return ExcelChartSnapshotSupport.snapshotSeriesTitle(contextSheet, title, formulaRuntime);
   }
 

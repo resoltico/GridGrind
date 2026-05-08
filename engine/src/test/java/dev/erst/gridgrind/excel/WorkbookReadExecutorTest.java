@@ -18,7 +18,7 @@ class WorkbookReadExecutorTest {
           new ExcelNamedRangeDefinition(
               "BudgetTotal",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "B2")));
+              ExcelNamedRangeTarget.range("Budget", "B2")));
 
       WorkbookReadExecutor executor = new WorkbookReadExecutor();
 

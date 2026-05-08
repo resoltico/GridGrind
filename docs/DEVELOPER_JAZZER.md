@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-05-01"
 route:
@@ -281,8 +281,9 @@ Tree rules:
 - `jazzer/src/test/java` contains deterministic tests for the Jazzer support and reporting layer.
 - `protocol-request` and `protocol-workflow` remain harness names for the canonical JSON request
   surface; they are not references to a live top-level `protocol` Gradle module. The product
-  module split is `contract` plus `executor`, while the Jazzer harness names intentionally stay
-  stable so historical findings, corpora, and promoted metadata paths remain coherent.
+  runtime split is `contract` plus `engine`, while the `executor` project now exists only for
+  parity verification. The Jazzer harness names intentionally stay stable so historical findings,
+  corpora, and promoted metadata paths remain coherent.
 - `jazzer/src/fuzz/java` contains only fuzz harness classes.
 - `jazzer/src/fuzz/resources` contains only committed regression inputs and promotion metadata.
 - `jazzer/.local/` is the only approved location for generated local fuzz state.
@@ -292,7 +293,8 @@ Tree rules:
 ## Build Model
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")`, so the nested build consumes the live
-local `engine`, `contract`, and `executor` modules without publishing snapshots. It also imports
+local `engine` and `contract` modules, plus the verification-only `executor` project, without
+publishing snapshots. It also imports
 the shared root version catalog from `../gradle/libs.versions.toml` and resolves `gridgrind.*`
 plugins from the shared included build logic under `../gradle/build-logic`.
 

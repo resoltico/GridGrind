@@ -22,22 +22,24 @@ final class OperationSequenceRuleValues {
         data.consumeBoolean()
             ? new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done"))
             : new DataValidationRuleInput.WholeNumber(
-                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()
-            ? new DataValidationPromptInput(
-                TextSourceInput.inline("Status"),
-                TextSourceInput.inline("Use an allowed value."),
-                data.consumeBoolean())
-            : null,
+            ? Optional.of(
+                new DataValidationPromptInput(
+                    TextSourceInput.inline("Status"),
+                    TextSourceInput.inline("Use an allowed value."),
+                    data.consumeBoolean()))
+            : Optional.empty(),
         data.consumeBoolean()
-            ? new DataValidationErrorAlertInput(
-                ExcelDataValidationErrorStyle.STOP,
-                TextSourceInput.inline("Invalid"),
-                TextSourceInput.inline("Use an allowed value."),
-                data.consumeBoolean())
-            : null);
+            ? Optional.of(
+                new DataValidationErrorAlertInput(
+                    ExcelDataValidationErrorStyle.STOP,
+                    TextSourceInput.inline("Invalid"),
+                    TextSourceInput.inline("Use an allowed value."),
+                    data.consumeBoolean()))
+            : Optional.empty());
   }
 
   static ExcelDataValidationDefinition nextExcelDataValidationDefinition(GridGrindFuzzData data) {
@@ -45,20 +47,22 @@ final class OperationSequenceRuleValues {
         data.consumeBoolean()
             ? new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done"))
             : new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", Optional.empty()),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()
-            ? new ExcelDataValidationPrompt(
-                "Status", "Use an allowed value.", data.consumeBoolean())
-            : null,
+            ? Optional.of(
+                new ExcelDataValidationPrompt(
+                    "Status", "Use an allowed value.", data.consumeBoolean()))
+            : Optional.empty(),
         data.consumeBoolean()
-            ? new ExcelDataValidationErrorAlert(
-                ExcelDataValidationErrorStyle.STOP,
-                "Invalid",
-                "Use an allowed value.",
-                data.consumeBoolean())
-            : null);
+            ? Optional.of(
+                new ExcelDataValidationErrorAlert(
+                    ExcelDataValidationErrorStyle.STOP,
+                    "Invalid",
+                    "Use an allowed value.",
+                    data.consumeBoolean()))
+            : Optional.empty());
   }
 
   static ConditionalFormattingBlockInput nextConditionalFormattingInput(
@@ -68,13 +72,13 @@ final class OperationSequenceRuleValues {
         List.of(
             data.consumeBoolean()
                 ? new ConditionalFormattingRuleInput.FormulaRule(
-                    "A1>0", data.consumeBoolean(), nextDifferentialStyleInput(data))
+                    "A1>0", data.consumeBoolean(), Optional.of(nextDifferentialStyleInput(data)))
                 : new ConditionalFormattingRuleInput.CellValueRule(
                     ExcelComparisonOperator.GREATER_THAN,
                     "1",
-                    null,
+                    Optional.empty(),
                     data.consumeBoolean(),
-                    nextDifferentialStyleInput(data))));
+                    Optional.of(nextDifferentialStyleInput(data)))));
   }
 
   static ExcelConditionalFormattingBlockDefinition nextExcelConditionalFormattingBlockDefinition(
@@ -84,13 +88,13 @@ final class OperationSequenceRuleValues {
         List.of(
             data.consumeBoolean()
                 ? new ExcelConditionalFormattingRule.FormulaRule(
-                    "A1>0", data.consumeBoolean(), nextExcelDifferentialStyle(data))
+                    "A1>0", data.consumeBoolean(), Optional.of(nextExcelDifferentialStyle(data)))
                 : new ExcelConditionalFormattingRule.CellValueRule(
                     ExcelComparisonOperator.GREATER_THAN,
                     "1",
-                    null,
+                    Optional.empty(),
                     data.consumeBoolean(),
-                    nextExcelDifferentialStyle(data))));
+                    Optional.of(nextExcelDifferentialStyle(data)))));
   }
 
   static DifferentialStyleInput nextDifferentialStyleInput(GridGrindFuzzData data) {
@@ -108,13 +112,13 @@ final class OperationSequenceRuleValues {
             ? "0.00"
             : null;
     return new DifferentialStyleInput(
-        numberFormat,
-        bold,
-        italic,
-        null,
+        Optional.ofNullable(numberFormat),
+        Optional.ofNullable(bold),
+        Optional.ofNullable(italic),
+        Optional.empty(),
         java.util.Optional.ofNullable(fontColor),
-        underline,
-        strikeout,
+        Optional.ofNullable(underline),
+        Optional.ofNullable(strikeout),
         java.util.Optional.ofNullable(fillColor),
         java.util.Optional.empty());
   }
@@ -134,7 +138,15 @@ final class OperationSequenceRuleValues {
             ? "0.00"
             : null;
     return new ExcelDifferentialStyle(
-        numberFormat, bold, italic, null, fontColor, underline, strikeout, fillColor, null);
+        Optional.ofNullable(numberFormat),
+        Optional.ofNullable(bold),
+        Optional.ofNullable(italic),
+        Optional.empty(),
+        Optional.ofNullable(fontColor),
+        Optional.ofNullable(underline),
+        Optional.ofNullable(strikeout),
+        Optional.ofNullable(fillColor),
+        Optional.empty());
   }
 
   static RangeSelector nextRangeSelector(

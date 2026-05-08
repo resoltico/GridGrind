@@ -16,11 +16,11 @@ final class WorkbookInvariantWorkbookChecks {
 
   static void requireWorkbookShape(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var workbookSummary =
         ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
                 readExecutor
-                    .apply(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape"))
+                    .read(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape"))
                     .getFirst())
             .workbook();
 
@@ -32,7 +32,7 @@ final class WorkbookInvariantWorkbookChecks {
               requireEngineSheetSummaryShape(
                   ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
                           readExecutor
-                              .apply(
+                              .read(
                                   workbook,
                                   new WorkbookReadCommand.GetSheetSummary(
                                       "sheet-shape-" + sheetName, sheetName))
@@ -40,7 +40,7 @@ final class WorkbookInvariantWorkbookChecks {
                       .sheet());
               ((dev.erst.gridgrind.excel.WorkbookDrawingResult.DrawingObjectsResult)
                       readExecutor
-                          .apply(
+                          .read(
                               workbook,
                               new WorkbookReadCommand.GetDrawingObjects(
                                   "drawing-shape-" + sheetName, sheetName))
@@ -49,17 +49,19 @@ final class WorkbookInvariantWorkbookChecks {
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineDrawingObjectShape);
               ((dev.erst.gridgrind.excel.WorkbookDrawingResult.ChartsResult)
                       readExecutor
-                          .apply(
+                          .read(
                               workbook,
                               new WorkbookReadCommand.GetCharts(
-                                  "chart-shape-" + sheetName, sheetName))
+                                  "chart-shape-" + sheetName,
+                                  new dev.erst.gridgrind.excel.ExcelChartSelection.AllOnSheet(
+                                      sheetName)))
                           .getFirst())
                   .charts()
                   .forEach(WorkbookInvariantWorkbookChecks::requireEngineChartShape);
             });
     ((dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
             readExecutor
-                .apply(
+                .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
                         "pivot-shape", new dev.erst.gridgrind.excel.ExcelPivotTableSelection.All()))

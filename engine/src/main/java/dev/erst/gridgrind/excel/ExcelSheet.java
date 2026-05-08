@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -199,7 +200,7 @@ public final class ExcelSheet {
   public ExcelSheet setAutofilter(
       String range,
       List<ExcelAutofilterFilterColumn> criteria,
-      ExcelAutofilterSortState sortState) {
+      Optional<ExcelAutofilterSortState> sortState) {
     return metadataSupport.setAutofilter(range, criteria, sortState, this);
   }
 
@@ -514,14 +515,14 @@ public final class ExcelSheet {
    * Returns the normalized workbook-core hyperlink for the cell, or null when no usable hyperlink
    * exists.
    */
-  static ExcelHyperlink hyperlink(Cell cell) {
+  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
     return ExcelSheetAnnotationSupport.hyperlink(cell);
   }
 
   /**
    * Returns the normalized workbook-core hyperlink for the POI hyperlink, or null when unusable.
    */
-  static ExcelHyperlink hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+  static Optional<ExcelHyperlink> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
     return ExcelSheetAnnotationSupport.hyperlink(hyperlink);
   }
 
@@ -529,7 +530,7 @@ public final class ExcelSheet {
    * Returns the normalized workbook-core hyperlink for the supplied type and target, or null when
    * unusable.
    */
-  static ExcelHyperlink hyperlink(HyperlinkType hyperlinkType, String target) {
+  static Optional<ExcelHyperlink> hyperlink(HyperlinkType hyperlinkType, String target) {
     return ExcelSheetAnnotationSupport.hyperlink(hyperlinkType, target);
   }
 
@@ -537,24 +538,24 @@ public final class ExcelSheet {
    * Returns the normalized workbook-core comment for the cell, or null when the POI comment is
    * incomplete.
    */
-  static ExcelComment comment(Cell cell) {
+  static Optional<ExcelComment> comment(Cell cell) {
     return ExcelSheetAnnotationSupport.comment(cell);
   }
 
   /** Returns the normalized workbook-core comment for the POI comment, or null when incomplete. */
-  static ExcelComment comment(Comment comment) {
+  static Optional<ExcelComment> comment(Comment comment) {
     return ExcelSheetAnnotationSupport.comment(comment);
   }
 
   /** Returns the normalized workbook-core comment for the supplied fields, or null when invalid. */
-  static ExcelComment comment(String text, String author, boolean visible) {
+  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
     return ExcelSheetAnnotationSupport.comment(text, author, visible);
   }
 
   /**
    * Returns the full factual workbook-core comment snapshot for the cell, or null when incomplete.
    */
-  static ExcelCommentSnapshot commentSnapshot(Cell cell) {
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
     return ExcelSheetAnnotationSupport.commentSnapshot(cell);
   }
 
@@ -562,7 +563,7 @@ public final class ExcelSheet {
    * Returns the full factual workbook-core comment snapshot for the POI comment, or null when
    * incomplete.
    */
-  static ExcelCommentSnapshot commentSnapshot(Comment comment) {
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
     return ExcelSheetAnnotationSupport.commentSnapshot(comment);
   }
 

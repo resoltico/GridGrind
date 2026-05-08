@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.BiPredicate;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -40,8 +41,9 @@ final class ExcelPivotTableController {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    PivotHandle existing = pivotByName(workbook, definition.name());
-    if (existing != null && !existing.sheetName().equals(definition.sheetName())) {
+    Optional<PivotHandle> existing = pivotByName(workbook, definition.name());
+    if (existing.isPresent()
+        && !existing.orElseThrow().sheetName().equals(definition.sheetName())) {
       throw new IllegalArgumentException(
           "pivot table name already exists on a different sheet: " + definition.name());
     }
@@ -54,11 +56,11 @@ final class ExcelPivotTableController {
     CellReference anchor = new CellReference(definition.anchor().topLeftAddress());
     requireSupportedReportFilterAnchor(definition, anchor);
 
-    if (existing != null) {
-      deletePivotHandle(workbook, existing);
+    if (existing.isPresent()) {
+      deletePivotHandle(workbook, existing.orElseThrow());
     }
 
-    primePivotTableAllocator(workbook.xssfWorkbook(), existing == null ? null : existing.table());
+    primePivotTableAllocator(workbook.xssfWorkbook(), existing.map(PivotHandle::table));
     try {
       XSSFPivotTable pivotTable = createPivotTable(workbook, definition, source, anchor);
       normalizeCacheId(workbook.xssfWorkbook(), pivotTable);
@@ -93,7 +95,7 @@ final class ExcelPivotTableController {
           ExcelPivotDataPoiBridge.toPoi(dataField.function()),
           columns.relativeIndex(dataField.sourceColumnName()),
           dataField.displayName(),
-          dataField.valueFormat());
+          dataField.valueFormat().orElse(null));
     }
   }
 
@@ -103,12 +105,12 @@ final class ExcelPivotTableController {
     String validatedName = ExcelPivotTableNaming.validateName(name);
     dev.erst.gridgrind.excel.foundation.ExcelSheetNames.requireValid(sheetName, "sheetName");
 
-    PivotHandle handle = pivotByName(workbook, validatedName);
-    if (handle == null || !handle.sheetName().equals(sheetName)) {
+    Optional<PivotHandle> handle = pivotByName(workbook, validatedName);
+    if (handle.isEmpty() || !handle.orElseThrow().sheetName().equals(sheetName)) {
       throw new IllegalArgumentException(
           "pivot table not found on expected sheet: " + validatedName + "@" + sheetName);
     }
-    deletePivotHandle(workbook, handle);
+    deletePivotHandle(workbook, handle.orElseThrow());
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global name or all pivots. */
@@ -150,12 +152,17 @@ final class ExcelPivotTableController {
       case RANGE -> sheet.createPivotTable(source.area(), anchor, source.sheet());
       case NAMED_RANGE ->
           sheet.createPivotTable(
-              Objects.requireNonNull(source.namedRange(), "namedRange must not be null"),
+              source
+                  .namedRange()
+                  .orElseThrow(() -> new IllegalArgumentException("namedRange must not be absent")),
               anchor,
               source.sheet());
       case TABLE ->
           sheet.createPivotTable(
-              Objects.requireNonNull(source.table(), "table must not be null"), anchor);
+              source
+                  .table()
+                  .orElseThrow(() -> new IllegalArgumentException("table must not be absent")),
+              anchor);
     };
   }
 
@@ -164,9 +171,8 @@ final class ExcelPivotTableController {
     if (pivotCache == null) {
       return;
     }
-    XSSFPivotCacheDefinition cacheDefinition = cacheDefinition(pivotTable);
-    String currentRelationId =
-        cacheDefinition == null ? null : workbook.getRelationId(cacheDefinition);
+    Optional<XSSFPivotCacheDefinition> cacheDefinition = cacheDefinition(pivotTable);
+    String currentRelationId = cacheDefinition.map(workbook::getRelationId).orElse(null);
     long currentId = pivotCache.getCTPivotCache().getCacheId();
     long maxOtherId = 0L;
     boolean duplicate = false;
@@ -199,28 +205,25 @@ final class ExcelPivotTableController {
   List<PivotHandle> selectHandlesByName(List<PivotHandle> handles, List<String> names) {
     List<PivotHandle> selected = new ArrayList<>();
     for (String name : names) {
-      PivotHandle handle = findPivotHandleByName(handles, name);
-      if (handle != null) {
-        selected.add(handle);
-      }
+      findPivotHandleByName(handles, name).ifPresent(selected::add);
     }
     return List.copyOf(selected);
   }
 
-  PivotHandle pivotByName(ExcelWorkbook workbook, String name) {
+  Optional<PivotHandle> pivotByName(ExcelWorkbook workbook, String name) {
     return findPivotHandleByName(allPivotTables(workbook), name);
   }
 
-  PivotHandle findPivotHandleByName(List<PivotHandle> handles, String name) {
+  Optional<PivotHandle> findPivotHandleByName(List<PivotHandle> handles, String name) {
     String expected = ExcelPivotTableNaming.validateName(name).toUpperCase(Locale.ROOT);
     for (PivotHandle handle : handles) {
       if (ExcelPivotTableIdentitySupport.resolvedName(handle)
           .toUpperCase(Locale.ROOT)
           .equals(expected)) {
-        return handle;
+        return Optional.of(handle);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   List<PivotHandle> allPivotTables(ExcelWorkbook workbook) {
@@ -288,7 +291,8 @@ final class ExcelPivotTableController {
     ExcelPivotTableLifecycleSupport.cleanupPackagePartIfUnused(pkg, partName);
   }
 
-  void primePivotTableAllocator(XSSFWorkbook workbook, XSSFPivotTable allocationSentinel) {
+  void primePivotTableAllocator(
+      XSSFWorkbook workbook, Optional<XSSFPivotTable> allocationSentinel) {
     ExcelPivotTableLifecycleSupport.primePivotTableAllocator(workbook, allocationSentinel);
   }
 
@@ -354,7 +358,7 @@ final class ExcelPivotTableController {
     return ExcelPivotTableSnapshotSupport.fromSubtotal(subtotalValue);
   }
 
-  String numberFormat(XSSFWorkbook workbook, Long numFmtId) {
+  Optional<String> numberFormat(XSSFWorkbook workbook, Long numFmtId) {
     return ExcelPivotTableSnapshotSupport.numberFormat(workbook, numFmtId);
   }
 
@@ -362,19 +366,20 @@ final class ExcelPivotTableController {
     return ExcelPivotTableSnapshotSupport.requiredCacheDefinition(pivotTable);
   }
 
-  XSSFPivotCacheDefinition cacheDefinition(XSSFPivotTable pivotTable) {
+  Optional<XSSFPivotCacheDefinition> cacheDefinition(XSSFPivotTable pivotTable) {
     return ExcelPivotTableSnapshotSupport.cacheDefinition(pivotTable);
   }
 
-  XSSFPivotCacheRecords cacheRecords(XSSFPivotCacheDefinition cacheDefinition) {
+  Optional<XSSFPivotCacheRecords> cacheRecords(XSSFPivotCacheDefinition cacheDefinition) {
     return ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition);
   }
 
-  <T extends POIXMLDocumentPart> T firstRelation(POIXMLDocumentPart parent, Class<T> relationType) {
+  <T extends POIXMLDocumentPart> Optional<T> firstRelation(
+      POIXMLDocumentPart parent, Class<T> relationType) {
     return ExcelPivotTableSnapshotSupport.firstRelation(parent, relationType);
   }
 
-  CTPivotCache workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
+  Optional<CTPivotCache> workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
     return ExcelPivotTableSnapshotSupport.workbookPivotCache(workbook, cacheId);
   }
 

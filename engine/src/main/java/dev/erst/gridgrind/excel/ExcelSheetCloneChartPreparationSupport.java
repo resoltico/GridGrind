@@ -60,7 +60,7 @@ final class ExcelSheetCloneChartPreparationSupport {
     String normalizedFormula =
         ExcelChartSourceSupport.normalizeFormula(originalFormula.orElseThrow());
     if (ExcelChartSourceSupport.resolveDefinedNameReference(contextSheet, normalizedFormula)
-        == null) {
+        .isEmpty()) {
       return;
     }
 

@@ -6,8 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
 
@@ -208,17 +210,19 @@ final class ExcelColumnDefinitionSupport {
     }
     Map<Integer, CTCol> effectiveColumns = new LinkedHashMap<>();
     for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
-      CTCol effectiveDefinition =
-          effectiveColumnDefinition(sheet, columnIndex, explicitColumns.get(columnIndex));
-      if (effectiveDefinition != null) {
-        effectiveColumns.put(columnIndex, effectiveDefinition);
-      }
+      int targetColumnIndex = columnIndex;
+      effectiveColumnDefinition(sheet, columnIndex, explicitColumns.get(columnIndex))
+          .ifPresent(
+              effectiveDefinition -> effectiveColumns.put(targetColumnIndex, effectiveDefinition));
     }
     return Map.copyOf(effectiveColumns);
   }
 
-  private static CTCol effectiveColumnDefinition(
-      XSSFSheet sheet, int columnIndex, CTCol baseDefinition) {
+  private static Optional<CTCol> effectiveColumnDefinition(
+      XSSFSheet sheet, int columnIndex, @Nullable CTCol baseDefinition) {
+    if (baseDefinition == null) {
+      return Optional.empty();
+    }
     boolean hidden = false;
     long outlineLevel = 0L;
     boolean collapsed = false;
@@ -233,7 +237,7 @@ final class ExcelColumnDefinitionSupport {
       }
     }
     if (!hasMeaningfulColumnDefinition(baseDefinition, hidden, outlineLevel, collapsed)) {
-      return null;
+      return Optional.empty();
     }
     CTCol effectiveDefinition = copyOf(baseDefinition);
     effectiveDefinition.setMin(columnIndex + 1L);
@@ -241,7 +245,7 @@ final class ExcelColumnDefinitionSupport {
     effectiveDefinition.setHidden(hidden);
     effectiveDefinition.setOutlineLevel((short) outlineLevel);
     effectiveDefinition.setCollapsed(collapsed);
-    return effectiveDefinition;
+    return Optional.of(effectiveDefinition);
   }
 
   private static boolean hasMeaningfulColumnDefinition(
@@ -249,7 +253,7 @@ final class ExcelColumnDefinitionSupport {
     return hidden
         || outlineLevel > 0L
         || collapsed
-        || (baseDefinition != null && !isSemanticallyEmptyColumnDefinition(baseDefinition));
+        || !isSemanticallyEmptyColumnDefinition(baseDefinition);
   }
 
   private static boolean isSemanticallyEmptyColumnDefinition(CTCol definition) {
@@ -263,6 +267,7 @@ final class ExcelColumnDefinitionSupport {
   }
 
   private static CTCol copyOf(CTCol original) {
+    Objects.requireNonNull(original, "original must not be null");
     CTCol copy = CTCol.Factory.newInstance();
     copy.set(original);
     return copy;

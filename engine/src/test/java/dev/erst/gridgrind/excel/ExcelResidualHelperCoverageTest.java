@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -17,6 +16,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
@@ -221,9 +221,9 @@ class ExcelResidualHelperCoverageTest {
                       false,
                       ExcelChartBarDirection.COLUMN,
                       ExcelChartBarGrouping.CLUSTERED,
-                      100,
-                      50,
-                      null,
+                      Optional.of(100),
+                      Optional.of(50),
+                      Optional.empty(),
                       List.of(axis(ExcelChartAxisKind.CATEGORY), axis(ExcelChartAxisKind.VALUE)),
                       List.of(
                           new ExcelChartDefinition.Series(
@@ -263,8 +263,9 @@ class ExcelResidualHelperCoverageTest {
 
       org.apache.poi.openxml4j.opc.PackagePart previewPart =
           ExcelDrawingBinarySupport.relatedInternalPart(
-              sheet.getVMLDrawing(false).getPackagePart(),
-              signatureShape.getImagedataArray(0).getRelid());
+                  sheet.getVMLDrawing(false).getPackagePart(),
+                  signatureShape.getImagedataArray(0).getRelid())
+              .orElseThrow();
       assertTrue(ExcelDrawingBinarySupport.imagePartUsed(workbook, previewPart.getPartName()));
       sheet.createDrawingPatriarch();
       assertTrue(ExcelDrawingBinarySupport.imagePartUsed(workbook, previewPart.getPartName()));
@@ -315,7 +316,8 @@ class ExcelResidualHelperCoverageTest {
               graphicFrame,
               ExcelDrawingAnchorSupport.shapeXml(graphicFrame),
               ExcelDrawingAnchorSupport.parentAnchor(
-                  ExcelDrawingAnchorSupport.shapeXml(graphicFrame)));
+                      ExcelDrawingAnchorSupport.shapeXml(graphicFrame))
+                  .orElse(null));
       IllegalStateException chartRemovalFailure =
           assertThrows(
               IllegalStateException.class,
@@ -460,42 +462,41 @@ class ExcelResidualHelperCoverageTest {
                   "A1048577",
                   new CellReference(SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1, 0)));
 
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+      WorkbookCommandExecutor.applyDrawingCommand(
           workbook,
           new WorkbookDrawingCommand.SetSignatureLine(
               "Ops",
               signatureDefinition("OpsSignature", ExcelChartTestSupport.anchor(1, 8, 4, 12))));
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+      WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.SetNamedRange(
               new ExcelNamedRangeDefinition(
                   "BudgetTotal",
                   new ExcelNamedRangeScope.WorkbookScope(),
-                  new ExcelNamedRangeTarget("Ops", "B2"))));
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+                  ExcelNamedRangeTarget.range("Ops", "B2"))));
+      WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.DeleteNamedRange(
               "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+      WorkbookCommandExecutor.applyDrawingCommand(
           workbook,
           new WorkbookDrawingCommand.SetShape(
               "Ops",
-              new ExcelShapeDefinition(
+              new ExcelShapeDefinition.SimpleShape(
                   "Mover",
-                  ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
                   ExcelChartTestSupport.anchor(5, 8, 8, 12),
                   "rect",
-                  "text")));
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+                  Optional.of("text"))));
+      WorkbookCommandExecutor.applyDrawingCommand(
           workbook,
           new WorkbookDrawingCommand.SetDrawingObjectAnchor(
               "Ops", "Mover", ExcelChartTestSupport.anchor(9, 8, 12, 12)));
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+      WorkbookCommandExecutor.applyDrawingCommand(
           workbook, new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "Mover"));
     }
 
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
-      WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+      WorkbookCommandExecutor.applyMetadataCommand(
           workbook,
           new WorkbookMetadataCommand.ImportCustomXmlMapping(
               new ExcelCustomXmlImportDefinition(
@@ -565,12 +566,12 @@ class ExcelResidualHelperCoverageTest {
           new ExcelNamedRangeDefinition(
               "LocalName",
               new ExcelNamedRangeScope.SheetScope("Target"),
-              new ExcelNamedRangeTarget("Target", "A1")));
+              ExcelNamedRangeTarget.range("Target", "A1")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "WorkbookName",
               new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Target", "A1")));
+              ExcelNamedRangeTarget.range("Target", "A1")));
 
       ExcelSheetCopyController.deleteLocalNamedRanges(workbook, "Target");
       assertEquals(
@@ -620,10 +621,10 @@ class ExcelResidualHelperCoverageTest {
       var fakeMap =
           ExcelCustomXmlControllerTestSupport.fakeMap(ctMap, ctSchema, null, List.of(), List.of());
       ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(fakeMap);
-      assertNull(snapshot.schemaNamespace());
-      assertNull(snapshot.schemaLanguage());
-      assertNull(snapshot.schemaReference());
-      assertNull(snapshot.schemaXml());
+      assertEquals(Optional.empty(), snapshot.schemaNamespace());
+      assertEquals(Optional.empty(), snapshot.schemaLanguage());
+      assertEquals(Optional.empty(), snapshot.schemaReference());
+      assertEquals(Optional.empty(), snapshot.schemaXml());
     }
   }
 
@@ -636,19 +637,19 @@ class ExcelResidualHelperCoverageTest {
             null,
             new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
             new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
-            true,
-            ExcelChartMarkerStyle.SQUARE,
-            (short) 9,
-            20L);
+            Optional.of(true),
+            Optional.of(ExcelChartMarkerStyle.SQUARE),
+            Optional.of((short) 9),
+            Optional.of(20L));
     ExcelChartDefinition.Series noOptionsSeries =
         new ExcelChartDefinition.Series(
             null,
             new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
             new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
-            null,
-            null,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
 
     XDDFLineChartData lineData =
         (XDDFLineChartData)
@@ -690,10 +691,10 @@ class ExcelResidualHelperCoverageTest {
             null,
             new ExcelChartDefinition.DataSource.StringLiteral(List.of("Jan", "Feb")),
             new ExcelChartDefinition.DataSource.NumericLiteral(List.of(10d, 12d)),
-            null,
-            null,
-            null,
-            25L);
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(25L));
     XDDFPieChartData pieData = (XDDFPieChartData) chart.createData(ChartTypes.PIE, null, null);
     XDDFPieChartData.Series pieSeries =
         (XDDFPieChartData.Series) pieData.addSeries(categories, values);
@@ -789,8 +790,8 @@ class ExcelResidualHelperCoverageTest {
         "ada@example.com",
         null,
         "invalid",
-        ExcelPictureFormat.PNG,
-        new ExcelBinaryData(new byte[] {1}));
+        Optional.of(ExcelPictureFormat.PNG),
+        Optional.of(new ExcelBinaryData(new byte[] {1})));
   }
 
   private static ExcelChartDefinition.Axis axis(ExcelChartAxisKind kind) {

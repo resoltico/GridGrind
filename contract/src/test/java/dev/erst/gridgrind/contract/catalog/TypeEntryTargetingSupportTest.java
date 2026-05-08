@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.step.WorkbookStepTargeting;
 import java.util.List;
 import java.util.Optional;
@@ -21,10 +21,10 @@ class TypeEntryTargetingSupportTest {
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(
             WorkbookMutationAction.EnsureSheet.class);
     Optional<WorkbookStepTargeting.TargetSurface> assertionSurface =
-        TypeEntryTargetingSupport.optionalTargetSurfaceFor(Assertion.TablePresent.class);
+        TypeEntryTargetingSupport.optionalTargetSurfaceFor(PresenceAssertion.TablePresent.class);
     Optional<WorkbookStepTargeting.TargetSurface> querySurface =
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(
-            InspectionQuery.GetWorkbookSummary.class);
+            WorkbookIntrospectionQuery.GetWorkbookSummary.class);
 
     assertTrue(mutationSurface.isPresent());
     assertTrue(assertionSurface.isPresent());

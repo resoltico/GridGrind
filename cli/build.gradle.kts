@@ -7,7 +7,10 @@ plugins {
 description = "CLI transport adapter for the GridGrind protocol"
 
 dependencies {
-    implementation(project(":executor"))
+    implementation(project(":contract"))
+    implementation(project(":engine"))
+    implementation(project(":excel-foundation"))
+    implementation(libs.jackson.databind)
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)
     testRuntimeOnly(libs.junit.platform.launcher)
@@ -72,21 +75,23 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     mergeServiceFiles()
 
     // Exclude per-dependency META-INF license and notice files to prevent conflicts
-    // and silent overwrites. GridGrind bundles its own curated NOTICE, MIT LICENSE,
-    // and the Apache License 2.0 text that covers all bundled Apache-licensed components.
+    // and silent overwrites. GridGrind bundles its own curated NOTICE plus the
+    // project-owned license texts for all bundled dependency license families.
     exclude("META-INF/LICENSE", "META-INF/LICENSE.txt", "META-INF/LICENSE.md")
     exclude("META-INF/NOTICE", "META-INF/NOTICE.txt", "META-INF/NOTICE.md")
     exclude("META-INF/DEPENDENCIES")
 
-    // Bundle the curated attribution notice and both license texts into META-INF/.
-    // NOTICE covers Apache POI, Log4j Core, and Jackson Databind attribution.
+    // Bundle the curated attribution notice and license texts into META-INF/.
     // LICENSE is the MIT license for GridGrind's own code.
-    // LICENSE-APACHE-2.0 satisfies Apache License 2.0 Section 4(a) for bundled components.
+    // LICENSE-APACHE-2.0, LICENSE-BSD-2-CLAUSE, LICENSE-BSD-3-CLAUSE, and LICENSE-EDL-1.0 cover
+    // bundled third-party components under those respective license families.
     from(rootProject.file("NOTICE")) { into("META-INF") }
     from(rootProject.file("PATENTS.md")) { into("META-INF") }
     from(rootProject.file("LICENSE")) { into("META-INF") }
     from(rootProject.file("LICENSE-APACHE-2.0")) { into("META-INF") }
+    from(rootProject.file("LICENSE-BSD-2-CLAUSE")) { into("META-INF") }
     from(rootProject.file("LICENSE-BSD-3-CLAUSE")) { into("META-INF") }
+    from(rootProject.file("LICENSE-EDL-1.0")) { into("META-INF") }
 
     manifest {
         attributes(
@@ -101,8 +106,31 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
 tasks.named<ProcessResources>("processResources") {
     val description: String = providers.gradleProperty("gridgrindDescription").get()
+    val version: String = providers.gradleProperty("version").get()
     filesMatching("gridgrind.properties") {
-        expand(mapOf("gridgrindDescription" to description))
+        expand(
+            mapOf(
+                "gridgrindDescription" to description,
+                "gridgrindVersion" to version,
+            )
+        )
+    }
+}
+
+pluginManager.withPlugin("java") {
+    tasks.register<JavaExec>("writeRepositoryExamples") {
+        group = "documentation"
+        description =
+            "Regenerates the checkout-rooted examples/*.json fixtures from the CLI-owned example registry."
+        dependsOn(tasks.named("testClasses"))
+        classpath =
+            project.the<org.gradle.api.plugins.JavaPluginExtension>()
+                .sourceSets
+                .named("test")
+                .get()
+                .runtimeClasspath
+        mainClass = "dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesWriter"
+        workingDir = rootProject.projectDir
     }
 }
 

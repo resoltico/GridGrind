@@ -6,16 +6,17 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 /** Protocol-facing factual report for one conditional-formatting differential style. */
 public record DifferentialStyleReport(
-    String numberFormat,
-    Boolean bold,
-    Boolean italic,
-    FontHeightReport fontHeight,
+    @Nullable String numberFormat,
+    @Nullable Boolean bold,
+    @Nullable Boolean italic,
+    @Nullable FontHeightReport fontHeight,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fontColor,
-    Boolean underline,
-    Boolean strikeout,
+    @Nullable Boolean underline,
+    @Nullable Boolean strikeout,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> fillColor,
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<DifferentialBorderReport> border,
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
@@ -49,7 +50,7 @@ public record DifferentialStyleReport(
     }
   }
 
-  private static boolean hasNoStyleAttributes(Object... attributes) {
+  private static boolean hasNoStyleAttributes(@Nullable Object... attributes) {
     return Stream.of(attributes)
         .map(
             attribute ->

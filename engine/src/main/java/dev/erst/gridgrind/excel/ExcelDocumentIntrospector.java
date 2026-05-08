@@ -90,11 +90,16 @@ final class ExcelDocumentIntrospector {
     return workbook.sheet(sheetName).drawingObjects();
   }
 
-  /** Returns factual chart metadata for one sheet. */
-  List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, String sheetName) {
+  /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
+  List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, ExcelChartSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    Objects.requireNonNull(sheetName, "sheetName must not be null");
-    return workbook.sheet(sheetName).charts();
+    Objects.requireNonNull(selection, "selection must not be null");
+    List<ExcelChartSnapshot> charts = workbook.sheet(selection.sheetName()).charts();
+    return switch (selection) {
+      case ExcelChartSelection.AllOnSheet _ -> charts;
+      case ExcelChartSelection.ByName byName ->
+          charts.stream().filter(chart -> chart.name().equals(byName.chartName())).toList();
+    };
   }
 
   /** Returns the extracted binary payload for one existing drawing object on one sheet. */

@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class ExcelSheetPresentationControllerTest {
       ExcelSheetPresentation authored =
           new ExcelSheetPresentation(
               new ExcelSheetDisplay(false, false, false, true, true),
-              ExcelColor.rgb("#112233"),
+              Optional.of(ExcelColor.rgb("#112233")),
               new ExcelSheetOutlineSummary(false, false),
               new ExcelSheetDefaults(11, 18.5d),
               List.of(
@@ -38,7 +39,7 @@ class ExcelSheetPresentationControllerTest {
 
       ExcelSheetPresentationSnapshot snapshot = controller.presentation(sheet);
       assertEquals(authored.display(), snapshot.display());
-      assertEquals(ExcelColorSnapshot.rgb("#112233"), snapshot.tabColor());
+      assertEquals(Optional.of(ExcelColorSnapshot.rgb("#112233")), snapshot.tabColor());
       assertEquals(authored.outlineSummary(), snapshot.outlineSummary());
       assertEquals(authored.sheetDefaults(), snapshot.sheetDefaults());
       assertEquals(
@@ -62,7 +63,7 @@ class ExcelSheetPresentationControllerTest {
 
       ExcelSheetPresentationSnapshot cleared = controller.presentation(sheet);
       assertEquals(ExcelSheetDisplay.defaults(), cleared.display());
-      assertNull(cleared.tabColor());
+      assertEquals(Optional.empty(), cleared.tabColor());
       assertEquals(ExcelSheetOutlineSummary.defaults(), cleared.outlineSummary());
       assertEquals(ExcelSheetDefaults.defaults(), cleared.sheetDefaults());
       assertEquals(List.of(), cleared.ignoredErrors());
@@ -124,7 +125,7 @@ class ExcelSheetPresentationControllerTest {
                   sheet,
                   new ExcelSheetPresentation(
                       ExcelSheetDisplay.defaults(),
-                      null,
+                      Optional.empty(),
                       ExcelSheetOutlineSummary.defaults(),
                       new ExcelSheetDefaults(
                           0, ExcelSheetDefaults.defaults().defaultRowHeightPoints()),
@@ -136,7 +137,7 @@ class ExcelSheetPresentationControllerTest {
                   sheet,
                   new ExcelSheetPresentation(
                       ExcelSheetDisplay.defaults(),
-                      null,
+                      Optional.empty(),
                       ExcelSheetOutlineSummary.defaults(),
                       new ExcelSheetDefaults(
                           ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1,
@@ -149,7 +150,7 @@ class ExcelSheetPresentationControllerTest {
                   sheet,
                   new ExcelSheetPresentation(
                       ExcelSheetDisplay.defaults(),
-                      null,
+                      Optional.empty(),
                       ExcelSheetOutlineSummary.defaults(),
                       new ExcelSheetDefaults(
                           ExcelSheetDefaults.defaults().defaultColumnWidth(),

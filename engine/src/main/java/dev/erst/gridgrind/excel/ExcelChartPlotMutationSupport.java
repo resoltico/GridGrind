@@ -17,6 +17,7 @@ import org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /** Writes one authored plot into a POI chart while reusing shared chart helpers. */
 final class ExcelChartPlotMutationSupport {
@@ -35,7 +36,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Plot plot,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (plot) {
       case ExcelChartDefinition.Area area ->
           createAreaPlot(sheet, chart, axisRegistry, area, formulaRuntime);
@@ -69,7 +70,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Area area,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(area.axes());
     XDDFAreaChartData areaData =
         (XDDFAreaChartData)
@@ -88,7 +89,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Area3D area3D,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(area3D.axes());
     XDDFArea3DChartData areaData =
         (XDDFArea3DChartData)
@@ -98,7 +99,7 @@ final class ExcelChartPlotMutationSupport {
                 axes.valueAxis());
     areaData.setVaryColors(area3D.varyColors());
     areaData.setGrouping(ExcelChartPoiBridge.toPoiGrouping(area3D.grouping()));
-    areaData.setGapDepth(area3D.gapDepth());
+    area3D.gapDepth().ifPresent(areaData::setGapDepth);
     addSeries(sheet, areaData, area3D.series(), formulaRuntime);
     chart.plot(areaData);
   }
@@ -108,7 +109,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Bar bar,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(bar.axes());
     XDDFBarChartData barData =
         (XDDFBarChartData)
@@ -119,8 +120,8 @@ final class ExcelChartPlotMutationSupport {
     barData.setVaryColors(bar.varyColors());
     barData.setBarDirection(ExcelChartPoiBridge.toPoiBarDirection(bar.barDirection()));
     barData.setBarGrouping(ExcelChartPoiBridge.toPoiBarGrouping(bar.grouping()));
-    barData.setGapWidth(bar.gapWidth());
-    barData.setOverlap(bar.overlap() == null ? null : bar.overlap().byteValue());
+    bar.gapWidth().ifPresent(barData::setGapWidth);
+    bar.overlap().map(Integer::byteValue).ifPresent(barData::setOverlap);
     addSeries(sheet, barData, bar.series(), formulaRuntime);
     chart.plot(barData);
   }
@@ -130,7 +131,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Bar3D bar3D,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(bar3D.axes());
     XDDFBar3DChartData barData =
         (XDDFBar3DChartData)
@@ -141,11 +142,9 @@ final class ExcelChartPlotMutationSupport {
     barData.setVaryColors(bar3D.varyColors());
     barData.setBarDirection(ExcelChartPoiBridge.toPoiBarDirection(bar3D.barDirection()));
     barData.setBarGrouping(ExcelChartPoiBridge.toPoiBarGrouping(bar3D.grouping()));
-    barData.setGapDepth(bar3D.gapDepth());
-    barData.setGapWidth(bar3D.gapWidth());
-    if (bar3D.shape() != null) {
-      barData.setShape(ExcelChartPoiBridge.toPoiBarShape(bar3D.shape()));
-    }
+    bar3D.gapDepth().ifPresent(barData::setGapDepth);
+    bar3D.gapWidth().ifPresent(barData::setGapWidth);
+    bar3D.shape().map(ExcelChartPoiBridge::toPoiBarShape).ifPresent(barData::setShape);
     addSeries(sheet, barData, bar3D.series(), formulaRuntime);
     chart.plot(barData);
   }
@@ -154,14 +153,14 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartDefinition.Doughnut doughnut,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFDoughnutChartData doughnutData =
         (XDDFDoughnutChartData)
             chart.createData(
                 ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.DOUGHNUT), null, null);
     doughnutData.setVaryColors(doughnut.varyColors());
-    doughnutData.setFirstSliceAngle(doughnut.firstSliceAngle());
-    doughnutData.setHoleSize(doughnut.holeSize());
+    doughnut.firstSliceAngle().ifPresent(doughnutData::setFirstSliceAngle);
+    doughnut.holeSize().ifPresent(doughnutData::setHoleSize);
     addSeries(sheet, doughnutData, doughnut.series(), formulaRuntime);
     chart.plot(doughnutData);
   }
@@ -171,7 +170,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Line line,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(line.axes());
     XDDFLineChartData lineData =
         (XDDFLineChartData)
@@ -190,7 +189,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Line3D line3D,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(line3D.axes());
     XDDFLine3DChartData lineData =
         (XDDFLine3DChartData)
@@ -200,7 +199,7 @@ final class ExcelChartPlotMutationSupport {
                 axes.valueAxis());
     lineData.setVaryColors(line3D.varyColors());
     lineData.setGrouping(ExcelChartPoiBridge.toPoiGrouping(line3D.grouping()));
-    lineData.setGapDepth(line3D.gapDepth());
+    line3D.gapDepth().ifPresent(lineData::setGapDepth);
     addSeries(sheet, lineData, line3D.series(), formulaRuntime);
     chart.plot(lineData);
   }
@@ -209,13 +208,13 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartDefinition.Pie pie,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFPieChartData pieData =
         (XDDFPieChartData)
             chart.createData(
                 ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.PIE), null, null);
     pieData.setVaryColors(pie.varyColors());
-    pieData.setFirstSliceAngle(pie.firstSliceAngle());
+    pie.firstSliceAngle().ifPresent(pieData::setFirstSliceAngle);
     addSeries(sheet, pieData, pie.series(), formulaRuntime);
     chart.plot(pieData);
   }
@@ -224,7 +223,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartDefinition.Pie3D pie3D,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     XDDFPie3DChartData pieData =
         (XDDFPie3DChartData)
             chart.createData(
@@ -239,7 +238,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Radar radar,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.CategoryValueAxes axes = axisRegistry.categoryValueAxes(radar.axes());
     XDDFRadarChartData radarData =
         (XDDFRadarChartData)
@@ -258,7 +257,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Scatter scatter,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.ScatterAxes axes = axisRegistry.scatterAxes(scatter.axes());
     XDDFScatterChartData scatterData =
         (XDDFScatterChartData)
@@ -277,7 +276,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Surface surface,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.SurfaceAxes axes = axisRegistry.surfaceAxes(surface.axes());
     XDDFSurfaceChartData surfaceData =
         (XDDFSurfaceChartData)
@@ -297,7 +296,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFChart chart,
       ExcelChartAxisRegistry axisRegistry,
       ExcelChartDefinition.Surface3D surface3D,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     ExcelChartAxisRegistry.SurfaceAxes axes = axisRegistry.surfaceAxes(surface3D.axes());
     XDDFSurface3DChartData surfaceData =
         (XDDFSurface3DChartData)
@@ -316,7 +315,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XDDFChartData data,
       List<ExcelChartDefinition.Series> definitions,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     for (ExcelChartDefinition.Series definition : definitions) {
       XDDFChartData.Series series =
           data.addSeries(
@@ -333,7 +332,7 @@ final class ExcelChartPlotMutationSupport {
       XSSFSheet sheet,
       XDDFChartData.Series series,
       ExcelChartDefinition.Title title,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (ExcelChartMutationSupport.prepareSeriesTitle(sheet, title, formulaRuntime)) {
       case PreparedSeriesTitleNone _ -> {
         // Leave the series title unset.
@@ -348,54 +347,39 @@ final class ExcelChartPlotMutationSupport {
       XDDFChartData.Series series, ExcelChartDefinition.Series definition) {
     switch (series) {
       case XDDFLineChartData.Series lineSeries -> {
-        if (definition.smooth() != null) {
-          lineSeries.setSmooth(definition.smooth());
-        }
-        if (definition.markerStyle() != null) {
-          lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(definition.markerStyle()));
-        }
-        if (definition.markerSize() != null) {
-          lineSeries.setMarkerSize(definition.markerSize());
-        }
+        definition.smooth().ifPresent(lineSeries::setSmooth);
+        definition
+            .markerStyle()
+            .ifPresent(
+                markerStyle ->
+                    lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+        definition.markerSize().ifPresent(lineSeries::setMarkerSize);
       }
       case XDDFLine3DChartData.Series lineSeries -> {
-        if (definition.smooth() != null) {
-          lineSeries.setSmooth(definition.smooth());
-        }
-        if (definition.markerStyle() != null) {
-          lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(definition.markerStyle()));
-        }
-        if (definition.markerSize() != null) {
-          lineSeries.setMarkerSize(definition.markerSize());
-        }
+        definition.smooth().ifPresent(lineSeries::setSmooth);
+        definition
+            .markerStyle()
+            .ifPresent(
+                markerStyle ->
+                    lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+        definition.markerSize().ifPresent(lineSeries::setMarkerSize);
       }
       case XDDFScatterChartData.Series scatterSeries -> {
-        if (definition.smooth() != null) {
-          scatterSeries.setSmooth(definition.smooth());
-        }
-        if (definition.markerStyle() != null) {
-          scatterSeries.setMarkerStyle(
-              ExcelChartPoiBridge.toPoiMarkerStyle(definition.markerStyle()));
-        }
-        if (definition.markerSize() != null) {
-          scatterSeries.setMarkerSize(definition.markerSize());
-        }
+        definition.smooth().ifPresent(scatterSeries::setSmooth);
+        definition
+            .markerStyle()
+            .ifPresent(
+                markerStyle ->
+                    scatterSeries.setMarkerStyle(
+                        ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+        definition.markerSize().ifPresent(scatterSeries::setMarkerSize);
       }
-      case XDDFPieChartData.Series pieSeries -> {
-        if (definition.explosion() != null) {
-          pieSeries.setExplosion(definition.explosion());
-        }
-      }
-      case XDDFPie3DChartData.Series pieSeries -> {
-        if (definition.explosion() != null) {
-          pieSeries.setExplosion(definition.explosion());
-        }
-      }
-      case XDDFDoughnutChartData.Series doughnutSeries -> {
-        if (definition.explosion() != null) {
-          doughnutSeries.setExplosion(definition.explosion());
-        }
-      }
+      case XDDFPieChartData.Series pieSeries ->
+          definition.explosion().ifPresent(pieSeries::setExplosion);
+      case XDDFPie3DChartData.Series pieSeries ->
+          definition.explosion().ifPresent(pieSeries::setExplosion);
+      case XDDFDoughnutChartData.Series doughnutSeries ->
+          definition.explosion().ifPresent(doughnutSeries::setExplosion);
       default -> {
         // No extra series-level options for this plot family.
       }

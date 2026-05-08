@@ -31,12 +31,12 @@ final class ExcelRowColumnStructureGuardSupport {
             "row structural edits that would move tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastRow() >= rowIndex) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent() && autofilter.orElseThrow().lastRow() >= rowIndex) {
       throw unsupportedStructure(
           "INSERT_ROWS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "row structural edits that would move sheet autofilters are not supported");
     }
   }
@@ -52,12 +52,12 @@ final class ExcelRowColumnStructureGuardSupport {
             "row structural edits that would move or truncate tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastRow() >= rows.firstRowIndex()) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent() && autofilter.orElseThrow().lastRow() >= rows.firstRowIndex()) {
       throw unsupportedStructure(
           "DELETE_ROWS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "row structural edits that would move or truncate sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
@@ -84,12 +84,12 @@ final class ExcelRowColumnStructureGuardSupport {
             "row structural edits that would move tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && affectsRows(autofilter, rows, delta)) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent() && affectsRows(autofilter.orElseThrow(), rows, delta)) {
       throw unsupportedStructure(
           "SHIFT_ROWS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "row structural edits that would move sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
@@ -116,12 +116,12 @@ final class ExcelRowColumnStructureGuardSupport {
             "column structural edits that would move tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastColumn() >= columnIndex) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent() && autofilter.orElseThrow().lastColumn() >= columnIndex) {
       throw unsupportedStructure(
           "INSERT_COLUMNS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "column structural edits that would move sheet autofilters are not supported");
     }
   }
@@ -137,12 +137,13 @@ final class ExcelRowColumnStructureGuardSupport {
             "column structural edits that would move or truncate tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && autofilter.lastColumn() >= columns.firstColumnIndex()) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent()
+        && autofilter.orElseThrow().lastColumn() >= columns.firstColumnIndex()) {
       throw unsupportedStructure(
           "DELETE_COLUMNS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "column structural edits that would move or truncate sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
@@ -170,12 +171,12 @@ final class ExcelRowColumnStructureGuardSupport {
             "column structural edits that would move tables are not supported");
       }
     }
-    ExcelRange autofilter = sheetAutofilterRange(sheet);
-    if (autofilter != null && affectsColumns(autofilter, columns, delta)) {
+    Optional<ExcelRange> autofilter = sheetAutofilterRange(sheet);
+    if (autofilter.isPresent() && affectsColumns(autofilter.orElseThrow(), columns, delta)) {
       throw unsupportedStructure(
           "SHIFT_COLUMNS",
           sheet,
-          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
+          "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter.orElseThrow()),
           "column structural edits that would move sheet autofilters are not supported");
     }
     for (String validationRange : dataValidationRanges(sheet)) {
@@ -323,7 +324,9 @@ final class ExcelRowColumnStructureGuardSupport {
               target ->
                   resolved.add(
                       new ResolvedNamedRange(
-                          name.getNameName(), target, ExcelRange.parse(target.range()))));
+                          name.getNameName(),
+                          target,
+                          ExcelRange.parse(((ExcelNamedRangeTarget.Range) target).range()))));
     }
     return List.copyOf(resolved);
   }
@@ -404,7 +407,7 @@ final class ExcelRowColumnStructureGuardSupport {
     }
 
     private boolean targetsSheet(String sheetName) {
-      return target.sheetName().equals(sheetName);
+      return ((ExcelNamedRangeTarget.Range) target).sheetName().equals(sheetName);
     }
 
     private String label() {
@@ -412,14 +415,15 @@ final class ExcelRowColumnStructureGuardSupport {
     }
   }
 
-  private static ExcelRange sheetAutofilterRange(XSSFSheet sheet) {
+  private static Optional<ExcelRange> sheetAutofilterRange(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
-      return null;
+      return Optional.empty();
     }
-    return parsedRange(
-        sheet.getCTWorksheet().getAutoFilter().getRef(),
-        "sheet autofilter",
-        sheet.getCTWorksheet().getAutoFilter().getRef());
+    return Optional.of(
+        parsedRange(
+            sheet.getCTWorksheet().getAutoFilter().getRef(),
+            "sheet autofilter",
+            sheet.getCTWorksheet().getAutoFilter().getRef()));
   }
 
   private static List<String> dataValidationRanges(XSSFSheet sheet) {
@@ -435,11 +439,11 @@ final class ExcelRowColumnStructureGuardSupport {
   }
 
   private static ExcelRange parsedRange(String rawRange, String structureType, String detail) {
-    ExcelRange range = ExcelSheetStructureSupport.parseRangeOrNull(rawRange);
-    if (range == null) {
+    Optional<ExcelRange> range = ExcelSheetStructureSupport.parseOptionalRange(rawRange);
+    if (range.isEmpty()) {
       throw new IllegalArgumentException(
           "Stored " + structureType + " range is invalid and cannot be normalized: " + detail);
     }
-    return range;
+    return range.orElseThrow();
   }
 }

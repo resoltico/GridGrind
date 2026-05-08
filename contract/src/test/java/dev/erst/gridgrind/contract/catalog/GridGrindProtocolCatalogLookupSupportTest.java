@@ -96,8 +96,6 @@ class GridGrindProtocolCatalogLookupSupportTest {
         published.protocolVersion(),
         published.discriminatorField(),
         new TypeEntry("REQUEST", "Synthetic request catalog entry.", List.of()),
-        published.cliSurface(),
-        List.of(),
         List.of(new TypeEntry("SOURCE_ALPHA", "Budget forecast entry.", List.of())),
         List.of(),
         List.of(),

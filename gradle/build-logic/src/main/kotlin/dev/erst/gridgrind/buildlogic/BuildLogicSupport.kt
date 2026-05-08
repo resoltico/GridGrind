@@ -20,7 +20,6 @@ internal fun Project.configureGridGrindRepositories() {
             repository.name = "JaCoCoSnapshots"
             repository.url = uri(JACOCO_SNAPSHOTS_REPOSITORY)
             repository.mavenContent { content ->
-                content.snapshotsOnly()
                 content.includeGroup("org.jacoco")
             }
         },

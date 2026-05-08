@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Factual pivot-table snapshot surfaced by workbook reads. */
 public sealed interface ExcelPivotTableSnapshot
@@ -105,7 +106,7 @@ public sealed interface ExcelPivotTableSnapshot
       String sourceColumnName,
       ExcelPivotDataConsolidateFunction function,
       String displayName,
-      String valueFormat) {
+      Optional<String> valueFormat) {
     public DataField {
       if (sourceColumnIndex < 0) {
         throw new IllegalArgumentException("sourceColumnIndex must not be negative");
@@ -113,7 +114,8 @@ public sealed interface ExcelPivotTableSnapshot
       sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");
       displayName = requireNonBlank(displayName, "displayName");
-      if (valueFormat != null && valueFormat.isBlank()) {
+      Objects.requireNonNull(valueFormat, "valueFormat must not be null");
+      if (valueFormat.isPresent() && valueFormat.orElseThrow().isBlank()) {
         throw new IllegalArgumentException("valueFormat must not be blank");
       }
     }

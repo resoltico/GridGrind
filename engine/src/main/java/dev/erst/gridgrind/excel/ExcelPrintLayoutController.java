@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.IntStream;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Footer;
@@ -137,7 +138,7 @@ final class ExcelPrintLayoutController {
         sheetRef.setFitToPage(false);
         CTPageSetup pageSetup =
             Objects.requireNonNull(
-                pageSetupOrNull(sheetRef), "page setup must exist after fit-to-page toggle");
+                pageSetup(sheetRef).orElse(null), "page setup must exist after fit-to-page toggle");
         if (pageSetup.isSetFitToWidth()) {
           pageSetup.unsetFitToWidth();
         }
@@ -228,11 +229,12 @@ final class ExcelPrintLayoutController {
   }
 
   private static ExcelPrintLayout.Area printArea(XSSFSheet sheet) {
-    String printArea = storedPrintAreaFormulaOrNull(sheet);
-    if (printArea == null || printArea.isBlank()) {
+    Optional<String> printArea = storedPrintAreaFormula(sheet);
+    if (printArea.isEmpty()) {
       return new ExcelPrintLayout.Area.None();
     }
-    AreaReference areaReference = new AreaReference(printArea, SpreadsheetVersion.EXCEL2007);
+    AreaReference areaReference =
+        new AreaReference(printArea.orElseThrow(), SpreadsheetVersion.EXCEL2007);
     return new ExcelPrintLayout.Area.Range(
         new CellRangeAddress(
                 areaReference.getFirstCell().getRow(),
@@ -242,48 +244,53 @@ final class ExcelPrintLayoutController {
             .formatAsString());
   }
 
-  static String storedPrintAreaFormulaOrNull(XSSFSheet sheet) {
+  static Optional<String> storedPrintAreaFormula(XSSFSheet sheet) {
     int sheetIndex = sheet.getWorkbook().getSheetIndex(sheet);
-    String rawPrintArea = rawPrintAreaFormulaOrNull(sheet.getWorkbook(), sheetIndex);
-    if (rawPrintArea == null || rawPrintArea.isBlank()) {
-      return rawPrintArea;
+    if (rawPrintAreaFormula(sheet.getWorkbook(), sheetIndex).isEmpty()) {
+      return Optional.empty();
     }
-    return sheet.getWorkbook().getPrintArea(sheetIndex);
+    return nonBlank(sheet.getWorkbook().getPrintArea(sheetIndex));
   }
 
-  static String rawPrintAreaFormulaOrNull(XSSFWorkbook workbook, int sheetIndex) {
+  static Optional<String> rawPrintAreaFormula(XSSFWorkbook workbook, int sheetIndex) {
     if (!workbook.getCTWorkbook().isSetDefinedNames()) {
-      return null;
+      return Optional.empty();
     }
     for (CTDefinedName definedName :
         workbook.getCTWorkbook().getDefinedNames().getDefinedNameList()) {
       if (XSSFName.BUILTIN_PRINT_AREA.equals(definedName.getName())
           && definedName.isSetLocalSheetId()
           && definedName.getLocalSheetId() == sheetIndex) {
-        return definedName.getStringValue();
+        return nonBlank(definedName.getStringValue());
       }
     }
-    return null;
+    return Optional.empty();
+  }
+
+  private static Optional<String> nonBlank(String value) {
+    return Optional.ofNullable(value).filter(candidate -> !candidate.isBlank());
   }
 
   private static ExcelPrintOrientation orientation(XSSFSheet sheet) {
-    CTPageSetup pageSetup = pageSetupOrNull(sheet);
-    return pageSetup != null
-            && pageSetup.isSetOrientation()
-            && pageSetup.getOrientation() == STOrientation.LANDSCAPE
+    Optional<CTPageSetup> pageSetup = pageSetup(sheet);
+    return pageSetup.isPresent()
+            && pageSetup.orElseThrow().isSetOrientation()
+            && pageSetup.orElseThrow().getOrientation() == STOrientation.LANDSCAPE
         ? ExcelPrintOrientation.LANDSCAPE
         : ExcelPrintOrientation.PORTRAIT;
   }
 
   static ExcelPrintLayout.Scaling scaling(XSSFSheet sheet) {
-    CTPageSetUpPr pageSetUpPr = pageSetUpPrOrNull(sheet);
-    if (pageSetUpPr == null || !pageSetUpPr.isSetFitToPage() || !pageSetUpPr.getFitToPage()) {
+    Optional<CTPageSetUpPr> pageSetUpPr = pageSetUpPr(sheet);
+    if (pageSetUpPr.isEmpty()
+        || !pageSetUpPr.orElseThrow().isSetFitToPage()
+        || !pageSetUpPr.orElseThrow().getFitToPage()) {
       return new ExcelPrintLayout.Scaling.Automatic();
     }
-    CTPageSetup pageSetup = pageSetupOrNull(sheet);
+    Optional<CTPageSetup> pageSetup = pageSetup(sheet);
     return new ExcelPrintLayout.Scaling.Fit(
-        pageSetup != null ? Math.toIntExact(pageSetup.getFitToWidth()) : 1,
-        pageSetup != null ? Math.toIntExact(pageSetup.getFitToHeight()) : 1);
+        pageSetup.isPresent() ? Math.toIntExact(pageSetup.orElseThrow().getFitToWidth()) : 1,
+        pageSetup.isPresent() ? Math.toIntExact(pageSetup.orElseThrow().getFitToHeight()) : 1);
   }
 
   static ExcelPrintLayout.TitleRows repeatingRows(XSSFSheet sheet) {
@@ -312,7 +319,7 @@ final class ExcelPrintLayoutController {
   }
 
   private static ExcelPrintSetup setup(XSSFSheet sheet) {
-    CTPageSetup pageSetup = pageSetupOrNull(sheet);
+    Optional<CTPageSetup> pageSetup = pageSetup(sheet);
     ExcelPrintSetup defaults = ExcelPrintSetup.defaults();
     ExcelPrintMargins defaultMargins = defaults.margins();
     ExcelPrintMargins margins =
@@ -330,13 +337,21 @@ final class ExcelPrintLayoutController {
         sheet.isPrintGridlines(),
         sheet.getHorizontallyCenter(),
         sheet.getVerticallyCenter(),
-        pageSetup != null ? Math.toIntExact(pageSetup.getPaperSize()) : defaults.paperSize(),
-        pageSetup != null ? pageSetup.getDraft() : defaults.draft(),
-        pageSetup != null ? pageSetup.getBlackAndWhite() : defaults.blackAndWhite(),
-        pageSetup != null ? Math.toIntExact(pageSetup.getCopies()) : defaults.copies(),
-        pageSetup != null ? pageSetup.getUseFirstPageNumber() : defaults.useFirstPageNumber(),
-        pageSetup != null
-            ? Math.toIntExact(pageSetup.getFirstPageNumber())
+        pageSetup.isPresent()
+            ? Math.toIntExact(pageSetup.orElseThrow().getPaperSize())
+            : defaults.paperSize(),
+        pageSetup.isPresent() ? pageSetup.orElseThrow().getDraft() : defaults.draft(),
+        pageSetup.isPresent()
+            ? pageSetup.orElseThrow().getBlackAndWhite()
+            : defaults.blackAndWhite(),
+        pageSetup.isPresent()
+            ? Math.toIntExact(pageSetup.orElseThrow().getCopies())
+            : defaults.copies(),
+        pageSetup.isPresent()
+            ? pageSetup.orElseThrow().getUseFirstPageNumber()
+            : defaults.useFirstPageNumber(),
+        pageSetup.isPresent()
+            ? Math.toIntExact(pageSetup.orElseThrow().getFirstPageNumber())
             : defaults.firstPageNumber(),
         IntStream.of(sheet.getRowBreaks()).boxed().toList(),
         IntStream.of(sheet.getColumnBreaks()).boxed().toList());
@@ -363,14 +378,14 @@ final class ExcelPrintLayoutController {
   }
 
   static void normalizePageSetupNode(XSSFSheet sheet) {
-    CTPageSetup pageSetup = pageSetupOrNull(sheet);
-    if (pageSetup == null) {
+    Optional<CTPageSetup> pageSetup = pageSetup(sheet);
+    if (pageSetup.isEmpty()) {
       return;
     }
-    if (shouldUnsetPageSetupOrientation(sheet, pageSetup)) {
-      pageSetup.unsetOrientation();
+    if (shouldUnsetPageSetupOrientation(sheet, pageSetup.orElseThrow())) {
+      pageSetup.orElseThrow().unsetOrientation();
     }
-    if (isEmptyPageSetup(pageSetup)) {
+    if (isEmptyPageSetup(pageSetup.orElseThrow())) {
       sheet.getCTWorksheet().unsetPageSetup();
     }
   }
@@ -401,18 +416,20 @@ final class ExcelPrintLayoutController {
   }
 
   static void normalizePageSetupProperties(XSSFSheet sheet) {
-    CTSheetPr sheetPr = sheetPrOrNull(sheet);
-    if (sheetPr == null) {
+    Optional<CTSheetPr> sheetPr = sheetPr(sheet);
+    if (sheetPr.isEmpty()) {
       return;
     }
-    CTPageSetUpPr pageSetUpPr = pageSetUpPrOrNull(sheet);
-    if (pageSetUpPr != null && pageSetUpPr.isSetFitToPage() && !pageSetUpPr.getFitToPage()) {
-      pageSetUpPr.unsetFitToPage();
+    Optional<CTPageSetUpPr> pageSetUpPr = pageSetUpPr(sheet);
+    if (pageSetUpPr.isPresent()
+        && pageSetUpPr.orElseThrow().isSetFitToPage()
+        && !pageSetUpPr.orElseThrow().getFitToPage()) {
+      pageSetUpPr.orElseThrow().unsetFitToPage();
     }
-    if (pageSetUpPr != null && !pageSetUpPr.isSetFitToPage()) {
-      sheetPr.unsetPageSetUpPr();
+    if (pageSetUpPr.isPresent() && !pageSetUpPr.orElseThrow().isSetFitToPage()) {
+      sheetPr.orElseThrow().unsetPageSetUpPr();
     }
-    if (!sheetPr.isSetPageSetUpPr()) {
+    if (!sheetPr.orElseThrow().isSetPageSetUpPr()) {
       sheet.getCTWorksheet().unsetSheetPr();
     }
   }
@@ -432,19 +449,23 @@ final class ExcelPrintLayoutController {
     }
   }
 
-  static CTPageSetup pageSetupOrNull(XSSFSheet sheet) {
-    return sheet.getCTWorksheet().isSetPageSetup() ? sheet.getCTWorksheet().getPageSetup() : null;
+  static Optional<CTPageSetup> pageSetup(XSSFSheet sheet) {
+    return sheet.getCTWorksheet().isSetPageSetup()
+        ? Optional.of(sheet.getCTWorksheet().getPageSetup())
+        : Optional.empty();
   }
 
-  static CTSheetPr sheetPrOrNull(XSSFSheet sheet) {
-    return sheet.getCTWorksheet().isSetSheetPr() ? sheet.getCTWorksheet().getSheetPr() : null;
+  static Optional<CTSheetPr> sheetPr(XSSFSheet sheet) {
+    return sheet.getCTWorksheet().isSetSheetPr()
+        ? Optional.of(sheet.getCTWorksheet().getSheetPr())
+        : Optional.empty();
   }
 
-  static CTPageSetUpPr pageSetUpPrOrNull(XSSFSheet sheet) {
-    CTSheetPr sheetPr = sheetPrOrNull(sheet);
-    if (sheetPr == null || !sheetPr.isSetPageSetUpPr()) {
-      return null;
+  static Optional<CTPageSetUpPr> pageSetUpPr(XSSFSheet sheet) {
+    Optional<CTSheetPr> sheetPr = sheetPr(sheet);
+    if (sheetPr.isEmpty() || !sheetPr.orElseThrow().isSetPageSetUpPr()) {
+      return Optional.empty();
     }
-    return sheetPr.getPageSetUpPr();
+    return Optional.of(sheetPr.orElseThrow().getPageSetUpPr());
   }
 }

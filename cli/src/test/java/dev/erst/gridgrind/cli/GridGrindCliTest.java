@@ -2,19 +2,22 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.executor.ExecutionJournalSink;
+import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
+import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
+import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -56,12 +59,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(
-                        null,
-                        new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
-                        List.of(),
-                        List.of(),
-                        List.of()),
+                    GridGrindResponses.success(List.of(), List.of(), List.of()),
                 new CliRequestReader(),
                 new CliResponseWriter())
             .run(
@@ -82,12 +80,54 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(
-                        null,
-                        new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
-                        List.of(),
-                        List.of(),
-                        List.of()),
+                    GridGrindResponses.success(List.of(), List.of(), List.of()),
+                new CliRequestReader(),
+                new CliResponseWriter(),
+                new CliJournalWriter())
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertInstanceOf(
+        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+  }
+
+  @Test
+  void fourArgumentConstructorWithExplicitDoctorStillRunsWithDefaultJournalWriter()
+      throws IOException {
+    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli(
+                (ignoredRequest, ignoredBindings, ignoredSink) ->
+                    GridGrindResponses.success(List.of(), List.of(), List.of()),
+                GridGrindEngine.requestDoctor(),
+                new CliRequestReader(),
+                new CliResponseWriter())
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertInstanceOf(
+        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+  }
+
+  @Test
+  void fiveArgumentConstructorWithExplicitDoctorStillUsesProvidedJournalWriter()
+      throws IOException {
+    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli(
+                (ignoredRequest, ignoredBindings, ignoredSink) ->
+                    GridGrindResponses.success(List.of(), List.of(), List.of()),
+                GridGrindEngine.requestDoctor(),
                 new CliRequestReader(),
                 new CliResponseWriter(),
                 new CliJournalWriter())
@@ -105,7 +145,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   void cliJournalWriterReturnsNoopWhenRequestIsMissing() {
     CliJournalWriter writer = new CliJournalWriter();
 
-    assertSame(ExecutionJournalSink.NOOP, writer.sinkFor(null, OutputStream.nullOutputStream()));
+    assertSame(GridGrindJournalSink.NOOP, writer.sinkFor(null, OutputStream.nullOutputStream()));
   }
 
   @Test
@@ -209,11 +249,11 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals(List.of(), success.warnings());
-    GridGrindWorkbookSurfaceReports.WorkbookSummary workbook =
-        ((InspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
+    WorkbookSummary workbook =
+        ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
     assertEquals("Budget", workbook.sheetNames().get(0));
-    InspectionResult.CellsResult cells =
-        (InspectionResult.CellsResult) success.inspections().get(1);
+    SheetInspectionResult.CellsResult cells =
+        (SheetInspectionResult.CellsResult) success.inspections().get(1);
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport b3Cell =
         (dev.erst.gridgrind.contract.dto.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula());
@@ -307,8 +347,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    InspectionResult.CellsResult cells =
-        assertInstanceOf(InspectionResult.CellsResult.class, success.inspections().getFirst());
+    SheetInspectionResult.CellsResult cells =
+        assertInstanceOf(SheetInspectionResult.CellsResult.class, success.inspections().getFirst());
     dev.erst.gridgrind.contract.dto.CellReport.TextReport a1 =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
@@ -483,8 +523,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
-    InspectionResult.TablesResult tables =
-        (InspectionResult.TablesResult) success.inspections().getFirst();
+    WorkbookAssetInspectionResult.TablesResult tables =
+        (WorkbookAssetInspectionResult.TablesResult) success.inspections().getFirst();
     assertEquals(1, tables.tables().size());
     assertEquals(0, tables.tables().getFirst().totalsRowCount());
   }
@@ -508,6 +548,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """));
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
@@ -515,18 +556,68 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                   "--request", requestPath.toString(), "--response", responsePath.toString()
                 },
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
     GridGrindResponse response = GridGrindJson.readResponse(Files.readAllBytes(responsePath));
 
     assertEquals(0, exitCode);
     assertEquals(0, stdout.size());
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals(
         List.of("Budget"),
-        ((InspectionResult.WorkbookSummaryResult) success.inspections().getFirst())
+        ((WorkbookInspectionResult.WorkbookSummaryResult) success.inspections().getFirst())
             .workbook()
             .sheetNames());
+  }
+
+  @Test
+  void writesFailurePointerToStderrWhenExecutionFailsAndResponsePathIsConfigured()
+      throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-invalid-request-", ".json");
+    Path responsePath = Files.createTempFile("gridgrind-invalid-response-", ".json");
+    Files.writeString(
+        requestPath,
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              {
+                "stepId": "summary",
+                "target": { "type": "WORKBOOK" },
+                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+              }
+            ]
+            """));
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "--request", requestPath.toString(), "--response", responsePath.toString()
+                },
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class,
+            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+
+    assertEquals(1, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(
+        "GridGrind wrote the response to "
+            + responsePath.toAbsolutePath()
+            + "; inspect that file for failure."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(failure.problem().message().contains("WORKBOOK"));
   }
 }

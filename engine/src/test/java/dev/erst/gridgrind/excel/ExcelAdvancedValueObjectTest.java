@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.ExcelStyleTestAccess.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
@@ -106,10 +105,10 @@ class ExcelAdvancedValueObjectTest {
     var indexedColor = ExcelColor.indexed(10);
     var gradient =
         ExcelGradientFill.path(
-            0.1d,
-            0.2d,
-            0.3d,
-            0.4d,
+            Optional.of(0.1d),
+            Optional.of(0.2d),
+            Optional.of(0.3d),
+            Optional.of(0.4d),
             List.of(
                 new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                 new ExcelGradientStop(1.0d, indexedColor)));
@@ -161,12 +160,18 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class, () -> ExcelColor.theme(1, Double.POSITIVE_INFINITY));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelGradientFill.path(Double.NaN, null, null, null, List.of()));
+        () ->
+            ExcelGradientFill.path(
+                Optional.of(Double.NaN),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                List.of()));
     assertEquals(
         "LINEAR",
         gradientType(
             ExcelGradientFill.linear(
-                null,
+                Optional.empty(),
                 List.of(
                     new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                     new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566"))))));
@@ -174,7 +179,7 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class,
         () ->
             ExcelGradientFill.linear(
-                Double.POSITIVE_INFINITY,
+                Optional.of(Double.POSITIVE_INFINITY),
                 List.of(
                     new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                     new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
@@ -182,10 +187,10 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class,
         () ->
             ExcelGradientFill.path(
-                Double.POSITIVE_INFINITY,
-                null,
-                null,
-                null,
+                Optional.of(Double.POSITIVE_INFINITY),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(
                     new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                     new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
@@ -193,21 +198,23 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class,
         () ->
             ExcelGradientFill.linear(
-                Double.NaN,
+                Optional.of(Double.NaN),
                 List.of(
                     new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")),
                     new ExcelGradientStop(1.0d, ExcelColor.rgb("#445566")))));
-    assertThrows(NullPointerException.class, () -> ExcelGradientFill.linear(null, null));
+    assertThrows(
+        NullPointerException.class, () -> ExcelGradientFill.linear(Optional.empty(), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             ExcelGradientFill.linear(
-                null, List.of(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")))));
+                Optional.empty(), List.of(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")))));
     assertThrows(
         NullPointerException.class,
         () ->
             ExcelGradientFill.linear(
-                null, Arrays.asList(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")), null)));
+                Optional.empty(),
+                Arrays.asList(new ExcelGradientStop(0.0d, ExcelColor.rgb("#112233")), null)));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelGradientStop(-0.1d, ExcelColor.rgb("#112233")));
@@ -312,10 +319,10 @@ class ExcelAdvancedValueObjectTest {
     ExcelDrawingAnchor.TwoCell twoCell =
         new ExcelDrawingAnchor.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
     ExcelPictureDefinition picture =
-        new ExcelPictureDefinition("OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, null);
+        new ExcelPictureDefinition(
+            "OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, Optional.empty());
     ExcelShapeDefinition shape =
-        new ExcelShapeDefinition(
-            "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, " rect ", "Queue");
+        new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " rect ", Optional.of("Queue"));
     ExcelEmbeddedObjectDefinition embeddedObject =
         new ExcelEmbeddedObjectDefinition(
             "OpsEmbed",
@@ -349,7 +356,7 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(3, binary.size());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, twoCell.behavior());
     assertEquals(ExcelPictureFormat.PNG, picture.format());
-    assertEquals("rect", shape.presetGeometryToken());
+    assertEquals("rect", ((ExcelShapeDefinition.SimpleShape) shape).presetGeometryToken());
     assertEquals("payload.txt", embeddedObject.fileName());
     assertEquals(2, groupSnapshot.childCount());
     assertEquals("Payload", payload.label());
@@ -370,13 +377,7 @@ class ExcelAdvancedValueObjectTest {
                 new ExcelDrawingMarker(1, 2, 3, 0), new ExcelDrawingMarker(3, 2, 4, 0), null));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ExcelShapeDefinition(
-                "OpsShape", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, "rect", null));
-    ExcelShapeDefinition nullPresetShape =
-        new ExcelShapeDefinition(
-            "OpsNullPreset", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, null, null);
-    assertEquals("rect", nullPresetShape.presetGeometryToken());
+        () -> new ExcelShapeDefinition.SimpleShape("OpsShape", twoCell, " ", Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -398,43 +399,52 @@ class ExcelAdvancedValueObjectTest {
             "Quarterly Review",
             "GridGrind",
             true,
-            new ExcelRichText(
-                List.of(
-                    new ExcelRichTextRun("Quarterly", null),
-                    new ExcelRichTextRun(
-                        " Review",
-                        new ExcelCellFont(
-                            true, false, "Aptos", null, ExcelColor.rgb("#112233"), null, null)))),
-            new ExcelCommentAnchor(1, 2, 4, 6));
+            Optional.of(
+                new ExcelRichText(
+                    List.of(
+                        new ExcelRichTextRun("Quarterly", Optional.empty()),
+                        new ExcelRichTextRun(
+                            " Review",
+                            Optional.of(
+                                new ExcelCellFont(
+                                    Optional.of(true),
+                                    Optional.of(false),
+                                    Optional.of("Aptos"),
+                                    Optional.empty(),
+                                    Optional.of(ExcelColor.rgb("#112233")),
+                                    Optional.empty(),
+                                    Optional.empty())))))),
+            Optional.of(new ExcelCommentAnchor(1, 2, 4, 6)));
     var commentSnapshot =
         new ExcelCommentSnapshot(
             "Quarterly Review",
             "GridGrind",
             true,
-            new ExcelRichTextSnapshot(
-                List.of(
-                    new ExcelRichTextRunSnapshot(
-                        "Quarterly",
-                        new ExcelCellFontSnapshot(
-                            false,
-                            false,
-                            "Aptos",
-                            ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
-                            null,
-                            false,
-                            false)),
-                    new ExcelRichTextRunSnapshot(
-                        " Review",
-                        new ExcelCellFontSnapshot(
-                            true,
-                            false,
-                            "Aptos",
-                            ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
-                            ExcelColorSnapshot.rgb("#112233"),
-                            false,
-                            false)))),
-            new ExcelCommentAnchorSnapshot(1, 2, 4, 6));
-    var formulaTarget = new ExcelNamedRangeTarget("SUM(Ops!$B$2:$B$5)");
+            Optional.of(
+                new ExcelRichTextSnapshot(
+                    List.of(
+                        new ExcelRichTextRunSnapshot(
+                            "Quarterly",
+                            new ExcelCellFontSnapshot(
+                                false,
+                                false,
+                                "Aptos",
+                                ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
+                                null,
+                                false,
+                                false)),
+                        new ExcelRichTextRunSnapshot(
+                            " Review",
+                            new ExcelCellFontSnapshot(
+                                true,
+                                false,
+                                "Aptos",
+                                ExcelFontHeight.fromPoints(java.math.BigDecimal.valueOf(11)),
+                                ExcelColorSnapshot.rgb("#112233"),
+                                false,
+                                false))))),
+            Optional.of(new ExcelCommentAnchorSnapshot(1, 2, 4, 6)));
+    var formulaTarget = ExcelNamedRangeTarget.formula("SUM(Ops!$B$2:$B$5)");
     var table =
         new ExcelTableDefinition(
             "Queue",
@@ -451,7 +461,9 @@ class ExcelAdvancedValueObjectTest {
             null,
             null,
             List.of(new ExcelTableColumnDefinition(1, null, null, " SUM ", "B2*2")));
-    var protection = new ExcelWorkbookProtectionSettings(true, false, true, "book", "review");
+    var protection =
+        new ExcelWorkbookProtectionSettings(
+            true, false, true, Optional.of("book"), Optional.of("review"));
     ExcelComment copiedComment = commentSnapshot.toAuthoringComment();
 
     assertEquals("SUM(Ops!$B$2:$B$5)", formulaTarget.refersToFormula());
@@ -459,26 +471,43 @@ class ExcelAdvancedValueObjectTest {
     assertEquals(authoringComment.author(), copiedComment.author());
     assertEquals(authoringComment.visible(), copiedComment.visible());
     assertEquals(authoringComment.anchor(), copiedComment.anchor());
-    assertEquals(authoringComment.runs().plainText(), copiedComment.runs().plainText());
-    assertEquals(ExcelColor.rgb("#112233"), copiedComment.runs().runs().get(1).font().fontColor());
+    assertEquals(
+        authoringComment.runs().orElseThrow().plainText(),
+        copiedComment.runs().orElseThrow().plainText());
+    assertEquals(
+        ExcelColor.rgb("#112233"),
+        copiedComment
+            .runs()
+            .orElseThrow()
+            .runs()
+            .get(1)
+            .font()
+            .orElseThrow()
+            .fontColor()
+            .orElseThrow());
     assertEquals("", table.comment());
     assertEquals("", table.headerRowCellStyle());
     assertEquals("sum", table.columns().getFirst().totalsRowFunction());
     assertEquals("B2*2", table.columns().getFirst().calculatedColumnFormula());
-    assertEquals("book", protection.workbookPassword());
-    assertEquals("review", protection.revisionsPassword());
-    assertEquals("A1", new ExcelNamedRangeTarget("Ops", "A1").range());
-    assertEquals("Ops!$A$1", new ExcelNamedRangeTarget("Ops", "A1").refersToFormula());
-    assertEquals("A1:B2", new ExcelNamedRangeTarget("Ops", "$A$1:$B$2").range());
+    assertEquals("book", protection.workbookPassword().orElseThrow());
+    assertEquals("review", protection.revisionsPassword().orElseThrow());
+    assertEquals(
+        "A1", ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "A1")).range());
+    assertEquals("Ops!$A$1", ExcelNamedRangeTarget.range("Ops", "A1").refersToFormula());
+    assertEquals(
+        "A1:B2",
+        ((ExcelNamedRangeTarget.Range) ExcelNamedRangeTarget.range("Ops", "$A$1:$B$2")).range());
     ExcelComment plainComment =
-        new ExcelCommentSnapshot("Done", "GridGrind", false, null, null).toPlainComment();
+        new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
+            .toPlainComment();
     assertEquals("Done", plainComment.text());
     assertEquals("GridGrind", plainComment.author());
     ExcelComment plainAuthoringComment =
-        new ExcelCommentSnapshot("Done", "GridGrind", false, null, null).toAuthoringComment();
+        new ExcelCommentSnapshot("Done", "GridGrind", false, Optional.empty(), Optional.empty())
+            .toAuthoringComment();
     assertEquals("Done", plainAuthoringComment.text());
-    assertNull(plainAuthoringComment.runs());
-    assertNull(plainAuthoringComment.anchor());
+    assertTrue(plainAuthoringComment.runs().isEmpty());
+    assertTrue(plainAuthoringComment.anchor().isEmpty());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -487,18 +516,21 @@ class ExcelAdvancedValueObjectTest {
                 "Quarterly Review",
                 "GridGrind",
                 true,
-                new ExcelRichText(List.of(new ExcelRichTextRun("Mismatch", null))),
-                null));
-    assertThrows(IllegalArgumentException.class, () -> new ExcelNamedRangeTarget(" "));
+                Optional.of(
+                    new ExcelRichText(List.of(new ExcelRichTextRun("Mismatch", Optional.empty())))),
+                Optional.empty()));
+    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.formula(" "));
+    assertThrows(IllegalArgumentException.class, () -> ExcelNamedRangeTarget.range("Ops", " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelNamedRangeTarget("Ops", "A1", "SUM(Ops!$A$1)"));
+        () ->
+            new ExcelWorkbookProtectionSettings(
+                false, false, false, Optional.of(" "), Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelWorkbookProtectionSettings(false, false, false, " ", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelWorkbookProtectionSettings(false, false, false, null, " "));
+        () ->
+            new ExcelWorkbookProtectionSettings(
+                false, false, false, Optional.empty(), Optional.of(" ")));
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelTableColumnDefinition(-1, "", "", "", ""));
     ExcelTableColumnDefinition normalizedColumn =
@@ -598,7 +630,8 @@ class ExcelAdvancedValueObjectTest {
                 percentile,
                 max),
             false);
-    var top10 = new ExcelConditionalFormattingRule.Top10Rule(10, true, false, false, null);
+    var top10 =
+        new ExcelConditionalFormattingRule.Top10Rule(10, true, false, false, Optional.empty());
     var anchor = new ExcelCommentAnchor(1, 2, 3, 4);
 
     assertEquals(3, colorScale.thresholds().size());
@@ -670,7 +703,7 @@ class ExcelAdvancedValueObjectTest {
                 List.of(min, max),
                 false));
     assertThrows(
-        IllegalArgumentException.class,
+        NullPointerException.class,
         () -> new ExcelConditionalFormattingRule.Top10Rule(0, false, false, false, null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(-1, 0, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(1, 0, 0, 1));

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,14 +11,14 @@ public record TypeEntry(
     String summary,
     List<FieldEntry> fields,
     List<TargetSelectorEntry> targetSelectors,
-    String targetSelectorRule) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> targetSelectorRule) {
   /**
    * Creates a type entry without target-selector metadata.
    *
    * <p>Use this overload for nested value types that are not step-addressable.
    */
   public TypeEntry(String id, String summary, List<FieldEntry> fields) {
-    this(id, summary, fields, List.of(), null);
+    this(id, summary, fields, List.of(), Optional.empty());
   }
 
   public TypeEntry {
@@ -26,7 +27,8 @@ public record TypeEntry(
     fields = CatalogRecordValidation.copyFieldEntries(fields, "fields");
     targetSelectors =
         CatalogRecordValidation.copyTargetSelectorEntries(targetSelectors, "targetSelectors");
-    if (targetSelectorRule != null && targetSelectorRule.isBlank()) {
+    Objects.requireNonNull(targetSelectorRule, "targetSelectorRule must not be null");
+    if (targetSelectorRule.isPresent() && targetSelectorRule.orElseThrow().isBlank()) {
       throw new IllegalArgumentException("targetSelectorRule must not be blank");
     }
   }

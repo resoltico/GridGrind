@@ -5,13 +5,14 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.jspecify.annotations.Nullable;
 
 /** Shared RGB color normalization and POI conversion helpers for workbook style subsystems. */
 final class ExcelRgbColorSupport {
   private ExcelRgbColorSupport() {}
 
   /** Normalizes one optional {@code #RRGGBB} color literal for storage and comparison. */
-  static Optional<String> normalizeRgbHex(String color, String fieldName) {
+  static Optional<String> normalizeRgbHex(@Nullable String color, String fieldName) {
     if (color == null) {
       return Optional.empty();
     }

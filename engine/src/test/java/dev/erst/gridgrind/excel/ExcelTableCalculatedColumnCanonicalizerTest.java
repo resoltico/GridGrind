@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellType;
@@ -75,16 +76,21 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
   @Test
   void helperMethodsCoverBlankFormulaAndPreserveShellCases() throws IOException {
     CTTableColumn missingFormula = CTTableColumn.Factory.newInstance();
-    assertNull(ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(missingFormula));
+    assertEquals(
+        Optional.empty(),
+        ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(missingFormula));
 
     CTTableColumn blankFormula = CTTableColumn.Factory.newInstance();
     blankFormula.addNewCalculatedColumnFormula().setStringValue(" ");
-    assertNull(ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(blankFormula));
+    assertEquals(
+        Optional.empty(),
+        ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(blankFormula));
 
     CTTableColumn valuedFormula = CTTableColumn.Factory.newInstance();
     valuedFormula.addNewCalculatedColumnFormula().setStringValue("1+1");
     assertEquals(
-        "1+1", ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(valuedFormula));
+        Optional.of("1+1"),
+        ExcelTableCalculatedColumnCanonicalizer.calculatedColumnFormula(valuedFormula));
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");

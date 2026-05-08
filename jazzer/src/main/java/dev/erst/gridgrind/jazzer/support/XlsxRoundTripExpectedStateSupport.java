@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import org.apache.poi.ss.util.CellReference;
+import org.jspecify.annotations.Nullable;
 
 /** Captures the pre-save workbook state that must survive `.xlsx` round-trips. */
 final class XlsxRoundTripExpectedStateSupport {
@@ -85,7 +86,7 @@ final class XlsxRoundTripExpectedStateSupport {
     }
   }
 
-  record ExpectedCellMetadata(ExcelHyperlink hyperlink, ExcelComment comment) {
+  record ExpectedCellMetadata(@Nullable ExcelHyperlink hyperlink, @Nullable ExcelComment comment) {
     static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
           metadata.hyperlink().orElse(null),
@@ -114,5 +115,5 @@ final class XlsxRoundTripExpectedStateSupport {
   }
 
   record ExpectedNamedRange(
-      ExcelNamedRangeScope scope, String refersToFormula, ExcelNamedRangeTarget target) {}
+      ExcelNamedRangeScope scope, String refersToFormula, @Nullable ExcelNamedRangeTarget target) {}
 }

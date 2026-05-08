@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Gradient fill payload for cell-style authoring. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -18,41 +19,58 @@ public sealed interface CellGradientFillInput
   List<CellGradientStopInput> stops();
 
   /** Creates one linear gradient fill. */
-  static Linear linear(Double degree, List<CellGradientStopInput> stops) {
+  static Linear linear(Optional<Double> degree, List<CellGradientStopInput> stops) {
     return new Linear(degree, stops);
   }
 
   /** Creates one path gradient fill. */
   static Path path(
-      Double left, Double right, Double top, Double bottom, List<CellGradientStopInput> stops) {
+      Optional<Double> left,
+      Optional<Double> right,
+      Optional<Double> top,
+      Optional<Double> bottom,
+      List<CellGradientStopInput> stops) {
     return new Path(left, right, top, bottom, stops);
   }
 
   /** Linear gradient defined by one optional degree plus ordered stops. */
-  record Linear(Double degree, List<CellGradientStopInput> stops) implements CellGradientFillInput {
+  record Linear(Optional<Double> degree, List<CellGradientStopInput> stops)
+      implements CellGradientFillInput {
     public Linear {
-      requireFiniteOrNull(degree, "degree");
+      Objects.requireNonNull(degree, "degree must not be null");
+      requireFinite(degree, "degree");
       stops = copyStops(stops);
     }
   }
 
   /** Path gradient defined by optional edge offsets plus ordered stops. */
   record Path(
-      Double left, Double right, Double top, Double bottom, List<CellGradientStopInput> stops)
+      Optional<Double> left,
+      Optional<Double> right,
+      Optional<Double> top,
+      Optional<Double> bottom,
+      List<CellGradientStopInput> stops)
       implements CellGradientFillInput {
     public Path {
-      requireFiniteOrNull(left, "left");
-      requireFiniteOrNull(right, "right");
-      requireFiniteOrNull(top, "top");
-      requireFiniteOrNull(bottom, "bottom");
+      Objects.requireNonNull(left, "left must not be null");
+      Objects.requireNonNull(right, "right must not be null");
+      Objects.requireNonNull(top, "top must not be null");
+      Objects.requireNonNull(bottom, "bottom must not be null");
+      requireFinite(left, "left");
+      requireFinite(right, "right");
+      requireFinite(top, "top");
+      requireFinite(bottom, "bottom");
       stops = copyStops(stops);
     }
   }
 
-  private static void requireFiniteOrNull(Double value, String fieldName) {
-    if (value != null && !Double.isFinite(value)) {
-      throw new IllegalArgumentException(fieldName + " must be finite");
-    }
+  private static void requireFinite(Optional<Double> value, String fieldName) {
+    value.ifPresent(
+        actual -> {
+          if (!Double.isFinite(actual)) {
+            throw new IllegalArgumentException(fieldName + " must be finite");
+          }
+        });
   }
 
   private static List<CellGradientStopInput> copyStops(List<CellGradientStopInput> stops) {

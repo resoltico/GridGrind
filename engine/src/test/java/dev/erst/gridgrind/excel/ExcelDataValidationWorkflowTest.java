@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
 import org.apache.poi.ss.util.CellRangeAddressList;
@@ -26,12 +27,14 @@ class ExcelDataValidationWorkflowTest {
               new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
               true,
               false,
-              new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true),
-              new ExcelDataValidationErrorAlert(
-                  ExcelDataValidationErrorStyle.STOP,
-                  "Invalid status",
-                  "Use one of the allowed values.",
-                  true));
+              Optional.of(
+                  new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true)),
+              Optional.of(
+                  new ExcelDataValidationErrorAlert(
+                      ExcelDataValidationErrorStyle.STOP,
+                      "Invalid status",
+                      "Use one of the allowed values.",
+                      true)));
       budget.setDataValidation("A1:C3", definition);
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();

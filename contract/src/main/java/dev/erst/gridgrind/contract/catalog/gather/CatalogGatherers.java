@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.catalog.gather;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dev.erst.gridgrind.contract.catalog.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.contract.catalog.CatalogIgnored;
 import dev.erst.gridgrind.contract.catalog.FieldEntry;
 import java.lang.reflect.RecordComponent;

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.63.0"
+version: "0.64.0"
 domain: DEVELOPER
 updated: "2026-05-01"
 route:
@@ -18,13 +18,13 @@ route:
 
 GridGrind is in hard-break contract-replacement mode.
 
-The old monolithic `protocol` module is deleted and replaced by the current six-module product
-graph:
+The old monolithic `protocol` module is deleted and replaced by the current five-module product
+runtime plus one verification project:
 
 ```text
 dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
-dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
 
 The ownership boundaries are now:
@@ -32,11 +32,11 @@ The ownership boundaries are now:
 - `excel-foundation`
   - shared POI-free Excel-domain foundation types, limits, and value objects
 - `engine`
-  - workbook domain behavior and POI-backed execution
+  - workbook domain behavior, POI-backed execution, and the request-execution bridge
 - `contract`
   - canonical public contract model, metadata registry, and JSON codecs
 - `executor`
-  - the only bridge from contract to engine
+  - parity, regression, and black-box execution verification only
 - `authoring-java`
   - fluent Java authoring layer built strictly above the canonical contract and intentionally
     separate from execution
@@ -88,7 +88,7 @@ confused ownership model.
 - Do not add a new top-level Gradle product module that bypasses `executor`.
 - Do not reintroduce `protocol` as a top-level module, JPMS module, or package root.
 - Do not move execution logic back into `contract`.
-- Do not put transport-specific behavior in `engine` or `executor`.
+- Do not put transport-specific behavior in `engine`.
 - Do not reintroduce separate `operations[]` and `reads[]` arrays; the canonical contract is the
   ordered `steps[]` workflow surface.
 
@@ -102,10 +102,11 @@ Phase 0 and Phase 1 of the redesign are complete when all of the following are t
 - `settings.gradle.kts` includes `excel-foundation`, `engine`, `contract`, `executor`,
   `authoring-java`, and `cli`, and no longer includes `protocol`
 - the old top-level `protocol/` module is absent
-- the CLI depends on `executor`, not directly on the deleted `protocol` module
+- the CLI depends on `engine`, not directly on the deleted `protocol` module
 - `authoring-java` depends on `contract`, not directly on `executor`, `engine`, or the deleted
   `protocol` module
-- help and catalog discovery still render from the canonical contract registry
+- protocol-catalog discovery still renders from the canonical contract registry, while CLI help,
+  task discovery, and example discovery render from downstream CLI-owned surfaces
 - relocated tests, parity suites, and quality gates remain green
 
 ---

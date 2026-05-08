@@ -28,10 +28,7 @@ final class EventReadCommandTypes {
       case WorkbookReadCommand.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadCommand.GetAutofilters _ -> "GET_AUTOFILTERS";
       case WorkbookReadCommand.GetTables _ -> "GET_TABLES";
-      case WorkbookReadCommand.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
-      case WorkbookReadCommand.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
-      case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
     };
   }
 }

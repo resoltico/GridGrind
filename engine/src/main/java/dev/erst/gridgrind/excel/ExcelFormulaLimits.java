@@ -77,7 +77,7 @@ final class ExcelFormulaLimits {
     }
   }
 
-  private static FormulaShape scanFormulaShape(String formula) {
+  static FormulaShape scanFormulaShape(String formula) {
     Deque<FunctionFrame> functions = new ArrayDeque<>();
     boolean inString = false;
     int maximumFunctionNesting = 0;
@@ -126,7 +126,7 @@ final class ExcelFormulaLimits {
     return new FormulaShape(maximumFunctionNesting, maximumFunctionArguments);
   }
 
-  private static boolean looksLikeFunctionCall(String formula, int openParenIndex) {
+  static boolean looksLikeFunctionCall(String formula, int openParenIndex) {
     int index = openParenIndex - 1;
     while (index >= 0 && Character.isWhitespace(formula.charAt(index))) {
       index--;
@@ -140,7 +140,7 @@ final class ExcelFormulaLimits {
     return true;
   }
 
-  private static boolean isFunctionIdentifierCharacter(char value) {
+  static boolean isFunctionIdentifierCharacter(char value) {
     return Character.isLetterOrDigit(value) || value == '_' || value == '.';
   }
 
@@ -152,5 +152,5 @@ final class ExcelFormulaLimits {
     private int argumentSeparators;
   }
 
-  private record FormulaShape(int maximumFunctionNesting, int maximumFunctionArguments) {}
+  record FormulaShape(int maximumFunctionNesting, int maximumFunctionArguments) {}
 }

@@ -4,12 +4,13 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /** Drawing-domain mutations and readback for one sheet wrapper. */
 final class ExcelSheetDrawingSupport {
   private final Sheet sheet;
   private final ExcelDrawingController drawingController;
-  private final ExcelFormulaRuntime formulaRuntime;
+  private final @Nullable ExcelFormulaRuntime formulaRuntime;
 
   ExcelSheetDrawingSupport(Sheet sheet) {
     this(sheet, new ExcelDrawingController(), null);
@@ -20,7 +21,9 @@ final class ExcelSheetDrawingSupport {
   }
 
   ExcelSheetDrawingSupport(
-      Sheet sheet, ExcelDrawingController drawingController, ExcelFormulaRuntime formulaRuntime) {
+      Sheet sheet,
+      ExcelDrawingController drawingController,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
     this.drawingController =
         Objects.requireNonNull(drawingController, "drawingController must not be null");

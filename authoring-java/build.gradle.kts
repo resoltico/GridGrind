@@ -7,7 +7,7 @@ description = "Java-first fluent authoring API over the canonical GridGrind cont
 
 dependencies {
     api(project(":contract"))
-    testImplementation(project(":executor"))
+    testImplementation(project(":engine"))
     testImplementation(libs.junit.jupiter)
     testImplementation(testFixtures(project(":engine")))
     testRuntimeOnly(libs.junit.platform.launcher)

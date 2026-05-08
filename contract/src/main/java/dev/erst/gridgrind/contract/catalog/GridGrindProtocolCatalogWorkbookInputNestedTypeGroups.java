@@ -6,7 +6,9 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
+import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.PaneInput;
+import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
 import java.util.List;
 
@@ -113,5 +115,31 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       AutofilterSortConditionInput.Icon.class,
                       "ICON",
-                      "Sort by the icon id inside the active icon-set definition."))));
+                      "Sort by the icon id inside the active icon-set definition."))),
+          nestedTypeGroup(
+              "namedRangeTargetTypes",
+              NamedRangeTarget.class,
+              List.of(
+                  descriptor(
+                      NamedRangeTarget.Range.class,
+                      "RANGE",
+                      "Write one named-range target backed by an explicit sheet-qualified cell or rectangular range."),
+                  descriptor(
+                      NamedRangeTarget.Formula.class,
+                      "FORMULA",
+                      "Write one named-range target backed by an exact stored formula."))),
+          nestedTypeGroup(
+              "shapeInputTypes",
+              ShapeInput.class,
+              List.of(
+                  descriptor(
+                      ShapeInput.SimpleShape.class,
+                      "SIMPLE_SHAPE",
+                      "Write one authored simple shape with required geometry token and optional"
+                          + " text payload.",
+                      "text"),
+                  descriptor(
+                      ShapeInput.Connector.class,
+                      "CONNECTOR",
+                      "Write one authored connector with no geometry token or text payload."))));
 }

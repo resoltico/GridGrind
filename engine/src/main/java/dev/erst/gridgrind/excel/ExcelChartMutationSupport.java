@@ -7,6 +7,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTStrData;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTStrRef;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
@@ -21,7 +22,9 @@ final class ExcelChartMutationSupport {
   }
 
   static void validateChart(
-      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition definition,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -36,7 +39,9 @@ final class ExcelChartMutationSupport {
   }
 
   static void createChart(
-      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition definition,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
@@ -58,7 +63,9 @@ final class ExcelChartMutationSupport {
   }
 
   static PreparedSeriesTitle prepareSeriesTitle(
-      XSSFSheet sheet, ExcelChartDefinition.Title title, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition.Title title,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     return switch (title) {
       case ExcelChartDefinition.Title.None _ -> new PreparedSeriesTitleNone();
       case ExcelChartDefinition.Title.Text text -> new PreparedSeriesTitleText(text.text());
@@ -75,7 +82,9 @@ final class ExcelChartMutationSupport {
   }
 
   private static void validateChartTitle(
-      XSSFSheet sheet, ExcelChartDefinition.Title title, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition.Title title,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     if (title instanceof ExcelChartDefinition.Title.Formula formula) {
       CellReference reference =
           ExcelChartSourceSupport.resolveSingleCellReference(
@@ -87,7 +96,9 @@ final class ExcelChartMutationSupport {
   }
 
   private static void validatePlot(
-      XSSFSheet sheet, ExcelChartDefinition.Plot plot, ExcelFormulaRuntime formulaRuntime) {
+      XSSFSheet sheet,
+      ExcelChartDefinition.Plot plot,
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     for (ExcelChartDefinition.Series series : plotSeries(plot)) {
       ExcelChartSourceSupport.toCategoryDataSource(sheet, series.categories(), formulaRuntime);
       ExcelChartSourceSupport.toValueDataSource(sheet, series.values(), formulaRuntime);
@@ -153,7 +164,7 @@ final class ExcelChartMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartDefinition definition,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     applyChartTitle(sheet, chart, definition.title(), formulaRuntime);
     applyChartLegend(chart, definition.legend());
     chart.displayBlanksAs(ExcelChartPoiBridge.toPoiDisplayBlanks(definition.displayBlanksAs()));
@@ -164,7 +175,7 @@ final class ExcelChartMutationSupport {
       XSSFSheet sheet,
       XSSFChart chart,
       ExcelChartDefinition.Title title,
-      ExcelFormulaRuntime formulaRuntime) {
+      @Nullable ExcelFormulaRuntime formulaRuntime) {
     switch (title) {
       case ExcelChartDefinition.Title.None _ -> chart.removeTitle();
       case ExcelChartDefinition.Title.Text text -> chart.setTitleText(text.text());

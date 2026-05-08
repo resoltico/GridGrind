@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
@@ -39,8 +40,9 @@ final class ExcelTableController {
     List<String> headerNames = ExcelTableStructureSupport.headerNames(sheet, targetRange);
     requireHeaders(headerNames);
 
-    TableHandle existingByName = tableByName(workbook, definition.name());
-    if (existingByName != null && !existingByName.sheetName().equals(definition.sheetName())) {
+    Optional<TableHandle> existingByName = tableByName(workbook, definition.name());
+    if (existingByName.isPresent()
+        && !existingByName.orElseThrow().sheetName().equals(definition.sheetName())) {
       throw new IllegalArgumentException(
           "table name already exists on a different sheet: " + definition.name());
     }
@@ -49,13 +51,13 @@ final class ExcelTableController {
     validateStyle(workbook, definition.style());
 
     XSSFTable table =
-        existingByName == null
+        existingByName.isEmpty()
             ? sheet.createTable(
                 new AreaReference(
                     ExcelSheetStructureSupport.formatRange(targetRange),
                     SpreadsheetVersion.EXCEL2007))
-            : existingByName.table();
-    if (existingByName != null) {
+            : existingByName.orElseThrow().table();
+    if (existingByName.isPresent()) {
       table.setArea(
           new AreaReference(
               ExcelSheetStructureSupport.formatRange(targetRange), SpreadsheetVersion.EXCEL2007));
@@ -87,12 +89,12 @@ final class ExcelTableController {
       throw new IllegalArgumentException("sheetName must not be blank");
     }
 
-    TableHandle tableHandle = tableByName(workbook, validatedName);
-    if (tableHandle == null || !tableHandle.sheetName().equals(sheetName)) {
+    Optional<TableHandle> tableHandle = tableByName(workbook, validatedName);
+    if (tableHandle.isEmpty() || !tableHandle.orElseThrow().sheetName().equals(sheetName)) {
       throw new IllegalArgumentException(
           "table not found on expected sheet: " + validatedName + "@" + sheetName);
     }
-    tableHandle.sheet().removeTable(tableHandle.table());
+    tableHandle.orElseThrow().sheet().removeTable(tableHandle.orElseThrow().table());
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
@@ -180,11 +182,11 @@ final class ExcelTableController {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
       return;
     }
-    ExcelRange sheetAutofilterRange =
-        ExcelSheetStructureSupport.parseRangeOrNull(
+    Optional<ExcelRange> sheetAutofilterRange =
+        ExcelSheetStructureSupport.parseOptionalRange(
             Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), ""));
-    if (sheetAutofilterRange != null
-        && ExcelSheetStructureSupport.intersects(sheetAutofilterRange, tableRange)) {
+    if (sheetAutofilterRange.isPresent()
+        && ExcelSheetStructureSupport.intersects(sheetAutofilterRange.orElseThrow(), tableRange)) {
       autofilterController.clearSheetAutofilter(sheet);
     }
   }
@@ -193,20 +195,21 @@ final class ExcelTableController {
       ExcelWorkbook workbook,
       ExcelTableDefinition definition,
       ExcelRange targetRange,
-      TableHandle existingByName) {
+      Optional<TableHandle> existingByName) {
     List<String> overlaps = new ArrayList<>();
     for (TableHandle tableHandle : allTables(workbook)) {
       if (!tableHandle.sheetName().equals(definition.sheetName())) {
         continue;
       }
-      if (existingByName != null && tableHandle.name().equalsIgnoreCase(existingByName.name())) {
+      if (existingByName.isPresent()
+          && tableHandle.name().equalsIgnoreCase(existingByName.orElseThrow().name())) {
         continue;
       }
-      ExcelRange existingRange =
-          ExcelSheetStructureSupport.parseRangeOrNull(
+      Optional<ExcelRange> existingRange =
+          ExcelSheetStructureSupport.parseOptionalRange(
               Objects.requireNonNullElse(tableHandle.table().getCTTable().getRef(), ""));
-      if (existingRange != null
-          && ExcelSheetStructureSupport.intersects(existingRange, targetRange)) {
+      if (existingRange.isPresent()
+          && ExcelSheetStructureSupport.intersects(existingRange.orElseThrow(), targetRange)) {
         overlaps.add(tableHandle.name() + "@" + tableHandle.table().getCTTable().getRef());
       }
     }
@@ -362,14 +365,14 @@ final class ExcelTableController {
     return List.copyOf(tables);
   }
 
-  private TableHandle tableByName(ExcelWorkbook workbook, String name) {
+  private Optional<TableHandle> tableByName(ExcelWorkbook workbook, String name) {
     String key = name.toUpperCase(Locale.ROOT);
     for (TableHandle tableHandle : allTables(workbook)) {
       if (tableHandle.name().toUpperCase(Locale.ROOT).equals(key)) {
-        return tableHandle;
+        return Optional.of(tableHandle);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   private static XSSFSheet requiredSheet(ExcelWorkbook workbook, String sheetName) {

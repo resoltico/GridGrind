@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Immutable factual workbook custom-XML mapping metadata. */
 public record ExcelCustomXmlMappingSnapshot(
@@ -15,11 +16,11 @@ public record ExcelCustomXmlMappingSnapshot(
     boolean append,
     boolean preserveSortAfLayout,
     boolean preserveFormat,
-    String schemaNamespace,
-    String schemaLanguage,
-    String schemaReference,
-    String schemaXml,
-    ExcelCustomXmlDataBindingSnapshot dataBinding,
+    Optional<String> schemaNamespace,
+    Optional<String> schemaLanguage,
+    Optional<String> schemaReference,
+    Optional<String> schemaXml,
+    Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
     List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
     List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
   public ExcelCustomXmlMappingSnapshot {
@@ -29,18 +30,11 @@ public record ExcelCustomXmlMappingSnapshot(
     name = requireNonBlank(name, "name");
     rootElement = requireNonBlank(rootElement, "rootElement");
     schemaId = requireNonBlank(schemaId, "schemaId");
-    if (schemaNamespace != null) {
-      schemaNamespace = requireNonBlank(schemaNamespace, "schemaNamespace");
-    }
-    if (schemaLanguage != null) {
-      schemaLanguage = requireNonBlank(schemaLanguage, "schemaLanguage");
-    }
-    if (schemaReference != null) {
-      schemaReference = requireNonBlank(schemaReference, "schemaReference");
-    }
-    if (schemaXml != null) {
-      schemaXml = requireNonBlank(schemaXml, "schemaXml");
-    }
+    schemaNamespace = requireNonBlankOptional(schemaNamespace, "schemaNamespace");
+    schemaLanguage = requireNonBlankOptional(schemaLanguage, "schemaLanguage");
+    schemaReference = requireNonBlankOptional(schemaReference, "schemaReference");
+    schemaXml = requireNonBlankOptional(schemaXml, "schemaXml");
+    Objects.requireNonNull(dataBinding, "dataBinding must not be null");
     linkedCells = copyValues(linkedCells, "linkedCells");
     linkedTables = copyValues(linkedTables, "linkedTables");
   }
@@ -51,6 +45,13 @@ public record ExcelCustomXmlMappingSnapshot(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
+  }
+
+  private static Optional<String> requireNonBlankOptional(
+      Optional<String> value, String fieldName) {
+    Optional<String> required = Objects.requireNonNull(value, fieldName + " must not be null");
+    required.ifPresent(nonBlank -> requireNonBlank(nonBlank, fieldName));
+    return required;
   }
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {

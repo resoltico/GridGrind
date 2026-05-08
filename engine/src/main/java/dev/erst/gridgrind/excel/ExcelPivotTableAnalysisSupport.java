@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -42,7 +43,7 @@ final class ExcelPivotTableAnalysisSupport {
   static List<WorkbookAnalysis.AnalysisFinding> pivotTableHealthFindings(
       XSSFWorkbook workbook, PivotHandle handle) {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    if (ExcelPivotTableIdentitySupport.actualName(handle) == null) {
+    if (ExcelPivotTableIdentitySupport.actualName(handle).isEmpty()) {
       findings.add(
           finding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
@@ -53,8 +54,8 @@ final class ExcelPivotTableAnalysisSupport {
               List.of(ExcelPivotTableIdentitySupport.resolvedName(handle))));
     }
 
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
-    if (location == null) {
+    Optional<PivotLocation> location = ExcelPivotTableIdentitySupport.safeLocation(handle);
+    if (location.isEmpty()) {
       findings.add(
           finding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
@@ -63,13 +64,15 @@ final class ExcelPivotTableAnalysisSupport {
               handle,
               "Pivot table location is malformed",
               "The pivot table location range could not be parsed.",
-              List.of(ExcelPivotTableIdentitySupport.rawLocationRange(handle))));
+              ExcelPivotTableIdentitySupport.rawLocationRange(handle)
+                  .map(List::of)
+                  .orElse(List.of("PIVOT_" + (handle.ordinalOnSheet() + 1)))));
       return List.copyOf(findings);
     }
 
-    XSSFPivotCacheDefinition cacheDefinition =
+    Optional<XSSFPivotCacheDefinition> cacheDefinition =
         ExcelPivotTableSnapshotSupport.cacheDefinition(handle.table());
-    if (cacheDefinition == null) {
+    if (cacheDefinition.isEmpty()) {
       findings.add(
           finding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
@@ -78,11 +81,11 @@ final class ExcelPivotTableAnalysisSupport {
               handle,
               "Pivot table is missing its cache definition relation",
               "The pivot table part no longer points at a pivot cache definition.",
-              List.of(location.locationRange())));
+              List.of(location.orElseThrow().locationRange())));
       return List.copyOf(findings);
     }
 
-    if (ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition) == null) {
+    if (ExcelPivotTableSnapshotSupport.cacheRecords(cacheDefinition.orElseThrow()).isEmpty()) {
       findings.add(
           finding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
@@ -91,12 +94,12 @@ final class ExcelPivotTableAnalysisSupport {
               handle,
               "Pivot table is missing its cache records relation",
               "The pivot cache definition does not point at pivot cache records.",
-              List.of(location.locationRange())));
+              List.of(location.orElseThrow().locationRange())));
     }
 
     CTPivotTableDefinition definition = handle.table().getCTPivotTableDefinition();
     if (ExcelPivotTableSnapshotSupport.workbookPivotCache(workbook, definition.getCacheId())
-        == null) {
+        .isEmpty()) {
       findings.add(
           finding(
               dev.erst.gridgrind.excel.foundation.AnalysisFindingCode
@@ -132,7 +135,7 @@ final class ExcelPivotTableAnalysisSupport {
               "Pivot table source is broken",
               Objects.requireNonNullElse(
                   exception.getMessage(), "The pivot source no longer resolves cleanly."),
-              List.of(location.locationRange())));
+              List.of(location.orElseThrow().locationRange())));
     }
     return List.copyOf(new ArrayList<>(new LinkedHashSet<>(findings)));
   }

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Table-, pivot-, and autofilter-oriented tabular commands. */
 public sealed interface WorkbookTabularCommand extends WorkbookCommand
@@ -24,17 +25,18 @@ public sealed interface WorkbookTabularCommand extends WorkbookCommand
       String sheetName,
       String range,
       List<ExcelAutofilterFilterColumn> criteria,
-      ExcelAutofilterSortState sortState)
+      Optional<ExcelAutofilterSortState> sortState)
       implements WorkbookTabularCommand {
     /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
     public SetAutofilter(String sheetName, String range) {
-      this(sheetName, range, List.of(), null);
+      this(sheetName, range, List.of(), Optional.empty());
     }
 
     public SetAutofilter {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(range, "range must not be null");
       criteria = List.copyOf(Objects.requireNonNull(criteria, "criteria must not be null"));
+      Objects.requireNonNull(sortState, "sortState must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }

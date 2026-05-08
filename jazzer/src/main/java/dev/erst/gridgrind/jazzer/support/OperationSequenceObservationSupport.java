@@ -5,9 +5,10 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.ne
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.nextTableSelector;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 
-import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
@@ -17,6 +18,7 @@ import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
+import java.util.Optional;
 
 /** Shared selector and assertion generation support for observation-side Jazzer workflows. */
 final class OperationSequenceObservationSupport {
@@ -119,55 +121,55 @@ final class OperationSequenceObservationSupport {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
           case 0 ->
-              new Assertion.WorkbookProtectionFacts(
+              new WorkbookFactAssertion.WorkbookProtectionFacts(
                   new dev.erst.gridgrind.contract.dto.WorkbookProtectionReport(
                       false, false, false, false, false));
           case 1 ->
-              new Assertion.AnalysisMaxSeverity(
-                  new InspectionQuery.AnalyzeWorkbookFindings(), nextMaximumSeverity(data));
+              new AnalysisAssertion.AnalysisMaxSeverity(
+                  new InspectionAnalysisQuery.AnalyzeWorkbookFindings(), nextMaximumSeverity(data));
           default ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeWorkbookFindings(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeWorkbookFindings(),
                   AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
         };
     Assertion alternate =
-        new Assertion.AnalysisFindingPresent(
-            new InspectionQuery.AnalyzeWorkbookFindings(),
+        new AnalysisAssertion.AnalysisFindingPresent(
+            new InspectionAnalysisQuery.AnalyzeWorkbookFindings(),
             AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
-            null,
-            null);
+            Optional.empty(),
+            Optional.empty());
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextCellAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 4) {
-          case 0 -> new Assertion.CellValue(nextExpectedCellValue(data));
-          case 1 -> new Assertion.DisplayValue("display-" + data.consumeInt(0, 9));
-          case 2 -> new Assertion.FormulaText(data.consumeBoolean() ? "B2*2" : "SUM(B2:B4)");
-          default -> new Assertion.DisplayValue("Report");
+          case 0 -> new CellAssertion.CellValue(nextExpectedCellValue(data));
+          case 1 -> new CellAssertion.DisplayValue("display-" + data.consumeInt(0, 9));
+          case 2 -> new CellAssertion.FormulaText(data.consumeBoolean() ? "B2*2" : "SUM(B2:B4)");
+          default -> new CellAssertion.DisplayValue("Report");
         };
-    Assertion alternate = new Assertion.CellValue(new ExpectedCellValue.Text("Jan"));
+    Assertion alternate = new CellAssertion.CellValue(new ExpectedCellValue.Text("Jan"));
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextNamedRangeAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.NamedRangePresent();
+          case 0 -> new PresenceAssertion.NamedRangePresent();
           case 1 ->
-              new Assertion.AnalysisMaxSeverity(
-                  new InspectionQuery.AnalyzeNamedRangeHealth(), nextMaximumSeverity(data));
+              new AnalysisAssertion.AnalysisMaxSeverity(
+                  new InspectionAnalysisQuery.AnalyzeNamedRangeHealth(), nextMaximumSeverity(data));
           default ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeNamedRangeHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeNamedRangeHealth(),
                   AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
         };
-    Assertion alternate = new Assertion.NamedRangeAbsent();
+    Assertion alternate = new PresenceAssertion.NamedRangeAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
@@ -175,91 +177,93 @@ final class OperationSequenceObservationSupport {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 6) {
           case 0 ->
-              new Assertion.AnalysisMaxSeverity(
-                  new InspectionQuery.AnalyzeFormulaHealth(), nextMaximumSeverity(data));
+              new AnalysisAssertion.AnalysisMaxSeverity(
+                  new InspectionAnalysisQuery.AnalyzeFormulaHealth(), nextMaximumSeverity(data));
           case 1 ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeDataValidationHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeDataValidationHealth(),
                   AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
           case 2 ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeConditionalFormattingHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth(),
                   AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
           case 3 ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeAutofilterHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeAutofilterHealth(),
                   AnalysisFindingCode.AUTOFILTER_INVALID_RANGE,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
           case 4 ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeHyperlinkHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeHyperlinkHealth(),
                   AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
           default ->
-              new Assertion.SheetStructureFacts(
-                  new dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports
-                      .SheetSummaryReport(
+              new WorkbookFactAssertion.SheetStructureFacts(
+                  new dev.erst.gridgrind.contract.dto.SheetSummaryReport(
                       sheetName,
                       ExcelSheetVisibility.VISIBLE,
-                      new dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports
-                          .SheetProtectionReport.Unprotected(),
+                      new dev.erst.gridgrind.contract.dto.SheetProtectionReport.Unprotected(),
                       0,
                       -1,
                       -1));
         };
     Assertion alternate =
-        new Assertion.AnalysisMaxSeverity(
-            new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING);
+        new AnalysisAssertion.AnalysisMaxSeverity(
+            new InspectionAnalysisQuery.AnalyzeFormulaHealth(), AnalysisSeverity.WARNING);
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextTableAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.TablePresent();
+          case 0 -> new PresenceAssertion.TablePresent();
           case 1 ->
-              new Assertion.AnalysisMaxSeverity(
-                  new InspectionQuery.AnalyzeTableHealth(), nextMaximumSeverity(data));
+              new AnalysisAssertion.AnalysisMaxSeverity(
+                  new InspectionAnalysisQuery.AnalyzeTableHealth(), nextMaximumSeverity(data));
           default ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzeTableHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzeTableHealth(),
                   AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
         };
-    Assertion alternate = new Assertion.TableAbsent();
+    Assertion alternate = new PresenceAssertion.TableAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextPivotTableAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.PivotTablePresent();
+          case 0 -> new PresenceAssertion.PivotTablePresent();
           case 1 ->
-              new Assertion.AnalysisMaxSeverity(
-                  new InspectionQuery.AnalyzePivotTableHealth(), nextMaximumSeverity(data));
+              new AnalysisAssertion.AnalysisMaxSeverity(
+                  new InspectionAnalysisQuery.AnalyzePivotTableHealth(), nextMaximumSeverity(data));
           default ->
-              new Assertion.AnalysisFindingAbsent(
-                  new InspectionQuery.AnalyzePivotTableHealth(),
+              new AnalysisAssertion.AnalysisFindingAbsent(
+                  new InspectionAnalysisQuery.AnalyzePivotTableHealth(),
                   AnalysisFindingCode.PIVOT_TABLE_BROKEN_SOURCE,
                   nextOptionalSeverity(data),
-                  null);
+                  Optional.empty());
         };
-    Assertion alternate = new Assertion.PivotTableAbsent();
+    Assertion alternate = new PresenceAssertion.PivotTableAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextChartAssertion(GridGrindFuzzData data) {
     Assertion primary =
-        data.consumeBoolean() ? new Assertion.ChartPresent() : new Assertion.ChartAbsent();
+        data.consumeBoolean()
+            ? new PresenceAssertion.ChartPresent()
+            : new PresenceAssertion.ChartAbsent();
     Assertion alternate =
-        data.consumeBoolean() ? new Assertion.ChartAbsent() : new Assertion.ChartPresent();
+        data.consumeBoolean()
+            ? new PresenceAssertion.ChartAbsent()
+            : new PresenceAssertion.ChartPresent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
@@ -267,9 +271,9 @@ final class OperationSequenceObservationSupport {
       GridGrindFuzzData data, Assertion primary, Assertion alternate) {
     return switch (selectorSlot(nextSelectorByte(data)) % 4) {
       case 0 -> primary;
-      case 1 -> new Assertion.Not(primary);
-      case 2 -> new Assertion.AllOf(List.of(primary, alternate));
-      default -> new Assertion.AnyOf(List.of(primary, alternate));
+      case 1 -> new CompositeAssertion.Not(primary);
+      case 2 -> new CompositeAssertion.AllOf(List.of(primary, alternate));
+      default -> new CompositeAssertion.AnyOf(List.of(primary, alternate));
     };
   }
 
@@ -281,8 +285,8 @@ final class OperationSequenceObservationSupport {
     };
   }
 
-  private static AnalysisSeverity nextOptionalSeverity(GridGrindFuzzData data) {
-    return data.consumeBoolean() ? nextMaximumSeverity(data) : null;
+  private static Optional<AnalysisSeverity> nextOptionalSeverity(GridGrindFuzzData data) {
+    return data.consumeBoolean() ? Optional.of(nextMaximumSeverity(data)) : Optional.empty();
   }
 
   private static ExpectedCellValue nextExpectedCellValue(GridGrindFuzzData data) {

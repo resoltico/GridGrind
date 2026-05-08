@@ -86,8 +86,7 @@ final class ExcelSheetAnnotationSupport {
   }
 
   ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return ExcelCellMetadataSnapshot.of(
-        optionalHyperlink(cell).orElse(null), optionalCommentSnapshot(cell).orElse(null));
+    return ExcelCellMetadataSnapshot.of(optionalHyperlink(cell), optionalCommentSnapshot(cell));
   }
 
   List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
@@ -106,36 +105,36 @@ final class ExcelSheetAnnotationSupport {
     };
   }
 
-  static ExcelHyperlink hyperlink(Cell cell) {
-    return optionalHyperlink(cell).orElse(null);
+  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
+    return optionalHyperlink(cell);
   }
 
-  static ExcelHyperlink hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    return optionalHyperlink(hyperlink).orElse(null);
+  static Optional<ExcelHyperlink> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+    return optionalHyperlink(hyperlink);
   }
 
-  static ExcelHyperlink hyperlink(HyperlinkType hyperlinkType, String target) {
-    return optionalHyperlink(hyperlinkType, target).orElse(null);
+  static Optional<ExcelHyperlink> hyperlink(HyperlinkType hyperlinkType, String target) {
+    return optionalHyperlink(hyperlinkType, target);
   }
 
-  static ExcelComment comment(Cell cell) {
-    return optionalComment(cell).orElse(null);
+  static Optional<ExcelComment> comment(Cell cell) {
+    return optionalComment(cell);
   }
 
-  static ExcelComment comment(Comment comment) {
-    return optionalComment(comment).orElse(null);
+  static Optional<ExcelComment> comment(Comment comment) {
+    return optionalComment(comment);
   }
 
-  static ExcelComment comment(String text, String author, boolean visible) {
-    return optionalComment(text, author, visible).orElse(null);
+  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
+    return optionalComment(text, author, visible);
   }
 
-  static ExcelCommentSnapshot commentSnapshot(Cell cell) {
-    return optionalCommentSnapshot(cell).orElse(null);
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
+    return optionalCommentSnapshot(cell);
   }
 
-  static ExcelCommentSnapshot commentSnapshot(Comment comment) {
-    return optionalCommentSnapshot(comment).orElse(null);
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
+    return optionalCommentSnapshot(comment);
   }
 
   static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
@@ -159,19 +158,19 @@ final class ExcelSheetAnnotationSupport {
   private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
     ExcelCellTextLimits.requireSupportedLength(comment.text(), "comment.text"); // LIM-010
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    ExcelCommentAnchor authoredAnchor = comment.anchor();
-    anchor.setRow1(authoredAnchor == null ? rowIndex : authoredAnchor.firstRow());
-    anchor.setRow2(authoredAnchor == null ? rowIndex + 3 : authoredAnchor.lastRow());
-    anchor.setCol1(authoredAnchor == null ? columnIndex : authoredAnchor.firstColumn());
-    anchor.setCol2(authoredAnchor == null ? columnIndex + 3 : authoredAnchor.lastColumn());
+    Optional<ExcelCommentAnchor> authoredAnchor = comment.anchor();
+    anchor.setRow1(authoredAnchor.map(ExcelCommentAnchor::firstRow).orElse(rowIndex));
+    anchor.setRow2(authoredAnchor.map(ExcelCommentAnchor::lastRow).orElse(rowIndex + 3));
+    anchor.setCol1(authoredAnchor.map(ExcelCommentAnchor::firstColumn).orElse(columnIndex));
+    anchor.setCol2(authoredAnchor.map(ExcelCommentAnchor::lastColumn).orElse(columnIndex + 3));
     Comment poiComment = sheet.createDrawingPatriarch().createCellComment(anchor);
     poiComment.setAuthor(comment.author());
     poiComment.setVisible(comment.visible());
     poiComment.setString(
-        comment.runs() == null
+        comment.runs().isEmpty()
             ? new XSSFRichTextString(comment.text())
             : ExcelRichTextSupport.toPoiRichText(
-                (XSSFWorkbook) sheet.getWorkbook(), comment.runs()));
+                (XSSFWorkbook) sheet.getWorkbook(), comment.runs().orElseThrow()));
     return poiComment;
   }
 
@@ -259,41 +258,44 @@ final class ExcelSheetAnnotationSupport {
   }
 
   private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(
-      Workbook workbook, Comment comment) {
+      Optional<Workbook> workbook, Comment comment) {
     if (!(comment instanceof XSSFComment xssfComment)
         || xssfComment.getString() == null
         || xssfComment.getAuthor() == null
         || xssfComment.getAuthor().isBlank()) {
       return Optional.empty();
     }
-    ExcelComment plainComment =
+    Optional<ExcelComment> plainComment =
         optionalComment(
-                xssfComment.getString().getString(),
-                xssfComment.getAuthor(),
-                xssfComment.isVisible())
-            .orElse(null);
-    if (plainComment == null) {
+            xssfComment.getString().getString(), xssfComment.getAuthor(), xssfComment.isVisible());
+    if (plainComment.isEmpty()) {
       return Optional.empty();
     }
-    ExcelCommentAnchorSnapshot anchor = null;
+    Optional<ExcelCommentAnchorSnapshot> anchor = Optional.empty();
     if (xssfComment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
       anchor =
-          new ExcelCommentAnchorSnapshot(
-              clientAnchor.getCol1(),
-              clientAnchor.getRow1(),
-              clientAnchor.getCol2(),
-              clientAnchor.getRow2());
+          Optional.of(
+              new ExcelCommentAnchorSnapshot(
+                  clientAnchor.getCol1(),
+                  clientAnchor.getRow1(),
+                  clientAnchor.getCol2(),
+                  clientAnchor.getRow2()));
     }
-    ExcelRichTextSnapshot runs =
-        workbook == null
-            ? null
+    Optional<ExcelRichTextSnapshot> runs =
+        workbook.isEmpty()
+            ? Optional.empty()
             : ExcelRichTextSupport.snapshot(
-                (XSSFWorkbook) workbook,
+                (XSSFWorkbook) workbook.orElseThrow(),
                 xssfComment.getString(),
-                WorkbookStyleRegistry.snapshotFont(((XSSFWorkbook) workbook).getFontAt(0)));
+                WorkbookStyleRegistry.snapshotFont(
+                    ((XSSFWorkbook) workbook.orElseThrow()).getFontAt(0)));
     return Optional.of(
         new ExcelCommentSnapshot(
-            plainComment.text(), plainComment.author(), plainComment.visible(), runs, anchor));
+            plainComment.orElseThrow().text(),
+            plainComment.orElseThrow().author(),
+            plainComment.orElseThrow().visible(),
+            runs,
+            anchor));
   }
 
   static void removeCommentFromTable(XSSFSheet sheet, CellAddress address) {
@@ -457,10 +459,11 @@ final class ExcelSheetAnnotationSupport {
   private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Cell cell) {
     return cell == null
         ? Optional.empty()
-        : optionalCommentSnapshot(cell.getSheet().getWorkbook(), cell.getCellComment());
+        : optionalCommentSnapshot(
+            Optional.of(cell.getSheet().getWorkbook()), cell.getCellComment());
   }
 
   private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Comment comment) {
-    return optionalCommentSnapshot(null, comment);
+    return optionalCommentSnapshot(Optional.empty(), comment);
   }
 }

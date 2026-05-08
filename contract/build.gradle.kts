@@ -12,7 +12,8 @@ plugins {
 
 description = "Canonical GridGrind contract model, metadata registry, and JSON codecs"
 
-val downstreamCoverageProjects = listOf(project(":executor"), project(":authoring-java"), project(":cli"))
+val downstreamCoverageProjects =
+    listOf(project(":engine"), project(":executor"), project(":authoring-java"), project(":cli"))
 
 fun downstreamCoverageTaskPaths(): List<String> =
     downstreamCoverageProjects.flatMap { downstreamProject ->
@@ -64,17 +65,4 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     executionData.from(localCoverageExecutionData())
     dependsOn(downstreamCoverageTaskPaths())
     executionData.from(downstreamCoverageExecutionData())
-}
-
-pluginManager.withPlugin("java") {
-    tasks.register<JavaExec>("writeRepositoryExamples") {
-        group = "documentation"
-        description =
-            "Regenerates the checkout-rooted examples/*.json fixtures from the contract-owned example registry."
-        dependsOn(tasks.named("testClasses"))
-        classpath =
-            project.the<JavaPluginExtension>().sourceSets.named("test").get().runtimeClasspath
-        mainClass = "dev.erst.gridgrind.contract.json.ExampleRequestFixturesWriter"
-        workingDir = rootProject.projectDir
-    }
 }

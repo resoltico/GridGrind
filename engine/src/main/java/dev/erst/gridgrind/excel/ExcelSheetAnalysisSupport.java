@@ -13,6 +13,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellReference;
+import org.jspecify.annotations.Nullable;
 
 /** Derived-analysis support for formula and hyperlink health on one sheet. */
 final class ExcelSheetAnalysisSupport {
@@ -411,7 +412,9 @@ final class ExcelSheetAnalysisSupport {
   }
 
   private static boolean hasUnregisteredUserDefinedFunction(
-      ExcelFormulaRuntimeContext formulaContext, String leadingFunctionName, String formula) {
+      ExcelFormulaRuntimeContext formulaContext,
+      @Nullable String leadingFunctionName,
+      String formula) {
     return leadingFunctionName != null
         && FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
             formulaContext,

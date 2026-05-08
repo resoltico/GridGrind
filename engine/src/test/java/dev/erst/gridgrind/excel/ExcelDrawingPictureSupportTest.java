@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.TargetMode;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
@@ -68,7 +69,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       ExcelDrawingPictureSupport.PictureReadback readback =
           ExcelDrawingPictureSupport.requiredPictureReadback(picture);
@@ -120,7 +121,7 @@ class ExcelDrawingPictureSupportTest {
               picture.getDrawing(),
               picture,
               shapeXml,
-              ExcelDrawingAnchorSupport.parentAnchor(shapeXml));
+              ExcelDrawingAnchorSupport.parentAnchor(shapeXml).orElse(null));
       assertDoesNotThrow(
           () -> ExcelDrawingPictureSupport.deletePicture(sheet.xssfSheet(), located, picture));
       assertEquals(0, sheet.xssfSheet().getDrawingPatriarch().getShapes().size());
@@ -137,7 +138,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       String detachedRelationId = "rIdDetached";
       String originalRelationId =
@@ -176,7 +177,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       picture
           .getDrawing()
@@ -211,7 +212,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       ExcelDrawingPictureSupport.PictureReadback readback =
           ExcelDrawingPictureSupport.requiredPictureReadback(picture);
@@ -240,7 +241,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
 
       removeBlipFill(picture);
@@ -276,7 +277,7 @@ class ExcelDrawingPictureSupportTest {
               new ExcelBinaryData(PNG_PIXEL_BYTES),
               ExcelPictureFormat.PNG,
               anchor(1, 1, 4, 6),
-              "Queue preview"));
+              Optional.of("Queue preview")));
       workbook.save(workbookPath);
     }
     return workbookPath;

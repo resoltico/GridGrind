@@ -1,10 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.GoalPlanReport;
-import dev.erst.gridgrind.contract.catalog.TaskCatalog;
-import dev.erst.gridgrind.contract.catalog.TaskEntry;
-import dev.erst.gridgrind.contract.catalog.TaskPlanTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -82,46 +78,6 @@ public final class GridGrindJson {
         GridGrindJsonMessageSupport::invalidPayload);
   }
 
-  /** Reads a task catalog from an input stream without closing the caller-owned stream. */
-  public static TaskCatalog readTaskCatalog(InputStream inputStream) throws IOException {
-    Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        inputStream,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        TaskCatalog.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
-  /** Reads a task catalog from a byte array. */
-  public static TaskCatalog readTaskCatalog(byte[] bytes) throws IOException {
-    Objects.requireNonNull(bytes, "bytes must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        bytes,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        TaskCatalog.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
-  /** Reads a task plan template from an input stream without closing the caller-owned stream. */
-  public static TaskPlanTemplate readTaskPlanTemplate(InputStream inputStream) throws IOException {
-    Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        inputStream,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        TaskPlanTemplate.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
-  /** Reads a task plan template from a byte array. */
-  public static TaskPlanTemplate readTaskPlanTemplate(byte[] bytes) throws IOException {
-    Objects.requireNonNull(bytes, "bytes must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        bytes,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        TaskPlanTemplate.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
   /** Reads a request doctor report from an input stream without closing the caller-owned stream. */
   public static RequestDoctorReport readRequestDoctorReport(InputStream inputStream)
       throws IOException {
@@ -140,26 +96,6 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         RequestDoctorReport.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
-  /** Reads a goal plan report from an input stream without closing the caller-owned stream. */
-  public static GoalPlanReport readGoalPlanReport(InputStream inputStream) throws IOException {
-    Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        inputStream,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        GoalPlanReport.class,
-        GridGrindJsonMessageSupport::invalidPayload);
-  }
-
-  /** Reads a goal plan report from a byte array. */
-  public static GoalPlanReport readGoalPlanReport(byte[] bytes) throws IOException {
-    Objects.requireNonNull(bytes, "bytes must not be null");
-    return GridGrindJsonCodecSupport.readValue(
-        bytes,
-        GridGrindJsonMapperSupport.JSON_MAPPER,
-        GoalPlanReport.class,
         GridGrindJsonMessageSupport::invalidPayload);
   }
 
@@ -184,30 +120,9 @@ public final class GridGrindJson {
         GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, catalog);
   }
 
-  /** Serializes a task catalog to bytes. */
-  public static byte[] writeTaskCatalogBytes(TaskCatalog catalog) throws IOException {
-    Objects.requireNonNull(catalog, "catalog must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, catalog);
-  }
-
-  /** Serializes a task plan template to bytes. */
-  public static byte[] writeTaskPlanTemplateBytes(TaskPlanTemplate template) throws IOException {
-    Objects.requireNonNull(template, "template must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, template);
-  }
-
   /** Serializes a request doctor report to bytes. */
   public static byte[] writeRequestDoctorReportBytes(RequestDoctorReport report)
       throws IOException {
-    Objects.requireNonNull(report, "report must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, report);
-  }
-
-  /** Serializes a goal plan report to bytes. */
-  public static byte[] writeGoalPlanReportBytes(GoalPlanReport report) throws IOException {
     Objects.requireNonNull(report, "report must not be null");
     return GridGrindJsonCodecSupport.writeBytes(
         GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, report);
@@ -231,26 +146,8 @@ public final class GridGrindJson {
     writeValue(outputStream, catalog);
   }
 
-  /** Writes a task catalog to an output stream without closing the caller-owned stream. */
-  public static void writeTaskCatalog(OutputStream outputStream, TaskCatalog catalog)
-      throws IOException {
-    writeValue(outputStream, catalog);
-  }
-
-  /** Writes a task plan template to an output stream without closing the caller-owned stream. */
-  public static void writeTaskPlanTemplate(OutputStream outputStream, TaskPlanTemplate template)
-      throws IOException {
-    writeValue(outputStream, template);
-  }
-
   /** Writes a request doctor report to an output stream without closing the caller-owned stream. */
   public static void writeRequestDoctorReport(OutputStream outputStream, RequestDoctorReport report)
-      throws IOException {
-    writeValue(outputStream, report);
-  }
-
-  /** Writes a goal plan report to an output stream without closing the caller-owned stream. */
-  public static void writeGoalPlanReport(OutputStream outputStream, GoalPlanReport report)
       throws IOException {
     writeValue(outputStream, report);
   }
@@ -266,11 +163,6 @@ public final class GridGrindJson {
   public static void writeCatalogLookupValue(OutputStream outputStream, Object value)
       throws IOException {
     writeValue(outputStream, value);
-  }
-
-  /** Writes a single task entry to an output stream without closing the caller-owned stream. */
-  public static void writeTaskEntry(OutputStream outputStream, TaskEntry entry) throws IOException {
-    writeValue(outputStream, entry);
   }
 
   /** Returns the maximum accepted JSON request document length in bytes. */

@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.assertion.*;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -14,6 +14,7 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage for package-private helper seams inside the authoring module. */
@@ -23,9 +24,9 @@ class AuthoringInternalsCoverageTest {
     SheetSelector.ByName sheetSelector = new SheetSelector.ByName("Budget");
     CellSelector.ByAddress cellSelector = new CellSelector.ByAddress("Budget", "A1");
     WorkbookMutationAction.EnsureSheet ensureSheet = new WorkbookMutationAction.EnsureSheet();
-    InspectionQuery.GetCells cellQuery = new InspectionQuery.GetCells();
-    Assertion.CellValue present =
-        new Assertion.CellValue(Values.toExpectedCellValue(Values.expectedBlank()));
+    SheetIntrospectionQuery.GetCells cellQuery = new SheetIntrospectionQuery.GetCells();
+    CellAssertion.CellValue present =
+        new CellAssertion.CellValue(Values.toExpectedCellValue(Values.expectedBlank()));
 
     PlannedMutation unnamedMutation = new PlannedMutation(sheetSelector, ensureSheet);
     PlannedInspection unnamedInspection = new PlannedInspection(cellSelector, cellQuery);
@@ -49,87 +50,96 @@ class AuthoringInternalsCoverageTest {
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedMutation(" ", sheetSelector, ensureSheet))
+                () -> new PlannedMutation(Optional.of(" "), sheetSelector, ensureSheet))
             .getMessage());
     assertEquals(
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedInspection(" ", cellSelector, cellQuery))
+                () -> new PlannedInspection(Optional.of(" "), cellSelector, cellQuery))
             .getMessage());
     assertEquals(
         "stepId must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new PlannedAssertion(" ", cellSelector, present))
+                () -> new PlannedAssertion(Optional.of(" "), cellSelector, present))
             .getMessage());
     assertEquals(
         "target must not be null",
-        assertThrows(NullPointerException.class, () -> new PlannedMutation("id", null, ensureSheet))
+        assertThrows(
+                NullPointerException.class,
+                () -> new PlannedMutation(Optional.of("id"), null, ensureSheet))
             .getMessage());
     assertEquals(
         "action must not be null",
         assertThrows(
-                NullPointerException.class, () -> new PlannedMutation("id", sheetSelector, null))
+                NullPointerException.class,
+                () -> new PlannedMutation(Optional.of("id"), sheetSelector, null))
             .getMessage());
     assertEquals(
         "target must not be null",
-        assertThrows(NullPointerException.class, () -> new PlannedInspection("id", null, cellQuery))
+        assertThrows(
+                NullPointerException.class,
+                () -> new PlannedInspection(Optional.of("id"), null, cellQuery))
             .getMessage());
     assertEquals(
         "query must not be null",
         assertThrows(
-                NullPointerException.class, () -> new PlannedInspection("id", cellSelector, null))
+                NullPointerException.class,
+                () -> new PlannedInspection(Optional.of("id"), cellSelector, null))
             .getMessage());
     assertEquals(
         "target must not be null",
-        assertThrows(NullPointerException.class, () -> new PlannedAssertion("id", null, present))
+        assertThrows(
+                NullPointerException.class,
+                () -> new PlannedAssertion(Optional.of("id"), null, present))
             .getMessage());
     assertEquals(
         "assertion must not be null",
         assertThrows(
-                NullPointerException.class, () -> new PlannedAssertion("id", cellSelector, null))
+                NullPointerException.class,
+                () -> new PlannedAssertion(Optional.of("id"), cellSelector, null))
             .getMessage());
   }
 
   @Test
   void checksCoverAllSupportedAssertionHelpers() {
-    InspectionQuery.AnalyzeFormulaHealth analysisQuery = Queries.formulaHealth();
+    InspectionAnalysisQuery.AnalyzeFormulaHealth analysisQuery = Queries.formulaHealth();
 
-    assertInstanceOf(Assertion.NamedRangePresent.class, Checks.namedRangePresent());
-    assertInstanceOf(Assertion.NamedRangeAbsent.class, Checks.namedRangeAbsent());
-    assertInstanceOf(Assertion.TablePresent.class, Checks.tablePresent());
-    assertInstanceOf(Assertion.TableAbsent.class, Checks.tableAbsent());
-    assertInstanceOf(Assertion.PivotTablePresent.class, Checks.pivotTablePresent());
-    assertInstanceOf(Assertion.PivotTableAbsent.class, Checks.pivotTableAbsent());
-    assertInstanceOf(Assertion.ChartPresent.class, Checks.chartPresent());
-    assertInstanceOf(Assertion.ChartAbsent.class, Checks.chartAbsent());
-    assertInstanceOf(Assertion.CellValue.class, Checks.cellValue(Values.expectedText("Owner")));
-    assertInstanceOf(Assertion.DisplayValue.class, Checks.displayValue("Owner"));
-    assertInstanceOf(Assertion.FormulaText.class, Checks.formulaText("SUM(A1:A2)"));
+    assertInstanceOf(PresenceAssertion.NamedRangePresent.class, Checks.namedRangePresent());
+    assertInstanceOf(PresenceAssertion.NamedRangeAbsent.class, Checks.namedRangeAbsent());
+    assertInstanceOf(PresenceAssertion.TablePresent.class, Checks.tablePresent());
+    assertInstanceOf(PresenceAssertion.TableAbsent.class, Checks.tableAbsent());
+    assertInstanceOf(PresenceAssertion.PivotTablePresent.class, Checks.pivotTablePresent());
+    assertInstanceOf(PresenceAssertion.PivotTableAbsent.class, Checks.pivotTableAbsent());
+    assertInstanceOf(PresenceAssertion.ChartPresent.class, Checks.chartPresent());
+    assertInstanceOf(PresenceAssertion.ChartAbsent.class, Checks.chartAbsent());
+    assertInstanceOf(CellAssertion.CellValue.class, Checks.cellValue(Values.expectedText("Owner")));
+    assertInstanceOf(CellAssertion.DisplayValue.class, Checks.displayValue("Owner"));
+    assertInstanceOf(CellAssertion.FormulaText.class, Checks.formulaText("SUM(A1:A2)"));
     assertInstanceOf(
-        Assertion.AnalysisMaxSeverity.class,
+        AnalysisAssertion.AnalysisMaxSeverity.class,
         Checks.analysisMaxSeverity(analysisQuery, AnalysisSeverity.WARNING));
     assertInstanceOf(
-        Assertion.AnalysisFindingPresent.class,
+        AnalysisAssertion.AnalysisFindingPresent.class,
         Checks.analysisFindingPresent(
             analysisQuery,
             AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
             AnalysisSeverity.ERROR,
             "detail"));
     assertInstanceOf(
-        Assertion.AnalysisFindingAbsent.class,
+        AnalysisAssertion.AnalysisFindingAbsent.class,
         Checks.analysisFindingAbsent(
             analysisQuery,
             AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
             AnalysisSeverity.ERROR,
             "detail"));
-    Assertion.AllOf allOf = Checks.allOf(Checks.chartPresent(), Checks.chartAbsent());
-    Assertion.AnyOf anyOf = Checks.anyOf(Checks.tablePresent(), Checks.tableAbsent());
-    Assertion.Not not = Checks.not(Checks.namedRangePresent());
+    CompositeAssertion.AllOf allOf = Checks.allOf(Checks.chartPresent(), Checks.chartAbsent());
+    CompositeAssertion.AnyOf anyOf = Checks.anyOf(Checks.tablePresent(), Checks.tableAbsent());
+    CompositeAssertion.Not not = Checks.not(Checks.namedRangePresent());
     assertEquals(2, allOf.assertions().size());
     assertEquals(2, anyOf.assertions().size());
-    assertInstanceOf(Assertion.NamedRangePresent.class, not.assertion());
+    assertInstanceOf(PresenceAssertion.NamedRangePresent.class, not.assertion());
     assertEquals(
         "assertion must not be null",
         assertThrows(NullPointerException.class, () -> Checks.not(null)).getMessage());
@@ -137,41 +147,53 @@ class AuthoringInternalsCoverageTest {
 
   @Test
   void queriesCoverAllSupportedInspectionHelpers() {
-    assertInstanceOf(InspectionQuery.GetWorkbookSummary.class, Queries.workbookSummary());
-    assertInstanceOf(InspectionQuery.GetPackageSecurity.class, Queries.packageSecurity());
-    assertInstanceOf(InspectionQuery.GetWorkbookProtection.class, Queries.workbookProtection());
-    assertInstanceOf(InspectionQuery.GetNamedRanges.class, Queries.namedRanges());
-    assertInstanceOf(InspectionQuery.GetSheetSummary.class, Queries.sheetSummary());
-    assertInstanceOf(InspectionQuery.GetCells.class, Queries.cells());
-    assertInstanceOf(InspectionQuery.GetWindow.class, Queries.window());
-    assertInstanceOf(InspectionQuery.GetMergedRegions.class, Queries.mergedRegions());
-    assertInstanceOf(InspectionQuery.GetHyperlinks.class, Queries.hyperlinks());
-    assertInstanceOf(InspectionQuery.GetComments.class, Queries.comments());
-    assertInstanceOf(InspectionQuery.GetDrawingObjects.class, Queries.drawingObjects());
-    assertInstanceOf(InspectionQuery.GetCharts.class, Queries.charts());
-    assertInstanceOf(InspectionQuery.GetPivotTables.class, Queries.pivotTables());
-    assertInstanceOf(InspectionQuery.GetDrawingObjectPayload.class, Queries.drawingObjectPayload());
-    assertInstanceOf(InspectionQuery.GetSheetLayout.class, Queries.sheetLayout());
-    assertInstanceOf(InspectionQuery.GetPrintLayout.class, Queries.printLayout());
-    assertInstanceOf(InspectionQuery.GetDataValidations.class, Queries.dataValidations());
     assertInstanceOf(
-        InspectionQuery.GetConditionalFormatting.class, Queries.conditionalFormatting());
-    assertInstanceOf(InspectionQuery.GetAutofilters.class, Queries.autofilters());
-    assertInstanceOf(InspectionQuery.GetTables.class, Queries.tables());
-    assertInstanceOf(InspectionQuery.GetFormulaSurface.class, Queries.formulaSurface());
-    assertInstanceOf(InspectionQuery.GetSheetSchema.class, Queries.sheetSchema());
-    assertInstanceOf(InspectionQuery.GetNamedRangeSurface.class, Queries.namedRangeSurface());
-    assertInstanceOf(InspectionQuery.AnalyzeFormulaHealth.class, Queries.formulaHealth());
+        WorkbookIntrospectionQuery.GetWorkbookSummary.class, Queries.workbookSummary());
     assertInstanceOf(
-        InspectionQuery.AnalyzeDataValidationHealth.class, Queries.dataValidationHealth());
+        WorkbookIntrospectionQuery.GetPackageSecurity.class, Queries.packageSecurity());
     assertInstanceOf(
-        InspectionQuery.AnalyzeConditionalFormattingHealth.class,
+        WorkbookIntrospectionQuery.GetWorkbookProtection.class, Queries.workbookProtection());
+    assertInstanceOf(WorkbookIntrospectionQuery.GetNamedRanges.class, Queries.namedRanges());
+    assertInstanceOf(SheetIntrospectionQuery.GetSheetSummary.class, Queries.sheetSummary());
+    assertInstanceOf(SheetIntrospectionQuery.GetCells.class, Queries.cells());
+    assertInstanceOf(SheetIntrospectionQuery.GetWindow.class, Queries.window());
+    assertInstanceOf(SheetIntrospectionQuery.GetMergedRegions.class, Queries.mergedRegions());
+    assertInstanceOf(SheetIntrospectionQuery.GetHyperlinks.class, Queries.hyperlinks());
+    assertInstanceOf(SheetIntrospectionQuery.GetComments.class, Queries.comments());
+    assertInstanceOf(
+        WorkbookAssetIntrospectionQuery.GetDrawingObjects.class, Queries.drawingObjects());
+    assertInstanceOf(WorkbookAssetIntrospectionQuery.GetCharts.class, Queries.charts());
+    assertInstanceOf(WorkbookAssetIntrospectionQuery.GetPivotTables.class, Queries.pivotTables());
+    assertInstanceOf(
+        WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload.class,
+        Queries.drawingObjectPayload());
+    assertInstanceOf(SheetIntrospectionQuery.GetSheetLayout.class, Queries.sheetLayout());
+    assertInstanceOf(SheetIntrospectionQuery.GetPrintLayout.class, Queries.printLayout());
+    assertInstanceOf(SheetIntrospectionQuery.GetDataValidations.class, Queries.dataValidations());
+    assertInstanceOf(
+        SheetIntrospectionQuery.GetConditionalFormatting.class, Queries.conditionalFormatting());
+    assertInstanceOf(SheetIntrospectionQuery.GetAutofilters.class, Queries.autofilters());
+    assertInstanceOf(WorkbookAssetIntrospectionQuery.GetTables.class, Queries.tables());
+    assertInstanceOf(InspectionSurfaceQuery.GetFormulaSurface.class, Queries.formulaSurface());
+    assertInstanceOf(InspectionSurfaceQuery.GetSheetSchema.class, Queries.sheetSchema());
+    assertInstanceOf(
+        InspectionSurfaceQuery.GetNamedRangeSurface.class, Queries.namedRangeSurface());
+    assertInstanceOf(InspectionAnalysisQuery.AnalyzeFormulaHealth.class, Queries.formulaHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeDataValidationHealth.class, Queries.dataValidationHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth.class,
         Queries.conditionalFormattingHealth());
-    assertInstanceOf(InspectionQuery.AnalyzeAutofilterHealth.class, Queries.autofilterHealth());
-    assertInstanceOf(InspectionQuery.AnalyzeTableHealth.class, Queries.tableHealth());
-    assertInstanceOf(InspectionQuery.AnalyzePivotTableHealth.class, Queries.pivotTableHealth());
-    assertInstanceOf(InspectionQuery.AnalyzeHyperlinkHealth.class, Queries.hyperlinkHealth());
-    assertInstanceOf(InspectionQuery.AnalyzeNamedRangeHealth.class, Queries.namedRangeHealth());
-    assertInstanceOf(InspectionQuery.AnalyzeWorkbookFindings.class, Queries.workbookFindings());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeAutofilterHealth.class, Queries.autofilterHealth());
+    assertInstanceOf(InspectionAnalysisQuery.AnalyzeTableHealth.class, Queries.tableHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzePivotTableHealth.class, Queries.pivotTableHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeHyperlinkHealth.class, Queries.hyperlinkHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeNamedRangeHealth.class, Queries.namedRangeHealth());
+    assertInstanceOf(
+        InspectionAnalysisQuery.AnalyzeWorkbookFindings.class, Queries.workbookFindings());
   }
 }

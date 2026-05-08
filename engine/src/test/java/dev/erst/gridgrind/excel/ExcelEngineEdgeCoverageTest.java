@@ -18,6 +18,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
@@ -526,8 +527,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -541,8 +542,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -556,8 +557,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -571,8 +572,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -586,13 +587,23 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 "line1\nline2\nline3\nline4",
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelSignatureLineDefinition(
-                "Signature", anchor, false, null, null, null, null, null, "invalid", null, null));
+                "Signature",
+                anchor,
+                false,
+                null,
+                null,
+                null,
+                null,
+                null,
+                "invalid",
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -606,8 +617,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                null));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -621,26 +632,48 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                null,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.empty(),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
   }
 
   @Test
   void customXmlAndChartValueObjectsRejectInvalidInputs() {
     assertDoesNotThrow(
-        () -> new ExcelCustomXmlDataBindingSnapshot("binding", true, 7L, "file", 0L));
+        () ->
+            new ExcelCustomXmlDataBindingSnapshot(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(7L),
+                Optional.of("file"),
+                0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlDataBindingSnapshot(" ", true, 7L, "file", 0L));
+        () ->
+            new ExcelCustomXmlDataBindingSnapshot(
+                Optional.of(" "), Optional.of(true), Optional.of(7L), Optional.of("file"), 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlDataBindingSnapshot("binding", true, -1L, "file", 0L));
+        () ->
+            new ExcelCustomXmlDataBindingSnapshot(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(-1L),
+                Optional.of("file"),
+                0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlDataBindingSnapshot("binding", true, 7L, " ", 0L));
+        () ->
+            new ExcelCustomXmlDataBindingSnapshot(
+                Optional.of("binding"), Optional.of(true), Optional.of(7L), Optional.of(" "), 0L));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCustomXmlDataBindingSnapshot("binding", true, 7L, "file", -1L));
+        () ->
+            new ExcelCustomXmlDataBindingSnapshot(
+                Optional.of("binding"),
+                Optional.of(true),
+                Optional.of(7L),
+                Optional.of("file"),
+                -1L));
 
     assertDoesNotThrow(() -> new ExcelCustomXmlMappingLocator(1L, null));
     assertDoesNotThrow(() -> new ExcelCustomXmlMappingLocator(null, "Map"));
@@ -665,11 +698,17 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                "urn:test",
-                "XSD",
-                "schema.xsd",
-                "<schema/>",
-                new ExcelCustomXmlDataBindingSnapshot("binding", true, 7L, "file", 0L),
+                Optional.of("urn:test"),
+                Optional.of("XSD"),
+                Optional.of("schema.xsd"),
+                Optional.of("<schema/>"),
+                Optional.of(
+                    new ExcelCustomXmlDataBindingSnapshot(
+                        Optional.of("binding"),
+                        Optional.of(true),
+                        Optional.of(7L),
+                        Optional.of("file"),
+                        0L)),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -685,11 +724,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -705,11 +744,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -725,11 +764,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -745,31 +784,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                " ",
-                null,
-                null,
-                null,
-                null,
-                List.of(linkedCell),
-                List.of(linkedTable)));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelCustomXmlMappingSnapshot(
-                1L,
-                "Map",
-                "Root",
-                "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                null,
-                " ",
-                null,
-                null,
-                null,
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -785,11 +804,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                " ",
-                null,
-                null,
+                Optional.empty(),
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -805,11 +824,31 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                null,
-                " ",
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                List.of(linkedCell),
+                List.of(linkedTable)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelCustomXmlMappingSnapshot(
+                1L,
+                "Map",
+                "Root",
+                "Schema",
+                true,
+                false,
+                true,
+                false,
+                true,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(" "),
+                Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
@@ -825,11 +864,11 @@ class ExcelEngineEdgeCoverageTest {
                 true,
                 false,
                 true,
-                null,
-                null,
-                null,
-                null,
-                null,
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 List.of((ExcelCustomXmlLinkedCellSnapshot) null),
                 List.of(linkedTable)));
 
@@ -840,10 +879,10 @@ class ExcelEngineEdgeCoverageTest {
                 new ExcelChartDefinition.Title.Text("Plan"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
-                null,
-                ExcelChartMarkerStyle.CIRCLE,
-                (short) 1,
-                null));
+                Optional.empty(),
+                Optional.of(ExcelChartMarkerStyle.CIRCLE),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -851,10 +890,10 @@ class ExcelEngineEdgeCoverageTest {
                 new ExcelChartDefinition.Title.Text("Plan"),
                 ExcelChartTestSupport.ref("A2:A4"),
                 ExcelChartTestSupport.ref("B2:B4"),
-                null,
-                ExcelChartMarkerStyle.CIRCLE,
-                (short) 10,
-                -1L));
+                Optional.empty(),
+                Optional.of(ExcelChartMarkerStyle.CIRCLE),
+                Optional.of((short) 10),
+                Optional.of(-1L)));
     ExcelChartDefinition.Series defaultTitleSeries =
         new ExcelChartDefinition.Series(
             null, ExcelChartTestSupport.ref("A2:A4"), ExcelChartTestSupport.ref("B2:B4"));
@@ -866,28 +905,28 @@ class ExcelEngineEdgeCoverageTest {
             new ExcelChartSnapshot.Series(
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("1")),
-                null,
-                ExcelChartMarkerStyle.CIRCLE,
-                (short) 1,
-                null));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+                Optional.empty(),
+                Optional.of(ExcelChartMarkerStyle.CIRCLE),
+                Optional.of((short) 1),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelChartSnapshot.Series(
                 new ExcelChartSnapshot.Title.None(),
                 new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-                new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("1")),
-                null,
-                ExcelChartMarkerStyle.CIRCLE,
-                (short) 10,
-                -1L));
+                new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")),
+                Optional.empty(),
+                Optional.of(ExcelChartMarkerStyle.CIRCLE),
+                Optional.of((short) 10),
+                Optional.of(-1L)));
     ExcelChartSnapshot.Series compactSeries =
         new ExcelChartSnapshot.Series(
             new ExcelChartSnapshot.Title.None(),
             new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
-            new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("1")));
-    assertEquals(null, compactSeries.smooth());
+            new ExcelChartSnapshot.DataSource.NumericLiteral(Optional.of("0.0"), List.of("1")));
+    assertEquals(Optional.empty(), compactSeries.smooth());
 
     assertThrows(
         IllegalArgumentException.class,
@@ -966,6 +1005,7 @@ class ExcelEngineEdgeCoverageTest {
       assertEquals(
           "WorkbookValues",
           ExcelChartSourceSupport.resolveDefinedNameReference(sheet, "WorkbookValues")
+              .orElseThrow()
               .getNameName());
       assertEquals(
           List.of("10.0", "12.0"),
@@ -984,8 +1024,8 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 null,
                 "invalid",
-                ExcelPictureFormat.PNG,
-                new ExcelBinaryData(new byte[] {1})));
+                Optional.of(ExcelPictureFormat.PNG),
+                Optional.of(new ExcelBinaryData(new byte[] {1}))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");
         XSSFDrawing drawing = wrappedWorkbook.sheet("Ops").xssfSheet().createDrawingPatriarch();
         XSSFSimpleShape duplicateShape =

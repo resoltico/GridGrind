@@ -29,12 +29,14 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly source_run_task="${repo_root}/jazzer/bin/_run-task"
 readonly source_run_lock_support="${repo_root}/jazzer/bin/_run-lock-support"
 readonly source_repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
+readonly temp_parent="${repo_root}/tmp/test-jazzer-wrapper-arg-order"
 
 [[ -f "${source_run_task}" ]] || die "missing ${source_run_task}"
 [[ -f "${source_run_lock_support}" ]] || die "missing ${source_run_lock_support}"
 [[ -f "${source_repo_lock_support}" ]] || die "missing ${source_repo_lock_support}"
 
-tmp_dir="$(mktemp -d)"
+mkdir -p "${temp_parent}"
+tmp_dir="$(mktemp -d "${temp_parent%/}/run.XXXXXX")"
 tmp_dir="$(cd -P -- "${tmp_dir}" && pwd)"
 cleanup() {
     rm -rf "${tmp_dir}"
@@ -83,9 +85,21 @@ exit 0
 EOF
 chmod +x "${fake_repo_root}/gradlew"
 
+read_lines() {
+    local file_path=$1
+    local array_name=$2
+    local line
+    local lines=()
+    while IFS= read -r line; do
+        lines+=("${line}")
+    done < "${file_path}"
+    printf -v "${array_name}" '%s' ""
+    eval "${array_name}=(\"\${lines[@]}\")"
+}
+
 bash "${fake_jazzer_bin_dir}/_run-task" jazzerStatus -PjazzerTarget=protocol-request --console=plain
 
-mapfile -t generic_args < "${generic_args_log}"
+read_lines "${generic_args_log}" generic_args
 expected_generic=(
     --project-dir
     "${fake_repo_root}/jazzer"
@@ -103,7 +117,7 @@ done
 
 bash "${fake_jazzer_bin_dir}/_run-task" fuzzProtocolRequest -PjazzerMaxDuration=30s --console=plain
 
-mapfile -t active_args < "${active_args_log}"
+read_lines "${active_args_log}" active_args
 expected_active=(
     --project-dir
     "${fake_repo_root}/jazzer"
@@ -120,7 +134,7 @@ for index in "${!expected_active[@]}"; do
         "active Jazzer wrapper invocation reordered Gradle arguments unexpectedly"
 done
 
-mapfile -t summary_args < "${summary_args_log}"
+read_lines "${summary_args_log}" summary_args
 [[ " ${summary_args[*]} " == *" jazzerSummarizeRun "* ]] || die \
     "active Jazzer wrapper no longer runs the summary task after fuzz execution"
 

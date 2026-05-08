@@ -144,13 +144,19 @@ public final class JazzerTextRenderer {
       case ReplayOutcome.ExpectedInvalid invalid -> {
         builder.append("Outcome: EXPECTED_INVALID").append(System.lineSeparator());
         builder.append("Kind: ").append(invalid.invalidKind()).append(System.lineSeparator());
-        builder.append("Message: ").append(invalid.message()).append(System.lineSeparator());
+        builder
+            .append("Message: ")
+            .append(invalid.message().orElse("(no message)"))
+            .append(System.lineSeparator());
         builder.append(renderReplayDetails(invalid.details()));
       }
       case ReplayOutcome.UnexpectedFailure failure -> {
         builder.append("Outcome: UNEXPECTED_FAILURE").append(System.lineSeparator());
         builder.append("Kind: ").append(failure.failureKind()).append(System.lineSeparator());
-        builder.append("Message: ").append(failure.message()).append(System.lineSeparator());
+        builder
+            .append("Message: ")
+            .append(failure.message().orElse("(no message)"))
+            .append(System.lineSeparator());
         builder.append(renderReplayDetails(failure.details())).append(System.lineSeparator());
         builder.append("Stack Trace").append(System.lineSeparator());
         builder.append(failure.stackTrace().strip());

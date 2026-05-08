@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -81,7 +82,8 @@ class PromotionMetadataRefresherTest {
                 input.length,
                 PromotionMetadata.relativizePath(projectDirectory, replayTextPath)));
 
-    assertEquals(1, PromotionMetadataRefresher.refresh(projectDirectory, "protocol-request"));
+    assertEquals(
+        1, PromotionMetadataRefresher.refresh(projectDirectory, Optional.of("protocol-request")));
 
     PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
     assertEquals("EXPECTED_INVALID", metadata.replayOutcome());

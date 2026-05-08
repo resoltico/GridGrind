@@ -3,7 +3,28 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.64.0] - 2026-05-08
+
+### Changed
+
+- Bumped `org.apache.santuario:xmlsec` from `3.0.6` to `4.0.4`, added the required Jakarta Activation and XML Bind APIs to the runtime surface, and replaced the OOXML signature relationship-transform path with a GridGrind-owned xmlsec-4-compatible DSig provider.
+- Split the old contract-owned CLI help surface back into the `cli` module, promoted workbook/package-signing seams to explicit engine bridge types, and replaced the widened sheet-scoped `GET_CHARTS` inspection path with first-class chart selectors.
+- Reduced the contract discovery layer to public task descriptors, moved task planning and English keyword query ranking into `cli`, and switched task-plan scaffolds to generic descriptor-derived starter requests instead of hidden contract-owned starter workflows.
+- Rebuilt the protocol-catalog descriptor stack around lightweight canonical descriptor records, moved the request-execution bridge into `engine`, replaced the old `--print-goal-plan` surface with the honest `--print-task-keyword-match <query>` command and `TaskKeywordMatchReport`, and retargeted the build-failing architecture ratchet onto the current engine and Jazzer hotspot files.
+- Split the old omnibus `InspectionResult` union into workbook-, sheet-, asset-, surface-, and analysis-scoped public result families, moved inspection-result null or blank guards into shared support, and registered JSON subtype ids from the sealed leaf result types instead of one central annotation block.
+- Promoted formula-surface, sheet-schema, and named-range-surface reads into an explicit public `Surface` query family, renamed their response anchors from `analysis.*` to `surface.*`, moved the built-in example registry behind a non-exported CLI package, and split the internal example catalog into smaller discovery sub-contexts.
+- Added `Woodstox Core` and `Stax2 API` to `NOTICE` and `PATENTS.md`; added `LICENSE-BSD-2-CLAUSE` to the distribution (Stax2 API is BSD 2-Clause); added `LICENSE-EDL-1.0` and `LICENSE-BSD-2-CLAUSE` to the Docker image filesystem; updated the `org.opencontainers.image.licenses` OCI label to `MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0`; wired `LICENSE-BSD-2-CLAUSE` into the `--license` CLI output path.
+- Replaced the hand-maintained dependency enumeration in `README.md`'s Legal section with a license-family summary and a pointer to `NOTICE` as the canonical attribution source; added `LICENSE-BSD-2-CLAUSE` and `LICENSE-EDL-1.0` links to the README legal footer.
+- Made unbundled `:cli:run --version` resolve the packaged product version from the bundled resource metadata, taught the built-in example catalog and help output which requests are self-contained versus asset-backed, preserved actionable response-write failure messages instead of collapsing them to a bare path, and cleaned stale versioned jars out of module `build/libs` directories during fresh jar production.
+- Replaced centralized protocol action/query/assertion targeting tables with leaf-owned metadata, removed the dead top-level descriptor registry classes left behind by the split, published exact `requiredPaths` for asset-backed built-in examples through the machine-readable example catalog and help surface, and corrected the example-guide verification command to the live `:cli:test` fixture owner.
+- Reworked the root `check.sh` stage runner so stage completion follows the actual command process instead of a lingering `tee`/`awk` pipe, which removes the false Stage 4 shell-regression stalls that appeared on GitHub runners after the last regression script had already reported success.
+- Tightened the workbook-core null model by replacing internal null sentinels with `Optional` across pivot-table, drawing, validation, color, signature-line, and embedded-object seams; enabled NullAway in the shared Java conventions for `@NullMarked` production packages; and pinned JaCoCo to the exact published Maven snapshot coordinate (`0.8.15-20260506.113836-98`) that corresponds to the May 6 2026 trunk build required for Java 26 coverage.
+
+### Fixed
+
+- Non-success CLI runs that write their payload to `--response <path>` now emit one stderr line naming that response or doctor-report file, so operators and agents can find the structured failure payload without guessing after a non-zero exit.
+- CLI parse and discovery failures now honor `--response <path>` the same way execution failures do, response-write fallback now emits one stderr line before streaming the structured failure to stdout, and the `Protocol Grammar` help block now keeps constructor shortcuts and playbook advice in the `Operator Guidance` section instead of mixing them into the normative request contract.
+- Hardened the Stage 4 shell regression harnesses to the active shell baseline: Jazzer wrapper UX checks no longer depend on fragile direct redirection under the release-contract prelude, the wrapper arg-order regression no longer assumes Bash `mapfile`, the root `check.sh` monitor path no longer depends on process substitution that could terminate Docker-smoke verification early, and the deterministic root gate now forces serial Gradle execution after a fresh parallel release build produced a truncated JPMS jar entry.
 
 ## [0.63.0] - 2026-05-05
 
@@ -67,7 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   text.
 - CLI discovery failures now explain their next corrective move directly: dependent flags such as
   `--task`, `--operation`, and `--search` name the parent command they require, unknown task ids
-  point back to `--print-task-catalog` and `--print-goal-plan`, unknown protocol lookup ids point
+  point back to `--print-task-catalog` and `--print-task-keyword-match`, unknown protocol lookup ids point
   to protocol-catalog search, and missing request files identify the unreadable path explicitly.
 - Built-in example lookup failures now point operators back to the packaged help surface’s
   generated-example section, and the packaged help synopsis now advertises `--license` alongside
@@ -192,7 +213,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stage definitions.
 - Discovery and planning JSON now omit absent optional fields instead of emitting explicit
   `null` placeholders. `--print-protocol-catalog`, `--print-task-catalog`,
-  `--print-task-plan`, `--print-goal-plan`, and `--doctor-request` stay schema-compatible while
+  `--print-task-plan`, `--print-task-keyword-match`, and `--doctor-request` stay schema-compatible while
   becoming easier for agents and shell tooling to consume directly.
 - Request and response JSON now omit absent optional fields too, including `--print-example`
   output, checked-in `examples/*.json`, and normal execution responses, so the full public JSON
@@ -318,7 +339,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   forcing stdout-only handling.
 - `--response <path>` now works consistently across discovery and informational CLI commands too,
   including `--help`, `--version`, `--print-request-template`, `--print-example`,
-  `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, and
+  `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and
   `--print-protocol-catalog`, with the same parent-directory creation and structured fallback
   behavior already used by execution and doctoring.
 - Missing polymorphic `type` discriminators in request JSON no longer crash the parser's public
@@ -386,7 +407,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now depends transitively on `contract`, the fluent API no longer exposes `run(...)`, raw
   request DTOs, or response-report types as intended public authoring vocabulary, and the
   shipped Java example now executes in process through an explicit executor call.
-- Goal planning is now less noisy for agents and operators. `--print-goal-plan` no longer keeps
+- Task keyword match reporting is now less noisy for agents and operators. `--print-task-keyword-match` no longer keeps
   low-signal candidates alive solely because one capability summary happened to share a word with
   the goal, and `suggestedIntentTags` now come from the strongest matching tasks instead of from
   the entire catalog.
@@ -402,7 +423,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Task discovery now ships broader runnable starter scaffolds instead of thin placeholders.
-  `--print-task-catalog`, `--print-task-plan`, and `--print-goal-plan` now cover tabular
+  `--print-task-catalog`, `--print-task-plan`, and `--print-task-keyword-match` now cover tabular
   reports, dashboards, data-entry workflows, workbook audits, custom XML workflows, pivot
   reports, drawing/signature workflows, and workbook-maintenance flows with non-empty starter
   plans.
@@ -416,7 +437,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   signing keystore paths.
 - CLI discovery commands now reject stray trailing flags consistently instead of silently
   accepting malformed invocations. `--help`, `--version`, `--license`, `--print-example`,
-  `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, `--print-request-template`,
+  `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, `--print-request-template`,
   and `--print-protocol-catalog` now fail fast on extra arguments, and `--doctor-request` no
   longer ignores unknown trailing flags.
 - Public docs, help text, and shipped examples now match the live discovery and path-resolution
@@ -623,7 +644,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - GridGrind now publishes a contract-owned intent-discovery layer on top of the exact protocol:
-  `--print-task-catalog`, `--print-task-plan <id>`, `--print-goal-plan "<goal>"`, and
+  `--print-task-catalog`, `--print-task-plan <id>`, `--print-task-keyword-match "<goal>"`, and
   `--doctor-request`. The packaged JAR and Docker artifact verifiers now black-box these task,
   planning, and diagnostics surfaces too, so the intent layer cannot drift silently from the core
   protocol contract.
@@ -2584,7 +2605,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.63.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.64.0...HEAD
+[0.64.0]: https://github.com/resoltico/GridGrind/compare/v0.63.0...v0.64.0
 [0.63.0]: https://github.com/resoltico/GridGrind/compare/v0.62.0...v0.63.0
 [0.62.0]: https://github.com/resoltico/GridGrind/compare/v0.61.0...v0.62.0
 [0.61.0]: https://github.com/resoltico/GridGrind/compare/v0.60.0...v0.61.0

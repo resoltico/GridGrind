@@ -15,6 +15,19 @@ import java.util.function.Supplier;
 
 /** JVM-local stdin TTY detection backed by native platform APIs. */
 final class NativeStandardInputProbe implements BooleanSupplier {
+  /** Signals that native probe setup failed for the current process or platform. */
+  static final class NativeProbeUnavailableException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    NativeProbeUnavailableException(String message, Throwable cause) {
+      super(message, cause);
+    }
+
+    NativeProbeUnavailableException(String message) {
+      super(message);
+    }
+  }
+
   /** Builds one OS-specific native probe, possibly failing before the probe is usable. */
   @FunctionalInterface
   interface ProbeFactory {
@@ -82,7 +95,7 @@ final class NativeStandardInputProbe implements BooleanSupplier {
   static NativeStandardInputProbe currentProcessProbe(ProbeFactory factory) {
     try {
       return factory.create();
-    } catch (RuntimeException | LinkageError exception) {
+    } catch (NativeProbeUnavailableException | UnsatisfiedLinkError exception) {
       return unsupported();
     }
   }
@@ -115,14 +128,13 @@ final class NativeStandardInputProbe implements BooleanSupplier {
   static NativeStandardInputProbe windowsCurrentProcess(
       Supplier<Optional<SymbolLookup>> libraryLookupSupplier,
       DowncallHandleProvider downcallHandleProvider) {
-    SymbolLookup kernel32Lookup = libraryLookupSupplier.get().orElse(null);
-    return windowsCurrentProcessFromLookup(kernel32Lookup, downcallHandleProvider);
+    return windowsCurrentProcessFromLookup(libraryLookupSupplier.get(), downcallHandleProvider);
   }
 
   static Optional<SymbolLookup> libraryLookup(Supplier<SymbolLookup> lookupFactory) {
     try {
       return Optional.of(lookupFactory.get());
-    } catch (RuntimeException | LinkageError exception) {
+    } catch (NativeProbeUnavailableException | UnsatisfiedLinkError exception) {
       return Optional.empty();
     }
   }
@@ -135,7 +147,15 @@ final class NativeStandardInputProbe implements BooleanSupplier {
 
   static Optional<SymbolLookup> namedLibraryLookup(String libraryName) {
     Objects.requireNonNull(libraryName, "libraryName must not be null");
-    return libraryLookup(() -> SymbolLookup.libraryLookup(libraryName, Arena.global()));
+    return libraryLookup(
+        () -> {
+          try {
+            return SymbolLookup.libraryLookup(libraryName, Arena.global());
+          } catch (IllegalArgumentException | UnsupportedOperationException exception) {
+            throw new NativeProbeUnavailableException(
+                "Native library lookup failed for " + libraryName, exception);
+          }
+        });
   }
 
   static Optional<SymbolLookup> kernel32LibraryLookup() {
@@ -157,14 +177,17 @@ final class NativeStandardInputProbe implements BooleanSupplier {
   }
 
   static NativeStandardInputProbe windowsCurrentProcessFromLookup(
-      SymbolLookup symbolLookup, DowncallHandleProvider downcallHandleProvider) {
-    if (symbolLookup == null) {
+      Optional<SymbolLookup> symbolLookup, DowncallHandleProvider downcallHandleProvider) {
+    Objects.requireNonNull(symbolLookup, "symbolLookup must not be null");
+    if (symbolLookup.isEmpty()) {
       return unsupported();
     }
+    SymbolLookup requiredLookup = symbolLookup.orElseThrow();
     return currentProcessProbe(
         () ->
             windowsCurrentProcess(
-                (SymbolResolver) name -> findOrThrow(symbolLookup, name), downcallHandleProvider));
+                (SymbolResolver) name -> findOrThrow(requiredLookup, name),
+                downcallHandleProvider));
   }
 
   static NativeStandardInputProbe windowsCurrentProcess(
@@ -198,16 +221,23 @@ final class NativeStandardInputProbe implements BooleanSupplier {
   public boolean getAsBoolean() {
     try {
       return probe.getAsBoolean();
-    } catch (Throwable throwable) {
+    } catch (NativeProbeUnavailableException | UnsatisfiedLinkError exception) {
       return false;
+    } catch (RuntimeException exception) {
+      throw exception;
+    } catch (Error error) {
+      throw error;
+    } catch (Throwable throwable) {
+      throw new IllegalStateException(
+          "Native standard-input probe threw a checked failure", throwable);
     }
   }
 
   private static MemorySegment findOrThrow(SymbolLookup symbolLookup, String name) {
     Optional<MemorySegment> symbol = symbolLookup.find(name);
     if (symbol.isPresent()) {
-      return symbol.get();
+      return symbol.orElseThrow();
     }
-    throw new IllegalArgumentException("missing native symbol: " + name);
+    throw new NativeProbeUnavailableException("missing native symbol: " + name);
   }
 }

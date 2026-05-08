@@ -18,6 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFShape;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Repairs embedded-object internals after POI sheet cloning leaves sheet-level and preview-drawing
@@ -63,8 +64,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
             sourceSheet.getPackagePart(), packageRelationId, objectName, "embedded object package");
 
     String previewSheetRelationId =
-        ExcelDrawingBinarySupport.previewSheetRelationId(objectData.getOleObject());
-    InternalRelationSnapshot previewSheetPart =
+        ExcelDrawingBinarySupport.previewSheetRelationId(objectData.getOleObject()).orElse(null);
+    @Nullable InternalRelationSnapshot previewSheetPart =
         previewSheetRelationId == null
             ? null
             : requiredInternalRelation(
@@ -73,8 +74,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
                 objectName,
                 "embedded object sheet preview");
     String previewDrawingRelationId =
-        ExcelDrawingBinarySupport.previewDrawingRelationId(objectData);
-    InternalRelationSnapshot previewDrawingPart =
+        ExcelDrawingBinarySupport.previewDrawingRelationId(objectData).orElse(null);
+    @Nullable InternalRelationSnapshot previewDrawingPart =
         previewDrawingRelationId == null
             ? null
             : requiredInternalRelation(
@@ -88,7 +89,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
 
   static InternalRelationSnapshot requiredInternalRelation(
       PackagePart sourcePart,
-      String relationshipId,
+      @Nullable String relationshipId,
       String objectName,
       String relationDescription) {
     if (relationshipId == null || relationshipId.isBlank()) {
@@ -104,7 +105,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
               + relationDescription
               + " relationship");
     }
-    PackagePart part = ExcelDrawingBinarySupport.relatedInternalPart(sourcePart, relationshipId);
+    PackagePart part =
+        ExcelDrawingBinarySupport.relatedInternalPart(sourcePart, relationshipId).orElse(null);
     if (part == null) {
       throw new IllegalStateException(
           "Embedded object '" + objectName + "' is missing its " + relationDescription + " part");
@@ -124,7 +126,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
         targetSheet, targetObjectData, embeddedObject.packagePart(), embeddedObject.objectName());
 
     String targetPreviewRelationId =
-        ExcelDrawingBinarySupport.previewSheetRelationId(targetObjectData.getOleObject());
+        ExcelDrawingBinarySupport.previewSheetRelationId(targetObjectData.getOleObject())
+            .orElse(null);
     if (embeddedObject.previewSheetPart() != null) {
       repairSheetPreviewRelation(
           targetSheet,
@@ -134,7 +137,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
           embeddedObject.objectName());
     }
     String targetDrawingPreviewRelationId =
-        ExcelDrawingBinarySupport.previewDrawingRelationId(targetObjectData);
+        ExcelDrawingBinarySupport.previewDrawingRelationId(targetObjectData).orElse(null);
     if (targetDrawingPreviewRelationId != null && embeddedObject.previewDrawingPart() != null) {
       ensureInternalRelation(
           targetObjectData.getDrawing().getPackagePart(),
@@ -152,7 +155,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
       InternalRelationSnapshot sourcePart,
       String objectName) {
     String currentRelationId =
-        ExcelDrawingBinarySupport.nullIfBlank(targetObjectData.getOleObject().getId());
+        ExcelDrawingBinarySupport.blankAsOptional(targetObjectData.getOleObject().getId())
+            .orElse(null);
     String repairedRelationId =
         repairWorksheetBoundRelation(
             targetSheet,
@@ -168,7 +172,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
   private static void repairSheetPreviewRelation(
       XSSFSheet targetSheet,
       XSSFObjectData targetObjectData,
-      String currentRelationId,
+      @Nullable String currentRelationId,
       InternalRelationSnapshot sourcePart,
       String objectName) {
     String repairedRelationId =
@@ -211,9 +215,9 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
       InternalRelationSnapshot sourcePart,
       String relationDescription,
       String objectName) {
-    PackageRelationship existingRelationship = sheetPart.getRelationship(relationshipId);
-    PackagePart existingPart =
-        ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, relationshipId);
+    @Nullable PackageRelationship existingRelationship = sheetPart.getRelationship(relationshipId);
+    @Nullable PackagePart existingPart =
+        ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, relationshipId).orElse(null);
     if (matchingRelation(existingRelationship, existingPart, sourcePart)) {
       return;
     }
@@ -230,8 +234,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
   }
 
   private static boolean matchingRelation(
-      PackageRelationship existingRelationship,
-      PackagePart existingPart,
+      @Nullable PackageRelationship existingRelationship,
+      @Nullable PackagePart existingPart,
       InternalRelationSnapshot sourcePart) {
     if (existingRelationship == null || existingPart == null) {
       return false;
@@ -246,22 +250,24 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
       XSSFSheet targetSheet,
       XSSFObjectData targetObjectData,
       WorksheetRelationRole relationRole,
-      String preferredRelationId,
+      @Nullable String preferredRelationId,
       InternalRelationSnapshot sourcePart,
       String relationDescription,
       String objectName) {
     PackagePart sheetPart = targetSheet.getPackagePart();
-    PackageRelationship existingRelationship =
+    @Nullable PackageRelationship existingRelationship =
         preferredRelationId == null ? null : sheetPart.getRelationship(preferredRelationId);
-    PackagePart existingPart =
+    @Nullable PackagePart existingPart =
         preferredRelationId == null
             ? null
-            : ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, preferredRelationId);
+            : ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, preferredRelationId)
+                .orElse(null);
     boolean referencedElsewhere =
         worksheetRelationIdReferencedElsewhere(
             targetSheet, targetObjectData, relationRole, preferredRelationId);
     if (matchingRelation(existingRelationship, existingPart, sourcePart) && !referencedElsewhere) {
-      return preferredRelationId;
+      return Objects.requireNonNull(
+          preferredRelationId, "preferredRelationId must not be null when relation matches");
     }
     PackagePart copiedPart =
         createCopiedPart(sheetPart.getPackage(), sourcePart, relationDescription, objectName);
@@ -272,15 +278,17 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
                 || replaceableWorksheetBoundRelation(
                     existingRelationship, existingPart, sourcePart));
     if (reusePreferredId) {
+      String resolvedPreferredRelationId =
+          Objects.requireNonNull(preferredRelationId, "preferredRelationId must not be null");
       if (existingRelationship != null) {
-        removeExistingRelationAndCleanup(sheetPart, preferredRelationId, existingPart);
+        removeExistingRelationAndCleanup(sheetPart, resolvedPreferredRelationId, existingPart);
       }
       return sheetPart
           .addRelationship(
               copiedPart.getPartName(),
               TargetMode.INTERNAL,
               sourcePart.relationshipType(),
-              preferredRelationId)
+              resolvedPreferredRelationId)
           .getId();
     }
     return sheetPart
@@ -294,14 +302,14 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
 
   private static boolean replaceableWorksheetBoundRelation(
       PackageRelationship existingRelationship,
-      PackagePart existingPart,
+      @Nullable PackagePart existingPart,
       InternalRelationSnapshot sourcePart) {
     return sourcePart.relationshipType().equals(existingRelationship.getRelationshipType())
         && (existingPart == null || sourcePart.contentType().equals(existingPart.getContentType()));
   }
 
   private static void removeExistingRelationAndCleanup(
-      PackagePart sheetPart, String relationshipId, PackagePart existingPart) {
+      PackagePart sheetPart, String relationshipId, @Nullable PackagePart existingPart) {
     sheetPart.removeRelationship(relationshipId);
     if (existingPart != null) {
       ExcelDrawingRemovalSupport.cleanupPackagePartIfUnused(
@@ -313,8 +321,9 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
       XSSFSheet targetSheet,
       XSSFObjectData targetObjectData,
       WorksheetRelationRole relationRole,
-      String relationId) {
-    String normalizedRelationId = ExcelDrawingBinarySupport.nullIfBlank(relationId);
+      @Nullable String relationId) {
+    String normalizedRelationId =
+        ExcelDrawingBinarySupport.blankAsOptional(relationId).orElse(null);
     if (normalizedRelationId == null) {
       return false;
     }
@@ -362,7 +371,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
         relationRole != WorksheetRelationRole.OLE_OBJECT
             || !isTargetOleObject(oleObject, targetOleObject);
     return differentTarget
-        && relationId.equals(ExcelDrawingBinarySupport.nullIfBlank(oleObject.getId()));
+        && relationId.equals(
+            ExcelDrawingBinarySupport.blankAsOptional(oleObject.getId()).orElse(null));
   }
 
   private static boolean referencesPreviewRelationId(
@@ -374,7 +384,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
         relationRole != WorksheetRelationRole.PREVIEW_SHEET
             || !isTargetOleObject(oleObject, targetOleObject);
     return differentTarget
-        && relationId.equals(ExcelDrawingBinarySupport.previewSheetRelationId(oleObject));
+        && relationId.equals(
+            ExcelDrawingBinarySupport.previewSheetRelationId(oleObject).orElse(null));
   }
 
   private static boolean isTargetOleObject(
@@ -427,14 +438,16 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
     if (worksheet.isSetOleObjects()) {
       for (var oleObject : worksheet.getOleObjects().getOleObjectList()) {
         addNonBlank(referencedIds, oleObject.getId());
-        addNonBlank(referencedIds, ExcelDrawingBinarySupport.previewSheetRelationId(oleObject));
+        addNonBlank(
+            referencedIds,
+            ExcelDrawingBinarySupport.previewSheetRelationId(oleObject).orElse(null));
       }
     }
     return referencedIds;
   }
 
-  private static void addNonBlank(Set<String> ids, String value) {
-    String normalized = ExcelDrawingBinarySupport.nullIfBlank(value);
+  private static void addNonBlank(Set<String> ids, @Nullable String value) {
+    String normalized = ExcelDrawingBinarySupport.blankAsOptional(value).orElse(null);
     if (normalized != null) {
       ids.add(normalized);
     }
@@ -445,7 +458,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
       return;
     }
     String drawingRelationId =
-        ExcelDrawingBinarySupport.nullIfBlank(targetSheet.getCTWorksheet().getDrawing().getId());
+        ExcelDrawingBinarySupport.blankAsOptional(targetSheet.getCTWorksheet().getDrawing().getId())
+            .orElse(null);
     if (drawingRelationId == null) {
       return;
     }
@@ -459,14 +473,15 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
 
   static void repairSheetDrawingRelation(XSSFSheet targetSheet, XSSFDrawing drawing) {
     String drawingRelationId =
-        ExcelDrawingBinarySupport.nullIfBlank(targetSheet.getCTWorksheet().getDrawing().getId());
+        ExcelDrawingBinarySupport.blankAsOptional(targetSheet.getCTWorksheet().getDrawing().getId())
+            .orElse(null);
     if (drawingRelationId == null) {
       return;
     }
     PackagePart sheetPart = targetSheet.getPackagePart();
     PackageRelationship existingRelationship = sheetPart.getRelationship(drawingRelationId);
     PackagePart existingPart =
-        ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, drawingRelationId);
+        ExcelDrawingBinarySupport.relatedInternalPart(sheetPart, drawingRelationId).orElse(null);
     if (existingRelationship != null
         && existingPart != null
         && org.apache.poi.xssf.usermodel.XSSFRelation.DRAWINGS
@@ -528,8 +543,8 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
   private record EmbeddedObjectCopyPlan(
       String objectName,
       InternalRelationSnapshot packagePart,
-      InternalRelationSnapshot previewSheetPart,
-      InternalRelationSnapshot previewDrawingPart) {
+      @Nullable InternalRelationSnapshot previewSheetPart,
+      @Nullable InternalRelationSnapshot previewDrawingPart) {
     private EmbeddedObjectCopyPlan {
       Objects.requireNonNull(objectName, "objectName must not be null");
       Objects.requireNonNull(packagePart, "packagePart must not be null");

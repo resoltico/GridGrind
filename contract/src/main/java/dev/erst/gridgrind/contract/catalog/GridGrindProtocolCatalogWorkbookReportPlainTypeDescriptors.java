@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
+import dev.erst.gridgrind.contract.dto.CellStyleReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
@@ -15,8 +16,8 @@ import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
-import dev.erst.gridgrind.contract.dto.GridGrindWorkbookSurfaceReports;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.contract.dto.SheetSummaryReport;
 import dev.erst.gridgrind.contract.dto.TableColumnReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
@@ -37,13 +38,13 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
               List.of()),
           plainTypeDescriptor(
               "sheetSummaryReportType",
-              GridGrindWorkbookSurfaceReports.SheetSummaryReport.class,
+              SheetSummaryReport.class,
               "SheetSummaryReport",
               "Exact sheet summary report including visibility, protection, and structural counts.",
               List.of()),
           plainTypeDescriptor(
               "cellStyleReportType",
-              GridGrindWorkbookSurfaceReports.CellStyleReport.class,
+              CellStyleReport.class,
               "CellStyleReport",
               "Exact effective cell-style report used by style assertions.",
               List.of()),
@@ -196,7 +197,7 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
       String id,
       String summary,
       List<String> optionalFields) {
-    return GridGrindProtocolCatalog.plainTypeDescriptor(
+    return CatalogTypeEntryFactory.plainTypeDescriptor(
         group, recordType, id, summary, optionalFields);
   }
 }

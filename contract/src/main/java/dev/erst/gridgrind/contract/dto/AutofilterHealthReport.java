@@ -7,8 +7,8 @@ import java.util.Objects;
 /** Autofilter-health analysis for one selected sheet set. */
 public record AutofilterHealthReport(
     int checkedAutofilterCount,
-    GridGrindAnalysisReports.AnalysisSummaryReport summary,
-    List<GridGrindAnalysisReports.AnalysisFindingReport> findings) {
+    AnalysisSummaryReport summary,
+    List<AnalysisFindingReport> findings) {
   public AutofilterHealthReport {
     if (checkedAutofilterCount < 0) {
       throw new IllegalArgumentException("checkedAutofilterCount must not be negative");

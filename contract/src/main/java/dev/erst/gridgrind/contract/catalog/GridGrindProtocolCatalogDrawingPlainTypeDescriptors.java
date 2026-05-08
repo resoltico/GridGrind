@@ -10,7 +10,6 @@ import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PictureInput;
-import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import java.util.List;
 
@@ -104,15 +103,6 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
                   "invalidStamp",
                   "plainSignature")),
           plainTypeDescriptor(
-              "shapeInputType",
-              ShapeInput.class,
-              "ShapeInput",
-              "Named simple-shape or connector authoring payload for SET_SHAPE."
-                  + " kind is limited to the authored drawing shape family."
-                  + " SIMPLE_SHAPE requires presetGeometryToken and CONNECTOR must omit it."
-                  + " Invalid presetGeometryToken values are rejected non-mutatingly.",
-              List.of("text")),
-          plainTypeDescriptor(
               "embeddedObjectInputType",
               EmbeddedObjectInput.class,
               "EmbeddedObjectInput",
@@ -127,7 +117,7 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
       String id,
       String summary,
       List<String> optionalFields) {
-    return GridGrindProtocolCatalog.plainTypeDescriptor(
+    return CatalogTypeEntryFactory.plainTypeDescriptor(
         group, recordType, id, summary, optionalFields);
   }
 }

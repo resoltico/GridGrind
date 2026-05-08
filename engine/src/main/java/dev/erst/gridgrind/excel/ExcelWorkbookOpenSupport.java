@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -14,9 +15,9 @@ final class ExcelWorkbookOpenSupport {
 
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
@@ -42,9 +43,9 @@ final class ExcelWorkbookOpenSupport {
   static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
@@ -70,9 +71,9 @@ final class ExcelWorkbookOpenSupport {
 
   static ExcelWorkbook openMaterializedWorkbook(
       XSSFWorkbook xssfWorkbook,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     try {
       return new ExcelWorkbook(
@@ -90,9 +91,9 @@ final class ExcelWorkbookOpenSupport {
   static ExcelWorkbook openMaterializedWorkbook(
       XSSFWorkbook xssfWorkbook,
       ExcelFormulaEnvironment formulaEnvironment,
-      Path sourcePath,
+      Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      String sourceEncryptionPassword)
+      Optional<String> sourceEncryptionPassword)
       throws IOException {
     try {
       return new ExcelWorkbook(

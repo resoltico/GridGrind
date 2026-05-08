@@ -9,4 +9,8 @@ if [[ $# -ge 1 && "$1" != -* ]]; then
   shift
 fi
 
-"${script_dir}/_run-task" jazzerReport "${gradle_args[@]}" "$@"
+if ((${#gradle_args[@]} > 0)); then
+  "${script_dir}/_run-task" jazzerReport "${gradle_args[@]}" "$@"
+else
+  "${script_dir}/_run-task" jazzerReport "$@"
+fi

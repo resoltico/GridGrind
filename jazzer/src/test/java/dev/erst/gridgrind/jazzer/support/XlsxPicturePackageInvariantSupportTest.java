@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -147,7 +148,7 @@ class XlsxPicturePackageInvariantSupportTest {
                   ExcelPictureFormat.PNG,
                   new ExcelDrawingAnchor.TwoCell(
                       new ExcelDrawingMarker(1, 1, 0, 0), new ExcelDrawingMarker(4, 6, 0, 0), null),
-                  "Queue preview"));
+                  Optional.of("Queue preview")));
       workbook.save(workbookPath);
     }
     return workbookPath;

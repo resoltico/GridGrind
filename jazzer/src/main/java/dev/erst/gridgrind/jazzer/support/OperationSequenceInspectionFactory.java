@@ -4,7 +4,7 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceSelectorSupport
 import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.*;
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 
-import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
@@ -39,24 +39,24 @@ final class OperationSequenceInspectionFactory {
                 inspect(
                     requestId,
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.GetWorkbookSummary());
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary());
             case 0x1 ->
                 inspect(
                     requestId,
                     new SheetSelector.ByName(targetSheet),
-                    new InspectionQuery.GetSheetSummary());
+                    new SheetIntrospectionQuery.GetSheetSummary());
             case 0x2 ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextNamedRangeSelection(
                         data, targetSheet, workbookNamedRange, sheetNamedRange, validName),
-                    new InspectionQuery.GetNamedRanges());
+                    new WorkbookIntrospectionQuery.GetNamedRanges());
             default ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextNamedRangeSelection(
                         data, targetSheet, workbookNamedRange, sheetNamedRange, validName),
-                    new InspectionQuery.GetNamedRangeSurface());
+                    new InspectionSurfaceQuery.GetNamedRangeSurface());
           };
       case 0x1 ->
           switch (selectorSlot(selector)) {
@@ -66,7 +66,7 @@ final class OperationSequenceInspectionFactory {
                     new CellSelector.ByAddresses(
                         targetSheet,
                         OperationSequenceObservationSupport.nextReadAddresses(data, validAddress)),
-                    new InspectionQuery.GetCells());
+                    new SheetIntrospectionQuery.GetCells());
             case 0x1 ->
                 inspect(
                     requestId,
@@ -75,12 +75,12 @@ final class OperationSequenceInspectionFactory {
                         FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
                         data.consumeInt(1, 4),
                         data.consumeInt(1, 4)),
-                    new InspectionQuery.GetWindow());
+                    new SheetIntrospectionQuery.GetWindow());
             case 0x2 ->
                 inspect(
                     requestId,
                     new SheetSelector.ByName(targetSheet),
-                    new InspectionQuery.GetSheetLayout());
+                    new SheetIntrospectionQuery.GetSheetLayout());
             default ->
                 inspect(
                     requestId,
@@ -89,7 +89,7 @@ final class OperationSequenceInspectionFactory {
                         validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
                         data.consumeInt(1, 5),
                         data.consumeInt(1, 4)),
-                    new InspectionQuery.GetSheetSchema());
+                    new InspectionSurfaceQuery.GetSheetSchema());
           };
       case 0x2 ->
           switch (selectorSlot(selector)) {
@@ -97,46 +97,46 @@ final class OperationSequenceInspectionFactory {
                 inspect(
                     requestId,
                     new SheetSelector.ByName(targetSheet),
-                    new InspectionQuery.GetMergedRegions());
+                    new SheetIntrospectionQuery.GetMergedRegions());
             case 0x1 ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextCellSelector(
                         data, targetSheet, validAddress),
-                    new InspectionQuery.GetHyperlinks());
+                    new SheetIntrospectionQuery.GetHyperlinks());
             case 0x2 ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextCellSelector(
                         data, targetSheet, validAddress),
-                    new InspectionQuery.GetComments());
+                    new SheetIntrospectionQuery.GetComments());
             case 0x3 ->
                 inspect(
                     requestId,
                     new DrawingObjectSelector.AllOnSheet(targetSheet),
-                    new InspectionQuery.GetDrawingObjects());
+                    new WorkbookAssetIntrospectionQuery.GetDrawingObjects());
             case 0x4 ->
                 inspect(
                     requestId,
                     new DrawingObjectSelector.ByName(
                         targetSheet, nextDrawingBinaryObjectName(data)),
-                    new InspectionQuery.GetDrawingObjectPayload());
+                    new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload());
             case 0x5 ->
                 inspect(
                     requestId,
                     new ChartSelector.AllOnSheet(targetSheet),
-                    new InspectionQuery.GetCharts());
+                    new WorkbookAssetIntrospectionQuery.GetCharts());
             case 0x6 ->
                 inspect(
                     requestId,
                     new SheetSelector.ByName(targetSheet),
-                    new InspectionQuery.GetPrintLayout());
+                    new SheetIntrospectionQuery.GetPrintLayout());
             default ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.GetFormulaSurface());
+                    new InspectionSurfaceQuery.GetFormulaSurface());
           };
       case 0x3 ->
           switch (selectorSlot(selector)) {
@@ -144,17 +144,17 @@ final class OperationSequenceInspectionFactory {
                 inspect(
                     requestId,
                     nextRangeSelector(data, targetSheet, validRange),
-                    new InspectionQuery.GetDataValidations());
+                    new SheetIntrospectionQuery.GetDataValidations());
             case 0x1 ->
                 inspect(
                     requestId,
                     nextRangeSelector(data, targetSheet, validRange),
-                    new InspectionQuery.GetConditionalFormatting());
+                    new SheetIntrospectionQuery.GetConditionalFormatting());
             default ->
                 inspect(
                     requestId,
                     new SheetSelector.ByName(targetSheet),
-                    new InspectionQuery.GetAutofilters());
+                    new SheetIntrospectionQuery.GetAutofilters());
           };
       case 0x4 ->
           switch (selectorSlot(selector)) {
@@ -162,30 +162,30 @@ final class OperationSequenceInspectionFactory {
                 inspect(
                     requestId,
                     nextTableSelector(data, primarySheet, secondarySheet),
-                    new InspectionQuery.GetTables());
+                    new WorkbookAssetIntrospectionQuery.GetTables());
             case 0x1 ->
                 inspect(
                     requestId,
                     nextPivotTableSelector(
                         data, primarySheet, secondarySheet, pivotTableName, validName),
-                    new InspectionQuery.GetPivotTables());
+                    new WorkbookAssetIntrospectionQuery.GetPivotTables());
             case 0x2 ->
                 inspect(
                     requestId,
                     nextTableSelector(data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeTableHealth());
+                    new InspectionAnalysisQuery.AnalyzeTableHealth());
             case 0x3 ->
                 inspect(
                     requestId,
                     nextPivotTableSelector(
                         data, primarySheet, secondarySheet, pivotTableName, validName),
-                    new InspectionQuery.AnalyzePivotTableHealth());
+                    new InspectionAnalysisQuery.AnalyzePivotTableHealth());
             default ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeAutofilterHealth());
+                    new InspectionAnalysisQuery.AnalyzeAutofilterHealth());
           };
       case 0x5 ->
           switch (selectorSlot(selector)) {
@@ -194,25 +194,25 @@ final class OperationSequenceInspectionFactory {
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeFormulaHealth());
+                    new InspectionAnalysisQuery.AnalyzeFormulaHealth());
             case 0x1 ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeDataValidationHealth());
+                    new InspectionAnalysisQuery.AnalyzeDataValidationHealth());
             case 0x2 ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeConditionalFormattingHealth());
+                    new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth());
             default ->
                 inspect(
                     requestId,
                     OperationSequenceObservationSupport.nextSheetSelector(
                         data, primarySheet, secondarySheet),
-                    new InspectionQuery.AnalyzeHyperlinkHealth());
+                    new InspectionAnalysisQuery.AnalyzeHyperlinkHealth());
           };
       default ->
           switch (selectorSlot(selector)) {
@@ -221,12 +221,12 @@ final class OperationSequenceInspectionFactory {
                     requestId,
                     OperationSequenceObservationSupport.nextNamedRangeSelection(
                         data, targetSheet, workbookNamedRange, sheetNamedRange, validName),
-                    new InspectionQuery.AnalyzeNamedRangeHealth());
+                    new InspectionAnalysisQuery.AnalyzeNamedRangeHealth());
             default ->
                 inspect(
                     requestId,
                     new WorkbookSelector.Current(),
-                    new InspectionQuery.AnalyzeWorkbookFindings());
+                    new InspectionAnalysisQuery.AnalyzeWorkbookFindings());
           };
     };
   }

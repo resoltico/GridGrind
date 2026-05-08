@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.catalog.gather.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -28,43 +28,6 @@ class CatalogEdgeCoverageTest {
             GridGrindProtocolVersion.current(),
             "type",
             requestType,
-            new CliSurface(
-                new CliSurface.CliSection("Usage", List.of("gridgrind --help")),
-                new CliSurface.CliWorkflowSection(
-                    "Workflows",
-                    List.of(
-                        new CliSurface.WorkflowEntry(
-                            "Discover", List.of("gridgrind --print-task-catalog")))),
-                new CliSurface.CliSection("Execution", List.of("Executes requests.")),
-                new CliSurface.CliDefinitionSection(
-                    "Limits", List.of(new CliSurface.DefinitionEntry("One", "Value"))),
-                new CliSurface.CliSection("Request", List.of("Request line")),
-                new CliSurface.CliDefinitionSection(
-                    "Files", List.of(new CliSurface.DefinitionEntry("Input", "Reads input"))),
-                new CliSurface.CliTableSection(
-                    "Coordinates",
-                    "Pattern",
-                    "Meaning",
-                    List.of(new CliSurface.CoordinateSystemEntry("A1", "Excel"))),
-                new CliSurface.CliTemplateSection("Minimal valid request"),
-                new CliSurface.CliCommandExample(
-                    "Read from stdin", List.of("cat request.json | gridgrind"), null),
-                new CliSurface.CliCommandExample(
-                    "Run in Docker", List.of("docker run {{CONTAINER_TAG}}"), "Uses the image"),
-                new CliSurface.CliDiscoverySection(
-                    "Discovery",
-                    List.of("List built-in examples"),
-                    "Built-in examples",
-                    "Print one example",
-                    "Protocol catalog note",
-                    "gridgrind --print-example WORKBOOK_HEALTH"),
-                new CliSurface.CliReferenceSection(
-                    "Docs",
-                    List.of(new CliSurface.ReferenceEntry("Quick start", "docs/QUICK_START.md"))),
-                new CliSurface.CliDefinitionSection(
-                    "Flags", List.of(new CliSurface.DefinitionEntry("--help", "Show help"))),
-                "msg"),
-            List.of(),
             List.of(),
             List.of(),
             List.of(),
@@ -85,8 +48,6 @@ class CatalogEdgeCoverageTest {
                         null,
                         "type",
                         requestType,
-                        catalog.cliSurface(),
-                        List.of(),
                         List.of(),
                         List.of(),
                         List.of(),
@@ -163,7 +124,7 @@ class CatalogEdgeCoverageTest {
                     GridGrindProtocolCatalog.validateCoverage(
                         JsonTypeOnlySealedType.class, Map.of(JsonTypeOnlyRecord.class, "ONLY")))
             .getMessage()
-            .contains("@JsonSubTypes"));
+            .contains("must declare a non-blank @JsonTypeName or @ProtocolTypeMetadata id"));
     assertDoesNotThrow(
         () ->
             GridGrindProtocolCatalog.validateCoverage(
@@ -209,10 +170,10 @@ class CatalogEdgeCoverageTest {
 
     assertEquals(
         List.of("stepId", "query"),
-        GridGrindProtocolCatalog.requiredFields(InspectionStep.class, List.of("target")));
+        CatalogTypeEntryFactory.requiredFields(InspectionStep.class, List.of("target")));
     assertEquals(
         List.of("stepId", "action"),
-        GridGrindProtocolCatalog.requiredFields(MutationStep.class, List.of("target")));
+        CatalogTypeEntryFactory.requiredFields(MutationStep.class, List.of("target")));
   }
 
   @Test
@@ -221,24 +182,73 @@ class CatalogEdgeCoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () -> GridGrindContractText.typeNamesByClass(MissingJsonSubtypes.class));
-    assertEquals(MissingJsonSubtypes.class + " is missing @JsonSubTypes", failure.getMessage());
+    assertEquals(
+        MissingJsonSubtypes.class
+            + " must be sealed or declare @JsonSubTypes for discriminator discovery",
+        failure.getMessage());
   }
 
   @Test
-  void privateCatalogIdGuardAndCliCommandValidationStayCovered() {
-    assertEquals(
-        "description must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new CliSurface.CliCommandExample("Example", List.of("gridgrind"), " "))
-            .getMessage());
+  void privateCatalogIdGuardStaysCovered() {
     IllegalStateException mismatch =
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.requireMatchingCatalogId(
+                CatalogTypeEntryFactory.requireMatchingCatalogId(
                     "BROKEN", "SET_CELL", CellMutationAction.SetCell.class));
     assertTrue(mismatch.getMessage().contains("Catalog type id mismatch"));
+  }
+
+  @Test
+  void descriptorFactoryHelpersRejectInvalidShapesAndHideIgnoredFields() {
+    IllegalStateException missingOptionalField =
+        assertThrows(
+            IllegalStateException.class,
+            () -> CatalogTypeEntryFactory.requiredFields(InspectionStep.class, List.of("missing")));
+    assertEquals(
+        "Catalog optional field 'missing' does not exist on " + InspectionStep.class.getName(),
+        missingOptionalField.getMessage());
+
+    IllegalStateException missingDiscriminator =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                CatalogTypeEntryFactory.discriminatorFieldFor(
+                    MissingDiscriminatorSealedType.class));
+    assertEquals(
+        "Catalog coverage requires "
+            + MissingDiscriminatorSealedType.class.getName()
+            + " to declare a non-blank @JsonTypeInfo property",
+        missingDiscriminator.getMessage());
+
+    TypeEntry ignoredFieldEntry =
+        CatalogTypeEntryFactory.typeEntry(
+            IgnoredFieldRecord.class, "IgnoredFieldRecord", "summary", List.of());
+    assertEquals(
+        List.of("visible"), ignoredFieldEntry.fields().stream().map(FieldEntry::name).toList());
+  }
+
+  @Test
+  void descriptorMapAndTopLevelGroupGuardsRejectBrokenInputs() {
+    IllegalStateException duplicateFailure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                CatalogDescriptorMaps.uniqueMap(
+                    List.of(new DuplicateFixture("A", "one"), new DuplicateFixture("A", "two")),
+                    DuplicateFixture::id,
+                    DuplicateFixture::value,
+                    "duplicate key: "));
+    assertEquals("duplicate key: A", duplicateFailure.getMessage());
+
+    assertEquals(
+        "typeDescriptors must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CatalogTopLevelTypeDescriptorGroup(
+                        "group", AnnotatedSealedType.class, List.of()))
+            .getMessage());
   }
 
   /** Duplicate-id fixture used to cover ordered catalog-map rejection. */
@@ -267,6 +277,13 @@ class CatalogEdgeCoverageTest {
   /** Minimal wrong-discriminator subtype. */
   private record WrongDiscriminatorRecord() implements WrongDiscriminatorAnnotatedSealedType {}
 
+  /** Sealed type with a blank discriminator property. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "")
+  private sealed interface MissingDiscriminatorSealedType permits MissingDiscriminatorRecord {}
+
+  /** Minimal subtype for missing-discriminator coverage. */
+  private record MissingDiscriminatorRecord() implements MissingDiscriminatorSealedType {}
+
   /** Sealed type whose subtype is not a record. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({@JsonSubTypes.Type(value = NonRecordSubtype.class, name = "NON_RECORD")})
@@ -274,6 +291,10 @@ class CatalogEdgeCoverageTest {
 
   /** Non-record subtype used to verify coverage rejection. */
   private static final class NonRecordSubtype implements NonRecordAnnotatedSealedType {}
+
+  /** Record used to verify that ignored record components do not leak into the catalog surface. */
+  private record IgnoredFieldRecord(
+      String visible, @CatalogIgnored String hiddenByCatalog, @JsonIgnore String hiddenByJson) {}
 
   /** Type with no subtype annotations for contract-text validation coverage. */
   private static final class MissingJsonSubtypes {}

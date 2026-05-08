@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Immutable factual gradient-fill metadata loaded from one cell style. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -18,18 +19,22 @@ public sealed interface CellGradientFillReport
   List<CellGradientStopReport> stops();
 
   /** Returns one factual linear gradient report. */
-  static Linear linear(Double degree, List<CellGradientStopReport> stops) {
+  static Linear linear(@Nullable Double degree, List<CellGradientStopReport> stops) {
     return new Linear(degree, stops);
   }
 
   /** Returns one factual path gradient report. */
   static Path path(
-      Double left, Double right, Double top, Double bottom, List<CellGradientStopReport> stops) {
+      @Nullable Double left,
+      @Nullable Double right,
+      @Nullable Double top,
+      @Nullable Double bottom,
+      List<CellGradientStopReport> stops) {
     return new Path(left, right, top, bottom, stops);
   }
 
   /** Factual linear gradient report. */
-  record Linear(Double degree, List<CellGradientStopReport> stops)
+  record Linear(@Nullable Double degree, List<CellGradientStopReport> stops)
       implements CellGradientFillReport {
     public Linear {
       requireFiniteOrNull(degree, "degree");
@@ -39,7 +44,11 @@ public sealed interface CellGradientFillReport
 
   /** Factual path gradient report. */
   record Path(
-      Double left, Double right, Double top, Double bottom, List<CellGradientStopReport> stops)
+      @Nullable Double left,
+      @Nullable Double right,
+      @Nullable Double top,
+      @Nullable Double bottom,
+      List<CellGradientStopReport> stops)
       implements CellGradientFillReport {
     public Path {
       requireFiniteOrNull(left, "left");
@@ -50,7 +59,7 @@ public sealed interface CellGradientFillReport
     }
   }
 
-  private static void requireFiniteOrNull(Double value, String fieldName) {
+  private static void requireFiniteOrNull(@Nullable Double value, String fieldName) {
     if (value != null && !Double.isFinite(value)) {
       throw new IllegalArgumentException(fieldName + " must be finite when provided");
     }

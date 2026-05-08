@@ -239,9 +239,18 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "examples guide must name the repo-asset-backed built-ins"),
         () ->
             assertTrue(
-                normalizedExamples.contains("shippedExamples[*].workspaceMode")
-                    && normalizedExamples.contains("shippedExamples[*].requiredPaths"),
-                "examples guide must document the machine-readable prerequisite metadata"));
+                normalizedExamples.contains(
+                    "machine-readable CLI example catalog exposes stable example ids, file names, summaries, a portable `workspaceMode` contract, and exact `requiredPaths`"),
+                "examples guide must describe the public example-catalog portability surface"),
+        () ->
+            assertTrue(
+                normalizedExamples.contains("exact `requiredPaths` for asset-backed examples"),
+                "examples guide must document exact requiredPaths for asset-backed examples"),
+        () ->
+            assertTrue(
+                examples.contains(
+                    "./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest"),
+                "examples guide must point at the live example-fixture verification test owner"));
   }
 
   @Test

@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-facing factual report for one sheet- or table-owned autofilter. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -22,22 +24,24 @@ public sealed interface AutofilterEntryReport
   java.util.List<AutofilterFilterColumnReport> filterColumns();
 
   /** Persisted sort-state metadata carried by the autofilter, when present. */
-  AutofilterSortStateReport sortState();
+  Optional<AutofilterSortStateReport> sortState();
 
   /** One sheet-owned autofilter stored directly on the worksheet. */
   record SheetOwned(
       String range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") AutofilterSortStateReport sortState)
+      @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a sheet-owned autofilter report with no persisted criteria or sort state. */
     public SheetOwned(String range) {
-      this(range, java.util.List.of(), null);
+      this(range, java.util.List.of(), Optional.empty());
     }
 
     public SheetOwned {
       Objects.requireNonNull(range, "range must not be null");
       filterColumns = copyValues(filterColumns, "filterColumns");
+      Objects.requireNonNull(sortState, "sortState must not be null");
     }
   }
 
@@ -46,17 +50,19 @@ public sealed interface AutofilterEntryReport
       String range,
       String tableName,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      @JsonProperty("sortState") AutofilterSortStateReport sortState)
+      @JsonProperty("sortState") @JsonInclude(JsonInclude.Include.NON_ABSENT)
+          Optional<AutofilterSortStateReport> sortState)
       implements AutofilterEntryReport {
     /** Creates a table-owned autofilter report with no persisted criteria or sort state. */
     public TableOwned(String range, String tableName) {
-      this(range, tableName, java.util.List.of(), null);
+      this(range, tableName, java.util.List.of(), Optional.empty());
     }
 
     public TableOwned {
       Objects.requireNonNull(range, "range must not be null");
       Objects.requireNonNull(tableName, "tableName must not be null");
       filterColumns = copyValues(filterColumns, "filterColumns");
+      Objects.requireNonNull(sortState, "sortState must not be null");
     }
   }
 

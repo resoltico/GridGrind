@@ -5,6 +5,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.Base64;
+import java.util.Optional;
 
 /** Validates protocol responses and workbook state without depending on JUnit assertions. */
 public final class WorkbookInvariantChecks {
@@ -53,5 +54,15 @@ public final class WorkbookInvariantChecks {
     if (value instanceof TextSourceInput.Inline inline) {
       require(!inline.text().isBlank(), fieldName + " must not be blank");
     }
+  }
+
+  static <T> T requirePresent(Optional<T> value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    require(value.isPresent(), fieldName + " must not be absent");
+    return value.orElseThrow();
+  }
+
+  static void requireOptionalNonBlank(Optional<String> value, String fieldName) {
+    requireNonBlank(requirePresent(value, fieldName), fieldName);
   }
 }

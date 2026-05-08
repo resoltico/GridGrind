@@ -22,20 +22,6 @@ append_fixture_line() {
     printf '%s\n%s' "${text}" "${appended_line}"
 }
 
-ensure_cli_shadow_jar() {
-    local jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
-    if [[ -f "${jar_path}" ]]; then
-        printf '%s\n' "${jar_path}"
-        return 0
-    fi
-    "${repo_root}/gradlew" :cli:shadowJar --console=plain
-    [[ -f "${jar_path}" ]] || {
-        printf 'error: expected CLI shadow jar at %s after build\n' "${jar_path}" >&2
-        return 1
-    }
-    printf '%s\n' "${jar_path}"
-}
-
 print_cli_contract_minimal_request() {
     cat <<'JSON'
 {
@@ -62,7 +48,9 @@ JSON
 
 load_test_cli_contract_fixtures() {
     local jar_path
-    jar_path="$(ensure_cli_shadow_jar)"
+    # shellcheck source=/dev/null
+    source "${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
+    jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 
     success_help="$(
         java -jar "${jar_path}" --help | tr -d '\r'
@@ -70,14 +58,17 @@ load_test_cli_contract_fixtures() {
     success_catalog="$(
         java -jar "${jar_path}" --print-protocol-catalog | tr -d '\r'
     )"
+    success_example_catalog="$(
+        java -jar "${jar_path}" --print-example-catalog | tr -d '\r'
+    )"
     success_task_catalog="$(
         java -jar "${jar_path}" --print-task-catalog | tr -d '\r'
     )"
     success_task_plan="$(
         java -jar "${jar_path}" --print-task-plan DASHBOARD | tr -d '\r'
     )"
-    success_goal_plan="$(
-        java -jar "${jar_path}" --print-goal-plan "monthly sales dashboard with charts" | tr -d '\r'
+    success_task_keyword_match="$(
+        java -jar "${jar_path}" --print-task-keyword-match "monthly sales dashboard with charts" | tr -d '\r'
     )"
     success_request_template="$(
         java -jar "${jar_path}" --print-request-template | tr -d '\r'

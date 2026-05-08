@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Factual criterion family loaded from one autofilter filter column. */
 public sealed interface ExcelAutofilterFilterCriterionSnapshot
@@ -38,7 +39,7 @@ public sealed interface ExcelAutofilterFilterCriterionSnapshot
   }
 
   /** One dynamic-filter rule. */
-  record Dynamic(String type, Double value, Double maxValue)
+  record Dynamic(String type, @Nullable Double value, @Nullable Double maxValue)
       implements ExcelAutofilterFilterCriterionSnapshot {
     public Dynamic {
       Objects.requireNonNull(type, "type must not be null");
@@ -51,7 +52,7 @@ public sealed interface ExcelAutofilterFilterCriterionSnapshot
   }
 
   /** One top-10 filter rule. */
-  record Top10(boolean top, boolean percent, double value, Double filterValue)
+  record Top10(boolean top, boolean percent, double value, @Nullable Double filterValue)
       implements ExcelAutofilterFilterCriterionSnapshot {
     public Top10 {
       if (!Double.isFinite(value) || value < 0.0d) {
@@ -62,7 +63,7 @@ public sealed interface ExcelAutofilterFilterCriterionSnapshot
   }
 
   /** One color-based filter rule. */
-  record Color(boolean cellColor, ExcelColorSnapshot color)
+  record Color(boolean cellColor, @Nullable ExcelColorSnapshot color)
       implements ExcelAutofilterFilterCriterionSnapshot {
     public Color {}
   }
@@ -94,7 +95,7 @@ public sealed interface ExcelAutofilterFilterCriterionSnapshot
     }
   }
 
-  private static void requireFiniteOrNull(Double value, String fieldName) {
+  private static void requireFiniteOrNull(@Nullable Double value, String fieldName) {
     if (value != null && !Double.isFinite(value)) {
       throw new IllegalArgumentException(fieldName + " must be finite when provided");
     }

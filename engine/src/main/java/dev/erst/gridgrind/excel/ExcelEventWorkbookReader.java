@@ -78,7 +78,7 @@ public final class ExcelEventWorkbookReader {
     }
     List<String> selectedSheetNames = new ArrayList<>();
     for (EventSheetReference sheet : metadata.sheets()) {
-      if (sheetSnapshot(reader, metadata, sheetSummaries, sheet.name()).selected()) {
+      if (sheetSnapshot(reader, sheetSummaries, sheet).selected()) {
         selectedSheetNames.add(sheet.name());
       }
     }
@@ -101,7 +101,10 @@ public final class ExcelEventWorkbookReader {
       String sheetName)
       throws IOException {
     EventSheetReference sheet = metadata.sheetByName().get(sheetName);
-    EventSheetSummary summary = sheetSnapshot(reader, metadata, sheetSummaries, sheetName);
+    if (sheet == null) {
+      throw new SheetNotFoundException(sheetName);
+    }
+    EventSheetSummary summary = sheetSnapshot(reader, sheetSummaries, sheet);
     return new WorkbookSheetResult.SheetSummary(
         sheetName,
         sheet.visibility(),
@@ -112,21 +115,14 @@ public final class ExcelEventWorkbookReader {
   }
 
   private EventSheetSummary sheetSnapshot(
-      XSSFReader reader,
-      EventWorkbookMetadata metadata,
-      Map<String, EventSheetSummary> sheetSummaries,
-      String sheetName)
+      XSSFReader reader, Map<String, EventSheetSummary> sheetSummaries, EventSheetReference sheet)
       throws IOException {
-    EventSheetReference sheet = metadata.sheetByName().get(sheetName);
-    if (sheet == null) {
-      throw new SheetNotFoundException(sheetName);
-    }
-    EventSheetSummary summary = sheetSummaries.get(sheetName);
+    EventSheetSummary summary = sheetSummaries.get(sheet.name());
     if (summary != null) {
       return summary;
     }
     EventSheetSummary scannedSummary = scanSheet(reader, sheet);
-    sheetSummaries.put(sheetName, scannedSummary);
+    sheetSummaries.put(sheet.name(), scannedSummary);
     return scannedSummary;
   }
 

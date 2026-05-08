@@ -14,6 +14,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.BarDirection;
@@ -46,6 +47,7 @@ import org.apache.poi.xddf.usermodel.chart.XDDFSeriesAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 
 /**
@@ -143,18 +145,18 @@ final class ExcelChartPoiBridge {
 
   static ExcelChartBarDirection fromPoiBarDirection(BarDirection direction) {
     Objects.requireNonNull(direction, "direction must not be null");
-    return switch (direction) {
-      case COL -> ExcelChartBarDirection.COLUMN;
-      case BAR -> ExcelChartBarDirection.BAR;
-    };
+    if (direction == BarDirection.COL) {
+      return ExcelChartBarDirection.COLUMN;
+    }
+    return ExcelChartBarDirection.BAR;
   }
 
   static BarDirection toPoiBarDirection(ExcelChartBarDirection direction) {
     Objects.requireNonNull(direction, "direction must not be null");
-    return switch (direction) {
-      case COLUMN -> BarDirection.COL;
-      case BAR -> BarDirection.BAR;
-    };
+    if (direction == ExcelChartBarDirection.COLUMN) {
+      return BarDirection.COL;
+    }
+    return BarDirection.BAR;
   }
 
   static ExcelChartBarGrouping fromPoiBarGrouping(BarGrouping grouping) {
@@ -171,7 +173,7 @@ final class ExcelChartPoiBridge {
     return grouping == null ? ExcelChartBarGrouping.CLUSTERED : fromPoiBarGrouping(grouping);
   }
 
-  static ExcelChartBarGrouping fromBarGroupingTokenOrDefault(String token) {
+  static ExcelChartBarGrouping fromBarGroupingTokenOrDefault(@Nullable String token) {
     if (token == null) {
       return ExcelChartBarGrouping.CLUSTERED;
     }
@@ -207,7 +209,7 @@ final class ExcelChartPoiBridge {
     return grouping == null ? ExcelChartGrouping.STANDARD : fromPoiGrouping(grouping);
   }
 
-  static ExcelChartGrouping fromGroupingTokenOrDefault(String token) {
+  static ExcelChartGrouping fromGroupingTokenOrDefault(@Nullable String token) {
     if (token == null) {
       return ExcelChartGrouping.STANDARD;
     }
@@ -228,16 +230,19 @@ final class ExcelChartPoiBridge {
     };
   }
 
-  static ExcelChartBarShape fromPoiBarShape(Shape shape) {
-    Objects.requireNonNull(shape, "shape must not be null");
-    return switch (shape) {
-      case BOX -> ExcelChartBarShape.BOX;
-      case CONE -> ExcelChartBarShape.CONE;
-      case CONE_TO_MAX -> ExcelChartBarShape.CONE_TO_MAX;
-      case CYLINDER -> ExcelChartBarShape.CYLINDER;
-      case PYRAMID -> ExcelChartBarShape.PYRAMID;
-      case PYRAMID_TO_MAX -> ExcelChartBarShape.PYRAMID_TO_MAX;
-    };
+  static Optional<ExcelChartBarShape> fromPoiBarShape(@Nullable Shape shape) {
+    if (shape == null) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        switch (shape) {
+          case BOX -> ExcelChartBarShape.BOX;
+          case CONE -> ExcelChartBarShape.CONE;
+          case CONE_TO_MAX -> ExcelChartBarShape.CONE_TO_MAX;
+          case CYLINDER -> ExcelChartBarShape.CYLINDER;
+          case PYRAMID -> ExcelChartBarShape.PYRAMID;
+          case PYRAMID_TO_MAX -> ExcelChartBarShape.PYRAMID_TO_MAX;
+        });
   }
 
   static Shape toPoiBarShape(ExcelChartBarShape shape) {

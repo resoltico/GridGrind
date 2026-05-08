@@ -38,14 +38,14 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(
           ExcelPrintOrientation.LANDSCAPE,
           results.printLayout().printLayout().layout().orientation());
-      assertEquals(1, results.formulaSurface().analysis().totalFormulaCellCount());
+      assertEquals(1, results.formulaSurface().surface().totalFormulaCellCount());
       assertEquals(
           "SUM(B2:B3)",
-          results.formulaSurface().analysis().sheets().getFirst().formulas().getFirst().formula());
-      assertEquals("Budget", results.schema().analysis().sheetName());
-      assertEquals(4, results.schema().analysis().dataRowCount());
-      assertEquals(1, results.namedRangeSurface().analysis().rangeBackedCount());
-      assertEquals(0, results.namedRangeSurface().analysis().formulaBackedCount());
+          results.formulaSurface().surface().sheets().getFirst().formulas().getFirst().formula());
+      assertEquals("Budget", results.schema().surface().sheetName());
+      assertEquals(4, results.schema().surface().dataRowCount());
+      assertEquals(1, results.namedRangeSurface().surface().rangeBackedCount());
+      assertEquals(0, results.namedRangeSurface().surface().formulaBackedCount());
       assertEquals(
           List.of(
               new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
@@ -137,12 +137,12 @@ class ExcelWorkbookIntrospectorTest {
                 "SharedName",
                 new ExcelNamedRangeScope.WorkbookScope(),
                 "Budget!$A$1",
-                new ExcelNamedRangeTarget("Budget", "A1")),
+                ExcelNamedRangeTarget.range("Budget", "A1")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "SharedName",
                 new ExcelNamedRangeScope.SheetScope("Forecast"),
                 "Forecast!$A$1",
-                new ExcelNamedRangeTarget("Forecast", "A1")));
+                ExcelNamedRangeTarget.range("Forecast", "A1")));
 
     List<ExcelNamedRangeSnapshot> workbookScoped =
         ExcelWorkbookIntrospector.matchSelector(
@@ -222,7 +222,7 @@ class ExcelWorkbookIntrospectorTest {
                       new ExcelDrawingMarker(1, 2),
                       new ExcelDrawingMarker(4, 6),
                       ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                  "Queue preview"))
+                  java.util.Optional.of("Queue preview")))
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -267,7 +267,9 @@ class ExcelWorkbookIntrospectorTest {
         NullPointerException.class,
         () -> introspector.execute(null, new WorkbookReadCommand.GetWorkbookSummary("workbook")));
     assertThrows(
-        NullPointerException.class, () -> introspector.execute(ExcelWorkbook.create(), null));
+        NullPointerException.class,
+        () ->
+            introspector.execute(ExcelWorkbook.create(), (WorkbookReadCommand.Introspection) null));
     assertThrows(
         NullPointerException.class,
         () -> introspector.selectNamedRanges(null, new ExcelNamedRangeSelection.All()));
@@ -317,10 +319,10 @@ class ExcelWorkbookIntrospectorTest {
                   workbook,
                   new WorkbookReadCommand.GetFormulaSurface(
                       "formula", new ExcelSheetSelection.Selected(List.of("Forecast")))));
-      assertEquals(1, formulaSurface.analysis().totalFormulaCellCount());
+      assertEquals(1, formulaSurface.surface().totalFormulaCellCount());
       assertEquals(
           List.of("Forecast"),
-          formulaSurface.analysis().sheets().stream()
+          formulaSurface.surface().sheets().stream()
               .map(WorkbookSurfaceResult.SheetFormulaSurface::sheetName)
               .toList());
 
@@ -335,10 +337,10 @@ class ExcelWorkbookIntrospectorTest {
                           List.of(
                               new ExcelNamedRangeSelector.WorkbookScope("BudgetRollup"),
                               new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))))));
-      assertEquals(1, namedRangeSurface.analysis().workbookScopedCount());
-      assertEquals(1, namedRangeSurface.analysis().sheetScopedCount());
-      assertEquals(1, namedRangeSurface.analysis().formulaBackedCount());
-      assertEquals(1, namedRangeSurface.analysis().rangeBackedCount());
+      assertEquals(1, namedRangeSurface.surface().workbookScopedCount());
+      assertEquals(1, namedRangeSurface.surface().sheetScopedCount());
+      assertEquals(1, namedRangeSurface.surface().formulaBackedCount());
+      assertEquals(1, namedRangeSurface.surface().rangeBackedCount());
     }
   }
 
@@ -358,7 +360,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 3, 1)));
 
-      assertNull(schema.analysis().columns().getFirst().dominantType());
+      assertNull(schema.surface().columns().getFirst().dominantType());
     }
   }
 
@@ -378,9 +380,9 @@ class ExcelWorkbookIntrospectorTest {
 
       assertEquals(
           0,
-          schema.analysis().dataRowCount(),
+          schema.surface().dataRowCount(),
           "dataRowCount must be 0 when all header cells are blank");
-      assertEquals(3, schema.analysis().columns().size());
+      assertEquals(3, schema.surface().columns().size());
     }
   }
 
@@ -401,7 +403,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
 
-      assertEquals(2, schema.analysis().dataRowCount(), "dataRowCount must be rowCount - 1");
+      assertEquals(2, schema.surface().dataRowCount(), "dataRowCount must be rowCount - 1");
     }
   }
 
@@ -421,7 +423,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 1)));
 
-      WorkbookSurfaceResult.SchemaColumn column = schema.analysis().columns().getFirst();
+      WorkbookSurfaceResult.SchemaColumn column = schema.surface().columns().getFirst();
       assertEquals(1, column.observedTypes().size());
       assertEquals("NUMBER", column.observedTypes().getFirst().type());
       assertEquals("NUMBER", column.dominantType());
@@ -460,10 +462,10 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
 
-      WorkbookSurfaceResult.SchemaColumn boolCol = schema.analysis().columns().get(0);
+      WorkbookSurfaceResult.SchemaColumn boolCol = schema.surface().columns().get(0);
       assertEquals("BOOLEAN", boolCol.dominantType());
 
-      WorkbookSurfaceResult.SchemaColumn errCol = schema.analysis().columns().get(1);
+      WorkbookSurfaceResult.SchemaColumn errCol = schema.surface().columns().get(1);
       assertEquals("ERROR", errCol.dominantType());
     }
   }
@@ -485,7 +487,7 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 4, 1)));
 
-      assertEquals("STRING", schema.analysis().columns().getFirst().dominantType());
+      assertEquals("STRING", schema.surface().columns().getFirst().dominantType());
     }
   }
 
@@ -518,7 +520,7 @@ class ExcelWorkbookIntrospectorTest {
         new ExcelNamedRangeDefinition(
             "BudgetTotal",
             new ExcelNamedRangeScope.WorkbookScope(),
-            new ExcelNamedRangeTarget("Budget", "B4")));
+            ExcelNamedRangeTarget.range("Budget", "B4")));
 
     ExcelSheet ops = workbook.getOrCreateSheet("Ops");
     ops.setCell("A1", ExcelCellValue.text("Owner"));

@@ -30,36 +30,31 @@ class GridGrindResponseNestedCoverageTest {
             Optional.empty(),
             "Owner",
             Optional.of(List.of(new RichTextRunReport("Owner", style().font()))));
-    GridGrindLayoutSurfaceReports.WindowRowReport row =
-        new GridGrindLayoutSurfaceReports.WindowRowReport(0, List.of(textCell));
-    GridGrindLayoutSurfaceReports.WindowReport window =
-        new GridGrindLayoutSurfaceReports.WindowReport("Budget", "A1", 1, 1, List.of(row));
+    WindowRowReport row = new WindowRowReport(0, List.of(textCell));
+    WindowReport window = new WindowReport("Budget", "A1", 1, 1, List.of(row));
     assertEquals("Budget", window.sheetName());
     assertEquals(
         "rowCount must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new GridGrindLayoutSurfaceReports.WindowReport(
-                        "Budget", "A1", 0, 1, List.of(row)))
+                () -> new WindowReport("Budget", "A1", 0, 1, List.of(row)))
             .getMessage());
 
-    GridGrindLayoutSurfaceReports.SheetLayoutReport layout =
-        new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+    SheetLayoutReport layout =
+        new SheetLayoutReport(
             "Budget",
             new PaneReport.Split(1, 1, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
             125,
             SheetPresentationReport.defaults(),
-            List.of(
-                new GridGrindLayoutSurfaceReports.ColumnLayoutReport(0, 8.43d, false, 0, false)),
-            List.of(new GridGrindLayoutSurfaceReports.RowLayoutReport(0, 15.0d, false, 0, false)));
+            List.of(new ColumnLayoutReport(0, 8.43d, false, 0, false)),
+            List.of(new RowLayoutReport(0, 15.0d, false, 0, false)));
     assertEquals(125, layout.zoomPercent());
     assertEquals(
         "zoomPercent must be between 10 and 400 inclusive: 401",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+                    new SheetLayoutReport(
                         "Budget",
                         new PaneReport.None(),
                         401,
@@ -68,88 +63,68 @@ class GridGrindResponseNestedCoverageTest {
                         List.of()))
             .getMessage());
 
-    GridGrindSchemaAndFormulaReports.SheetSchemaReport schema =
-        new GridGrindSchemaAndFormulaReports.SheetSchemaReport(
+    SheetSchemaReport schema =
+        new SheetSchemaReport(
             "Budget",
             "A1",
             2,
             1,
             1,
             List.of(
-                new GridGrindSchemaAndFormulaReports.SchemaColumnReport(
-                    0,
-                    "A",
-                    "Owner",
-                    1,
-                    0,
-                    List.of(new GridGrindSchemaAndFormulaReports.TypeCountReport("STRING", 1)),
-                    "STRING")));
+                new SchemaColumnReport(
+                    0, "A", "Owner", 1, 0, List.of(new TypeCountReport("STRING", 1)), "STRING")));
     assertEquals(1, schema.columns().size());
     assertEquals(
         "count must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new GridGrindSchemaAndFormulaReports.TypeCountReport("STRING", 0))
+        assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("STRING", 0))
             .getMessage());
 
-    GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport surface =
-        new GridGrindSchemaAndFormulaReports.NamedRangeSurfaceReport(
+    NamedRangeSurfaceReport surface =
+        new NamedRangeSurfaceReport(
             1,
             0,
             1,
             0,
             List.of(
-                new GridGrindSchemaAndFormulaReports.NamedRangeSurfaceEntryReport(
+                new NamedRangeSurfaceEntryReport(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
                     "Budget!$B$4",
-                    GridGrindSchemaAndFormulaReports.NamedRangeBackingKind.RANGE)));
+                    NamedRangeBackingKind.RANGE)));
     assertEquals(1, surface.namedRanges().size());
     assertEquals(
         "formulaCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new GridGrindSchemaAndFormulaReports.SheetFormulaSurfaceReport(
-                        "Budget", -1, 0, List.of()))
+                () -> new SheetFormulaSurfaceReport("Budget", -1, 0, List.of()))
             .getMessage());
     assertEquals(
         "formula must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new GridGrindSchemaAndFormulaReports.FormulaPatternReport(
-                        " ", 1, List.of("A1")))
+                () -> new FormulaPatternReport(" ", 1, List.of("A1")))
             .getMessage());
 
-    GridGrindAnalysisReports.AnalysisSummaryReport summary =
-        new GridGrindAnalysisReports.AnalysisSummaryReport(1, 0, 1, 0);
-    GridGrindAnalysisReports.AnalysisFindingReport finding =
-        new GridGrindAnalysisReports.AnalysisFindingReport(
+    AnalysisSummaryReport summary = new AnalysisSummaryReport(1, 0, 1, 0);
+    AnalysisFindingReport finding =
+        new AnalysisFindingReport(
             AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET,
             AnalysisSeverity.INFO,
             "Formula-backed name",
             "Named range stores a formula.",
-            new GridGrindAnalysisReports.AnalysisLocationReport.NamedRange(
-                "BudgetTotal", new NamedRangeScope.Workbook()),
+            new AnalysisLocationReport.NamedRange("BudgetTotal", new NamedRangeScope.Workbook()),
             List.of("Budget!$B$4"));
-    assertEquals(
-        1,
-        new GridGrindAnalysisReports.WorkbookFindingsReport(summary, List.of(finding))
-            .findings()
-            .size());
+    assertEquals(1, new WorkbookFindingsReport(summary, List.of(finding)).findings().size());
     assertEquals(
         "totalCount must equal errorCount + warningCount + infoCount",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new GridGrindAnalysisReports.AnalysisSummaryReport(2, 0, 1, 0))
+        assertThrows(IllegalArgumentException.class, () -> new AnalysisSummaryReport(2, 0, 1, 0))
             .getMessage());
   }
 
   @Test
   void commentCellAndProblemReportsCoverDefaultsAndValidation() {
-    GridGrindWorkbookSurfaceReports.CommentReport comment =
-        new GridGrindWorkbookSurfaceReports.CommentReport(
+    CommentReport comment =
+        new CommentReport(
             "Owner note",
             "Alice",
             true,
@@ -161,7 +136,7 @@ class GridGrindResponseNestedCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindWorkbookSurfaceReports.CommentReport(
+                    new CommentReport(
                         "Owner note",
                         "Alice",
                         false,
@@ -219,9 +194,8 @@ class GridGrindResponseNestedCoverageTest {
     assertEquals("#DIV/0!", errorCell.errorValue());
     assertEquals("SUM(A1:A2)", formulaCell.formula());
     assertInstanceOf(
-        GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport.class,
-        new GridGrindWorkbookSurfaceReports.NamedRangeReport.FormulaReport(
-            "Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
+        NamedRangeReport.FormulaReport.class,
+        new NamedRangeReport.FormulaReport("Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));
 
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(
@@ -251,9 +225,9 @@ class GridGrindResponseNestedCoverageTest {
             .getMessage());
   }
 
-  private static GridGrindWorkbookSurfaceReports.CellStyleReport style() {
+  private static CellStyleReport style() {
     CellBorderSideReport emptySide = new CellBorderSideReport(ExcelBorderStyle.NONE, null);
-    return new GridGrindWorkbookSurfaceReports.CellStyleReport(
+    return new CellStyleReport(
         "General",
         new CellAlignmentReport(
             false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),

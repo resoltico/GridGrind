@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.poi.openxml4j.exceptions.OpenXML4JException;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.xmlbeans.XmlException;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBookView;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheet;
@@ -24,6 +25,11 @@ record EventWorkbookMetadata(
     int activeSheetIndex,
     int namedRangeCount,
     boolean forceFormulaRecalculationOnOpen) {
+
+  EventWorkbookMetadata {
+    sheets = List.copyOf(sheets);
+    sheetByName = Map.copyOf(sheetByName);
+  }
 
   List<String> sheetNames() {
     return sheets.stream().map(EventSheetReference::name).toList();
@@ -81,7 +87,7 @@ record EventWorkbookMetadata(
         sheet.getName(), sheet.getId(), visibility(sheet.isSetState() ? sheet.getState() : null));
   }
 
-  static ExcelSheetVisibility visibility(STSheetState.Enum state) {
+  static ExcelSheetVisibility visibility(STSheetState.@Nullable Enum state) {
     if (state == null || state == STSheetState.VISIBLE) {
       return ExcelSheetVisibility.VISIBLE;
     }

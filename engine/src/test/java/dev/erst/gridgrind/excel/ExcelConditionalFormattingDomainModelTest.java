@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupported
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
 import org.apache.poi.ss.usermodel.IconMultiStateFormatting;
 import org.junit.jupiter.api.Test;
@@ -115,15 +116,15 @@ class ExcelConditionalFormattingDomainModelTest {
     ExcelDifferentialBorder border = new ExcelDifferentialBorder(side, null, null, null, null);
     ExcelDifferentialStyle style =
         new ExcelDifferentialStyle(
-            "0.00",
-            true,
-            false,
-            ExcelFontHeight.fromPoints(BigDecimal.valueOf(11)),
-            "#223344",
-            true,
-            false,
-            "#AABBCC",
-            border);
+            Optional.of("0.00"),
+            Optional.of(true),
+            Optional.of(false),
+            Optional.ofNullable(ExcelFontHeight.fromPoints(BigDecimal.valueOf(11))),
+            Optional.of("#223344"),
+            Optional.of(true),
+            Optional.of(false),
+            Optional.of("#AABBCC"),
+            Optional.ofNullable(border));
     List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures =
         new ArrayList<>(List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES));
     ExcelDifferentialStyleSnapshot snapshot =
@@ -140,8 +141,8 @@ class ExcelConditionalFormattingDomainModelTest {
             unsupportedFeatures);
     unsupportedFeatures.clear();
 
-    assertEquals("#223344", style.fontColor());
-    assertEquals("#AABBCC", style.fillColor());
+    assertEquals(Optional.of("#223344"), style.fontColor());
+    assertEquals(Optional.of("#AABBCC"), style.fillColor());
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.FONT_ATTRIBUTES),
         snapshot.unsupportedFeatures());
@@ -151,15 +152,55 @@ class ExcelConditionalFormattingDomainModelTest {
         () -> new ExcelDifferentialBorder(null, null, null, null, null));
     assertDoesNotThrow(() -> new ExcelDifferentialBorder(null, null, null, null, side));
     assertDoesNotThrow(
-        () -> new ExcelDifferentialStyle(null, true, null, null, null, null, null, null, null));
+        () ->
+            new ExcelDifferentialStyle(
+                Optional.empty(),
+                Optional.of(true),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertDoesNotThrow(
-        () -> new ExcelDifferentialStyle(null, null, null, null, null, null, null, null, border));
+        () ->
+            new ExcelDifferentialStyle(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.ofNullable(border)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDifferentialStyle(" ", null, null, null, null, null, null, null, null));
+        () ->
+            new ExcelDifferentialStyle(
+                Optional.of(" "),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelDifferentialStyle(null, null, null, null, null, null, null, null, null));
+        () ->
+            new ExcelDifferentialStyle(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -210,7 +251,17 @@ class ExcelConditionalFormattingDomainModelTest {
         new ExcelConditionalFormattingRule.FormulaRule(
             "=A1>0",
             true,
-            new ExcelDifferentialStyle("0.00", null, null, null, null, null, null, null, null));
+            Optional.of(
+                new ExcelDifferentialStyle(
+                    Optional.of("0.00"),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty(),
+                    Optional.empty())));
     ExcelConditionalFormattingBlockDefinition definition =
         new ExcelConditionalFormattingBlockDefinition(List.of("A1:A3"), List.of(rule));
 
@@ -267,7 +318,16 @@ class ExcelConditionalFormattingDomainModelTest {
   @Test
   void enforcesAuthoredAndLoadedRuleInvariants() {
     ExcelDifferentialStyle style =
-        new ExcelDifferentialStyle("0.00", null, null, null, null, null, null, null, null);
+        new ExcelDifferentialStyle(
+            Optional.of("0.00"),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty());
     ExcelDifferentialStyleSnapshot snapshot =
         new ExcelDifferentialStyleSnapshot(
             "0.00", null, null, null, null, null, null, null, null, List.of());
@@ -277,7 +337,7 @@ class ExcelConditionalFormattingDomainModelTest {
 
     ExcelConditionalFormattingRule.CellValueRule authoredCellValueRule =
         new ExcelConditionalFormattingRule.CellValueRule(
-            ExcelComparisonOperator.BETWEEN, "=1", "=9", false, style);
+            ExcelComparisonOperator.BETWEEN, "=1", Optional.of("=9"), false, Optional.of(style));
     ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule =
         new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
             1, false, List.of(threshold), List.of("#102030"));
@@ -291,11 +351,12 @@ class ExcelConditionalFormattingDomainModelTest {
             List.of(threshold));
 
     assertEquals("1", authoredCellValueRule.formula1());
-    assertEquals("9", authoredCellValueRule.formula2());
+    assertEquals("9", authoredCellValueRule.formula2().orElseThrow());
     assertEquals(List.of("#102030"), colorScaleRule.colors());
     assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
 
-    assertDoesNotThrow(() -> new ExcelConditionalFormattingRule.FormulaRule("=A1>0", true, null));
+    assertDoesNotThrow(
+        () -> new ExcelConditionalFormattingRule.FormulaRule("=A1>0", true, Optional.empty()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelConditionalFormattingRuleSnapshot.FormulaRule(-1, false, "A1>0", snapshot));

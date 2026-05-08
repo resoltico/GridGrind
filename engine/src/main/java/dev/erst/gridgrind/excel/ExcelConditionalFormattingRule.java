@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authorable conditional-formatting rule families supported by GridGrind. */
 public sealed interface ExcelConditionalFormattingRule
@@ -15,10 +16,11 @@ public sealed interface ExcelConditionalFormattingRule
         ExcelConditionalFormattingRule.Top10Rule {
 
   /** Formula-driven conditional-formatting rule with one differential-style payload. */
-  record FormulaRule(String formula, boolean stopIfTrue, ExcelDifferentialStyle style)
+  record FormulaRule(String formula, boolean stopIfTrue, Optional<ExcelDifferentialStyle> style)
       implements ExcelConditionalFormattingRule {
     public FormulaRule {
       formula = ExcelComparisonFormulaSupport.normalizeFormula(formula, "formula");
+      Objects.requireNonNull(style, "style must not be null");
     }
   }
 
@@ -26,16 +28,16 @@ public sealed interface ExcelConditionalFormattingRule
   record CellValueRule(
       ExcelComparisonOperator operator,
       String formula1,
-      String formula2,
+      Optional<String> formula2,
       boolean stopIfTrue,
-      ExcelDifferentialStyle style)
+      Optional<ExcelDifferentialStyle> style)
       implements ExcelConditionalFormattingRule {
     public CellValueRule {
+      Objects.requireNonNull(style, "style must not be null");
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
-              .orElse(null);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -106,9 +108,14 @@ public sealed interface ExcelConditionalFormattingRule
 
   /** Top-N or bottom-N rule with one differential-style payload. */
   record Top10Rule(
-      int rank, boolean percent, boolean bottom, boolean stopIfTrue, ExcelDifferentialStyle style)
+      int rank,
+      boolean percent,
+      boolean bottom,
+      boolean stopIfTrue,
+      Optional<ExcelDifferentialStyle> style)
       implements ExcelConditionalFormattingRule {
     public Top10Rule {
+      Objects.requireNonNull(style, "style must not be null");
       if (rank <= 0) {
         throw new IllegalArgumentException("rank must be greater than 0");
       }

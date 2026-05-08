@@ -4,28 +4,13 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;
 import org.apache.poi.ss.util.CellReference;
 
-/** Immutable workbook-core cell or rectangular-range target of a defined name. */
-public record ExcelNamedRangeTarget(String sheetName, String range, String formula) {
-  /** Creates a sheet-local cell or rectangular range target. */
-  public ExcelNamedRangeTarget(String sheetName, String range) {
-    this(sheetName, range, null);
-  }
+/** Immutable workbook-core target of a defined name. */
+public sealed interface ExcelNamedRangeTarget
+    permits ExcelNamedRangeTarget.Range, ExcelNamedRangeTarget.Formula {
 
-  /** Creates a formula-defined target that is stored exactly as authored. */
-  public ExcelNamedRangeTarget(String formula) {
-    this(null, null, formula);
-  }
-
-  public ExcelNamedRangeTarget {
-    if (formula != null) {
-      if (formula.isBlank()) {
-        throw new IllegalArgumentException("formula must not be blank");
-      }
-      if (sheetName != null || range != null) {
-        throw new IllegalArgumentException(
-            "formula-defined named-range targets must not also set sheetName or range");
-      }
-    } else {
+  /** Sheet-local cell or rectangular range target. */
+  record Range(String sheetName, String range) implements ExcelNamedRangeTarget {
+    public Range {
       ExcelSheetNames.requireValid(sheetName, "sheetName");
       Objects.requireNonNull(range, "range must not be null");
       if (range.isBlank()) {
@@ -33,23 +18,48 @@ public record ExcelNamedRangeTarget(String sheetName, String range, String formu
       }
       range = normalizeRange(range);
     }
+
+    @Override
+    public String refersToFormula() {
+      ExcelRange excelRange = ExcelRange.parse(range);
+      CellReference first =
+          new CellReference(sheetName, excelRange.firstRow(), excelRange.firstColumn(), true, true);
+      if (excelRange.rowCount() == 1 && excelRange.columnCount() == 1) {
+        return first.formatAsString();
+      }
+      return first.formatAsString()
+          + ":"
+          + new CellReference(excelRange.lastRow(), excelRange.lastColumn(), true, true)
+              .formatAsString();
+    }
+  }
+
+  /** Formula-defined target stored exactly as authored. */
+  record Formula(String formula) implements ExcelNamedRangeTarget {
+    public Formula {
+      Objects.requireNonNull(formula, "formula must not be null");
+      if (formula.isBlank()) {
+        throw new IllegalArgumentException("formula must not be blank");
+      }
+    }
+
+    @Override
+    public String refersToFormula() {
+      return formula;
+    }
   }
 
   /** Returns this target as a sheet-qualified absolute Excel formula string. */
-  public String refersToFormula() {
-    if (formula != null) {
-      return formula;
-    }
-    ExcelRange excelRange = ExcelRange.parse(range);
-    CellReference first =
-        new CellReference(sheetName, excelRange.firstRow(), excelRange.firstColumn(), true, true);
-    if (excelRange.rowCount() == 1 && excelRange.columnCount() == 1) {
-      return first.formatAsString();
-    }
-    return first.formatAsString()
-        + ":"
-        + new CellReference(excelRange.lastRow(), excelRange.lastColumn(), true, true)
-            .formatAsString();
+  String refersToFormula();
+
+  /** Creates a typed sheet-local range target. */
+  static ExcelNamedRangeTarget range(String sheetName, String range) {
+    return new Range(sheetName, range);
+  }
+
+  /** Creates an exact formula-defined target. */
+  static ExcelNamedRangeTarget formula(String formula) {
+    return new Formula(formula);
   }
 
   private static String normalizeRange(String range) {

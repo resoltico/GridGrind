@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** End-to-end mutation and introspection coverage for authored charts. */
@@ -37,7 +38,9 @@ class ExcelChartMutationFlowTest {
           assertInstanceOf(
               WorkbookDrawingResult.ChartsResult.class,
               introspector.execute(
-                  workbook, new WorkbookReadCommand.GetCharts("charts", "Charts")));
+                  workbook,
+                  new WorkbookReadCommand.GetCharts(
+                      "charts", new ExcelChartSelection.AllOnSheet("Charts"))));
       ExcelChartSnapshot initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
       assertEquals(new ExcelChartSnapshot.Title.Text("Line roadmap"), initialLine.title());
 
@@ -59,7 +62,7 @@ class ExcelChartMutationFlowTest {
               90));
       ExcelChartSnapshot initialPie = ExcelChartTestSupport.chart(sheet.charts(), "OpsPie");
       assertEquals(
-          90,
+          Optional.of(90),
           ExcelChartTestSupport.singlePlot(initialPie, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
 
@@ -72,9 +75,19 @@ class ExcelChartMutationFlowTest {
       ExcelChartSnapshot updatedPie = ExcelChartTestSupport.chart(sheet.charts(), "OpsPie");
       assertEquals(ExcelChartTestSupport.anchor(14, 2, 20, 13), updatedPie.anchor());
       assertEquals(
-          120,
+          Optional.of(120),
           ExcelChartTestSupport.singlePlot(updatedPie, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
+
+      WorkbookDrawingResult.ChartsResult exactChartRead =
+          assertInstanceOf(
+              WorkbookDrawingResult.ChartsResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetCharts(
+                      "chart-by-name", new ExcelChartSelection.ByName("Charts", "OpsPie"))));
+      assertEquals(1, exactChartRead.charts().size());
+      assertEquals("OpsPie", exactChartRead.charts().getFirst().name());
 
       IllegalArgumentException invalidChartTitle =
           assertThrows(
@@ -124,18 +137,18 @@ class ExcelChartMutationFlowTest {
                       new ExcelChartDefinition.Title.Text("Plan"),
                       ExcelChartTestSupport.ref("ChartCategories"),
                       ExcelChartTestSupport.ref("ChartPlan"),
-                      null,
-                      null,
-                      null,
-                      null),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()),
                   new ExcelChartDefinition.Series(
                       new ExcelChartDefinition.Title.Formula("C1"),
                       ExcelChartTestSupport.ref("ChartCategories"),
                       ExcelChartTestSupport.ref("ChartActual"),
-                      null,
-                      null,
-                      null,
-                      null))));
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
       sheet.setChart(
           barChartDefinition(
               "OpsBarSeries",
@@ -145,10 +158,10 @@ class ExcelChartMutationFlowTest {
                       new ExcelChartDefinition.Title.None(),
                       ExcelChartTestSupport.ref("ChartCategories"),
                       ExcelChartTestSupport.ref("ChartPlan"),
-                      null,
-                      null,
-                      null,
-                      null))));
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty(),
+                      Optional.empty()))));
       ExcelChartSnapshot barChart = ExcelChartTestSupport.chart(sheet.charts(), "OpsBarSeries");
       assertEquals(
           1,
@@ -169,7 +182,7 @@ class ExcelChartMutationFlowTest {
 
       ExcelChartSnapshot updatedChart = ExcelChartTestSupport.chart(sheet.charts(), "OpsType");
       assertEquals(
-          45,
+          Optional.of(45),
           ExcelChartTestSupport.singlePlot(updatedChart, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
 
@@ -208,10 +221,10 @@ class ExcelChartMutationFlowTest {
                 seriesTitle,
                 ExcelChartTestSupport.ref("ChartCategories"),
                 ExcelChartTestSupport.ref("ChartPlan"),
-                null,
-                null,
-                null,
-                null)));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty())));
   }
 
   private static ExcelChartDefinition pieChartDefinition(
@@ -233,10 +246,10 @@ class ExcelChartMutationFlowTest {
                 new ExcelChartDefinition.Title.Text("Actual"),
                 ExcelChartTestSupport.ref("ChartCategories"),
                 ExcelChartTestSupport.ref("ChartActual"),
-                null,
-                null,
-                null,
-                45L)));
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of(45L))));
   }
 
   private static ExcelChartDefinition barChartDefinition(

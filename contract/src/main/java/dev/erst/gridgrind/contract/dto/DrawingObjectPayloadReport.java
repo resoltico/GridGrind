@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Base64;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Extracted binary drawing-object payload returned by payload reads. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -38,7 +39,7 @@ public sealed interface DrawingObjectPayloadReport
       String fileName,
       String sha256,
       String base64Data,
-      String description)
+      @Nullable String description)
       implements DrawingObjectPayloadReport {
     public Picture {
       validateCommon(name, contentType, sha256, base64Data);
@@ -55,11 +56,11 @@ public sealed interface DrawingObjectPayloadReport
       String name,
       ExcelEmbeddedObjectPackagingKind packagingKind,
       String contentType,
-      String fileName,
+      @Nullable String fileName,
       String sha256,
       String base64Data,
-      String label,
-      String command)
+      @Nullable String label,
+      @Nullable String command)
       implements DrawingObjectPayloadReport {
     public EmbeddedObject {
       validateCommon(name, contentType, sha256, base64Data);

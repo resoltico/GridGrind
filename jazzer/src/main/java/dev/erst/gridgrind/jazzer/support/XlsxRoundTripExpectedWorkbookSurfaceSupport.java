@@ -17,8 +17,8 @@ import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
-import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -129,17 +129,17 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
 
   static dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary(
       ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     return ((dev.erst.gridgrind.excel.WorkbookCoreResult.WorkbookSummaryResult)
             readExecutor
-                .apply(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary"))
+                .read(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary"))
                 .getFirst())
         .workbook();
   }
 
   static Map<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary>
       expectedSheetSummaries(ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expected =
         new LinkedHashMap<>();
     for (String sheetName : workbook.sheetNames()) {
@@ -147,7 +147,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
           sheetName,
           ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
                   readExecutor
-                      .apply(
+                      .read(
                           workbook,
                           new WorkbookReadCommand.GetSheetSummary(
                               "sheet-summary-" + sheetName, sheetName))
@@ -172,14 +172,14 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
 
   static Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting(
       ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<ExcelConditionalFormattingBlockSnapshot>> expected =
         new LinkedHashMap<>();
     for (String sheetName : workbook.sheetNames()) {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
               readExecutor
-                  .apply(
+                  .read(
                       workbook,
                       new WorkbookReadCommand.GetConditionalFormatting(
                           "conditionalFormatting", sheetName, new ExcelRangeSelection.All()))
@@ -192,13 +192,13 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters(ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<ExcelAutofilterSnapshot>> expected = new LinkedHashMap<>();
     for (String sheetName : workbook.sheetNames()) {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
               readExecutor
-                  .apply(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", sheetName))
+                  .read(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", sheetName))
                   .getFirst();
       if (!result.autofilters().isEmpty()) {
         expected.put(sheetName, result.autofilters());
@@ -225,11 +225,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static List<ExcelPivotTableSnapshot> expectedPivots(ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.excel.WorkbookDrawingResult.PivotTablesResult)
             readExecutor
-                .apply(
+                .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
                         "pivots", new ExcelPivotTableSelection.All()))
@@ -238,11 +238,11 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   }
 
   static List<ExcelTableSnapshot> expectedTables(ExcelWorkbook workbook) {
-    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     var result =
         (dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)
             readExecutor
-                .apply(
+                .read(
                     workbook,
                     new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))
                 .getFirst();

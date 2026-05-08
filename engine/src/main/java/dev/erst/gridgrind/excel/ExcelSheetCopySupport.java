@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection;
 
@@ -86,9 +87,9 @@ final class ExcelSheetCopySupport {
   }
 
   static void replaceAutofilter(
-      ExcelAutofilterSnapshot.SheetOwned sheetAutofilter, ExcelSheet targetSheet) {
+      Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter, ExcelSheet targetSheet) {
     targetSheet.clearAutofilter();
-    copyAutofilter(sheetAutofilter, targetSheet);
+    sheetAutofilter.ifPresent(value -> copyAutofilter(value, targetSheet));
   }
 
   private static void copyDataValidations(
@@ -132,15 +133,12 @@ final class ExcelSheetCopySupport {
 
   private static void copyAutofilter(
       ExcelAutofilterSnapshot.SheetOwned sheetAutofilter, ExcelSheet targetSheet) {
-    if (sheetAutofilter == null) {
-      return;
-    }
     targetSheet.setAutofilter(
         sheetAutofilter.range(),
         sheetAutofilter.filterColumns().stream()
             .map(ExcelSheetCopySupport::copyableAutofilterColumn)
             .toList(),
-        copyableSortState(sheetAutofilter.sortState()).orElse(null));
+        copyableSortState(sheetAutofilter.sortState()));
   }
 
   private static void copyLocalNamedRanges(
@@ -266,7 +264,7 @@ final class ExcelSheetCopySupport {
           new ExcelConditionalFormattingRule.CellValueRule(
               cellValueRule.operator(),
               cellValueRule.formula1(),
-              cellValueRule.formula2(),
+              Optional.ofNullable(cellValueRule.formula2()),
               cellValueRule.stopIfTrue(),
               copyableStyle(cellValueRule.style(), sourceSheetName));
       case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule ->
@@ -313,11 +311,11 @@ final class ExcelSheetCopySupport {
     };
   }
 
-  static ExcelDifferentialStyle copyableStyle(
-      ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
+  static Optional<ExcelDifferentialStyle> copyableStyle(
+      @Nullable ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
     if (style == null) {
-      return null;
+      return Optional.empty();
     }
     if (!style.unsupportedFeatures().isEmpty()) {
       throw new IllegalArgumentException(
@@ -326,27 +324,28 @@ final class ExcelSheetCopySupport {
               + "': conditional-formatting rules with unsupported differential-style features are"
               + " not copyable");
     }
-    return new ExcelDifferentialStyle(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        style.fontHeight(),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        style.border());
+    return Optional.of(
+        new ExcelDifferentialStyle(
+            Optional.ofNullable(style.numberFormat()),
+            Optional.ofNullable(style.bold()),
+            Optional.ofNullable(style.italic()),
+            Optional.ofNullable(style.fontHeight()),
+            Optional.ofNullable(style.fontColor()),
+            Optional.ofNullable(style.underline()),
+            Optional.ofNullable(style.strikeout()),
+            Optional.ofNullable(style.fillColor()),
+            Optional.ofNullable(style.border())));
   }
 
-  static ExcelAutofilterSnapshot.SheetOwned sheetOwnedAutofilter(
+  static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
       List<ExcelAutofilterSnapshot> autofilters) {
     Objects.requireNonNull(autofilters, "autofilters must not be null");
     if (autofilters.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
     ExcelAutofilterSnapshot autofilter = autofilters.getFirst();
     return switch (autofilter) {
-      case ExcelAutofilterSnapshot.SheetOwned sheetOwned -> sheetOwned;
+      case ExcelAutofilterSnapshot.SheetOwned sheetOwned -> Optional.of(sheetOwned);
       case ExcelAutofilterSnapshot.TableOwned _ ->
           throw new IllegalStateException(
               "sheetOwnedAutofilters must not return table-owned autofilter snapshots");
@@ -354,8 +353,7 @@ final class ExcelSheetCopySupport {
   }
 
   static Optional<String> sheetOwnedAutofilterRange(List<ExcelAutofilterSnapshot> autofilters) {
-    ExcelAutofilterSnapshot.SheetOwned sheetOwned = sheetOwnedAutofilter(autofilters);
-    return sheetOwned == null ? Optional.empty() : Optional.of(sheetOwned.range());
+    return sheetOwnedAutofilter(autofilters).map(ExcelAutofilterSnapshot.SheetOwned::range);
   }
 
   private static ExcelConditionalFormattingThreshold copyableThreshold(
@@ -394,7 +392,9 @@ final class ExcelSheetCopySupport {
               (int) Math.round(top10.value()), top10.top(), top10.percent());
       case ExcelAutofilterFilterCriterionSnapshot.Color color ->
           new ExcelAutofilterFilterCriterion.Color(
-              color.cellColor(), ExcelColorSupport.copyOf(color.color()));
+              color.cellColor(),
+              Objects.requireNonNull(
+                  ExcelColorSupport.copyOf(color.color()), "autofilter color must not be null"));
       case ExcelAutofilterFilterCriterionSnapshot.Icon icon ->
           new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
     };
@@ -415,7 +415,7 @@ final class ExcelSheetCopySupport {
                         .toList()));
   }
 
-  private static ExcelAutofilterSortCondition copyableSortCondition(
+  static ExcelAutofilterSortCondition copyableSortCondition(
       ExcelAutofilterSortConditionSnapshot condition) {
     return switch (condition) {
       case ExcelAutofilterSortConditionSnapshot.Value value ->
@@ -424,12 +424,14 @@ final class ExcelSheetCopySupport {
           new ExcelAutofilterSortCondition.CellColor(
               cellColor.range(),
               cellColor.descending(),
-              ExcelColorSupport.copyOf(cellColor.color()));
+              Objects.requireNonNull(
+                  ExcelColorSupport.copyOf(cellColor.color()), "cell sort color must not be null"));
       case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
           new ExcelAutofilterSortCondition.FontColor(
               fontColor.range(),
               fontColor.descending(),
-              ExcelColorSupport.copyOf(fontColor.color()));
+              Objects.requireNonNull(
+                  ExcelColorSupport.copyOf(fontColor.color()), "font sort color must not be null"));
       case ExcelAutofilterSortConditionSnapshot.Icon icon ->
           new ExcelAutofilterSortCondition.Icon(icon.range(), icon.descending(), icon.iconId());
     };
@@ -563,12 +565,13 @@ final class ExcelSheetCopySupport {
           new ExcelNamedRangeDefinition(
               rangeSnapshot.name(),
               scope,
-              new ExcelNamedRangeTarget(targetSheetName, rangeSnapshot.target().range()));
+              ExcelNamedRangeTarget.range(
+                  targetSheetName, ((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range()));
       case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
           new ExcelNamedRangeDefinition(
               formulaSnapshot.name(),
               scope,
-              new ExcelNamedRangeTarget(
+              ExcelNamedRangeTarget.formula(
                   ExcelFormulaSheetRenameSupport.renameSheet(
                       workbook.xssfWorkbook(),
                       formulaSnapshot.refersToFormula(),
@@ -663,16 +666,17 @@ final class ExcelSheetCopySupport {
         newSheetName);
   }
 
-  private static String retargetOptionalFormula(
+  private static Optional<String> retargetOptionalFormula(
       ExcelWorkbook workbook,
-      String formula,
+      Optional<String> formula,
       FormulaType formulaType,
       int targetSheetIndex,
       String sourceSheetName,
       String newSheetName) {
-    return formula == null
-        ? null
-        : retargetFormula(
-            workbook, formula, formulaType, targetSheetIndex, sourceSheetName, newSheetName);
+    Objects.requireNonNull(formula, "formula must not be null");
+    return formula.map(
+        value ->
+            retargetFormula(
+                workbook, value, formulaType, targetSheetIndex, sourceSheetName, newSheetName));
   }
 }

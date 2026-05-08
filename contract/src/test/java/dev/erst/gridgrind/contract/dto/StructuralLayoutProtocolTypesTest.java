@@ -185,7 +185,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+            new SheetLayoutReport(
                 "Budget",
                 null,
                 100,
@@ -195,7 +195,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+            new SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 9,
@@ -205,7 +205,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+            new SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 401,
@@ -215,7 +215,7 @@ class StructuralLayoutProtocolTypesTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindLayoutSurfaceReports.SheetLayoutReport(
+            new SheetLayoutReport(
                 "Budget",
                 new PaneReport.None(),
                 100,

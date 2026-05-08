@@ -9,8 +9,6 @@ public record Catalog(
     GridGrindProtocolVersion protocolVersion,
     String discriminatorField,
     TypeEntry requestType,
-    CliSurface cliSurface,
-    List<ShippedExampleEntry> shippedExamples,
     List<TypeEntry> sourceTypes,
     List<TypeEntry> persistenceTypes,
     List<TypeEntry> stepTypes,
@@ -24,9 +22,6 @@ public record Catalog(
     discriminatorField =
         CatalogRecordValidation.requireNonBlank(discriminatorField, "discriminatorField");
     Objects.requireNonNull(requestType, "requestType must not be null");
-    Objects.requireNonNull(cliSurface, "cliSurface must not be null");
-    shippedExamples =
-        CatalogRecordValidation.copyExampleEntries(shippedExamples, "shippedExamples");
     sourceTypes = CatalogRecordValidation.copyEntries(sourceTypes, "sourceTypes");
     persistenceTypes = CatalogRecordValidation.copyEntries(persistenceTypes, "persistenceTypes");
     stepTypes = CatalogRecordValidation.copyEntries(stepTypes, "stepTypes");

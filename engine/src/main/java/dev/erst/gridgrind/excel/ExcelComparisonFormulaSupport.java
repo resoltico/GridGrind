@@ -11,19 +11,20 @@ final class ExcelComparisonFormulaSupport {
 
   /** Validates one comparison-rule payload before formula normalization is applied. */
   static void validateComparisonRule(
-      ExcelComparisonOperator operator, String formula1, String formula2) {
+      ExcelComparisonOperator operator, String formula1, Optional<String> formula2) {
     Objects.requireNonNull(operator, "operator must not be null");
+    Objects.requireNonNull(formula2, "formula2 must not be null");
     requireNonBlank(formula1, "formula1");
     if ((operator == ExcelComparisonOperator.BETWEEN
             || operator == ExcelComparisonOperator.NOT_BETWEEN)
-        && (formula2 == null || formula2.isBlank())) {
+        && (formula2.isEmpty() || formula2.orElseThrow().isBlank())) {
       throw new IllegalArgumentException(
           "formula2 must not be blank for " + operator.name().toLowerCase(Locale.ROOT));
     }
     if (operator != ExcelComparisonOperator.BETWEEN
         && operator != ExcelComparisonOperator.NOT_BETWEEN
-        && formula2 != null
-        && !formula2.isBlank()) {
+        && formula2.isPresent()
+        && !formula2.orElseThrow().isBlank()) {
       throw new IllegalArgumentException(
           "formula2 must be omitted unless operator is BETWEEN or NOT_BETWEEN");
     }
@@ -43,10 +44,11 @@ final class ExcelComparisonFormulaSupport {
 
   /** Normalizes the optional second comparison operand when the operator requires it. */
   static Optional<String> normalizeOptionalComparisonUpperBound(
-      ExcelComparisonOperator operator, String formula2) {
+      ExcelComparisonOperator operator, Optional<String> formula2) {
+    Objects.requireNonNull(formula2, "formula2 must not be null");
     if (operator == ExcelComparisonOperator.BETWEEN
         || operator == ExcelComparisonOperator.NOT_BETWEEN) {
-      return Optional.of(normalizeFormula(formula2, "formula2"));
+      return Optional.of(normalizeFormula(formula2.orElseThrow(), "formula2"));
     }
     return Optional.empty();
   }
