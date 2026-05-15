@@ -4,7 +4,7 @@ package dev.erst.gridgrind.contract.dto;
 final class FormulaInputSecurity {
   private FormulaInputSecurity() {}
 
-  static void rejectDde(String formula) { // LIM-027, LIM-031
+  static void rejectDde(String formula) { // LIM-027, LIM-031, LIM-032, LIM-033, LIM-034
     String toCheck = formula;
     if (toCheck.startsWith("{=") && toCheck.endsWith("}")) {
       toCheck = toCheck.substring(2, toCheck.length() - 1);

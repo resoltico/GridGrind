@@ -40,6 +40,7 @@ public sealed interface NamedRangeTarget permits NamedRangeTarget.Range, NamedRa
       if (formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
+      FormulaInputSecurity.rejectDde(formula); // LIM-032
     }
   }
 }
