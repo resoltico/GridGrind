@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.64.0"
 domain: LIMITATIONS
-updated: "2026-05-01"
+updated: "2026-05-08"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -54,7 +54,7 @@ catalog summary, or help line.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `rowCount * columnCount must not exceed 250000 but was {n}` |
 | **Applies to** | `GET_WINDOW`, `GET_SHEET_SCHEMA` |
-| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorSupport.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowWithinLimit // LIM-001` |
+| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorSupport.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowSize // LIM-001` |
 | **UX** | `--help` Limits section; `GET_WINDOW` and `GET_SHEET_SCHEMA` catalog summaries |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
@@ -157,7 +157,21 @@ and default row-height values can still be reported above `409.0` instead of bei
 | **Message** | `steps must not contain duplicate stepId values: {id}` |
 | **Applies to** | All `steps` entries |
 | **Code** | `WorkbookPlan.copySteps // LIM-006` |
-| **UX** | Not surfaced in help or catalog (structural protocol rule) |
+| **UX** | Surfaced in the protocol help, quick reference, and request reference as part of the step envelope contract |
+
+---
+
+### LIM-006A — Step ID Token Shape
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `stepId` must match `[A-Za-z0-9._-]+` |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `stepId must match [A-Za-z0-9._-]+` |
+| **Applies to** | Every authored `steps[*].stepId` |
+| **Code** | `WorkbookStepValidation.requireStepId // LIM-006A` |
+| **UX** | Surfaced in the protocol help, quick reference, and request reference as part of the step envelope contract |
 
 ---
 
@@ -172,6 +186,138 @@ and default row-height values can still be reported above `409.0` instead of bei
 | **Applies to** | `GET_CELLS` |
 | **Code** | `SelectorSupport.copyDistinctAddresses // LIM-007`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-007` |
 | **UX** | Not surfaced in help or catalog (structural protocol rule) |
+
+---
+
+### LIM-023 — DDE Formula Injection
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `CellInput.Formula` must not use the Excel DDE function |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `source must not use the DDE function; DDE formula execution is a security risk` |
+| **Applies to** | Every `CellInput.Formula` with an `INLINE` source value |
+| **Code** | `CellInput.Formula // LIM-023` |
+| **UX** | Not surfaced in help (structural protocol rule) |
+
+Dynamic Data Exchange (DDE) formulas such as `DDE("cmd", "/C calc", "")` can invoke external
+programs when the saved workbook is opened in Microsoft Excel on Windows. GridGrind rejects inline
+formula sources that begin with `DDE(` (case-insensitive) after stripping the leading `=`.
+File-backed formula sources are not validated at construction time but are equally subject to this
+constraint in execution.
+
+---
+
+### LIM-024 — Step Count
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `steps` must not exceed 10,000 entries |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `steps must not exceed 10000 entries but was {n}` |
+| **Applies to** | All `steps` entries across all execution modes |
+| **Code** | `WorkbookPlan.MAX_STEPS // LIM-024`; `WorkbookPlan.copySteps // LIM-024` |
+| **UX** | Not surfaced in help (structural protocol rule) |
+
+Unbounded step lists enable runaway resource consumption and extended execution times. The 10,000-
+step ceiling is generous enough for legitimate bulk streaming-write workflows (for example, 10,000
+`APPEND_ROW` mutations) while preventing pathological inputs. The separate 16 MiB JSON cap
+(`LIM-021`) further bounds the total request size independent of step count.
+
+---
+
+### LIM-025 — Relative Path Traversal
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Relative `source.path`, `persistence.path`, and `formulaEnvironment.externalWorkbooks[*].path` values must not escape the working directory |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `path must not escape the working directory: {path}` |
+| **Applies to** | All relative path fields resolved against the execution working directory |
+| **Code** | `ExecutionRequestPaths.normalizePath // LIM-025` |
+| **UX** | Not surfaced in help (structural protocol rule) |
+
+Relative paths that use `../` components to escape the working directory are rejected. Absolute
+paths remain allowed as explicit references. The working directory is the directory containing the
+`--request` file, or the process working directory when the request is read from stdin.
+
+---
+
+### LIM-026 — ZIP Decompression Limits
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Maximum decompressed ZIP entry size: 100 MiB; minimum inflate ratio: 0.01 (1:100) |
+| **Error** | Apache POI `ZipBombException` translated to `INVALID_REQUEST` |
+| **Applies to** | All xlsx workbook open operations |
+| **Code** | `ExcelWorkbookOpenSupport.MAX_ZIP_ENTRY_SIZE // LIM-026`; `ExcelWorkbookOpenSupport static // LIM-026` |
+| **UX** | Not surfaced in help |
+
+GridGrind explicitly configures Apache POI's `ZipSecureFile` limits to bound decompression memory
+and time during xlsx package open. An entry expanding beyond 100 MiB or achieving a compression
+ratio beyond 1:100 triggers a `ZipBombException`, which GridGrind translates to an
+`INVALID_REQUEST` failure rather than an `OutOfMemoryError` or indefinite CPU consumption.
+
+---
+
+### LIM-027 — DDE Rejection in All Formula Inputs
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | DDE function forbidden in all formula-bearing inputs |
+| **Error** | `IllegalArgumentException`: formula must not use the DDE function |
+| **Applies to** | `ArrayFormulaInput`, `DataValidationRuleInput` formula fields, `ConditionalFormattingRuleInput` formula fields, `ConditionalFormattingThresholdInput.formula`, `ChartDataSourceInput.Reference.formula` |
+| **Code** | `FormulaInputSecurity.rejectDde // LIM-027` (applied at each formula input site) |
+| **UX** | Not surfaced in help |
+
+GridGrind rejects any formula string that begins with `DDE(` (case-insensitive, stripping leading
+`=` or `{=...}` prefixes first) across all formula-bearing input types. The DDE (Dynamic Data
+Exchange) function is a Windows IPC mechanism; embedding it in an xlsx workbook can trigger
+arbitrary command execution when the file is opened in Microsoft Excel. This guard extends the
+`CellInput.Formula` protection (LIM-023) to every remaining formula surface written to xlsx output.
+
+---
+
+### LIM-028 — URL Scheme Allowlist
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Only `http`, `https`, `ftp`, and `ftps` schemes accepted for URL hyperlinks |
+| **Error** | `IllegalArgumentException`: target uses unsupported scheme '…'; only http, https, ftp, and ftps are allowed |
+| **Applies to** | `HyperlinkTarget.Url` |
+| **Code** | `ProtocolHyperlinkSupport.ALLOWED_URL_SCHEMES // LIM-028`; `ProtocolHyperlinkSupport.isValidUrlTarget // LIM-028` |
+| **UX** | Not surfaced in help |
+
+GridGrind enforces an explicit allowlist of URL schemes for `HyperlinkTarget.Url` targets.
+Schemes such as `javascript:`, `vbscript:`, `ms-excel:`, `ldap:`, and `data:` are rejected.
+These schemes can trigger script execution, protocol-handler abuse, or cross-site scripting when
+the hyperlink is activated in a browser-based spreadsheet viewer or other host application.
+
+---
+
+### LIM-029 — Symlink Confinement
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Symbolic links within the working directory must not resolve to paths outside it |
+| **Error** | `IllegalArgumentException`: path must not escape the working directory |
+| **Applies to** | All relative file paths resolved via `ExecutionRequestPaths.normalizePath` |
+| **Code** | `ExecutionRequestPaths.checkNoSymlinkEscape // LIM-029` |
+| **UX** | Not surfaced in help |
+
+The lexicographic confinement check (LIM-025) prevents `../` traversal attacks but cannot detect
+symlinks. LIM-029 walks each path component from the working directory root to the target,
+checking for symbolic links using `Files.isSymbolicLink`. When a symlink is found, its resolved
+real path is verified to remain within the working directory. Paths to non-existent files are
+safely handled because `Files.isSymbolicLink` returns false for non-existent entries, so only
+existing path components are checked.
 
 ---
 
@@ -350,7 +496,7 @@ Example message:
 | **Error** | `INVALID_REQUEST` |
 | **Message** | Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet |
 | **Applies to** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
-| **Code** | `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowShift`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnShift` |
+| **Code** | `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowDelete // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowShift // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnDelete // LIM-018`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnShift // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowDelete // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowShift // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnDelete // LIM-018`; `ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnShift // LIM-018` |
 | **UX** | `--help` Limits section; structural-edit catalog summaries |
 
 Apache POI can safely translate a range-backed named range when the named range is fully contained
@@ -371,12 +517,12 @@ Example messages:
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `execution.mode.readMode=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries |
+| **Limit** | `execution.mode.type=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `execution.mode.readMode=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.readMode=EVENT_READ does not support assertion steps`, or `execution.mode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
-| **Applies to** | top-level `execution.mode.readMode`, `steps[]` |
+| **Message** | `execution.mode.type=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.type=EVENT_READ does not support assertion steps`, or `execution.mode.type=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
+| **Applies to** | top-level `execution.mode.type`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputType` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeTypes` catalog summary |
 
 `EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
 materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
@@ -390,12 +536,12 @@ time instead of silently falling back to the normal in-memory executor.
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `execution.mode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation |
+| **Limit** | `execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `execution.mode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.writeMode=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
-| **Applies to** | top-level `execution.mode.writeMode`, `source`, `steps[]` |
+| **Message** | `execution.mode.type=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.type=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.type=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.type=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
+| **Applies to** | top-level `execution.mode.type`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputType` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeTypes` catalog summary |
 
 `STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
@@ -456,9 +602,9 @@ windows consume proportionally more and can exhaust it — which is why LIM-001 
 
 **Streaming.** POI provides SXSSF for streaming writes and event-model APIs for streaming
 reads. GridGrind now exposes both as explicit opt-in execution modes:
-- `execution.mode.readMode=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
+- `execution.mode.type=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
   `GET_SHEET_SUMMARY` requests only (`LIM-019`)
-- `execution.mode.writeMode=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
+- `execution.mode.type=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
   workbooks using `ENSURE_SHEET` and `APPEND_ROW` only, with optional
   `execution.calculation.markRecalculateOnOpen=true`
   (`LIM-020`)

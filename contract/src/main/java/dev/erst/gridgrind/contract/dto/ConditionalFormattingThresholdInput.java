@@ -11,6 +11,9 @@ public record ConditionalFormattingThresholdInput(
     if (formula != null && formula.isBlank()) {
       throw new IllegalArgumentException("formula must not be blank");
     }
+    if (formula != null) {
+      FormulaInputSecurity.rejectDde(formula); // LIM-027
+    }
     if (value != null && !Double.isFinite(value)) {
       throw new IllegalArgumentException("value must be finite");
     }

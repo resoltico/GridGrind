@@ -5,14 +5,18 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /** Protocol-owned hyperlink normalization and validation helpers. */
 final class ProtocolHyperlinkSupport {
   private static final Pattern ABSOLUTE_URI_PATTERN =
       Pattern.compile("^[A-Za-z][A-Za-z0-9+.-]*:\\S+$");
+  private static final Set<String> ALLOWED_URL_SCHEMES =
+      Set.of("http", "https", "ftp", "ftps"); // LIM-028
   private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
   private static final String SAFE_URI_PATH_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/:";
@@ -31,6 +35,12 @@ final class ProtocolHyperlinkSupport {
     if ("mailto".equalsIgnoreCase(scheme)) {
       throw new IllegalArgumentException(
           "target uses mailto: scheme; use EMAIL hyperlinks instead");
+    }
+    if (scheme != null) {
+      throw new IllegalArgumentException( // LIM-028
+          "target uses unsupported scheme '"
+              + scheme
+              + "'; only http, https, ftp, and ftps are allowed");
     }
     throw new IllegalArgumentException("target must be an absolute URI with a scheme");
   }
@@ -86,8 +96,7 @@ final class ProtocolHyperlinkSupport {
     }
     try {
       URI uri = URI.create(target);
-      String scheme = uri.getScheme();
-      return !"file".equalsIgnoreCase(scheme) && !"mailto".equalsIgnoreCase(scheme);
+      return ALLOWED_URL_SCHEMES.contains(uri.getScheme().toLowerCase(Locale.ROOT)); // LIM-028
     } catch (IllegalArgumentException exception) {
       return false;
     }

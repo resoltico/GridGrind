@@ -386,6 +386,15 @@ class AdvancedMutationProtocolTypesTest {
 
     assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text(" ")));
     assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text("{=}")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ArrayFormulaInput(text("DDE(\"cmd\",\"/C calc\",\"\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ArrayFormulaInput(text("=dde(\"cmd\",\"/C calc\",\"\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ArrayFormulaInput(text("{=DDE(\"cmd\",\"/C calc\",\"\")}")));
   }
 
   @Test
@@ -555,6 +564,12 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(IllegalArgumentException.class, () -> new ChartTitleInput.Formula(" "));
     assertThrows(NullPointerException.class, () -> new ChartLegendInput.Visible(null));
     assertThrows(IllegalArgumentException.class, () -> new ChartDataSourceInput.Reference(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartDataSourceInput.Reference("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartDataSourceInput.Reference("=dde(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -739,6 +754,13 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new ConditionalFormattingThresholdInput(
                 ExcelConditionalFormattingThresholdType.NUMBER, null, Double.NEGATIVE_INFINITY));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingThresholdInput(
+                ExcelConditionalFormattingThresholdType.FORMULA,
+                "DDE(\"cmd\",\"/C calc\",\"\")",
+                null));
     assertThrows(
         IllegalArgumentException.class,
         () ->

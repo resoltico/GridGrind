@@ -51,6 +51,7 @@ public sealed interface ConditionalFormattingRuleInput
       if (formula.isBlank()) {
         throw new IllegalArgumentException("formula must not be blank");
       }
+      FormulaInputSecurity.rejectDde(formula); // LIM-027
     }
   }
 
@@ -70,6 +71,7 @@ public sealed interface ConditionalFormattingRuleInput
       if (formula1.isBlank()) {
         throw new IllegalArgumentException("formula1 must not be blank");
       }
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -184,6 +186,7 @@ public sealed interface ConditionalFormattingRuleInput
         throw new IllegalArgumentException(
             "formula2 must not be blank for " + operator.name().toLowerCase(Locale.ROOT));
       }
+      FormulaInputSecurity.rejectDde(upperBound); // LIM-027
       return Optional.of(upperBound);
     }
     if (formula2.isPresent()) {

@@ -19,6 +19,7 @@ public sealed interface ChartDataSourceInput
   record Reference(String formula) implements ChartDataSourceInput {
     public Reference {
       formula = ChartInput.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula); // LIM-027
     }
   }
 

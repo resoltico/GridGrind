@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
@@ -102,6 +103,77 @@ class ExecutionPathCoverageTest {
                             List.of()),
                         workingDirectory))
             .getMessage());
+  }
+
+  @Test
+  void symlinkEscapingWorkingDirectoryIsRejected() throws IOException {
+    Path workDir = Files.createTempDirectory("gridgrind-symlink-test");
+    Path outside = Files.createTempDirectory("gridgrind-symlink-outside");
+    Path symlink = workDir.resolve("escape");
+    Files.createSymbolicLink(symlink, outside);
+    try {
+      org.junit.jupiter.api.Assertions.assertThrows(
+          IllegalArgumentException.class,
+          () -> ExecutionRequestPaths.normalizePath("escape/secret.xlsx", workDir));
+    } finally {
+      Files.delete(symlink);
+      Files.delete(outside);
+      Files.delete(workDir);
+    }
+  }
+
+  @Test
+  void symlinkWithinWorkingDirectoryIsAllowed() throws IOException {
+    Path workDir = Files.createTempDirectory("gridgrind-symlink-internal-test");
+    Path subDir = Files.createTempDirectory(workDir, "subdir");
+    Path symlink = workDir.resolve("internal-link");
+    Files.createSymbolicLink(symlink, subDir);
+    try {
+      assertEquals(
+          workDir.resolve("internal-link/file.xlsx").normalize(),
+          ExecutionRequestPaths.normalizePath("internal-link/file.xlsx", workDir));
+    } finally {
+      Files.delete(symlink);
+      Files.delete(subDir);
+      Files.delete(workDir);
+    }
+  }
+
+  @Test
+  void danglingSymlinkInWorkingDirectoryIsRejected() throws IOException {
+    Path workDir = Files.createTempDirectory("gridgrind-symlink-dangling-test");
+    Path nonExistent = workDir.resolve("gone");
+    Path symlink = workDir.resolve("dangler");
+    Files.createSymbolicLink(symlink, nonExistent);
+    try {
+      org.junit.jupiter.api.Assertions.assertThrows(
+          IllegalArgumentException.class,
+          () -> ExecutionRequestPaths.normalizePath("dangler/file.xlsx", workDir));
+    } finally {
+      Files.delete(symlink);
+      Files.delete(workDir);
+    }
+  }
+
+  @Test
+  void relativePathTraversalEscapingWorkingDirectoryIsRejected() {
+    Path workingDirectory = Path.of("/tmp/gridgrind");
+
+    IllegalArgumentException traversalFailure =
+        org.junit.jupiter.api.Assertions.assertThrows(
+            IllegalArgumentException.class,
+            () -> ExecutionRequestPaths.normalizePath("../../etc/passwd", workingDirectory));
+    assertTrue(traversalFailure.getMessage().contains("../../etc/passwd"));
+
+    // Sibling traversal that stays within working directory is allowed
+    assertEquals(
+        workingDirectory.resolve("subdir/workbook.xlsx").normalize(),
+        ExecutionRequestPaths.normalizePath("subdir/workbook.xlsx", workingDirectory));
+
+    // Absolute paths outside working directory remain allowed
+    assertEquals(
+        Path.of("/tmp/other/workbook.xlsx"),
+        ExecutionRequestPaths.normalizePath("/tmp/other/workbook.xlsx", workingDirectory));
   }
 
   @Test

@@ -41,6 +41,7 @@ public sealed interface DataValidationRuleInput
   record FormulaList(String formula) implements DataValidationRuleInput {
     public FormulaList {
       formula = requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula); // LIM-027
     }
   }
 
@@ -53,6 +54,7 @@ public sealed interface DataValidationRuleInput
     public WholeNumber {
       Objects.requireNonNull(operator, "operator must not be null");
       formula1 = requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -66,6 +68,7 @@ public sealed interface DataValidationRuleInput
     public DecimalNumber {
       Objects.requireNonNull(operator, "operator must not be null");
       formula1 = requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -79,6 +82,7 @@ public sealed interface DataValidationRuleInput
     public DateRule {
       Objects.requireNonNull(operator, "operator must not be null");
       formula1 = requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -92,6 +96,7 @@ public sealed interface DataValidationRuleInput
     public TimeRule {
       Objects.requireNonNull(operator, "operator must not be null");
       formula1 = requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -105,6 +110,7 @@ public sealed interface DataValidationRuleInput
     public TextLength {
       Objects.requireNonNull(operator, "operator must not be null");
       formula1 = requireNonBlank(formula1, "formula1");
+      FormulaInputSecurity.rejectDde(formula1); // LIM-027
       formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
@@ -113,6 +119,7 @@ public sealed interface DataValidationRuleInput
   record CustomFormula(String formula) implements DataValidationRuleInput {
     public CustomFormula {
       formula = requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula); // LIM-027
     }
   }
 
@@ -138,14 +145,16 @@ public sealed interface DataValidationRuleInput
     Objects.requireNonNull(formula2, "formula2 must not be null");
     if (operator == ExcelComparisonOperator.BETWEEN
         || operator == ExcelComparisonOperator.NOT_BETWEEN) {
-      return Optional.of(
+      String upperBound =
           requireNonBlank(
               formula2.orElseThrow(
                   () ->
                       new IllegalArgumentException(
                           "formula2 must not be blank for "
                               + operator.name().toLowerCase(java.util.Locale.ROOT))),
-              "formula2"));
+              "formula2");
+      FormulaInputSecurity.rejectDde(upperBound); // LIM-027
+      return Optional.of(upperBound);
     }
     if (formula2.isPresent()) {
       throw new IllegalArgumentException(

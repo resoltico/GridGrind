@@ -66,6 +66,33 @@ class ProtocolResidualCoverageTest {
                     new DataValidationRuleInput.WholeNumber(
                         ExcelComparisonOperator.GREATER_THAN, "7", Optional.of("9")))
             .getMessage());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.CustomFormula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.FormulaList("=dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.BETWEEN,
+                "1",
+                Optional.of("DDE(\"cmd\",\"/C calc\",\"\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.FormulaRule(
+                "DDE(\"cmd\",\"/C calc\",\"\")", false, Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.CellValueRule(
+                ExcelComparisonOperator.BETWEEN,
+                "1",
+                Optional.of("DDE(\"cmd\",\"/C calc\",\"\")"),
+                false,
+                Optional.empty()));
   }
 
   @Test
