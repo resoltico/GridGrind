@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: QUICK_REFERENCE
-updated: "2026-05-15"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -151,6 +151,9 @@ Common execution block:
 ```json
 {
   "execution": {
+    "mode": {
+      "type": "FULL_XSSF"
+    },
     "journal": {
       "level": "VERBOSE"
     },

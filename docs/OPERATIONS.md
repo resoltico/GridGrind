@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: OPERATIONS
-updated: "2026-05-15"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -113,7 +113,8 @@ Structured feature actions:
 
 ## Assertion And Inspection Surface
 
-Assertion families include `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`,
+Assertion families include `EXPECT_SHEET_PRESENT`, `EXPECT_SHEET_ABSENT`,
+`EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`,
 `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`,
 `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`,
 `EXPECT_CELL_VALUE`, `EXPECT_DISPLAY_VALUE`, `EXPECT_FORMULA_TEXT`, `EXPECT_CELL_STYLE`,

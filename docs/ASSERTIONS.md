@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: ASSERTIONS
-updated: "2026-05-01"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, assertions, expect-cell-value, expect-display-value, expect-analysis-max-severity]
   questions: ["what assertions does gridgrind support", "how do assertions work in gridgrind", "how do i verify workbook facts in gridgrind"]
@@ -53,8 +53,8 @@ Failed assertions stop the workflow with `ASSERTION_FAILED` and attach a structu
 results that caused the mismatch.
 
 Entity-presence assertions are selector-count assertions, not strict read lookups. If an exact
-named-range, chart, table, or pivot-table selector matches nothing, the assertion observes zero
-entities and then passes or fails from that count; GridGrind does not surface selector-specific
+sheet, named-range, chart, table, or pivot-table selector matches nothing, the assertion observes
+zero entities and then passes or fails from that count; GridGrind does not surface selector-specific
 `*_NOT_FOUND` problems for these assertion families.
 
 Assertion families:
