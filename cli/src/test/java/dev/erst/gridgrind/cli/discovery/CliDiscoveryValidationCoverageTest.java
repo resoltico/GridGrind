@@ -9,11 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
-import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for CLI discovery validation helpers and task-definition accessors. */
@@ -21,21 +21,13 @@ class CliDiscoveryValidationCoverageTest {
   @Test
   void validatesPrimitiveCopyHelpersAndNullGuards() {
     GridGrindProtocolVersion protocolVersion = GridGrindProtocolVersion.current();
-    WorkbookPlan requestTemplate =
-        WorkbookPlan.standard(
-            new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.defaults(),
-            FormulaEnvironmentInput.empty(),
-            List.of());
     TypeEntry typeEntry = GridGrindProtocolCatalog.catalog().plainTypes().getFirst().type();
     ShippedExampleEntry exampleEntry = GridGrindShippedExamples.catalog().examples().getFirst();
     TaskEntry taskEntry = GridGrindTaskCatalog.catalog().tasks().getFirst();
-    TaskPhase taskPhase = taskEntry.phases().getFirst();
+    TaskPhase taskPhase = taskEntry.workflow().phases().getFirst();
     TaskCapabilityRef capabilityRef = taskPhase.capabilityRefs().getFirst();
 
     assertEquals(protocolVersion, CliDiscoveryValidation.requireProtocolVersion(protocolVersion));
-    assertEquals(requestTemplate, CliDiscoveryValidation.requireRequestTemplate(requestTemplate));
     assertEquals(
         List.of("alpha", "beta"),
         CliDiscoveryValidation.copyStrings(List.of("alpha", "beta"), "values"));
@@ -57,12 +49,6 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () -> CliDiscoveryValidation.requireProtocolVersion(null))
-            .getMessage());
-    assertEquals(
-        "requestTemplate must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> CliDiscoveryValidation.requireRequestTemplate(null))
             .getMessage());
     assertEquals(
         "entries must not be null",
@@ -108,22 +94,19 @@ class CliDiscoveryValidationCoverageTest {
     TaskEntry brokenTask =
         new TaskEntry(
             "BROKEN",
-            "Broken task for direct validation coverage",
+            TaskTestFixtures.discoveryProfile("broken"),
+            TaskTestFixtures.narrative("Broken task for direct validation coverage"),
             profile(),
-            List.of(),
-            List.of(),
-            List.of("broken"),
-            List.of("none"),
-            List.of("input"),
-            List.of(),
-            List.of(
-                new TaskPhase(
-                    TaskPhasePurpose.AUTHOR,
-                    "broken phase",
-                    "exercise dangling capability validation",
-                    List.of(new TaskCapabilityRef("mutationActionTypes", "NO_SUCH_ACTION")),
-                    List.of())),
-            List.of());
+            TaskTestFixtures.interactionProfile(),
+            new TaskWorkflow(
+                List.of(
+                    new TaskPhase(
+                        TaskPhasePurpose.AUTHOR,
+                        "broken phase",
+                        "exercise dangling capability validation",
+                        List.of(new TaskCapabilityRef("mutationActionTypes", "NO_SUCH_ACTION")),
+                        List.of())),
+                List.of()));
 
     assertEquals(
         "Task BROKEN references unknown protocol capability mutationActionTypes:NO_SUCH_ACTION",
@@ -134,11 +117,160 @@ class CliDiscoveryValidationCoverageTest {
             .getMessage());
   }
 
+  @Test
+  void discoveryRecordsRejectInvalidMandatoryShapesAndNormalizeOptionalFailureFields() {
+    assertEquals(
+        "phases must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TaskWorkflow(List.of(), List.of("pitfall")))
+            .getMessage());
+
+    assertEquals(
+        "discoveryTerms must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new TaskEntry(
+                        "NO_TERMS",
+                        new TaskDiscoveryProfile(
+                            List.of(),
+                            List.of("office"),
+                            new TaskIntentProfile(
+                                List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK))),
+                        TaskTestFixtures.narrative("summary"),
+                        profile(),
+                        TaskTestFixtures.interactionProfile(),
+                        TaskTestFixtures.workflow(
+                            List.of(
+                                new TaskPhase(
+                                    TaskPhasePurpose.AUTHOR,
+                                    "Phase",
+                                    "Objective",
+                                    List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                                    List.of("note"))))))
+            .getMessage());
+
+    assertEquals(
+        "discoveryTerms must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new TaskDiscoveryProfile(
+                        List.of(),
+                        List.of("office"),
+                        new TaskIntentProfile(
+                            List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK))))
+            .getMessage());
+
+    assertEquals(
+        "goals must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TaskIntentProfile(List.of(), List.of(TaskArtifactKind.WORKBOOK)))
+            .getMessage());
+
+    assertEquals(
+        "artifacts must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new TaskIntentProfile(List.of(TaskGoalKind.AUTHOR), List.of()))
+            .getMessage());
+
+    assertEquals(
+        "argument must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new CliFailureReport(
+                        GridGrindProtocolVersion.current(),
+                        2,
+                        "print-task-plan",
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "message",
+                        CliFailureLocation.unavailable(),
+                        null,
+                        List.of(),
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "suggestions must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new CliFailureReport(
+                        GridGrindProtocolVersion.current(),
+                        2,
+                        "print-task-plan",
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "message",
+                        CliFailureLocation.unavailable(),
+                        Optional.empty(),
+                        null,
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "resolution must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new CliFailureReport(
+                        GridGrindProtocolVersion.current(),
+                        2,
+                        "print-task-plan",
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "message",
+                        CliFailureLocation.unavailable(),
+                        Optional.empty(),
+                        List.of(),
+                        null))
+            .getMessage());
+    assertEquals(
+        "exitCode must be positive",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CliFailureReport(
+                        GridGrindProtocolVersion.current(),
+                        0,
+                        "print-task-plan",
+                        GridGrindProblemCode.INVALID_ARGUMENTS,
+                        "message",
+                        CliFailureLocation.unavailable(),
+                        Optional.empty(),
+                        List.of(),
+                        Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "jsonLine and jsonColumn must either both be present or both be absent",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CliFailureLocation(
+                        Optional.of("steps[0]"), Optional.of(1), Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "jsonColumn must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CliFailureLocation(Optional.of("steps[0]"), Optional.of(1), Optional.of(0)))
+            .getMessage());
+    assertEquals(
+        "suggestedRequestPath must start with examples/",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ShippedExampleEntry(
+                        "BROKEN",
+                        Path.of("budget-request.json").toString(),
+                        "summary",
+                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        List.of()))
+            .getMessage());
+  }
+
   private static TaskExecutionProfile profile() {
-    return new TaskExecutionProfile(
-        TaskSourceMode.NEW_WORKBOOK,
-        TaskPersistenceMode.NONE,
-        TaskMutationMode.MUTATING,
-        TaskAssetMode.SELF_CONTAINED);
+    return TaskTestFixtures.profile();
   }
 }

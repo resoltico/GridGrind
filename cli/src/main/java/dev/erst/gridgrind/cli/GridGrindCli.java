@@ -1,16 +1,12 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
@@ -31,9 +27,9 @@ public final class GridGrindCli {
         StandardInputInteractivity.currentProcess());
   }
 
-  GridGrindCli(GridGrindRequestExecutor requestExecutor) {
-    this(
-        requestExecutor,
+  static GridGrindCli forTesting(GridGrindRequestExecutor executor) {
+    return new GridGrindCli(
+        executor,
         GridGrindEngine.requestDoctor(),
         new CliRequestReader(),
         new CliResponseWriter(),
@@ -41,74 +37,14 @@ public final class GridGrindCli {
         StandardInputInteractivity.never());
   }
 
-  GridGrindCli(
-      GridGrindRequestExecutor requestExecutor,
-      GridGrindRequestDoctor requestDoctor,
-      CliRequestReader requestReader,
-      CliResponseWriter responseWriter) {
-    this(
-        requestExecutor,
-        requestDoctor,
-        requestReader,
-        responseWriter,
+  static GridGrindCli forTesting(
+      GridGrindRequestExecutor executor, BooleanSupplier standardInputIsInteractive) {
+    return new GridGrindCli(
+        executor,
+        GridGrindEngine.requestDoctor(),
+        new CliRequestReader(),
+        new CliResponseWriter(),
         new CliJournalWriter(),
-        StandardInputInteractivity.never());
-  }
-
-  GridGrindCli(
-      GridGrindRequestExecutor requestExecutor,
-      CliRequestReader requestReader,
-      CliResponseWriter responseWriter) {
-    this(
-        requestExecutor,
-        GridGrindEngine.requestDoctor(),
-        requestReader,
-        responseWriter,
-        new CliJournalWriter(),
-        StandardInputInteractivity.never());
-  }
-
-  GridGrindCli(
-      GridGrindRequestExecutor requestExecutor,
-      CliRequestReader requestReader,
-      CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter) {
-    this(
-        requestExecutor,
-        GridGrindEngine.requestDoctor(),
-        requestReader,
-        responseWriter,
-        journalWriter,
-        StandardInputInteractivity.never());
-  }
-
-  GridGrindCli(
-      GridGrindRequestExecutor requestExecutor,
-      GridGrindRequestDoctor requestDoctor,
-      CliRequestReader requestReader,
-      CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter) {
-    this(
-        requestExecutor,
-        requestDoctor,
-        requestReader,
-        responseWriter,
-        journalWriter,
-        StandardInputInteractivity.never());
-  }
-
-  GridGrindCli(
-      GridGrindRequestExecutor requestExecutor,
-      CliRequestReader requestReader,
-      CliResponseWriter responseWriter,
-      CliJournalWriter journalWriter,
-      BooleanSupplier standardInputIsInteractive) {
-    this(
-        requestExecutor,
-        GridGrindEngine.requestDoctor(),
-        requestReader,
-        responseWriter,
-        journalWriter,
         standardInputIsInteractive);
   }
 
@@ -150,31 +86,33 @@ public final class GridGrindCli {
     try {
       command = CliArguments.parse(args);
     } catch (CliArgumentsException exception) {
-      return responseWriter.write(
+      return responseWriter.writeCliFailureReport(
           responsePathHint,
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "parse-arguments",
+              Optional.of(exception.argument()),
               argumentFailureMessage(exception),
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      exception.argument())),
-              exception),
-          2);
+              List.of(),
+              Optional.of(
+                  "Run gridgrind --help for a synopsis, --help-protocol for the authoritative"
+                      + " request contract, or --help-guidance for workflows and examples.")));
     } catch (IllegalArgumentException exception) {
-      return responseWriter.write(
+      return responseWriter.writeCliFailureReport(
           responsePathHint,
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "parse-arguments",
+              Optional.empty(),
               argumentFailureMessage(exception),
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument
-                      .unknown()),
-              exception),
-          2);
+              List.of(),
+              Optional.of(
+                  "Run gridgrind --help for a synopsis, --help-protocol for the authoritative"
+                      + " request contract, or --help-guidance for workflows and examples.")));
     }
 
     return switch (command) {
@@ -206,9 +144,25 @@ public final class GridGrindCli {
           GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, stderr, responseWriter);
       case CliCommand.Execute execute -> {
         Optional<InputStream> requestInput =
-            executionCommands.standardInputOrNullForImplicitHelp(execute, args, stdin, stdout);
+            executionCommands.standardInputIfPresent(execute, stdin);
         if (requestInput.isEmpty()) {
-          yield 0;
+          yield responseWriter.writeCliFailureReport(
+              execute.responsePath(),
+              execute.responsePath().isPresent() ? stdout : stderr,
+              stderr,
+              CliFailureReports.invalidArguments(
+                  2,
+                  "execute",
+                  Optional.of("--request"),
+                  "No request JSON was provided. Pass --request <path> or pipe one request"
+                      + " document on standard input.",
+                  List.of(
+                      "gridgrind --print-request-template --response request.json",
+                      "gridgrind --help",
+                      "gridgrind --help-protocol"),
+                  Optional.of(
+                      "Use explicit --help for documentation; a bare gridgrind invocation"
+                          + " now expects a real request document.")));
         }
         yield executionCommands.executeCommand(execute, requestInput.orElseThrow(), stdout, stderr);
       }
@@ -222,7 +176,7 @@ public final class GridGrindCli {
    * packaged JAR manifest.
    */
   static String helpText(String implementationVersion) {
-    return GridGrindCliProductInfo.helpText(implementationVersion);
+    return GridGrindCliProductInfo.helpText(CliCommand.HelpTopic.OVERVIEW, implementationVersion);
   }
 
   /**
@@ -297,16 +251,6 @@ public final class GridGrindCli {
    */
   static String requestTemplateText(RequestTemplateBytesSupplier supplier) {
     return GridGrindCliProductInfo.requestTemplateText(supplier);
-  }
-
-  private GridGrindResponse.Failure failure(
-      GridGrindProblemCode code,
-      String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
-      Throwable cause) {
-    return GridGrindResponses.failure(
-        GridGrindProtocolVersion.current(),
-        GridGrindProblems.problem(code, message, context, cause));
   }
 
   private static String argumentFailureMessage(RuntimeException exception) {

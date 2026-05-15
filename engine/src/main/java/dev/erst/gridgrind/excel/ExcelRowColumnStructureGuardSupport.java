@@ -192,7 +192,7 @@ final class ExcelRowColumnStructureGuardSupport {
     rejectDestructiveNamedRangesForColumnShift(sheet.getWorkbook(), sheet, columns, delta);
   }
 
-  static void rejectDestructiveNamedRangesForRowDelete(
+  static void rejectDestructiveNamedRangesForRowDelete( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -209,7 +209,7 @@ final class ExcelRowColumnStructureGuardSupport {
     }
   }
 
-  static void rejectDestructiveNamedRangesForRowShift(
+  static void rejectDestructiveNamedRangesForRowShift( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -226,7 +226,7 @@ final class ExcelRowColumnStructureGuardSupport {
     }
   }
 
-  static void rejectDestructiveNamedRangesForColumnDelete(
+  static void rejectDestructiveNamedRangesForColumnDelete( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -243,7 +243,7 @@ final class ExcelRowColumnStructureGuardSupport {
     }
   }
 
-  static void rejectDestructiveNamedRangesForColumnShift(
+  static void rejectDestructiveNamedRangesForColumnShift( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {

@@ -5,8 +5,8 @@
 # human-facing project gate entrypoint. The scripts/ directory is reserved for subordinate helper
 # scripts that workflows and this root gate invoke.
 #
-# The fixed five-stage contract is canonically owned by scripts/check-stage-contract.sh so usage
-# text, stage selection, and Stage 4 script coverage cannot drift independently.
+# The fixed six-stage contract is canonically owned by scripts/check-stage-contract.sh so usage
+# text, stage selection, and Stage 5 script coverage cannot drift independently.
 #
 # CI runs this whole-repo deterministic gate, including nested Jazzer verification, release-surface
 # shell regressions, and Docker smoke. Active fuzzing remains local-only.
@@ -154,7 +154,7 @@ print_usage() {
     printf '%s\n' \
         'Usage: ./check.sh [supported gradle options]' \
         '' \
-        'Runs five fixed stages against the repository that contains this script:'
+        'Runs six fixed stages against the repository that contains this script:'
     check_stage_usage_lines
     printf '%s\n' \
         '' \

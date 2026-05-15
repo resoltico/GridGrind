@@ -136,7 +136,7 @@ public record CliSurface(
       List<String> lines,
       String builtInExamplesLabel,
       String printOneExampleLabel,
-      String protocolCatalogNote,
+      List<String> protocolCatalogNotes,
       String printOneExampleCommand) {
     public CliDiscoverySection {
       label = CliSurfaceValidation.requireNonBlank(label, "label");
@@ -145,8 +145,8 @@ public record CliSurface(
           CliSurfaceValidation.requireNonBlank(builtInExamplesLabel, "builtInExamplesLabel");
       printOneExampleLabel =
           CliSurfaceValidation.requireNonBlank(printOneExampleLabel, "printOneExampleLabel");
-      protocolCatalogNote =
-          CliSurfaceValidation.requireNonBlank(protocolCatalogNote, "protocolCatalogNote");
+      protocolCatalogNotes =
+          CliSurfaceValidation.copyStrings(protocolCatalogNotes, "protocolCatalogNotes");
       printOneExampleCommand =
           CliSurfaceValidation.requireNonBlank(printOneExampleCommand, "printOneExampleCommand");
     }
@@ -164,11 +164,12 @@ public record CliSurface(
     }
   }
 
-  /** One label plus one docs-relative markdown path. */
-  public record ReferenceEntry(String label, String relativePath) {
+  /** One labeled document reference with its docs-relative markdown path and one purpose line. */
+  public record ReferenceEntry(String label, String relativePath, String description) {
     public ReferenceEntry {
       label = CliSurfaceValidation.requireNonBlank(label, "label");
       relativePath = CliSurfaceValidation.requireNonBlank(relativePath, "relativePath");
+      description = CliSurfaceValidation.requireNonBlank(description, "description");
     }
   }
 }

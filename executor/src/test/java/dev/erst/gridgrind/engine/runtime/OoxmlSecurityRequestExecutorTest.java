@@ -281,9 +281,7 @@ class OoxmlSecurityRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of(

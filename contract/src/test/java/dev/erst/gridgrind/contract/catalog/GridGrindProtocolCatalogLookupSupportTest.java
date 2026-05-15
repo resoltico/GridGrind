@@ -1,8 +1,11 @@
 package dev.erst.gridgrind.contract.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +35,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
     CatalogSearchResult result =
         GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "sourcetypes");
 
-    assertEquals(List.of("sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
+    assertEquals(List.of("sourceTypes", "sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
   }
 
   @Test
@@ -40,7 +43,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
     CatalogSearchResult result =
         GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "source forecast");
 
-    assertEquals(List.of("sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
+    assertEquals(List.of("sourceTypes", "sourceTypes:SOURCE_ALPHA"), qualifiedIds(result));
   }
 
   @Test
@@ -59,12 +62,92 @@ class GridGrindProtocolCatalogLookupSupportTest {
   }
 
   @Test
+  void searchMatchesSupportingEntriesBySummaryAndCollapsesThemBehindGroupResults() {
+    Catalog catalog = lookupFixtureCatalog();
+
+    CatalogSearchResult nestedSummary =
+        GridGrindProtocolCatalogLookupSupport.search(catalog, "legend variant");
+    CatalogSearchResult plainSummary =
+        GridGrindProtocolCatalogLookupSupport.search(catalog, "display card");
+
+    assertTrue(
+        nestedSummary.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("nestedTypes:legendVariants"::equals));
+    assertTrue(
+        nestedSummary.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .noneMatch("legendVariants:LEGEND_ALPHA"::equals));
+    assertTrue(
+        plainSummary.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("plainTypes:displayCard"::equals));
+    assertTrue(
+        plainSummary.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .noneMatch("displayCard:DISPLAY_CARD"::equals));
+  }
+
+  @Test
+  void searchMatchesSupportingEntriesThroughFieldTextBeforeCollapsingThem() {
+    CatalogSearchResult result =
+        GridGrindProtocolCatalogLookupSupport.search(lookupFixtureCatalog(), "title");
+
+    assertTrue(
+        result.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("nestedTypes:legendVariants"::equals));
+    assertTrue(
+        result.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .noneMatch("legendVariants:LEGEND_ALPHA"::equals));
+  }
+
+  @Test
+  void searchPrioritizesOperationEntriesForConceptQueriesAndPublishesRelatedEntryIds() {
+    CatalogSearchResult result = GridGrindProtocolCatalog.searchCatalog("chart title");
+
+    assertTrue(
+        result.matches().stream()
+            .limit(2)
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("mutationActionTypes:SET_CHART"::equals));
+    assertTrue(
+        result.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .noneMatch("chartTitleInputTypes:FORMULA"::equals));
+    assertTrue(
+        result.matches().stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .noneMatch("chartInputType:ChartInput"::equals));
+    assertTrue(
+        result.matches().stream()
+            .filter(match -> "mutationActionTypes:SET_CHART".equals(match.qualifiedId()))
+            .findFirst()
+            .orElseThrow()
+            .supportingMatches()
+            .stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("nestedTypes:chartTitleInputTypes"::equals));
+    assertTrue(
+        result.matches().stream()
+            .filter(match -> "mutationActionTypes:SET_CHART".equals(match.qualifiedId()))
+            .findFirst()
+            .orElseThrow()
+            .supportingMatches()
+            .stream()
+            .map(CatalogSearchMatch::qualifiedId)
+            .anyMatch("plainTypes:chartInputType"::equals));
+  }
+
+  @Test
   void searchResultRejectsNullMatches() {
     IllegalArgumentException exception =
         assertThrows(
             IllegalArgumentException.class,
             () ->
                 new CatalogSearchResult(
+                    GridGrindProtocolVersion.current(),
                     "source",
                     new java.util.ArrayList<>(java.util.Arrays.asList((CatalogSearchMatch) null))));
 
@@ -72,18 +155,39 @@ class GridGrindProtocolCatalogLookupSupportTest {
   }
 
   @Test
-  void lookupHelpersRejectUnsupportedValueKinds() {
-    IllegalArgumentException kindFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> GridGrindProtocolCatalogLookupSupport.kindFor("bogus-kind"));
-    assertEquals("Unsupported catalog lookup value: bogus-kind", kindFailure.getMessage());
+  void lookupValueHelpersReturnTopLevelTypeGroupForCategoryNames() {
+    Object mutationGroup =
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(
+                GridGrindProtocolCatalog.catalog(), "mutationActionTypes")
+            .orElseThrow();
+    Object sourceGroup =
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(lookupFixtureCatalog(), "sourceTypes")
+            .orElseThrow();
 
-    IllegalArgumentException summaryFailure =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> GridGrindProtocolCatalogLookupSupport.summaryFor("bogus-summary"));
-    assertEquals("Unsupported catalog lookup value: bogus-summary", summaryFailure.getMessage());
+    assertTrue(mutationGroup instanceof TopLevelTypeGroup);
+    assertTrue(sourceGroup instanceof TopLevelTypeGroup);
+    assertFalse(((TopLevelTypeGroup) mutationGroup).types().isEmpty());
+    assertEquals(1, ((TopLevelTypeGroup) sourceGroup).types().size());
+  }
+
+  @Test
+  void lookupValueHelpersReturnPublishedEntryAndGroupShapes() {
+    Object nestedGroup =
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(
+                lookupFixtureCatalog(), "nestedTypes:legendVariants")
+            .orElseThrow();
+    Object plainGroup =
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(
+                lookupFixtureCatalog(), "plainTypes:displayCard")
+            .orElseThrow();
+    Object sourceEntry =
+        GridGrindProtocolCatalogLookupSupport.lookupValueFor(
+                lookupFixtureCatalog(), "sourceTypes:SOURCE_ALPHA")
+            .orElseThrow();
+
+    assertTrue(nestedGroup instanceof NestedTypeGroup);
+    assertTrue(plainGroup instanceof PlainTypeGroup);
+    assertTrue(sourceEntry instanceof TypeEntry);
   }
 
   private static List<String> qualifiedIds(CatalogSearchResult result) {
@@ -107,10 +211,26 @@ class GridGrindProtocolCatalogLookupSupportTest {
   }
 
   private static TypeEntry nestedLegend() {
-    return new TypeEntry("LEGEND_ALPHA", "Legend variant entry.", List.of());
+    return new TypeEntry(
+        "LEGEND_ALPHA",
+        "Legend variant entry.",
+        List.of(
+            new FieldEntry(
+                "title",
+                FieldRequirement.REQUIRED,
+                new FieldShape.Scalar(ScalarType.STRING),
+                List.of())));
   }
 
   private static TypeEntry displayCard() {
-    return new TypeEntry("DISPLAY_CARD", "Display card summary.", List.of());
+    return new TypeEntry(
+        "DISPLAY_CARD",
+        "Display card summary.",
+        List.of(
+            new FieldEntry(
+                "label",
+                FieldRequirement.REQUIRED,
+                new FieldShape.Scalar(ScalarType.STRING),
+                List.of())));
   }
 }

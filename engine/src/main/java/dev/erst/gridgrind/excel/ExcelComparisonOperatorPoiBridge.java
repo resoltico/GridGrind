@@ -4,10 +4,11 @@ import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
 
 /** Maps GridGrind comparison operators to and from Apache POI constants. */
-final class ExcelComparisonOperatorPoiBridge {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelComparisonOperatorPoiBridge {
   private ExcelComparisonOperatorPoiBridge() {}
 
-  static byte toPoi(ExcelComparisonOperator operator) {
+  public static byte toPoi(ExcelComparisonOperator operator) {
     return switch (operator) {
       case BETWEEN -> ComparisonOperator.BETWEEN;
       case NOT_BETWEEN -> ComparisonOperator.NOT_BETWEEN;
@@ -20,7 +21,7 @@ final class ExcelComparisonOperatorPoiBridge {
     };
   }
 
-  static ExcelComparisonOperator fromPoi(int comparisonOperator) {
+  public static ExcelComparisonOperator fromPoi(int comparisonOperator) {
     return switch (comparisonOperator) {
       case ComparisonOperator.BETWEEN -> ExcelComparisonOperator.BETWEEN;
       case ComparisonOperator.NOT_BETWEEN -> ExcelComparisonOperator.NOT_BETWEEN;

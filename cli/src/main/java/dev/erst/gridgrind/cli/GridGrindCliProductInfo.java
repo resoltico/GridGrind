@@ -16,10 +16,10 @@ final class GridGrindCliProductInfo {
         GridGrindCli.class.getPackage().getImplementationVersion(), GridGrindCli.class);
   }
 
-  static String helpText(String implementationVersion) {
+  static String helpText(CliCommand.HelpTopic topic, String implementationVersion) {
     String version = versionFrom(implementationVersion, GridGrindCli.class);
     return GridGrindCliHelp.helpText(
-        version, description(), documentRef(version), containerImageRef(version));
+        topic, version, description(), documentRef(version), containerImageRef(version));
   }
 
   static String productHeader(String version, String description) {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlDsigProviderSupport;
 import org.apache.poi.poifs.crypt.dsig.SignatureInfo;
 
 /** Public signature-info bridge for callers that need GridGrind's xmlsec-4-compatible setup. */

@@ -1,12 +1,19 @@
 package dev.erst.gridgrind.cli;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /** Shared helpers for CLI integration tests. */
 @SuppressWarnings("PMD.UseUtilityClass")
@@ -79,7 +86,7 @@ class GridGrindCliTestSupport {
       String journalLevel, String calculationStrategy, boolean markRecalculateOnOpen) {
     return """
         {
-          "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+          "mode": {"type": "FULL_XSSF"},
           "journal": { "level": "%s" },
           "calculation": {
             "strategy": { "type": "%s" },
@@ -148,6 +155,62 @@ class GridGrindCliTestSupport {
   protected static ProblemContext.ExecuteStep executeStepContext(
       GridGrindResponse.Failure failure) {
     return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
+  }
+
+  protected static CliFailureReport cliFailure(byte[] bytes) throws IOException {
+    return GridGrindCliJson.readCliFailureReport(bytes);
+  }
+
+  /**
+   * Reads a {@link CliFailureReport} from stdout and asserts that stderr received nothing.
+   *
+   * <p>Use this helper in every test that expects a CLI failure with no {@code --response} path
+   * configured. It encodes the full routing contract — structured JSON on stdout, nothing on stderr
+   * — in a single call so individual tests cannot forget either half.
+   */
+  protected static CliFailureReport cliFailureOnStdout(
+      ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
+    assertEquals(
+        "",
+        stderr.toString(StandardCharsets.UTF_8),
+        "stderr must be empty when CLI failure is routed to stdout");
+    return GridGrindCliJson.readCliFailureReport(stdout.toByteArray());
+  }
+
+  /**
+   * Reads a {@link CliFailureReport} from stderr and asserts that stdout received nothing.
+   *
+   * <p>Use this helper for bare-invocation tests (no {@code --request} and no {@code --response})
+   * where the CLI writes structured JSON to stderr and leaves stdout empty.
+   */
+  protected static CliFailureReport cliFailureOnStderr(
+      ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
+    assertEquals(
+        "",
+        stdout.toString(StandardCharsets.UTF_8),
+        "stdout must be empty when CLI failure is routed to stderr");
+    return GridGrindCliJson.readCliFailureReport(stderr.toByteArray());
+  }
+
+  protected static GridGrindResponse response(
+      ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
+    return GridGrindJson.readResponse(nonEmptyPayload(stdout, stderr));
+  }
+
+  protected static RequestDoctorReport doctorReport(
+      ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
+    return GridGrindJson.readRequestDoctorReport(nonEmptyPayload(stdout, stderr));
+  }
+
+  private static byte[] nonEmptyPayload(
+      ByteArrayOutputStream primary, ByteArrayOutputStream secondary) {
+    Objects.requireNonNull(primary, "primary must not be null");
+    Objects.requireNonNull(secondary, "secondary must not be null");
+    byte[] primaryBytes = primary.toByteArray();
+    if (primaryBytes.length > 0) {
+      return primaryBytes;
+    }
+    return secondary.toByteArray();
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

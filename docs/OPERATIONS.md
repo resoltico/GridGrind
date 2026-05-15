@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: OPERATIONS
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -25,9 +25,9 @@ focused documents so the public surface stays easier to audit and harder to let 
 gridgrind --print-request-template --response request.json
 gridgrind --print-protocol-catalog --response protocol-catalog.json
 gridgrind --print-protocol-catalog --search chart --response chart-search.json
-gridgrind --print-protocol-catalog --operation mutationActionTypes:SET_CELL
-gridgrind --print-example BUDGET --response budget-request.json
-gridgrind --print-example ASSERTION --response assertion-request.json
+gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL
+gridgrind --print-example --lookup BUDGET --response budget-request.json
+gridgrind --print-example --lookup ASSERTION --response assertion-request.json
 gridgrind --print-request-template | gridgrind --doctor-request
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
@@ -36,16 +36,23 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 current request model, every mutation action, every assertion type, every inspection query,
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
 fields. Use `--search` when you only know part of the name or summary, then switch to
-`--operation <group>:<id>` for the exact entry once you have the stable qualified id. Discovery,
+`--lookup <group>:<id>` for the exact entry once you have the stable qualified id. Search now
+returns grouped operation-centered results: top-level capability hits carry their `stepTemplate`,
+and any supporting nested/plain matches attach underneath the owning capability through
+`supportingMatches` plus `relatedEntryIds` instead of leaving the consumer to reconstruct the
+parent operation manually. Discovery,
 printed example requests, doctor reports, and normal execution responses omit absent optional
 fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
 placeholders, so the machine-readable surface is easier for agents and shell tooling to consume
 directly.
 Task discovery is layered on top of that same catalog surface:
-`--print-task-catalog --response tasks.json`, `--print-task-plan <id> --response task-plan.json`,
-and `--print-task-keyword-match "<query>" --response task-keyword-match.json` now emit
-starter scaffolds for dashboards, tabular reports, data-entry flows, pivot reports, custom XML
-workflows, workbook maintenance, and drawing/signature workflows.
+`--print-task-catalog --response tasks.json`,
+`--print-task-plan --lookup <id> --response task-request.json`,
+and `--print-task-keyword-match --query "<query>" --response task-keyword-match.json` now cover
+dashboards, tabular reports, data-entry flows, pivot reports, custom XML workflows, workbook
+maintenance, and drawing/signature workflows. Task-plan output is one executable starter request;
+keyword-match responses stay compact, are weighted by typed goal/artifact metadata first, and
+point at the matched task id plus why it ranked.
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits,
 source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
 workbook. `--response <path>` applies across execution, doctoring, and discovery, so primary
@@ -143,9 +150,9 @@ Common response anchors:
   without a dedicated mutation action.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
   surface `CELL_NOT_FOUND`; an existing non-formula cell is rejected as `INVALID_REQUEST`.
-- `execution.mode.readMode=EVENT_READ` supports `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`
+- `execution.mode.type=EVENT_READ` supports `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`
   only.
-- `execution.mode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, limits mutations to
+- `execution.mode.type=STREAMING_WRITE` requires `source.type=NEW`, limits mutations to
   `ENSURE_SHEET` plus `APPEND_ROW`, and allows `markRecalculateOnOpen=true` only with
   `strategy=DO_NOT_CALCULATE`.
 
@@ -167,7 +174,7 @@ charts are supported when every plot belongs to one of those families.
 - Java-first authoring without hand-written JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Budget walkthrough: [../examples/budget-request.json](../examples/budget-request.json) or
-  `gridgrind --print-example BUDGET --response budget-request.json`
+  `gridgrind --print-example --lookup BUDGET --response budget-request.json`
 - Assertion walkthrough: [../examples/assertion-request.json](../examples/assertion-request.json)
 - Workbook-health walkthrough:
   [../examples/workbook-health-request.json](../examples/workbook-health-request.json)

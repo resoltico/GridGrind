@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Optional;
@@ -26,7 +28,7 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              ExcelDrawingChartSupport.requiredDefinedNameFormula(
+              ExcelChartSourceSupport.requiredDefinedNameFormula(
                   new DefinedNameStub("BlankStringSource", " ", -1)));
 
       org.apache.poi.ss.usermodel.Name workbookScoped = workbook.createName();
@@ -34,16 +36,16 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
       workbookScoped.setRefersToFormula("Ops!$A$1");
       assertEquals(
           Optional.of(workbookScoped),
-          ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "ScopedSource"));
+          ExcelChartSourceSupport.resolveDefinedNameReference(sheet, "ScopedSource"));
       org.apache.poi.ss.usermodel.Name otherSheetScoped = workbook.createName();
       otherSheetScoped.setNameName("OtherOnly");
       otherSheetScoped.setSheetIndex(workbook.getSheetIndex("Other"));
       otherSheetScoped.setRefersToFormula("Other!$A$1");
       assertEquals(
           Optional.empty(),
-          ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "OtherOnly"));
+          ExcelChartSourceSupport.resolveDefinedNameReference(sheet, "OtherOnly"));
       assertEquals(
-          Optional.empty(), ExcelDrawingChartSupport.resolveDefinedNameReference(sheet, "Bad-1"));
+          Optional.empty(), ExcelChartSourceSupport.resolveDefinedNameReference(sheet, "Bad-1"));
 
       XSSFDrawing drawing = sheet.createDrawingPatriarch();
       org.apache.poi.xssf.usermodel.XSSFChart firstChart =
@@ -169,8 +171,9 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
                   org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
                       new Double[] {1d}));
       Object noTitle =
-          ExcelDrawingChartSupport.prepareSeriesTitle(sheet, new ExcelChartDefinition.Title.None());
-      ExcelDrawingChartSupport.applySeriesTitle(barSeries, (PreparedSeriesTitle) noTitle);
+          ExcelChartMutationSupport.prepareSeriesTitle(
+              sheet, new ExcelChartDefinition.Title.None());
+      ExcelChartMutationSupport.applySeriesTitle(barSeries, (PreparedSeriesTitle) noTitle);
       assertFalse(barSeries.getCTBarSer().isSetTx());
 
       org.apache.poi.xssf.usermodel.XSSFChart applyLineTitleChart =
@@ -194,7 +197,7 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
                       new String[] {"Only"}),
                   org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
                       new Double[] {1d}));
-      ExcelDrawingChartSupport.applySeriesTitle(lineSeries, (PreparedSeriesTitle) noTitle);
+      ExcelChartMutationSupport.applySeriesTitle(lineSeries, (PreparedSeriesTitle) noTitle);
       assertFalse(lineSeries.getCTLineSer().isSetTx());
 
       org.apache.poi.xssf.usermodel.XSSFChart applyPieTitleChart =
@@ -211,7 +214,7 @@ class ExcelDrawingChartHelperCoverageTest extends ExcelDrawingCoverageTestSuppor
                   org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
                       new Double[] {1d}));
       pieSeries.setTitle("Pie", null);
-      ExcelDrawingChartSupport.applySeriesTitle(pieSeries, (PreparedSeriesTitle) noTitle);
+      ExcelChartMutationSupport.applySeriesTitle(pieSeries, (PreparedSeriesTitle) noTitle);
       assertFalse(pieSeries.getCTPieSer().isSetTx());
 
       org.apache.poi.xssf.usermodel.XSSFChart bareBarChart =

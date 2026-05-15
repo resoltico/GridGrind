@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: EXAMPLES
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -12,7 +12,7 @@ route:
 
 **Purpose**: Map the shipped example surfaces, explain how their paths resolve, and show how to
 refresh and verify them.
-**Fastest artifact-native path**: `gridgrind --print-example <ID> --response request.json`
+**Fastest artifact-native path**: `gridgrind --print-example --lookup <ID> --response request.json`
 **Docker `:latest` note**: for first-contact artifact runs, prefer
 `docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...` or refresh once with
 `docker pull ghcr.io/resoltico/gridgrind:latest` before using plain `docker run ...:latest`
@@ -20,7 +20,7 @@ refresh and verify them.
 
 GridGrind ships the same example workflows in two forms:
 
-- **Built-in artifact examples** from `gridgrind --print-example <ID> --response request.json`.
+- **Built-in artifact examples** from `gridgrind --print-example --lookup <ID> --response request.json`.
   These are designed to run from an artifact working directory and use artifact-rooted paths such
   as `examples/...` or `generated-workbooks/...`. They are not all equally portable:
   most are self-contained in a blank working directory, while a few are intentionally
@@ -46,7 +46,7 @@ GridGrind ships the same example workflows in two forms:
 
 ## Built-In Example Portability
 
-Self-contained built-ins execute from a blank artifact workspace after `--print-example`:
+Self-contained built-ins execute from a blank artifact workspace after `--print-example --lookup <ID>`:
 
 | Built-in ID | Matching fixture | Notes |
 |:------------|:-----------------|:------|
@@ -62,7 +62,7 @@ Self-contained built-ins execute from a blank artifact workspace after `--print-
 | `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | file/document hyperlink analysis |
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
-Repo-asset-backed built-ins still use `--print-example <ID>`, but they also require copied
+Repo-asset-backed built-ins still use `--print-example --lookup <ID>`, but they also require copied
 `examples/` assets in the working directory:
 
 | Built-in ID | Matching fixture | Required assets |

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;

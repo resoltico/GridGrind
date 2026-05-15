@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import java.util.Objects;
 
 /** Formatting-rule commands for styles, validations, and conditional formatting. */

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
@@ -53,6 +55,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one area plot from the authored wire shape. */
+    @JsonCreator
+    public Area(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), grouping, axes, series);
+    }
+
     public Area {
       Objects.requireNonNull(grouping, "grouping must not be null");
       axes = copyAxes(axes, "axes");
@@ -73,6 +85,17 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one 3D area plot from the authored wire shape. */
+    @JsonCreator
+    public Area3D(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("gapDepth") Optional<Integer> gapDepth,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), grouping, emptyIfNull(gapDepth), axes, series);
+    }
+
     public Area3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
       Objects.requireNonNull(gapDepth, "gapDepth must not be null");
@@ -100,6 +123,26 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one bar plot from the authored wire shape. */
+    @JsonCreator
+    public Bar(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("barDirection") ExcelChartBarDirection barDirection,
+        @JsonProperty("grouping") ExcelChartBarGrouping grouping,
+        @JsonProperty("gapWidth") Optional<Integer> gapWidth,
+        @JsonProperty("overlap") Optional<Integer> overlap,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(
+          defaultFalse(varyColors),
+          barDirection,
+          grouping,
+          emptyIfNull(gapWidth),
+          emptyIfNull(overlap),
+          axes,
+          series);
+    }
+
     public Bar {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
@@ -135,6 +178,28 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one 3D bar plot from the authored wire shape. */
+    @JsonCreator
+    public Bar3D(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("barDirection") ExcelChartBarDirection barDirection,
+        @JsonProperty("grouping") ExcelChartBarGrouping grouping,
+        @JsonProperty("gapDepth") Optional<Integer> gapDepth,
+        @JsonProperty("gapWidth") Optional<Integer> gapWidth,
+        @JsonProperty("shape") Optional<ExcelChartBarShape> shape,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(
+          defaultFalse(varyColors),
+          barDirection,
+          grouping,
+          emptyIfNull(gapDepth),
+          emptyIfNull(gapWidth),
+          emptyIfNull(shape),
+          axes,
+          series);
+    }
+
     public Bar3D {
       Objects.requireNonNull(barDirection, "barDirection must not be null");
       Objects.requireNonNull(grouping, "grouping must not be null");
@@ -173,6 +238,16 @@ public sealed interface ChartPlotInput
       Optional<Integer> holeSize,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one doughnut plot from the authored wire shape. */
+    @JsonCreator
+    public Doughnut(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("firstSliceAngle") Optional<Integer> firstSliceAngle,
+        @JsonProperty("holeSize") Optional<Integer> holeSize,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), emptyIfNull(firstSliceAngle), emptyIfNull(holeSize), series);
+    }
+
     public Doughnut {
       Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
       Objects.requireNonNull(holeSize, "holeSize must not be null");
@@ -191,6 +266,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one line plot from the authored wire shape. */
+    @JsonCreator
+    public Line(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), grouping, axes, series);
+    }
+
     public Line {
       Objects.requireNonNull(grouping, "grouping must not be null");
       axes = copyAxes(axes, "axes");
@@ -211,6 +296,17 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one 3D line plot from the authored wire shape. */
+    @JsonCreator
+    public Line3D(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("grouping") ExcelChartGrouping grouping,
+        @JsonProperty("gapDepth") Optional<Integer> gapDepth,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), grouping, emptyIfNull(gapDepth), axes, series);
+    }
+
     public Line3D {
       Objects.requireNonNull(grouping, "grouping must not be null");
       Objects.requireNonNull(gapDepth, "gapDepth must not be null");
@@ -231,6 +327,15 @@ public sealed interface ChartPlotInput
   /** Pie chart plot. */
   record Pie(boolean varyColors, Optional<Integer> firstSliceAngle, List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one pie plot from the authored wire shape. */
+    @JsonCreator
+    public Pie(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("firstSliceAngle") Optional<Integer> firstSliceAngle,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), emptyIfNull(firstSliceAngle), series);
+    }
+
     public Pie {
       Objects.requireNonNull(firstSliceAngle, "firstSliceAngle must not be null");
       validateAngle(firstSliceAngle);
@@ -240,6 +345,14 @@ public sealed interface ChartPlotInput
 
   /** 3D pie chart plot. */
   record Pie3D(boolean varyColors, List<ChartSeriesInput> series) implements ChartPlotInput {
+    /** Reads one 3D pie plot from the authored wire shape. */
+    @JsonCreator
+    public Pie3D(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), series);
+    }
+
     public Pie3D {
       series = copySeries(series);
     }
@@ -252,6 +365,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one radar plot from the authored wire shape. */
+    @JsonCreator
+    public Radar(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("style") dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle style,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), style, axes, series);
+    }
+
     public Radar {
       Objects.requireNonNull(style, "style must not be null");
       axes = copyAxes(axes, "axes");
@@ -271,6 +394,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one scatter plot from the authored wire shape. */
+    @JsonCreator
+    public Scatter(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("style") ExcelChartScatterStyle style,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), style, axes, series);
+    }
+
     public Scatter {
       Objects.requireNonNull(style, "style must not be null");
       axes = copyAxes(axes, "axes");
@@ -291,6 +424,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one surface plot from the authored wire shape. */
+    @JsonCreator
+    public Surface(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("wireframe") Boolean wireframe,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), defaultFalse(wireframe), axes, series);
+    }
+
     public Surface {
       axes = copyAxes(axes, "axes");
       series = copySeries(series);
@@ -309,6 +452,16 @@ public sealed interface ChartPlotInput
       List<ChartAxisInput> axes,
       List<ChartSeriesInput> series)
       implements ChartPlotInput {
+    /** Reads one 3D surface plot from the authored wire shape. */
+    @JsonCreator
+    public Surface3D(
+        @JsonProperty("varyColors") Boolean varyColors,
+        @JsonProperty("wireframe") Boolean wireframe,
+        @JsonProperty("axes") List<ChartAxisInput> axes,
+        @JsonProperty("series") List<ChartSeriesInput> series) {
+      this(defaultFalse(varyColors), defaultFalse(wireframe), axes, series);
+    }
+
     public Surface3D {
       axes = copyAxes(axes, "axes");
       series = copySeries(series);
@@ -373,6 +526,14 @@ public sealed interface ChartPlotInput
 
   private static List<ChartAxisInput> copyAxes(List<ChartAxisInput> axes, String fieldName) {
     return ChartInput.copyNonEmptyValues(axes, fieldName);
+  }
+
+  private static boolean defaultFalse(Boolean value) {
+    return Boolean.TRUE.equals(value);
+  }
+
+  private static <T> Optional<T> emptyIfNull(Optional<T> value) {
+    return value == null ? Optional.empty() : value;
   }
 
   private static void validateAngle(Optional<Integer> angle) {

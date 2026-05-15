@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
@@ -83,7 +84,7 @@ public final class GridGrindRequestDoctor {
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    ExecutionModeSelection executionModes = ExecutionModeRules.executionModes(request);
+    ExecutionModeInput executionMode = ExecutionModeRules.executionMode(request);
     WorkbookPlan.StepPartition stepPartition = request.stepPartition();
     int mutationStepCount = stepPartition.mutations().size();
     int assertionStepCount = stepPartition.assertions().size();
@@ -91,8 +92,7 @@ public final class GridGrindRequestDoctor {
     return new RequestDoctorReport.Summary(
         ExecutionRequestPaths.reqSourceType(request),
         ExecutionRequestPaths.reqPersistenceType(request),
-        executionModes.readMode().name(),
-        executionModes.writeMode().name(),
+        executionMode.modeType(),
         request.calculationPolicy().effectiveStrategy().strategyType(),
         request.calculationPolicy().markRecalculateOnOpen(),
         SourceBackedPlanResolver.requiresStandardInput(request),

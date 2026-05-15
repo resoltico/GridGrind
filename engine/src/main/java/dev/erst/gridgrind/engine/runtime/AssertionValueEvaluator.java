@@ -36,7 +36,11 @@ final class AssertionValueEvaluator {
             observationList,
             shouldExist
                 ? assertionType + " observed no matching workbook entities"
-                : assertionType + " observed " + count + " matching workbook entities");
+                : assertionType
+                    + " observed "
+                    + count
+                    + " matching workbook "
+                    + (count == 1 ? "entity" : "entities"));
   }
 
   AssertionEvaluation evaluateCellValue(

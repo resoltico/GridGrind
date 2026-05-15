@@ -282,8 +282,8 @@ public final class XlsxRoundTrip {
   }
 
   /** Returns normalized data-validation structures stored on one saved sheet. */
-  public static List<ExcelDataValidationSnapshot> dataValidations(
-      Path workbookPath, String sheetName) throws IOException {
+  public static List<dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot>
+      dataValidations(Path workbookPath, String sheetName) throws IOException {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");
 

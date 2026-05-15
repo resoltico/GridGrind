@@ -10,6 +10,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Resolves defined-name formulas into typed GridGrind range targets when normalization is possible.
  */
+@SuppressWarnings("PMD.CommentRequired")
 public final class ExcelNamedRangeTargets {
   private ExcelNamedRangeTargets() {}
 
@@ -50,7 +51,7 @@ public final class ExcelNamedRangeTargets {
     }
   }
 
-  static String normalizeAreaFormulaForPoi(String refersToFormula) {
+  public static String normalizeAreaFormulaForPoi(String refersToFormula) {
     int separatorIndex = refersToFormula.indexOf(':');
     if (separatorIndex < 0) {
       return refersToFormula;

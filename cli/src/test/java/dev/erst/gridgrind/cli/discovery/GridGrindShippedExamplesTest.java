@@ -41,7 +41,7 @@ class GridGrindShippedExamplesTest {
                     "summary",
                     GridGrindProtocolCatalog.requestTemplate()));
 
-    assertEquals("fileName must end with .json", failure.getMessage());
+    assertEquals("requestFileName must end with .json", failure.getMessage());
   }
 
   @Test
@@ -77,12 +77,12 @@ class GridGrindShippedExamplesTest {
             () ->
                 new ShippedExampleEntry(
                     "WORKBOOK_HEALTH",
-                    "workbook-health-request.txt",
+                    "examples/workbook-health-request.txt",
                     "summary",
                     ExampleWorkspaceMode.SELF_CONTAINED,
                     java.util.List.of()));
 
-    assertEquals("fileName must end with .json", failure.getMessage());
+    assertEquals("suggestedRequestPath must end with .json", failure.getMessage());
   }
 
   @Test
@@ -90,28 +90,31 @@ class GridGrindShippedExamplesTest {
     ShippedExampleEntry entry =
         new ShippedExampleEntry(
             "WORKBOOK_HEALTH",
-            "workbook-health-request.json",
+            "examples/workbook-health-request.json",
             "summary",
             ExampleWorkspaceMode.SELF_CONTAINED,
             java.util.List.of());
     assertEquals("WORKBOOK_HEALTH", entry.id());
-    assertEquals("workbook-health-request.json", entry.fileName());
+    assertEquals("examples/workbook-health-request.json", entry.suggestedRequestPath());
     assertEquals("summary", entry.summary());
     assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, entry.workspaceMode());
     assertEquals(java.util.List.of(), entry.requiredPaths());
   }
 
   @Test
-  void shippedExampleEntryTreatsMissingRequiredPathsAsEmpty() {
-    ShippedExampleEntry entry =
-        new ShippedExampleEntry(
-            "WORKBOOK_HEALTH",
-            "workbook-health-request.json",
-            "summary",
-            ExampleWorkspaceMode.SELF_CONTAINED,
-            null);
+  void shippedExampleEntryRejectsMissingRequiredPaths() {
+    NullPointerException failure =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                new ShippedExampleEntry(
+                    "WORKBOOK_HEALTH",
+                    "examples/workbook-health-request.json",
+                    "summary",
+                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    null));
 
-    assertEquals(java.util.List.of(), entry.requiredPaths());
+    assertEquals("requiredPaths must not be null", failure.getMessage());
   }
 
   @Test
@@ -155,8 +158,12 @@ class GridGrindShippedExamplesTest {
         "Missing shipped-example requirements for NO_REQUIREMENTS",
         missingRequirementsFailure.getMessage());
 
-    GridGrindShippedExamples.ExampleRequirements requirements =
-        new GridGrindShippedExamples.ExampleRequirements(ExampleWorkspaceMode.SELF_CONTAINED, null);
-    assertEquals(java.util.List.of(), requirements.requiredPaths());
+    NullPointerException missingRequiredPathsFailure =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                new GridGrindShippedExamples.ExampleRequirements(
+                    ExampleWorkspaceMode.SELF_CONTAINED, null));
+    assertEquals("requiredPaths must not be null", missingRequiredPathsFailure.getMessage());
   }
 }

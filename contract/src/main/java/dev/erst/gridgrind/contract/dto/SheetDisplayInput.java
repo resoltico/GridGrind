@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Screen-facing sheet display flags authored as part of sheet-presentation state. */
 public record SheetDisplayInput(
@@ -19,11 +20,11 @@ public record SheetDisplayInput(
   /** Creates sheet-display settings while applying the documented worksheet-view defaults. */
   @JsonCreator
   public SheetDisplayInput(
-      Boolean displayGridlines,
-      Boolean displayZeros,
-      Boolean displayRowColHeadings,
-      Boolean displayFormulas,
-      Boolean rightToLeft) {
+      @JsonProperty("displayGridlines") Boolean displayGridlines,
+      @JsonProperty("displayZeros") Boolean displayZeros,
+      @JsonProperty("displayRowColHeadings") Boolean displayRowColHeadings,
+      @JsonProperty("displayFormulas") Boolean displayFormulas,
+      @JsonProperty("rightToLeft") Boolean rightToLeft) {
     this(
         java.util.Objects.requireNonNull(displayGridlines, "displayGridlines must not be null")
             .booleanValue(),

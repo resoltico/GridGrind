@@ -2,6 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;

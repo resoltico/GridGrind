@@ -24,6 +24,7 @@ class GridGrindTaskCatalogTest {
         "inspectionQueryTypes:GET_CHARTS",
         GridGrindTaskCatalog.entryFor("DASHBOARD")
             .orElseThrow()
+            .workflow()
             .phases()
             .getLast()
             .capabilityRefs()
@@ -41,44 +42,31 @@ class GridGrindTaskCatalogTest {
 
   @Test
   void taskCatalogValidationRejectsDuplicateIdsAndDanglingReferences() {
+    TaskPhase newSourcePhase =
+        TaskTestFixtures.phase(java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")));
     TaskEntry left =
         new TaskEntry(
             "DUPLICATE",
-            "one",
+            TaskTestFixtures.discoveryProfile("duplicate"),
+            TaskTestFixtures.narrative("one"),
             profile(),
-            java.util.List.of(),
-            java.util.List.of(),
-            java.util.List.of("office"),
-            java.util.List.of("outcome"),
-            java.util.List.of("input"),
-            java.util.List.of("feature"),
-            java.util.List.of(
-                new TaskPhase(
-                    TaskPhasePurpose.AUTHOR,
-                    "Phase",
-                    "Objective",
-                    java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
-                    java.util.List.of("note"))),
-            java.util.List.of("pitfall"));
+            TaskTestFixtures.interactionProfile(),
+            TaskTestFixtures.workflow(java.util.List.of(newSourcePhase)));
     TaskEntry right =
         new TaskEntry(
             "DUPLICATE",
-            "two",
+            TaskTestFixtures.discoveryProfile("duplicate"),
+            TaskTestFixtures.narrative("two"),
             profile(),
-            java.util.List.of(),
-            java.util.List.of(),
-            java.util.List.of("office"),
-            java.util.List.of("outcome"),
-            java.util.List.of("input"),
-            java.util.List.of("feature"),
-            java.util.List.of(
-                new TaskPhase(
-                    TaskPhasePurpose.AUTHOR,
-                    "Phase Two",
-                    "Objective",
-                    java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
-                    java.util.List.of("note"))),
-            java.util.List.of("pitfall"));
+            TaskTestFixtures.interactionProfile(),
+            TaskTestFixtures.workflow(
+                java.util.List.of(
+                    new TaskPhase(
+                        TaskPhasePurpose.AUTHOR,
+                        "Phase Two",
+                        "Objective",
+                        java.util.List.of(new TaskCapabilityRef("sourceTypes", "NEW")),
+                        java.util.List.of("note")))));
     IllegalArgumentException duplicateTasks =
         assertThrows(
             IllegalArgumentException.class,
@@ -119,19 +107,7 @@ class GridGrindTaskCatalogTest {
     IllegalArgumentException emptyPhases =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                new TaskEntry(
-                    "TASK",
-                    "summary",
-                    profile(),
-                    java.util.List.of(),
-                    java.util.List.of(),
-                    java.util.List.of("office"),
-                    java.util.List.of("outcome"),
-                    java.util.List.of("input"),
-                    java.util.List.of("feature"),
-                    java.util.List.of(),
-                    java.util.List.of("pitfall")));
+            () -> new TaskWorkflow(java.util.List.of(), java.util.List.of("pitfall")));
     assertEquals("phases must not be empty", emptyPhases.getMessage());
 
     IllegalStateException danglingReference =
@@ -141,27 +117,7 @@ class GridGrindTaskCatalogTest {
                 GridGrindTaskCatalog.validateCapabilityReferences(
                     new TaskCatalog(
                         dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-                        java.util.List.of(
-                            new TaskEntry(
-                                "BROKEN",
-                                "summary",
-                                profile(),
-                                java.util.List.of(),
-                                java.util.List.of(),
-                                java.util.List.of("office"),
-                                java.util.List.of("outcome"),
-                                java.util.List.of("input"),
-                                java.util.List.of("feature"),
-                                java.util.List.of(
-                                    new TaskPhase(
-                                        TaskPhasePurpose.AUTHOR,
-                                        "Phase",
-                                        "Objective",
-                                        java.util.List.of(
-                                            new TaskCapabilityRef(
-                                                "mutationActionTypes", "NO_SUCH_ACTION")),
-                                        java.util.List.of("note"))),
-                                java.util.List.of("pitfall"))))));
+                        java.util.List.of(brokenTask()))));
     assertTrue(
         danglingReference
             .getMessage()
@@ -190,10 +146,16 @@ class GridGrindTaskCatalogTest {
   }
 
   private static TaskExecutionProfile profile() {
-    return new TaskExecutionProfile(
-        TaskSourceMode.NEW_WORKBOOK,
-        TaskPersistenceMode.NONE,
-        TaskMutationMode.MUTATING,
-        TaskAssetMode.SELF_CONTAINED);
+    return TaskTestFixtures.profile();
+  }
+
+  private static TaskEntry brokenTask() {
+    return TaskTestFixtures.task(
+        "BROKEN",
+        profile(),
+        java.util.List.of(
+            TaskTestFixtures.phase(
+                java.util.List.of(
+                    new TaskCapabilityRef("mutationActionTypes", "NO_SUCH_ACTION")))));
   }
 }

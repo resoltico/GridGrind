@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -132,9 +132,11 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202605061138` via Maven coordinate
-  `0.8.15-20260506.113836-98`, because that line is where official Java 26 support remains ahead
-  of the next JaCoCo release
+  official JaCoCo trunk build `0.8.15.202605081121` via Maven coordinate
+  `0.8.15-20260508.112122-100`; the published snapshot artifact exposes that same trunk build in
+  its bundle metadata while keeping the snapshot timestamp/build-number form required by the Maven
+  repository, and that line is where official Java 26 support remains ahead of the next JaCoCo
+  release
 - the shared build conventions therefore add JaCoCo's documented snapshot repository narrowly for
   `org.jacoco` artifacts instead of widening the whole build to general snapshot resolution
 - do not "simplify" that repo wiring away unless JaCoCo Java 26 support is available in a normal
@@ -143,7 +145,7 @@ JaCoCo note:
 Jackson note:
 - `tools.jackson.core:jackson-databind` 3.x intentionally still depends on
   `com.fasterxml.jackson.core:jackson-annotations`
-- do not attempt to migrate GridGrind model annotations to a nonexistent
+- do not attempt to rewrite GridGrind model annotations toward a nonexistent
   `tools.jackson.annotation` namespace
 - keep the comment beside the version-catalog entry and the JSON round-trip regressions in place
   so this upstream Jackson rule does not get "fixed" incorrectly later

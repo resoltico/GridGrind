@@ -6,11 +6,11 @@ import java.util.Objects;
 import java.util.Optional;
 
 /** Shared comparison-rule validation and formula normalization for Excel rule families. */
-final class ExcelComparisonFormulaSupport {
+public final class ExcelComparisonFormulaSupport {
   private ExcelComparisonFormulaSupport() {}
 
   /** Validates one comparison-rule payload before formula normalization is applied. */
-  static void validateComparisonRule(
+  public static void validateComparisonRule(
       ExcelComparisonOperator operator, String formula1, Optional<String> formula2) {
     Objects.requireNonNull(operator, "operator must not be null");
     Objects.requireNonNull(formula2, "formula2 must not be null");
@@ -31,7 +31,7 @@ final class ExcelComparisonFormulaSupport {
   }
 
   /** Normalizes one formula-like string by trimming and removing a leading {@code =}. */
-  static String normalizeFormula(String value, String fieldName) {
+  public static String normalizeFormula(String value, String fieldName) {
     String normalized = requireNonBlank(value, fieldName).trim();
     if (normalized.startsWith("=")) {
       normalized = normalized.substring(1);
@@ -43,7 +43,7 @@ final class ExcelComparisonFormulaSupport {
   }
 
   /** Normalizes the optional second comparison operand when the operator requires it. */
-  static Optional<String> normalizeOptionalComparisonUpperBound(
+  public static Optional<String> normalizeOptionalComparisonUpperBound(
       ExcelComparisonOperator operator, Optional<String> formula2) {
     Objects.requireNonNull(formula2, "formula2 must not be null");
     if (operator == ExcelComparisonOperator.BETWEEN

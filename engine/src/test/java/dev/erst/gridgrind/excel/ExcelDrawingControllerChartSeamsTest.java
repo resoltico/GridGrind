@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -36,7 +39,7 @@ class ExcelDrawingControllerChartSeamsTest {
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> ExcelDrawingChartSupport.requiredDefinedNameFormula(blankName));
+              () -> ExcelChartSourceSupport.requiredDefinedNameFormula(blankName));
       assertTrue(failure.getMessage().contains("Defined name 'BlankSource'"));
     }
   }
@@ -45,18 +48,18 @@ class ExcelDrawingControllerChartSeamsTest {
   void formulaScalarDecoderHandlesBlankAndRejectsMissingCachedResults() {
     assertEquals(
         new ExcelDrawingController.CellScalar(ExcelDrawingController.CellScalarKind.STRING, "", 0d),
-        ExcelDrawingChartSupport.scalarFromFormula(
+        ExcelChartSourceSupport.scalarFromFormula(
             new FormulaProbeCell(CellType.BLANK, "", 0d, false)));
     assertEquals(
         new ExcelDrawingController.CellScalar(ExcelDrawingController.CellScalarKind.STRING, "", 0d),
-        ExcelDrawingChartSupport.scalarFromFormula(
+        ExcelChartSourceSupport.scalarFromFormula(
             new FormulaProbeCell(CellType._NONE, "", 0d, false)));
 
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                ExcelDrawingChartSupport.scalarFromFormula(
+                ExcelChartSourceSupport.scalarFromFormula(
                     new FormulaProbeCell(CellType.FORMULA, "", 0d, false)));
     assertTrue(failure.getMessage().contains("must expose a cached scalar result"));
   }

@@ -195,6 +195,13 @@ final class WorkbookInvariantResponseChecks {
           requireCustomXmlExportShape(result.export());
       case WorkbookInspectionResult.NamedRangesResult result ->
           result.namedRanges().forEach(WorkbookInvariantResponseChecks::requireNamedRangeShape);
+      case WorkbookInspectionResult.SheetsResult result ->
+          result
+              .sheetNames()
+              .forEach(
+                  name ->
+                      require(
+                          name != null && !name.isBlank(), "sheets sheetName must not be blank"));
       case SheetInspectionResult.SheetSummaryResult result ->
           requireSheetSummaryShape(result.sheet());
       case SheetInspectionResult.ArrayFormulasResult result ->

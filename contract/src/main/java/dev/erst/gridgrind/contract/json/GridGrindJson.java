@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -12,6 +13,7 @@ import java.util.Objects;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Shared JSON codec for the GridGrind protocol. */
 public final class GridGrindJson {
@@ -106,6 +108,12 @@ public final class GridGrindJson {
         GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, request);
   }
 
+  /** Renders one request into its machine-readable object tree form without I/O. */
+  public static ObjectNode requestTree(WorkbookPlan request) {
+    Objects.requireNonNull(request, "request must not be null");
+    return GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(request);
+  }
+
   /** Serializes a response to bytes. */
   public static byte[] writeResponseBytes(GridGrindResponse response) throws IOException {
     Objects.requireNonNull(response, "response must not be null");
@@ -163,6 +171,23 @@ public final class GridGrindJson {
   public static void writeCatalogLookupValue(OutputStream outputStream, Object value)
       throws IOException {
     writeValue(outputStream, value);
+  }
+
+  /**
+   * Writes one catalog lookup result as a JSON object with protocolVersion prepended to the root.
+   */
+  public static void writeCatalogLookupResult(
+      OutputStream outputStream, GridGrindProtocolVersion protocolVersion, Object value)
+      throws IOException {
+    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
+    Objects.requireNonNull(value, "value must not be null");
+    ObjectNode valueNode = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(value);
+    ObjectNode envelope = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.createObjectNode();
+    envelope.put("protocolVersion", protocolVersion.name());
+    for (var field : valueNode.properties()) {
+      envelope.set(field.getKey(), field.getValue());
+    }
+    writeValue(outputStream, envelope);
   }
 
   /** Returns the maximum accepted JSON request document length in bytes. */

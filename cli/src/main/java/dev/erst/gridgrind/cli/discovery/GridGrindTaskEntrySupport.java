@@ -16,26 +16,30 @@ final class GridGrindTaskEntrySupport {
 
   static TaskEntry task(
       String id,
-      String summary,
+      TaskDiscoveryProfile discoveryProfile,
+      TaskNarrative narrative,
       TaskExecutionProfile executionProfile,
       TaskInteractionProfile interactionProfile,
-      List<String> intentTags,
-      List<String> outcomes,
-      List<String> requiredInputs,
-      List<String> optionalFeatures,
       TaskWorkflow workflow) {
     return new TaskEntry(
-        id,
-        summary,
-        executionProfile,
-        interactionProfile.requiredInputKinds(),
-        interactionProfile.verificationKinds(),
-        intentTags,
-        outcomes,
-        requiredInputs,
-        optionalFeatures,
-        workflow.phases(),
-        workflow.commonPitfalls());
+        id, discoveryProfile, narrative, executionProfile, interactionProfile, workflow);
+  }
+
+  static TaskDiscoveryProfile discovery(
+      List<String> discoveryTerms, List<String> intentTags, TaskIntentProfile intentProfile) {
+    return new TaskDiscoveryProfile(discoveryTerms, intentTags, intentProfile);
+  }
+
+  static TaskNarrative narrative(
+      String summary,
+      List<String> outcomes,
+      List<String> requiredInputs,
+      List<String> optionalFeatures) {
+    return new TaskNarrative(summary, outcomes, requiredInputs, optionalFeatures);
+  }
+
+  static TaskIntentProfile intent(List<TaskGoalKind> goals, List<TaskArtifactKind> artifacts) {
+    return new TaskIntentProfile(goals, artifacts);
   }
 
   static TaskInteractionProfile signals(

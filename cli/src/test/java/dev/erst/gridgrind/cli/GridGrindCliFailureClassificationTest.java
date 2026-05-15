@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -22,181 +23,183 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void versionFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--version", "--request", "ignored.json"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
   }
 
   @Test
   void helpFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--help", "--request", "ignored.json"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
   }
 
   @Test
   void printRequestTemplateRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--print-request-template", "--request", "ignored.json"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
   }
 
   @Test
   void printExampleRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-example", "ASSERTION", "--request", "ignored.json"},
+                new String[] {
+                  "--print-example", "--lookup", "ASSERTION", "--request", "ignored.json"
+                },
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
   }
 
   @Test
   void returnsStructuredJsonErrorForInvalidArguments() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
-            .run(new String[] {"--unknown"}, new ByteArrayInputStream(new byte[0]), stdout);
+            .run(new String[] {"--unknown"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("--unknown"), parseArgumentsContext(failure).argumentName());
-    assertEquals("Unknown argument: --unknown", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
+    assertEquals(java.util.Optional.of("--unknown"), failure.argument());
+    assertEquals("Unknown argument: --unknown", failure.message());
   }
 
   @Test
   void returnsStructuredJsonErrorWhenArgumentValueIsMissing() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
-            .run(new String[] {"--request"}, new ByteArrayInputStream(new byte[0]), stdout);
+            .run(new String[] {"--request"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertEquals("Missing value for --request", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertEquals("Missing value for --request", failure.message());
   }
 
   @Test
   void rejectsDuplicateArguments() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--request", "a.json", "--request", "b.json"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    assertEquals(
-        "Duplicate argument: --request",
-        ((GridGrindResponse.Failure) response).problem().message());
+    assertEquals("Duplicate argument: --request", failure.message());
   }
 
   @Test
   void rejectsDuplicateResponseArguments() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--response", "a.json", "--response", "b.json"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    assertEquals(
-        "Duplicate argument: --response",
-        ((GridGrindResponse.Failure) response).problem().message());
+    assertEquals("Duplicate argument: --response", failure.message());
   }
 
   @Test
   void classifiesInvalidPathArgumentFailures() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
-            .run(new String[] {"--request", "\0"}, new ByteArrayInputStream(new byte[0]), stdout);
+            .run(
+                new String[] {"--request", "\0"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
   }
 
   @Test
   void classifiesIoErrorsWhenRequestFileCannotBeRead() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     String missingPath = "/tmp/does-not-exist.json";
 
     int exitCode =
@@ -204,22 +207,23 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .run(
                 new String[] {"--request", missingPath},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("Request file not found: " + Path.of(missingPath), failure.problem().message());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertEquals("Request file not found: " + Path.of(missingPath), failure.message());
   }
 
   @Test
   void classifiesIoErrorsWhenRequestPathIsDirectory() throws IOException {
     Path requestDirectory = Files.createTempDirectory("gridgrind-request-directory-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     try {
       int exitCode =
@@ -227,18 +231,17 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
               .run(
                   new String[] {"--request", requestDirectory.toString()},
                   new ByteArrayInputStream(new byte[0]),
-                  stdout);
+                  stdout,
+                  stderr);
 
-      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
       assertEquals(1, exitCode);
-      assertInstanceOf(GridGrindResponse.Failure.class, response);
-      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-      assertEquals("READ_REQUEST", failure.problem().context().stage());
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+      assertEquals("execute", failure.command());
       assertEquals(
           "Request path is not a regular file: " + requestDirectory.toAbsolutePath().normalize(),
-          failure.problem().message());
+          failure.message());
     } finally {
       Files.deleteIfExists(requestDirectory);
     }
@@ -257,6 +260,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     Files.writeString(unreadableFile, requestBody, StandardCharsets.UTF_8);
     Set<PosixFilePermission> originalPermissions = Files.getPosixFilePermissions(unreadableFile);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     try {
       Files.setPosixFilePermissions(unreadableFile, Set.of());
@@ -267,18 +271,17 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
               .run(
                   new String[] {"--request", unreadableFile.toString()},
                   new ByteArrayInputStream(new byte[0]),
-                  stdout);
+                  stdout,
+                  stderr);
 
-      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
       assertEquals(1, exitCode);
-      assertInstanceOf(GridGrindResponse.Failure.class, response);
-      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-      assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-      assertEquals("READ_REQUEST", failure.problem().context().stage());
+      assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+      assertEquals("execute", failure.command());
       assertEquals(
           "Request file is not readable: " + unreadableFile.toAbsolutePath().normalize(),
-          failure.problem().message());
+          failure.message());
     } finally {
       Files.setPosixFilePermissions(unreadableFile, originalPermissions);
       Files.deleteIfExists(unreadableFile);
@@ -292,7 +295,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             .resolve("nested")
             .resolve("response.json");
     GridGrindCli cli =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -321,8 +324,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void classifiesExecutionErrorsWithExistingSourceAndOverwritePersistence() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -336,9 +340,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                         "{ \"type\": \"OVERWRITE\" }",
                         "[]")
                     .getBytes(StandardCharsets.UTF_8)),
-            stdout);
+            stdout,
+            stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -353,8 +358,9 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void classifiesExecutionErrorsWithSaveAsPersistence() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -368,9 +374,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                         "{ \"type\": \"SAVE_AS\", \"path\": \"/tmp/output.xlsx\" }",
                         "[]")
                     .getBytes(StandardCharsets.UTF_8)),
-            stdout);
+            stdout,
+            stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -386,7 +393,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   void fallsBackToExceptionTypeWhenExecutionErrorHasNoMessage() throws IOException {
     Path responsePath = Path.of("gridgrind-cli-response-" + UUID.randomUUID() + ".json");
     GridGrindCli cli =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException();
             });
@@ -416,29 +423,31 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void returnsInvalidJsonForMalformedJson() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of(1), readRequestContext(failure).jsonLine());
-    assertEquals(java.util.Optional.of(2), readRequestContext(failure).jsonColumn());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonPath());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.empty(), failure.argument());
+    assertEquals(java.util.Optional.of(1), failure.location().jsonLine());
+    assertEquals(java.util.Optional.of(2), failure.location().jsonColumn());
+    assertEquals(java.util.Optional.empty(), failure.location().jsonPath());
   }
 
   @Test
   void classifiesRequestShapeFailuresAsReadRequest() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -454,26 +463,23 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                             ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("steps[0]"), readRequestContext(failure).jsonPath());
-    assertEquals(1, failure.problem().causes().size());
-    assertEquals(
-        GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().causes().getFirst().code());
-    assertFalse(failure.problem().causes().getFirst().message().contains("tools.jackson"));
-    assertFalse(failure.problem().causes().getFirst().message().contains("dev.erst.gridgrind"));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("steps[0]"), failure.location().jsonPath());
+    assertFalse(failure.message().contains("tools.jackson"));
+    assertFalse(failure.message().contains("dev.erst.gridgrind"));
   }
 
   @Test
   void classifiesSemanticRequestValidationAsReadRequest() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -499,18 +505,17 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                             ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("steps[0].target"), readRequestContext(failure).jsonPath());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonLine());
-    assertEquals(java.util.Optional.empty(), readRequestContext(failure).jsonColumn());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("steps[0].target"), failure.location().jsonPath());
+    assertEquals(java.util.Optional.empty(), failure.location().jsonLine());
+    assertEquals(java.util.Optional.empty(), failure.location().jsonColumn());
   }
 
   @Test
@@ -529,23 +534,23 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         StandardCharsets.UTF_8);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--request", requestPath.toString()},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals("execute", failure.command());
     assertEquals(
         "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
-        failure.problem().message());
+        failure.message());
   }
 
   @Test
@@ -587,7 +592,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(
@@ -621,30 +626,28 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(
-        "GridGrind wrote the response to "
+        "GridGrind wrote the CLI failure report to "
             + responsePath.toAbsolutePath()
             + "; inspect that file for failure."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals("Unknown argument: --bogus-flag", failure.problem().message());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
+    assertEquals("Unknown argument: --bogus-flag", failure.message());
   }
 
   @Test
   void preservesOriginalProblemWhenFallbackResponseWriteAlsoFails() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-response-dir-error-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindCli cli =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
             (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -655,9 +658,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             new ByteArrayInputStream(
                 requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
-            stdout);
+            stdout,
+            stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -671,6 +675,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void classifiesInvalidFormulasAsFormulaErrors() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -689,9 +694,10 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                             ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -723,23 +729,22 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     try {
       ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+      ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
       int exitCode =
           new GridGrindCli()
               .run(
                   new String[] {"--request", path.toString(), "--response", path.toString()},
                   new ByteArrayInputStream(new byte[0]),
-                  stdout);
+                  stdout,
+                  stderr);
 
-      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
       assertEquals(2, exitCode);
-      assertInstanceOf(GridGrindResponse.Failure.class, response);
-      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-      assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-      assertEquals(
-          "--request and --response must not point to the same path", failure.problem().message());
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+      assertEquals("parse-arguments", failure.command());
+      assertEquals("--request and --response must not point to the same path", failure.message());
     } finally {
       Files.deleteIfExists(path);
     }
@@ -748,6 +753,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   @Test
   void rejectsGetWindowWhenCellCountExceedsLimit() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -774,16 +780,16 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                             ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals("execute", failure.command());
     assertTrue(
-        failure.problem().message().contains("rowCount * columnCount must not exceed"),
+        failure.message().contains("rowCount * columnCount must not exceed"),
         "message should state the limit");
   }
 }

@@ -21,13 +21,13 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
-import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.util.Optional;
 
 /** Converts structured contract inputs such as drawings, validations, and tables. */

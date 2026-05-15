@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.Objects;
 
 /** Drawing-object commands for pictures, charts, shapes, and embedded payloads. */

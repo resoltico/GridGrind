@@ -13,17 +13,18 @@ import java.util.Optional;
 /** CLI-owned generated example workbook plans used by the CLI and repository fixtures. */
 public final class GridGrindShippedExamples {
   /** One built-in example request emitted by the CLI and mirrored under `examples/`. */
-  public record ShippedExample(String id, String fileName, String summary, WorkbookPlan plan) {
+  public record ShippedExample(
+      String id, String requestFileName, String summary, WorkbookPlan plan) {
     public ShippedExample {
       id = requireNonBlank(id, "id");
       if (!id.equals(id.toUpperCase(Locale.ROOT))) {
         throw new IllegalArgumentException("id must use upper-case discovery tokens");
       }
-      fileName = requireNonBlank(fileName, "fileName");
+      requestFileName = requireNonBlank(requestFileName, "requestFileName");
       summary = requireNonBlank(summary, "summary");
       Objects.requireNonNull(plan, "plan must not be null");
-      if (!fileName.endsWith(".json")) {
-        throw new IllegalArgumentException("fileName must end with .json");
+      if (!requestFileName.endsWith(".json")) {
+        throw new IllegalArgumentException("requestFileName must end with .json");
       }
     }
   }
@@ -33,7 +34,8 @@ public final class GridGrindShippedExamples {
       ExampleWorkspaceMode workspaceMode, List<String> requiredPaths) {
     public ExampleRequirements {
       Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
-      requiredPaths = requiredPaths == null ? List.of() : List.copyOf(requiredPaths);
+      requiredPaths =
+          List.copyOf(Objects.requireNonNull(requiredPaths, "requiredPaths must not be null"));
     }
   }
 
@@ -118,7 +120,7 @@ public final class GridGrindShippedExamples {
     ExampleRequirements requirements = requirementsFor(example);
     return new ShippedExampleEntry(
         example.id(),
-        example.fileName(),
+        "examples/" + example.requestFileName(),
         example.summary(),
         requirements.workspaceMode(),
         requirements.requiredPaths());
@@ -134,14 +136,14 @@ public final class GridGrindShippedExamples {
         entry(
             "CUSTOM_XML",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "custom-xml-assets/custom-xml-mapping.xlsx",
-            "custom-xml-assets/custom-xml-update.xml"),
+            "examples/custom-xml-assets/custom-xml-mapping.xlsx",
+            "examples/custom-xml-assets/custom-xml-update.xml"),
         entry(
             "SOURCE_BACKED_INPUT",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "source-backed-input-assets/title.txt",
-            "source-backed-input-assets/total-formula.txt",
-            "source-backed-input-assets/payload.bin"),
+            "examples/source-backed-input-assets/title.txt",
+            "examples/source-backed-input-assets/total-formula.txt",
+            "examples/source-backed-input-assets/payload.bin"),
         entry("SIGNATURE_LINE", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("LARGE_FILE_MODES", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("CHART", ExampleWorkspaceMode.SELF_CONTAINED),
@@ -149,7 +151,7 @@ public final class GridGrindShippedExamples {
         entry(
             "PACKAGE_SECURITY_INSPECTION",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "package-security-assets/gridgrind-package-security.xlsx"),
+            "examples/package-security-assets/gridgrind-package-security.xlsx"),
         entry("FILE_HYPERLINK_HEALTH", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("INTROSPECTION_ANALYSIS", ExampleWorkspaceMode.SELF_CONTAINED));
   }

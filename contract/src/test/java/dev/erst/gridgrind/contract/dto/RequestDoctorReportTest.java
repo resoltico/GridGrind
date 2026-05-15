@@ -14,7 +14,7 @@ class RequestDoctorReportTest {
   void reportFactoriesNormalizeSeverityAndCopyWarnings() {
     RequestDoctorReport.Summary summary =
         new RequestDoctorReport.Summary(
-            "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
+            "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
     RequestWarning warning = new RequestWarning(0, "step-1", "SET_CELL", "warning");
     List<RequestWarning> mutableWarnings = new java.util.ArrayList<>(List.of(warning));
     GridGrindProblemDetail.Problem problem =
@@ -41,7 +41,7 @@ class RequestDoctorReportTest {
   void reportAndSummaryValidationRejectInconsistentShapes() {
     RequestDoctorReport.Summary summary =
         new RequestDoctorReport.Summary(
-            "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
+            "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0);
     GridGrindProblemDetail.Problem problem =
         GridGrindProblemDetail.Problem.of(
             GridGrindProblemCode.INVALID_REQUEST,
@@ -133,17 +133,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport.Summary(
-                        "NEW",
-                        "NONE",
-                        "FULL_XSSF",
-                        "FULL_XSSF",
-                        "DO_NOT_CALCULATE",
-                        false,
-                        false,
-                        1,
-                        0,
-                        0,
-                        0))
+                        "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 0, 0, 0))
             .getMessage());
     assertEquals(
         "sourceType must not be null",
@@ -151,17 +141,7 @@ class RequestDoctorReportTest {
                 NullPointerException.class,
                 () ->
                     new RequestDoctorReport.Summary(
-                        null,
-                        "NONE",
-                        "FULL_XSSF",
-                        "FULL_XSSF",
-                        "DO_NOT_CALCULATE",
-                        false,
-                        false,
-                        0,
-                        0,
-                        0,
-                        0))
+                        null, "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0))
             .getMessage());
     assertEquals(
         "stepCount must not be negative",
@@ -169,17 +149,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport.Summary(
-                        "NEW",
-                        "NONE",
-                        "FULL_XSSF",
-                        "FULL_XSSF",
-                        "DO_NOT_CALCULATE",
-                        false,
-                        false,
-                        -1,
-                        0,
-                        0,
-                        0))
+                        "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, -1, 0, 0, 0))
             .getMessage());
     assertEquals(
         "sourceType must not be blank",
@@ -187,17 +157,7 @@ class RequestDoctorReportTest {
                 IllegalArgumentException.class,
                 () ->
                     new RequestDoctorReport.Summary(
-                        " ",
-                        "NONE",
-                        "FULL_XSSF",
-                        "FULL_XSSF",
-                        "DO_NOT_CALCULATE",
-                        false,
-                        false,
-                        0,
-                        0,
-                        0,
-                        0))
+                        " ", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0))
             .getMessage());
   }
 
@@ -212,17 +172,19 @@ class RequestDoctorReportTest {
     List<RequestWarning> warningsWithNull = new java.util.ArrayList<>();
     warningsWithNull.add(null);
 
-    RequestDoctorReport invalid =
-        new RequestDoctorReport(
-            GridGrindProtocolVersion.V1,
-            AnalysisSeverity.ERROR,
-            false,
-            Optional.empty(),
-            null,
-            Optional.of(problem));
-
-    assertEquals(GridGrindProtocolVersion.V1, invalid.protocolVersion());
-    assertEquals(List.of(), invalid.warnings());
+    assertEquals(
+        "warnings must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new RequestDoctorReport(
+                        GridGrindProtocolVersion.V1,
+                        AnalysisSeverity.ERROR,
+                        false,
+                        Optional.empty(),
+                        null,
+                        Optional.of(problem)))
+            .getMessage());
     assertEquals(
         "warnings must not contain nulls",
         assertThrows(
@@ -236,7 +198,6 @@ class RequestDoctorReportTest {
                             new RequestDoctorReport.Summary(
                                 "NEW",
                                 "NONE",
-                                "FULL_XSSF",
                                 "FULL_XSSF",
                                 "DO_NOT_CALCULATE",
                                 false,

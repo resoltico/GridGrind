@@ -369,7 +369,11 @@ class GridGrindResponseTest {
   @Test
   void successCopiesAssertionsAndProblemCanCarryAssertionFailure() {
     List<AssertionResult> assertions = new ArrayList<>();
-    assertions.add(new AssertionResult("assert-total", "EXPECT_CELL_VALUE"));
+    assertions.add(
+        new AssertionResult(
+            dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+            "assert-total",
+            "EXPECT_CELL_VALUE"));
 
     GridGrindResponse.Success success =
         GridGrindResponses.success(
@@ -450,7 +454,6 @@ class GridGrindResponseTest {
                             GridGrindProblemCategory.REQUEST,
                             "EXECUTE_STEP",
                             "observed value mismatch")))),
-            List.of(),
             new ExecutionJournal.Outcome(
                 ExecutionJournal.Status.FAILED,
                 1,

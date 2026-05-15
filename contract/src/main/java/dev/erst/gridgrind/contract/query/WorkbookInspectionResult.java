@@ -17,7 +17,8 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
         WorkbookInspectionResult.WorkbookProtectionResult,
         WorkbookInspectionResult.CustomXmlMappingsResult,
         WorkbookInspectionResult.CustomXmlExportResult,
-        WorkbookInspectionResult.NamedRangesResult {
+        WorkbookInspectionResult.NamedRangesResult,
+        WorkbookInspectionResult.SheetsResult {
 
   /** Returns workbook-level summary facts. */
   @JsonTypeName("GET_WORKBOOK_SUMMARY")
@@ -76,6 +77,15 @@ public sealed interface WorkbookInspectionResult extends InspectionIntrospection
     public NamedRangesResult {
       stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
       namedRanges = InspectionResultValidationSupport.copyValues(namedRanges, "namedRanges");
+    }
+  }
+
+  /** Returns sheet names matched by the originating sheet-presence assertion. */
+  @JsonTypeName("GET_SHEETS")
+  record SheetsResult(String stepId, List<String> sheetNames) implements WorkbookInspectionResult {
+    public SheetsResult {
+      stepId = InspectionResultValidationSupport.requireNonBlank(stepId, "stepId");
+      sheetNames = InspectionResultValidationSupport.copyValues(sheetNames, "sheetNames");
     }
   }
 }

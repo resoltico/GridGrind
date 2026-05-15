@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;

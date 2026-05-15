@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationStructureSupport;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -376,25 +377,25 @@ final class ExcelRowColumnStructureController {
         sheet, columns, delta);
   }
 
-  void rejectDestructiveNamedRangesForRowDelete(
+  void rejectDestructiveNamedRangesForRowDelete( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows) {
     ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowDelete(
         workbook, sheet, rows);
   }
 
-  void rejectDestructiveNamedRangesForRowShift(
+  void rejectDestructiveNamedRangesForRowShift( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows, int delta) {
     ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForRowShift(
         workbook, sheet, rows, delta);
   }
 
-  void rejectDestructiveNamedRangesForColumnDelete(
+  void rejectDestructiveNamedRangesForColumnDelete( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns) {
     ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnDelete(
         workbook, sheet, columns);
   }
 
-  void rejectDestructiveNamedRangesForColumnShift(
+  void rejectDestructiveNamedRangesForColumnShift( // LIM-018
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
     ExcelRowColumnStructureGuardSupport.rejectDestructiveNamedRangesForColumnShift(
         workbook, sheet, columns, delta);

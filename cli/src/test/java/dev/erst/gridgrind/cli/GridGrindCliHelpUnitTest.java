@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,7 +16,7 @@ class GridGrindCliHelpUnitTest {
   void requestTemplateTextRendersUtf8Bytes() {
     assertEquals(
         "{\"protocolVersion\":\"V1\"}",
-        GridGrindCliHelp.requestTemplateText(
+        GridGrindCli.requestTemplateText(
             () -> "{\"protocolVersion\":\"V1\"}".getBytes(StandardCharsets.UTF_8)));
   }
 
@@ -25,7 +26,7 @@ class GridGrindCliHelpUnitTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindCliHelp.requestTemplateText(
+                GridGrindCli.requestTemplateText(
                     () -> {
                       throw new IOException("synthetic failure");
                     }));
@@ -44,6 +45,41 @@ class GridGrindCliHelpUnitTest {
         "Docs:",
         GridGrindCliHelp.renderReferences(
             new CliSurface.CliReferenceSection("Docs", List.of()), "https://example.invalid/root"));
+  }
+
+  @Test
+  void renderHelpersWrapLongReferenceDescriptions() {
+    String rendered =
+        GridGrindCliHelp.renderReferences(
+            new CliSurface.CliReferenceSection(
+                "Docs",
+                List.of(
+                    new CliSurface.ReferenceEntry(
+                        "Quick Start",
+                        "QUICK_START.md",
+                        "One deliberately long description that must wrap across multiple help"
+                            + " lines for coverage because the renderer should emit at least one"
+                            + " continuation line when public help prose exceeds the configured"
+                            + " terminal width."))),
+            "https://example.invalid/root");
+
+    java.util.List<String> lines = rendered.lines().toList();
+    assertTrue(lines.size() >= 4);
+    assertTrue(lines.get(2).startsWith("    "));
+    assertTrue(lines.get(3).startsWith("    "));
+  }
+
+  @Test
+  void renderHelpersKeepOversizedSingleTokensOnTheirCurrentLine() {
+    String longToken = "x".repeat(160);
+    String rendered =
+        GridGrindCliHelp.renderReferences(
+            new CliSurface.CliReferenceSection(
+                "Docs",
+                List.of(new CliSurface.ReferenceEntry("Quick Start", "QUICK_START.md", longToken))),
+            "https://example.invalid/root");
+
+    assertTrue(rendered.contains("\n    " + longToken));
   }
 
   @Test

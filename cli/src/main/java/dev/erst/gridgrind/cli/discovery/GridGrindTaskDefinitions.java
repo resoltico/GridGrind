@@ -36,18 +36,21 @@ final class GridGrindTaskDefinitions {
   private static List<TaskEntry> buildEntries() {
     List<TaskEntry> entries =
         List.of(
-                GridGrindReportingTaskDefinitions.entries(),
-                GridGrindWorkbookTaskDefinitions.entries())
-            .stream()
-            .flatMap(List::stream)
-            .toList();
+            TabularReportTaskDefinition.entry(),
+            DashboardTaskDefinition.entry(),
+            DataEntryWorkflowTaskDefinition.entry(),
+            PivotReportTaskDefinition.entry(),
+            AuditExistingWorkbookTaskDefinition.entry(),
+            CustomXmlWorkflowTaskDefinition.entry(),
+            DrawingAndSignatureWorkflowTaskDefinition.entry(),
+            WorkbookMaintenanceTaskDefinition.entry());
     validateTaskCapabilityReferences(entries);
     return entries;
   }
 
   static void validateTaskCapabilityReferences(List<TaskEntry> tasks) {
     for (TaskEntry task : tasks) {
-      for (TaskPhase phase : task.phases()) {
+      for (TaskPhase phase : task.workflow().phases()) {
         for (TaskCapabilityRef capabilityRef : phase.capabilityRefs()) {
           if (GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId()).isEmpty()) {
             throw new IllegalStateException(

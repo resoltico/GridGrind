@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

@@ -12,6 +12,7 @@ final class GridGrindProtocolCatalogNestedTypeGroups {
               GridGrindProtocolCatalogSourceAndReportNestedTypeGroups.SOURCE_AND_REPORT_GROUPS,
               GridGrindProtocolCatalogWorkbookInputNestedTypeGroups.WORKBOOK_INPUT_GROUPS,
               GridGrindProtocolCatalogSelectorNestedTypeGroups.SELECTOR_GROUPS,
+              GridGrindProtocolCatalogExecutionNestedTypeGroups.EXECUTION_GROUPS,
               GridGrindProtocolCatalogChartAndValidationNestedTypeGroups
                   .CHART_AND_VALIDATION_GROUPS)
           .flatMap(List::stream)

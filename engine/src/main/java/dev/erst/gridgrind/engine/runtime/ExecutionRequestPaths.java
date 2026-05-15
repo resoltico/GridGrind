@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot;
-import dev.erst.gridgrind.excel.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -149,7 +151,33 @@ final class ExecutionRequestPaths {
     if (candidate.isAbsolute()) {
       return candidate.toAbsolutePath().normalize();
     }
-    return workingDirectory.toAbsolutePath().normalize().resolve(candidate).normalize();
+    Path base = workingDirectory.toAbsolutePath().normalize();
+    Path normalized = base.resolve(candidate).normalize();
+    if (!normalized.startsWith(base)) { // LIM-025
+      throw new IllegalArgumentException("path must not escape the working directory: " + path);
+    }
+    checkNoSymlinkEscape(path, base, normalized); // LIM-029
+    return normalized;
+  }
+
+  private static void checkNoSymlinkEscape(String original, Path base, Path normalized) {
+    Path current = base;
+    for (Path component : base.relativize(normalized)) { // LIM-029
+      current = current.resolve(component);
+      if (!Files.isSymbolicLink(current)) {
+        continue;
+      }
+      try {
+        Path real = current.toRealPath();
+        if (!real.startsWith(base.toRealPath())) {
+          throw new IllegalArgumentException(
+              "path must not escape the working directory: " + original);
+        }
+      } catch (IOException e) {
+        throw new IllegalArgumentException(
+            "path must not escape the working directory: " + original, e);
+      }
+    }
   }
 
   private static @Nullable String normalizedPersistencePath(

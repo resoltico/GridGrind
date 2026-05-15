@@ -6,8 +6,8 @@ import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
@@ -30,6 +30,8 @@ final class ExecutionCalculationSupport {
     CalculationPolicyInput policy = request.calculationPolicy();
     CalculationPolicyInput effectivePolicy = CalculationPolicyExecutor.normalize(policy);
     if (effectivePolicy.isDefault()) {
+      journal.markCalculationPreflightNotRequested();
+      journal.markCalculationExecutionNotRequested();
       return new CalculationExecutionOutcome(
           CalculationPolicyExecutor.notRequestedReport(effectivePolicy), Optional.empty());
     }
@@ -61,6 +63,8 @@ final class ExecutionCalculationSupport {
             Optional.of(problem));
       }
       preflightPhase.succeed();
+    } else {
+      journal.markCalculationPreflightNotRequested();
     }
 
     ExecutionJournalRecorder.PhaseHandle executionPhase = journal.beginCalculationExecution();
@@ -86,9 +90,12 @@ final class ExecutionCalculationSupport {
     CalculationPolicyInput policy = request.calculationPolicy();
     CalculationPolicyInput effectivePolicy = CalculationPolicyExecutor.normalize(policy);
     if (effectivePolicy.isDefault()) {
+      journal.markCalculationPreflightNotRequested();
+      journal.markCalculationExecutionNotRequested();
       return new CalculationExecutionOutcome(
           CalculationPolicyExecutor.notRequestedReport(effectivePolicy), Optional.empty());
     }
+    journal.markCalculationPreflightNotRequested();
     ExecutionJournalRecorder.PhaseHandle executionPhase = journal.beginCalculationExecution();
     try {
       streamingCalculationApplier.apply(writer);

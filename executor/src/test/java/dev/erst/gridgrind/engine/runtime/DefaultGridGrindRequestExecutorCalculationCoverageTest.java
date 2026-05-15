@@ -30,9 +30,9 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.nio.file.Files;
 import java.util.Iterator;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -77,10 +77,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
         request(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/calculation-event-read.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            executionPolicy(
-                new ExecutionModeInput(
-                    ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
-                calculateAll()),
+            executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
             null,
             java.util.List.of(),
             java.util.List.of(
@@ -91,7 +88,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
-            request, DefaultGridGrindRequestExecutor.executionModes(request)));
+            request, DefaultGridGrindRequestExecutor.executionMode(request)));
   }
 
   @Test
@@ -113,11 +110,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    executionPolicy(
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
-                        markRecalculateOnOpen()),
+                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
                     null,
                     java.util.List.of(
                         mutate(

@@ -66,6 +66,97 @@ class ProtocolResidualCoverageTest {
                     new DataValidationRuleInput.WholeNumber(
                         ExcelComparisonOperator.GREATER_THAN, "7", Optional.of("9")))
             .getMessage());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.CustomFormula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationRuleInput.FormulaList("=dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.WholeNumber(
+                ExcelComparisonOperator.BETWEEN,
+                "1",
+                Optional.of("DDE(\"cmd\",\"/C calc\",\"\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.FormulaRule(
+                "DDE(\"cmd\",\"/C calc\",\"\")", false, Optional.empty()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.CellValueRule(
+                ExcelComparisonOperator.BETWEEN,
+                "1",
+                Optional.of("DDE(\"cmd\",\"/C calc\",\"\")"),
+                false,
+                Optional.empty()));
+  }
+
+  @Test
+  void rejectsWebserviceFormulaInjectionInAllCaseForms() { // LIM-031
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellInput.Formula(
+                TextSourceInput.inline("WEBSERVICE(\"https://evil.example.com\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellInput.Formula(
+                TextSourceInput.inline("=webservice(\"https://evil.example.com\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ArrayFormulaInput(
+                TextSourceInput.inline("{=WEBSERVICE(\"https://evil.example.com\")}")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.CustomFormula("WEBSERVICE(\"https://evil.example.com\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.FormulaRule(
+                "WEBSERVICE(\"https://evil.example.com\")", false, Optional.empty()));
+  }
+
+  @Test
+  void rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate() { // LIM-032, LIM-033, LIM-034
+    // LIM-032 — named-range formula target
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("=DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("WEBSERVICE(\"https://evil.example.com\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> NamedRangeTarget.formula("webservice(\"https://evil.example.com\")"));
+
+    // LIM-033 — chart title formula
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartTitleInput.Formula("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartTitleInput.Formula("WEBSERVICE(\"https://evil.example.com\")"));
+
+    // LIM-034 — UDF formula template (defense-in-depth; POI evaluator won't execute these
+    //           server-side, but they must not silently end up in future execution paths)
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new FormulaUdfFunctionInput(
+                "MY_FUNC", 0, 0, "WEBSERVICE(\"https://evil.example.com\")"));
   }
 
   @Test

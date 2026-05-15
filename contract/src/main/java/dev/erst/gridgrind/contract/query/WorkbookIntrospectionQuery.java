@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.query;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
@@ -51,6 +53,18 @@ public sealed interface WorkbookIntrospectionQuery extends InspectionQuery.Intro
     /** Creates one UTF-8 export request without requiring the caller to pass the encoding. */
     public ExportCustomXmlMapping(CustomXmlMappingLocator mapping, boolean validateSchema) {
       this(mapping, validateSchema, StandardCharsets.UTF_8.name());
+    }
+
+    /** Reads one export request while defaulting omitted flags and encoding. */
+    @JsonCreator
+    public ExportCustomXmlMapping(
+        @JsonProperty("mapping") CustomXmlMappingLocator mapping,
+        @JsonProperty("validateSchema") Boolean validateSchema,
+        @JsonProperty("encoding") String encoding) {
+      this(
+          mapping,
+          Boolean.TRUE.equals(validateSchema),
+          encoding == null ? StandardCharsets.UTF_8.name() : encoding);
     }
 
     public ExportCustomXmlMapping {

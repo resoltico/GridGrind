@@ -6,16 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 
 /** Focused coverage tests for CLI stdin interactivity detection. */
-class StandardInputInteractivityTest {
+class StandardInputInteractivityTest extends GridGrindCliTestSupport {
   @Test
   void currentProcessFactoryReturnsAnInstance() {
     StandardInputInteractivity interactivity = StandardInputInteractivity.currentProcess();
@@ -105,31 +106,32 @@ class StandardInputInteractivityTest {
   @Test
   void productionConstructorUsesInteractiveDetectorWithoutReadingProvidedInput() throws Exception {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     try (InputStream blockingStdin =
         new InputStream() {
           @Override
           public int read() {
-            throw new AssertionError("interactive no-arg help must not read stdin");
+            throw new AssertionError("interactive no-arg execution must not read stdin");
           }
 
           @Override
           public int read(byte[] b, int off, int len) {
-            throw new AssertionError("interactive no-arg help must not read stdin");
+            throw new AssertionError("interactive no-arg execution must not read stdin");
           }
         }) {
       int exitCode =
-          new GridGrindCli(
+          GridGrindCli.forTesting(
                   (ignoredRequest, ignoredBindings, ignoredSink) -> {
-                    throw new AssertionError("interactive no-arg help must not execute a request");
+                    throw new AssertionError(
+                        "interactive no-arg execution must not execute a request");
                   },
-                  new CliRequestReader(),
-                  new CliResponseWriter(),
-                  new CliJournalWriter(),
                   () -> true)
-              .run(new String[0], blockingStdin, stdout);
+              .run(new String[0], blockingStdin, stdout, stderr);
 
-      assertEquals(0, exitCode);
-      assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("Usage:"));
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+      assertEquals(2, exitCode);
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+      assertTrue(failure.message().contains("No request JSON was provided."));
     }
   }
 }

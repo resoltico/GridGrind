@@ -50,9 +50,9 @@ public record AutofilterSortStateInput(
       @JsonProperty("conditions") List<AutofilterSortConditionInput> conditions) {
     this(
         range,
-        Objects.requireNonNull(caseSensitive, "caseSensitive must not be null").booleanValue(),
-        Objects.requireNonNull(columnSort, "columnSort must not be null").booleanValue(),
-        Objects.requireNonNull(sortMethod, "sortMethod must not be null"),
+        Boolean.TRUE.equals(caseSensitive),
+        Boolean.TRUE.equals(columnSort),
+        sortMethod == null ? Optional.empty() : sortMethod,
         conditions);
   }
 

@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Objects;
 import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Shared JSON codec for CLI-owned discovery surfaces. */
@@ -29,18 +30,6 @@ public final class GridGrindCliJson {
     return JSON_MAPPER.readValue(nonClosing(inputStream), TaskCatalog.class);
   }
 
-  /** Reads one task-plan template from UTF-8 JSON bytes. */
-  public static TaskPlanTemplate readTaskPlanTemplate(byte[] bytes) throws IOException {
-    Objects.requireNonNull(bytes, "bytes must not be null");
-    return JSON_MAPPER.readValue(bytes, TaskPlanTemplate.class);
-  }
-
-  /** Reads one task-plan template from a caller-owned input stream without closing it. */
-  public static TaskPlanTemplate readTaskPlanTemplate(InputStream inputStream) throws IOException {
-    Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return JSON_MAPPER.readValue(nonClosing(inputStream), TaskPlanTemplate.class);
-  }
-
   /** Reads one keyword-match report from UTF-8 JSON bytes. */
   public static TaskKeywordMatchReport readTaskKeywordMatchReport(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
@@ -60,6 +49,12 @@ public final class GridGrindCliJson {
     return JSON_MAPPER.readValue(bytes, ShippedExampleCatalog.class);
   }
 
+  /** Reads one CLI failure report from UTF-8 JSON bytes. */
+  public static CliFailureReport readCliFailureReport(byte[] bytes) throws IOException {
+    Objects.requireNonNull(bytes, "bytes must not be null");
+    return JSON_MAPPER.readValue(bytes, CliFailureReport.class);
+  }
+
   /** Reads one built-in example catalog from a caller-owned input stream without closing it. */
   public static ShippedExampleCatalog readShippedExampleCatalog(InputStream inputStream)
       throws IOException {
@@ -67,14 +62,21 @@ public final class GridGrindCliJson {
     return JSON_MAPPER.readValue(nonClosing(inputStream), ShippedExampleCatalog.class);
   }
 
+  /** Reads one CLI failure report from a caller-owned input stream without closing it. */
+  public static CliFailureReport readCliFailureReport(InputStream inputStream) throws IOException {
+    Objects.requireNonNull(inputStream, "inputStream must not be null");
+    return JSON_MAPPER.readValue(nonClosing(inputStream), CliFailureReport.class);
+  }
+
+  /** Reads one generic JSON tree from UTF-8 bytes. */
+  public static JsonNode readTree(byte[] bytes) throws IOException {
+    Objects.requireNonNull(bytes, "bytes must not be null");
+    return JSON_MAPPER.readTree(bytes);
+  }
+
   /** Writes one task catalog to UTF-8 JSON bytes. */
   public static byte[] writeTaskCatalogBytes(TaskCatalog catalog) throws IOException {
     return writeBytes(catalog);
-  }
-
-  /** Writes one task-plan template to UTF-8 JSON bytes. */
-  public static byte[] writeTaskPlanTemplateBytes(TaskPlanTemplate template) throws IOException {
-    return writeBytes(template);
   }
 
   /** Writes one keyword-match report to UTF-8 JSON bytes. */
@@ -89,6 +91,11 @@ public final class GridGrindCliJson {
     return writeBytes(catalog);
   }
 
+  /** Writes one CLI failure report to UTF-8 JSON bytes. */
+  public static byte[] writeCliFailureReportBytes(CliFailureReport report) throws IOException {
+    return writeBytes(report);
+  }
+
   /** Writes one task entry as JSON without closing the caller-owned output stream. */
   public static void writeTaskEntry(OutputStream outputStream, TaskEntry entry) throws IOException {
     writeValue(outputStream, entry);
@@ -98,12 +105,6 @@ public final class GridGrindCliJson {
   public static void writeTaskCatalog(OutputStream outputStream, TaskCatalog catalog)
       throws IOException {
     writeValue(outputStream, catalog);
-  }
-
-  /** Writes one task-plan template as JSON without closing the caller-owned output stream. */
-  public static void writeTaskPlanTemplate(OutputStream outputStream, TaskPlanTemplate template)
-      throws IOException {
-    writeValue(outputStream, template);
   }
 
   /** Writes one keyword-match report as JSON without closing the caller-owned output stream. */
@@ -116,6 +117,12 @@ public final class GridGrindCliJson {
   public static void writeShippedExampleCatalog(
       OutputStream outputStream, ShippedExampleCatalog catalog) throws IOException {
     writeValue(outputStream, catalog);
+  }
+
+  /** Writes one CLI failure report as JSON without closing the caller-owned output stream. */
+  public static void writeCliFailureReport(OutputStream outputStream, CliFailureReport report)
+      throws IOException {
+    writeValue(outputStream, report);
   }
 
   private static byte[] writeBytes(Object value) throws IOException {

@@ -4,10 +4,11 @@ import java.util.Objects;
 import org.apache.poi.ss.usermodel.Cell;
 
 /** Centralizes authored, rewritten, and scratch formula writes behind consistent errors. */
-final class ExcelFormulaWriteSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelFormulaWriteSupport {
   private ExcelFormulaWriteSupport() {}
 
-  static void setAuthoredFormula(
+  public static void setAuthoredFormula(
       Cell cell,
       String formula,
       ExcelFormulaRuntime formulaRuntime,
@@ -25,7 +26,7 @@ final class ExcelFormulaWriteSupport {
     }
   }
 
-  static void setAuthoredFormula(Cell cell, String formula) {
+  public static void setAuthoredFormula(Cell cell, String formula) {
     Objects.requireNonNull(cell, "cell must not be null");
     Objects.requireNonNull(formula, "formula must not be null");
     String sheetName = cell.getSheet().getSheetName();

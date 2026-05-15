@@ -2,7 +2,6 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,80 +12,66 @@ import dev.erst.gridgrind.cli.discovery.TaskExecutionProfile;
 import dev.erst.gridgrind.cli.discovery.TaskMutationMode;
 import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhase;
-import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
-import dev.erst.gridgrind.cli.discovery.TaskPlanTemplate;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
+import dev.erst.gridgrind.cli.discovery.TaskTestFixtures;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.JsonNodeFactory;
+import tools.jackson.databind.node.ObjectNode;
 
-/** Tests for CLI-owned starter task-plan scaffolds derived from task descriptors. */
+/** Tests for CLI-owned starter requests derived from task descriptors. */
 class GridGrindTaskPlannerTest {
   @Test
-  void plannerBuildsDashboardStarterTemplate() {
-    TaskPlanTemplate template = GridGrindTaskPlanner.templateFor("DASHBOARD");
+  void plannerBuildsDashboardStarterRequest() {
+    WorkbookPlan request = GridGrindTaskPlanner.requestFor("DASHBOARD");
 
-    assertEquals("DASHBOARD", template.task().id());
-    assertInstanceOf(WorkbookPlan.WorkbookSource.New.class, template.requestTemplate().source());
-    WorkbookPlan.WorkbookPersistence.SaveAs persistence =
-        assertInstanceOf(
-            WorkbookPlan.WorkbookPersistence.SaveAs.class,
-            template.requestTemplate().persistence());
-    assertTrue(persistence.path().endsWith(".xlsx"));
-    assertTrue(persistence.path().contains("dashboard"));
-    assertTrue(template.requestTemplate().steps().isEmpty());
-    assertTrue(
-        template.authoringNotes().stream()
-            .anyMatch(note -> note.contains("source and persistence are scaffolded")));
-    assertTrue(
-        template.authoringNotes().stream().anyMatch(note -> note.contains("output workbook path")));
+    assertEquals("NEW", sourceType(request));
+    assertEquals("SAVE_AS", persistenceType(request));
+    assertTrue(outputPath(request).endsWith(".xlsx"));
+    assertTrue(outputPath(request).contains("dashboard"));
+    assertFalse(steps(request).isEmpty());
+    assertTrue(firstStep(request).has("target"));
+    assertTrue(firstStep(request).has("action") || firstStep(request).has("query"));
+    assertEquals("phase-1-step-1", textField(firstStep(request), "stepId"));
+    assertTrue(GridGrindEngine.requestDoctor().diagnose(request).valid());
   }
 
   @Test
-  void plannerBuildsAuditStarterTemplate() {
-    TaskPlanTemplate template = GridGrindTaskPlanner.templateFor("AUDIT_EXISTING_WORKBOOK");
+  void plannerBuildsAuditStarterRequest() {
+    WorkbookPlan request = GridGrindTaskPlanner.requestFor("AUDIT_EXISTING_WORKBOOK");
 
-    WorkbookPlan.WorkbookSource.ExistingFile source =
-        assertInstanceOf(
-            WorkbookPlan.WorkbookSource.ExistingFile.class, template.requestTemplate().source());
-    assertTrue(source.path().endsWith(".xlsx"));
-    assertTrue(source.path().contains("audit-existing-workbook"));
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.None.class, template.requestTemplate().persistence());
-    assertTrue(template.requestTemplate().steps().isEmpty());
-    assertTrue(
-        template.authoringNotes().stream().anyMatch(note -> note.contains("non-destructive")));
+    assertEquals("EXISTING", sourceType(request));
+    assertTrue(inputPath(request).endsWith(".xlsx"));
+    assertTrue(inputPath(request).contains("audit-existing-workbook"));
+    assertEquals("NONE", persistenceType(request));
+    assertFalse(steps(request).isEmpty());
+    assertTrue(firstStep(request).has("query"));
   }
 
   @Test
-  void plannerCarriesTaskPitfallsIntoSpecializedExistingWorkbookTemplates() {
-    TaskPlanTemplate customXml = GridGrindTaskPlanner.templateFor("CUSTOM_XML_WORKFLOW");
-    TaskPlanTemplate maintenance = GridGrindTaskPlanner.templateFor("WORKBOOK_MAINTENANCE");
+  void plannerCarriesExistingWorkbookAndExternalPayloadPlaceholders() {
+    WorkbookPlan customXml = GridGrindTaskPlanner.requestFor("CUSTOM_XML_WORKFLOW");
+    WorkbookPlan maintenance = GridGrindTaskPlanner.requestFor("WORKBOOK_MAINTENANCE");
 
-    assertInstanceOf(
-        WorkbookPlan.WorkbookSource.ExistingFile.class, customXml.requestTemplate().source());
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.SaveAs.class, customXml.requestTemplate().persistence());
-    assertTrue(customXml.requestTemplate().steps().isEmpty());
-    assertTrue(
-        customXml.authoringNotes().stream()
-            .anyMatch(note -> note.contains("IMPORT_CUSTOM_XML_MAPPING requires an existing")));
+    assertEquals("EXISTING", sourceType(customXml));
+    assertEquals("SAVE_AS", persistenceType(customXml));
+    assertFalse(steps(customXml).isEmpty());
 
-    assertInstanceOf(
-        WorkbookPlan.WorkbookSource.ExistingFile.class, maintenance.requestTemplate().source());
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.SaveAs.class, maintenance.requestTemplate().persistence());
-    assertTrue(maintenance.requestTemplate().steps().isEmpty());
-    assertTrue(
-        maintenance.authoringNotes().stream()
-            .anyMatch(note -> note.contains("copy-sheet requires an existing source sheet")));
+    assertEquals("EXISTING", sourceType(maintenance));
+    assertEquals("SAVE_AS", persistenceType(maintenance));
+    assertFalse(steps(maintenance).isEmpty());
+    assertTrue(outputPath(maintenance).contains("workbook-maintenance"));
   }
 
   @Test
   void plannerRejectsUnknownAndIncompatibleTaskDefaults() {
     IllegalArgumentException unknownTask =
         assertThrows(
-            IllegalArgumentException.class, () -> GridGrindTaskPlanner.templateFor("BOGUS_TASK"));
+            IllegalArgumentException.class, () -> GridGrindTaskPlanner.requestFor("BOGUS_TASK"));
     assertTrue(unknownTask.getMessage().contains("Unknown task id"));
 
     TaskEntry invalidOverwriteTask =
@@ -100,23 +85,25 @@ class GridGrindTaskPlannerTest {
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
     IllegalStateException invalidOverwrite =
         assertThrows(
-            IllegalStateException.class, () -> GridGrindTaskPlanner.planFor(invalidOverwriteTask));
+            IllegalStateException.class,
+            () -> GridGrindTaskPlanner.requestFor(invalidOverwriteTask));
     assertTrue(invalidOverwrite.getMessage().contains("cannot plan OVERWRITE persistence"));
   }
 
   @Test
   void plannerRejectsNullAndBlankTaskIds() {
     NullPointerException nullTaskId =
-        assertThrows(NullPointerException.class, () -> GridGrindTaskPlanner.templateFor(null));
+        assertThrows(
+            NullPointerException.class, () -> GridGrindTaskPlanner.requestFor((String) null));
     assertEquals("taskId must not be null", nullTaskId.getMessage());
 
     IllegalArgumentException blankTaskId =
-        assertThrows(IllegalArgumentException.class, () -> GridGrindTaskPlanner.templateFor(" "));
+        assertThrows(IllegalArgumentException.class, () -> GridGrindTaskPlanner.requestFor(" "));
     assertEquals("taskId must not be blank", blankTaskId.getMessage());
   }
 
   @Test
-  void plannerBuildsOverwriteStarterTemplateForExistingWorkbookTasks() {
+  void plannerBuildsOverwriteStarterRequestForExistingWorkbookTasks() {
     TaskEntry overwriteTask =
         task(
             "OVERWRITE_EXISTING",
@@ -127,20 +114,17 @@ class GridGrindTaskPlannerTest {
                 TaskAssetMode.SELF_CONTAINED),
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
 
-    TaskPlanTemplate template = GridGrindTaskPlanner.planFor(overwriteTask);
+    WorkbookPlan request = GridGrindTaskPlanner.requestFor(overwriteTask);
 
-    WorkbookPlan.WorkbookSource.ExistingFile source =
-        assertInstanceOf(
-            WorkbookPlan.WorkbookSource.ExistingFile.class, template.requestTemplate().source());
-    assertTrue(source.path().endsWith(".xlsx"));
-    assertTrue(source.path().contains("overwrite-existing"));
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.OverwriteSource.class,
-        template.requestTemplate().persistence());
+    assertEquals("EXISTING", sourceType(request));
+    assertTrue(inputPath(request).endsWith(".xlsx"));
+    assertTrue(inputPath(request).contains("overwrite-existing"));
+    assertEquals("OVERWRITE", persistenceType(request));
+    assertFalse(steps(request).isEmpty());
   }
 
   @Test
-  void plannerBuildsGenericTemplatesForAdHocNoneAndSaveAsTasks() {
+  void plannerBuildsGenericRequestsForAdHocNoneAndSaveAsTasks() {
     TaskEntry noneTask =
         task(
             "AD_HOC_DISCOVERY",
@@ -160,40 +144,29 @@ class GridGrindTaskPlannerTest {
                 TaskAssetMode.SELF_CONTAINED),
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
 
-    TaskPlanTemplate noneTemplate = GridGrindTaskPlanner.planFor(noneTask);
-    TaskPlanTemplate saveAsTemplate = GridGrindTaskPlanner.planFor(saveAsTask);
-    String noneNotes = String.join("\n", noneTemplate.authoringNotes());
-    String saveAsNotes = String.join("\n", saveAsTemplate.authoringNotes());
+    WorkbookPlan noneRequest = GridGrindTaskPlanner.requestFor(noneTask);
+    WorkbookPlan saveAsRequest = GridGrindTaskPlanner.requestFor(saveAsTask);
 
-    assertInstanceOf(
-        WorkbookPlan.WorkbookSource.New.class, noneTemplate.requestTemplate().source());
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.None.class, noneTemplate.requestTemplate().persistence());
-    assertTrue(noneTemplate.requestTemplate().steps().isEmpty());
-    assertTrue(noneNotes.contains("non-destructive"));
+    assertEquals("NEW", sourceType(noneRequest));
+    assertEquals("NONE", persistenceType(noneRequest));
+    assertFalse(steps(noneRequest).isEmpty());
 
-    WorkbookPlan.WorkbookSource.ExistingFile existingSource =
-        assertInstanceOf(
-            WorkbookPlan.WorkbookSource.ExistingFile.class,
-            saveAsTemplate.requestTemplate().source());
-    WorkbookPlan.WorkbookPersistence.SaveAs saveAs =
-        assertInstanceOf(
-            WorkbookPlan.WorkbookPersistence.SaveAs.class,
-            saveAsTemplate.requestTemplate().persistence());
-    assertEquals("todo-ad-hoc-export-input.xlsx", existingSource.path());
-    assertEquals("todo-ad-hoc-export-output.xlsx", saveAs.path());
-    assertTrue(saveAsTemplate.requestTemplate().steps().isEmpty());
-    assertFalse(saveAsNotes.contains("non-destructive"));
+    assertEquals("EXISTING", sourceType(saveAsRequest));
+    assertEquals("starter-ad-hoc-export-input.xlsx", inputPath(saveAsRequest));
+    assertEquals("SAVE_AS", persistenceType(saveAsRequest));
+    assertEquals("starter-ad-hoc-export-output.xlsx", outputPath(saveAsRequest));
+    assertFalse(steps(saveAsRequest).isEmpty());
   }
 
   @Test
-  void plannerRejectsNullTasksAndCarriesExternalAssetNotes() {
+  void plannerRejectsNullTasksAndCarriesExternalAssetRequests() {
     NullPointerException nullTask =
-        assertThrows(NullPointerException.class, () -> GridGrindTaskPlanner.planFor(null));
+        assertThrows(
+            NullPointerException.class, () -> GridGrindTaskPlanner.requestFor((TaskEntry) null));
     assertEquals("task must not be null", nullTask.getMessage());
 
-    TaskPlanTemplate externalPayloadTemplate =
-        GridGrindTaskPlanner.planFor(
+    WorkbookPlan externalPayloadRequest =
+        GridGrindTaskPlanner.requestFor(
             task(
                 "EXTERNAL_PAYLOAD_IMPORT",
                 new TaskExecutionProfile(
@@ -207,29 +180,66 @@ class GridGrindTaskPlannerTest {
                             new TaskCapabilityRef(
                                 "mutationActionTypes", "IMPORT_CUSTOM_XML_MAPPING"))))));
 
-    assertTrue(
-        externalPayloadTemplate.authoringNotes().stream()
-            .anyMatch(note -> note.contains("external payload files")));
+    assertEquals("EXISTING", sourceType(externalPayloadRequest));
+    assertEquals("SAVE_AS", persistenceType(externalPayloadRequest));
+  }
+
+  @Test
+  void plannerWrapsSerializationFailuresFromInvalidGeneratedTrees() {
+    ObjectNode cyclic = JsonNodeFactory.instance.objectNode();
+    cyclic.put("protocolVersion", "V1");
+    cyclic.set("self", cyclic);
+
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () -> GridGrindTaskPlanner.decodedRequest("BROKEN_TASK", cyclic));
+
+    assertEquals("CLI-generated task request is invalid for BROKEN_TASK", failure.getMessage());
   }
 
   private static TaskEntry task(
       String id, TaskExecutionProfile executionProfile, List<TaskPhase> phases) {
-    return new TaskEntry(
-        id,
-        "summary",
-        executionProfile,
-        List.of(),
-        List.of(),
-        List.of("office"),
-        List.of("outcome"),
-        List.of("input"),
-        List.of("feature"),
-        phases,
-        List.of("pitfall"));
+    return TaskTestFixtures.task(id, executionProfile, phases);
   }
 
   private static TaskPhase phase(List<TaskCapabilityRef> capabilityRefs) {
-    return new TaskPhase(
-        TaskPhasePurpose.AUTHOR, "Phase", "Objective", capabilityRefs, List.of("note"));
+    return TaskTestFixtures.phase(capabilityRefs);
+  }
+
+  private static String sourceType(WorkbookPlan request) {
+    return textField(requestTree(request).path("source"), "type");
+  }
+
+  private static String persistenceType(WorkbookPlan request) {
+    return textField(requestTree(request).path("persistence"), "type");
+  }
+
+  private static String inputPath(WorkbookPlan request) {
+    return textField(requestTree(request).path("source"), "path");
+  }
+
+  private static String outputPath(WorkbookPlan request) {
+    return textField(requestTree(request).path("persistence"), "path");
+  }
+
+  private static List<JsonNode> steps(WorkbookPlan request) {
+    List<JsonNode> steps = new java.util.ArrayList<>();
+    for (JsonNode step : requestTree(request).path("steps")) {
+      steps.add(step);
+    }
+    return List.copyOf(steps);
+  }
+
+  private static JsonNode firstStep(WorkbookPlan request) {
+    return steps(request).getFirst();
+  }
+
+  private static ObjectNode requestTree(WorkbookPlan request) {
+    return GridGrindJson.requestTree(request);
+  }
+
+  private static String textField(JsonNode node, String fieldName) {
+    return java.util.Objects.requireNonNull(node.path(fieldName).stringValue());
   }
 }

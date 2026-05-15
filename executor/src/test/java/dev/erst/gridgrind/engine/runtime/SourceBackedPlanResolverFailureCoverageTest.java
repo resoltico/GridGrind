@@ -142,7 +142,9 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     textLoopPlan, new ExecutionInputBindings(workingDirectory)));
-    assertTrue(textLoopFailure.getMessage().contains("Failed to read cell text file"));
+    // LIM-029: circular symlinks are caught as path-escape violations before the read stage;
+    // the message is "Invalid cell text path" rather than "Failed to read cell text file".
+    assertTrue(textLoopFailure.getMessage().contains("Invalid cell text path"));
 
     WorkbookPlan missingBinaryPlan =
         request(
@@ -186,7 +188,63 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             () ->
                 SourceBackedPlanResolver.resolve(
                     binaryLoopPlan, new ExecutionInputBindings(workingDirectory)));
-    assertTrue(binaryLoopFailure.getMessage().contains("Failed to read picture payload file"));
+    // LIM-029: circular symlinks are caught as path-escape violations before the read stage.
+    assertTrue(binaryLoopFailure.getMessage().contains("Invalid picture payload path"));
+
+    // Exercise the IOException (not NoSuchFileException) path in the text and binary read helpers.
+    // On POSIX systems a mode-000 file passes path-security validation but fails at the actual
+    // read. These blocks are skipped when setReadable returns false (e.g. running as root).
+    Path unreadableTextFile = workingDirectory.resolve("unreadable-text.txt");
+    Files.writeString(unreadableTextFile, "some text content", StandardCharsets.UTF_8);
+    boolean textReadableRevoked = unreadableTextFile.toFile().setReadable(false, false);
+    if (textReadableRevoked) {
+      WorkbookPlan ioTextFailurePlan =
+          request(
+              new WorkbookPlan.WorkbookSource.New(),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              mutations(
+                  mutate(
+                      new CellSelector.ByAddress("Budget", "A1"),
+                      new CellMutationAction.SetCell(
+                          new CellInput.Text(TextSourceInput.utf8File("unreadable-text.txt"))))));
+      InputSourceReadException ioTextFailure =
+          assertThrows(
+              InputSourceReadException.class,
+              () ->
+                  SourceBackedPlanResolver.resolve(
+                      ioTextFailurePlan, new ExecutionInputBindings(workingDirectory)));
+      assertTrue(ioTextFailure.getMessage().contains("Failed to read cell text file"));
+      unreadableTextFile.toFile().setReadable(true, false);
+    }
+
+    Path unreadableBinaryFile = workingDirectory.resolve("unreadable-binary.bin");
+    Files.write(unreadableBinaryFile, new byte[] {1, 2, 3});
+    boolean binaryReadableRevoked = unreadableBinaryFile.toFile().setReadable(false, false);
+    if (binaryReadableRevoked) {
+      WorkbookPlan ioBinaryFailurePlan =
+          request(
+              new WorkbookPlan.WorkbookSource.New(),
+              new WorkbookPlan.WorkbookPersistence.None(),
+              mutations(
+                  mutate(
+                      new SheetSelector.ByName("Budget"),
+                      new DrawingMutationAction.SetPicture(
+                          picture(
+                              "Logo",
+                              new PictureDataInput(
+                                  ExcelPictureFormat.PNG,
+                                  BinarySourceInput.file("unreadable-binary.bin")),
+                              twoCellAnchor(),
+                              null)))));
+      InputSourceReadException ioBinaryFailure =
+          assertThrows(
+              InputSourceReadException.class,
+              () ->
+                  SourceBackedPlanResolver.resolve(
+                      ioBinaryFailurePlan, new ExecutionInputBindings(workingDirectory)));
+      assertTrue(ioBinaryFailure.getMessage().contains("Failed to read picture payload file"));
+      unreadableBinaryFile.toFile().setReadable(true, false);
+    }
 
     WorkbookPlan emptyBinaryPlan =
         request(

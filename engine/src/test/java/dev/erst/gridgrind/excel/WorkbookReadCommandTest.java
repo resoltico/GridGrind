@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

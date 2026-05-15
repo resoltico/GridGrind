@@ -13,8 +13,7 @@
   },
   "execution" : {
     "mode" : {
-      "readMode" : "FULL_XSSF",
-      "writeMode" : "FULL_XSSF"
+      "type" : "FULL_XSSF"
     },
     "journal" : {
       "level" : "NORMAL"

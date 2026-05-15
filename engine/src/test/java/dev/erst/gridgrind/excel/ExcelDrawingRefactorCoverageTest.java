@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -58,7 +61,7 @@ class ExcelDrawingRefactorCoverageTest {
   void extractedChartAndSnapshotHelpersKeepFacadeAndFailureBranchesCovered() throws Throwable {
     assertEquals(
         "'Data Sheet'!$A$1:$B$2",
-        ExcelDrawingChartSupport.normalizeAreaFormulaForPoi("'Data Sheet'!$A$1:'Data Sheet'!$B$2"));
+        ExcelChartSourceSupport.normalizeAreaFormulaForPoi("'Data Sheet'!$A$1:'Data Sheet'!$B$2"));
 
     ExcelDrawingSnapshotSupport.RasterDimensions noImageDimensions =
         ExcelDrawingSnapshotSupport.rasterDimensions(

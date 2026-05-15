@@ -28,7 +28,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Abstracts formula evaluation, caching, and environment setup behind a GridGrind-owned seam. */
-interface ExcelFormulaRuntime extends AutoCloseable {
+public interface ExcelFormulaRuntime extends AutoCloseable {
   Pattern ARGUMENT_PLACEHOLDER_PATTERN =
       Pattern.compile("\\bARG([1-9][0-9]*)\\b", Pattern.CASE_INSENSITIVE);
   String SCRATCH_ARGUMENT_NAME_PREFIX = "_GRIDGRIND_ARG_";

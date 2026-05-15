@@ -6,12 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
-import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskInputKind;
 import dev.erst.gridgrind.cli.discovery.TaskKeywordMatchReport;
 import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
-import dev.erst.gridgrind.cli.discovery.TaskPlanTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -19,28 +17,31 @@ import org.junit.jupiter.api.Test;
 /** Tests for English keyword matching over the CLI-owned task planner. */
 class GridGrindTaskKeywordMatcherTest {
   @Test
-  void keywordMatcherRanksDashboardAuditAndPivotTasksDeterministically() {
+  void keywordMatcherRanksDashboardAuditPivotAndBudgetTasksDeterministically() {
     TaskKeywordMatchReport dashboardReport =
         GridGrindTaskKeywordMatcher.reportFor("Create a monthly sales dashboard with charts");
     TaskKeywordMatchReport auditReport =
         GridGrindTaskKeywordMatcher.reportFor("Audit an existing workbook for health findings");
     TaskKeywordMatchReport pivotReport =
         GridGrindTaskKeywordMatcher.reportFor("build a pivot report from range data");
+    TaskKeywordMatchReport budgetReport =
+        GridGrindTaskKeywordMatcher.reportFor("create budget spreadsheet");
 
-    assertEquals("DASHBOARD", dashboardReport.candidates().getFirst().task().id());
+    assertEquals("DASHBOARD", dashboardReport.candidates().getFirst().taskId());
     assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("dashboard"));
     assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("chart"));
     assertTrue(dashboardReport.suggestedIntentTags().contains("dashboard"));
     assertFalse(dashboardReport.candidates().isEmpty());
 
-    assertEquals("AUDIT_EXISTING_WORKBOOK", auditReport.candidates().getFirst().task().id());
+    assertEquals("AUDIT_EXISTING_WORKBOOK", auditReport.candidates().getFirst().taskId());
     assertTrue(auditReport.candidates().getFirst().matchedTerms().contains("audit"));
     assertTrue(auditReport.candidates().getFirst().matchedTerms().contains("existing"));
 
-    assertEquals("PIVOT_REPORT", pivotReport.candidates().getFirst().task().id());
+    assertEquals("PIVOT_REPORT", pivotReport.candidates().getFirst().taskId());
     assertTrue(pivotReport.candidates().getFirst().matchedTerms().contains("pivot"));
-    assertTrue(
-        pivotReport.candidates().getFirst().starterTemplate().requestTemplate().steps().isEmpty());
+
+    assertEquals("TABULAR_REPORT", budgetReport.candidates().getFirst().taskId());
+    assertTrue(budgetReport.candidates().getFirst().matchedTerms().contains("budget"));
   }
 
   @Test
@@ -51,14 +52,12 @@ class GridGrindTaskKeywordMatcherTest {
         GridGrindTaskKeywordMatcher.reportFor(
             "repair broken workbook comments and copy sheets safely");
 
-    assertEquals("CUSTOM_XML_WORKFLOW", customXmlReport.candidates().getFirst().task().id());
+    assertEquals("CUSTOM_XML_WORKFLOW", customXmlReport.candidates().getFirst().taskId());
     assertTrue(customXmlReport.candidates().getFirst().matchedTerms().contains("xml"));
     assertTrue(customXmlReport.candidates().getFirst().matchedTerms().contains("mapping"));
-    assertTrue(
-        customXmlReport.candidates().getFirst().reasons().stream()
-            .anyMatch(reason -> reason.contains("capability summary")));
+    assertTrue(customXmlReport.candidates().getFirst().matchSources().contains("discovery term"));
 
-    assertEquals("WORKBOOK_MAINTENANCE", maintenanceReport.candidates().getFirst().task().id());
+    assertEquals("WORKBOOK_MAINTENANCE", maintenanceReport.candidates().getFirst().taskId());
     assertTrue(maintenanceReport.candidates().getFirst().matchedTerms().contains("comment"));
     assertTrue(maintenanceReport.candidates().getFirst().matchedTerms().contains("copy"));
     assertFalse(maintenanceReport.candidates().isEmpty());
@@ -85,7 +84,7 @@ class GridGrindTaskKeywordMatcherTest {
   }
 
   @Test
-  void keywordMatcherRejectsNullAndBlankQueries() {
+  void keywordMatcherRejectsNullBlankAndFullyDiscardedQueries() {
     NullPointerException nullQuery =
         assertThrows(NullPointerException.class, () -> GridGrindTaskKeywordMatcher.reportFor(null));
     assertEquals("query must not be null", nullQuery.getMessage());
@@ -93,7 +92,16 @@ class GridGrindTaskKeywordMatcherTest {
     IllegalArgumentException blankQuery =
         assertThrows(
             IllegalArgumentException.class, () -> GridGrindTaskKeywordMatcher.reportFor(" "));
-    assertEquals("query must not be blank", blankQuery.getMessage());
+    assertEquals(
+        "query must contain at least one searchable term after normalization",
+        blankQuery.getMessage());
+
+    IllegalArgumentException discardedQuery =
+        assertThrows(
+            IllegalArgumentException.class, () -> GridGrindTaskKeywordMatcher.reportFor("a"));
+    assertEquals(
+        "query must contain at least one searchable term after normalization",
+        discardedQuery.getMessage());
   }
 
   @Test
@@ -123,16 +131,12 @@ class GridGrindTaskKeywordMatcherTest {
 
   @Test
   void suggestedIntentTagsKeepsHighestScoreWhenDuplicateTagsReappear() {
-    TaskEntry dashboardTask = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskPlanTemplate dashboardTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
     List<String> suggestedTags =
         GridGrindTaskKeywordMatcher.suggestedIntentTags(
             List.of("dashboard"),
             List.of(
-                new TaskKeywordMatchReport.Candidate(
-                    dashboardTask, 40, List.of("dashboard"), List.of("high"), dashboardTemplate),
-                new TaskKeywordMatchReport.Candidate(
-                    dashboardTask, 20, List.of("dashboard"), List.of("low"), dashboardTemplate)));
+                candidate("DASHBOARD", 40, List.of("dashboard")),
+                candidate("DASHBOARD", 20, List.of("dashboard"))));
 
     assertEquals(List.copyOf(new java.util.LinkedHashSet<>(suggestedTags)), suggestedTags);
     assertTrue(suggestedTags.contains("dashboard"));
@@ -141,16 +145,12 @@ class GridGrindTaskKeywordMatcherTest {
 
   @Test
   void suggestedIntentTagsReplacesLowerScoreWhenStrongerDuplicateAppearsLater() {
-    TaskEntry dashboardTask = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskPlanTemplate dashboardTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
     List<String> suggestedTags =
         GridGrindTaskKeywordMatcher.suggestedIntentTags(
             List.of("dashboard"),
             List.of(
-                new TaskKeywordMatchReport.Candidate(
-                    dashboardTask, 20, List.of("dashboard"), List.of("low"), dashboardTemplate),
-                new TaskKeywordMatchReport.Candidate(
-                    dashboardTask, 40, List.of("dashboard"), List.of("high"), dashboardTemplate)));
+                candidate("DASHBOARD", 20, List.of("dashboard")),
+                candidate("DASHBOARD", 40, List.of("dashboard"))));
 
     assertEquals(List.copyOf(new java.util.LinkedHashSet<>(suggestedTags)), suggestedTags);
     assertTrue(suggestedTags.contains("dashboard"));
@@ -174,11 +174,8 @@ class GridGrindTaskKeywordMatcherTest {
 
   private static TaskKeywordMatchReport.Candidate candidate(
       String taskId, int score, List<String> matchedTerms) {
+    var task = GridGrindTaskCatalog.entryFor(taskId).orElseThrow();
     return new TaskKeywordMatchReport.Candidate(
-        GridGrindTaskCatalog.entryFor(taskId).orElseThrow(),
-        score,
-        matchedTerms,
-        List.of("test"),
-        GridGrindTaskPlanner.templateFor(taskId));
+        task.id(), task.narrative().summary(), score, matchedTerms, List.of("test"));
   }
 }

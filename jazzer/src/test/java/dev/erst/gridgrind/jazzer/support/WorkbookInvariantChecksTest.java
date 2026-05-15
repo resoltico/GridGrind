@@ -84,12 +84,11 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -116,6 +115,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -144,7 +144,11 @@ class WorkbookInvariantChecksTest {
                     "step-01-set-cell",
                     "SET_CELL",
                     "Formula references same-request sheet names with spaces.")),
-            List.of(new AssertionResult("assert-total", "EXPECT_NAMED_RANGE_PRESENT")),
+            List.of(
+                new AssertionResult(
+                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+                    "assert-total",
+                    "EXPECT_NAMED_RANGE_PRESENT")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -661,7 +665,11 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
-            List.of(new AssertionResult("assert-total", "EXPECT_ANALYSIS_MAX_SEVERITY")),
+            List.of(
+                new AssertionResult(
+                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+                    "assert-total",
+                    "EXPECT_ANALYSIS_MAX_SEVERITY")),
             List.of(
                 new SheetInspectionResult.SheetSummaryResult(
                     "sheet",

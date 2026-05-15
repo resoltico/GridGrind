@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotDataPoiBridge;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

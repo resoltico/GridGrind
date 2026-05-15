@@ -53,6 +53,10 @@ dependencies {
     testRuntimeOnly(libs.log4j.core)
 }
 
+tasks.withType<Test>().configureEach {
+    systemProperty("gridgrind.root.dir", rootProject.projectDir.absolutePath)
+}
+
 tasks.named<JacocoReport>("jacocoTestReport") {
     dependsOn(tasks.named<Test>("test"))
     executionData.from(localCoverageExecutionData())

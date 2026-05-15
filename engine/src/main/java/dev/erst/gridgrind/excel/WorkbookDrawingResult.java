@@ -3,6 +3,9 @@ package dev.erst.gridgrind.excel;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.copyValues;
 import static dev.erst.gridgrind.excel.WorkbookResultSupport.requireNonBlank;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import java.util.List;
 import java.util.Objects;
 

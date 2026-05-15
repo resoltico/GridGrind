@@ -4,7 +4,6 @@ import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
@@ -31,20 +30,20 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               ExecutionJournal.class,
               "ExecutionJournal",
               "Structured execution telemetry returned on every success and failure response,"
-                  + " including validation, open, calculation, step, persistence, and close"
-                  + " phases.",
+                  + " including validation, input resolution, open, calculation, step,"
+                  + " persistence, and close phases.",
               List.of(
                   "planId",
                   "level",
                   "source",
                   "persistence",
                   "validation",
+                  "inputResolution",
                   "open",
                   "calculation",
                   "persistencePhase",
                   "close",
                   "steps",
-                  "warnings",
                   "outcome",
                   "events")),
           plainTypeDescriptor(
@@ -106,7 +105,7 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "requestWarningType",
               RequestWarning.class,
               "RequestWarning",
-              "Non-fatal authored-plan warning surfaced on success and echoed inside the execution journal.",
+              "Non-fatal authored-plan warning surfaced at the response root.",
               List.of()),
           plainTypeDescriptor(
               "executionPolicyInputType",
@@ -120,12 +119,6 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "CalculationPolicyInput",
               GridGrindContractText.calculationPolicyInputSummary(),
               List.of("strategy")),
-          plainTypeDescriptor(
-              "executionModeInputType",
-              ExecutionModeInput.class,
-              "ExecutionModeInput",
-              GridGrindContractText.executionModeInputSummary(),
-              List.of("readMode", "writeMode")),
           plainTypeDescriptor(
               "executionJournalInputType",
               ExecutionJournalInput.class,

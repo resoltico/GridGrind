@@ -6,9 +6,17 @@ import java.util.Optional;
 
 /** Parsed CLI command model for one GridGrind process invocation. */
 sealed interface CliCommand {
+  /** One explicit help surface published by the CLI. */
+  enum HelpTopic {
+    OVERVIEW,
+    PROTOCOL,
+    GUIDANCE
+  }
+
   /** Requests that help text be emitted as the primary command output. */
-  record Help(Optional<Path> responsePath) implements CliCommand {
+  record Help(HelpTopic topic, Optional<Path> responsePath) implements CliCommand {
     public Help {
+      Objects.requireNonNull(topic, "topic must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
@@ -35,9 +43,9 @@ sealed interface CliCommand {
   }
 
   /** Requests that one built-in generated example request be emitted as the primary output. */
-  record PrintExample(String exampleId, Optional<Path> responsePath) implements CliCommand {
+  record PrintExample(String lookupId, Optional<Path> responsePath) implements CliCommand {
     public PrintExample {
-      Objects.requireNonNull(exampleId, "exampleId must not be null");
+      Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
@@ -52,18 +60,18 @@ sealed interface CliCommand {
   }
 
   /** Requests that the machine-readable task catalog be emitted as the primary output. */
-  record PrintTaskCatalog(Optional<String> taskFilter, Optional<Path> responsePath)
+  record PrintTaskCatalog(Optional<String> lookupId, Optional<Path> responsePath)
       implements CliCommand {
     public PrintTaskCatalog {
-      Objects.requireNonNull(taskFilter, "taskFilter must not be null");
+      Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
 
-  /** Requests that one machine-readable starter task plan be emitted as the primary output. */
-  record PrintTaskPlan(String taskId, Optional<Path> responsePath) implements CliCommand {
+  /** Requests that one runnable starter request scaffold be emitted as the primary output. */
+  record PrintTaskPlan(String lookupId, Optional<Path> responsePath) implements CliCommand {
     public PrintTaskPlan {
-      Objects.requireNonNull(taskId, "taskId must not be null");
+      Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
@@ -106,10 +114,10 @@ sealed interface CliCommand {
    *
    * <p>Duplicate ids must be qualified as {@code <group>:<id>}.
    */
-  record PrintProtocolCatalogLookup(String operationFilter, Optional<Path> responsePath)
+  record PrintProtocolCatalogLookup(String lookupId, Optional<Path> responsePath)
       implements PrintProtocolCatalog {
     public PrintProtocolCatalogLookup {
-      Objects.requireNonNull(operationFilter, "operationFilter must not be null");
+      Objects.requireNonNull(lookupId, "lookupId must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }

@@ -3,9 +3,9 @@ package dev.erst.gridgrind.cli.discovery;
 import java.util.List;
 
 /** Internal grouped typed discovery signals for one task descriptor. */
-record TaskInteractionProfile(
+public record TaskInteractionProfile(
     List<TaskInputKind> requiredInputKinds, List<TaskVerificationKind> verificationKinds) {
-  TaskInteractionProfile {
+  public TaskInteractionProfile {
     requiredInputKinds =
         CliDiscoveryValidation.copyEnumValues(requiredInputKinds, "requiredInputKinds", Enum::name);
     verificationKinds =

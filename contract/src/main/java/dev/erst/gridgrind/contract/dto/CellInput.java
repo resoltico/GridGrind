@@ -55,7 +55,11 @@ public sealed interface CellInput {
   /** Boolean cell input. */
   record BooleanValue(boolean bool) implements CellInput {}
 
-  /** Excel formula cell input. A leading {@code =} sign is stripped automatically if present. */
+  /**
+   * Excel formula cell input. A leading {@code =} sign is stripped automatically if present.
+   * Formulas beginning with {@code DDE(} or {@code WEBSERVICE(} (case-insensitive) are rejected;
+   * see LIM-023, LIM-031.
+   */
   record Formula(TextSourceInput source) implements CellInput {
     public Formula {
       source = Validation.required(source, "source");
@@ -67,6 +71,7 @@ public sealed interface CellInput {
         if (formula.isBlank()) {
           throw new IllegalArgumentException("source must not be blank after stripping leading =");
         }
+        FormulaInputSecurity.rejectDde(formula); // LIM-023, LIM-031
         source = new TextSourceInput.Inline(formula);
       }
     }

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: QUICK_REFERENCE
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -16,26 +16,31 @@ cheat sheet, then jump to the detailed references when you need the full field l
 ## Artifact Discovery
 
 ```bash
-gridgrind help
+gridgrind --help
+gridgrind --help-protocol
+gridgrind --help-guidance
 gridgrind --print-request-template --response request.json
 gridgrind --print-protocol-catalog --response protocol-catalog.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
-gridgrind --print-protocol-catalog --operation inspectionQueryTypes:GET_SHEET_LAYOUT
-gridgrind --print-example BUDGET --response budget-request.json
-gridgrind --print-example SHEET_MAINTENANCE --response sheet-maintenance.json
-gridgrind --print-example WORKBOOK_HEALTH --response workbook-health.json
-gridgrind --print-example ASSERTION --response assertion.json
+gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
+gridgrind --print-example --lookup BUDGET --response budget-request.json
+gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
+gridgrind --print-example --lookup WORKBOOK_HEALTH --response workbook-health.json
+gridgrind --print-example --lookup ASSERTION --response assertion.json
 gridgrind --print-request-template | gridgrind --doctor-request
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`gridgrind help` is the explicit alias for `--help`. `--doctor-request` validates request shape,
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, and
+`--help-guidance` is the workflow/example playbook. `--doctor-request` validates request shape,
 resolves source-backed inputs, and preflights existing workbook-source access without mutating a
 workbook. `--response <path>` works across execution, doctoring, and discovery commands, so the
 primary output can be captured to a file instead of stdout.
 
 `--search` is the fast discovery path when you only know part of an id or summary. Use
-`--operation <group>:<id>` once you want one exact machine-readable entry.
+`--lookup <group>:<id>` once you want one exact machine-readable entry. Search now ranks published
+top-level operations ahead of support-type groups and adds `relatedEntryIds` on support-group hits
+so agents can climb from a type family to the executable operation that uses it.
 
 ## Smallest Valid Request
 
@@ -50,8 +55,7 @@ primary output can be captured to a file instead of stdout.
   },
   "execution": {
     "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "FULL_XSSF"
+      "type": "FULL_XSSF"
     },
     "journal": {
       "level": "NORMAL"
@@ -72,8 +76,9 @@ primary output can be captured to a file instead of stdout.
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. Step kind is inferred from exactly one of
-`action`, `assertion`, or `query`; do not send `step.type`.
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within
+`steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`,
+`assertion`, or `query`; do not send `step.type`.
 `gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below
 are request fragments, not standalone full requests, unless the section explicitly shows the full
 top-level envelope.
@@ -184,9 +189,9 @@ Targeted evaluation:
 ```
 
 Rules to remember:
-- `execution.mode.readMode=EVENT_READ` supports `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`
+- `execution.mode.type=EVENT_READ` supports `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`
   only.
-- `execution.mode.writeMode=STREAMING_WRITE` requires `source.type=NEW` and supports only
+- `execution.mode.type=STREAMING_WRITE` requires `source.type=NEW` and supports only
   `ENSURE_SHEET` plus `APPEND_ROW`.
 - `markRecalculateOnOpen` persists Excel's workbook-open recalculation flag.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. Missing physical cells can

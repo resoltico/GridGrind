@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: DEVELOPER
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -105,14 +105,19 @@ imports POI-backed engine internals just to reuse enums or limits. Shared Java b
 `modularity.inferModulePath`, so the `module-info.java` descriptors in the product modules
 participate in normal local builds, CI, and release verification.
 
+Within `engine`, the workbook runtime no longer treats `dev.erst.gridgrind.excel` as one flat
+catch-all namespace. High-churn workbook subdomains now sit in dedicated `event`, `stream`,
+`pivot`, `customxml`, `ooxml`, `drawing`, and `validation` subpackages so package names carry the
+same theory boundaries as the code they own.
+
 The highest-churn architecture seams are intentionally split too:
-- `GridGrindProtocolCatalog` owns the top-level catalog assembly, while `GridGrindProtocolCatalogFieldGroupSupport` owns the large nested/plain field-shape descriptor registry and `GridGrindProtocolCatalogLookupSupport` owns lookup/search behavior.
+- `GridGrindProtocolCatalog` owns the top-level catalog assembly, `CatalogFieldMetadataSupport` derives nested/plain field-shape metadata from the canonical descriptor groups, and `GridGrindProtocolCatalogLookupSupport` owns exact lookup plus grouped operation-centered search behavior.
 - Jazzer request generation is no longer one monolith: the `OperationSequence*` family now splits orchestration, selector helpers, mutation/inspection/command factories, observation-side assertions, bounded payload generation, and chart payload generation into focused seams, while `WorkbookInvariantChecks` is split across workbook/cell/engine-surface invariant helpers.
 - Build-failing architecture audits protect these boundaries. Contract source must stay on `excel-foundation`, direct `Cell.setCellFormula(...)` calls must stay inside `ExcelFormulaWriteSupport`, POI reflective access must stay inside `PoiPrivateAccessSupport`, and the split hotspot files must stay below their enforced size ceilings. `PoiPrivateAccessCompatibilityTest` also fails fast if a POI upgrade stops resolving the registered private sheet-clone, picture-catalog, fill-registry, or relation-removal seams that the engine still depends on.
 
 ## Contract Replacement Mode
 
-The legacy monolithic `protocol` module is gone. GridGrind is now in hard-break contract-replacement
+The former monolithic `protocol` module is gone. GridGrind is now in hard-break contract-replacement
 mode: new top-level contract surface growth must happen through the `contract` plus `executor`
 split and the accepted post-replacement architecture, not by reintroducing monolithic
 transport-and-execution ownership. The accepted architecture decision record for that freeze is
@@ -177,7 +182,7 @@ and `jazzer/bin/*` so top-level verification entrypoints cannot overlap accident
 Docker smoke and release verification should likewise stay independent from personal Docker login
 state by using an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine,
 and local Docker verification now requires `docker buildx` because Stage 5 builds through
-`docker buildx build --load` instead of Docker's legacy builder path.
+`docker buildx build --load` instead of Docker's deprecated classic builder path.
 The committed contributor devcontainer is validated separately through
 `./scripts/validate-devcontainer.sh`, which builds the contributor image, checks its pinned Java
 and tooling surface, guards the portable devcontainer contract, and verifies the committed VS Code
@@ -203,11 +208,11 @@ overlay contract in `.devcontainer/devcontainer.json`.
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
-./gradlew :cli:run --args="--print-example BUDGET"
+./gradlew :cli:run --args="--print-example --lookup BUDGET"
 ./gradlew :cli:run --args="--print-example-catalog"
 ./gradlew :cli:run --args="--print-task-catalog"
-./gradlew :cli:run --args="--print-task-plan DASHBOARD"
-./gradlew :cli:run --args='--print-task-keyword-match "monthly sales dashboard with charts"'
+./gradlew :cli:run --args="--print-task-plan --lookup DASHBOARD"
+./gradlew :cli:run --args='--print-task-keyword-match --query "monthly sales dashboard with charts"'
 ./scripts/docker-smoke.sh
 ./scripts/validate-devcontainer.sh
 ```
@@ -222,10 +227,10 @@ instead of thin downstream string copies. `GridGrindContractText` owns stable wo
 rules plus their validation messages. CLI-specific presentation lives downstream in `cli`:
 `CliSurface` and `GridGrindCliHelp` own the help section labels, key/value entries, flags,
 docs links, and example routing that the transport renders. `cli` owns the high-level task
-descriptors, while `cli` also owns
-`GridGrindTaskPlanner` and `GridGrindTaskKeywordMatcher` as downstream discovery policy: starter request
-scaffolds are derived generically from the published task descriptors, and English keyword query ranking
-runs from the CLI-owned planner rather than hidden contract-side search metadata. Request linting
+descriptors plus typed discovery profiles, while `GridGrindTaskPlanner` and
+`GridGrindTaskKeywordMatcher` own the downstream discovery policy: starter requests are
+derived generically from the published task descriptors, and English keyword query ranking is
+anchored first in typed goal/artifact metadata rather than loose notes or pitfalls. Request linting
 is also part of that authoritative public surface now: `engine` exports a narrow request-doctor
 API alongside the request executor, and the packaged-artifact verifier exercises the emitted
 doctor report instead of relying only on module-local tests. The build now also includes
@@ -392,7 +397,7 @@ boundary: GridGrind does not emit a partially written workbook file.
 The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
-the artifact-native built-in examples directly with `gridgrind --print-example <id>`. The full
+the artifact-native built-in examples directly with `gridgrind --print-example --lookup <id>`. The full
 map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). These
 fixtures and authoring examples cover the core surface:
 

@@ -9,6 +9,7 @@ public record ArrayFormulaInput(TextSourceInput source) {
     TextSourceInput normalized = Objects.requireNonNull(source, "source must not be null");
     if (normalized instanceof TextSourceInput.Inline inline) {
       String formula = inline.text();
+      FormulaInputSecurity.rejectDde(formula); // LIM-027: check before stripping
       if (formula.startsWith("{=") && formula.endsWith("}")) {
         formula = formula.substring(2, formula.length() - 1);
       } else if (formula.startsWith("=")) {

@@ -100,10 +100,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     inputResolutionPhase.succeed();
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(resolvedRequest);
-    journal.setWarnings(warnings);
 
-    ExecutionModeSelection executionModes = executionModes(resolvedRequest);
-    if (directEventReadEligible(resolvedRequest, executionModes)) {
+    ExecutionModeInput executionMode = executionMode(resolvedRequest);
+    if (directEventReadEligible(resolvedRequest, executionMode)) {
       return responseSupport.guardUnexpectedRuntime(
           protocolVersion,
           resolvedRequest,
@@ -116,7 +115,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                   journal,
                   executionBindings.workingDirectory()));
     }
-    if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
+    if (executionMode instanceof ExecutionModeInput.StreamingWrite) {
       return responseSupport.guardUnexpectedRuntime(
           protocolVersion,
           resolvedRequest,
@@ -125,7 +124,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               workflowSupport.executeStreamingWorkflow(
                   protocolVersion,
                   resolvedRequest,
-                  executionModes,
+                  executionMode,
                   warnings,
                   journal,
                   executionBindings.workingDirectory()));
@@ -169,7 +168,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                 protocolVersion,
                 resolvedRequest,
                 workbook,
-                executionModes,
+                executionMode,
                 warnings,
                 journal,
                 executionBindings.workingDirectory()));
@@ -180,15 +179,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   }
 
   Optional<String> executionModeFailure(WorkbookPlan request) { // LIM-019, LIM-020
-    return ExecutionModeRules.executionModeFailure(request, executionModes(request));
+    return ExecutionModeRules.executionModeFailure(request, executionMode(request));
   }
 
-  static boolean directEventReadEligible(
-      WorkbookPlan request, ExecutionModeSelection executionModes) {
-    return ExecutionModeRules.directEventReadEligible(request, executionModes);
+  static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {
+    return ExecutionModeRules.directEventReadEligible(request, executionMode);
   }
 
-  static ExecutionModeSelection executionModes(WorkbookPlan request) {
-    return ExecutionModeRules.executionModes(request);
+  static ExecutionModeInput executionMode(WorkbookPlan request) {
+    return ExecutionModeRules.executionMode(request);
   }
 }

@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;

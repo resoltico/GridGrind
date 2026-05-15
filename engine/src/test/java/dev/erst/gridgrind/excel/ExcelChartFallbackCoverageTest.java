@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -76,6 +77,7 @@ class ExcelChartFallbackCoverageTest {
       assertEquals(
           "18.0",
           ExcelChartSourceSupport.scalarText(sheet, new CellReference("Charts", 2, 1, true, true)));
+      assertEquals("18.0", ExcelChartSourceSupport.scalarText(sheet, new CellReference(2, 1)));
       assertEquals(
           new ExcelDrawingController.CellScalar(
               ExcelDrawingController.CellScalarKind.STRING, "", 0d),

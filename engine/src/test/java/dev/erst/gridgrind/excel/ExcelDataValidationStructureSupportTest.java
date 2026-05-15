@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationStructureSupport;
 import java.util.List;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;

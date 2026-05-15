@@ -11,6 +11,7 @@ import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
@@ -63,6 +64,18 @@ final class AssertionObservationExecutor {
       String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     try {
       return switch (target) {
+        case SheetSelector.All _ ->
+            new WorkbookInspectionResult.SheetsResult(stepId, workbook.sheetNames());
+        case SheetSelector.ByName byName ->
+            new WorkbookInspectionResult.SheetsResult(
+                stepId,
+                workbook.sheetNames().contains(byName.name()) ? List.of(byName.name()) : List.of());
+        case SheetSelector.ByNames byNames ->
+            new WorkbookInspectionResult.SheetsResult(
+                stepId,
+                byNames.names().stream()
+                    .filter(name -> workbook.sheetNames().contains(name))
+                    .toList());
         case NamedRangeSelector selector ->
             executeObservation(
                 stepId,
@@ -94,7 +107,7 @@ final class AssertionObservationExecutor {
         default ->
             throw new IllegalArgumentException(
                 "Unsupported presence assertion target: "
-                    + SelectorJsonSupport.displayName(target.getClass()));
+                    + SelectorJsonSupport.typeIdsFor(target.getClass()).getFirst());
       };
     } catch (NamedRangeNotFoundException | SheetNotFoundException ignored) {
       return zeroMatchPresenceObservation(stepId, target);
@@ -121,6 +134,7 @@ final class AssertionObservationExecutor {
 
   static int observedCount(InspectionResult observation) {
     return switch (observation) {
+      case WorkbookInspectionResult.SheetsResult result -> result.sheetNames().size();
       case WorkbookInspectionResult.NamedRangesResult result -> result.namedRanges().size();
       case WorkbookAssetInspectionResult.TablesResult result -> result.tables().size();
       case WorkbookAssetInspectionResult.PivotTablesResult result -> result.pivotTables().size();

@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.4.0-Beta2"
+kotlin = "2.4.0-RC"
 junit-jupiter = "6.1.0-RC1"
 junit-platform-launcher = "6.1.0-RC1"
 junit-bom = "6.1.0-RC1"
@@ -21,10 +21,10 @@ errorprone-plugin = "5.1.0"
 jspecify = "1.0.0"
 nullaway = "0.13.4"
 google-java-format = "1.35.0"
-jacoco = "0.8.15-20260506.113836-98"
+jacoco = "0.8.15-20260513.074320-106"
 pmd = "7.24.0"
 shadow = "9.4.1"
-spotless = "8.4.0"
+spotless = "8.5.0"
 
 [libraries]
 bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }

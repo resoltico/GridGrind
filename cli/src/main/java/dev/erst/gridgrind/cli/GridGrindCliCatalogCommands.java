@@ -4,12 +4,7 @@ import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,7 +29,7 @@ final class GridGrindCliCatalogCommands {
         command.responsePath(),
         stdout,
         stderr,
-        GridGrindCliProductInfo.helpText(GridGrindCliProductInfo.version())
+        GridGrindCliProductInfo.helpText(command.topic(), GridGrindCliProductInfo.version())
             .getBytes(StandardCharsets.UTF_8));
   }
 
@@ -89,21 +84,23 @@ final class GridGrindCliCatalogCommands {
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    var example = GridGrindShippedExamples.find(command.exampleId());
+    var example = GridGrindShippedExamples.find(command.lookupId());
     if (example.isEmpty()) {
-      String message = unknownExampleMessage(command.exampleId());
-      return responseWriter.write(
+      String message = unknownExampleMessage(command.lookupId());
+      return writeCliFailure(
+          responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-example",
+              Optional.of("--lookup"),
               message,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      "--print-example")),
-              new IllegalArgumentException(message)),
-          2);
+              List.of("gridgrind --print-example-catalog", "gridgrind --help-guidance"),
+              Optional.of(
+                  "Use --print-example-catalog first when you need the stable example ids,"
+                      + " workspaceMode, and requiredPaths.")));
     }
     emitExamplePortabilityWarning(example.get(), stderr);
     return writePayload(
@@ -134,7 +131,7 @@ final class GridGrindCliCatalogCommands {
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    if (command.taskFilter().isEmpty()) {
+    if (command.lookupId().isEmpty()) {
       return writePayload(
           responseWriter,
           command.responsePath(),
@@ -142,29 +139,33 @@ final class GridGrindCliCatalogCommands {
           stderr,
           GridGrindCliJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog()));
     }
-    String taskFilter = command.taskFilter().orElseThrow();
+    String taskFilter = command.lookupId().orElseThrow();
     var entry = GridGrindTaskCatalog.entryFor(taskFilter);
     if (entry.isEmpty()) {
       String message = unknownTaskMessage(taskFilter);
-      return responseWriter.write(
+      return writeCliFailure(
+          responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-task-catalog",
+              Optional.of("--lookup"),
               message,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      "--task")),
-              new IllegalArgumentException(message)),
-          2);
+              List.of("gridgrind --print-task-catalog", "gridgrind --print-task-keyword-match"),
+              Optional.of(
+                  "Use --print-task-keyword-match --query <text> when you know the work you want"
+                      + " but not the stable task id.")));
     }
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
         stderr,
-        output -> GridGrindCliJson.writeTaskEntry(output, entry.get()));
+        output ->
+            GridGrindJson.writeCatalogLookupResult(
+                output, GridGrindTaskCatalog.catalog().protocolVersion(), entry.get()));
   }
 
   static int taskPlan(
@@ -173,28 +174,29 @@ final class GridGrindCliCatalogCommands {
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    var task = GridGrindTaskCatalog.entryFor(command.taskId());
+    var task = GridGrindTaskCatalog.entryFor(command.lookupId());
     if (task.isEmpty()) {
-      String message = unknownTaskMessage(command.taskId());
-      return responseWriter.write(
+      String message = unknownTaskMessage(command.lookupId());
+      return writeCliFailure(
+          responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-task-plan",
+              Optional.of("--lookup"),
               message,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      "--print-task-plan")),
-              new IllegalArgumentException(message)),
-          2);
+              List.of("gridgrind --print-task-catalog", "gridgrind --print-task-keyword-match"),
+              Optional.of(
+                  "Resolve one valid task id first, then rerun --print-task-plan --lookup <id>.")));
     }
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
         stderr,
-        GridGrindCliJson.writeTaskPlanTemplateBytes(GridGrindTaskPlanner.planFor(task.get())));
+        GridGrindJson.writeRequestBytes(GridGrindTaskPlanner.requestFor(task.get())));
   }
 
   static int taskKeywordMatch(
@@ -203,13 +205,30 @@ final class GridGrindCliCatalogCommands {
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    return writePayload(
-        responseWriter,
-        command.responsePath(),
-        stdout,
-        stderr,
-        GridGrindCliJson.writeTaskKeywordMatchReportBytes(
-            GridGrindTaskKeywordMatcher.reportFor(command.query())));
+    try {
+      return writePayload(
+          responseWriter,
+          command.responsePath(),
+          stdout,
+          stderr,
+          GridGrindCliJson.writeTaskKeywordMatchReportBytes(
+              GridGrindTaskKeywordMatcher.reportFor(command.query())));
+    } catch (IllegalArgumentException exception) {
+      return writeCliFailure(
+          responseWriter,
+          command.responsePath(),
+          stdout,
+          stderr,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-task-keyword-match",
+              Optional.of("--query"),
+              Objects.requireNonNullElse(exception.getMessage(), "Invalid keyword query"),
+              List.of("gridgrind --print-task-catalog", "gridgrind --help-guidance"),
+              Optional.of(
+                  "Use a natural-language query that leaves at least one searchable"
+                      + " non-stop-word term after normalization.")));
+    }
   }
 
   static int protocolCatalogAll(
@@ -248,48 +267,52 @@ final class GridGrindCliCatalogCommands {
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(command.operationFilter());
+    List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(command.lookupId());
     if (matches.size() > 1) {
       String message =
-          "Ambiguous operation: "
-              + command.operationFilter()
+          "Ambiguous lookup id: "
+              + command.lookupId()
               + ". Use one of: "
               + String.join(", ", matches);
-      return responseWriter.write(
+      return writeCliFailure(
+          responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-protocol-catalog",
+              Optional.of("--lookup"),
               message,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      "--operation")),
-              new IllegalArgumentException(message)),
-          2);
+              matches,
+              Optional.of(
+                  "Rerun the lookup with one qualified id exactly as listed in suggestions.")));
     }
-    var lookupValue = GridGrindProtocolCatalog.lookupValueFor(command.operationFilter());
+    var lookupValue = GridGrindProtocolCatalog.lookupValueFor(command.lookupId());
     if (lookupValue.isEmpty()) {
-      String message = unknownOperationMessage(command.operationFilter());
-      return responseWriter.write(
+      String message = unknownOperationMessage(command.lookupId());
+      return writeCliFailure(
+          responseWriter,
           command.responsePath(),
           stdout,
           stderr,
-          failure(
-              GridGrindProblemCode.INVALID_ARGUMENTS,
+          CliFailureReports.invalidArguments(
+              2,
+              "print-protocol-catalog",
+              Optional.of("--lookup"),
               message,
-              new dev.erst.gridgrind.contract.dto.ProblemContext.ParseArguments(
-                  dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument.named(
-                      "--operation")),
-              new IllegalArgumentException(message)),
-          2);
+              List.of("gridgrind --print-protocol-catalog --search <text>"),
+              Optional.of(
+                  "Use --search when you know the concept but not the exact lookup id or group.")));
     }
     return writePayload(
         responseWriter,
         command.responsePath(),
         stdout,
         stderr,
-        output -> GridGrindJson.writeCatalogLookupValue(output, lookupValue.get()));
+        output ->
+            GridGrindJson.writeCatalogLookupResult(
+                output, GridGrindProtocolCatalog.catalog().protocolVersion(), lookupValue.get()));
   }
 
   private static String unknownExampleMessage(String exampleId) {
@@ -300,13 +323,11 @@ final class GridGrindCliCatalogCommands {
                     + exampleId
                     + ". Example ids use stable upper-case tokens; did you mean "
                     + suggestion
-                    + "? Run gridgrind --help and read the Built-in generated examples section"
-                    + " to list valid ids.")
+                    + "? Run gridgrind --print-example-catalog to list valid ids.")
         .orElse(
             "Unknown example: "
                 + exampleId
-                + ". Run gridgrind --help and read the Built-in generated examples section"
-                + " to list valid ids.");
+                + ". Run gridgrind --print-example-catalog to list valid ids.");
   }
 
   private static void emitExamplePortabilityWarning(
@@ -325,7 +346,7 @@ final class GridGrindCliCatalogCommands {
                 + " requires copied examples/ assets beside the request before execution;"
                 + " required paths: "
                 + requiredPaths
-                + ". Inspect --print-example-catalog or --help for portability details.\n")
+                + ". Inspect --print-example-catalog or --help-guidance for portability details.\n")
             .getBytes(StandardCharsets.UTF_8));
     stderr.flush();
   }
@@ -339,12 +360,14 @@ final class GridGrindCliCatalogCommands {
                     + ". Task ids use stable upper-case tokens; did you mean "
                     + suggestion
                     + "? Run gridgrind --print-task-catalog to list valid ids or"
-                    + " gridgrind --print-task-keyword-match <query> to discover a close starter plan.")
+                    + " gridgrind --print-task-keyword-match --query <text> to discover a close"
+                    + " task id before printing its task plan.")
         .orElse(
             "Unknown task: "
                 + taskId
                 + ". Run gridgrind --print-task-catalog to list valid ids or"
-                + " gridgrind --print-task-keyword-match <query> to discover a close starter plan.");
+                + " gridgrind --print-task-keyword-match --query <text> to discover a close"
+                + " task id before printing its task plan.");
   }
 
   private static Optional<String> suggestedTaskId(String taskId) {
@@ -359,7 +382,7 @@ final class GridGrindCliCatalogCommands {
   }
 
   private static String unknownOperationMessage(String operationId) {
-    return "Unknown operation: "
+    return "Unknown lookup id: "
         + operationId
         + ". Run gridgrind --print-protocol-catalog --search <text> or"
         + " gridgrind --print-protocol-catalog to discover valid lookup ids.";
@@ -371,9 +394,9 @@ final class GridGrindCliCatalogCommands {
         .filter(
             example ->
                 example.id().equalsIgnoreCase(exampleId)
-                    || example.fileName().equalsIgnoreCase(exampleId)
-                    || exampleStem(example.fileName()).equalsIgnoreCase(exampleId)
-                    || normalizeLookupToken(exampleStem(example.fileName()))
+                    || example.requestFileName().equalsIgnoreCase(exampleId)
+                    || exampleStem(example.requestFileName()).equalsIgnoreCase(exampleId)
+                    || normalizeLookupToken(exampleStem(example.requestFileName()))
                         .equals(normalizedExampleId))
         .map(GridGrindShippedExamples.ShippedExample::id)
         .findFirst();
@@ -409,14 +432,14 @@ final class GridGrindCliCatalogCommands {
     return responseWriter.writePayload(responsePath, stdout, stderr, buffer.toByteArray(), 0);
   }
 
-  private static GridGrindResponse.Failure failure(
-      GridGrindProblemCode code,
-      String message,
-      dev.erst.gridgrind.contract.dto.ProblemContext context,
-      Throwable cause) {
-    return GridGrindResponses.failure(
-        GridGrindProtocolVersion.current(),
-        GridGrindProblems.problem(code, message, context, cause));
+  private static int writeCliFailure(
+      CliResponseWriter responseWriter,
+      Optional<java.nio.file.Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      dev.erst.gridgrind.cli.discovery.CliFailureReport failureReport)
+      throws IOException {
+    return responseWriter.writeCliFailureReport(responsePath, stdout, stderr, failureReport);
   }
 
   /** Renders one command-specific payload into the caller-owned output buffer. */

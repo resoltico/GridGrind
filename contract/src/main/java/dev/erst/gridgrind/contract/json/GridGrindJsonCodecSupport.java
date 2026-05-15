@@ -80,13 +80,6 @@ final class GridGrindJsonCodecSupport {
       return mapper.treeToValue(node, targetType);
     } catch (JacksonException exception) {
       throw failureMapper.apply(exception);
-    } catch (IllegalArgumentException exception) {
-      throw new InvalidRequestException(
-          GridGrindJsonMessageSupport.message(exception),
-          Optional.empty(),
-          Optional.empty(),
-          Optional.empty(),
-          exception);
     }
   }
 
@@ -95,7 +88,12 @@ final class GridGrindJsonCodecSupport {
       for (var entry : node.properties()) {
         String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
         if (entry.getValue().isNull()) {
-          throw new IllegalArgumentException("problem: " + childPath + " must not be null");
+          throw new InvalidRequestException(
+              "Missing required field '" + childPath + "'",
+              Optional.of(childPath),
+              Optional.empty(),
+              Optional.empty(),
+              null);
         }
         rejectExplicitNullMembers(entry.getValue(), childPath);
       }
@@ -106,7 +104,12 @@ final class GridGrindJsonCodecSupport {
         JsonNode child = node.get(index);
         String childPath = path + "[" + index + "]";
         if (child.isNull()) {
-          throw new IllegalArgumentException("problem: " + childPath + " must not be null");
+          throw new InvalidRequestException(
+              "Missing required field '" + childPath + "'",
+              Optional.of(childPath),
+              Optional.empty(),
+              Optional.empty(),
+              null);
         }
         rejectExplicitNullMembers(child, childPath);
       }
@@ -116,7 +119,7 @@ final class GridGrindJsonCodecSupport {
   private static void requireNonNullRoot(JsonNode node) {
     if (node.isNull()) {
       throw new InvalidRequestException(
-          "problem: <root> must not be null",
+          "JSON payload must not be null",
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),

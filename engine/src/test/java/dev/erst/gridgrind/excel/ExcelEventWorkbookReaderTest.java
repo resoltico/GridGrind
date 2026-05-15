@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.event.EventReadCommandTypes;
+import dev.erst.gridgrind.excel.event.EventSheetSummary;
+import dev.erst.gridgrind.excel.event.EventSheetSummaryHandler;
+import dev.erst.gridgrind.excel.event.EventWorkbookMetadata;
+import dev.erst.gridgrind.excel.event.ExcelEventWorkbookReader;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -91,7 +96,7 @@ class ExcelEventWorkbookReaderTest {
               () -> reader.apply(workbookPath, singleCommand),
               () -> "expected EVENT_READ rejection for " + command.getClass().getSimpleName());
 
-      assertTrue(failure.getMessage().contains("executionMode.readMode=EVENT_READ"));
+      assertTrue(failure.getMessage().contains("execution.mode.type=EVENT_READ"));
       assertTrue(failure.getMessage().contains(expectedReadType(command)));
     }
   }

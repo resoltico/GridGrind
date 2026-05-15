@@ -56,8 +56,8 @@ class MutationStepTest {
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner")))));
 
     assertEquals(
-        "SET_CELL requires target type CellSelector.ByAddress or"
-            + " TableCellSelector.ByColumnName but got RangeSelector.ByRange",
+        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got"
+            + " RANGE_BY_RANGE",
         incompatibleTargetFailure.getMessage());
   }
 

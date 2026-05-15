@@ -404,8 +404,7 @@ final class GridGrindProtocolCatalogChartAndValidationNestedTypeGroups {
                   descriptor(
                       CalculationStrategyInput.EvaluateTargets.class,
                       "EVALUATE_TARGETS",
-                      "Preflight and evaluate the explicit formula-cell target list only.",
-                      "cells"),
+                      "Preflight and evaluate the explicit formula-cell target list only."),
                   descriptor(
                       CalculationStrategyInput.ClearCachesOnly.class,
                       "CLEAR_CACHES_ONLY",

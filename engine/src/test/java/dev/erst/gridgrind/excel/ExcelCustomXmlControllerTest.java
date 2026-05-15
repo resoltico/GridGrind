@@ -6,6 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;

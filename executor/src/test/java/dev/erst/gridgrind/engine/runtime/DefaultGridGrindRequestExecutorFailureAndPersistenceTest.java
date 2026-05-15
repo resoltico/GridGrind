@@ -887,11 +887,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/book.xlsx"),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                executionPolicy(
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.EVENT_READ,
-                        ExecutionModeInput.WriteMode.FULL_XSSF),
-                    calculateAll()),
+                executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
                 null,
                 List.of(),
                 List.of(
@@ -904,11 +900,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
-                executionPolicy(
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.FULL_XSSF,
-                        ExecutionModeInput.WriteMode.STREAMING_WRITE),
-                    calculateAll()),
+                executionPolicy(ExecutionModeInput.streamingWrite(), calculateAll()),
                 null,
                 List.of(
                     mutate(
@@ -964,7 +956,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 },
                 Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
+                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                    ::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(
@@ -994,7 +987,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 },
                 Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
+                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                    ::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(

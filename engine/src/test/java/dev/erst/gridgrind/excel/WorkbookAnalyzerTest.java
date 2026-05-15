@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

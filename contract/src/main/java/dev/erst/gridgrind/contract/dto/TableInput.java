@@ -82,16 +82,16 @@ public record TableInput(
         name,
         sheetName,
         range,
-        Objects.requireNonNull(showTotalsRow, "showTotalsRow must not be null").booleanValue(),
-        Objects.requireNonNull(hasAutofilter, "hasAutofilter must not be null").booleanValue(),
+        Boolean.TRUE.equals(showTotalsRow),
+        !Boolean.FALSE.equals(hasAutofilter),
         Objects.requireNonNull(style, "style must not be null"),
-        Objects.requireNonNull(comment, "comment must not be null"),
-        Objects.requireNonNull(published, "published must not be null").booleanValue(),
-        Objects.requireNonNull(insertRow, "insertRow must not be null").booleanValue(),
-        Objects.requireNonNull(insertRowShift, "insertRowShift must not be null").booleanValue(),
-        Objects.requireNonNull(headerRowCellStyle, "headerRowCellStyle must not be null"),
-        Objects.requireNonNull(dataCellStyle, "dataCellStyle must not be null"),
-        Objects.requireNonNull(totalsRowCellStyle, "totalsRowCellStyle must not be null"),
-        Objects.requireNonNull(columns, "columns must not be null"));
+        comment == null ? new TextSourceInput.Inline("") : comment,
+        Boolean.TRUE.equals(published),
+        Boolean.TRUE.equals(insertRow),
+        Boolean.TRUE.equals(insertRowShift),
+        headerRowCellStyle == null ? "" : headerRowCellStyle,
+        dataCellStyle == null ? "" : dataCellStyle,
+        totalsRowCellStyle == null ? "" : totalsRowCellStyle,
+        columns == null ? java.util.List.of() : columns);
   }
 }

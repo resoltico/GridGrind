@@ -3,6 +3,16 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;

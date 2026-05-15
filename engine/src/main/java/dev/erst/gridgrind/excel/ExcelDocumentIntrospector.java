@@ -1,5 +1,12 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.util.List;
 import java.util.Objects;
 

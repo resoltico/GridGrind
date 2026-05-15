@@ -3,6 +3,16 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
 import java.util.Optional;

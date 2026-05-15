@@ -50,32 +50,24 @@ final class ExecutionModeRules {
   }
 
   static Optional<String> executionModeFailure(
-      WorkbookPlan request, ExecutionModeSelection executionModes) {
-    if (executionModes.readMode() == ExecutionModeInput.ReadMode.EVENT_READ) {
-      Optional<String> eventReadFailure = eventReadFailure(request);
-      if (eventReadFailure.isPresent()) {
-        return eventReadFailure;
-      }
-    }
-    if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
-      return streamingWriteFailure(request);
-    }
-    return Optional.empty();
+      WorkbookPlan request, ExecutionModeInput executionMode) {
+    return switch (executionMode) {
+      case ExecutionModeInput.FullXssf _ -> Optional.empty();
+      case ExecutionModeInput.EventRead _ -> eventReadFailure(request);
+      case ExecutionModeInput.StreamingWrite _ -> streamingWriteFailure(request);
+    };
   }
 
-  static boolean directEventReadEligible(
-      WorkbookPlan request, ExecutionModeSelection executionModes) {
-    return executionModes.readMode() == ExecutionModeInput.ReadMode.EVENT_READ
-        && executionModes.writeMode() == ExecutionModeInput.WriteMode.FULL_XSSF
+  static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {
+    return executionMode instanceof ExecutionModeInput.EventRead
         && CalculationPolicyExecutor.allowsEventRead(request.calculationPolicy())
         && request.steps().stream().allMatch(InspectionStep.class::isInstance)
         && request.persistence() instanceof WorkbookPlan.WorkbookPersistence.None
         && request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile;
   }
 
-  static ExecutionModeSelection executionModes(WorkbookPlan request) {
-    ExecutionModeInput executionMode = request.effectiveExecutionMode();
-    return new ExecutionModeSelection(executionMode.readMode(), executionMode.writeMode());
+  static ExecutionModeInput executionMode(WorkbookPlan request) {
+    return request.effectiveExecutionMode();
   }
 
   private static Optional<String> eventReadFailure(WorkbookPlan request) {

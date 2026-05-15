@@ -65,55 +65,39 @@ final class CliArguments {
   private static Optional<ImmediateParseResult> parseImmediateCommand(
       String[] args, int index, String argument, Optional<Path> responsePath) {
     return switch (argument) {
-      case "--help", "-h", "help" -> Optional.of(parseHelpCommand(index, responsePath));
+      case "--help", "-h" ->
+          Optional.of(
+              parseHelpCommand(index, CliCommand.HelpTopic.OVERVIEW, responsePath, argument));
+      case "--help-protocol" ->
+          Optional.of(
+              parseHelpCommand(index, CliCommand.HelpTopic.PROTOCOL, responsePath, argument));
+      case "--help-guidance" ->
+          Optional.of(
+              parseHelpCommand(index, CliCommand.HelpTopic.GUIDANCE, responsePath, argument));
       case "--version" -> Optional.of(parseVersionCommand(index, responsePath));
       case "--license" -> Optional.of(parseLicenseCommand(index, responsePath));
       case "--print-request-template" ->
           Optional.of(parseRequestTemplateCommand(index, responsePath));
-      case "--print-example" -> {
-        int valueIndex = nextValueIndex(args, index, "--print-example");
-        yield Optional.of(
-            new ImmediateParseResult(
-                new CliCommand.PrintExample(
-                    requireNonBlankValue("--print-example", args[valueIndex], "example id"),
-                    responsePath),
-                valueIndex + 1,
-                argument));
-      }
+      case "--print-example" -> Optional.of(parseExampleCommand(args, index, responsePath));
       case "--print-example-catalog" ->
           Optional.of(
               new ImmediateParseResult(
                   new CliCommand.PrintExampleCatalog(responsePath), index + 1, argument));
       case "--print-task-catalog" ->
           Optional.of(parseTaskCatalogCommand(args, index, responsePath));
-      case "--print-task-plan" -> {
-        int valueIndex = nextValueIndex(args, index, "--print-task-plan");
-        yield Optional.of(
-            new ImmediateParseResult(
-                new CliCommand.PrintTaskPlan(
-                    requireNonBlankValue("--print-task-plan", args[valueIndex], "task id"),
-                    responsePath),
-                valueIndex + 1,
-                argument));
-      }
-      case "--print-task-keyword-match" -> {
-        int valueIndex = nextValueIndex(args, index, "--print-task-keyword-match");
-        yield Optional.of(
-            new ImmediateParseResult(
-                new CliCommand.PrintTaskKeywordMatch(
-                    requireNonBlankValue("--print-task-keyword-match", args[valueIndex], "query"),
-                    responsePath),
-                valueIndex + 1,
-                argument));
-      }
+      case "--print-task-plan" -> Optional.of(parseTaskPlanCommand(args, index, responsePath));
+      case "--print-task-keyword-match" ->
+          Optional.of(parseTaskKeywordMatchCommand(args, index, responsePath));
       case "--print-protocol-catalog" ->
           Optional.of(parseProtocolCatalogCommand(args, index, responsePath));
       default -> Optional.empty();
     };
   }
 
-  private static ImmediateParseResult parseHelpCommand(int index, Optional<Path> responsePath) {
-    return new ImmediateParseResult(new CliCommand.Help(responsePath), index + 1, "--help");
+  private static ImmediateParseResult parseHelpCommand(
+      int index, CliCommand.HelpTopic topic, Optional<Path> responsePath, String commandToken) {
+    return new ImmediateParseResult(
+        new CliCommand.Help(topic, responsePath), index + 1, commandToken);
   }
 
   private static ImmediateParseResult parseVersionCommand(int index, Optional<Path> responsePath) {
@@ -130,47 +114,131 @@ final class CliArguments {
         new CliCommand.PrintRequestTemplate(responsePath), index + 1, "--print-request-template");
   }
 
-  private static ImmediateParseResult parseTaskCatalogCommand(
+  private static ImmediateParseResult parseExampleCommand(
       String[] args, int index, Optional<Path> responsePath) {
-    Optional<String> taskFilter = Optional.empty();
+    Optional<String> lookupId = Optional.empty();
     int nextIndex = index + 1;
     boolean keepParsing = true;
     while (nextIndex < args.length && keepParsing) {
       String argument = args[nextIndex];
-      if ("--task".equals(argument)) {
-        if (taskFilter.isPresent()) {
-          throw new CliArgumentsException("--task", "Duplicate argument: --task");
+      if ("--lookup".equals(argument)) {
+        if (lookupId.isPresent()) {
+          throw new CliArgumentsException("--lookup", "Duplicate argument: --lookup");
         }
-        int valueIndex = nextValueIndex(args, nextIndex, "--task");
-        taskFilter = Optional.of(requireNonBlankValue("--task", args[valueIndex], "task id"));
+        int valueIndex = nextValueIndex(args, nextIndex, "--lookup");
+        lookupId =
+            Optional.of(requireNonBlankValue("--lookup", args[valueIndex], "example lookup id"));
+        nextIndex = valueIndex + 1;
+      } else {
+        keepParsing = false;
+      }
+    }
+    if (lookupId.isEmpty()) {
+      throw new CliArgumentsException(
+          "--lookup", "--print-example requires --lookup and one example id value");
+    }
+    return new ImmediateParseResult(
+        new CliCommand.PrintExample(lookupId.orElseThrow(), responsePath),
+        nextIndex,
+        "--print-example");
+  }
+
+  private static ImmediateParseResult parseTaskCatalogCommand(
+      String[] args, int index, Optional<Path> responsePath) {
+    Optional<String> lookupId = Optional.empty();
+    int nextIndex = index + 1;
+    boolean keepParsing = true;
+    while (nextIndex < args.length && keepParsing) {
+      String argument = args[nextIndex];
+      if ("--lookup".equals(argument)) {
+        if (lookupId.isPresent()) {
+          throw new CliArgumentsException("--lookup", "Duplicate argument: --lookup");
+        }
+        int valueIndex = nextValueIndex(args, nextIndex, "--lookup");
+        lookupId =
+            Optional.of(requireNonBlankValue("--lookup", args[valueIndex], "task lookup id"));
         nextIndex = valueIndex + 1;
       } else {
         keepParsing = false;
       }
     }
     return new ImmediateParseResult(
-        new CliCommand.PrintTaskCatalog(taskFilter, responsePath),
+        new CliCommand.PrintTaskCatalog(lookupId, responsePath), nextIndex, "--print-task-catalog");
+  }
+
+  private static ImmediateParseResult parseTaskPlanCommand(
+      String[] args, int index, Optional<Path> responsePath) {
+    Optional<String> lookupId = Optional.empty();
+    int nextIndex = index + 1;
+    boolean keepParsing = true;
+    while (nextIndex < args.length && keepParsing) {
+      String argument = args[nextIndex];
+      if ("--lookup".equals(argument)) {
+        if (lookupId.isPresent()) {
+          throw new CliArgumentsException("--lookup", "Duplicate argument: --lookup");
+        }
+        int valueIndex = nextValueIndex(args, nextIndex, "--lookup");
+        lookupId =
+            Optional.of(requireNonBlankValue("--lookup", args[valueIndex], "task lookup id"));
+        nextIndex = valueIndex + 1;
+      } else {
+        keepParsing = false;
+      }
+    }
+    if (lookupId.isEmpty()) {
+      throw new CliArgumentsException(
+          "--lookup", "--print-task-plan requires --lookup and one task id value");
+    }
+    return new ImmediateParseResult(
+        new CliCommand.PrintTaskPlan(lookupId.orElseThrow(), responsePath),
         nextIndex,
-        "--print-task-catalog");
+        "--print-task-plan");
+  }
+
+  private static ImmediateParseResult parseTaskKeywordMatchCommand(
+      String[] args, int index, Optional<Path> responsePath) {
+    Optional<String> query = Optional.empty();
+    int nextIndex = index + 1;
+    boolean keepParsing = true;
+    while (nextIndex < args.length && keepParsing) {
+      String argument = args[nextIndex];
+      if ("--query".equals(argument)) {
+        if (query.isPresent()) {
+          throw new CliArgumentsException("--query", "Duplicate argument: --query");
+        }
+        int valueIndex = nextValueIndex(args, nextIndex, "--query");
+        query = Optional.of(args[valueIndex]);
+        nextIndex = valueIndex + 1;
+      } else {
+        keepParsing = false;
+      }
+    }
+    if (query.isEmpty()) {
+      throw new CliArgumentsException(
+          "--query", "--print-task-keyword-match requires --query and one query value");
+    }
+    return new ImmediateParseResult(
+        new CliCommand.PrintTaskKeywordMatch(query.orElseThrow(), responsePath),
+        nextIndex,
+        "--print-task-keyword-match");
   }
 
   private static ImmediateParseResult parseProtocolCatalogCommand(
       String[] args, int index, Optional<Path> responsePath) {
-    Optional<String> operationFilter = Optional.empty();
+    Optional<String> lookupFilter = Optional.empty();
     Optional<String> searchQuery = Optional.empty();
     int nextIndex = index + 1;
     boolean keepParsing = true;
     while (nextIndex < args.length && keepParsing) {
       String argument = args[nextIndex];
-      if ("--operation".equals(argument)) {
-        if (operationFilter.isPresent()) {
-          throw new CliArgumentsException("--operation", "Duplicate argument: --operation");
+      if ("--lookup".equals(argument)) {
+        if (lookupFilter.isPresent()) {
+          throw new CliArgumentsException("--lookup", "Duplicate argument: --lookup");
         }
-        int valueIndex = nextValueIndex(args, nextIndex, "--operation");
-        operationFilter =
+        int valueIndex = nextValueIndex(args, nextIndex, "--lookup");
+        lookupFilter =
             Optional.of(
-                requireNonBlankValue(
-                    "--operation", args[valueIndex], "protocol catalog lookup id"));
+                requireNonBlankValue("--lookup", args[valueIndex], "protocol catalog lookup id"));
         nextIndex = valueIndex + 1;
       } else if ("--search".equals(argument)) {
         if (searchQuery.isPresent()) {
@@ -184,31 +252,31 @@ final class CliArguments {
         keepParsing = false;
       }
     }
-    return protocolCatalogCommand(operationFilter, searchQuery, responsePath, nextIndex);
+    return protocolCatalogCommand(lookupFilter, searchQuery, responsePath, nextIndex);
   }
 
   private static ImmediateParseResult protocolCatalogCommand(
-      Optional<String> operationFilter,
+      Optional<String> lookupFilter,
       Optional<String> searchQuery,
       Optional<Path> responsePath,
       int nextIndex) {
-    if (operationFilter.isPresent() && searchQuery.isPresent()) {
+    if (lookupFilter.isPresent() && searchQuery.isPresent()) {
       throw new CliArgumentsException(
-          "--search", "--print-protocol-catalog does not allow both --operation and --search");
+          "--search", "--print-protocol-catalog does not allow both --lookup and --search");
     }
     return new ImmediateParseResult(
-        protocolCatalogCommand(operationFilter, searchQuery, responsePath),
+        protocolCatalogCommand(lookupFilter, searchQuery, responsePath),
         nextIndex,
         "--print-protocol-catalog");
   }
 
   private static CliCommand.PrintProtocolCatalog protocolCatalogCommand(
-      Optional<String> operationFilter, Optional<String> searchQuery, Optional<Path> responsePath) {
+      Optional<String> lookupFilter, Optional<String> searchQuery, Optional<Path> responsePath) {
     if (searchQuery.isPresent()) {
       return new CliCommand.PrintProtocolCatalogSearch(searchQuery.orElseThrow(), responsePath);
     }
-    if (operationFilter.isPresent()) {
-      return new CliCommand.PrintProtocolCatalogLookup(operationFilter.orElseThrow(), responsePath);
+    if (lookupFilter.isPresent()) {
+      return new CliCommand.PrintProtocolCatalogLookup(lookupFilter.orElseThrow(), responsePath);
     }
     return new CliCommand.PrintProtocolCatalogAll(responsePath);
   }
@@ -277,7 +345,8 @@ final class CliArguments {
     return switch (argument) {
       case "--help",
           "-h",
-          "help",
+          "--help-protocol",
+          "--help-guidance",
           "--version",
           "--license",
           "--print-request-template",
@@ -296,6 +365,10 @@ final class CliArguments {
       String[] args, int index, String argument, ParsedOptions options) {
     return switch (argument) {
       case "--doctor-request" -> {
+        if (options.doctorRequest) {
+          throw new CliArgumentsException(
+              "--doctor-request", "Duplicate argument: --doctor-request");
+        }
         options.doctorRequest = true;
         yield index + 1;
       }
@@ -307,19 +380,56 @@ final class CliArguments {
         options.requestPath = Optional.of(Path.of(args[valueIndex]));
         yield valueIndex + 1;
       }
+      case "--help",
+          "-h",
+          "--help-protocol",
+          "--help-guidance",
+          "--version",
+          "--license",
+          "--print-request-template",
+          "--print-example",
+          "--print-example-catalog",
+          "--print-task-catalog",
+          "--print-task-plan",
+          "--print-task-keyword-match",
+          "--print-protocol-catalog" ->
+          throw primaryCommandOrderingException(argument, options);
       default -> throw unknownArgumentException(argument);
     };
   }
 
+  private static CliArgumentsException primaryCommandOrderingException(
+      String argument, ParsedOptions options) {
+    Objects.requireNonNull(argument, "argument must not be null");
+    Objects.requireNonNull(options, "options must not be null");
+    if (options.doctorRequest) {
+      return new CliArgumentsException(
+          argument,
+          "Only one primary command may be used per invocation; --doctor-request cannot be combined with "
+              + argument);
+    }
+    return new CliArgumentsException(
+        argument, argument + " must be the primary command and cannot follow execution arguments");
+  }
+
   private static CliArgumentsException unknownArgumentException(String argument) {
     return switch (argument) {
+      case "--example" ->
+          new CliArgumentsException(
+              "--example",
+              "--example is no longer part of the CLI grammar; use --print-example --lookup <id>");
       case "--task" ->
           new CliArgumentsException(
-              "--task", "--task requires --print-task-catalog and one task id value");
-      case "--operation" ->
+              "--task", "--task is no longer part of the CLI grammar; use --lookup instead");
+      case "--query" ->
           new CliArgumentsException(
-              "--operation",
-              "--operation requires --print-protocol-catalog and one lookup id value");
+              "--query",
+              "--query requires --print-task-keyword-match and one natural-language query value");
+      case "--lookup" ->
+          new CliArgumentsException(
+              "--lookup",
+              "--lookup requires --print-example, --print-task-catalog, --print-task-plan,"
+                  + " or --print-protocol-catalog and one lookup id value");
       case "--search" ->
           new CliArgumentsException(
               "--search", "--search requires --print-protocol-catalog and one search text value");

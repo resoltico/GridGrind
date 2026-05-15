@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.catalog;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -37,6 +38,8 @@ public final class GridGrindProtocolTypeNames {
       typeNamesByClass(InspectionQuery.class);
   private static final Map<Class<?>, String> CALCULATION_STRATEGY_TYPE_NAMES =
       typeNamesByClass(CalculationStrategyInput.class);
+  private static final Map<Class<?>, String> EXECUTION_MODE_TYPE_NAMES =
+      typeNamesByClass(ExecutionModeInput.class);
 
   private GridGrindProtocolTypeNames() {}
 
@@ -82,6 +85,12 @@ public final class GridGrindProtocolTypeNames {
       Class<? extends CalculationStrategyInput> calculationStrategyClass) {
     return requiredTypeName(
         CALCULATION_STRATEGY_TYPE_NAMES, calculationStrategyClass, "CalculationStrategyInput");
+  }
+
+  /** Returns the canonical wire id for one execution-mode subtype. */
+  public static String executionModeTypeName(
+      Class<? extends ExecutionModeInput> executionModeClass) {
+    return requiredTypeName(EXECUTION_MODE_TYPE_NAMES, executionModeClass, "ExecutionModeInput");
   }
 
   /** Returns the annotation-owned subtype id map for one sealed wire family. */

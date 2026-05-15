@@ -10,8 +10,7 @@
   },
   "execution" : {
     "mode" : {
-      "readMode" : "FULL_XSSF",
-      "writeMode" : "STREAMING_WRITE"
+      "type" : "STREAMING_WRITE"
     },
     "journal" : {
       "level" : "NORMAL"

@@ -2,6 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
@@ -13,6 +19,14 @@ import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;

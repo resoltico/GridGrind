@@ -20,7 +20,7 @@ public final class GridGrindTaskCatalog {
   /** Validates that every built-in task capability reference resolves against the protocol. */
   static void validateCapabilityReferences(TaskCatalog catalog) {
     for (TaskEntry task : catalog.tasks()) {
-      for (TaskPhase phase : task.phases()) {
+      for (TaskPhase phase : task.workflow().phases()) {
         for (TaskCapabilityRef capabilityRef : phase.capabilityRefs()) {
           if (GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId()).isEmpty()) {
             throw new IllegalStateException(

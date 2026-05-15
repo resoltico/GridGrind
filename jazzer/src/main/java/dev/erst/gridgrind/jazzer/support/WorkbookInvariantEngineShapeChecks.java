@@ -87,20 +87,20 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineDrawingObjectShape(
-      dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot drawingObject) {
+      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot drawingObject) {
     WorkbookInvariantChecks.require(
         drawingObject != null, "engine drawing object must not be null");
     WorkbookInvariantChecks.requireNonBlank(drawingObject.name(), "engine drawing object name");
     requireEngineDrawingAnchorShape(drawingObject.anchor());
     switch (drawingObject) {
-      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Picture picture -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Picture picture -> {
         WorkbookInvariantChecks.requireNonBlank(
             picture.contentType(), "engine picture contentType");
         WorkbookInvariantChecks.requireNonBlank(picture.sha256(), "engine picture sha256");
         WorkbookInvariantChecks.require(
             picture.byteSize() >= 0L, "engine picture byteSize must not be negative");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Chart chart -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Chart chart -> {
         WorkbookInvariantChecks.require(
             chart.plotTypeTokens() != null, "engine chart plotTypeTokens must not be null");
         chart
@@ -111,7 +111,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             chart.title() != null, "engine chart title must not be null");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Shape shape -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.Shape shape -> {
         if (shape.presetGeometryToken() != null) {
           WorkbookInvariantChecks.require(
               !shape.presetGeometryToken().isBlank(),
@@ -124,14 +124,16 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             shape.childCount() >= 0, "engine shape childCount must not be negative");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.EmbeddedObject
+              embeddedObject -> {
         WorkbookInvariantChecks.requireNonBlank(
             embeddedObject.contentType(), "engine embedded contentType");
         WorkbookInvariantChecks.requireNonBlank(embeddedObject.sha256(), "engine embedded sha256");
         WorkbookInvariantChecks.require(
             embeddedObject.byteSize() >= 0L, "engine embedded byteSize must not be negative");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.SignatureLine
+              signatureLine ->
           requireEngineSignatureLineDrawingObjectShape(signatureLine);
     }
   }
@@ -148,7 +150,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEngineSignatureLineDrawingObjectShape(
-      dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.SignatureLine signatureLine) {
+      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot.SignatureLine signatureLine) {
     if (signatureLine.setupId() != null) {
       WorkbookInvariantChecks.requireNonBlank(
           signatureLine.setupId(), "engine signature line setupId");
@@ -316,13 +318,13 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot pivotTable) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot pivotTable) {
     WorkbookInvariantChecks.require(pivotTable != null, "engine pivot table must not be null");
     WorkbookInvariantChecks.requireNonBlank(pivotTable.name(), "engine pivot table name");
     WorkbookInvariantChecks.requireNonBlank(pivotTable.sheetName(), "engine pivot table sheetName");
     requireEnginePivotTableAnchorShape(pivotTable.anchor());
     switch (pivotTable) {
-      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Supported supported -> {
+      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Supported supported -> {
         requireEnginePivotTableSourceShape(supported.source());
         supported
             .rowLabels()
@@ -339,22 +341,22 @@ final class WorkbookInvariantEngineShapeChecks {
             .dataFields()
             .forEach(WorkbookInvariantEngineShapeChecks::requireEnginePivotTableDataFieldShape);
       }
-      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Unsupported unsupported ->
+      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Unsupported unsupported ->
           WorkbookInvariantChecks.requireNonBlank(
               unsupported.detail(), "engine pivot table detail");
     }
   }
 
   static void requireEnginePivotTableSourceShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source source) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source source) {
     WorkbookInvariantChecks.require(source != null, "engine pivot table source must not be null");
     switch (source) {
-      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.Range range -> {
+      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.Range range -> {
         WorkbookInvariantChecks.requireNonBlank(
             range.sheetName(), "engine pivot range source sheetName");
         WorkbookInvariantChecks.requireNonBlank(range.range(), "engine pivot range source range");
       }
-      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.NamedRange namedRange -> {
+      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.NamedRange namedRange -> {
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.name(), "engine pivot named-range source name");
         WorkbookInvariantChecks.requireNonBlank(
@@ -362,7 +364,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.requireNonBlank(
             namedRange.range(), "engine pivot named-range source range");
       }
-      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.Table table -> {
+      case dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Source.Table table -> {
         WorkbookInvariantChecks.requireNonBlank(table.name(), "engine pivot table source name");
         WorkbookInvariantChecks.requireNonBlank(
             table.sheetName(), "engine pivot table source sheetName");
@@ -372,7 +374,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableAnchorShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Anchor anchor) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Anchor anchor) {
     WorkbookInvariantChecks.require(anchor != null, "engine pivot table anchor must not be null");
     WorkbookInvariantChecks.requireNonBlank(
         anchor.topLeftAddress(), "engine pivot table anchor topLeftAddress");
@@ -381,7 +383,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableFieldShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Field field) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.Field field) {
     WorkbookInvariantChecks.require(field != null, "engine pivot table field must not be null");
     WorkbookInvariantChecks.require(
         field.sourceColumnIndex() >= 0,
@@ -391,7 +393,7 @@ final class WorkbookInvariantEngineShapeChecks {
   }
 
   static void requireEnginePivotTableDataFieldShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.DataField dataField) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot.DataField dataField) {
     WorkbookInvariantChecks.require(
         dataField != null, "engine pivot table dataField must not be null");
     WorkbookInvariantChecks.require(
@@ -486,16 +488,17 @@ final class WorkbookInvariantEngineShapeChecks {
     }
   }
 
-  static void requireEngineDrawingAnchorShape(dev.erst.gridgrind.excel.ExcelDrawingAnchor anchor) {
+  static void requireEngineDrawingAnchorShape(
+      dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor anchor) {
     WorkbookInvariantChecks.require(anchor != null, "engine drawing anchor must not be null");
     switch (anchor) {
-      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.TwoCell twoCell -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.TwoCell twoCell -> {
         requireEngineDrawingMarkerShape(twoCell.from());
         requireEngineDrawingMarkerShape(twoCell.to());
         WorkbookInvariantChecks.require(
             twoCell.behavior() != null, "engine two-cell anchor behavior must not be null");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.OneCell oneCell -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.OneCell oneCell -> {
         requireEngineDrawingMarkerShape(oneCell.from());
         WorkbookInvariantChecks.require(
             oneCell.widthEmu() > 0L, "engine one-cell widthEmu must be positive");
@@ -504,7 +507,7 @@ final class WorkbookInvariantEngineShapeChecks {
         WorkbookInvariantChecks.require(
             oneCell.behavior() != null, "engine one-cell anchor behavior must not be null");
       }
-      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.Absolute absolute -> {
+      case dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor.Absolute absolute -> {
         WorkbookInvariantChecks.require(
             absolute.xEmu() >= 0L, "engine absolute xEmu must not be negative");
         WorkbookInvariantChecks.require(
@@ -519,7 +522,8 @@ final class WorkbookInvariantEngineShapeChecks {
     }
   }
 
-  static void requireEngineDrawingMarkerShape(dev.erst.gridgrind.excel.ExcelDrawingMarker marker) {
+  static void requireEngineDrawingMarkerShape(
+      dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker marker) {
     WorkbookInvariantChecks.require(marker != null, "engine drawing marker must not be null");
     WorkbookInvariantChecks.require(
         marker.columnIndex() >= 0, "engine drawing marker columnIndex must not be negative");

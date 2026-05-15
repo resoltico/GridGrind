@@ -19,15 +19,15 @@ import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortConditionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortStateSnapshot;
-import dev.erst.gridgrind.excel.ExcelCustomXmlDataBindingSnapshot;
-import dev.erst.gridgrind.excel.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedTableSnapshot;
-import dev.erst.gridgrind.excel.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableStyleSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import org.jspecify.annotations.Nullable;
 
 /** Converts workbook structure snapshots such as XML mappings, filters, tables, and pivots. */

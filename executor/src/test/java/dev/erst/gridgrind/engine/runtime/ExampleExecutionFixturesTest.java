@@ -106,13 +106,15 @@ class ExampleExecutionFixturesTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings exampleBindings = new ExecutionInputBindings(examplesDirectory);
     for (ShippedExampleEntry example : exampleCatalog().examples()) {
-      Path requestPath = examplesDirectory.resolve(example.fileName());
+      Path requestPath = workspace.resolve(example.suggestedRequestPath());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
       GridGrindResponse.Success success =
           assertInstanceOf(
               GridGrindResponse.Success.class,
               executor.execute(request, exampleBindings),
-              () -> "repository example must execute successfully in-place: " + example.fileName());
+              () ->
+                  "repository example must execute successfully in-place: "
+                      + example.suggestedRequestPath());
       assertEquals(
           request.planId(),
           success.journal().planId(),
@@ -152,7 +154,7 @@ class ExampleExecutionFixturesTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         cli.run(
-            new String[] {"--print-example", exampleId},
+            new String[] {"--print-example", "--lookup", exampleId},
             InputStream.nullInputStream(),
             stdout,
             OutputStream.nullOutputStream());

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Default row and column sizing authored as part of sheet-presentation state. */
 public record SheetDefaultsInput(int defaultColumnWidth, double defaultRowHeightPoints) {
@@ -18,7 +19,9 @@ public record SheetDefaultsInput(int defaultColumnWidth, double defaultRowHeight
 
   /** Creates sheet defaults while applying the documented row-height and column-width defaults. */
   @JsonCreator
-  public SheetDefaultsInput(Integer defaultColumnWidth, Double defaultRowHeightPoints) {
+  public SheetDefaultsInput(
+      @JsonProperty("defaultColumnWidth") Integer defaultColumnWidth,
+      @JsonProperty("defaultRowHeightPoints") Double defaultRowHeightPoints) {
     this(
         java.util.Objects.requireNonNull(defaultColumnWidth, "defaultColumnWidth must not be null")
             .intValue(),

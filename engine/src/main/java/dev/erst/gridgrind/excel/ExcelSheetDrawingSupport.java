@@ -1,5 +1,13 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Sheet;

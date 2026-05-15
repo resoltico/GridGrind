@@ -25,7 +25,6 @@ class ExecutionJournalTest {
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
             List.of(),
-            List.of(),
             new ExecutionJournal.Outcome(
                 ExecutionJournal.Status.SUCCEEDED,
                 0,
@@ -37,13 +36,14 @@ class ExecutionJournalTest {
             List.of());
 
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
-    assertEquals(List.of(), journal.warnings());
     assertEquals(List.of(), journal.events());
   }
 
   @Test
   void phaseRejectsNegativeDurationForStartedStatuses() {
     assertEquals(ExecutionJournal.Status.NOT_STARTED, ExecutionJournal.Phase.notStarted().status());
+    assertEquals(
+        ExecutionJournal.Status.NOT_REQUESTED, ExecutionJournal.Phase.notRequested().status());
     assertEquals(
         "NOT_STARTED phases must omit timestamps and use durationMillis=0",
         assertThrows(
@@ -62,6 +62,17 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.Phase(
                         ExecutionJournal.Status.NOT_STARTED, Optional.empty(), Optional.empty(), 1))
+            .getMessage());
+    assertEquals(
+        "NOT_REQUESTED phases must omit timestamps and use durationMillis=0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ExecutionJournal.Phase(
+                        ExecutionJournal.Status.NOT_REQUESTED,
+                        Optional.empty(),
+                        Optional.of("2026-04-18T10:00:01Z"),
+                        0))
             .getMessage());
     assertEquals(
         "durationMillis must be >= 0",

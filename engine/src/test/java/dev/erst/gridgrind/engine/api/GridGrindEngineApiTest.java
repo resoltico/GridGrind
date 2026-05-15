@@ -191,7 +191,7 @@ class GridGrindEngineApiTest {
   private static RequestDoctorReport cleanDoctorSummary() {
     return RequestDoctorReport.clean(
         new RequestDoctorReport.Summary(
-            "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
+            "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
   }
 
   private static WorkbookPlan standardInputRequest() throws IOException {
@@ -202,7 +202,7 @@ class GridGrindEngineApiTest {
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
-            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+            "mode": {"type": "FULL_XSSF"},
             "journal": { "level": "NORMAL" },
             "calculation": {
               "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -237,7 +237,7 @@ class GridGrindEngineApiTest {
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "execution": {
-            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+            "mode": {"type": "FULL_XSSF"},
             "journal": { "level": "VERBOSE" },
             "calculation": {
               "strategy": { "type": "DO_NOT_CALCULATE" },

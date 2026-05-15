@@ -26,38 +26,35 @@ public record TaskKeywordMatchReport(
     Set<String> taskIds = new LinkedHashSet<>();
     for (Candidate candidate : candidates) {
       Candidate value = Objects.requireNonNull(candidate, "candidates must not contain nulls");
-      if (!taskIds.add(value.task().id())) {
+      if (!taskIds.add(value.taskId())) {
         throw new IllegalArgumentException(
-            "candidates must not contain duplicate task ids: " + value.task().id());
+            "candidates must not contain duplicate task ids: " + value.taskId());
       }
       copy.add(value);
     }
     candidates = List.copyOf(copy);
   }
 
-  /** One scored task match plus the starter scaffold derived from the exact task descriptor. */
+  /** One compact scored task match that points the caller at the next discovery command. */
   public record Candidate(
-      TaskEntry task,
+      String taskId,
+      String summary,
       int score,
       List<String> matchedTerms,
-      List<String> reasons,
-      TaskPlanTemplate starterTemplate) {
+      List<String> matchSources) {
     public Candidate {
-      Objects.requireNonNull(task, "task must not be null");
+      taskId = CliDiscoveryValidation.requireNonBlank(taskId, "taskId");
+      summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");
       if (score <= 0) {
         throw new IllegalArgumentException("score must be positive");
       }
       matchedTerms = CliDiscoveryValidation.copyStrings(matchedTerms, "matchedTerms");
-      reasons = CliDiscoveryValidation.copyStrings(reasons, "reasons");
-      Objects.requireNonNull(starterTemplate, "starterTemplate must not be null");
+      matchSources = CliDiscoveryValidation.copyStrings(matchSources, "matchSources");
       if (matchedTerms.isEmpty()) {
         throw new IllegalArgumentException("matchedTerms must not be empty");
       }
-      if (reasons.isEmpty()) {
-        throw new IllegalArgumentException("reasons must not be empty");
-      }
-      if (!task.id().equals(starterTemplate.task().id())) {
-        throw new IllegalArgumentException("starterTemplate task id must match candidate task id");
+      if (matchSources.isEmpty()) {
+        throw new IllegalArgumentException("matchSources must not be empty");
       }
     }
   }

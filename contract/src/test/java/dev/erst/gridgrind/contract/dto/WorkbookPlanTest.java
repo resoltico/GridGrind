@@ -127,10 +127,7 @@ class WorkbookPlanTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(
-                new ExecutionModeInput(
-                    ExecutionModeInput.ReadMode.EVENT_READ,
-                    ExecutionModeInput.WriteMode.FULL_XSSF)),
+            ExecutionPolicyInput.mode(ExecutionModeInput.eventRead()),
             formulaEnvironment,
             List.of(
                 new MutationStep(
@@ -138,8 +135,8 @@ class WorkbookPlanTest {
                     new CellSelector.ByAddress("Budget", "A1"),
                     new CellMutationAction.SetCell(new CellInput.Text(text("Owner"))))));
 
-    assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, plan.executionMode().readMode());
-    assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, plan.effectiveExecutionMode().readMode());
+    assertInstanceOf(ExecutionModeInput.EventRead.class, plan.executionMode());
+    assertInstanceOf(ExecutionModeInput.EventRead.class, plan.effectiveExecutionMode());
     assertEquals(formulaEnvironment, plan.formulaEnvironment());
     assertEquals("set-cell", plan.steps().getFirst().stepId());
     assertThrows(
@@ -164,8 +161,7 @@ class WorkbookPlanTest {
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
             ExecutionPolicyInput.modeAndJournal(
-                new ExecutionModeInput(
-                    ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
+                ExecutionModeInput.fullXssf(),
                 new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
             FormulaEnvironmentInput.empty(),
             List.of());
@@ -173,7 +169,7 @@ class WorkbookPlanTest {
     assertEquals("budget-audit", plan.planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.journalLevel());
     assertEquals(ExecutionJournalLevel.VERBOSE, plan.execution().journal().level());
-    assertEquals(ExecutionModeInput.ReadMode.FULL_XSSF, plan.effectiveExecutionMode().readMode());
+    assertInstanceOf(ExecutionModeInput.FullXssf.class, plan.effectiveExecutionMode());
     assertEquals(
         "planId must not be blank",
         assertThrows(
@@ -194,8 +190,7 @@ class WorkbookPlanTest {
   void supportsExecutionPolicyConstructorAndDefaultEffectiveExecution() {
     ExecutionPolicyInput executionPolicy =
         ExecutionPolicyInput.modeAndJournal(
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            ExecutionModeInput.eventRead(),
             new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY));
     WorkbookPlan explicitPlan =
         new WorkbookPlan(
@@ -216,11 +211,10 @@ class WorkbookPlanTest {
 
     assertEquals(executionPolicy, explicitPlan.execution());
     assertEquals(ExecutionJournalLevel.SUMMARY, explicitPlan.journalLevel());
-    assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, explicitPlan.executionMode().readMode());
+    assertInstanceOf(ExecutionModeInput.EventRead.class, explicitPlan.executionMode());
     assertEquals(
         ExecutionJournalLevel.NORMAL, defaultPlan.effectiveExecution().effectiveJournalLevel());
-    assertEquals(
-        ExecutionModeInput.ReadMode.FULL_XSSF, defaultPlan.effectiveExecutionMode().readMode());
+    assertInstanceOf(ExecutionModeInput.FullXssf.class, defaultPlan.effectiveExecutionMode());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -296,6 +290,30 @@ class WorkbookPlanTest {
                 () -> new WorkbookPlan.WorkbookSource.ExistingFile(" "))
             .getMessage()
             .startsWith("path "));
+  }
+
+  @Test
+  void rejectsStepCountExceedingMaximum() {
+    List<WorkbookStep> manySteps = new ArrayList<>();
+    for (int i = 0; i <= WorkbookPlan.MAX_STEPS; i++) {
+      manySteps.add(
+          new MutationStep(
+              "step-" + i,
+              new SheetSelector.ByName("Sheet1"),
+              new WorkbookMutationAction.EnsureSheet()));
+    }
+
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                WorkbookPlan.standard(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicyInput.defaults(),
+                    FormulaEnvironmentInput.empty(),
+                    manySteps));
+    assertTrue(failure.getMessage().contains(String.valueOf(WorkbookPlan.MAX_STEPS)));
   }
 
   private static TextSourceInput text(String value) {

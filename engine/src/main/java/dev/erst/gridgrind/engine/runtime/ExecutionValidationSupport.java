@@ -21,8 +21,7 @@ final class ExecutionValidationSupport {
     }
 
     Optional<String> executionModeFailure =
-        ExecutionModeRules.executionModeFailure(
-            request, ExecutionModeRules.executionModes(request));
+        ExecutionModeRules.executionModeFailure(request, ExecutionModeRules.executionMode(request));
     if (executionModeFailure.isPresent()) {
       return Optional.of(
           GridGrindProblems.problem(

@@ -2,7 +2,6 @@ package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,20 +25,24 @@ final class CliDiscoveryValidation {
     return Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
   }
 
-  static WorkbookPlan requireRequestTemplate(WorkbookPlan requestTemplate) {
-    return Objects.requireNonNull(requestTemplate, "requestTemplate must not be null");
-  }
-
   static List<String> copyStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     return List.copyOf(values.stream().map(value -> requireNonBlank(value, fieldName)).toList());
   }
 
-  static List<String> copyOptionalStrings(List<String> values) {
-    if (values == null) {
-      return List.of();
+  static List<String> copyStringsAllowEmpty(List<String> values, String fieldName) {
+    Objects.requireNonNull(values, fieldName + " must not be null");
+    return List.copyOf(values.stream().map(value -> requireNonBlank(value, fieldName)).toList());
+  }
+
+  static java.util.Optional<String> normalizeOptionalString(
+      java.util.Optional<String> value, String fieldName) {
+    java.util.Optional<String> normalized =
+        java.util.Objects.requireNonNull(value, fieldName + " must not be null");
+    if (normalized.isPresent()) {
+      normalized = java.util.Optional.of(requireNonBlank(normalized.orElseThrow(), fieldName));
     }
-    return List.copyOf(values.stream().map(value -> requireNonBlank(value, "value")).toList());
+    return normalized;
   }
 
   static List<TaskEntry> copyTaskEntries(List<TaskEntry> tasks, String fieldName) {

@@ -51,10 +51,21 @@ emit_fixture_file() {
 
 case "${1:-}" in
     '')
-        emit_fixture_file "${FAKE_GRIDGRIND_IMPLICIT_HELP_FILE:-${FAKE_GRIDGRIND_HELP_FILE:?}}"
+        if [[ -t 0 || -t 1 || -t 2 ]]; then
+            emit_fixture_file "${FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE:-${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}}" >&2
+        else
+            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}" >&2
+        fi
+        exit 2
         ;;
     --help)
-        emit_fixture_file "${FAKE_GRIDGRIND_HELP_FILE:?}"
+        emit_fixture_file "${FAKE_GRIDGRIND_HELP_OVERVIEW_FILE:?}"
+        ;;
+    --help-protocol)
+        emit_fixture_file "${FAKE_GRIDGRIND_HELP_PROTOCOL_FILE:?}"
+        ;;
+    --help-guidance)
+        emit_fixture_file "${FAKE_GRIDGRIND_HELP_GUIDANCE_FILE:?}"
         ;;
     --print-request-template)
         emit_fixture_file "${FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE:?}"
@@ -109,16 +120,21 @@ write_case_fixture() {
 
 run_verify_with_fixture_texts() {
     local unset_tmpdir=$1
-    local help_text=$2
-    local catalog_text=$3
-    local example_catalog_text=$4
-    local task_catalog_text=$5
-    local task_plan_text=$6
-    local task_keyword_match_text=$7
-    local doctor_report_text=$8
-    local implicit_help_text=$9
+    local help_overview_text=$2
+    local help_protocol_text=$3
+    local help_guidance_text=$4
+    local catalog_text=$5
+    local example_catalog_text=$6
+    local task_catalog_text=$7
+    local task_plan_text=$8
+    local task_keyword_match_text=$9
+    local doctor_report_text=${10}
+    local noargs_failure_text=${11}
+    local interactive_noargs_failure_text=${12}
     local case_dir
-    local help_file
+    local help_overview_file
+    local help_protocol_file
+    local help_guidance_file
     local catalog_file
     local example_catalog_file
     local task_catalog_file
@@ -126,10 +142,13 @@ run_verify_with_fixture_texts() {
     local task_keyword_match_file
     local request_template_file
     local doctor_report_file
-    local implicit_help_file
+    local noargs_failure_file
+    local interactive_noargs_failure_file
 
     case_dir="$(next_case_dir)"
-    help_file="$(write_case_fixture "${case_dir}" 'help.txt' "${help_text}")"
+    help_overview_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_text}")"
+    help_protocol_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_text}")"
+    help_guidance_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_text}")"
     catalog_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_text}")"
     example_catalog_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_text}")"
     task_catalog_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_text}")"
@@ -137,12 +156,16 @@ run_verify_with_fixture_texts() {
     task_keyword_match_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_text}")"
     request_template_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_text}")"
-    implicit_help_file="$(write_case_fixture "${case_dir}" 'implicit-help.txt' "${implicit_help_text}")"
+    noargs_failure_file="$(write_case_fixture "${case_dir}" 'noargs-failure.json' "${noargs_failure_text}")"
+    interactive_noargs_failure_file="$(
+        write_case_fixture "${case_dir}" 'interactive-noargs-failure.json' "${interactive_noargs_failure_text}"
+    )"
 
     if [[ "${unset_tmpdir}" == 'true' ]]; then
         env -u TMPDIR \
-            FAKE_GRIDGRIND_HELP_FILE="${help_file}" \
-            FAKE_GRIDGRIND_IMPLICIT_HELP_FILE="${implicit_help_file}" \
+            FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
+            FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
+            FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
             FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
             FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
             FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
@@ -150,12 +173,15 @@ run_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
             FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
             FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
+            FAKE_GRIDGRIND_NOARGS_FAILURE_FILE="${noargs_failure_file}" \
+            FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE="${interactive_noargs_failure_file}" \
             "${verify_script}" binary "${fake_cli}" >/dev/null
         return 0
     fi
 
-    FAKE_GRIDGRIND_HELP_FILE="${help_file}" \
-        FAKE_GRIDGRIND_IMPLICIT_HELP_FILE="${implicit_help_file}" \
+    FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
+        FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
+        FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
         FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
         FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
         FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
@@ -163,54 +189,68 @@ run_verify_with_fixture_texts() {
         FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
         FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
         FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
+        FAKE_GRIDGRIND_NOARGS_FAILURE_FILE="${noargs_failure_file}" \
+        FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE="${interactive_noargs_failure_file}" \
         "${verify_script}" binary "${fake_cli}" >/dev/null
 }
 
 run_verify_expect_success() {
     run_verify_with_fixture_texts \
         false \
-        "${success_help}" \
+        "${success_help_overview}" \
+        "${success_help_protocol}" \
+        "${success_help_guidance}" \
         "${success_catalog}" \
         "${success_example_catalog}" \
         "${success_task_catalog}" \
         "${success_task_plan}" \
         "${success_task_keyword_match}" \
         "${success_doctor_report}" \
-        "${success_help}"
+        "${success_noargs_failure}" \
+        "${success_noargs_failure}"
 }
 
 run_verify_expect_success_without_tmpdir() {
     run_verify_with_fixture_texts \
         true \
-        "${success_help}" \
+        "${success_help_overview}" \
+        "${success_help_protocol}" \
+        "${success_help_guidance}" \
         "${success_catalog}" \
         "${success_example_catalog}" \
         "${success_task_catalog}" \
         "${success_task_plan}" \
         "${success_task_keyword_match}" \
         "${success_doctor_report}" \
-        "${success_help}"
+        "${success_noargs_failure}" \
+        "${success_noargs_failure}"
 }
 
 run_verify_expect_failure() {
-    local help_text=$1
-    local catalog_text=$2
-    local example_catalog_text=${3:-${success_example_catalog}}
-    local task_catalog_text=${4:-${success_task_catalog}}
-    local task_plan_text=${5:-${success_task_plan}}
-    local task_keyword_match_text=${6:-${success_task_keyword_match}}
-    local doctor_report_text=${7:-${success_doctor_report}}
-    local implicit_help_text=${8:-${help_text}}
+    local help_overview_text=$1
+    local help_protocol_text=$2
+    local help_guidance_text=$3
+    local catalog_text=$4
+    local example_catalog_text=${5:-${success_example_catalog}}
+    local task_catalog_text=${6:-${success_task_catalog}}
+    local task_plan_text=${7:-${success_task_plan}}
+    local task_keyword_match_text=${8:-${success_task_keyword_match}}
+    local doctor_report_text=${9:-${success_doctor_report}}
+    local noargs_failure_text=${10:-${success_noargs_failure}}
+    local interactive_noargs_failure_text=${11:-${noargs_failure_text}}
     if run_verify_with_fixture_texts \
         false \
-        "${help_text}" \
+        "${help_overview_text}" \
+        "${help_protocol_text}" \
+        "${help_guidance_text}" \
         "${catalog_text}" \
         "${example_catalog_text}" \
         "${task_catalog_text}" \
         "${task_plan_text}" \
         "${task_keyword_match_text}" \
         "${doctor_report_text}" \
-        "${implicit_help_text}" >/dev/null 2>&1; then
+        "${noargs_failure_text}" \
+        "${interactive_noargs_failure_text}" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
     fi
 }
@@ -219,21 +259,29 @@ run_verify_expect_success
 run_verify_expect_success_without_tmpdir
 
 run_verify_expect_failure \
-    "$(append_fixture_line "${success_help}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
+    "${success_help_overview}" \
+    "$(append_fixture_line "${success_help_protocol}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
+    "${success_help_guidance}" \
     "${success_catalog}"
 
 run_verify_expect_failure \
-    "$(replace_fixture_token "${success_help}" 'WORKBOOK_HEALTH' 'WORKBOOK_HEALTH_BROKEN')" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "$(replace_fixture_token "${success_help_guidance}" 'WORKBOOK_HEALTH' 'WORKBOOK_HEALTH_BROKEN')" \
     "${success_catalog}"
 
 run_verify_expect_failure \
-    "${success_help}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "$(replace_fixture_token "${success_task_catalog}" 'SET_TABLE' 'NO_SUCH_MUTATION')"
 
 run_verify_expect_failure \
-    "${success_help}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -243,7 +291,9 @@ run_verify_expect_failure \
         'dashboard-output.xls')"
 
 run_verify_expect_failure \
-    "${success_help}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -253,28 +303,33 @@ run_verify_expect_failure \
         "${success_doctor_report}" \
         '"sourceType" : "NEW"' \
         '"sourceType" : "UTF8_FILE"')" \
-    "${success_help}"
+    "${success_noargs_failure}"
 
 run_verify_expect_failure \
-    "${success_help}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "$(replace_fixture_token \
         "${success_task_keyword_match}" \
-        '"id" : "DASHBOARD"' \
-        '"id" : "TABULAR_REPORT"')" \
+        '"taskId" : "DASHBOARD"' \
+        '"taskId" : "TABULAR_REPORT"')" \
     "${success_doctor_report}"
 
 run_verify_expect_failure \
-    "${success_help}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "${success_task_keyword_match}" \
     "${success_doctor_report}" \
-    "$(append_fixture_line "${success_help}" 'Implicit Help Drifted')"
+    "${success_noargs_failure}" \
+    "$(append_fixture_line "${success_noargs_failure}" 'Interactive no-arg failure drifted')"
 
 printf 'verify-cli-contract regression: success\n'

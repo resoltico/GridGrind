@@ -67,7 +67,9 @@ public enum GridGrindProblemCode {
       GridGrindProblemCategory.RESOURCE,
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Input source not found",
-      "Provide an existing authored input file or correct its path."),
+      "Provide an existing authored input file or correct its path. When the CLI reads a request"
+          + " via --request, relative request-owned paths resolve from the request file"
+          + " directory."),
   INPUT_SOURCE_UNAVAILABLE(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,

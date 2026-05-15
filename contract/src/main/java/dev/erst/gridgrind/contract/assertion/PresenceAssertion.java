@@ -4,11 +4,14 @@ import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 
-/** Presence and absence assertions over named ranges, tables, pivots, and charts. */
+/** Presence and absence assertions over sheets, named ranges, tables, pivots, and charts. */
 public sealed interface PresenceAssertion extends Assertion
-    permits PresenceAssertion.NamedRangePresent,
+    permits PresenceAssertion.SheetPresent,
+        PresenceAssertion.SheetAbsent,
+        PresenceAssertion.NamedRangePresent,
         PresenceAssertion.NamedRangeAbsent,
         PresenceAssertion.TablePresent,
         PresenceAssertion.TableAbsent,
@@ -16,6 +19,18 @@ public sealed interface PresenceAssertion extends Assertion
         PresenceAssertion.PivotTableAbsent,
         PresenceAssertion.ChartPresent,
         PresenceAssertion.ChartAbsent {
+
+  @ProtocolTypeMetadata(
+      id = "EXPECT_SHEET_PRESENT",
+      summary = "Require the selected sheet selector to resolve to one or more sheets.",
+      targetSelectors = {SheetSelector.class})
+  record SheetPresent() implements PresenceAssertion {}
+
+  @ProtocolTypeMetadata(
+      id = "EXPECT_SHEET_ABSENT",
+      summary = "Require the selected sheet selector to resolve to no sheets.",
+      targetSelectors = {SheetSelector.class})
+  record SheetAbsent() implements PresenceAssertion {}
 
   @ProtocolTypeMetadata(
       id = "EXPECT_NAMED_RANGE_PRESENT",

@@ -535,7 +535,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 },
                 Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
+                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                    ::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(

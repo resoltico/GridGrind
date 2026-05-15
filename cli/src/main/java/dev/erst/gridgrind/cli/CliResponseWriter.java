@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
@@ -20,6 +22,63 @@ import java.util.Optional;
 
 /** Writes GridGrind responses to stdout or an explicit response file with structured fallback. */
 final class CliResponseWriter {
+  /**
+   * Writes a CLI failure report to the configured destination.
+   *
+   * <p>When {@code responsePath} is empty, the JSON payload always goes to {@code stdout}
+   * regardless of exit code — callers can use the process exit code to detect failure without
+   * parsing stderr. The {@code stderr} stream is only used in the response-file path: to write a
+   * human-readable file pointer after a successful write, or to emit a fallback notice when the
+   * file write itself fails.
+   */
+  int writeCliFailureReport(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliFailureReport report)
+      throws IOException {
+    return writeCliFailureReportNamed("CLI failure report", responsePath, stdout, stderr, report);
+  }
+
+  /**
+   * Writes a request-content failure report, emitting a "request failure report" stderr pointer.
+   */
+  int writeRequestFailureReport(
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliFailureReport report)
+      throws IOException {
+    return writeCliFailureReportNamed(
+        "request failure report", responsePath, stdout, stderr, report);
+  }
+
+  private int writeCliFailureReportNamed(
+      String payloadName,
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliFailureReport report)
+      throws IOException {
+    Objects.requireNonNull(report, "report must not be null");
+    if (responsePath.isEmpty()) {
+      writePayload(stdout, GridGrindCliJson.writeCliFailureReportBytes(report));
+      return report.exitCode();
+    }
+
+    Path targetPath = responseTargetPath(responsePath.orElseThrow());
+    try {
+      writePayload(targetPath, GridGrindCliJson.writeCliFailureReportBytes(report));
+      writeNonSuccessPointerIfNeeded(stderr, report.exitCode(), targetPath, payloadName, "failure");
+      return report.exitCode();
+    } catch (IOException exception) {
+      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
+      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
+      return 1;
+    }
+  }
+
   /**
    * Writes one arbitrary command payload to stdout or a configured response file.
    *

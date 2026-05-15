@@ -1,6 +1,17 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -14,6 +25,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * High-level workbook wrapper around Apache POI for creation, loading, saving, and sheet access.
  */
+@SuppressWarnings({"PMD.CommentRequired", "PMD.ExcessivePublicCount"})
 public final class ExcelWorkbook implements AutoCloseable {
   private final ExcelWorkbookContext context;
   private final ExcelWorkbookFormulas formulas;
@@ -109,7 +121,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Opens one materialized plain OOXML package with explicit source-security metadata. */
-  static ExcelWorkbook openMaterializedWorkbook(
+  public static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       Optional<Path> sourcePath,
       ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
@@ -150,7 +162,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Opens one materialized plain OOXML package with explicit source-security metadata. */
-  static ExcelWorkbook openMaterializedWorkbook(
+  public static ExcelWorkbook openMaterializedWorkbook(
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
       Optional<Path> sourcePath,
@@ -408,7 +420,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns the mutable XSSF workbook delegate used by workbook-scoped controllers. */
-  XSSFWorkbook xssfWorkbook() {
+  public XSSFWorkbook xssfWorkbook() {
     return context.workbook();
   }
 
@@ -416,19 +428,19 @@ public final class ExcelWorkbook implements AutoCloseable {
     return context;
   }
 
-  Optional<Path> sourcePath() {
+  public Optional<Path> sourcePath() {
     return context.sourcePath();
   }
 
-  ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
+  public ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
     return context.loadedPackageSecurity();
   }
 
-  Optional<String> sourceEncryptionPassword() {
+  public Optional<String> sourceEncryptionPassword() {
     return context.sourceEncryptionPassword();
   }
 
-  boolean wasMutatedSinceOpen() {
+  public boolean wasMutatedSinceOpen() {
     return mutatedSinceOpen;
   }
 
@@ -450,12 +462,12 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   /** Returns whether the POI defined name is a user-facing range that GridGrind should analyze. */
-  static boolean shouldExpose(Name name) {
+  public static boolean shouldExpose(Name name) {
     return ExcelWorkbookNamedRangeSupport.shouldExpose(name);
   }
 
   /** Returns whether a defined-name triple is user-facing and analyzable by GridGrind. */
-  static boolean shouldExpose(String nameName, boolean functionName, boolean hidden) {
+  public static boolean shouldExpose(String nameName, boolean functionName, boolean hidden) {
     return ExcelWorkbookNamedRangeSupport.shouldExpose(nameName, functionName, hidden);
   }
 

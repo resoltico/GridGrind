@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 
 /** Shared unchecked IO bridge for workbook-side helper flows. */
-final class ExcelIoSupport {
+public final class ExcelIoSupport {
   private ExcelIoSupport() {}
 
   /** Executes one checked-IO supplier and rethrows failures as {@link UncheckedIOException}. */
-  static <T> T unchecked(String failureMessage, IoSupplier<T> supplier) {
+  public static <T> T unchecked(String failureMessage, IoSupplier<T> supplier) {
     try {
       return supplier.get();
     } catch (IOException exception) {
@@ -18,7 +18,7 @@ final class ExcelIoSupport {
 
   /** Checked-IO supplier contract for internal workbook helper flows. */
   @FunctionalInterface
-  interface IoSupplier<T> {
+  public interface IoSupplier<T> {
     /** Produces one value and may fail with checked IO. */
     T get() throws IOException;
   }

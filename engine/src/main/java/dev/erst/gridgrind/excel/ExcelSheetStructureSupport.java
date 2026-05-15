@@ -17,7 +17,8 @@ import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** Row, column, merge, view, and print-layout operations for one sheet wrapper. */
-final class ExcelSheetStructureSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelSheetStructureSupport {
   private final Sheet sheet;
   private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
@@ -302,7 +303,7 @@ final class ExcelSheetStructureSupport {
     }
   }
 
-  static String formatRange(ExcelRange range) {
+  public static String formatRange(ExcelRange range) {
     return toCellRangeAddress(range).formatAsString();
   }
 

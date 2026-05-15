@@ -26,6 +26,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.List;
 import java.util.Optional;
@@ -39,9 +40,7 @@ class ProtocolDefaultingCoverageTest {
     JsonMapper mapper = JsonMapper.builder().build();
     CalculationPolicyInput calculation =
         new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
-    ExecutionModeInput mode =
-        new ExecutionModeInput(
-            ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF);
+    ExecutionModeInput mode = ExecutionModeInput.fullXssf();
     ExecutionJournalInput journalInput = new ExecutionJournalInput(ExecutionJournalLevel.NORMAL);
     FormulaEnvironmentInput environment = FormulaEnvironmentInput.empty();
     SheetOutlineSummaryInput outlineSummary = SheetOutlineSummaryInput.defaults();
@@ -107,17 +106,7 @@ class ProtocolDefaultingCoverageTest {
             true,
             Optional.of(
                 new RequestDoctorReport.Summary(
-                    "NEW",
-                    "NONE",
-                    "FULL_XSSF",
-                    "FULL_XSSF",
-                    "DO_NOT_CALCULATE",
-                    false,
-                    false,
-                    0,
-                    0,
-                    0,
-                    0)),
+                    "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0)),
             List.of(),
             Optional.empty());
 
@@ -157,26 +146,25 @@ class ProtocolDefaultingCoverageTest {
   }
 
   @Test
-  void requestConstructorsRejectOmittedWireValues() {
+  void requestConstructorsDefaultWireBooleansWhileRejectingMissingRequiredState() {
     assertThrows(NullPointerException.class, () -> new CalculationPolicyInput(null, null));
-    assertThrows(NullPointerException.class, () -> new ExecutionModeInput(null, null));
+    assertThrows(NullPointerException.class, () -> ExecutionPolicyInput.mode(null));
     assertThrows(NullPointerException.class, () -> new ExecutionJournalInput(null));
     assertThrows(NullPointerException.class, () -> new FormulaEnvironmentInput(null, null, null));
     assertThrows(
         NullPointerException.class, () -> new SheetDisplayInput(null, null, null, null, null));
     assertThrows(NullPointerException.class, () -> new SheetOutlineSummaryInput(null, null));
     assertThrows(NullPointerException.class, () -> new SheetDefaultsInput(null, null));
-    assertThrows(
-        NullPointerException.class,
-        () -> new DataValidationPromptInput(text("Status"), text("Choose one."), (Boolean) null));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new DataValidationErrorAlertInput(
+    assertTrue(
+        new DataValidationPromptInput(text("Status"), text("Choose one."), (Boolean) null)
+            .showPromptBox());
+    assertTrue(
+        new DataValidationErrorAlertInput(
                 ExcelDataValidationErrorStyle.STOP,
                 text("Invalid status"),
                 text("Use one of the allowed values."),
-                (Boolean) null));
+                (Boolean) null)
+            .showErrorBox());
   }
 
   @Test
@@ -198,11 +186,8 @@ class ProtocolDefaultingCoverageTest {
             Boolean.TRUE,
             Optional.of(ExcelAutofilterSortMethod.PINYIN),
             List.of(valueCondition));
-    ExecutionModeInput customMode =
-        new ExecutionModeInput(
-            ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.STREAMING_WRITE);
-    ExecutionModeInput writeOnlyCustomMode =
-        ExecutionModeInput.writeMode(ExecutionModeInput.WriteMode.STREAMING_WRITE);
+    ExecutionModeInput customMode = ExecutionModeInput.eventRead();
+    ExecutionModeInput writeOnlyCustomMode = ExecutionModeInput.streamingWrite();
     ExecutionPolicyInput customPolicy = ExecutionPolicyInput.mode(customMode);
     ExecutionPolicyInput customJournalPolicy =
         ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE));
@@ -235,14 +220,61 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(explicitOutline.rowSumsRight());
     assertEquals(12, explicitSheetDefaults.defaultColumnWidth());
     assertEquals(18.5d, explicitSheetDefaults.defaultRowHeightPoints());
-    assertThrows(
-        NullPointerException.class,
-        () -> new AutofilterFilterColumnInput(2L, (Boolean) null, criterion));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new AutofilterSortStateInput(
-                "A1:B4", (Boolean) null, (Boolean) null, null, List.of(valueCondition)));
+    assertTrue(new AutofilterFilterColumnInput(2L, (Boolean) null, criterion).showButton());
+    AutofilterSortStateInput defaultedWireSortState =
+        new AutofilterSortStateInput(
+            "A1:B4", (Boolean) null, (Boolean) null, Optional.empty(), List.of(valueCondition));
+    assertFalse(defaultedWireSortState.caseSensitive());
+    assertFalse(defaultedWireSortState.columnSort());
+    assertEquals(Optional.empty(), defaultedWireSortState.sortMethod());
+  }
+
+  @Test
+  void residualWireCreatorsNormalizeNullOptionalFields() {
+    CommentInput comment =
+        new CommentInput(text("Owner note"), "Ada", (Boolean) null, nullOptional(), nullOptional());
+    AutofilterSortConditionInput valueCondition =
+        new AutofilterSortConditionInput.Value("A1:A4", true);
+    AutofilterSortStateInput defaultedSortState =
+        new AutofilterSortStateInput(
+            "A1:B4", Boolean.FALSE, Boolean.TRUE, nullOptional(), List.of(valueCondition));
+    WorkbookProtectionInput protection =
+        new WorkbookProtectionInput(null, null, null, nullOptional(), nullOptional());
+    PivotTableInput.DataField dataField =
+        PivotTableInput.DataField.create(
+            "Amount", ExcelPivotDataConsolidateFunction.SUM, null, nullOptional());
+    TableColumnInput tableColumn = TableColumnInput.create(0, null, null, null, null);
+    TableColumnInput explicitFactoryColumn =
+        TableColumnInput.create(1, "owner", "Total", " SUM ", "=[@Amount]");
+    DataValidationInput validation =
+        new DataValidationInput(
+            new DataValidationRuleInput.ExplicitList(List.of("Ready")),
+            null,
+            null,
+            nullOptional(),
+            nullOptional());
+
+    assertFalse(comment.visible());
+    assertEquals(Optional.empty(), comment.runs());
+    assertEquals(Optional.empty(), comment.anchor());
+    assertEquals(Optional.empty(), defaultedSortState.sortMethod());
+    assertFalse(protection.structureLocked());
+    assertFalse(protection.windowsLocked());
+    assertFalse(protection.revisionsLocked());
+    assertEquals(Optional.empty(), protection.workbookPassword());
+    assertEquals(Optional.empty(), protection.revisionsPassword());
+    assertEquals("Amount", dataField.displayName());
+    assertEquals(Optional.empty(), dataField.valueFormat());
+    assertEquals("", tableColumn.uniqueName());
+    assertEquals("", tableColumn.totalsRowLabel());
+    assertEquals("", tableColumn.totalsRowFunction());
+    assertEquals("", tableColumn.calculatedColumnFormula());
+    assertEquals("owner", explicitFactoryColumn.uniqueName());
+    assertEquals("sum", explicitFactoryColumn.totalsRowFunction());
+    assertFalse(validation.allowBlank());
+    assertFalse(validation.suppressDropDownArrow());
+    assertEquals(Optional.empty(), validation.prompt());
+    assertEquals(Optional.empty(), validation.errorAlert());
   }
 
   @Test
@@ -339,24 +371,32 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), defaultedTableReport.headerRowCellStyle());
     assertEquals(Optional.empty(), defaultedTableReport.dataCellStyle());
     assertEquals(Optional.empty(), defaultedTableReport.totalsRowCellStyle());
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new TableInput(
-                "Budget",
-                "Budget",
-                "A1:B3",
-                null,
-                null,
-                new TableStyleInput.None(),
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null));
+    TableInput defaultedWireTable =
+        new TableInput(
+            "Budget",
+            "Budget",
+            "A1:B3",
+            null,
+            null,
+            new TableStyleInput.None(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+    assertFalse(defaultedWireTable.showTotalsRow());
+    assertTrue(defaultedWireTable.hasAutofilter());
+    assertEquals(text(""), defaultedWireTable.comment());
+    assertFalse(defaultedWireTable.published());
+    assertFalse(defaultedWireTable.insertRow());
+    assertFalse(defaultedWireTable.insertRowShift());
+    assertEquals("", defaultedWireTable.headerRowCellStyle());
+    assertEquals("", defaultedWireTable.dataCellStyle());
+    assertEquals("", defaultedWireTable.totalsRowCellStyle());
+    assertEquals(List.of(), defaultedWireTable.columns());
   }
 
   @Test
@@ -745,6 +785,63 @@ class ProtocolDefaultingCoverageTest {
   }
 
   @Test
+  void chartPlotWireCreatorsDefaultNullBooleansAndOptionals() {
+    ChartSeriesInput series = sampleSeries();
+    List<ChartAxisInput> axes = sampleAxes();
+    ChartPlotInput.Area3D area3D =
+        new ChartPlotInput.Area3D(
+            null, ExcelChartGrouping.STANDARD, nullOptional(), axes, List.of(series));
+    ChartPlotInput.Bar3D bar3D =
+        new ChartPlotInput.Bar3D(
+            null,
+            ExcelChartBarDirection.COLUMN,
+            ExcelChartBarGrouping.CLUSTERED,
+            nullOptional(),
+            nullOptional(),
+            nullOptional(),
+            axes,
+            List.of(series));
+    ChartPlotInput.Doughnut doughnut =
+        new ChartPlotInput.Doughnut(null, nullOptional(), nullOptional(), List.of(series));
+    ChartPlotInput.Line line =
+        new ChartPlotInput.Line(null, ExcelChartGrouping.STANDARD, axes, List.of(series));
+    ChartPlotInput.Line3D line3D =
+        new ChartPlotInput.Line3D(
+            null, ExcelChartGrouping.STANDARD, nullOptional(), axes, List.of(series));
+    ChartPlotInput.Pie pie = new ChartPlotInput.Pie(null, nullOptional(), List.of(series));
+    ChartPlotInput.Pie3D pie3D = new ChartPlotInput.Pie3D(null, List.of(series));
+    ChartPlotInput.Radar radar =
+        new ChartPlotInput.Radar(null, ExcelChartRadarStyle.STANDARD, axes, List.of(series));
+    ChartPlotInput.Scatter scatter =
+        new ChartPlotInput.Scatter(null, ExcelChartScatterStyle.LINE, axes, List.of(series));
+    ChartPlotInput.Surface surface = new ChartPlotInput.Surface(null, null, axes, List.of(series));
+    ChartPlotInput.Surface3D surface3D =
+        new ChartPlotInput.Surface3D(null, null, axes, List.of(series));
+
+    assertFalse(area3D.varyColors());
+    assertEquals(Optional.empty(), area3D.gapDepth());
+    assertFalse(bar3D.varyColors());
+    assertEquals(Optional.empty(), bar3D.gapDepth());
+    assertEquals(Optional.empty(), bar3D.gapWidth());
+    assertEquals(Optional.empty(), bar3D.shape());
+    assertFalse(doughnut.varyColors());
+    assertEquals(Optional.empty(), doughnut.firstSliceAngle());
+    assertEquals(Optional.empty(), doughnut.holeSize());
+    assertFalse(line.varyColors());
+    assertFalse(line3D.varyColors());
+    assertEquals(Optional.empty(), line3D.gapDepth());
+    assertFalse(pie.varyColors());
+    assertEquals(Optional.empty(), pie.firstSliceAngle());
+    assertFalse(pie3D.varyColors());
+    assertFalse(radar.varyColors());
+    assertFalse(scatter.varyColors());
+    assertFalse(surface.varyColors());
+    assertFalse(surface.wireframe());
+    assertFalse(surface3D.varyColors());
+    assertFalse(surface3D.wireframe());
+  }
+
+  @Test
   void creatorsRequireExplicitWireValues() {
     JsonMapper mapper = JsonMapper.builder().build();
     PrintSetupInput printSetup =
@@ -919,7 +1016,6 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(Optional.empty(), tableReport.dataCellStyle());
     assertEquals(Optional.empty(), tableReport.totalsRowCellStyle());
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
-    assertEquals(List.of(), journal.warnings());
     assertEquals(List.of(), journal.events());
   }
 
@@ -932,6 +1028,35 @@ class ProtocolDefaultingCoverageTest {
 
   private static TextSourceInput text(String value) {
     return TextSourceInput.inline(value);
+  }
+
+  private static ChartSeriesInput sampleSeries() {
+    return ChartSeriesInput.untitled(
+        new ChartDataSourceInput.StringLiteral(List.of("Q1")),
+        new ChartDataSourceInput.NumericLiteral(List.of(1.0d)),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty(),
+        Optional.empty());
+  }
+
+  private static List<ChartAxisInput> sampleAxes() {
+    return List.of(
+        new ChartAxisInput(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true),
+        new ChartAxisInput(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true));
+  }
+
+  @SuppressWarnings("NullOptional")
+  private static <T> Optional<T> nullOptional() {
+    return null;
   }
 
   private static <T> T readJson(JsonMapper mapper, String json, Class<T> targetType) {

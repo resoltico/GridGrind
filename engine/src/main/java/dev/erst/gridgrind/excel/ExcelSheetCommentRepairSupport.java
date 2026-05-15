@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import java.util.ArrayList;
 import java.util.Comparator;

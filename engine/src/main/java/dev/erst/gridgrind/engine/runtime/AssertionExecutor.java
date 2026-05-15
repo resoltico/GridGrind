@@ -60,7 +60,10 @@ final class AssertionExecutor {
               step.assertion(),
               evaluation.observations()));
     }
-    return new AssertionResult(step.stepId(), step.assertion().assertionType());
+    return new AssertionResult(
+        dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+        step.stepId(),
+        step.assertion().assertionType());
   }
 
   private AssertionEvaluation evaluate(
@@ -70,6 +73,12 @@ final class AssertionExecutor {
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     return switch (assertion) {
+      case PresenceAssertion.SheetPresent sheetPresent ->
+          valueEvaluator.evaluateEntityPresence(
+              stepId, target, sheetPresent.assertionType(), true, workbook, workbookLocation);
+      case PresenceAssertion.SheetAbsent sheetAbsent ->
+          valueEvaluator.evaluateEntityPresence(
+              stepId, target, sheetAbsent.assertionType(), false, workbook, workbookLocation);
       case PresenceAssertion.NamedRangePresent namedRangePresent ->
           valueEvaluator.evaluateEntityPresence(
               stepId, target, namedRangePresent.assertionType(), true, workbook, workbookLocation);

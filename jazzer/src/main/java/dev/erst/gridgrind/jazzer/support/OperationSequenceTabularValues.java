@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.*;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.foundation.*;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;

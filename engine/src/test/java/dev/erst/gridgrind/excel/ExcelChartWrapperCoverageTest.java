@@ -6,6 +6,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingChartSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
 import java.lang.reflect.Proxy;

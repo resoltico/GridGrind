@@ -31,6 +31,7 @@ public sealed interface ChartTitleInput
   record Formula(String formula) implements ChartTitleInput {
     public Formula {
       formula = ChartInput.requireNonBlank(formula, "formula");
+      FormulaInputSecurity.rejectDde(formula); // LIM-033
     }
   }
 }

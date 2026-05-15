@@ -11,6 +11,12 @@ class ProtocolHyperlinkSupportTest {
     assertEquals(
         "https://example.com/report?q=1",
         ProtocolHyperlinkSupport.normalizeUrlTarget("https://example.com/report?q=1"));
+    assertEquals(
+        "http://example.com/page",
+        ProtocolHyperlinkSupport.normalizeUrlTarget("http://example.com/page"));
+    assertEquals(
+        "ftp://files.example.com/report.xlsx",
+        ProtocolHyperlinkSupport.normalizeUrlTarget("ftp://files.example.com/report.xlsx"));
     assertThrows(
         NullPointerException.class, () -> ProtocolHyperlinkSupport.normalizeUrlTarget(null));
     assertThrows(
@@ -25,6 +31,22 @@ class ProtocolHyperlinkSupportTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> ProtocolHyperlinkSupport.normalizeUrlTarget("http://[broken"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ProtocolHyperlinkSupport.normalizeUrlTarget("javascript:alert(1)"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ProtocolHyperlinkSupport.normalizeUrlTarget("vbscript:msgbox(1)"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            ProtocolHyperlinkSupport.normalizeUrlTarget(
+                "ms-excel:ofe|u|https://example.com/evil.xlsx"));
+    IllegalArgumentException schemeError =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ProtocolHyperlinkSupport.normalizeUrlTarget("ldap://evil.example.com/payload"));
+    assertTrue(schemeError.getMessage().contains("ldap"));
   }
 
   @Test
