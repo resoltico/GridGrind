@@ -1,5 +1,5 @@
 # Pin the multi-arch base-image manifest list digest so rebuilds stay reproducible across time.
-FROM azul/zulu-openjdk-alpine:26-jre@sha256:ba82b19503943a38b01a7fc77d4d25b87ae46d030cdd56aaca3a449d502c8179
+FROM azul/zulu-openjdk-alpine:26-jre@sha256:2d273c8744d90ab91a7b5c22c40047f43c7ca9a360650da23daa1ec292c543d4
 
 LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"
