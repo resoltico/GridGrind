@@ -5,10 +5,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
-
-- Bumped Gradle from `9.5.0` to `9.5.1`.
-
 ### Security
 
 - Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now
@@ -61,6 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Bumped Gradle from `9.5.0` to `9.5.1`.
 - Replaced the 6 intermediate package-private constructors in `GridGrindCli` with two static
   `forTesting(executor)` and `forTesting(executor, standardInputIsInteractive)` factory methods;
   the public no-arg and canonical 6-arg constructors are unchanged; deleted four tests that
