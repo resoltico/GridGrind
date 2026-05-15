@@ -5,55 +5,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Security
+### Added
 
-- Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now
-  verifies that relative paths resolve within the working directory; paths using `../` components
-  to escape are rejected with `INVALID_REQUEST`. Absolute paths remain allowed as explicit
-  references.
+- Decomposed `GridGrindProtocolCatalogLookupSupport` (936 lines, 50+ methods) into four
+  package-private helpers: `CatalogSearchRankingSupport` (rank scoring, `isTopLevelPublishedGroup`,
+  `stepTemplateFor`), `CatalogShapeTextSupport` (OOXML shape text rendering and shape-reference
+  traversal), `CatalogSearchAggregationSupport` (match grouping, dedup, `SearchAggregate`), and
+  `CatalogRefResolutionSupport` (flat catalog ref building); `GridGrindProtocolCatalogLookupSupport`
+  retains only the five public entry points, search coordination, value-type hierarchy, and the
+  `CatalogLookupRef` and `RankedSearchMatch` shared records.
 
-- DDE formula injection rejection (`LIM-023`): `CellInput.Formula` now rejects inline formula
-  sources that begin with `DDE(` (case-insensitive, after stripping the leading `=`) to prevent
-  malicious DDE calls from being written into saved workbooks.
+- Added `EXPECT_SHEET_PRESENT` and `EXPECT_SHEET_ABSENT` assertion types to `PresenceAssertion`,
+  closing the sheet-presence gap that existed alongside `EXPECT_NAMED_RANGE_PRESENT`,
+  `EXPECT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_PRESENT`, and `EXPECT_CHART_PRESENT`; both types
+  accept all `SheetSelector` variants (`SHEET_ALL`, `SHEET_BY_NAME`, `SHEET_BY_NAMES`) and
+  evaluate by matching against the live workbook sheet list without a separate inspection query;
+  added `WorkbookInspectionResult.SheetsResult` as the corresponding observation carrier and wired
+  the two new arms into `AssertionObservationExecutor` and `AssertionExecutor`.
 
-- Explicit ZIP decompression limits (`LIM-026`): `ExcelWorkbookOpenSupport` now explicitly
-  configures Apache POI `ZipSecureFile` with a 100 MiB maximum decompressed entry size and a
-  1:100 minimum inflate ratio, replacing implicit reliance on POI defaults.
 
-- Step count limit (`LIM-024`): `WorkbookPlan` now enforces a maximum of 10,000 steps per
-  request, preventing unbounded resource consumption from pathological inputs that could otherwise
-  exhaust execution time or memory under the 16 MiB JSON cap.
-
-- DDE rejection extended to all formula inputs (`LIM-027`): `FormulaInputSecurity.rejectDde` now
-  guards every formula-bearing input type — `ArrayFormulaInput`, all `DataValidationRuleInput`
-  formula fields, `ConditionalFormattingRuleInput` formula fields,
-  `ConditionalFormattingThresholdInput.formula`, and `ChartDataSourceInput.Reference.formula` —
-  closing the gap left by the original LIM-023 fix which only covered `CellInput.Formula`.
-
-- URL scheme allowlist for hyperlinks (`LIM-028`): `HyperlinkTarget.Url` now accepts only `http`,
-  `https`, `ftp`, and `ftps` schemes; previously any non-`file`/`mailto` URI scheme was accepted,
-  allowing `javascript:`, `vbscript:`, `ms-excel:`, and `ldap:` URLs to be written into workbooks.
-
-- Symlink confinement detection (`LIM-029`): `ExecutionRequestPaths.normalizePath` now walks each
-  path component and verifies that symbolic links within the working directory resolve to targets
-  still inside it, closing the bypass of the lexicographic LIM-025 traversal check.
-
-### Fixed
-
-- Added `Objects.requireNonNull(cell)` to the 1-arg `ExcelChartSourceSupport.scalarFromFormula`
-  overload, matching the guard already present in the 2-arg overload; the inconsistency meant the
-  contract differed silently between two methods with the same name. Extracted a `row` local in
-  `resolveChartSource` to replace a double `getRow()` call in the ternary with a single read,
-  removing the stylistic pattern that mirrors the `scalarText` null-dereference.
-
-- Fixed a null-dereference in `ExcelChartSourceSupport.scalarText()`: the method chained
-  `.getRow()` directly onto `workbook.getSheet(sheetName)` without first checking whether the
-  sheet exists; `Workbook.getSheet(name)` returns null for an unknown sheet name, and throws
-  `NullPointerException` when `CellReference.getSheetName()` is null (unqualified reference).
-  The fix extracts `targetSheet` using the same `requireSheet()` pattern already used by every
-  other `getSheet` call site in the class: null sheet name (unqualified reference) falls back to
-  the context sheet; a non-null name is validated through `requireSheet`, which throws
-  `IllegalArgumentException` with a clear message if the sheet is absent.
+- Added `passed` field to `AssertionResult` so every assertion outcome carries an explicit
+  boolean: `true` when the assertion held, `false` when it failed. Failure responses now include
+  the partial assertion list accumulated before the first failure, making the full per-step
+  assertion picture available without cross-referencing journal step events.
+- Added `assertions` field to `GridGrindResponse.Failure` so assertion steps executed before the
+  first failure are visible in the failure response alongside the `problem` payload.
+- Added `protocolVersion` field to `CatalogSearchResult` so `--print-protocol-catalog --search`
+  responses carry the same top-level version identifier as the full catalog response.
+- Added dedicated `CliFailureReport` shape for CLI argument, lookup, and command-usage errors,
+  emitting a machine-readable JSON payload with `exitCode`, `command`, `code`, `message`,
+  `location`, `argument`, `suggestions`, and `resolution` instead of a bare text message.
 
 ### Changed
 
@@ -80,32 +61,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `EXPECT_ANALYSIS_FINDING_ABSENT` are now included in the suggestions, and the candidate list
   will automatically include any new presence-assertion families added in future releases.
 
-### Fixed
-
-- Updated `LIMITATIONS.md` Code fields for LIM-006A and LIM-018 to include `// LIM-NNN`
-  traceability notation, aligning the registry entries with the enforcement-site comments added
-  to `WorkbookStepValidation.requireStepId` and all eight `rejectDestructiveNamed*` methods
-  across `ExcelRowColumnStructureController` and `ExcelRowColumnStructureGuardSupport`.
-
-### Added
-
-- Decomposed `GridGrindProtocolCatalogLookupSupport` (936 lines, 50+ methods) into four
-  package-private helpers: `CatalogSearchRankingSupport` (rank scoring, `isTopLevelPublishedGroup`,
-  `stepTemplateFor`), `CatalogShapeTextSupport` (OOXML shape text rendering and shape-reference
-  traversal), `CatalogSearchAggregationSupport` (match grouping, dedup, `SearchAggregate`), and
-  `CatalogRefResolutionSupport` (flat catalog ref building); `GridGrindProtocolCatalogLookupSupport`
-  retains only the five public entry points, search coordination, value-type hierarchy, and the
-  `CatalogLookupRef` and `RankedSearchMatch` shared records.
-
-- Added `EXPECT_SHEET_PRESENT` and `EXPECT_SHEET_ABSENT` assertion types to `PresenceAssertion`,
-  closing the sheet-presence gap that existed alongside `EXPECT_NAMED_RANGE_PRESENT`,
-  `EXPECT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_PRESENT`, and `EXPECT_CHART_PRESENT`; both types
-  accept all `SheetSelector` variants (`SHEET_ALL`, `SHEET_BY_NAME`, `SHEET_BY_NAMES`) and
-  evaluate by matching against the live workbook sheet list without a separate inspection query;
-  added `WorkbookInspectionResult.SheetsResult` as the corresponding observation carrier and wired
-  the two new arms into `AssertionObservationExecutor` and `AssertionExecutor`.
-
-### Changed
 
 - Replaced `AssertionResult.passed` (`boolean`) with `AssertionResult.outcome`
   (`AssertionOutcome` enum, values `PASSED` / `FAILED`): the boolean emitted `"passed": true` or
@@ -130,6 +85,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   text.
 
 ### Fixed
+
+- Added `Objects.requireNonNull(cell)` to the 1-arg `ExcelChartSourceSupport.scalarFromFormula`
+  overload, matching the guard already present in the 2-arg overload; the inconsistency meant the
+  contract differed silently between two methods with the same name. Extracted a `row` local in
+  `resolveChartSource` to replace a double `getRow()` call in the ternary with a single read,
+  removing the stylistic pattern that mirrors the `scalarText` null-dereference.
+
+- Fixed a null-dereference in `ExcelChartSourceSupport.scalarText()`: the method chained
+  `.getRow()` directly onto `workbook.getSheet(sheetName)` without first checking whether the
+  sheet exists; `Workbook.getSheet(name)` returns null for an unknown sheet name, and throws
+  `NullPointerException` when `CellReference.getSheetName()` is null (unqualified reference).
+  The fix extracts `targetSheet` using the same `requireSheet()` pattern already used by every
+  other `getSheet` call site in the class: null sheet name (unqualified reference) falls back to
+  the context sheet; a non-null name is validated through `requireSheet`, which throws
+  `IllegalArgumentException` with a clear message if the sheet is absent.
+
+
+- Updated `LIMITATIONS.md` Code fields for LIM-006A and LIM-018 to include `// LIM-NNN`
+  traceability notation, aligning the registry entries with the enforcement-site comments added
+  to `WorkbookStepValidation.requireStepId` and all eight `rejectDestructiveNamed*` methods
+  across `ExcelRowColumnStructureController` and `ExcelRowColumnStructureGuardSupport`.
+
 
 - Narrowed the `NullPointerException` arm of `GridGrindJsonMessageSupport.validationCause()` so
   that only explicit null-check NPEs (those whose message ends with `"must not be null"`) are
@@ -203,7 +180,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `customxml`, `ooxml`, `drawing`, and `validation` subpackages so the workbook runtime no longer
   depends on one flat `dev.erst.gridgrind.excel` catch-all namespace.
 
-### Fixed
 
 - Routed all structured JSON output (execution failures, CLI argument failures, doctor-report
   failures) to stdout regardless of exit code. Previously, non-zero responses were written to
@@ -268,21 +244,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or more valid subtypes of the target sealed interface; for example, typing `SET_CEL` in an
   action field now produces `Unknown type value 'SET_CEL'; similar valid values: SET_CELL`.
 
-### Added
-
-- Added `passed` field to `AssertionResult` so every assertion outcome carries an explicit
-  boolean: `true` when the assertion held, `false` when it failed. Failure responses now include
-  the partial assertion list accumulated before the first failure, making the full per-step
-  assertion picture available without cross-referencing journal step events.
-- Added `assertions` field to `GridGrindResponse.Failure` so assertion steps executed before the
-  first failure are visible in the failure response alongside the `problem` payload.
-- Added `protocolVersion` field to `CatalogSearchResult` so `--print-protocol-catalog --search`
-  responses carry the same top-level version identifier as the full catalog response.
-- Added dedicated `CliFailureReport` shape for CLI argument, lookup, and command-usage errors,
-  emitting a machine-readable JSON payload with `exitCode`, `command`, `code`, `message`,
-  `location`, `argument`, `suggestions`, and `resolution` instead of a bare text message.
-
-### Fixed
 
 - Corrected `requestType.optionalFields` in the protocol catalog: only `planId` is genuinely
   optional at runtime. The previous catalog listed `protocolVersion`, `persistence`, `execution`,
@@ -339,6 +300,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (already present in the `Limits` section as the `Request JSON size` entry), and the
   `"source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW"` line
   (already present in the `Limits` section as the `STREAMING_WRITE mode` entry).
+
+### Security
+
+- Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now
+  verifies that relative paths resolve within the working directory; paths using `../` components
+  to escape are rejected with `INVALID_REQUEST`. Absolute paths remain allowed as explicit
+  references.
+
+- DDE formula injection rejection (`LIM-023`): `CellInput.Formula` now rejects inline formula
+  sources that begin with `DDE(` (case-insensitive, after stripping the leading `=`) to prevent
+  malicious DDE calls from being written into saved workbooks.
+
+- Explicit ZIP decompression limits (`LIM-026`): `ExcelWorkbookOpenSupport` now explicitly
+  configures Apache POI `ZipSecureFile` with a 100 MiB maximum decompressed entry size and a
+  1:100 minimum inflate ratio, replacing implicit reliance on POI defaults.
+
+- Step count limit (`LIM-024`): `WorkbookPlan` now enforces a maximum of 10,000 steps per
+  request, preventing unbounded resource consumption from pathological inputs that could otherwise
+  exhaust execution time or memory under the 16 MiB JSON cap.
+
+- DDE rejection extended to all formula inputs (`LIM-027`): `FormulaInputSecurity.rejectDde` now
+  guards every formula-bearing input type — `ArrayFormulaInput`, all `DataValidationRuleInput`
+  formula fields, `ConditionalFormattingRuleInput` formula fields,
+  `ConditionalFormattingThresholdInput.formula`, and `ChartDataSourceInput.Reference.formula` —
+  closing the gap left by the original LIM-023 fix which only covered `CellInput.Formula`.
+
+- URL scheme allowlist for hyperlinks (`LIM-028`): `HyperlinkTarget.Url` now accepts only `http`,
+  `https`, `ftp`, and `ftps` schemes; previously any non-`file`/`mailto` URI scheme was accepted,
+  allowing `javascript:`, `vbscript:`, `ms-excel:`, and `ldap:` URLs to be written into workbooks.
+
+- Symlink confinement detection (`LIM-029`): `ExecutionRequestPaths.normalizePath` now walks each
+  path component and verifies that symbolic links within the working directory resolve to targets
+  still inside it, closing the bypass of the lexicographic LIM-025 traversal check.
 
 ## [0.64.0] - 2026-05-08
 
