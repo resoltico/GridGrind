@@ -303,6 +303,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Source file path confinement (`LIM-030`): `SourceBackedPathResolver.resolvePath` now delegates
+  to `ExecutionRequestPaths.normalizePath` (LIM-025, LIM-029), preventing relative path traversal
+  via `TextSourceInput.Utf8File` and `BinarySourceInput.File` inputs; previously a caller could
+  submit `"../../etc/shadow"` as a source file path and read arbitrary server-side files whose
+  content would appear in cell values or formula strings returned in the response.
+
+- WEBSERVICE formula rejection (`LIM-031`): `FormulaInputSecurity.rejectDde` now also rejects
+  formulas beginning with `WEBSERVICE(` (case-insensitive, after stripping `=` or `{=…}` prefix);
+  `WEBSERVICE` causes Excel to make outbound HTTP requests during formula evaluation, making it a
+  data-exfiltration vector when the generated workbook is opened by downstream users.
+
 - Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now
   verifies that relative paths resolve within the working directory; paths using `../` components
   to escape are rejected with `INVALID_REQUEST`. Absolute paths remain allowed as explicit

@@ -317,3 +317,37 @@ still resolves within the working directory via toRealPath(). Added LIM-029 to L
 and a test in ExecutionPathCoverageTest using a real temp-dir symlink.
 EFFORT: LOW
 ------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: P8Q3R7S
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: engine/src/main/java/dev/erst/gridgrind/engine/runtime/SourceBackedPathResolver.java
+CATEGORY: SECURITY
+OBSERVATION: SourceBackedPathResolver.resolvePath() resolved TextSourceInput.Utf8File and
+BinarySourceInput.File paths with plain Path.of(rawPath).resolve().normalize() — no confinement
+check and no symlink walk. A caller could submit "../../etc/shadow" or a symlink-based escape as
+a source-file path and read arbitrary server-side file content, which would then appear in cell
+values or formula strings returned in the API response.
+FIX: resolvePath() now delegates entirely to ExecutionRequestPaths.normalizePath() (LIM-025,
+LIM-029), which enforces working-directory confinement and symlink walk. Added LIM-030 to
+LIMITATIONS.md, added SourceBackedPathResolver.resolvePath // LIM-030, and two regression tests
+in ExecutionPathCoverageTest (traversal rejected, in-bounds path allowed).
+EFFORT: LOW
+------------------------------------------------------------------------
+------------------------------------------------------------------------
+ID: N2X6Y1Z
+DATE: 2026-05-15
+STATUS: ACTIONED
+FILE: contract/src/main/java/dev/erst/gridgrind/contract/dto/FormulaInputSecurity.java
+CATEGORY: SECURITY
+OBSERVATION: FormulaInputSecurity.rejectDde() blocked only the DDE() function (LIM-027). The Excel
+WEBSERVICE() function makes outbound HTTP GET requests when the workbook is opened in Excel,
+allowing a crafted formula to exfiltrate data to an attacker-controlled server without any user
+interaction beyond opening the file. All formula-bearing input types (CellInput.Formula,
+ArrayFormulaInput, DataValidationRuleInput formula fields, ConditionalFormattingRuleInput formula
+fields) were unguarded against WEBSERVICE injection.
+FIX: Extended rejectDde() to also reject formulas whose effective body begins with "webservice("
+(case-insensitive, after stripping leading = or {=…} wrapper). Added LIM-031 to LIMITATIONS.md
+and regression assertions covering all case forms in ProtocolResidualCoverageTest.
+EFFORT: TRIVIAL
+------------------------------------------------------------------------

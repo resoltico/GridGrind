@@ -177,6 +177,32 @@ class ExecutionPathCoverageTest {
   }
 
   @Test
+  void sourceFilePathTraversalEscapingWorkingDirectoryIsRejected() throws IOException {
+    Path workDir = Files.createTempDirectory("gridgrind-source-path-test");
+    try {
+      org.junit.jupiter.api.Assertions.assertThrows(
+          InputSourceReadException.class,
+          () -> SourceBackedPathResolver.resolvePath("../../etc/passwd", workDir, "test input"));
+    } finally {
+      Files.delete(workDir);
+    }
+  }
+
+  @Test
+  void sourceFilePathWithinWorkingDirectoryIsAllowed() throws IOException {
+    Path workDir = Files.createTempDirectory("gridgrind-source-path-allowed-test");
+    Path file = Files.createTempFile(workDir, "input", ".txt");
+    try {
+      assertEquals(
+          file.toAbsolutePath().normalize(),
+          SourceBackedPathResolver.resolvePath(file.getFileName().toString(), workDir, "test input"));
+    } finally {
+      Files.delete(file);
+      Files.delete(workDir);
+    }
+  }
+
+  @Test
   void failureResponseConvenienceOverloadDefaultsCalculationToNotRequested() {
     WorkbookPlan request =
         WorkbookPlan.standard(

