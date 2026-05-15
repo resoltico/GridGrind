@@ -5,6 +5,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped Gradle from `9.5.0` to `9.5.1`.
+
 ### Security
 
 - Relative path traversal prevention (`LIM-025`): `ExecutionRequestPaths.normalizePath` now
