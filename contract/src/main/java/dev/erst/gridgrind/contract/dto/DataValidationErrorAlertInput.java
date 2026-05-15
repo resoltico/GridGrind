@@ -33,10 +33,6 @@ public record DataValidationErrorAlertInput(
       @JsonProperty("title") TextSourceInput title,
       @JsonProperty("text") TextSourceInput text,
       @JsonProperty("showErrorBox") Boolean showErrorBox) {
-    this(
-        style,
-        title,
-        text,
-        Objects.requireNonNull(showErrorBox, "showErrorBox must not be null").booleanValue());
+    this(style, title, text, !Boolean.FALSE.equals(showErrorBox));
   }
 }

@@ -9,7 +9,7 @@
   },
   "execution": {
     "mode": {
-      "writeMode": "STREAMING_WRITE"
+      "type": "STREAMING_WRITE"
     },
     "calculation": {
       "markRecalculateOnOpen": true,

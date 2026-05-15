@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import java.util.Objects;
 
 /** Workbook-global metadata commands such as custom XML and named ranges. */

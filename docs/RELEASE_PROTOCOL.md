@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -452,7 +452,7 @@ duplicate release workflow run failed after the release was already created.
 The release workflow is expected to perform this same verification internally after publication.
 Before publication, that workflow also black-box verifies the packaged fat JAR with
 `./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` so the shipped `--help`
-surface, the interactive no-arg help path, plus `--print-protocol-catalog`,
+surface, the interactive no-arg failure path, plus `--print-protocol-catalog`,
 `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and `--doctor-request` cannot
 drift from the core contract silently. The operator-side `gh release view` check remains
 mandatory because workflow success is still not the authoritative state. The packaged verifier
@@ -474,7 +474,7 @@ gh release view vX.Y.Z                                                # GitHub R
 The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable,
 that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
-second — and that both published tags still expose the expected `--help`, interactive no-arg help,
+second — and that both published tags still expose the expected `--help`, interactive no-arg failure,
 `--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and
 `--doctor-request` contract. The verifier uses a disposable anonymous Docker config rooted under
 repo-local `tmp/`, so a passing local run matches CI's anonymous publication check instead of

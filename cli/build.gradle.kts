@@ -39,6 +39,10 @@ val cleanInstalledShadowDist by tasks.registering(Delete::class) {
     delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 
+val cleanDistributionArchives by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("distributions"))
+}
+
 tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
 }
@@ -59,6 +63,22 @@ tasks.named<Sync>("installDist") {
 
 tasks.named<Sync>("installShadowDist") {
     dependsOn(cleanInstalledShadowDist)
+}
+
+tasks.named("distZip") {
+    dependsOn(cleanDistributionArchives)
+}
+
+tasks.named("distTar") {
+    dependsOn(cleanDistributionArchives)
+}
+
+tasks.named("shadowDistZip") {
+    dependsOn(cleanDistributionArchives)
+}
+
+tasks.named("shadowDistTar") {
+    dependsOn(cleanDistributionArchives)
 }
 
 tasks.named<Test>("test") {
@@ -107,6 +127,8 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 tasks.named<ProcessResources>("processResources") {
     val description: String = providers.gradleProperty("gridgrindDescription").get()
     val version: String = providers.gradleProperty("version").get()
+    inputs.property("gridgrindDescription", description)
+    inputs.property("gridgrindVersion", version)
     filesMatching("gridgrind.properties") {
         expand(
             mapOf(

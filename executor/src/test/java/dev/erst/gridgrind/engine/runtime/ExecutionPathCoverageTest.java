@@ -195,7 +195,8 @@ class ExecutionPathCoverageTest {
     try {
       assertEquals(
           file.toAbsolutePath().normalize(),
-          SourceBackedPathResolver.resolvePath(file.getFileName().toString(), workDir, "test input"));
+          SourceBackedPathResolver.resolvePath(
+              file.getFileName().toString(), workDir, "test input"));
     } finally {
       Files.delete(file);
       Files.delete(workDir);

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: WORKBOOK_CELL_INSPECTIONS
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, inspections, get-workbook-summary, get-package-security, get-cells, get-window, get-comments]
   questions: ["how do i inspect workbook facts in gridgrind", "how do i read cells in gridgrind", "how do i inspect package security in gridgrind"]
@@ -87,7 +87,7 @@ Response shape:
 }
 ```
 
-`GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `execution.mode.readMode=EVENT_READ`
+`GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `execution.mode.type=EVENT_READ`
 rejects it up front because the event-model reader exposes only workbook and sheet summaries.
 Unencrypted workbooks return `"encryption": { "encrypted": false }` plus an empty `signatures`
 array.

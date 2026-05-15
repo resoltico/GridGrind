@@ -3,7 +3,6 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.nio.file.Path;
@@ -24,7 +23,6 @@ final class ExecutionJournalRecorder {
   private final long planStartNanos;
   private final List<ExecutionJournal.Step> steps = new ArrayList<>();
   private final List<ExecutionJournal.Event> events = new ArrayList<>();
-  private List<RequestWarning> warnings = List.of();
   private ExecutionJournal.Phase validation = ExecutionJournal.Phase.notStarted();
   private ExecutionJournal.Phase inputResolution = ExecutionJournal.Phase.notStarted();
   private ExecutionJournal.Phase open = ExecutionJournal.Phase.notStarted();
@@ -84,10 +82,6 @@ final class ExecutionJournalRecorder {
     return new ExecutionJournalRecorder(planId, level, source, persistence, liveSink);
   }
 
-  void setWarnings(List<RequestWarning> warnings) {
-    this.warnings = warnings == null ? List.of() : List.copyOf(warnings);
-  }
-
   PhaseHandle beginValidation() {
     return new PhaseHandle("VALIDATION", null, null, phase -> validation = phase);
   }
@@ -124,12 +118,30 @@ final class ExecutionJournalRecorder {
         phase -> calculation = new ExecutionJournal.Calculation(calculation.preflight(), phase));
   }
 
+  void markCalculationPreflightNotRequested() {
+    calculation =
+        new ExecutionJournal.Calculation(
+            ExecutionJournal.Phase.notRequested(), calculation.execution());
+  }
+
+  void markCalculationExecutionNotRequested() {
+    calculation =
+        new ExecutionJournal.Calculation(
+            calculation.preflight(), ExecutionJournal.Phase.notRequested());
+  }
+
   StepHandle beginStep(int stepIndex, WorkbookStep step) {
     return new StepHandle(stepIndex, step);
   }
 
   ExecutionJournal buildSuccess(int plannedStepCount) {
-    emit("PLAN", "succeeded", null, null);
+    return buildSuccess(plannedStepCount, true);
+  }
+
+  ExecutionJournal buildSuccess(int plannedStepCount, boolean emitPlanOutcomeEvent) {
+    if (emitPlanOutcomeEvent) {
+      emit("PLAN", "succeeded", null, null);
+    }
     return new ExecutionJournal(
         Optional.ofNullable(planId),
         level,
@@ -142,7 +154,6 @@ final class ExecutionJournalRecorder {
         persistencePhase,
         close,
         List.copyOf(steps),
-        warnings,
         new ExecutionJournal.Outcome(
             ExecutionJournal.Status.SUCCEEDED,
             plannedStepCount,
@@ -159,7 +170,18 @@ final class ExecutionJournalRecorder {
       GridGrindProblemCode failureCode,
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId) {
-    emit("PLAN", "failed (" + failureCode + ")", failedStepIndex, failedStepId);
+    return buildFailure(plannedStepCount, failureCode, failedStepIndex, failedStepId, true);
+  }
+
+  ExecutionJournal buildFailure(
+      int plannedStepCount,
+      GridGrindProblemCode failureCode,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId,
+      boolean emitPlanOutcomeEvent) {
+    if (emitPlanOutcomeEvent) {
+      emit("PLAN", "failed (" + failureCode + ")", failedStepIndex, failedStepId);
+    }
     return new ExecutionJournal(
         Optional.ofNullable(planId),
         level,
@@ -172,7 +194,6 @@ final class ExecutionJournalRecorder {
         persistencePhase,
         close,
         List.copyOf(steps),
-        warnings,
         new ExecutionJournal.Outcome(
             ExecutionJournal.Status.FAILED,
             plannedStepCount,

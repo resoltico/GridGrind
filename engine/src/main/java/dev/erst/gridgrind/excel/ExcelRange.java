@@ -4,8 +4,9 @@ import java.util.Objects;
 import org.apache.poi.ss.util.CellReference;
 
 /** Normalized rectangular cell range expressed with zero-based row and column bounds. */
-record ExcelRange(int firstRow, int lastRow, int firstColumn, int lastColumn) {
-  ExcelRange {
+@SuppressWarnings("PMD.CommentRequired")
+public record ExcelRange(int firstRow, int lastRow, int firstColumn, int lastColumn) {
+  public ExcelRange {
     if (firstRow < 0) {
       throw new IllegalArgumentException("firstRow must not be negative");
     }
@@ -20,7 +21,7 @@ record ExcelRange(int firstRow, int lastRow, int firstColumn, int lastColumn) {
     }
   }
 
-  static ExcelRange parse(String range) {
+  public static ExcelRange parse(String range) {
     Objects.requireNonNull(range, "range must not be null");
     if (range.isBlank()) {
       throw new IllegalArgumentException("range must not be blank");

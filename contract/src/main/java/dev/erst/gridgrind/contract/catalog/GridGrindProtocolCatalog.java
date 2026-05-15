@@ -35,13 +35,7 @@ public final class GridGrindProtocolCatalog {
           "WorkbookPlan",
           "Complete GridGrind plan for workbook source, execution policy, formula environment,"
               + " ordered mutation, assertion, and inspection steps, and persistence.",
-          List.of(
-              "protocolVersion",
-              "planId",
-              "persistence",
-              "execution",
-              "formulaEnvironment",
-              "steps"));
+          List.of("planId"));
   private static final List<CatalogTypeDescriptor> STEP_TYPES =
       GridGrindProtocolCatalogTypeDescriptors.STEP_TYPES;
   private static final List<CatalogTypeDescriptor> SOURCE_TYPES =
@@ -129,18 +123,21 @@ public final class GridGrindProtocolCatalog {
     for (CatalogNestedTypeDescriptor nestedTypeGroup : NESTED_TYPE_GROUPS) {
       validateCoverage(nestedTypeGroup.sealedType(), nestedTypeGroup.typeDescriptors());
     }
-    return new Catalog(
-        GridGrindProtocolVersion.current(),
-        DISCRIMINATOR_FIELD,
-        REQUEST_TYPE,
-        publicEntries(SOURCE_TYPES),
-        publicEntries(PERSISTENCE_TYPES),
-        publicEntries(STEP_TYPES),
-        publicEntries(MUTATION_ACTION_TYPES),
-        publicEntries(ASSERTION_TYPES),
-        publicEntries(INSPECTION_QUERY_TYPES),
-        NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList(),
-        PLAIN_TYPE_DESCRIPTORS.stream().map(GridGrindProtocolCatalog::publicPlainGroup).toList());
+    return CatalogStepTemplateSupport.attach(
+        new Catalog(
+            GridGrindProtocolVersion.current(),
+            DISCRIMINATOR_FIELD,
+            REQUEST_TYPE,
+            publicEntries(SOURCE_TYPES),
+            publicEntries(PERSISTENCE_TYPES),
+            publicEntries(STEP_TYPES),
+            publicEntries(MUTATION_ACTION_TYPES),
+            publicEntries(ASSERTION_TYPES),
+            publicEntries(INSPECTION_QUERY_TYPES),
+            NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList(),
+            PLAIN_TYPE_DESCRIPTORS.stream()
+                .map(GridGrindProtocolCatalog::publicPlainGroup)
+                .toList()));
   }
 
   private static NestedTypeGroup publicGroup(CatalogNestedTypeDescriptor descriptor) {

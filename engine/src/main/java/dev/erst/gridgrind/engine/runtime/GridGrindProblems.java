@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.contract.json.PayloadException;
+import dev.erst.gridgrind.contract.json.PayloadLocation;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -210,25 +211,24 @@ public final class GridGrindProblems {
     return switch (context) {
       case dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest rc -> {
         if (exception instanceof PayloadException pe) {
-          var jsonPath = pe.jsonPath();
-          var jsonLine = pe.jsonLine();
-          var jsonColumn = pe.jsonColumn();
           dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation jsonLocation =
-              jsonPath.isPresent() && (jsonLine.isEmpty() || jsonColumn.isEmpty())
-                  ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                      .pathOnly(jsonPath.orElseThrow())
-                  : jsonLine.isEmpty() || jsonColumn.isEmpty()
-                      ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
-                          .unavailable()
-                      : jsonPath.isEmpty()
-                          ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
-                              .JsonLocation.lineColumn(
-                              jsonLine.orElseThrow(), jsonColumn.orElseThrow())
-                          : dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces
-                              .JsonLocation.located(
-                              jsonPath.orElseThrow(),
-                              jsonLine.orElseThrow(),
-                              jsonColumn.orElseThrow());
+              switch (pe.jsonLocation()) {
+                case PayloadLocation.PathOnly pathOnly ->
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                        .pathOnly(pathOnly.jsonPathValue());
+                case PayloadLocation.LineColumn lineColumn ->
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                        .lineColumn(lineColumn.jsonLineValue(), lineColumn.jsonColumnValue());
+                case PayloadLocation.Located located ->
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                        .located(
+                            located.jsonPathValue(),
+                            located.jsonLineValue(),
+                            located.jsonColumnValue());
+                case PayloadLocation.Unavailable _ ->
+                    dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
+                        .unavailable();
+              };
           yield rc.withJson(jsonLocation);
         }
         yield context;

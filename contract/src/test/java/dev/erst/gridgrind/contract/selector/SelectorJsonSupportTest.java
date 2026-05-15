@@ -12,6 +12,13 @@ import org.junit.jupiter.api.Test;
 /** Tests selector JSON type-id registry behavior for canonical root-level serialization. */
 class SelectorJsonSupportTest {
   @Test
+  void displaysNameForNestedAndTopLevelClasses() {
+    assertEquals(
+        "CellSelector.ByAddress", SelectorJsonSupport.displayName(CellSelector.ByAddress.class));
+    assertEquals("String", SelectorJsonSupport.displayName(String.class));
+  }
+
+  @Test
   void resolvesKnownSelectorLeafTypeIds() {
     assertEquals("WORKBOOK_CURRENT", SelectorJsonSupport.typeIdFor(WorkbookSelector.Current.class));
     assertEquals("CELL_BY_ADDRESS", SelectorJsonSupport.typeIdFor(CellSelector.ByAddress.class));

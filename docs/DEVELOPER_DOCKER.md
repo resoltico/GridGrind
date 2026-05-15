@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: DEVELOPER_DOCKER
 updated: "2026-05-01"
 route:
@@ -32,7 +32,7 @@ For GridGrind's local container work, the documented standard is:
 - Docker comes from Docker Desktop, not from a separate Homebrew-only container-runtime story
 - `docker` and the Docker daemon must already work in the current shell before `./check.sh`
 - `docker buildx` is required; the smoke gate uses `docker buildx build --load`, not Docker's
-  deprecated legacy builder path
+  deprecated classic builder path
 - local smoke and release verification must not depend on personal Docker login state
 - public-image verification should run through a temporary anonymous `DOCKER_CONFIG` while still
   targeting the active local Docker engine
@@ -78,7 +78,7 @@ if that empty config would hide Buildx, stages an already-installed host `docker
 into the anonymous config. On macOS that plugin often comes from Docker Desktop; on CI or other
 hosts it may come from a system CLI-plugin directory. That keeps public pulls, runs, and Buildx
 image loads independent from personal Docker auth state without falling back to Docker's
-deprecated legacy builder path.
+deprecated classic builder path.
 
 ## Verification
 

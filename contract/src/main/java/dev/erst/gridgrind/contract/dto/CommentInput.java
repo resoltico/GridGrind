@@ -53,12 +53,7 @@ public record CommentInput(
       @JsonProperty("visible") Boolean visible,
       @JsonProperty("runs") Optional<java.util.List<RichTextRunInput>> runs,
       @JsonProperty("anchor") Optional<CommentAnchorInput> anchor) {
-    this(
-        text,
-        author,
-        Objects.requireNonNull(visible, "visible must not be null").booleanValue(),
-        Objects.requireNonNull(runs, "runs must not be null"),
-        Objects.requireNonNull(anchor, "anchor must not be null"));
+    this(text, author, Boolean.TRUE.equals(visible), emptyIfNull(runs), emptyIfNull(anchor));
   }
 
   private static void validateRunsAgainstInlineText(
@@ -94,5 +89,9 @@ public record CommentInput(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
+  }
+
+  private static <T> Optional<T> emptyIfNull(Optional<T> value) {
+    return value == null ? Optional.empty() : value;
   }
 }

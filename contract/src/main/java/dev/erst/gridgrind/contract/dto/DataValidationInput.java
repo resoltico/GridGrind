@@ -30,10 +30,13 @@ public record DataValidationInput(
       @JsonProperty("errorAlert") Optional<DataValidationErrorAlertInput> errorAlert) {
     this(
         rule,
-        Objects.requireNonNull(allowBlank, "allowBlank must not be null").booleanValue(),
-        Objects.requireNonNull(suppressDropDownArrow, "suppressDropDownArrow must not be null")
-            .booleanValue(),
-        Objects.requireNonNull(prompt, "prompt must not be null"),
-        Objects.requireNonNull(errorAlert, "errorAlert must not be null"));
+        Boolean.TRUE.equals(allowBlank),
+        Boolean.TRUE.equals(suppressDropDownArrow),
+        emptyIfNull(prompt),
+        emptyIfNull(errorAlert));
+  }
+
+  private static <T> Optional<T> emptyIfNull(Optional<T> value) {
+    return value == null ? Optional.empty() : value;
   }
 }

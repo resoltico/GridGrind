@@ -35,7 +35,7 @@ fails:
   "source": { "type": "NEW" },
   "persistence": { "type": "SAVE_AS", "path": "lots.xlsx" },
   "execution": {
-    "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+    "mode": { "type": "FULL_XSSF" },
     "journal": { "level": "NORMAL" },
     "calculation": {
       "strategy": { "type": "DO_NOT_CALCULATE" },

@@ -9,8 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput.WriteMode;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -99,7 +97,7 @@ class GridGrindPlanTest {
 
   @Test
   void journalPreservesImportedExecutionModeAndCalculation() {
-    ExecutionModeInput mode = new ExecutionModeInput(ReadMode.EVENT_READ, WriteMode.FULL_XSSF);
+    ExecutionModeInput mode = ExecutionModeInput.eventRead();
     dev.erst.gridgrind.contract.dto.CalculationPolicyInput calculation =
         new dev.erst.gridgrind.contract.dto.CalculationPolicyInput(
             new dev.erst.gridgrind.contract.dto.CalculationStrategyInput.DoNotCalculate(), true);

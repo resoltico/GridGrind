@@ -26,7 +26,7 @@ public final class ExampleRequestFixturesWriter {
         GridGrindShippedExamples.repositoryExamples();
     Set<String> expectedFiles =
         examples.stream()
-            .map(GridGrindShippedExamples.ShippedExample::fileName)
+            .map(GridGrindShippedExamples.ShippedExample::requestFileName)
             .collect(Collectors.toUnmodifiableSet());
 
     try (Stream<Path> stream = Files.list(examplesDirectory)) {
@@ -43,7 +43,8 @@ public final class ExampleRequestFixturesWriter {
 
     for (GridGrindShippedExamples.ShippedExample example : examples) {
       Files.write(
-          examplesDirectory.resolve(example.fileName()), requestBytesWithLineSeparator(example));
+          examplesDirectory.resolve(example.requestFileName()),
+          requestBytesWithLineSeparator(example));
     }
   }
 

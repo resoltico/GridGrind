@@ -55,6 +55,8 @@ class AssertionCoverageTest {
             "Budget!B2",
             dev.erst.gridgrind.contract.dto.NamedRangeTarget.range("Budget", "B2"));
 
+    assertEquals("EXPECT_SHEET_PRESENT", new PresenceAssertion.SheetPresent().assertionType());
+    assertEquals("EXPECT_SHEET_ABSENT", new PresenceAssertion.SheetAbsent().assertionType());
     assertEquals(
         "EXPECT_NAMED_RANGE_PRESENT", new PresenceAssertion.NamedRangePresent().assertionType());
     assertEquals(

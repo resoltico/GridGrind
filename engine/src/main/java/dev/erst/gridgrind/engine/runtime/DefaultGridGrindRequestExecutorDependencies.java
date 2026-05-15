@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.nio.file.Files;
 import java.util.Objects;
 

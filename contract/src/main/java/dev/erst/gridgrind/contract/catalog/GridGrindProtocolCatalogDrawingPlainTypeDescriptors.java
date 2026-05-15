@@ -74,7 +74,7 @@ final class GridGrindProtocolCatalogDrawingPlainTypeDescriptors {
               "ChartSeriesInput",
               "One authored chart series with a title plus category and value data sources."
                   + " smooth, marker, and explosion fields are optional by chart family.",
-              List.of("title", "smooth", "markerStyle", "markerSize", "explosion")),
+              List.of("smooth", "markerStyle", "markerSize", "explosion")),
           plainTypeDescriptor(
               "pictureDataInputType",
               PictureDataInput.class,

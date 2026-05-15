@@ -1,6 +1,10 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

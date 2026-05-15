@@ -45,6 +45,7 @@ import tools.jackson.core.json.JsonFactory;
 import tools.jackson.databind.exc.InvalidTypeIdException;
 import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Tests for JSON serialization, parser wording, and the step-based wire shape. */
 @SuppressWarnings("NotJavadoc")
@@ -59,7 +60,7 @@ class GridGrindJsonTest {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
-                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "mode": {"type": "FULL_XSSF"},
                 "journal": { "level": "NORMAL" },
                 "calculation": {
                   "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -155,9 +156,7 @@ class GridGrindJsonTest {
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExecutionPolicyInput.mode(
-                new ExecutionModeInput(
-                    ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF)),
+            ExecutionPolicyInput.mode(ExecutionModeInput.fullXssf()),
             FormulaEnvironmentInput.empty(),
             List.of(
                 new MutationStep(
@@ -177,7 +176,11 @@ class GridGrindJsonTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
-            List.of(new AssertionResult("assert-owner", "EXPECT_CELL_VALUE")),
+            List.of(
+                new AssertionResult(
+                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+                    "assert-owner",
+                    "EXPECT_CELL_VALUE")),
             List.of(
                 new WorkbookInspectionResult.WorkbookSummaryResult(
                     "summary",
@@ -255,7 +258,7 @@ class GridGrindJsonTest {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
-                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "mode": {"type": "FULL_XSSF"},
                 "journal": { "level": "NORMAL" },
                 "calculation": {
                   "strategy": { "type": "EVALUATE_ALL" },
@@ -276,10 +279,7 @@ class GridGrindJsonTest {
     String serializedJson = new String(serialized, StandardCharsets.UTF_8);
 
     assertFalse(serializedJson.contains("\"default\""));
-    assertEquals(
-        new ExecutionModeInput(
-            ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF),
-        request.effectiveExecutionMode());
+    assertEquals(ExecutionModeInput.fullXssf(), request.effectiveExecutionMode());
     assertFalse(request.calculationPolicy().markRecalculateOnOpen());
     assertEquals(request, GridGrindJson.readRequest(serialized));
   }
@@ -294,7 +294,7 @@ class GridGrindJsonTest {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
-                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "mode": {"type": "FULL_XSSF"},
                 "journal": { "level": "NORMAL" },
                 "calculation": {
                   "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -352,7 +352,7 @@ class GridGrindJsonTest {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "execution": {
-                "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                "mode": {"type": "FULL_XSSF"},
                 "journal": { "level": "NORMAL" },
                 "calculation": {
                   "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -581,80 +581,128 @@ class GridGrindJsonTest {
   }
 
   @Test
-  void rejectsDataValidationPayloadsThatOmitExplicitValidationBooleans() {
-    InvalidRequestException missingAllowBlank =
-        assertThrows(
-            InvalidRequestException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        {
-                          "stepId": "validation-missing-allowBlank",
-                          "target": {
-                            "type": "RANGE_BY_RANGE",
-                            "sheetName": "Intake",
-                            "range": "A2:A20"
-                          },
-                          "action": {
-                            "type": "SET_DATA_VALIDATION",
-                            "validation": {
-                              "rule": {
-                                "type": "EXPLICIT_LIST",
-                                "values": [ "Queued" ]
-                              },
-                              "suppressDropDownArrow": false
-                            }
-                          }
-                        }
-                      ]
+  void defaultsDataValidationPayloadsThatOmitValidationBooleans() throws IOException {
+    ObjectNode missingAllowBlank =
+        GridGrindJson.requestTree(
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": "V1",
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "mode": { "type": "FULL_XSSF" },
+                    "journal": { "level": "NORMAL" },
+                    "calculation": {
+                      "strategy": { "type": "DO_NOT_CALCULATE" },
+                      "markRecalculateOnOpen": false
                     }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestException missingSuppressDropDownArrow =
-        assertThrows(
-            InvalidRequestException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
+                  },
+                  "formulaEnvironment": {
+                    "externalWorkbooks": [ ],
+                    "missingWorkbookPolicy": "ERROR",
+                    "udfToolpacks": [ ]
+                  },
+                  "steps": [
                     {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        {
-                          "stepId": "validation-missing-suppressDropDownArrow",
-                          "target": {
-                            "type": "RANGE_BY_RANGE",
-                            "sheetName": "Intake",
-                            "range": "A2:A20"
+                      "stepId": "validation-missing-allowBlank",
+                      "target": {
+                        "type": "RANGE_BY_RANGE",
+                        "sheetName": "Intake",
+                        "range": "A2:A20"
+                      },
+                      "action": {
+                        "type": "SET_DATA_VALIDATION",
+                        "validation": {
+                          "rule": {
+                            "type": "EXPLICIT_LIST",
+                            "values": [ "Queued" ]
                           },
-                          "action": {
-                            "type": "SET_DATA_VALIDATION",
-                            "validation": {
-                              "rule": {
-                                "type": "EXPLICIT_LIST",
-                                "values": [ "Queued" ]
-                              },
-                              "allowBlank": false
-                            }
-                          }
+                          "suppressDropDownArrow": false
                         }
-                      ]
+                      }
                     }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
+                  ]
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)));
+    ObjectNode missingSuppressDropDownArrow =
+        GridGrindJson.requestTree(
+            GridGrindJson.readRequest(
+                """
+                {
+                  "protocolVersion": "V1",
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
+                  "execution": {
+                    "mode": { "type": "FULL_XSSF" },
+                    "journal": { "level": "NORMAL" },
+                    "calculation": {
+                      "strategy": { "type": "DO_NOT_CALCULATE" },
+                      "markRecalculateOnOpen": false
+                    }
+                  },
+                  "formulaEnvironment": {
+                    "externalWorkbooks": [ ],
+                    "missingWorkbookPolicy": "ERROR",
+                    "udfToolpacks": [ ]
+                  },
+                  "steps": [
+                    {
+                      "stepId": "validation-missing-suppressDropDownArrow",
+                      "target": {
+                        "type": "RANGE_BY_RANGE",
+                        "sheetName": "Intake",
+                        "range": "A2:A20"
+                      },
+                      "action": {
+                        "type": "SET_DATA_VALIDATION",
+                        "validation": {
+                          "rule": {
+                            "type": "EXPLICIT_LIST",
+                            "values": [ "Queued" ]
+                          },
+                          "allowBlank": false
+                        }
+                      }
+                    }
+                  ]
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals("Missing required field 'allowBlank'", missingAllowBlank.getMessage());
-    assertEquals(
-        Optional.of("steps[0].action.validation"),
-        missingAllowBlank.jsonPath(),
-        "missing fields must point at the validation object");
-    assertEquals(
-        "Missing required field 'suppressDropDownArrow'",
-        missingSuppressDropDownArrow.getMessage());
-    assertEquals(
-        Optional.of("steps[0].action.validation"), missingSuppressDropDownArrow.jsonPath());
+    assertFalse(
+        missingAllowBlank
+            .path("steps")
+            .path(0)
+            .path("action")
+            .path("validation")
+            .path("allowBlank")
+            .booleanValue());
+    assertFalse(
+        missingAllowBlank
+            .path("steps")
+            .path(0)
+            .path("action")
+            .path("validation")
+            .path("suppressDropDownArrow")
+            .booleanValue());
+    assertFalse(
+        missingSuppressDropDownArrow
+            .path("steps")
+            .path(0)
+            .path("action")
+            .path("validation")
+            .path("allowBlank")
+            .booleanValue());
+    assertFalse(
+        missingSuppressDropDownArrow
+            .path("steps")
+            .path(0)
+            .path("action")
+            .path("validation")
+            .path("suppressDropDownArrow")
+            .booleanValue());
   }
 
   @Test
@@ -755,25 +803,17 @@ class GridGrindJsonTest {
   @Test
   void exposesProductOwnedHelperMessagesAndJsonLocations() throws IOException {
     JsonFactory jsonFactory = new JsonFactory();
-    MismatchedInputException nullPrimitive =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    jsonFactory.createParser("null"),
-                    Integer.class,
-                    "Cannot map `null` into type `int`")
-                .prependPath(WorkbookPlan.class, "rowCount");
     MismatchedInputException floatingInteger =
         (MismatchedInputException)
             MismatchedInputException.from(
                     jsonFactory.createParser("2.5"),
                     Integer.class,
-                    "Floating-point value (2.5) out of range of int")
+                    "Cannot coerce Floating-point value (2.5) to `int` value"
+                        + " (but could if coercion was enabled using `CoercionConfig`)")
                 .prependPath(WorkbookPlan.class, "rowCount");
     InvalidTypeIdException invalidType =
         InvalidTypeIdException.from(jsonFactory.createParser("\"x\""), "bad type", null, "NOPE");
 
-    assertEquals(
-        "Missing required field 'rowCount'", GridGrindJson.mismatchedInputMessage(nullPrimitive));
     assertEquals(
         "Field 'rowCount' must be an integer value",
         GridGrindJson.mismatchedInputMessage(floatingInteger));
@@ -789,7 +829,8 @@ class GridGrindJsonTest {
     assertEquals(
         "Cannot deserialize value",
         GridGrindJson.cleanJacksonMessage(
-            "Cannot deserialize value as a subtype of `x` (for POJO property 'target') (set x.y to allow)"));
+            "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
+                + " (but could if coercion was enabled using `CoercionConfig`)"));
     assertEquals("Invalid JSON payload", GridGrindJson.cleanJacksonMessage(" "));
     assertEquals(Optional.empty(), GridGrindJson.jsonLine(null));
     assertEquals(Optional.empty(), GridGrindJson.jsonColumn(null));
@@ -797,6 +838,69 @@ class GridGrindJsonTest {
         Optional.of(4), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
     assertEquals(
         Optional.of(9), GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
+  }
+
+  @Test
+  void surfacesSimilarValidTypeIdsForTyposInKnownActionTypes() {
+    InvalidRequestShapeException typo =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "typo",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "action": { "type": "COVE_SHEET" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        typo.getMessage().contains("MOVE_SHEET") && typo.getMessage().contains("COPY_SHEET"),
+        "typo matching multiple action types should list all similar candidates");
+  }
+
+  @Test
+  void surfacesUnknownTypeMessageForAtJsonSubTypesAnnotatedFields() {
+    InvalidRequestShapeException badAnchor =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "bad-anchor",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "action": {
+                            "type": "SET_CHART",
+                            "chart": {
+                              "name": "C",
+                              "anchor": { "type": "ONE_CELL" },
+                              "title": { "type": "NONE" },
+                              "legend": { "type": "VISIBLE", "position": "RIGHT" },
+                              "displayBlanksAs": "GAP",
+                              "plotOnlyVisibleCells": true,
+                              "plots": [{"type": "BAR", "series": []}]
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        badAnchor.getMessage().startsWith("Unknown type value 'ONE_CELL'"),
+        "unknown anchor type from @JsonSubTypes-annotated field should be reported");
   }
 
   /** Tracks whether the request reader closes the source stream after consuming it. */

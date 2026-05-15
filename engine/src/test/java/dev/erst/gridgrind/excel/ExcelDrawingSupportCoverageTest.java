@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +24,7 @@ class ExcelDrawingSupportCoverageTest {
       var definedName = workbook.createName();
       definedName.setNameName("Source");
       definedName.setRefersToFormula("Ops!$A$1");
-      assertEquals("Ops!$A$1", ExcelDrawingChartSupport.requiredDefinedNameFormula(definedName));
+      assertEquals("Ops!$A$1", ExcelChartSourceSupport.requiredDefinedNameFormula(definedName));
     }
   }
 }

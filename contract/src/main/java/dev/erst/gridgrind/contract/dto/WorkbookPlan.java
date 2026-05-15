@@ -241,8 +241,15 @@ public record WorkbookPlan(
     }
   }
 
+  /** Maximum number of steps permitted in one plan (LIM-024). */
+  public static final int MAX_STEPS = 10_000;
+
   private static List<WorkbookStep> copySteps(List<WorkbookStep> steps) {
     Objects.requireNonNull(steps, "steps must not be null");
+    if (steps.size() > MAX_STEPS) { // LIM-024
+      throw new IllegalArgumentException(
+          "steps must not exceed " + MAX_STEPS + " entries but was " + steps.size());
+    }
     List<WorkbookStep> copy = new java.util.ArrayList<>(steps.size());
     Set<String> seen = new HashSet<>();
     for (WorkbookStep step : steps) {

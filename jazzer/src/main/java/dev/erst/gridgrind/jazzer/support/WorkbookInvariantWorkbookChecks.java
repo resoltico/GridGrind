@@ -64,7 +64,8 @@ final class WorkbookInvariantWorkbookChecks {
                 .read(
                     workbook,
                     new WorkbookReadCommand.GetPivotTables(
-                        "pivot-shape", new dev.erst.gridgrind.excel.ExcelPivotTableSelection.All()))
+                        "pivot-shape",
+                        new dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection.All()))
                 .getFirst())
         .pivotTables()
         .forEach(WorkbookInvariantWorkbookChecks::requireEnginePivotTableShape);
@@ -81,7 +82,7 @@ final class WorkbookInvariantWorkbookChecks {
   }
 
   private static void requireEngineDrawingObjectShape(
-      dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot drawingObject) {
+      dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot drawingObject) {
     WorkbookInvariantEngineShapeChecks.requireEngineDrawingObjectShape(drawingObject);
   }
 
@@ -90,7 +91,7 @@ final class WorkbookInvariantWorkbookChecks {
   }
 
   private static void requireEnginePivotTableShape(
-      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot pivotTable) {
+      dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot pivotTable) {
     WorkbookInvariantEngineShapeChecks.requireEnginePivotTableShape(pivotTable);
   }
 }

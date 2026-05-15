@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +45,7 @@ final class ExcelChartSourceSupport {
   }
 
   static ExcelDrawingController.CellScalar scalarFromFormula(Cell cell) {
+    Objects.requireNonNull(cell, "cell must not be null");
     return switch (cell.getCachedFormulaResultType()) {
       case STRING ->
           new ExcelDrawingController.CellScalar(
@@ -150,10 +152,8 @@ final class ExcelChartSourceSupport {
     List<Double> numericValues = new ArrayList<>();
     boolean numeric = true;
     for (CellReference reference : resolved.areaReference().getAllReferencedCells()) {
-      Cell cell =
-          resolved.sheet().getRow(reference.getRow()) == null
-              ? null
-              : resolved.sheet().getRow(reference.getRow()).getCell(reference.getCol());
+      var row = resolved.sheet().getRow(reference.getRow());
+      Cell cell = row == null ? null : row.getCell(reference.getCol());
       ExcelDrawingController.CellScalar scalar = scalar(cell, formulaRuntime);
       if (scalar.kind() == ExcelDrawingController.CellScalarKind.NUMERIC) {
         stringValues.add(Double.toString(scalar.number()));
@@ -208,14 +208,15 @@ final class ExcelChartSourceSupport {
 
   static String scalarText(
       XSSFSheet sheet, CellReference reference, @Nullable ExcelFormulaRuntime formulaRuntime) {
+    XSSFSheet targetSheet =
+        reference.getSheetName() == null
+            ? sheet
+            : requireSheet(
+                sheet.getWorkbook(), reference.getSheetName(), reference.formatAsString());
     Cell cell =
-        sheet.getWorkbook().getSheet(reference.getSheetName()).getRow(reference.getRow()) == null
+        targetSheet.getRow(reference.getRow()) == null
             ? null
-            : sheet
-                .getWorkbook()
-                .getSheet(reference.getSheetName())
-                .getRow(reference.getRow())
-                .getCell(reference.getCol());
+            : targetSheet.getRow(reference.getRow()).getCell(reference.getCol());
     ExcelDrawingController.CellScalar scalar = scalar(cell, formulaRuntime);
     return scalar.kind() == ExcelDrawingController.CellScalarKind.NUMERIC
         ? Double.toString(scalar.number())

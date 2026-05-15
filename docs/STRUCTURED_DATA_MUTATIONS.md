@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: STRUCTURED_DATA_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, autofilter, table, pivot table, append-row, auto-size, execution calculation, named range]
   questions: ["how do i manage tables in gridgrind", "how do i set pivot tables in gridgrind", "how do i use append row or calculation policies in gridgrind"]
@@ -470,7 +470,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 Rows that contain only style, comment, or hyperlink metadata are ignored when locating the append
 position.
 
-In `execution.mode.writeMode=STREAMING_WRITE`, `APPEND_ROW` is valid only after an
+In `execution.mode.type=STREAMING_WRITE`, `APPEND_ROW` is valid only after an
 `ENSURE_SHEET` mutation has already created or selected the target sheet. The streaming contract
 requires at least one `ENSURE_SHEET` step before append/assert/read work begins.
 

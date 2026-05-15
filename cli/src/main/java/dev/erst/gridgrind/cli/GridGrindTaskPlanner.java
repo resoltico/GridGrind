@@ -1,50 +1,95 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
-import dev.erst.gridgrind.cli.discovery.TaskAssetMode;
+import dev.erst.gridgrind.cli.discovery.TaskCapabilityRef;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskExecutionProfile;
-import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
-import dev.erst.gridgrind.cli.discovery.TaskPlanTemplate;
-import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
+import dev.erst.gridgrind.cli.discovery.TaskPhase;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.ProtocolStepTemplate;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import java.util.ArrayList;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /** Builds CLI-owned starter request scaffolds from public task descriptors. */
 final class GridGrindTaskPlanner {
   private GridGrindTaskPlanner() {}
 
-  /** Returns a starter task-plan scaffold for one stable task id. */
-  static TaskPlanTemplate templateFor(String taskId) {
+  /** Returns one runnable starter request for the supplied stable task id. */
+  static WorkbookPlan requestFor(String taskId) {
     String requestedTaskId = requireNonBlank(taskId, "taskId");
     return GridGrindTaskCatalog.entryFor(requestedTaskId)
-        .map(GridGrindTaskPlanner::planFor)
+        .map(GridGrindTaskPlanner::requestFor)
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
                     "Unknown task id for task planning: " + requestedTaskId));
   }
 
-  /** Returns a starter task-plan scaffold for one task entry. */
-  static TaskPlanTemplate planFor(TaskEntry task) {
+  /** Returns one runnable starter request for the supplied task entry. */
+  static WorkbookPlan requestFor(TaskEntry task) {
     TaskEntry taskEntry = java.util.Objects.requireNonNull(task, "task must not be null");
     TaskExecutionProfile profile = taskEntry.executionProfile();
     WorkbookPlan.WorkbookSource source = sourceFor(taskEntry.id(), profile);
     WorkbookPlan.WorkbookPersistence persistence = persistenceFor(taskEntry, source);
-    WorkbookPlan requestTemplate =
+    WorkbookPlan templatePlan =
         WorkbookPlan.standard(
             source,
             persistence,
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
-    return new TaskPlanTemplate(
-        GridGrindProtocolVersion.current(), taskEntry, requestTemplate, authoringNotes(taskEntry));
+    return decodedRequest(taskEntry.id(), requestTemplateFor(taskEntry, templatePlan));
+  }
+
+  private static ObjectNode requestTemplateFor(TaskEntry task, WorkbookPlan templatePlan) {
+    ObjectNode requestTemplate =
+        dev.erst.gridgrind.contract.json.GridGrindJson.requestTree(templatePlan);
+    requestTemplate.set("steps", stepsFor(task));
+    return requestTemplate;
+  }
+
+  private static ArrayNode stepsFor(TaskEntry task) {
+    ArrayNode steps = tools.jackson.databind.node.JsonNodeFactory.instance.arrayNode();
+    Set<String> emittedStepBodies = new LinkedHashSet<>();
+    int phaseIndex = 1;
+    for (TaskPhase phase : task.workflow().phases()) {
+      int emittedStepIndex = 1;
+      for (TaskCapabilityRef capabilityRef : phase.capabilityRefs()) {
+        int emittedPhaseIndex = phaseIndex;
+        java.util.Optional<ProtocolStepTemplate> optionalStepTemplate =
+            GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId())
+                .flatMap(entry -> entry.stepTemplate());
+        if (optionalStepTemplate.isPresent()) {
+          ProtocolStepTemplate stepTemplate = optionalStepTemplate.orElseThrow();
+          String stepBodyKey = stepTemplate.stepKind() + ":" + stepTemplate.bodyField();
+          if (!emittedStepBodies.add(stepBodyKey + ":" + capabilityRef.qualifiedId())) {
+            continue;
+          }
+          steps.add(renderedStep(stepTemplate, emittedPhaseIndex, emittedStepIndex));
+          emittedStepIndex++;
+        }
+      }
+      phaseIndex++;
+    }
+    return steps;
+  }
+
+  private static ObjectNode renderedStep(
+      ProtocolStepTemplate template, int phaseIndex, int capabilityIndex) {
+    ObjectNode step = template.template().deepCopy();
+    String stepId = "phase-" + phaseIndex + "-step-" + capabilityIndex;
+    step.put("stepId", stepId);
+    return step;
   }
 
   private static WorkbookPlan.WorkbookSource sourceFor(
@@ -73,43 +118,24 @@ final class GridGrindTaskPlanner {
     };
   }
 
-  private static List<String> authoringNotes(TaskEntry task) {
-    List<String> notes = new ArrayList<>();
-    notes.add(
-        "requestTemplate is intentionally minimal for this task: source and persistence are"
-            + " scaffolded, and you author the exact workflow steps from the task phases.");
-    notes.add(
-        "Use task.phases[*].capabilityRefs to discover the exact operation shapes through"
-            + " --print-protocol-catalog --search <text> or"
-            + " --print-protocol-catalog --operation <group>:<id>.");
-    if (task.executionProfile().sourceMode() == TaskSourceMode.EXISTING_WORKBOOK) {
-      notes.add("Replace the placeholder input workbook path before execution.");
+  static WorkbookPlan decodedRequest(String taskId, ObjectNode requestTemplate) {
+    try {
+      ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+      GridGrindJson.writeCatalogLookupValue(buffer, requestTemplate);
+      return GridGrindJson.readRequest(buffer.toByteArray());
+    } catch (IOException | RuntimeException exception) {
+      throw new IllegalStateException(
+          "CLI-generated task request is invalid for " + requireNonBlank(taskId, "taskId"),
+          exception);
     }
-    if (task.executionProfile().persistenceMode() == TaskPersistenceMode.SAVE_AS) {
-      notes.add("Replace the placeholder output workbook path before execution.");
-    }
-    if (task.executionProfile().persistenceMode() == TaskPersistenceMode.NONE) {
-      notes.add(
-          "This task defaults to in-memory persistence so discovery and inspection stay"
-              + " non-destructive.");
-    }
-    if (task.executionProfile().assetMode() == TaskAssetMode.REQUIRES_EXTERNAL_PAYLOADS) {
-      notes.add(
-          "This task expects external payload files or mapped workbook assets; replace the"
-              + " placeholder sources before execution.");
-    }
-    for (String pitfall : task.commonPitfalls()) {
-      notes.add("Common pitfall: " + pitfall);
-    }
-    return List.copyOf(notes);
   }
 
   private static String defaultInputPath(String taskId) {
-    return "todo-" + slug(taskId) + "-input.xlsx";
+    return "starter-" + slug(taskId) + "-input.xlsx";
   }
 
   private static String defaultOutputPath(String taskId) {
-    return "todo-" + slug(taskId) + "-output.xlsx";
+    return "starter-" + slug(taskId) + "-output.xlsx";
   }
 
   private static String slug(String taskId) {

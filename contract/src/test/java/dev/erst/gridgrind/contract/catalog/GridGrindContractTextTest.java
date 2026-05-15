@@ -52,7 +52,8 @@ class GridGrindContractTextTest {
     assertEquals(
         GridGrindContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
         GridGrindContractText.workbookFindingsReadSummary());
-    assertTrue(GridGrindContractText.stepKindSummary().contains("stable caller-defined stepId"));
+    assertTrue(GridGrindContractText.stepKindSummary().contains("caller-defined stepId"));
+    assertTrue(GridGrindContractText.stepKindSummary().contains("[A-Za-z0-9._-]+"));
     assertTrue(
         GridGrindContractText.requestDocumentLimitSummary().contains("16777216 bytes"),
         "request-document summary must publish the canonical byte ceiling");
@@ -60,11 +61,11 @@ class GridGrindContractTextTest {
         GridGrindContractText.workbookFindingsDiscoverySummary()
             .contains("ANALYZE_WORKBOOK_FINDINGS"));
     assertEquals(
-        "execution.mode.readMode=EVENT_READ requires execution.calculation.strategy="
+        "execution.mode.type=EVENT_READ requires execution.calculation.strategy="
             + "DO_NOT_CALCULATE and markRecalculateOnOpen=false",
         GridGrindExecutionModeMetadata.eventRead().calculationFailureMessage());
     assertEquals(
-        "execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
+        "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
             + " unsupported mutation action type: SET_CELL",
         GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL"));
   }
@@ -124,7 +125,7 @@ class GridGrindContractTextTest {
                 IllegalArgumentException.class,
                 () ->
                     new GridGrindExecutionModeMetadata.EventReadMode(
-                        ExecutionModeInput.ReadMode.EVENT_READ,
+                        ExecutionModeInput.EventRead.class,
                         List.of(),
                         CalculationStrategyInput.DoNotCalculate.class,
                         false))
@@ -135,7 +136,7 @@ class GridGrindContractTextTest {
                 IllegalArgumentException.class,
                 () ->
                     new GridGrindExecutionModeMetadata.StreamingWriteMode(
-                        ExecutionModeInput.WriteMode.STREAMING_WRITE,
+                        ExecutionModeInput.StreamingWrite.class,
                         WorkbookPlan.WorkbookSource.New.class,
                         List.of(),
                         CalculationStrategyInput.DoNotCalculate.class,

@@ -10,17 +10,18 @@ import org.apache.poi.openxml4j.opc.TargetMode;
 import org.jspecify.annotations.Nullable;
 
 /** Shared package-relationship traversal and cleanup helpers for OOXML package maintenance. */
-final class ExcelPackageRelationshipSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelPackageRelationshipSupport {
   private ExcelPackageRelationshipSupport() {}
 
   /** Supplies package parts while allowing callers to surface invalid-package failures. */
   @FunctionalInterface
-  interface PackagePartsSupplier {
+  public interface PackagePartsSupplier {
     /** Returns the package parts to inspect. */
     Iterable<PackagePart> get() throws InvalidFormatException;
   }
 
-  static boolean partIsStillReferenced(
+  public static boolean partIsStillReferenced(
       Iterable<PackagePart> packageParts, @Nullable PackagePartName partName) {
     if (partName == null) {
       return false;
@@ -49,7 +50,7 @@ final class ExcelPackageRelationshipSupport {
     }
   }
 
-  static Iterable<PackagePart> requireParts(PackagePartsSupplier packagePartsSupplier) {
+  public static Iterable<PackagePart> requireParts(PackagePartsSupplier packagePartsSupplier) {
     try {
       return packagePartsSupplier.get();
     } catch (InvalidFormatException exception) {
@@ -57,7 +58,8 @@ final class ExcelPackageRelationshipSupport {
     }
   }
 
-  static void cleanupPackagePartIfUnused(OPCPackage pkg, @Nullable PackagePartName partName) {
+  public static void cleanupPackagePartIfUnused(
+      OPCPackage pkg, @Nullable PackagePartName partName) {
     if (partName == null) {
       return;
     }

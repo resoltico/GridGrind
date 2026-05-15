@@ -43,8 +43,7 @@ final class XlsxParitySecurityProbeGroup {
     GridGrindResponse response =
         XlsxParityGridGrind.executeReadWorkbook(
             largeSheet.workbookPath(),
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            ExecutionModeInput.eventRead(),
             inspect(
                 "workbook",
                 new WorkbookSelector.Current(),
@@ -92,9 +91,7 @@ final class XlsxParitySecurityProbeGroup {
     GridGrindResponse.Success streamed =
         XlsxParityGridGrind.writeNewWorkbook(
             gridGrindWorkbook,
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.FULL_XSSF,
-                ExecutionModeInput.WriteMode.STREAMING_WRITE),
+            ExecutionModeInput.streamingWrite(),
             operations,
             inspect(
                 "workbook",

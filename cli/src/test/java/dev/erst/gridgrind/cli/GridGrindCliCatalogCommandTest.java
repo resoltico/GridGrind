@@ -2,17 +2,16 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleCatalog;
 import dev.erst.gridgrind.cli.discovery.TaskCatalog;
 import dev.erst.gridgrind.cli.discovery.TaskKeywordMatchReport;
-import dev.erst.gridgrind.cli.discovery.TaskPlanTemplate;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -35,7 +34,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-example", "WORKBOOK_HEALTH"},
+                new String[] {"--print-example", "--lookup", "WORKBOOK_HEALTH"},
                 new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -78,7 +77,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .orElseThrow()
             .workspaceMode());
     assertEquals(
-        java.util.List.of("package-security-assets/gridgrind-package-security.xlsx"),
+        java.util.List.of("examples/package-security-assets/gridgrind-package-security.xlsx"),
         catalog.examples().stream()
             .filter(example -> "PACKAGE_SECURITY_INSPECTION".equals(example.id()))
             .findFirst()
@@ -94,7 +93,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-example", "PACKAGE_SECURITY_INSPECTION"},
+                new String[] {"--print-example", "--lookup", "PACKAGE_SECURITY_INSPECTION"},
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
@@ -117,24 +116,22 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void printExampleFlagRejectsUnknownExampleId() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-example", "BOGUS_EXAMPLE"},
+                new String[] {"--print-example", "--lookup", "BOGUS_EXAMPLE"},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
+                stdout,
+                stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--print-example"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
-    assertTrue(failure.problem().message().contains("Built-in generated examples section"));
-    assertTrue(failure.problem().message().contains("gridgrind --help"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("BOGUS_EXAMPLE"));
+    assertTrue(failure.message().contains("--print-example-catalog"));
   }
 
   @Test
@@ -149,27 +146,28 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(
                 new String[] {
-                  "--print-example", "BOGUS_EXAMPLE", "--response", responsePath.toString()
+                  "--print-example",
+                  "--lookup",
+                  "BOGUS_EXAMPLE",
+                  "--response",
+                  responsePath.toString()
                 },
                 InputStream.nullInputStream(),
                 stdout,
                 stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(
-        "GridGrind wrote the response to "
+        "GridGrind wrote the CLI failure report to "
             + responsePath.toAbsolutePath()
             + "; inspect that file for failure."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("BOGUS_EXAMPLE"));
   }
 
   @Test
@@ -203,22 +201,19 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-example", authoredValue},
+                new String[] {"--print-example", "--lookup", authoredValue},
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
-
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+                stdout,
+                stdout); // stdout passed for both streams; use the bytes overload directly
+    CliFailureReport failure = cliFailure(stdout.toByteArray());
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--print-example"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
     assertTrue(
-        failure.problem().message().contains("did you mean CHART?"),
+        failure.message().contains("did you mean CHART?"),
         () -> "expected CHART suggestion for authored value " + authoredValue);
     assertTrue(
-        failure.problem().message().contains("Built-in generated examples section"),
+        failure.message().contains("--print-example-catalog"),
         () -> "expected recovery guidance for authored value " + authoredValue);
   }
 
@@ -229,7 +224,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-catalog", "--task", "DASHBOARD"},
+                new String[] {"--print-task-catalog", "--lookup", "DASHBOARD"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -245,110 +240,109 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void printTaskCatalogRejectsBlankTaskFilterWithStructuredFailure() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-catalog", "--task", ""},
+                new String[] {"--print-task-catalog", "--lookup", ""},
                 InputStream.nullInputStream(),
-                stdout);
-
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+                stdout,
+                stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--task"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("task id must not be blank"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("task lookup id must not be blank"));
   }
 
   @Test
   void printTaskCatalogWithUnknownTaskReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-catalog", "--task", "BOGUS_TASK"},
+                new String[] {"--print-task-catalog", "--lookup", "BOGUS_TASK"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--task"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_TASK"));
-    assertTrue(failure.problem().message().contains("--print-task-catalog"));
-    assertTrue(failure.problem().message().contains("--print-task-keyword-match <query>"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("BOGUS_TASK"));
+    assertTrue(failure.message().contains("--print-task-catalog"));
+    assertTrue(failure.message().contains("--print-task-keyword-match --query <text>"));
   }
 
   @Test
   void printTaskCatalogWithNonCanonicalTaskIdSuggestsStableToken() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-catalog", "--task", "dashboard"},
+                new String[] {"--print-task-catalog", "--lookup", "dashboard"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--task"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("did you mean DASHBOARD?"));
-    assertTrue(failure.problem().message().contains("--print-task-catalog"));
-    assertTrue(failure.problem().message().contains("--print-task-keyword-match <query>"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("did you mean DASHBOARD?"));
+    assertTrue(failure.message().contains("--print-task-catalog"));
+    assertTrue(failure.message().contains("--print-task-keyword-match --query <text>"));
   }
 
   @Test
   void printTaskCatalogWithNormalizedTaskIdSuggestsStableToken() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-catalog", "--task", "audit existing workbook"},
+                new String[] {"--print-task-catalog", "--lookup", "audit existing workbook"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--task"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
-    assertTrue(failure.problem().message().contains("--print-task-catalog"));
-    assertTrue(failure.problem().message().contains("--print-task-keyword-match <query>"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("did you mean AUDIT_EXISTING_WORKBOOK?"));
+    assertTrue(failure.message().contains("--print-task-catalog"));
+    assertTrue(failure.message().contains("--print-task-keyword-match --query <text>"));
   }
 
   @Test
   void printTaskCatalogRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--print-task-catalog", "--version"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--version"), parseArgumentsContext(failure).argumentName());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--version"), failure.argument());
     assertTrue(
         failure
-            .problem()
             .message()
             .contains(
                 "Only one primary command may be used per invocation; --print-task-catalog"
@@ -356,63 +350,63 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printTaskPlanFlagPrintsStarterTemplateAndReturnsExitCodeZero() throws IOException {
+  void printTaskPlanFlagPrintsRunnableStarterRequestAndReturnsExitCodeZero() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-plan", "DASHBOARD"},
+                new String[] {"--print-task-plan", "--lookup", "DASHBOARD"},
                 InputStream.nullInputStream(),
                 stdout);
 
-    TaskPlanTemplate template = GridGrindCliJson.readTaskPlanTemplate(stdout.toByteArray());
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
 
     assertEquals(0, exitCode);
-    assertEquals(GridGrindTaskPlanner.templateFor("DASHBOARD"), template);
+    assertEquals(GridGrindTaskPlanner.requestFor("DASHBOARD"), request);
   }
 
   @Test
   void printTaskPlanWithUnknownTaskReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-plan", "BOGUS_TASK"},
+                new String[] {"--print-task-plan", "--lookup", "BOGUS_TASK"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--print-task-plan"), parseArgumentsContext(failure).argumentName());
-    assertTrue(failure.problem().message().contains("BOGUS_TASK"));
-    assertTrue(failure.problem().message().contains("--print-task-catalog"));
-    assertTrue(failure.problem().message().contains("--print-task-keyword-match <query>"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--lookup"), failure.argument());
+    assertTrue(failure.message().contains("BOGUS_TASK"));
+    assertTrue(failure.message().contains("--print-task-catalog"));
+    assertTrue(failure.message().contains("--print-task-keyword-match --query <text>"));
   }
 
   @Test
   void printTaskPlanRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-plan", "DASHBOARD", "--request", "ignored.json"},
+                new String[] {
+                  "--print-task-plan", "--lookup", "DASHBOARD", "--request", "ignored.json"
+                },
                 new ByteArrayInputStream(new byte[0]),
-                stdout);
-
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+                stdout,
+                stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
   }
 
   @Test
@@ -422,7 +416,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-keyword-match", "monthly sales dashboard with charts"},
+                new String[] {
+                  "--print-task-keyword-match", "--query", "monthly sales dashboard with charts"
+                },
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -431,7 +427,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals("monthly sales dashboard with charts", report.query());
-    assertEquals("DASHBOARD", report.candidates().getFirst().task().id());
+    assertEquals("DASHBOARD", report.candidates().getFirst().taskId());
     assertTrue(report.candidates().getFirst().matchedTerms().contains("dashboard"));
     assertTrue(report.candidates().getFirst().matchedTerms().contains("chart"));
   }
@@ -439,23 +435,55 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void printTaskKeywordMatchRejectsBlankQueries() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-task-keyword-match", ""},
+                new String[] {"--print-task-keyword-match", "--query", ""},
                 InputStream.nullInputStream(),
-                stdout);
-
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+                stdout,
+                stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--print-task-keyword-match"),
-        parseArgumentsContext(failure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--query"), failure.argument());
+  }
+
+  @Test
+  void printTaskKeywordMatchRejectsQueriesThatNormalizeToNoSearchableTerms() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-task-keyword-match", "--query", "a"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--query"), failure.argument());
+    assertTrue(failure.message().contains("searchable term after normalization"));
+  }
+
+  @Test
+  void printRequestTemplatePrintsTheCurrentMachineReadableTemplate() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"--print-request-template"}, InputStream.nullInputStream(), stdout);
+
+    dev.erst.gridgrind.contract.dto.WorkbookPlan template =
+        GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals("FULL_XSSF", template.execution().mode().modeType());
   }
 
   @Test
@@ -463,7 +491,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new GridGrindCli(
+        GridGrindCli.forTesting(
                 (ignoredRequest, ignoredBindings, ignoredSink) -> {
                   throw new AssertionError("doctoring a request must not execute it");
                 })
@@ -495,28 +523,51 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void doctorRequestReturnsStructuredInvalidJsonReport() throws IOException {
+  void doctorRequestReturnsCompactReadFailureForInvalidJson() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--doctor-request"},
                 new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_JSON, report.problem().orElseThrow().code());
-    assertTrue(report.summary().isEmpty());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.code());
+    assertEquals("doctor-request", failure.command());
+    assertEquals(java.util.Optional.of(1), failure.location().jsonLine());
+    assertEquals(java.util.Optional.of(2), failure.location().jsonColumn());
+    assertEquals(java.util.Optional.empty(), failure.argument());
+  }
+
+  @Test
+  void doctorRequestRejectsMissingRequestInputWithCompactCliFailure() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"--doctor-request"}, InputStream.nullInputStream(), stdout, stderr);
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("doctor-request", failure.command());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertTrue(failure.message().contains("No request JSON was provided."));
   }
 
   @Test
   void doctorRequestRejectsImpossibleStandardInputBindingWhenRequestAlsoUsesStdin()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -544,15 +595,15 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                             ]
                             """)
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
-    assertEquals(1, exitCode);
-    assertFalse(report.valid());
-    assertTrue(report.summary().orElseThrow().requiresStandardInputBinding());
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, report.problem().orElseThrow().code());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(report).argumentName());
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertTrue(failure.message().contains("STANDARD_INPUT"));
   }
 
   @Test
@@ -634,15 +685,17 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--doctor-request", "--request", requestPath.toString()},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    RequestDoctorReport report = doctorReport(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
@@ -655,6 +708,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   void doctorRequestReturnsStructuredInvalidReportForSemanticallyInvalidRequests()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
@@ -663,9 +717,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"OVERWRITE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    RequestDoctorReport report = doctorReport(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
@@ -726,15 +781,17 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             ]
             """));
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--doctor-request", "--request", requestPath.toString()},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    RequestDoctorReport report = doctorReport(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
@@ -746,9 +803,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void doctorRequestReturnsStructuredReadErrorsWhenTheRequestFileCannotBeOpened()
-      throws IOException {
+  void doctorRequestReturnsCompactReadFailureWhenTheRequestFileCannotBeOpened() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     Path missingRequestPath =
         Path.of("tmp", "doctor-missing-" + UUID.randomUUID() + ".json").toAbsolutePath();
 
@@ -757,14 +814,16 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .run(
                 new String[] {"--doctor-request", "--request", missingRequestPath.toString()},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
-    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.IO_ERROR, report.problem().orElseThrow().code());
-    assertTrue(report.summary().isEmpty());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals("doctor-request", failure.command());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertEquals("Request file not found: " + missingRequestPath, failure.message());
   }
 
   @Test
@@ -810,28 +869,28 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void printProtocolCatalogWithUnexpectedTrailingArgReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--print-protocol-catalog", "--version"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("--version"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("--version"));
   }
 
   @Test
-  void printProtocolCatalogWithOperationFilterReturnsMatchingEntry() throws IOException {
+  void printProtocolCatalogWithLookupFilterReturnsMatchingEntry() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "SET_CELL"},
+                new String[] {"--print-protocol-catalog", "--lookup", "SET_CELL"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -858,25 +917,17 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int blankOperationExitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", ""},
+                new String[] {"--print-protocol-catalog", "--lookup", ""},
                 InputStream.nullInputStream(),
+                blankOperationStdout,
                 blankOperationStdout);
-
-    GridGrindResponse.Failure blankOperationFailure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(blankOperationStdout.toByteArray()));
+    CliFailureReport blankOperationFailure = cliFailure(blankOperationStdout.toByteArray());
 
     assertEquals(2, blankOperationExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--operation"),
-        parseArgumentsContext(blankOperationFailure).argumentName());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankOperationFailure.code());
+    assertEquals(java.util.Optional.of("--lookup"), blankOperationFailure.argument());
     assertTrue(
-        blankOperationFailure
-            .problem()
-            .message()
-            .contains("protocol catalog lookup id must not be blank"));
+        blankOperationFailure.message().contains("protocol catalog lookup id must not be blank"));
 
     ByteArrayOutputStream blankSearchStdout = new ByteArrayOutputStream();
     int blankSearchExitCode =
@@ -884,29 +935,24 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .run(
                 new String[] {"--print-protocol-catalog", "--search", ""},
                 InputStream.nullInputStream(),
+                blankSearchStdout,
                 blankSearchStdout);
-
-    GridGrindResponse.Failure blankSearchFailure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(blankSearchStdout.toByteArray()));
+    CliFailureReport blankSearchFailure = cliFailure(blankSearchStdout.toByteArray());
 
     assertEquals(2, blankSearchExitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.problem().code());
-    assertEquals(
-        java.util.Optional.of("--search"),
-        parseArgumentsContext(blankSearchFailure).argumentName());
-    assertTrue(blankSearchFailure.problem().message().contains("search query must not be blank"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, blankSearchFailure.code());
+    assertEquals(java.util.Optional.of("--search"), blankSearchFailure.argument());
+    assertTrue(blankSearchFailure.message().contains("search query must not be blank"));
   }
 
   @Test
-  void printProtocolCatalogWithQualifiedOperationFilterReturnsMatchingNestedEntry()
+  void printProtocolCatalogWithQualifiedLookupFilterReturnsMatchingNestedEntry()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "cellInputTypes:FORMULA"},
+                new String[] {"--print-protocol-catalog", "--lookup", "cellInputTypes:FORMULA"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -925,9 +971,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {
-                  "--print-protocol-catalog", "--operation", "nestedTypes:cellInputTypes"
-                },
+                new String[] {"--print-protocol-catalog", "--lookup", "nestedTypes:cellInputTypes"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -944,7 +988,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "chartInputType"},
+                new String[] {"--print-protocol-catalog", "--lookup", "chartInputType"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -956,23 +1000,23 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printProtocolCatalogWithAmbiguousOperationReturnsErrorAndCandidates() throws IOException {
+  void printProtocolCatalogWithAmbiguousLookupReturnsErrorAndCandidates() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "FORMULA"},
+                new String[] {"--print-protocol-catalog", "--lookup", "FORMULA"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("Ambiguous operation: FORMULA"));
-    assertTrue(failure.problem().message().contains("cellInputTypes:FORMULA"));
-    assertTrue(failure.problem().message().contains("namedRangeReportTypes:FORMULA"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("Ambiguous lookup id: FORMULA"));
+    assertTrue(failure.message().contains("cellInputTypes:FORMULA"));
+    assertTrue(failure.message().contains("namedRangeReportTypes:FORMULA"));
   }
 
   @Test
@@ -981,7 +1025,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "GET_SHEET_LAYOUT"},
+                new String[] {"--print-protocol-catalog", "--lookup", "GET_SHEET_LAYOUT"},
                 InputStream.nullInputStream(),
                 stdout);
 
@@ -993,26 +1037,23 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printProtocolCatalogWithUnknownOperationReturnsError() throws IOException {
+  void printProtocolCatalogWithUnknownLookupReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--print-protocol-catalog", "--operation", "BOGUS_XYZ"},
+                new String[] {"--print-protocol-catalog", "--lookup", "BOGUS_XYZ"},
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals(
-        GridGrindProblemCode.INVALID_ARGUMENTS,
-        failure.journal().outcome().failureCode().orElseThrow());
-    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
-    assertTrue(failure.problem().message().contains("--print-protocol-catalog --search <text>"));
-    assertTrue(failure.problem().message().contains("--print-protocol-catalog"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("BOGUS_XYZ"));
+    assertTrue(failure.message().contains("--print-protocol-catalog --search <text>"));
+    assertTrue(failure.message().contains("--print-protocol-catalog"));
   }
 
   @Test
@@ -1028,7 +1069,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .run(
                 new String[] {
                   "--print-protocol-catalog",
-                  "--operation",
+                  "--lookup",
                   "BOGUS_XYZ",
                   "--response",
                   responsePath.toString()
@@ -1037,21 +1078,18 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(
-        "GridGrind wrote the response to "
+        "GridGrind wrote the CLI failure report to "
             + responsePath.toAbsolutePath()
             + "; inspect that file for failure."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("BOGUS_XYZ"));
   }
 
   @Test
@@ -1074,21 +1112,21 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   @Test
   void printProtocolCatalogRejectsOperationAndSearchTogether() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {
-                  "--print-protocol-catalog", "--operation", "SET_CELL", "--search", "cell"
+                  "--print-protocol-catalog", "--lookup", "SET_CELL", "--search", "cell"
                 },
                 InputStream.nullInputStream(),
-                stdout);
+                stdout,
+                stderr);
 
     assertEquals(2, exitCode);
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertTrue(failure.problem().message().contains("--operation"));
-    assertTrue(failure.problem().message().contains("--search"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertTrue(failure.message().contains("--lookup"));
+    assertTrue(failure.message().contains("--search"));
   }
 }

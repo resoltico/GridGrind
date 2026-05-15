@@ -1,11 +1,11 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: DEVELOPER_JAVA
-updated: "2026-05-01"
+updated: "2026-05-13"
 route:
-  keywords: [gridgrind, java26, zulu26, gradle wrapper, java_home, macos, shell, devcontainer, mounted volumes, local disk]
-  questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "do i need java installed on the host if i use the devcontainer", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]
+  keywords: [gridgrind, java26, zulu26, gradle wrapper, java_home, macos, shell, devcontainer, mounted volumes, local disk, tar.gz, brew, sudo, pkg installer]
+  questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "do i need java installed on the host if i use the devcontainer", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell", "how do i install zulu without sudo", "why does java_home not find my jdk"]
 ---
 
 # Java 26 And Gradle Workstation Setup
@@ -97,9 +97,55 @@ The canonical `./check.sh` gate also runs with `--no-daemon`, uses a repo-scoped
 `GRADLE_USER_HOME` under `tmp/gradle-user-home` by default, and shares one repo-wide verification
 lock with the Docker and Jazzer top-level entrypoints.
 
+## Installing Azul Zulu 26 On macOS
+
+Zulu 26 can be installed on macOS in two ways, and the right choice depends on whether you have
+sudo access on the machine.
+
+### Pkg installer (requires sudo)
+
+`brew install --cask zulu@26` downloads and runs Azul's `.pkg` installer behind the scenes.
+A `.pkg` installer on macOS requires elevated privileges and will prompt for a sudo password.
+If you are on a machine where sudo is locked down, this path is blocked — use the tar.gz path
+instead.
+
+When installed via `.pkg`, Zulu 26 registers with the macOS JVM discovery system so that
+`/usr/libexec/java_home -v 26` finds it automatically.
+
+### Tar.gz archive (no sudo required)
+
+Download the ARM64 tar.gz archive for Zulu 26 from the
+[Azul download page](https://www.azul.com/downloads/?version=java-26&os=macos&architecture=arm-64-bit&package=jdk#zulu).
+
+Extract it to any directory you control, for example `~/jdk/`:
+
+```zsh
+mkdir -p ~/jdk
+tar -xf zulu26.*-macosx_aarch64.tar.gz -C ~/jdk
+```
+
+Set `JAVA_HOME` manually in your shell profile — `/usr/libexec/java_home` cannot discover a
+tar.gz extraction because that utility only knows about JDKs registered by a `.pkg` installer.
+
+In `~/.zprofile`:
+
+```zsh
+export JAVA_HOME=~/jdk/zulu26.XX.XX-ca-jdk26.0.X-macosx_aarch64/Contents/Home
+path=("${JAVA_HOME}/bin" ${path:#${JAVA_HOME}/bin})
+```
+
+Replace `zulu26.XX.XX-ca-jdk26.0.X-macosx_aarch64` with the actual extracted directory name.
+
 ## Typical macOS Shell Setup
 
-If you use `/usr/libexec/java_home`, a minimal zsh setup looks like this.
+The shell setup depends on how you installed the JDK.
+
+### When installed via pkg (java_home discovery works)
+
+`/usr/libexec/java_home -v 26` only resolves JDKs that were registered by a macOS `.pkg`
+installer. It does not find a JDK extracted from a tar.gz archive.
+
+If your JDK was installed via `.pkg`, a minimal zsh setup looks like this.
 
 In `~/.zprofile`:
 
@@ -119,6 +165,18 @@ fi
 if [[ -n "${JAVA_HOME:-}" ]]; then
   path=("${JAVA_HOME}/bin" ${path:#${JAVA_HOME}/bin})
 fi
+```
+
+### When installed via tar.gz (manual JAVA_HOME)
+
+If you extracted a tar.gz archive, set `JAVA_HOME` directly to the extracted path.
+An equivalent and more portable pattern that works regardless of macOS version:
+
+In `~/.zprofile`:
+
+```zsh
+export JAVA_HOME=~/jdk/zulu26.XX.XX-ca-jdk26.0.X-macosx_aarch64/Contents/Home
+path=("${JAVA_HOME}/bin" ${path:#${JAVA_HOME}/bin})
 ```
 
 The goal is simple: both login and interactive shells should resolve the same JDK 26 first.
@@ -162,6 +220,11 @@ rerun that sequence from a local-disk mirror or worktree instead of weakening th
 
 - forgetting that the preferred devcontainer path already provides Java 26 and then spending time
   debugging a host Java install you do not actually need
+- attempting `brew install --cask zulu@26` on a machine where sudo is restricted — the cask runs
+  a `.pkg` installer that requires elevated privileges; use the tar.gz archive instead
+- using `/usr/libexec/java_home -v 26` after installing from a tar.gz archive — that utility only
+  discovers JDKs registered by a `.pkg` installer and will fail silently or leave `JAVA_HOME`
+  unset; set `JAVA_HOME` explicitly to the extracted path instead
 - relying on the Apple install-stub behavior behind `/usr/bin/java` or `/usr/bin/javac` instead
   of a real JDK 26 launcher
 - assuming Gradle toolchains cover `java -jar` or `./check.sh`

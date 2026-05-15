@@ -139,15 +139,18 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `ExecutionModeInput`. */
   public static String executionModeInputSummary() {
+    GridGrindExecutionModeMetadata.FullXssfMode fullXssf =
+        GridGrindExecutionModeMetadata.fullXssf();
     GridGrindExecutionModeMetadata.EventReadMode eventRead =
         GridGrindExecutionModeMetadata.eventRead();
     GridGrindExecutionModeMetadata.StreamingWriteMode streamingWrite =
         GridGrindExecutionModeMetadata.streamingWrite();
-    return "Execution-mode settings that select low-memory read and write"
-        + " execution families."
-        + " Supply explicit readMode and writeMode values."
+    return "Execution-mode settings that select one runtime family by discriminator."
         + " "
-        + eventRead.mode().name()
+        + fullXssf.modeId()
+        + " keeps the standard full workbook read/write path."
+        + " "
+        + eventRead.modeId()
         + " supports "
         + eventRead.allowedQueryPhrase()
         + " only and requires execution.calculation.strategy="
@@ -156,7 +159,7 @@ public final class GridGrindContractText {
         + eventRead.markRecalculateOnOpenAllowed()
         + " (LIM-019)."
         + " "
-        + streamingWrite.mode().name()
+        + streamingWrite.modeId()
         + " supports "
         + streamingWrite.allowedActionPhrase()
         + " on "
@@ -253,7 +256,8 @@ public final class GridGrindContractText {
 
   /** One stable step-kind explanation shared by help and discovery surfaces. */
   public static String stepKindSummary() {
-    return "Every authored step requires a stable caller-defined stepId."
+    return "Every authored step requires a non-blank caller-defined stepId."
+        + " stepId values must be unique within steps[] and must match [A-Za-z0-9._-]+."
         + " Use MUTATION steps for workbook changes, ASSERTION steps for first-class"
         + " verification, and INSPECTION steps for factual or analytical reads."
         + " Step kind is inferred from exactly one of action, assertion, or query;"

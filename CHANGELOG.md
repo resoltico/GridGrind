@@ -3,7 +3,7 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.65.0] - 2026-05-15
 
 ### Added
 
@@ -315,6 +315,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UDF formula template injection rejection (`LIM-034`): `FormulaUdfFunctionInput.formulaTemplate`
   now calls `FormulaInputSecurity.rejectDde`; applied as defense-in-depth since POI's evaluator
   does not execute DDE or WEBSERVICE server-side and templates are not written to xlsx output.
+
+- Documented three accepted limitations in `LIMITATIONS.md`: `LIM-035` (`HYPERLINK()` formula
+  content not validated against the URL scheme allowlist — requires user click, not auto-executed),
+  `LIM-036` (`RTD()` not blocked — Windows/COM only, no-op on macOS/Linux), and `LIM-037`
+  (`WorkbookFactory` may open XLS files named `.xlsx` — relates to LIM-002; no injection risk).
 
 - Source file path confinement (`LIM-030`): `SourceBackedPathResolver.resolvePath` now delegates
   to `ExecutionRequestPaths.normalizePath` (LIM-025, LIM-029), preventing relative path traversal
@@ -2961,7 +2966,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.64.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.65.0...HEAD
+[0.65.0]: https://github.com/resoltico/GridGrind/compare/v0.64.0...v0.65.0
 [0.64.0]: https://github.com/resoltico/GridGrind/compare/v0.63.0...v0.64.0
 [0.63.0]: https://github.com/resoltico/GridGrind/compare/v0.62.0...v0.63.0
 [0.62.0]: https://github.com/resoltico/GridGrind/compare/v0.61.0...v0.62.0

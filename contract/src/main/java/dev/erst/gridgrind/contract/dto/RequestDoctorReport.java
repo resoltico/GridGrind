@@ -89,8 +89,7 @@ public record RequestDoctorReport(
   public record Summary(
       String sourceType,
       String persistenceType,
-      String readMode,
-      String writeMode,
+      String executionMode,
       String calculationStrategy,
       boolean markRecalculateOnOpen,
       boolean requiresStandardInputBinding,
@@ -101,8 +100,7 @@ public record RequestDoctorReport(
     public Summary {
       sourceType = requireNonBlank(sourceType, "sourceType");
       persistenceType = requireNonBlank(persistenceType, "persistenceType");
-      readMode = requireNonBlank(readMode, "readMode");
-      writeMode = requireNonBlank(writeMode, "writeMode");
+      executionMode = requireNonBlank(executionMode, "executionMode");
       calculationStrategy = requireNonBlank(calculationStrategy, "calculationStrategy");
       requireNonNegative(stepCount, "stepCount");
       requireNonNegative(mutationStepCount, "mutationStepCount");
@@ -116,9 +114,7 @@ public record RequestDoctorReport(
   }
 
   private static List<RequestWarning> copyWarnings(List<RequestWarning> warnings) {
-    if (warnings == null) {
-      return List.of();
-    }
+    Objects.requireNonNull(warnings, "warnings must not be null");
     List<RequestWarning> copy = new ArrayList<>(warnings.size());
     for (RequestWarning warning : warnings) {
       copy.add(Objects.requireNonNull(warning, "warnings must not contain nulls"));

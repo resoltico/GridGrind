@@ -4,12 +4,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
-import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
+import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

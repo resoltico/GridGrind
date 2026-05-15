@@ -17,11 +17,11 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTUnderlineProperty;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STUnderlineValues;
 
 /** Project-owned rich-text seam used to author and snapshot string-cell runs. */
-final class ExcelRichTextSupport {
+public final class ExcelRichTextSupport {
   private ExcelRichTextSupport() {}
 
   /** Builds the POI rich-text payload for one authored GridGrind rich-text value. */
-  static XSSFRichTextString toPoiRichText(XSSFWorkbook workbook, ExcelRichText richText) {
+  public static XSSFRichTextString toPoiRichText(XSSFWorkbook workbook, ExcelRichText richText) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(richText, "richText must not be null");
 

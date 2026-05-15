@@ -216,10 +216,7 @@ JSON
 )"
 readonly default_execution_block="$(cat <<'JSON'
   "execution": {
-    "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "FULL_XSSF"
-    },
+    "mode": {"type": "FULL_XSSF"},
     "journal": {
       "level": "NORMAL"
     },
@@ -234,10 +231,7 @@ JSON
 )"
 readonly verbose_execution_block="$(cat <<'JSON'
   "execution": {
-    "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "FULL_XSSF"
-    },
+    "mode": {"type": "FULL_XSSF"},
     "journal": {
       "level": "VERBOSE"
     },
@@ -252,10 +246,7 @@ JSON
 )"
 readonly streaming_execution_block="$(cat <<'JSON'
   "execution": {
-    "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "STREAMING_WRITE"
-    },
+    "mode": {"type": "STREAMING_WRITE"},
     "journal": {
       "level": "NORMAL"
     },
@@ -270,10 +261,7 @@ JSON
 )"
 readonly event_read_execution_block="$(cat <<'JSON'
   "execution": {
-    "mode": {
-      "readMode": "EVENT_READ",
-      "writeMode": "FULL_XSSF"
-    },
+    "mode": {"type": "EVENT_READ"},
     "journal": {
       "level": "NORMAL"
     },
@@ -599,8 +587,8 @@ docker_with_repo_config run --rm \
 [[ -f "${workbook_path}" ]] || die "docker smoke workbook file was not written: ${workbook_path}"
 [[ ! -f "${legacy_workbook_path}" ]] || die \
     "docker smoke wrote the workbook relative to the shell workdir instead of the request file directory: ${legacy_workbook_path}"
-grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${response_path}" || die \
-    "docker smoke response did not report SUCCESS"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${response_path}" || die \
+    "docker smoke response did not report SUCCEEDED"
 grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
     "docker smoke response did not include the structured execution journal"
 grep -Eq '"level"[[:space:]]*:[[:space:]]*"VERBOSE"' "${response_path}" || die \
@@ -621,8 +609,8 @@ docker_with_repo_config run --rm \
 
 [[ -f "${existing_response_path}" ]] || die \
     "docker smoke reopen response file was not written: ${existing_response_path}"
-grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${existing_response_path}" || die \
-    "docker smoke EXISTING-source reopen did not report SUCCESS"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${existing_response_path}" || die \
+    "docker smoke EXISTING-source reopen did not report SUCCEEDED"
 [[ ! -s "${existing_stderr_path}" ]] || die \
     "docker smoke EXISTING-source reopen wrote unexpected stderr: $(tr '\n' ' ' < "${existing_stderr_path}")"
 
@@ -641,8 +629,8 @@ docker_with_repo_config run --rm \
     "docker smoke signature workbook file was not written: ${signature_workbook_path}"
 [[ ! -f "${legacy_signature_workbook_path}" ]] || die \
     "docker smoke wrote the signature workbook relative to the shell workdir instead of the request file directory: ${legacy_signature_workbook_path}"
-grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${signature_response_path}" || die \
-    "docker smoke signature-line authoring did not report SUCCESS"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${signature_response_path}" || die \
+    "docker smoke signature-line authoring did not report SUCCEEDED"
 grep -Eq '"BudgetSignature"' "${signature_response_path}" || die \
     "docker smoke signature-line response did not include the authored drawing object"
 [[ ! -s "${signature_stderr_path}" ]] || die \
@@ -663,8 +651,8 @@ docker_with_repo_config run --rm \
     "docker smoke streaming workbook file was not written: ${streaming_workbook_path}"
 [[ ! -f "${legacy_streaming_workbook_path}" ]] || die \
     "docker smoke wrote the streaming workbook relative to the shell workdir instead of the request file directory: ${legacy_streaming_workbook_path}"
-grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${streaming_response_path}" || die \
-    "docker smoke STREAMING_WRITE authoring did not report SUCCESS"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${streaming_response_path}" || die \
+    "docker smoke STREAMING_WRITE authoring did not report SUCCEEDED"
 [[ ! -s "${streaming_stderr_path}" ]] || die \
     "docker smoke STREAMING_WRITE authoring wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_stderr_path}")"
 
@@ -678,8 +666,8 @@ docker_with_repo_config run --rm \
 
 [[ -f "${streaming_read_response_path}" ]] || die \
     "docker smoke streaming readback response file was not written: ${streaming_read_response_path}"
-grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${streaming_read_response_path}" || die \
-    "docker smoke STREAMING_WRITE readback did not report SUCCESS"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${streaming_read_response_path}" || die \
+    "docker smoke STREAMING_WRITE readback did not report SUCCEEDED"
 [[ ! -s "${streaming_read_stderr_path}" ]] || die \
     "docker smoke STREAMING_WRITE readback wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_read_stderr_path}")"
 

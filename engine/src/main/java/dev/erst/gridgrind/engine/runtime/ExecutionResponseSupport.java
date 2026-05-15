@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -8,6 +9,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
@@ -131,7 +133,7 @@ final class ExecutionResponseSupport {
                   ExecutionRequestPaths.requestShape(request)));
       return closeWorkbook(
           workbook,
-          failureResponse(
+          failureResponseWithoutPlanOutcomeEvent(
               protocolVersion,
               journal,
               request.steps().size(),
@@ -173,9 +175,11 @@ final class ExecutionResponseSupport {
         journal,
         plannedStepCount,
         CalculationReport.notRequested(),
+        List.of(),
         problem,
         failedStepIndex,
-        failedStepId);
+        failedStepId,
+        true);
   }
 
   static GridGrindResponse.Failure failureResponse(
@@ -186,10 +190,96 @@ final class ExecutionResponseSupport {
       GridGrindProblemDetail.Problem problem,
       @Nullable Integer failedStepIndex,
       @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        plannedStepCount,
+        calculation,
+        List.of(),
+        problem,
+        failedStepIndex,
+        failedStepId,
+        true);
+  }
+
+  static GridGrindResponse.Failure failureResponse(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      int plannedStepCount,
+      CalculationReport calculation,
+      List<AssertionResult> assertions,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        plannedStepCount,
+        calculation,
+        assertions,
+        problem,
+        failedStepIndex,
+        failedStepId,
+        true);
+  }
+
+  static GridGrindResponse.Failure failureResponseWithoutPlanOutcomeEvent(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      int plannedStepCount,
+      CalculationReport calculation,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        plannedStepCount,
+        calculation,
+        List.of(),
+        problem,
+        failedStepIndex,
+        failedStepId,
+        false);
+  }
+
+  static GridGrindResponse.Failure failureResponseWithoutPlanOutcomeEvent(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      int plannedStepCount,
+      CalculationReport calculation,
+      List<AssertionResult> assertions,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId) {
+    return failureResponse(
+        protocolVersion,
+        journal,
+        plannedStepCount,
+        calculation,
+        assertions,
+        problem,
+        failedStepIndex,
+        failedStepId,
+        false);
+  }
+
+  private static GridGrindResponse.Failure failureResponse(
+      GridGrindProtocolVersion protocolVersion,
+      ExecutionJournalRecorder journal,
+      int plannedStepCount,
+      CalculationReport calculation,
+      List<AssertionResult> assertions,
+      GridGrindProblemDetail.Problem problem,
+      @Nullable Integer failedStepIndex,
+      @Nullable String failedStepId,
+      boolean emitPlanOutcomeEvent) {
     return new GridGrindResponse.Failure(
         protocolVersion,
-        journal.buildFailure(plannedStepCount, problem.code(), failedStepIndex, failedStepId),
+        journal.buildFailure(
+            plannedStepCount, problem.code(), failedStepIndex, failedStepId, emitPlanOutcomeEvent),
         calculation,
+        assertions,
         problem);
   }
 
@@ -219,6 +309,7 @@ final class ExecutionResponseSupport {
                   failedStepIndex,
                   failedStepId),
               failure.calculation(),
+              failure.assertions(),
               failure.problem());
     };
   }
@@ -240,6 +331,7 @@ final class ExecutionResponseSupport {
               failedStepIndex,
               failedStepId),
           existingFailure.calculation(),
+          existingFailure.assertions(),
           GridGrindProblems.appendCause(
               existingFailure.problem(), GridGrindProblems.problemCause(closeProblem)));
     }
@@ -247,6 +339,7 @@ final class ExecutionResponseSupport {
         request.protocolVersion(),
         journal.buildFailure(request.steps().size(), closeProblem.code(), null, null),
         response.calculation(),
+        List.of(),
         closeProblem);
   }
 }

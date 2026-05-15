@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -98,12 +98,13 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
 | `execution` | Yes | Explicit execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Use the standard template or `ExecutionPolicyInput.defaults()` from Java authoring for the normal full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
 | `formulaEnvironment` | Yes | Explicit evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Use empty workbook and UDF lists with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended. |
-| `steps` | Yes | Ordered list of workbook mutations, assertions, and inspections. Send `[]` for a no-op plan. Every non-empty step needs a caller-defined `stepId`. |
+| `steps` | Yes | Ordered list of workbook mutations, assertions, and inspections. Send `[]` for a no-op plan. Every non-empty step needs a caller-defined `stepId`; `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `action`, `query`, cell values, hyperlink targets, selectors, and named-range scopes.
 Every step object carries a caller-defined `stepId` plus exactly one of `action`, `assertion`, or
-`query`. Step kind is inferred from that field; request steps do not carry a separate `step.type`.
+`query`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step
+kind is inferred from that field; request steps do not carry a separate `step.type`.
 `gridgrind --print-request-template` emits the canonical minimal valid request with the full
 top-level envelope shown above.
 
@@ -165,8 +166,7 @@ with `NORMAL` journaling.
 {
   "execution": {
     "mode": {
-      "readMode": "EVENT_READ",
-      "writeMode": "STREAMING_WRITE"
+      "type": "EVENT_READ"
     },
     "journal": {
       "level": "VERBOSE"
@@ -175,7 +175,7 @@ with `NORMAL` journaling.
       "strategy": {
         "type": "DO_NOT_CALCULATE"
       },
-      "markRecalculateOnOpen": true
+      "markRecalculateOnOpen": false
     }
   }
 }
@@ -183,19 +183,20 @@ with `NORMAL` journaling.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `mode` | Yes | Explicit low-memory read and write mode selection. |
+| `mode` | Yes | Explicit execution-mode variant selection through `type=FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE`. |
 | `journal` | Yes | Explicit structured-journal policy. |
 | `calculation` | Yes | Explicit formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. |
 
-- `execution.mode.readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
+- `execution.mode.type: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
-- `execution.mode.writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires
+- `execution.mode.type: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires
   `source.type: NEW`, supports only `ENSURE_SHEET` and `APPEND_ROW`,
   requires `execution.calculation.strategy=DO_NOT_CALCULATE`,
   allows `markRecalculateOnOpen=true`, and
   requires at least one `ENSURE_SHEET` mutation (`LIM-020`). GridGrind keeps shared strings
   enabled in this mode so large repeated-text workbooks do not balloon into inline-string-heavy
   OOXML packages.
+- `execution.mode.type: FULL_XSSF` is the default full workbook read/write path with no low-memory restrictions.
 - `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
 - `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
   `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
@@ -208,9 +209,8 @@ with `NORMAL` journaling.
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
   workbook state and then performs the summary reads through the event model.
-- `STREAMING_WRITE` can pair with either `readMode: FULL_XSSF` for broader readback or
-  `readMode: EVENT_READ` for summary-only low-memory readback from the materialized streaming
-  result.
+- Execution mode is one closed variant, not a read/write cross-product. Choose exactly one of
+  `FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE` for the whole request.
 
 ### Response Journal
 
@@ -309,15 +309,15 @@ Every success and failure response includes a structured `journal` object:
 |:------|:------------|
 | `planId` | Caller-supplied plan correlation ID when present, otherwise a synthesized internal ID after request parsing. Pre-parse CLI failures may omit it because no request plan was available yet. |
 | `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
-| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. Finished phases carry `status`, `startedAt`, `finishedAt`, and `durationMillis`; `NOT_STARTED` phases carry `status` plus `durationMillis=0` only. `inputResolution` records source-backed file/stdin loading before workbook open. |
+| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. Finished phases carry `status`, `startedAt`, `finishedAt`, and `durationMillis`; `NOT_STARTED` and `NOT_REQUESTED` phases carry `status` plus `durationMillis=0` only. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
 | `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
-| `warnings[]` | Request-phase warnings derived during execution, mirrored from the top-level success `warnings` array. |
 | `events[]` | Fine-grained live events. Present only when `level=VERBOSE`. |
 | `outcome` | Whole-run status plus `plannedStepCount`, `completedStepCount`, total `durationMillis`, and optional `failedStepIndex`, `failedStepId`, and `failureCode` when the run failed. |
 
 `VERBOSE` keeps the full response journal and also streams `events[]` entries live to CLI stderr
-while the request is running.
+while the request is running as `[gridgrind] <timestamp> <CATEGORY> <detail>` with optional
+`stepIndex=<n>` and `stepId=<id>` suffixes on step-scoped events.
 
 ## Coordinate Systems
 
@@ -350,8 +350,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
   },
   "execution": {
     "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "FULL_XSSF"
+      "type": "FULL_XSSF"
     },
     "journal": {
       "level": "NORMAL"

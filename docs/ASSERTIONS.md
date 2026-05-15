@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: ASSERTIONS
 updated: "2026-05-01"
 route:
@@ -61,6 +61,8 @@ Assertion families:
 
 | Assertion `type` | Valid target families | Purpose |
 |:-----------------|:----------------------|:--------|
+| `EXPECT_SHEET_PRESENT` | `SheetSelector` | Require the selected sheet selector to resolve to one or more sheets. |
+| `EXPECT_SHEET_ABSENT` | `SheetSelector` | Require the selected sheet selector to resolve to no sheets. |
 | `EXPECT_NAMED_RANGE_PRESENT` | `NamedRangeSelector` | Require at least one matching named range; selector misses count as zero observed entities. |
 | `EXPECT_NAMED_RANGE_ABSENT` | `NamedRangeSelector` | Require zero matching named ranges; selector misses count as zero observed entities. |
 | `EXPECT_TABLE_PRESENT` | `TableSelector` | Require at least one matching table; selector misses count as zero observed entities. |

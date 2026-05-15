@@ -18,7 +18,6 @@ public record ExecutionJournal(
     Phase persistencePhase,
     Phase close,
     List<Step> steps,
-    List<RequestWarning> warnings,
     Outcome outcome,
     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Event> events) {
   public ExecutionJournal {
@@ -36,7 +35,6 @@ public record ExecutionJournal(
     Objects.requireNonNull(persistencePhase, "persistencePhase must not be null");
     Objects.requireNonNull(close, "close must not be null");
     steps = copyValues(steps, "steps");
-    warnings = copyValues(Objects.requireNonNullElseGet(warnings, List::of), "warnings");
     Objects.requireNonNull(outcome, "outcome must not be null");
     events = copyValues(Objects.requireNonNullElseGet(events, List::of), "events");
   }
@@ -77,10 +75,10 @@ public record ExecutionJournal(
       Objects.requireNonNull(status, "status must not be null");
       startedAt = normalizeOptional(startedAt, "startedAt");
       finishedAt = normalizeOptional(finishedAt, "finishedAt");
-      if (status == Status.NOT_STARTED) {
+      if (status == Status.NOT_STARTED || status == Status.NOT_REQUESTED) {
         if (startedAt.isPresent() || finishedAt.isPresent() || durationMillis != 0) {
           throw new IllegalArgumentException(
-              "NOT_STARTED phases must omit timestamps and use durationMillis=0");
+              status + " phases must omit timestamps and use durationMillis=0");
         }
       } else {
         if (startedAt.isEmpty()) {
@@ -98,6 +96,11 @@ public record ExecutionJournal(
     /** Creates a not-started phase. */
     public static Phase notStarted() {
       return new Phase(Status.NOT_STARTED, Optional.empty(), Optional.empty(), 0);
+    }
+
+    /** Creates a not-requested phase. */
+    public static Phase notRequested() {
+      return new Phase(Status.NOT_REQUESTED, Optional.empty(), Optional.empty(), 0);
     }
   }
 
@@ -225,6 +228,7 @@ public record ExecutionJournal(
   /** Status model shared by top-level and per-step phases. */
   public enum Status {
     NOT_STARTED,
+    NOT_REQUESTED,
     SUCCEEDED,
     FAILED
   }

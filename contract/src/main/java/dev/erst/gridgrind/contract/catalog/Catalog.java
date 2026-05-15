@@ -33,4 +33,17 @@ public record Catalog(
     nestedTypes = CatalogRecordValidation.copyGroups(nestedTypes, "nestedTypes");
     plainTypes = CatalogRecordValidation.copyPlainGroups(plainTypes, "plainTypes");
   }
+
+  /**
+   * Returns the ordered list of top-level type categories addressable by bare name via --lookup.
+   */
+  public List<TopLevelTypeGroup> topLevelGroups() {
+    return List.of(
+        new TopLevelTypeGroup("sourceTypes", sourceTypes),
+        new TopLevelTypeGroup("persistenceTypes", persistenceTypes),
+        new TopLevelTypeGroup("stepTypes", stepTypes),
+        new TopLevelTypeGroup("mutationActionTypes", mutationActionTypes),
+        new TopLevelTypeGroup("assertionTypes", assertionTypes),
+        new TopLevelTypeGroup("inspectionQueryTypes", inspectionQueryTypes));
+  }
 }

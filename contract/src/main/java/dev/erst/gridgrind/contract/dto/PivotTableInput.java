@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
@@ -23,6 +25,28 @@ public record PivotTableInput(
     List<String> columnLabels,
     List<String> reportFilters,
     List<DataField> dataFields) {
+  /** Reads a pivot-table payload while defaulting omitted axis lists to empty. */
+  @JsonCreator
+  public static PivotTableInput create(
+      @JsonProperty("name") String name,
+      @JsonProperty("sheetName") String sheetName,
+      @JsonProperty("source") Source source,
+      @JsonProperty("anchor") Anchor anchor,
+      @JsonProperty("rowLabels") List<String> rowLabels,
+      @JsonProperty("columnLabels") List<String> columnLabels,
+      @JsonProperty("reportFilters") List<String> reportFilters,
+      @JsonProperty("dataFields") List<DataField> dataFields) {
+    return new PivotTableInput(
+        name,
+        sheetName,
+        source,
+        anchor,
+        rowLabels == null ? List.of() : rowLabels,
+        columnLabels == null ? List.of() : columnLabels,
+        reportFilters == null ? List.of() : reportFilters,
+        dataFields);
+  }
+
   public PivotTableInput {
     name = ExcelPivotTableNaming.validateName(name);
     ExcelSheetNames.requireValid(sheetName, "sheetName");
@@ -83,6 +107,20 @@ public record PivotTableInput(
       ExcelPivotDataConsolidateFunction function,
       String displayName,
       Optional<String> valueFormat) {
+    /** Reads one pivot data-field while defaulting displayName and valueFormat when omitted. */
+    @JsonCreator
+    public static DataField create(
+        @JsonProperty("sourceColumnName") String sourceColumnName,
+        @JsonProperty("function") ExcelPivotDataConsolidateFunction function,
+        @JsonProperty("displayName") String displayName,
+        @JsonProperty("valueFormat") Optional<String> valueFormat) {
+      return new DataField(
+          sourceColumnName,
+          function,
+          displayName == null ? sourceColumnName : displayName,
+          valueFormat == null ? Optional.empty() : valueFormat);
+    }
+
     public DataField {
       sourceColumnName = requireNonBlank(sourceColumnName, "sourceColumnName");
       Objects.requireNonNull(function, "function must not be null");

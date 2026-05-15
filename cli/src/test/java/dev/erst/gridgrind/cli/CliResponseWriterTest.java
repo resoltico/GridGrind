@@ -2,8 +2,10 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -89,6 +91,127 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals("\n", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void writePayloadRoutesNonSuccessPayloadsToStdoutWhenNoResponsePathIsConfigured()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.writePayload(
+            Optional.empty(),
+            stdout,
+            stderr,
+            "{\"status\":\"error\"}".getBytes(StandardCharsets.UTF_8),
+            2);
+
+    assertEquals(2, exitCode);
+    assertEquals("{\"status\":\"error\"}\n", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void writeCliFailureReportWithoutResponsePathWritesTheCompactFailureToStdout()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.writeCliFailureReport(
+            Optional.empty(),
+            stdout,
+            stderr,
+            new dev.erst.gridgrind.cli.discovery.CliFailureReport(
+                GridGrindProtocolVersion.current(),
+                2,
+                "parse-arguments",
+                GridGrindProblemCode.INVALID_ARGUMENTS,
+                "bad flag",
+                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.of("--flag"),
+                List.of("gridgrind --help"),
+                Optional.of("Use one primary command.")));
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(2, exitCode);
+    assertEquals("bad flag", failure.message());
+  }
+
+  @Test
+  void writeCliFailureReportFallsBackToStructuredFailureWhenTheResponsePathCannotBeWritten()
+      throws IOException {
+    Path responseDirectory = Files.createTempDirectory("gridgrind-cli-failure-dir-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.writeCliFailureReport(
+            Optional.of(responseDirectory),
+            stdout,
+            stderr,
+            new dev.erst.gridgrind.cli.discovery.CliFailureReport(
+                GridGrindProtocolVersion.current(),
+                2,
+                "parse-arguments",
+                GridGrindProblemCode.INVALID_ARGUMENTS,
+                "bad flag",
+                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.of("--flag"),
+                List.of("gridgrind --help"),
+                Optional.of("Use one primary command.")));
+
+    GridGrindResponse.Failure fallback =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+
+    assertEquals(1, exitCode);
+    assertEquals(
+        "Could not write response file "
+            + responseDirectory.toAbsolutePath()
+            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
+    assertEquals("WRITE_RESPONSE", fallback.problem().context().stage());
+    assertEquals(
+        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
+        writeResponseContext(fallback).responsePath());
+  }
+
+  @Test
+  void writeRequestFailureReportEmitsRequestFailurePointerOnStderr() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-request-failure-report-", ".json");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.writeRequestFailureReport(
+            Optional.of(responsePath),
+            stdout,
+            stderr,
+            new dev.erst.gridgrind.cli.discovery.CliFailureReport(
+                GridGrindProtocolVersion.current(),
+                1,
+                "execute",
+                GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+                "missing required field",
+                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.of("--request"),
+                List.of("gridgrind --help-protocol"),
+                Optional.empty()));
+
+    assertEquals(1, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(
+        "GridGrind wrote the request failure report to "
+            + responsePath.toAbsolutePath()
+            + "; inspect that file for failure."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
   }
 
   @Test
@@ -355,6 +478,6 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
   private static RequestDoctorReport.Summary summary() {
     return new RequestDoctorReport.Summary(
-        "NEW", "NONE", "FULL_XSSF", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0);
+        "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0);
   }
 }

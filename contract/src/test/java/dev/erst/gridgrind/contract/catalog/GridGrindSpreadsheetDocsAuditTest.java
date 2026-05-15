@@ -206,7 +206,7 @@ class GridGrindSpreadsheetDocsAuditTest {
     assertAll(
         () ->
             assertTrue(
-                quickStart.contains("--print-example BUDGET"),
+                quickStart.contains("--print-example --lookup BUDGET"),
                 "quick start must teach the built-in budget example bootstrap flow"),
         () ->
             assertFalse(

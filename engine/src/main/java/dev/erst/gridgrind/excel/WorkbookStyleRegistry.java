@@ -33,7 +33,8 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
  * Caches and creates POI CellStyle and Font instances for a single workbook, merging protocol style
  * patches onto existing cell styles.
  */
-final class WorkbookStyleRegistry {
+@SuppressWarnings("PMD.CommentRequired")
+public final class WorkbookStyleRegistry {
   private static final String DEFAULT_NUMBER_FORMAT = "General";
   private static final ExcelCellStyle LOCAL_DATE_STYLE_PATCH =
       ExcelCellStyle.numberFormat("yyyy-mm-dd");
@@ -47,11 +48,12 @@ final class WorkbookStyleRegistry {
   private final Map<String, Integer> gradientFillIds;
   private final StylesTableFillRegistryAccess fillRegistryAccess;
 
-  WorkbookStyleRegistry(XSSFWorkbook workbook) {
+  public WorkbookStyleRegistry(XSSFWorkbook workbook) {
     this(workbook, StylesTableFillRegistryAccess.poiApi());
   }
 
-  WorkbookStyleRegistry(XSSFWorkbook workbook, StylesTableFillRegistryAccess fillRegistryAccess) {
+  public WorkbookStyleRegistry(
+      XSSFWorkbook workbook, StylesTableFillRegistryAccess fillRegistryAccess) {
     this.workbook = workbook;
     this.dataFormat = workbook.createDataFormat();
     this.cellStyles = new HashMap<>();
@@ -67,7 +69,7 @@ final class WorkbookStyleRegistry {
    * <p>This preserves any existing fill, border, font, alignment, or wrap state already present on
    * the cell.
    */
-  CellStyle localDateStyle(Cell cell) {
+  public CellStyle localDateStyle(Cell cell) {
     return mergedStyle(cell, LOCAL_DATE_STYLE_PATCH);
   }
 
@@ -77,7 +79,7 @@ final class WorkbookStyleRegistry {
    * <p>This preserves any existing fill, border, font, alignment, or wrap state already present on
    * the cell.
    */
-  CellStyle localDateTimeStyle(Cell cell) {
+  public CellStyle localDateTimeStyle(Cell cell) {
     return mergedStyle(cell, LOCAL_DATE_TIME_STYLE_PATCH);
   }
 

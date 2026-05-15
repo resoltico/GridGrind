@@ -49,6 +49,12 @@ class WorkbookStepValidationTest {
                 IllegalArgumentException.class, () -> WorkbookStepValidation.requireStepId(" "))
             .getMessage());
     assertEquals(
+        "stepId must match [A-Za-z0-9._-]+",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> WorkbookStepValidation.requireStepId("step with spaces"))
+            .getMessage());
+    assertEquals(
         "target must not be null",
         assertThrows(NullPointerException.class, () -> WorkbookStepValidation.requireTarget(null))
             .getMessage());
@@ -83,8 +89,8 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new SheetSelector.ByName("Budget"), setCell));
     assertEquals(
-        "SET_CELL requires target type CellSelector.ByAddress or"
-            + " TableCellSelector.ByColumnName but got SheetSelector.ByName",
+        "SET_CELL requires target type CELL_BY_ADDRESS or TABLE_CELL_BY_COLUMN_NAME but got"
+            + " SHEET_BY_NAME",
         wrongTarget.getMessage());
 
     IllegalArgumentException unionTargetFailure =
@@ -94,8 +100,7 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new WorkbookSelector.Current(), deleteTable));
     assertEquals(
-        "DELETE_TABLE requires target type TableSelector.ByNameOnSheet but got"
-            + " WorkbookSelector.Current",
+        "DELETE_TABLE requires target type TABLE_BY_NAME_ON_SHEET but got WORKBOOK_CURRENT",
         unionTargetFailure.getMessage());
   }
 
@@ -120,8 +125,8 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new RangeSelector.ByRange("Budget", "A1:B2"), getCharts));
     assertEquals(
-        "GET_CHARTS requires target type ChartSelector.AllOnSheet or ChartSelector.ByName but got"
-            + " RangeSelector.ByRange",
+        "GET_CHARTS requires target type CHART_ALL_ON_SHEET or CHART_BY_NAME but got"
+            + " RANGE_BY_RANGE",
         wrongTarget.getMessage());
   }
 
@@ -157,9 +162,8 @@ class WorkbookStepValidationTest {
                     new WorkbookSelector.Current(),
                     new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))));
     assertEquals(
-        "EXPECT_CELL_VALUE requires target type CellSelector.ByAddress,"
-            + " CellSelector.ByAddresses or TableCellSelector.ByColumnName but got"
-            + " WorkbookSelector.Current",
+        "EXPECT_CELL_VALUE requires target type CELL_BY_ADDRESS, CELL_BY_ADDRESSES or"
+            + " TABLE_CELL_BY_COLUMN_NAME but got WORKBOOK_CURRENT",
         wrongTarget.getMessage());
 
     IllegalArgumentException incompatibleComposite =
@@ -525,9 +529,8 @@ class WorkbookStepValidationTest {
                     new WorkbookSelector.Current(),
                     new StructuredMutationAction.DeleteNamedRange()));
     assertEquals(
-        "DELETE_NAMED_RANGE requires target type NamedRangeSelector.ByName,"
-            + " NamedRangeSelector.WorkbookScope or NamedRangeSelector.SheetScope but got"
-            + " WorkbookSelector.Current",
+        "DELETE_NAMED_RANGE requires target type NAMED_RANGE_BY_NAME, NAMED_RANGE_WORKBOOK_SCOPE"
+            + " or NAMED_RANGE_SHEET_SCOPE but got WORKBOOK_CURRENT",
         threeWayUnionFailure.getMessage());
 
     assertEquals(

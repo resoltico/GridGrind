@@ -26,9 +26,6 @@ public record AutofilterFilterColumnInput(
       @JsonProperty("columnId") long columnId,
       @JsonProperty("showButton") Boolean showButton,
       @JsonProperty("criterion") AutofilterFilterCriterionInput criterion) {
-    this(
-        columnId,
-        Objects.requireNonNull(showButton, "showButton must not be null").booleanValue(),
-        criterion);
+    this(columnId, !Boolean.FALSE.equals(showButton), criterion);
   }
 }

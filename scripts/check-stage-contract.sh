@@ -2,6 +2,7 @@
 # Canonical fixed-stage contract for the root check.sh entrypoint.
 
 readonly check_stage_ids=(
+    repo-hygiene
     quality-gates
     jazzer-check
     cli-shadowjar
@@ -10,14 +11,19 @@ readonly check_stage_ids=(
 )
 
 readonly check_stage_labels=(
-    'Stage 1/5: running quality gates'
-    'Stage 2/5: running Jazzer support tests and regression replay'
-    'Stage 3/5: building CLI fat JAR'
-    'Stage 4/5: checking release-surface shell scripts'
-    'Stage 5/5: running Docker smoke test'
+    'Stage 1/6: verifying repo hygiene'
+    'Stage 2/6: running quality gates'
+    'Stage 3/6: running Jazzer support tests and regression replay'
+    'Stage 4/6: building CLI fat JAR'
+    'Stage 5/6: checking release-surface shell scripts'
+    'Stage 6/6: running Docker smoke test'
 )
 
-readonly check_stage4_script_paths=(
+readonly check_stage5_script_paths=(
+    scripts/run-quality-gates.sh
+    scripts/repo-hygiene-support.sh
+    scripts/verify-repo-hygiene.sh
+    scripts/clean-repo-hygiene.sh
     scripts/test-check-process-support.sh
     scripts/test-check-file-support.sh
     scripts/test-check-stage-contract.sh
@@ -43,17 +49,18 @@ readonly check_stage4_script_paths=(
 
 check_stage_usage_lines() {
     printf '%s\n' \
-        '  1. check coverage' \
-        '  2. jazzer check' \
-        '  3. :cli:shadowJar' \
-        "  4. $(check_stage4_usage_command)" \
-        '  5. scripts/docker-smoke.sh'
+        '  1. scripts/verify-repo-hygiene.sh' \
+        '  2. check coverage' \
+        '  3. jazzer check' \
+        '  4. :cli:shadowJar' \
+        "  5. $(check_stage5_usage_command)" \
+        '  6. scripts/docker-smoke.sh'
 }
 
-check_stage4_usage_command() {
+check_stage5_usage_command() {
     local command='bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar'
     local script_path=''
-    for script_path in "${check_stage4_script_paths[@]}"; do
+    for script_path in "${check_stage5_script_paths[@]}"; do
         command="${command} && ${script_path}"
     done
     printf '%s\n' "${command}"
@@ -65,6 +72,11 @@ check_stage_execute() {
     local check_repo_root=$3
 
     case "${stage_id}" in
+        repo-hygiene)
+            run_shell_stage "${stage_id}" "${stage_label}" \
+                "${check_repo_root}/scripts/verify-repo-hygiene.sh" \
+                --repo-root "${check_repo_root}"
+            ;;
         quality-gates)
             run_stage "${stage_id}" "${stage_label}" "${check_repo_root}" check coverage
             ;;
@@ -105,7 +117,7 @@ check_stage_execute() {
                     for local_script_path in "$@"; do
                         bash "'"${check_repo_root}"'/${local_script_path}"
                     done
-                ' bash "${shell_syntax_targets[@]}" -- "${check_stage4_script_paths[@]}"
+                ' bash "${shell_syntax_targets[@]}" -- "${check_stage5_script_paths[@]}"
             ;;
         docker-smoke)
             run_shell_stage "${stage_id}" "${stage_label}" "${check_repo_root}/scripts/docker-smoke.sh"

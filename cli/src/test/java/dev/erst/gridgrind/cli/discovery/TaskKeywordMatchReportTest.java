@@ -3,7 +3,6 @@ package dev.erst.gridgrind.cli.discovery;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -12,14 +11,13 @@ class TaskKeywordMatchReportTest {
   @Test
   void reportConstructorCopiesCandidatesAndRequiresExplicitProtocolVersion() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskPlanTemplate starterTemplate = starterTemplate(task);
     TaskKeywordMatchReport.Candidate candidate =
         new TaskKeywordMatchReport.Candidate(
-            task,
+            task.id(),
+            task.narrative().summary(),
             42,
             List.of("dashboard", "chart"),
-            List.of("Matched intent tag \"dashboard\" via dashboard."),
-            starterTemplate);
+            List.of("intent tag", "summary"));
     TaskKeywordMatchReport report =
         new TaskKeywordMatchReport(
             dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
@@ -29,122 +27,95 @@ class TaskKeywordMatchReportTest {
             List.of("dashboard", "audit"),
             new java.util.ArrayList<>(List.of(candidate)));
 
-    assertEquals(task.id(), report.candidates().getFirst().task().id());
+    assertEquals(task.id(), report.candidates().getFirst().taskId());
     assertEquals(
         dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
         report.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> report.candidates().add(candidate));
-    assertEquals(
-        "protocolVersion must not be null",
+
+    NullPointerException exception =
         assertThrows(
-                NullPointerException.class,
-                () ->
-                    new TaskKeywordMatchReport(
-                        null,
-                        "monthly dashboard with charts",
-                        List.of("monthly", "dashboard", "chart"),
-                        List.of("monthly"),
-                        List.of("dashboard", "audit"),
-                        List.of(candidate)))
-            .getMessage());
+            NullPointerException.class,
+            () ->
+                new TaskKeywordMatchReport(
+                    null,
+                    "monthly dashboard with charts",
+                    List.of("monthly", "dashboard", "chart"),
+                    List.of("monthly"),
+                    List.of("dashboard", "audit"),
+                    List.of(candidate)));
+    assertEquals("protocolVersion must not be null", exception.getMessage());
   }
 
   @Test
   void reportAndCandidateValidationRejectInvalidShapes() {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
-    TaskPlanTemplate starterTemplate = starterTemplate(task);
 
-    assertEquals(
-        "query must not be blank",
+    IllegalArgumentException blankQuery =
         assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport(
-                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-                        " ",
-                        List.of("dashboard"),
-                        List.of(),
-                        List.of("dashboard"),
-                        List.of()))
-            .getMessage());
-    assertEquals(
-        "candidates must not contain duplicate task ids: DASHBOARD",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport(
-                        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-                        "dashboard",
-                        List.of("dashboard"),
-                        List.of(),
-                        List.of("dashboard"),
-                        List.of(
-                            new TaskKeywordMatchReport.Candidate(
-                                task,
-                                42,
-                                List.of("dashboard"),
-                                List.of("Matched intent tag \"dashboard\" via dashboard."),
-                                starterTemplate),
-                            new TaskKeywordMatchReport.Candidate(
-                                task,
-                                21,
-                                List.of("chart"),
-                                List.of("Matched capability \"set chart\" via chart."),
-                                starterTemplate))))
-            .getMessage());
-    assertEquals(
-        "score must be positive",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport.Candidate(
-                        task,
-                        0,
-                        List.of("dashboard"),
-                        List.of("Matched intent tag \"dashboard\" via dashboard."),
-                        starterTemplate))
-            .getMessage());
-    assertEquals(
-        "starterTemplate task id must match candidate task id",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport.Candidate(
-                        task,
-                        10,
-                        List.of("dashboard"),
-                        List.of("Matched intent tag \"dashboard\" via dashboard."),
-                        starterTemplate(
-                            GridGrindTaskCatalog.entryFor("AUDIT_EXISTING_WORKBOOK")
-                                .orElseThrow())))
-            .getMessage());
-    assertEquals(
-        "matchedTerms must not be empty",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport.Candidate(
-                        task,
-                        10,
-                        List.of(),
-                        List.of("Matched intent tag \"dashboard\" via dashboard."),
-                        starterTemplate))
-            .getMessage());
-    assertEquals(
-        "reasons must not be empty",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new TaskKeywordMatchReport.Candidate(
-                        task, 10, List.of("dashboard"), List.of(), starterTemplate))
-            .getMessage());
-  }
+            IllegalArgumentException.class,
+            () ->
+                new TaskKeywordMatchReport(
+                    dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+                    " ",
+                    List.of("dashboard"),
+                    List.of(),
+                    List.of("dashboard"),
+                    List.of()));
+    assertEquals("query must not be blank", blankQuery.getMessage());
 
-  private static TaskPlanTemplate starterTemplate(TaskEntry task) {
-    return new TaskPlanTemplate(
-        dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
-        task,
-        GridGrindProtocolCatalog.requestTemplate(),
-        List.of("note"));
+    IllegalArgumentException duplicateTaskId =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskKeywordMatchReport(
+                    dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion.current(),
+                    "dashboard",
+                    List.of("dashboard"),
+                    List.of(),
+                    List.of("dashboard"),
+                    List.of(
+                        new TaskKeywordMatchReport.Candidate(
+                            task.id(),
+                            task.narrative().summary(),
+                            42,
+                            List.of("dashboard"),
+                            List.of("intent tag")),
+                        new TaskKeywordMatchReport.Candidate(
+                            task.id(),
+                            task.narrative().summary(),
+                            21,
+                            List.of("chart"),
+                            List.of("capability summary")))));
+    assertEquals(
+        "candidates must not contain duplicate task ids: DASHBOARD", duplicateTaskId.getMessage());
+
+    IllegalArgumentException zeroScore =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskKeywordMatchReport.Candidate(
+                    task.id(),
+                    task.narrative().summary(),
+                    0,
+                    List.of("dashboard"),
+                    List.of("intent tag")));
+    assertEquals("score must be positive", zeroScore.getMessage());
+
+    IllegalArgumentException emptyMatchedTerms =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskKeywordMatchReport.Candidate(
+                    task.id(), task.narrative().summary(), 10, List.of(), List.of("intent tag")));
+    assertEquals("matchedTerms must not be empty", emptyMatchedTerms.getMessage());
+
+    IllegalArgumentException emptyMatchSources =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskKeywordMatchReport.Candidate(
+                    task.id(), task.narrative().summary(), 10, List.of("dashboard"), List.of()));
+    assertEquals("matchSources must not be empty", emptyMatchSources.getMessage());
   }
 }

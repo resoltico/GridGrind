@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /** Outline-summary placement authored as part of sheet-presentation state. */
 public record SheetOutlineSummaryInput(boolean rowSumsBelow, boolean rowSumsRight) {
@@ -13,7 +14,9 @@ public record SheetOutlineSummaryInput(boolean rowSumsBelow, boolean rowSumsRigh
 
   /** Creates outline-summary settings while applying the documented summary-placement defaults. */
   @JsonCreator
-  public SheetOutlineSummaryInput(Boolean rowSumsBelow, Boolean rowSumsRight) {
+  public SheetOutlineSummaryInput(
+      @JsonProperty("rowSumsBelow") Boolean rowSumsBelow,
+      @JsonProperty("rowSumsRight") Boolean rowSumsRight) {
     this(
         java.util.Objects.requireNonNull(rowSumsBelow, "rowSumsBelow must not be null")
             .booleanValue(),

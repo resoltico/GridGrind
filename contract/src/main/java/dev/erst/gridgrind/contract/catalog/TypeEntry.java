@@ -11,14 +11,25 @@ public record TypeEntry(
     String summary,
     List<FieldEntry> fields,
     List<TargetSelectorEntry> targetSelectors,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> targetSelectorRule) {
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> targetSelectorRule,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<ProtocolStepTemplate> stepTemplate) {
   /**
    * Creates a type entry without target-selector metadata.
    *
    * <p>Use this overload for nested value types that are not step-addressable.
    */
   public TypeEntry(String id, String summary, List<FieldEntry> fields) {
-    this(id, summary, fields, List.of(), Optional.empty());
+    this(id, summary, fields, List.of(), Optional.empty(), Optional.empty());
+  }
+
+  /** Creates a type entry with target-selector metadata but without a step template. */
+  public TypeEntry(
+      String id,
+      String summary,
+      List<FieldEntry> fields,
+      List<TargetSelectorEntry> targetSelectors,
+      Optional<String> targetSelectorRule) {
+    this(id, summary, fields, targetSelectors, targetSelectorRule, Optional.empty());
   }
 
   public TypeEntry {
@@ -31,6 +42,7 @@ public record TypeEntry(
     if (targetSelectorRule.isPresent() && targetSelectorRule.orElseThrow().isBlank()) {
       throw new IllegalArgumentException("targetSelectorRule must not be blank");
     }
+    Objects.requireNonNull(stepTemplate, "stepTemplate must not be null");
   }
 
   /** Returns the field entry with the given name, or empty when this type has no such field. */

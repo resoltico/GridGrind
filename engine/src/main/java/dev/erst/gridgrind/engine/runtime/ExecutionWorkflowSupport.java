@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -13,10 +14,10 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,7 +53,7 @@ final class ExecutionWorkflowSupport {
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       ExcelWorkbook workbook,
-      ExecutionModeSelection executionModes,
+      ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       Path workingDirectory) {
@@ -76,7 +77,7 @@ final class ExecutionWorkflowSupport {
           GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
           return responseSupport.closeWorkbook(
               workbook,
-              ExecutionResponseSupport.failureResponse(
+              ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
                   protocolVersion,
                   journal,
                   request.steps().size(),
@@ -99,11 +100,11 @@ final class ExecutionWorkflowSupport {
           case AssertionStep assertionStep ->
               assertions.add(
                   stepSupport.executeAssertionStep(
-                      assertionStep, workbook, workbookLocation, executionModes.readMode()));
+                      assertionStep, workbook, workbookLocation, executionMode));
           case InspectionStep inspectionStep ->
               inspections.add(
                   stepSupport.executeInspectionStep(
-                      inspectionStep, workbook, workbookLocation, executionModes.readMode()));
+                      inspectionStep, workbook, workbookLocation, executionMode));
         }
         stepHandle.succeed();
       } catch (Exception exception) {
@@ -112,13 +113,21 @@ final class ExecutionWorkflowSupport {
                 exception, stepSupport.executeStepContext(request, stepIndex, step, exception));
         stepHandle.fail(
             problem.code(), problem.category(), problem.context().stage(), problem.message());
+        if (exception instanceof AssertionFailedException assertionFailed) {
+          assertions.add(
+              new AssertionResult(
+                  dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+                  assertionFailed.assertionFailure().stepId(),
+                  assertionFailed.assertionFailure().assertionType()));
+        }
         return responseSupport.closeWorkbook(
             workbook,
-            ExecutionResponseSupport.failureResponse(
+            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
                 protocolVersion,
                 journal,
                 request.steps().size(),
                 calculation,
+                List.copyOf(assertions),
                 problem,
                 stepIndex,
                 step.stepId()),
@@ -138,7 +147,7 @@ final class ExecutionWorkflowSupport {
         GridGrindProblemDetail.Problem problem = calculationOutcome.failure().orElseThrow();
         return responseSupport.closeWorkbook(
             workbook,
-            ExecutionResponseSupport.failureResponse(
+            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
                 protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
             request,
             journal,
@@ -164,7 +173,7 @@ final class ExecutionWorkflowSupport {
       persistencePhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeWorkbook(
           workbook,
-          ExecutionResponseSupport.failureResponse(
+          ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
               protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
           request,
           journal,
@@ -178,7 +187,7 @@ final class ExecutionWorkflowSupport {
         workbook,
         new GridGrindResponse.Success(
             protocolVersion,
-            journal.buildSuccess(request.steps().size()),
+            journal.buildSuccess(request.steps().size(), false),
             calculation,
             persistence,
             warnings,
@@ -220,7 +229,7 @@ final class ExecutionWorkflowSupport {
       openPhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeReadableWorkbook(
           null,
-          ExecutionResponseSupport.failureResponse(
+          ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
               protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
           request,
           journal,
@@ -246,7 +255,7 @@ final class ExecutionWorkflowSupport {
             problem.code(), problem.category(), problem.context().stage(), problem.message());
         return responseSupport.closeReadableWorkbook(
             materialized,
-            ExecutionResponseSupport.failureResponse(
+            ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
                 protocolVersion,
                 journal,
                 request.steps().size(),
@@ -266,7 +275,7 @@ final class ExecutionWorkflowSupport {
         materialized,
         new GridGrindResponse.Success(
             protocolVersion,
-            journal.buildSuccess(request.steps().size()),
+            journal.buildSuccess(request.steps().size(), false),
             calculation,
             new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(),
             warnings,
@@ -282,7 +291,7 @@ final class ExecutionWorkflowSupport {
   GridGrindResponse executeStreamingWorkflow(
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
-      ExecutionModeSelection executionModes,
+      ExecutionModeInput executionMode,
       List<RequestWarning> warnings,
       ExecutionJournalRecorder journal,
       Path workingDirectory) {
@@ -313,7 +322,7 @@ final class ExecutionWorkflowSupport {
             case InspectionStep inspectionStep ->
                 inspections.add(
                     stepSupport.executeStreamingInspectionStep(
-                        writer, inspectionStep, workbookLocation, executionModes.readMode()));
+                        writer, inspectionStep, workbookLocation, executionMode));
           }
           stepHandle.succeed();
         } catch (Exception exception) {
@@ -323,11 +332,19 @@ final class ExecutionWorkflowSupport {
                   exception, stepSupport.executeStepContext(request, stepIndex, step, exception));
           stepHandle.fail(
               problem.code(), problem.category(), problem.context().stage(), problem.message());
+          if (exception instanceof AssertionFailedException assertionFailed) {
+            assertions.add(
+                new AssertionResult(
+                    dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+                    assertionFailed.assertionFailure().stepId(),
+                    assertionFailed.assertionFailure().assertionType()));
+          }
           return ExecutionResponseSupport.failureResponse(
               protocolVersion,
               journal,
               request.steps().size(),
               calculation,
+              List.copyOf(assertions),
               problem,
               stepIndex,
               step.stepId());

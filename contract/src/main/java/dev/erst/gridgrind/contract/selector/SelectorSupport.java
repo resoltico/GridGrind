@@ -120,7 +120,7 @@ final class SelectorSupport {
     return value;
   }
 
-  static void requireWindowSize(int rowCount, int columnCount) {
+  static void requireWindowSize(int rowCount, int columnCount) { // LIM-001
     long cells = (long) rowCount * columnCount;
     if (cells > ExcelReadLimits.MAX_WINDOW_CELLS) {
       throw new IllegalArgumentException(

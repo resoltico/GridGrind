@@ -80,7 +80,7 @@ final class WorkbookAuditExamples {
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
             new ExecutionPolicyInput(
-                ExecutionModeInput.writeMode(ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                ExecutionModeInput.streamingWrite(),
                 dev.erst.gridgrind.contract.dto.ExecutionJournalInput.defaults(),
                 new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
             ExamplePlanSupport.step(

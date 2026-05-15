@@ -11,8 +11,8 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.ExcelChartSelection;
-import dev.erst.gridgrind.excel.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

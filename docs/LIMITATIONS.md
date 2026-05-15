@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: LIMITATIONS
-updated: "2026-05-08"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -412,6 +412,62 @@ UDF formula templates are evaluated server-side only by Apache POI, which does n
 or WEBSERVICE and would return an evaluation error for those functions. Templates are also never
 written to xlsx output — only the UDF call site (e.g., `MY_FUNC(arg)`) appears in the file.
 The guard is applied as defense-in-depth against future POI changes or alternative evaluation paths.
+
+---
+
+### LIM-035 — HYPERLINK() Formula Content Not Validated Against URL Allowlist
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind (accepted limitation) |
+| **Limit** | `HYPERLINK()` payloads inside formula strings are not inspected for URL scheme |
+| **Applies to** | `CellInput.Formula`, `NamedRangeTarget.Formula`, `ChartTitleInput.Formula` |
+| **Code** | none (accepted gap; `DDE` and `WEBSERVICE` are blocked by `FormulaInputSecurity.rejectDde`) |
+| **Relates to** | LIM-023, LIM-028, LIM-031 |
+
+The URL scheme allowlist in LIM-028 applies to `HyperlinkInput`, not to formula-embedded
+hyperlinks. A formula such as `=HYPERLINK("javascript:evil()")` passes `FormulaInputSecurity.rejectDde`
+and is written to the xlsx file. The risk delta versus LIM-028 is limited: `HYPERLINK()` requires a
+user click to navigate and is not auto-evaluated on workbook open. The `DDE(` and `WEBSERVICE(` patterns
+that execute automatically are already blocked. Closing this gap fully would require an embedded
+formula parser; the accepted residual risk is click-triggered URI navigation only.
+
+---
+
+### LIM-036 — RTD() Function Not Blocked
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind (accepted limitation) |
+| **Limit** | `RTD()` (Real-Time Data) in formula strings is not blocked |
+| **Applies to** | all formula inputs |
+| **Code** | none (accepted gap) |
+
+`RTD()` connects to a registered Windows COM automation server when the workbook is opened on
+Windows. `FormulaInputSecurity.rejectDde` does not block `RTD()`. The risk is platform-scoped:
+`RTD()` is a no-op on macOS and Linux, and on Windows it requires a pre-registered COM server on
+the consuming workstation. GridGrind targets server-side xlsx generation workloads where COM
+infrastructure is absent. Blocking `RTD()` would require a formula parser; the accepted risk is
+Windows-only and depends on attacker-controlled COM registration on the target machine.
+
+---
+
+### LIM-037 — WorkbookFactory May Open XLS Files Presented as XLSX
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind (accepted limitation) |
+| **Limit** | An XLS binary file renamed `.xlsx` bypasses the extension check in LIM-002 |
+| **Applies to** | workbook source inputs |
+| **Code** | none (accepted gap; relates to LIM-002) |
+| **Relates to** | LIM-002 |
+
+`WorkbookFactory.create()` uses magic-byte detection after the extension check. A binary `.xls`
+file renamed `.xlsx` opens as an XLS workbook rather than being rejected. GridGrind operates as a
+server-side automation engine where workbook inputs are operator-supplied trusted artifacts. Opening
+a valid XLS file as XLS-format does not introduce injection risk beyond what the XLS format itself
+carries. A content-type-strict guard would require replacing `WorkbookFactory` with a format-probing
+layer; the extension check in LIM-002 remains the defense against unrecognized or malformed inputs.
 
 ---
 

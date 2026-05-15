@@ -37,7 +37,7 @@ grep -Fq 'check_stage_execute()' "${stage_contract_script}" || die \
 grep -Fq 'check_stage_execute "${stage_id}" "${stage_label}" "${repo_root}"' "${root_check_script}" || die \
     "check.sh no longer delegates fixed-stage execution through the canonical stage-contract owner"
 grep -Fq 'scripts/test-check-stage-contract.sh' "${stage_contract_script}" || die \
-    "stage contract no longer includes its own regression guard in Stage 4 coverage"
+    "stage contract no longer includes its own regression guard in Stage 5 coverage"
 
 if grep -Fq "run_stage 'quality-gates'" "${root_check_script}"; then
     die "check.sh still carries a direct fixed-stage quality-gates invocation"
@@ -52,7 +52,7 @@ if grep -Fq "run_shell_stage 'docker-smoke'" "${root_check_script}"; then
     die "check.sh still carries a direct fixed-stage docker-smoke invocation"
 fi
 if grep -Fq 'shell_syntax_targets=(' "${root_check_script}"; then
-    die "check.sh still carries the Stage 4 shell target inventory directly"
+    die "check.sh still carries the Stage 5 shell target inventory directly"
 fi
 
 printf 'check stage contract regression: success\n'

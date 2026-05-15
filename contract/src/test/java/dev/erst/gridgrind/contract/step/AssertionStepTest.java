@@ -26,9 +26,8 @@ class AssertionStepTest {
             IllegalArgumentException.class,
             () -> new AssertionStep("bad", new WorkbookSelector.Current(), assertion));
     assertEquals(
-        "EXPECT_CELL_VALUE requires target type CellSelector.ByAddress,"
-            + " CellSelector.ByAddresses or TableCellSelector.ByColumnName but got"
-            + " WorkbookSelector.Current",
+        "EXPECT_CELL_VALUE requires target type CELL_BY_ADDRESS, CELL_BY_ADDRESSES or"
+            + " TABLE_CELL_BY_COLUMN_NAME but got WORKBOOK_CURRENT",
         wrongTarget.getMessage());
   }
 }

@@ -273,6 +273,7 @@ final class WorkbookInvariantInspectionResultChecks {
       case WorkbookInspectionResult.CustomXmlMappingsResult _ -> "GET_CUSTOM_XML_MAPPINGS";
       case WorkbookInspectionResult.CustomXmlExportResult _ -> "EXPORT_CUSTOM_XML_MAPPING";
       case WorkbookInspectionResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
+      case WorkbookInspectionResult.SheetsResult _ -> "GET_SHEETS";
       case SheetInspectionResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
       case SheetInspectionResult.ArrayFormulasResult _ -> "GET_ARRAY_FORMULAS";
       case SheetInspectionResult.CellsResult _ -> "GET_CELLS";

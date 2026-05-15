@@ -5,10 +5,11 @@ import java.util.List;
 import java.util.Objects;
 
 /** Normalizes XMLBeans sqref payloads into stable trimmed string ranges. */
-final class ExcelSqrefSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelSqrefSupport {
   private ExcelSqrefSupport() {}
 
-  static List<String> normalizedSqref(List<?> sqref) {
+  public static List<String> normalizedSqref(List<?> sqref) {
     Objects.requireNonNull(sqref, "sqref must not be null");
 
     List<String> normalized = new ArrayList<>(sqref.size());

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,18 +21,19 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /** Chart snapshot and chart-readback helpers. */
-final class ExcelChartSnapshotSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelChartSnapshotSupport {
   private static final System.Logger LOGGER =
       System.getLogger(ExcelChartSnapshotSupport.class.getName());
 
   private ExcelChartSnapshotSupport() {}
 
-  static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChartDrawingObject(chart, graphicFrame, null);
   }
 
-  static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
+  public static ExcelDrawingObjectSnapshot.Chart snapshotChartDrawingObject(
       XSSFChart chart,
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -45,12 +48,12 @@ final class ExcelChartSnapshotSupport {
         titleSummary(snapshot.title()));
   }
 
-  static ExcelChartSnapshot snapshotChart(
+  public static ExcelChartSnapshot snapshotChart(
       XSSFChart chart, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return snapshotChart(chart, graphicFrame, null);
   }
 
-  static ExcelChartSnapshot snapshotChart(
+  public static ExcelChartSnapshot snapshotChart(
       XSSFChart chart,
       XSSFGraphicFrame graphicFrame,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -67,12 +70,12 @@ final class ExcelChartSnapshotSupport {
         plots);
   }
 
-  static @Nullable XSSFChart chartForGraphicFrame(
+  public static @Nullable XSSFChart chartForGraphicFrame(
       XSSFDrawing drawing, @Nullable XSSFGraphicFrame graphicFrame) {
     return optionalChartForGraphicFrame(drawing, graphicFrame).orElse(null);
   }
 
-  static ExcelChartSnapshot.Title snapshotTitle(XSSFChart chart) {
+  public static ExcelChartSnapshot.Title snapshotTitle(XSSFChart chart) {
     return snapshotTitle(chart, null);
   }
 
@@ -99,7 +102,7 @@ final class ExcelChartSnapshotSupport {
         : new ExcelChartSnapshot.Title.Text(text);
   }
 
-  static String cachedTitleText(XSSFChart chart, String formula) {
+  public static String cachedTitleText(XSSFChart chart, String formula) {
     return cachedTitleText(chart, formula, null);
   }
 
@@ -130,7 +133,7 @@ final class ExcelChartSnapshotSupport {
     return cachedText;
   }
 
-  static String resolvedTitleFormulaText(XSSFChart chart, String formula) {
+  public static String resolvedTitleFormulaText(XSSFChart chart, String formula) {
     return resolvedTitleFormulaText(chart, formula, null);
   }
 
@@ -168,26 +171,26 @@ final class ExcelChartSnapshotSupport {
     }
   }
 
-  static boolean barVaryColors(XSSFChart chart) {
+  public static boolean barVaryColors(XSSFChart chart) {
     return chart.getCTChart().getPlotArea().sizeOfBarChartArray() > 0
         && truthy(chart.getCTChart().getPlotArea().getBarChartArray(0).getVaryColors());
   }
 
-  static boolean lineVaryColors(XSSFChart chart) {
+  public static boolean lineVaryColors(XSSFChart chart) {
     return chart.getCTChart().getPlotArea().sizeOfLineChartArray() > 0
         && truthy(chart.getCTChart().getPlotArea().getLineChartArray(0).getVaryColors());
   }
 
-  static boolean pieVaryColors(XSSFChart chart) {
+  public static boolean pieVaryColors(XSSFChart chart) {
     return chart.getCTChart().getPlotArea().sizeOfPieChartArray() > 0
         && truthy(chart.getCTChart().getPlotArea().getPieChartArray(0).getVaryColors());
   }
 
-  static ExcelChartSnapshot.Title snapshotSeriesTitle(CTSerTx title) {
+  public static ExcelChartSnapshot.Title snapshotSeriesTitle(CTSerTx title) {
     return snapshotSeriesTitle(null, title, null);
   }
 
-  static ExcelChartSnapshot.Title snapshotSeriesTitle(
+  public static ExcelChartSnapshot.Title snapshotSeriesTitle(
       @Nullable XSSFSheet contextSheet,
       @Nullable CTSerTx title,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -219,7 +222,7 @@ final class ExcelChartSnapshotSupport {
         : new ExcelChartSnapshot.Title.None();
   }
 
-  static String titleSummary(ExcelChartSnapshot.Title title) {
+  public static String titleSummary(ExcelChartSnapshot.Title title) {
     return switch (title) {
       case ExcelChartSnapshot.Title.None _ -> "";
       case ExcelChartSnapshot.Title.Text text -> text.text();

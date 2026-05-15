@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
@@ -50,17 +51,7 @@ class GridGrindJsonCoverageTest {
     RequestDoctorReport doctorReport =
         RequestDoctorReport.warnings(
             new RequestDoctorReport.Summary(
-                "NEW",
-                "NONE",
-                "FULL_XSSF",
-                "FULL_XSSF",
-                "DO_NOT_CALCULATE",
-                false,
-                false,
-                1,
-                1,
-                0,
-                0),
+                "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 1, 1, 0, 0),
             List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")));
 
     try (TrackingInputStream responseStream =
@@ -116,6 +107,29 @@ class GridGrindJsonCoverageTest {
   }
 
   @Test
+  void requestTreeRendersTheWireObjectWithoutIOLayering() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+
+    ObjectNode requestTree = GridGrindJson.requestTree(request);
+
+    assertEquals("V1", requestTree.path("protocolVersion").stringValue());
+    assertEquals("NEW", requestTree.path("source").path("type").stringValue());
+    assertEquals(
+        "FULL_XSSF", requestTree.path("execution").path("mode").path("type").stringValue());
+    assertTrue(requestTree.path("steps").isArray());
+    assertEquals(
+        "request must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJson.requestTree(null))
+            .getMessage());
+  }
+
+  @Test
   void invalidRequestDoctorReportBytesSurfaceInvalidJson() {
     assertInstanceOf(
         InvalidJsonException.class,
@@ -141,13 +155,13 @@ class GridGrindJsonCoverageTest {
   @Test
   void rejectsTopLevelAndArrayNullRequestPayloads() {
     assertEquals(
-        "problem: <root> must not be null",
+        "JSON payload must not be null",
         assertThrows(
                 InvalidRequestException.class,
                 () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
             .getMessage());
     assertEquals(
-        "problem: <root> must not be null",
+        "JSON payload must not be null",
         assertThrows(
                 InvalidRequestException.class,
                 () ->
@@ -166,7 +180,7 @@ class GridGrindJsonCoverageTest {
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
-                            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                            "mode": {"type": "FULL_XSSF"},
                             "journal": { "level": "NORMAL" },
                             "calculation": {
                               "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -199,17 +213,7 @@ class GridGrindJsonCoverageTest {
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
             new RequestDoctorReport.Summary(
-                "NEW",
-                "NONE",
-                "FULL_XSSF",
-                "FULL_XSSF",
-                "DO_NOT_CALCULATE",
-                false,
-                false,
-                0,
-                0,
-                0,
-                0));
+                "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
 
     assertEquals(
         "Missing required field 'warnings'",
@@ -330,7 +334,6 @@ class GridGrindJsonCoverageTest {
                                 "NEW",
                                 "NONE",
                                 "FULL_XSSF",
-                                "FULL_XSSF",
                                 "DO_NOT_CALCULATE",
                                 false,
                                 false,
@@ -344,46 +347,47 @@ class GridGrindJsonCoverageTest {
   @Test
   void helperMethodsCoverFallbackAndLocationEdgeCases() throws IOException {
     JsonFactory jsonFactory = new JsonFactory();
-    MismatchedInputException nullPrimitiveWithoutPath =
-        MismatchedInputException.from(
-            jsonFactory.createParser("null"), Integer.class, "Cannot map `null` into type `int`");
-    MismatchedInputException nullPrimitiveWithIndex =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    jsonFactory.createParser("null"),
-                    Integer.class,
-                    "Cannot map `null` into type `int`")
-                .prependPath(new Object(), 0);
     MismatchedInputException floatingPointWithoutPath =
         MismatchedInputException.from(
             jsonFactory.createParser("2.5"),
             Integer.class,
-            "Floating-point value (2.5) out of range of int");
+            "Cannot coerce Floating-point value (2.5) to `int` value"
+                + " (but could if coercion was enabled using `CoercionConfig`)");
     MismatchedInputException floatingPointWithIndex =
         (MismatchedInputException)
             MismatchedInputException.from(
                     jsonFactory.createParser("2.5"),
                     Integer.class,
-                    "Floating-point value (2.5) out of range of int")
+                    "Cannot coerce Floating-point value (2.5) to `int` value"
+                        + " (but could if coercion was enabled using `CoercionConfig`)")
                 .prependPath(new Object(), 0);
+    MismatchedInputException floatingPointWithNestedPath =
+        (MismatchedInputException)
+            MismatchedInputException.from(
+                    jsonFactory.createParser("2.5"),
+                    Integer.class,
+                    "Cannot coerce Floating-point value (2.5) to `int` value"
+                        + " (but could if coercion was enabled using `CoercionConfig`)")
+                .prependPath(new Object(), 1)
+                .prependPath(new Object(), "bar")
+                .prependPath(new Object(), 0)
+                .prependPath(new Object(), "items");
 
-    assertEquals(
-        "Missing required field", GridGrindJson.mismatchedInputMessage(nullPrimitiveWithoutPath));
-    assertEquals(
-        "Missing required field", GridGrindJson.mismatchedInputMessage(nullPrimitiveWithIndex));
     assertEquals(
         "JSON value must be an integer value",
         GridGrindJson.mismatchedInputMessage(floatingPointWithoutPath));
     assertEquals(
-        "JSON value must be an integer value",
+        "JSON value at '[0]' must be an integer value",
         GridGrindJson.mismatchedInputMessage(floatingPointWithIndex));
     assertEquals(
+        "JSON value at 'items[0].bar[1]' must be an integer value",
+        GridGrindJson.mismatchedInputMessage(floatingPointWithNestedPath));
+    assertEquals(
         "Missing required field 'fieldName'",
-        GridGrindJson.message(new IllegalArgumentException("problem: fieldName must not be null")));
+        GridGrindJson.message(new NullPointerException("fieldName must not be null")));
     assertEquals(
         "Missing required field 'steps[0].target'",
-        GridGrindJson.message(
-            new IllegalArgumentException("problem: steps[0].target must not be null")));
+        GridGrindJson.message(new NullPointerException("steps[0].target must not be null")));
     assertEquals(
         "JSON value has the wrong shape for this field",
         GridGrindJson.message(
@@ -416,6 +420,11 @@ class GridGrindJsonCoverageTest {
         Optional.empty(), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 0, 9)));
     assertEquals(
         Optional.empty(), GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 0)));
+    assertEquals(
+        "Cannot coerce value to `boolean`",
+        GridGrindJson.cleanJacksonMessage(
+            "Cannot coerce value to `boolean`"
+                + " (but could if coercion was enabled using `CoercionConfig`)"));
   }
 
   @Test
@@ -426,17 +435,7 @@ class GridGrindJsonCoverageTest {
     RequestDoctorReport doctorReport =
         RequestDoctorReport.clean(
             new RequestDoctorReport.Summary(
-                "NEW",
-                "SAVE_AS",
-                "FULL_XSSF",
-                "FULL_XSSF",
-                "DO_NOT_CALCULATE",
-                false,
-                false,
-                0,
-                0,
-                0,
-                0));
+                "NEW", "SAVE_AS", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
     GridGrindJson.writeTypeEntry(outputStream, entry);
     GridGrindJson.writeRequestDoctorReport(doctorReportOutputStream, doctorReport);
     Catalog catalog =
@@ -469,7 +468,7 @@ class GridGrindJsonCoverageTest {
                           "source": { "type": "NEW" },
                           "persistence": { "type": "NONE" },
                           "execution": {
-                            "mode": { "readMode": "FULL_XSSF", "writeMode": "FULL_XSSF" },
+                            "mode": {"type": "FULL_XSSF"},
                             "journal": { "level": "NORMAL" },
                             "calculation": {
                               "strategy": { "type": "DO_NOT_CALCULATE" },
@@ -518,6 +517,32 @@ class GridGrindJsonCoverageTest {
   }
 
   @Test
+  void catalogLookupResultPrependsProtocolVersionToValueFields() throws IOException {
+    TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    GridGrindJson.writeCatalogLookupResult(outputStream, GridGrindProtocolVersion.V1, entry);
+    String json = outputStream.toString(StandardCharsets.UTF_8);
+    assertTrue(json.indexOf("\"protocolVersion\"") < json.indexOf("\"id\""));
+    assertTrue(json.contains("\"GET_CELLS\""));
+    assertEquals(
+        "protocolVersion must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJson.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(), null, entry))
+            .getMessage());
+    assertEquals(
+        "value must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJson.writeCatalogLookupResult(
+                        new ByteArrayOutputStream(), GridGrindProtocolVersion.V1, null))
+            .getMessage());
+  }
+
+  @Test
   void discoverySerializersOmitExplicitNullProperties() throws IOException {
     String catalogJson =
         new String(
@@ -552,6 +577,63 @@ class GridGrindJsonCoverageTest {
 
     assertFalse(requestJson.contains(": null"));
     assertFalse(responseJson.contains(": null"));
+  }
+
+  @Test
+  void rejectsExplicitNullInDeepNestedRequestFieldWithFullDottedPath() {
+    InvalidRequestException exception =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": {"type": "FULL_XSSF"},
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": null
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals(
+        "Missing required field 'execution.calculation.markRecalculateOnOpen'",
+        exception.getMessage());
+    assertEquals(
+        Optional.of("execution.calculation.markRecalculateOnOpen"),
+        exception.jsonLocation().jsonPath());
+  }
+
+  @Test
+  void classifiesOnlyExplicitNullChecksAsValidationCauses() {
+    NullPointerException explicitNull = new NullPointerException("field must not be null");
+    NullPointerException jvmNull = new NullPointerException("Cannot invoke method on null");
+    NullPointerException nullMessageNull = new NullPointerException();
+
+    assertInstanceOf(
+        InvalidRequestException.class,
+        invokeInvalidPayload(new WrappedJacksonException("wrapper", explicitNull)),
+        "NPE with 'must not be null' message should be treated as a validation error");
+    assertInstanceOf(
+        InvalidJsonException.class,
+        invokeInvalidPayload(new WrappedJacksonException("wrapper", jvmNull)),
+        "JVM NPE without 'must not be null' message should not be treated as a validation error");
+    assertInstanceOf(
+        InvalidJsonException.class,
+        invokeInvalidPayload(new WrappedJacksonException("wrapper", nullMessageNull)),
+        "NPE with null message should not be treated as a validation error");
   }
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {

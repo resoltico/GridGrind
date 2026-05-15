@@ -38,7 +38,7 @@ final class InspectionResultWorkbookCoreReportSupport {
   }
 
   static OoxmlPackageSecurityReport toOoxmlPackageSecurityReport(
-      dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot snapshot) {
+      dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot snapshot) {
     return new OoxmlPackageSecurityReport(
         toOoxmlEncryptionReport(snapshot.encryption()),
         snapshot.signatures().stream()
@@ -47,7 +47,7 @@ final class InspectionResultWorkbookCoreReportSupport {
   }
 
   static OoxmlEncryptionReport toOoxmlEncryptionReport(
-      dev.erst.gridgrind.excel.ExcelOoxmlEncryptionSnapshot snapshot) {
+      dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot snapshot) {
     return new OoxmlEncryptionReport(
         snapshot.encrypted(),
         snapshot.mode(),
@@ -60,7 +60,7 @@ final class InspectionResultWorkbookCoreReportSupport {
   }
 
   static OoxmlSignatureReport toOoxmlSignatureReport(
-      dev.erst.gridgrind.excel.ExcelOoxmlSignatureSnapshot snapshot) {
+      dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot snapshot) {
     return new OoxmlSignatureReport(
         snapshot.packagePartName(),
         snapshot.signerSubject(),

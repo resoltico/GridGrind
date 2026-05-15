@@ -826,7 +826,7 @@ Examples:
 | Atom exceeds token target but cannot be split without losing correctness | Keep accurate atom and note split exception |
 | Guide wants narrative but repeats full API details | Keep narrative, link to reference atoms |
 | Root README would benefit from one example but AFAD prefers reference structure | README storefront rule wins; include one concise runnable example |
-| Undocumented contract surface has unclear semantics | Create minimal atom with explicit TODO/unknown constraint, then preserve follow-up |
+| Undocumented contract surface has unclear semantics | Create minimal atom with explicit unknown constraint, then preserve follow-up |
 | Style violation but content is accurate and needed | Keep content; fix style in a later pass if needed |
 
 ---

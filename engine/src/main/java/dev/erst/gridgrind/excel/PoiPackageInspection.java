@@ -9,20 +9,21 @@ import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 
 /** Package-owned seam for checked POI package and relationship inspection. */
-final class PoiPackageInspection {
+@SuppressWarnings("PMD.CommentRequired")
+public final class PoiPackageInspection {
   private PoiPackageInspection() {}
 
-  static List<PackagePart> packageParts(OPCPackage pkg, String failureMessage) {
+  public static List<PackagePart> packageParts(OPCPackage pkg, String failureMessage) {
     Objects.requireNonNull(pkg, "pkg must not be null");
     return packageParts(pkg::getParts, failureMessage);
   }
 
-  static List<PackageRelationship> relationships(PackagePart part, String failureMessage) {
+  public static List<PackageRelationship> relationships(PackagePart part, String failureMessage) {
     Objects.requireNonNull(part, "part must not be null");
     return relationships(part::getRelationships, failureMessage);
   }
 
-  static List<PackagePart> packageParts(
+  public static List<PackagePart> packageParts(
       CheckedPackagePartsSupplier supplier, String failureMessage) {
     Objects.requireNonNull(supplier, "supplier must not be null");
     Objects.requireNonNull(failureMessage, "failureMessage must not be null");
@@ -37,7 +38,7 @@ final class PoiPackageInspection {
     }
   }
 
-  static List<PackageRelationship> relationships(
+  public static List<PackageRelationship> relationships(
       CheckedPackageRelationshipsSupplier supplier, String failureMessage) {
     Objects.requireNonNull(supplier, "supplier must not be null");
     Objects.requireNonNull(failureMessage, "failureMessage must not be null");
@@ -54,7 +55,7 @@ final class PoiPackageInspection {
 
   /** Supplies package parts while preserving POI's checked InvalidFormatException contract. */
   @FunctionalInterface
-  interface CheckedPackagePartsSupplier {
+  public interface CheckedPackagePartsSupplier {
     /** Returns the current package-part set. */
     Iterable<PackagePart> get() throws InvalidFormatException;
   }
@@ -63,7 +64,7 @@ final class PoiPackageInspection {
    * Supplies package relationships while preserving POI's checked InvalidFormatException contract.
    */
   @FunctionalInterface
-  interface CheckedPackageRelationshipsSupplier {
+  public interface CheckedPackageRelationshipsSupplier {
     /** Returns the current relationship set. */
     Iterable<PackageRelationship> get() throws InvalidFormatException;
   }

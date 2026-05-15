@@ -6,14 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +40,20 @@ class CatalogFieldMetadataSupportTest {
         new FieldShape.TopLevelTypeSetRef("stepTypes"),
         CatalogFieldMetadataSupport.fieldShape(WorkbookStep.class));
     assertEquals(
+        List.of("STANDARD", "STACKED", "PERCENT_STACKED"),
+        CatalogFieldMetadataSupport.fieldEntry(
+                recordComponent(MetadataFixture.class, "grouping"), Set.of("notes"))
+            .enumValues());
+    assertEquals(
+        List.of("STANDARD", "STACKED", "PERCENT_STACKED"),
+        CatalogFieldMetadataSupport.fieldEntry(
+                recordComponent(MetadataFixture.class, "groupings"), Set.of("notes"))
+            .enumValues());
+    assertEquals(
+        List.of(),
+        CatalogFieldMetadataSupport.enumValues(
+            recordComponent(MetadataFixture.class, "cells").getGenericType()));
+    assertEquals(
         new FieldShape.NestedTypeGroupUnionRef(
             List.of(
                 "workbookSelectorTypes",
@@ -55,7 +72,7 @@ class CatalogFieldMetadataSupportTest {
         CatalogFieldMetadataSupport.fieldShape(
             dev.erst.gridgrind.contract.selector.Selector.class));
     assertEquals(
-        new FieldShape.PlainTypeGroupRef("executionModeInputType"),
+        new FieldShape.NestedTypeGroupRef("executionModeTypes"),
         CatalogFieldMetadataSupport.fieldShape(ExecutionModeInput.class));
     assertEquals(
         new FieldShape.NestedTypeGroupRef("textSourceTypes"),
@@ -94,14 +111,23 @@ class CatalogFieldMetadataSupportTest {
         "Field-shape nested group mapping mismatch for dev.erst.gridgrind.contract.dto.CellInput: expected=wrongGroup, mapped=cellInputTypes",
         nestedMismatch.getMessage());
 
+    IllegalStateException nestedExecutionModeMismatch =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
+                    ExecutionModeInput.class, "wrongGroup"));
+    assertEquals(
+        "Field-shape nested group mapping mismatch for dev.erst.gridgrind.contract.dto.ExecutionModeInput: expected=wrongGroup, mapped=executionModeTypes",
+        nestedExecutionModeMismatch.getMessage());
     IllegalStateException plainMismatch =
         assertThrows(
             IllegalStateException.class,
             () ->
                 CatalogFieldMetadataSupport.validatePlainTypeGroupMapping(
-                    ExecutionModeInput.class, "wrongGroup"));
+                    ExecutionPolicyInput.class, "wrongGroup"));
     assertEquals(
-        "Field-shape plain group mapping mismatch for dev.erst.gridgrind.contract.dto.ExecutionModeInput: expected=wrongGroup, mapped=executionModeInputType",
+        "Field-shape plain group mapping mismatch for dev.erst.gridgrind.contract.dto.ExecutionPolicyInput: expected=wrongGroup, mapped=executionPolicyInputType",
         plainMismatch.getMessage());
 
     IllegalStateException ambiguous =
@@ -188,7 +214,12 @@ class CatalogFieldMetadataSupportTest {
   }
 
   private record MetadataFixture(
-      String name, List<String> notes, Map<String, CellInput> cells, WorkbookStep step) {}
+      String name,
+      List<String> notes,
+      Optional<ExcelChartGrouping> grouping,
+      List<ExcelChartGrouping> groupings,
+      Map<String, CellInput> cells,
+      WorkbookStep step) {}
 
   /** Broader fixture interface used for ambiguous assignable-group testing. */
   private interface Alpha {}

@@ -74,6 +74,15 @@ public sealed interface WorkbookMutationAction extends MutationAction {
       this(newSheetName, new SheetCopyPosition.AppendAtEnd());
     }
 
+    /** Reads a copy-sheet request while defaulting an omitted position to append-at-end. */
+    @JsonCreator
+    public static CopySheet create(
+        @JsonProperty("newSheetName") String newSheetName,
+        @JsonProperty("position") SheetCopyPosition position) {
+      return new CopySheet(
+          newSheetName, position == null ? new SheetCopyPosition.AppendAtEnd() : position);
+    }
+
     public CopySheet {
       MutationAction.Validation.requireSheetName(newSheetName, "newSheetName");
       Objects.requireNonNull(position, "position must not be null");

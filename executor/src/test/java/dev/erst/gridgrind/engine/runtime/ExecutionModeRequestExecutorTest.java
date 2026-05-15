@@ -71,9 +71,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         reads)));
@@ -92,9 +90,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(
                             mutate(
@@ -146,10 +142,7 @@ class ExecutionModeRequestExecutorTest {
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
                         executionPolicy(
-                            new ExecutionModeInput(
-                                ExecutionModeInput.ReadMode.FULL_XSSF,
-                                ExecutionModeInput.WriteMode.STREAMING_WRITE),
-                            markRecalculateOnOpen()),
+                            ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
                         null,
                         List.copyOf(operations),
                         List.copyOf(reads))));
@@ -184,7 +177,7 @@ class ExecutionModeRequestExecutorTest {
   }
 
   @Test
-  void streamingWriteModeRejectsEventReadInspectionModeWhenMutationsExist() {
+  void eventReadModeRejectsMutationInspectionWorkflow() {
     GridGrindResponse.Failure failure =
         failure(
             new DefaultGridGrindRequestExecutor()
@@ -192,9 +185,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(
                             mutate(
@@ -220,7 +211,8 @@ class ExecutionModeRequestExecutorTest {
                 ExcelWorkbook::close,
                 java.nio.file.Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
+                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                    ::markRecalculateOnOpen));
 
     GridGrindResponse.Success success =
         success(
@@ -228,9 +220,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.EVENT_READ,
-                        ExecutionModeInput.WriteMode.FULL_XSSF),
+                    ExecutionModeInput.eventRead(),
                     null,
                     List.of(),
                     List.of(
@@ -268,9 +258,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
                         new WorkbookPlan.WorkbookPersistence.SaveAs(persistedCopy.toString()),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of(
@@ -304,9 +292,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of(
@@ -328,9 +314,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of())));
@@ -349,9 +333,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of(
@@ -380,9 +362,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.streamingWrite(),
                         null,
                         List.of(
                             mutate(
@@ -406,7 +386,8 @@ class ExecutionModeRequestExecutorTest {
                   throw new IOException("temp creation failed");
                 },
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
+                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
+                    ::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(
@@ -414,9 +395,7 @@ class ExecutionModeRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.FULL_XSSF,
-                        ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                    ExecutionModeInput.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -437,9 +416,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.streamingWrite(),
                         null,
                         List.of(
                             mutate(
@@ -470,9 +447,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.streamingWrite(),
                         null,
                         List.of(
                             mutate(
@@ -503,9 +478,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.EVENT_READ,
-                            ExecutionModeInput.WriteMode.FULL_XSSF),
+                        ExecutionModeInput.eventRead(),
                         null,
                         List.of(),
                         List.of(
@@ -523,9 +496,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.streamingWrite(),
                         null,
                         mutations(
                             mutate(
@@ -542,9 +513,7 @@ class ExecutionModeRequestExecutorTest {
                     request(
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
-                        new ExecutionModeInput(
-                            ExecutionModeInput.ReadMode.FULL_XSSF,
-                            ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                        ExecutionModeInput.streamingWrite(),
                         null,
                         List.of(
                             mutate(
@@ -573,10 +542,7 @@ class ExecutionModeRequestExecutorTest {
                         new WorkbookPlan.WorkbookSource.New(),
                         new WorkbookPlan.WorkbookPersistence.None(),
                         executionPolicy(
-                            new ExecutionModeInput(
-                                ExecutionModeInput.ReadMode.FULL_XSSF,
-                                ExecutionModeInput.WriteMode.STREAMING_WRITE),
-                            markRecalculateOnOpen()),
+                            ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
                         null,
                         List.of(),
                         List.of())));

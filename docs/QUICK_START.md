@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.64.0"
+version: "0.65.0"
 domain: QUICK_START
-updated: "2026-05-01"
+updated: "2026-05-15"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -10,7 +10,7 @@ route:
 
 # Quick Start
 
-Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
+Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example --lookup BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
 Generated example JSON already includes the explicit top-level request envelope, so the first
 printed request is ready for copy-paste edits without inventing missing execution or formula
 sections yourself.
@@ -21,12 +21,12 @@ sections yourself.
 
 - A GridGrind runtime: Docker image or the release JAR
 - A working directory where GridGrind can read the request file and write the response file
-- One example request to start from: the built-in `BUDGET` example emitted by `--print-example BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
+- One example request to start from: the built-in `BUDGET` example emitted by `--print-example --lookup BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
 
 GridGrind supports `.xlsx` workbooks only.
 
 If you are starting from the release artifact alone, generate the request into your working
-directory first so the later `--request` path already exists: `gridgrind --print-example BUDGET --response budget-request.json`.
+directory first so the later `--request` path already exists: `gridgrind --print-example --lookup BUDGET --response budget-request.json`.
 When you later run `--request budget-request.json`, relative paths inside that JSON request follow
 the request file's directory. The separate `--response` flag still follows the shell working
 directory.
@@ -62,9 +62,10 @@ If you want the standalone JAR, download it from the
 [latest release](https://github.com/resoltico/GridGrind/releases/latest).
 
 The JAR path requires Java 26.
-Running `java -jar gridgrind.jar` with no arguments in an interactive terminal prints the same
-help text as `--help` and exits with code `0`. `java -jar gridgrind.jar help` is the explicit
-equivalent.
+`java -jar gridgrind.jar --help` prints the short synopsis. `--help-protocol` prints the
+authoritative CLI/request contract, and `--help-guidance` prints workflows plus example guidance.
+A bare `java -jar gridgrind.jar` invocation now expects a real request document on stdin or
+`--request <path>` and exits non-zero when neither is present.
 
 ## First Successful Run
 
@@ -81,7 +82,7 @@ example's `workspaceMode` and asset-backed `requiredPaths`.
 Generate the built-in request once, then run it from the current directory:
 
 ```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-example BUDGET \
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-example --lookup BUDGET \
   --response budget-request.json
 
 docker run --pull=always --rm -i \
@@ -97,7 +98,7 @@ docker run --pull=always --rm -i \
 Replace `gridgrind.jar` with the downloaded JAR filename if it differs on your machine.
 
 ```bash
-java -jar gridgrind.jar --print-example BUDGET --response budget-request.json
+java -jar gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
 
 java -jar gridgrind.jar \
   --request budget-request.json \
@@ -117,8 +118,8 @@ After a successful run:
 - Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
   - `--print-task-catalog --response tasks.json` lists the CLI-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
-  - `--print-task-plan DASHBOARD --response dashboard-plan.json` emits a starter request scaffold for one task.
-  - `--print-task-keyword-match "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
+  - `--print-task-plan --lookup DASHBOARD --response dashboard-request.json` emits one runnable starter request for one task.
+  - `--print-task-keyword-match --query "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
   - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report without mutating a workbook.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and

@@ -57,10 +57,7 @@ cat > "${request_path}" <<EOF
     }
   },
   "execution": {
-    "mode": {
-      "readMode": "FULL_XSSF",
-      "writeMode": "FULL_XSSF"
-    },
+    "mode": {"type": "FULL_XSSF"},
     "journal": {
       "level": "NORMAL"
     },

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
@@ -91,7 +92,7 @@ class ExcelStreamingWorkbookWriterTest {
                 () ->
                     "expected STREAMING_WRITE rejection for " + command.getClass().getSimpleName());
 
-        assertTrue(unsupported.getMessage().contains("execution.mode.writeMode=STREAMING_WRITE"));
+        assertTrue(unsupported.getMessage().contains("execution.mode.type=STREAMING_WRITE"));
         assertTrue(unsupported.getMessage().contains(command.commandType()));
       }
     } catch (IOException exception) {

@@ -90,8 +90,8 @@ class ArchitectureSeamAuditTest {
         600);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalogFieldGroupSupport.java"),
-        100);
+            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/CatalogFieldMetadataSupport.java"),
+        350);
     assertLineCountAtMost(
         repositoryRoot.resolve(
             "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalogStyleTypeGroups.java"),
@@ -113,7 +113,7 @@ class ArchitectureSeamAuditTest {
         700);
     assertLineCountAtMost(
         repositoryRoot.resolve(
-            "engine/src/main/java/dev/erst/gridgrind/excel/ExcelOoxmlPackageSecuritySupport.java"),
+            "engine/src/main/java/dev/erst/gridgrind/excel/ooxml/ExcelOoxmlPackageSecuritySupport.java"),
         700);
     assertLineCountAtMost(
         repositoryRoot.resolve(
@@ -135,6 +135,38 @@ class ArchitectureSeamAuditTest {
         repositoryRoot.resolve(
             "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookVisualizationExamples.java"),
         300);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/TabularReportTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DashboardTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DataEntryWorkflowTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/PivotReportTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/AuditExistingWorkbookTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/CustomXmlWorkflowTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DrawingAndSignatureWorkflowTaskDefinition.java"),
+        140);
+    assertLineCountAtMost(
+        repositoryRoot.resolve(
+            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/WorkbookMaintenanceTaskDefinition.java"),
+        140);
     assertLineCountAtMost(
         repositoryRoot.resolve(
             "jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/WorkbookInvariantAnalysisSurfaceChecks.java"),

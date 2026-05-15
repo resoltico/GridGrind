@@ -17,7 +17,11 @@ class GridGrindCliPublicSurfaceLintTest {
     Pattern candidatePattern = GridGrindContractVocabulary.candidateIdPattern();
     String helpText =
         GridGrindCliHelp.helpText(
-            "dev", "CLI lint surface", "https://example.invalid/gridgrind", "gridgrind:test");
+            CliCommand.HelpTopic.PROTOCOL,
+            "dev",
+            "CLI lint surface",
+            "https://example.invalid/gridgrind",
+            "gridgrind:test");
 
     Set<String> unknown = collectUnknown(helpText, registeredIds, candidatePattern);
 

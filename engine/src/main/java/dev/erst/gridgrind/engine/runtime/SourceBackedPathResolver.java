@@ -10,8 +10,7 @@ final class SourceBackedPathResolver {
   static Path resolvePath(String rawPath, Path workingDirectory, String inputKind)
       throws InputSourceReadException {
     try {
-      Path resolved =
-          ExecutionRequestPaths.normalizePath(rawPath, workingDirectory); // LIM-030
+      Path resolved = ExecutionRequestPaths.normalizePath(rawPath, workingDirectory); // LIM-030
       if (Files.isDirectory(resolved)) {
         throw new InputSourceReadException(
             inputKind + " path must resolve to a file, not a directory: " + resolved,

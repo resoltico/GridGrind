@@ -118,4 +118,21 @@ class CellInputTest {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Date(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.DateTime(null));
   }
+
+  @Test
+  void rejectsDdeFormulaInjectionInAllCaseForms() {
+    IllegalArgumentException ddeUpper =
+        assertThrows(
+            IllegalArgumentException.class, () -> formulaCell("DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertTrue(ddeUpper.getMessage().contains("DDE"));
+
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("Dde(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("=DDE(\"cmd\",\"/C calc\",\"\")"));
+    assertThrows(
+        IllegalArgumentException.class, () -> formulaCell("=dde(\"cmd\",\"/C calc\",\"\")"));
+  }
 }

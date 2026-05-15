@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;

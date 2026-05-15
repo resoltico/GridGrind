@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;

@@ -19,8 +19,7 @@ final class GridGrindJsonMessageSupport {
   private static final Pattern MISSING_TYPE_ID_FIELD_PATTERN =
       Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
   private static final Pattern NULL_FIELD_PROBLEM_PATTERN =
-      Pattern.compile(
-          "(?:problem: )?([A-Za-z0-9.\\[\\]_]+) must not be null", Pattern.CASE_INSENSITIVE);
+      Pattern.compile("([A-Za-z0-9.\\[\\]_]+) must not be null", Pattern.CASE_INSENSITIVE);
 
   private GridGrindJsonMessageSupport() {}
 
@@ -90,9 +89,6 @@ final class GridGrindJsonMessageSupport {
   static String mismatchedInputMessage(
       tools.jackson.databind.exc.MismatchedInputException exception) {
     String original = exception.getOriginalMessage();
-    if (original != null && original.startsWith("Cannot map `null` into type")) {
-      return nullIntoPrimitiveMessage(exception);
-    }
     if (original != null && original.contains("Floating-point value")) {
       return floatingPointIntoIntegerMessage(exception);
     }
@@ -109,7 +105,7 @@ final class GridGrindJsonMessageSupport {
         trimmed
             .replaceAll(" as a subtype of `[^`]+`", "")
             .replaceAll(" \\(for POJO property '[^']+'\\)", "")
-            .replaceAll(" \\(set [^)]*to allow\\)", "")
+            .replaceAll(" \\(but could if coercion[^)]*\\)", "")
             .strip();
     return cleaned.isBlank() ? "Invalid JSON payload" : cleaned;
   }
@@ -134,13 +130,20 @@ final class GridGrindJsonMessageSupport {
     Throwable current = throwable;
     while (current != null) {
       if (current instanceof IllegalArgumentException
-          || current instanceof NullPointerException
           || current instanceof java.time.DateTimeException) {
+        return Optional.of(current);
+      }
+      if (current instanceof NullPointerException npe && isExplicitNullCheck(npe)) {
         return Optional.of(current);
       }
       current = current.getCause();
     }
     return Optional.empty();
+  }
+
+  private static boolean isExplicitNullCheck(NullPointerException npe) {
+    String message = npe.getMessage();
+    return message != null && message.endsWith("must not be null");
   }
 
   private static String unknownTypeValueMessage(
@@ -157,22 +160,78 @@ final class GridGrindJsonMessageSupport {
             + "; use source.type='EXISTING' to open a workbook from disk"
             + " (FILE is only valid for source-backed authored payload inputs)";
       }
-      return defaultMessage;
+      return withCandidates(defaultMessage, exception, typeId);
     }
     if (containerName.isPresent() && "assertion".equals(containerName.orElseThrow())) {
       return switch (typeId) {
         case "EXPECT_PRESENT" ->
-            defaultMessage
-                + "; use one explicit family assertion such as EXPECT_NAMED_RANGE_PRESENT,"
-                + " EXPECT_TABLE_PRESENT, EXPECT_PIVOT_TABLE_PRESENT, or EXPECT_CHART_PRESENT";
+            legacyPresenceAssertionMessage(defaultMessage, exception, "_PRESENT");
         case "EXPECT_ABSENT" ->
-            defaultMessage
-                + "; use one explicit family assertion such as EXPECT_NAMED_RANGE_ABSENT,"
-                + " EXPECT_TABLE_ABSENT, EXPECT_PIVOT_TABLE_ABSENT, or EXPECT_CHART_ABSENT";
-        default -> defaultMessage;
+            legacyPresenceAssertionMessage(defaultMessage, exception, "_ABSENT");
+        default -> withCandidates(defaultMessage, exception, typeId);
       };
     }
-    return defaultMessage;
+    return withCandidates(defaultMessage, exception, typeId);
+  }
+
+  private static String legacyPresenceAssertionMessage(
+      String base, tools.jackson.databind.exc.InvalidTypeIdException exception, String suffix) {
+    List<String> candidates =
+        GridGrindJsonSubtypeSupport.typeIds(exception.getBaseType().getRawClass()).stream()
+            .filter(id -> id.endsWith(suffix))
+            .toList();
+    return base + "; use one explicit family assertion such as " + String.join(", ", candidates);
+  }
+
+  private static String withCandidates(
+      String base, tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
+    tools.jackson.databind.JavaType baseType = exception.getBaseType();
+    if (baseType == null) {
+      return base;
+    }
+    List<String> candidates = similarTypeIds(baseType.getRawClass(), typeId);
+    if (candidates.isEmpty()) {
+      return base;
+    }
+    return base + "; similar valid values: " + String.join(", ", candidates);
+  }
+
+  private static List<String> similarTypeIds(Class<?> baseClass, String typeId) {
+    List<String> all = GridGrindJsonSubtypeSupport.typeIds(baseClass);
+    String normalized = typeId.toUpperCase(java.util.Locale.ROOT);
+    int threshold = Math.min(3, Math.max(1, normalized.length() / 5));
+    return all.stream()
+        .filter(id -> editDistance(normalized, id) <= threshold)
+        .sorted(
+            java.util.Comparator.<String>comparingInt(id -> editDistance(normalized, id))
+                .thenComparing(java.util.Comparator.naturalOrder()))
+        .limit(3)
+        .toList();
+  }
+
+  @SuppressWarnings("PMD.AvoidArrayLoops")
+  private static int editDistance(String a, String b) {
+    int m = a.length();
+    int n = b.length();
+    int[] prev = new int[n + 1];
+    int[] curr = new int[n + 1];
+    for (int j = 0; j <= n; j++) {
+      prev[j] = j;
+    }
+    for (int i = 1; i <= m; i++) {
+      curr[0] = i;
+      for (int j = 1; j <= n; j++) {
+        if (a.charAt(i - 1) == b.charAt(j - 1)) {
+          curr[j] = prev[j - 1];
+        } else {
+          curr[j] = 1 + Math.min(prev[j - 1], Math.min(prev[j], curr[j - 1]));
+        }
+      }
+      int[] tmp = prev;
+      prev = curr;
+      curr = tmp;
+    }
+    return prev[n];
   }
 
   private static Optional<String> terminalContainerName(List<JacksonException.Reference> path) {
@@ -182,19 +241,6 @@ final class GridGrindJsonMessageSupport {
     return Optional.ofNullable(path.getLast().getPropertyName());
   }
 
-  private static String nullIntoPrimitiveMessage(
-      tools.jackson.databind.exc.MismatchedInputException exception) {
-    List<JacksonException.Reference> path = exception.getPath();
-    if (path.isEmpty()) {
-      return "Missing required field";
-    }
-    String propertyName = path.getLast().getPropertyName();
-    if (propertyName == null) {
-      return "Missing required field";
-    }
-    return "Missing required field '" + propertyName + "'";
-  }
-
   private static String floatingPointIntoIntegerMessage(
       tools.jackson.databind.exc.MismatchedInputException exception) {
     List<JacksonException.Reference> path = exception.getPath();
@@ -202,10 +248,26 @@ final class GridGrindJsonMessageSupport {
       return "JSON value must be an integer value";
     }
     String propertyName = path.getLast().getPropertyName();
-    if (propertyName == null) {
-      return "JSON value must be an integer value";
+    if (propertyName != null) {
+      return "Field '" + propertyName + "' must be an integer value";
     }
-    return "Field '" + propertyName + "' must be an integer value";
+    return "JSON value at '" + renderPath(path) + "' must be an integer value";
+  }
+
+  private static String renderPath(List<JacksonException.Reference> path) {
+    StringBuilder rendered = new StringBuilder();
+    for (JacksonException.Reference reference : path) {
+      String name = reference.getPropertyName();
+      if (name != null) {
+        if (!rendered.isEmpty()) {
+          rendered.append('.');
+        }
+        rendered.append(name);
+      } else {
+        rendered.append('[').append(reference.getIndex()).append(']');
+      }
+    }
+    return rendered.toString();
   }
 
   private static String productOwnedJacksonMessage(String cleaned) {
@@ -238,27 +300,16 @@ final class GridGrindJsonMessageSupport {
   }
 
   private static Optional<String> jsonPath(JacksonException exception) {
-    StringBuilder path = new StringBuilder();
-    for (JacksonException.Reference reference : exception.getPath()) {
-      String propertyName = reference.getPropertyName();
-      if (propertyName != null) {
-        if (!path.isEmpty()) {
-          path.append('.');
-        }
-        path.append(propertyName);
-        continue;
-      }
-      path.append('[').append(reference.getIndex()).append(']');
-    }
-    return path.isEmpty() ? Optional.empty() : Optional.of(path.toString());
+    String rendered = renderPath(exception.getPath());
+    return rendered.isEmpty() ? Optional.empty() : Optional.of(rendered);
   }
 
   private record PayloadMetadata(
       Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
     private PayloadMetadata {
-      jsonPath = Objects.requireNonNullElseGet(jsonPath, Optional::empty);
-      jsonLine = Objects.requireNonNullElseGet(jsonLine, Optional::empty);
-      jsonColumn = Objects.requireNonNullElseGet(jsonColumn, Optional::empty);
+      Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+      Objects.requireNonNull(jsonLine, "jsonLine must not be null");
+      Objects.requireNonNull(jsonColumn, "jsonColumn must not be null");
     }
   }
 }

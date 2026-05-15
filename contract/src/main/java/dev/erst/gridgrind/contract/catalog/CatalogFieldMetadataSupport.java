@@ -32,12 +32,6 @@ public final class CatalogFieldMetadataSupport {
           Double.class,
           java.math.BigDecimal.class,
           java.math.BigInteger.class);
-  private static final Map<Class<?>, String> NESTED_FIELD_SHAPE_GROUPS = nestedFieldShapeGroups();
-  private static final Map<Class<?>, List<String>> NESTED_FIELD_SHAPE_UNIONS =
-      nestedFieldShapeUnions();
-  private static final Map<Class<?>, String> TOP_LEVEL_FIELD_SHAPE_TYPE_SETS =
-      topLevelFieldShapeTypeSets();
-  private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS = plainFieldShapeGroups();
 
   private CatalogFieldMetadataSupport() {}
 
@@ -95,32 +89,35 @@ public final class CatalogFieldMetadataSupport {
     if (classType.isEnum()) {
       return new FieldShape.Scalar(ScalarType.STRING);
     }
-    List<String> nestedGroupUnion = NESTED_FIELD_SHAPE_UNIONS.get(classType);
+    Map<Class<?>, List<String>> nestedUnionGroups = nestedFieldShapeUnions();
+    Map<Class<?>, String> topLevelGroups = topLevelFieldShapeTypeSets();
+    Map<Class<?>, String> nestedGroups = nestedFieldShapeGroups();
+    Map<Class<?>, String> plainGroups = plainFieldShapeGroups();
+
+    List<String> nestedGroupUnion = nestedUnionGroups.get(classType);
     if (nestedGroupUnion == null) {
-      nestedGroupUnion =
-          lookupAssignableGroupList(NESTED_FIELD_SHAPE_UNIONS, classType).orElse(null);
+      nestedGroupUnion = lookupAssignableGroupList(nestedUnionGroups, classType).orElse(null);
     }
     if (nestedGroupUnion != null) {
       return new FieldShape.NestedTypeGroupUnionRef(nestedGroupUnion);
     }
-    String topLevelTypeSet = TOP_LEVEL_FIELD_SHAPE_TYPE_SETS.get(classType);
+    String topLevelTypeSet = topLevelGroups.get(classType);
     if (topLevelTypeSet == null) {
-      topLevelTypeSet =
-          lookupAssignableGroup(TOP_LEVEL_FIELD_SHAPE_TYPE_SETS, classType).orElse(null);
+      topLevelTypeSet = lookupAssignableGroup(topLevelGroups, classType).orElse(null);
     }
     if (topLevelTypeSet != null) {
       return new FieldShape.TopLevelTypeSetRef(topLevelTypeSet);
     }
-    String nestedGroup = NESTED_FIELD_SHAPE_GROUPS.get(classType);
+    String nestedGroup = nestedGroups.get(classType);
     if (nestedGroup == null) {
-      nestedGroup = lookupAssignableGroup(NESTED_FIELD_SHAPE_GROUPS, classType).orElse(null);
+      nestedGroup = lookupAssignableGroup(nestedGroups, classType).orElse(null);
     }
     if (nestedGroup != null) {
       return new FieldShape.NestedTypeGroupRef(nestedGroup);
     }
-    String plainGroup = PLAIN_FIELD_SHAPE_GROUPS.get(classType);
+    String plainGroup = plainGroups.get(classType);
     if (plainGroup == null) {
-      plainGroup = lookupAssignableGroup(PLAIN_FIELD_SHAPE_GROUPS, classType).orElse(null);
+      plainGroup = lookupAssignableGroup(plainGroups, classType).orElse(null);
     }
     if (plainGroup != null) {
       return new FieldShape.PlainTypeGroupRef(plainGroup);
@@ -190,18 +187,18 @@ public final class CatalogFieldMetadataSupport {
 
   /** Returns the set of all sealed types registered in the nested field-shape group map. */
   public static Set<Class<?>> registeredNestedTypes() {
-    return NESTED_FIELD_SHAPE_GROUPS.keySet();
+    return nestedFieldShapeGroups().keySet();
   }
 
   /** Returns the set of all record types registered in the plain field-shape group map. */
   public static Set<Class<?>> registeredPlainTypes() {
-    return PLAIN_FIELD_SHAPE_GROUPS.keySet();
+    return plainFieldShapeGroups().keySet();
   }
 
   /** Validates that one nested sealed input type maps to the published field-shape group. */
   public static void validateNestedTypeGroupMapping(Class<?> sealedType, String expectedGroup) {
     Objects.requireNonNull(sealedType, "sealedType must not be null");
-    String mappedGroup = NESTED_FIELD_SHAPE_GROUPS.get(sealedType);
+    String mappedGroup = nestedFieldShapeGroups().get(sealedType);
     if (!expectedGroup.equals(mappedGroup)) {
       throw new IllegalStateException(
           "Field-shape nested group mapping mismatch for "
@@ -216,7 +213,7 @@ public final class CatalogFieldMetadataSupport {
   /** Validates that one plain record input type maps to the published field-shape group. */
   public static void validatePlainTypeGroupMapping(Class<?> recordType, String expectedGroup) {
     Objects.requireNonNull(recordType, "recordType must not be null");
-    String mappedGroup = PLAIN_FIELD_SHAPE_GROUPS.get(recordType);
+    String mappedGroup = plainFieldShapeGroups().get(recordType);
     if (!expectedGroup.equals(mappedGroup)) {
       throw new IllegalStateException(
           "Field-shape plain group mapping mismatch for "
@@ -228,10 +225,14 @@ public final class CatalogFieldMetadataSupport {
     }
   }
 
-  private static java.util.List<String> enumValues(Type type) {
+  static java.util.List<String> enumValues(Type type) {
     if (type instanceof ParameterizedType parameterizedType
         && parameterizedType.getRawType() == java.util.Optional.class) {
       return enumValues(singleTypeArgument(parameterizedType, "Optional"));
+    }
+    if (type instanceof ParameterizedType parameterizedType
+        && parameterizedType.getRawType() == java.util.List.class) {
+      return enumValues(singleTypeArgument(parameterizedType, "List"));
     }
     if (type instanceof Class<?> classType && classType.isEnum()) {
       return Arrays.stream(classType.getEnumConstants())

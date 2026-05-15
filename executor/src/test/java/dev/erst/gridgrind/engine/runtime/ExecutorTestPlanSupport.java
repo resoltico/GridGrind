@@ -47,7 +47,12 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -493,6 +498,16 @@ final class ExecutorTestPlanSupport {
             .findFirst()
             .orElseThrow(
                 () -> new AssertionError("Missing inspection result for stepId " + stepId)));
+  }
+
+  static Path createWorkbookFile(String prefix) throws IOException {
+    Path workbookPath = Files.createTempFile(prefix, ".xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.text("Header"));
+      workbook.save(workbookPath);
+    }
+    return workbookPath;
   }
 
   private static String stepIdFor(int stepIndex, MutationAction action) {

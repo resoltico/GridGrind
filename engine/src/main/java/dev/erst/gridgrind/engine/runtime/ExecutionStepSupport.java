@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.catalog.GridGrindExecutionModeMetadata;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -9,13 +10,13 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelEventWorkbookReader;
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.event.ExcelEventWorkbookReader;
+import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -84,9 +85,9 @@ final class ExecutionStepSupport {
       InspectionStep inspectionStep,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode readMode)
+      ExecutionModeInput executionMode)
       throws IOException {
-    if (readMode == dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode.FULL_XSSF) {
+    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
       return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
     }
     return executeEventInspectionAgainstWorkbook(inspectionStep, workbook);
@@ -96,22 +97,22 @@ final class ExecutionStepSupport {
       AssertionStep assertionStep,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode readMode)
+      ExecutionModeInput executionMode)
       throws IOException, AssertionFailedException {
-    if (readMode == dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode.FULL_XSSF) {
+    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
     }
     throw new IllegalStateException(
-        "executionMode.readMode=EVENT_READ does not support assertion steps");
+        "execution.mode.type=EVENT_READ does not support assertion steps");
   }
 
   InspectionResult executeInspectionAgainstMaterializedPath(
       InspectionStep inspectionStep,
       WorkbookLocation workbookLocation,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode readMode,
+      ExecutionModeInput executionMode,
       Path materializedPath)
       throws IOException {
-    if (readMode == dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode.FULL_XSSF) {
+    if (!(executionMode instanceof ExecutionModeInput.EventRead)) {
       return executeFullInspectionAgainstMaterializedPath(
           inspectionStep, workbookLocation, materializedPath);
     }
@@ -157,13 +158,13 @@ final class ExecutionStepSupport {
       ExcelStreamingWorkbookWriter writer,
       InspectionStep inspectionStep,
       WorkbookLocation workbookLocation,
-      dev.erst.gridgrind.contract.dto.ExecutionModeInput.ReadMode readMode)
+      ExecutionModeInput executionMode)
       throws IOException {
     Path tempPath = tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx");
     try {
       writer.save(tempPath);
       return executeInspectionAgainstMaterializedPath(
-          inspectionStep, workbookLocation, readMode, tempPath);
+          inspectionStep, workbookLocation, executionMode, tempPath);
     } finally {
       ExecutionWorkbookSupport.deleteIfExists(tempPath);
     }

@@ -35,6 +35,7 @@ final class GridGrindResponseSupport {
         Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
+        List.of(),
         problem);
   }
 
@@ -71,7 +72,6 @@ final class GridGrindResponseSupport {
             ExecutionJournal.Phase.notStarted(), ExecutionJournal.Phase.notStarted()),
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
-        List.of(),
         List.of(),
         new ExecutionJournal.Outcome(
             status, 0, 0, 0, Optional.empty(), Optional.empty(), normalizedFailureCode),

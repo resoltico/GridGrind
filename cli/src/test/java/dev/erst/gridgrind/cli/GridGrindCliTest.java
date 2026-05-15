@@ -2,17 +2,16 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
-import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,96 +48,6 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     boolean closed() {
       return closed;
     }
-  }
-
-  @Test
-  void threeArgumentConstructorStillRunsWithDefaultJournalWriter() throws IOException {
-    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
-
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    int exitCode =
-        new GridGrindCli(
-                (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(List.of(), List.of(), List.of()),
-                new CliRequestReader(),
-                new CliResponseWriter())
-            .run(
-                new String[0],
-                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
-
-    assertEquals(0, exitCode);
-    assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-  }
-
-  @Test
-  void fourArgumentConstructorStillUsesProvidedJournalWriter() throws IOException {
-    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
-
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    int exitCode =
-        new GridGrindCli(
-                (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(List.of(), List.of(), List.of()),
-                new CliRequestReader(),
-                new CliResponseWriter(),
-                new CliJournalWriter())
-            .run(
-                new String[0],
-                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
-
-    assertEquals(0, exitCode);
-    assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-  }
-
-  @Test
-  void fourArgumentConstructorWithExplicitDoctorStillRunsWithDefaultJournalWriter()
-      throws IOException {
-    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
-
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    int exitCode =
-        new GridGrindCli(
-                (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(List.of(), List.of(), List.of()),
-                GridGrindEngine.requestDoctor(),
-                new CliRequestReader(),
-                new CliResponseWriter())
-            .run(
-                new String[0],
-                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
-
-    assertEquals(0, exitCode);
-    assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
-  }
-
-  @Test
-  void fiveArgumentConstructorWithExplicitDoctorStillUsesProvidedJournalWriter()
-      throws IOException {
-    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
-
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    int exitCode =
-        new GridGrindCli(
-                (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    GridGrindResponses.success(List.of(), List.of(), List.of()),
-                GridGrindEngine.requestDoctor(),
-                new CliRequestReader(),
-                new CliResponseWriter(),
-                new CliJournalWriter())
-            .run(
-                new String[0],
-                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
-
-    assertEquals(0, exitCode);
-    assertInstanceOf(
-        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
   }
 
   @Test
@@ -287,22 +196,21 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
-    assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
-    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
-    assertTrue(
-        failure.problem().message().contains("STANDARD_INPUT-authored values require --request"));
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("--request"), failure.argument());
+    assertTrue(failure.message().contains("STANDARD_INPUT"));
   }
 
   @Test
@@ -405,14 +313,16 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             "[]");
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    GridGrindResponse response = response(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -435,22 +345,22 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("steps[0].target"), readRequestContext(failure).jsonPath());
-    assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("steps[0].target"), failure.location().jsonPath());
+    assertTrue(failure.message().contains("invalid Excel character ':'"));
   }
 
   @Test
@@ -605,19 +515,17 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    GridGrindResponse.Failure failure =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class,
-            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(
-        "GridGrind wrote the response to "
+        "GridGrind wrote the request failure report to "
             + responsePath.toAbsolutePath()
             + "; inspect that file for failure."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertTrue(failure.problem().message().contains("WORKBOOK"));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertTrue(failure.message().contains("WORKBOOK"));
   }
 }

@@ -27,9 +27,6 @@ public record DataValidationPromptInput(
       @JsonProperty("title") TextSourceInput title,
       @JsonProperty("text") TextSourceInput text,
       @JsonProperty("showPromptBox") Boolean showPromptBox) {
-    this(
-        title,
-        text,
-        Objects.requireNonNull(showPromptBox, "showPromptBox must not be null").booleanValue());
+    this(title, text, !Boolean.FALSE.equals(showPromptBox));
   }
 }

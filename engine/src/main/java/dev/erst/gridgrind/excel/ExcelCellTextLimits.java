@@ -4,13 +4,14 @@ import java.util.Objects;
 import org.apache.poi.ss.SpreadsheetVersion;
 
 /** Centralized Excel cell-text ceiling checks for authored and reconstructed sheet content. */
-final class ExcelCellTextLimits {
-  static final int MAX_CELL_TEXT_LENGTH =
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelCellTextLimits {
+  public static final int MAX_CELL_TEXT_LENGTH =
       SpreadsheetVersion.EXCEL2007.getMaxTextLength(); // LIM-010
 
   private ExcelCellTextLimits() {}
 
-  static void requireSupportedLength(String text, String fieldName) {
+  public static void requireSupportedLength(String text, String fieldName) {
     Objects.requireNonNull(text, fieldName + " must not be null");
     if (text.length() > MAX_CELL_TEXT_LENGTH) {
       throw new IllegalArgumentException(

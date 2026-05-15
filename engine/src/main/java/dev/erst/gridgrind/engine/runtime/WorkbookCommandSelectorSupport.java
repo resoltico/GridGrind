@@ -106,8 +106,8 @@ final class WorkbookCommandSelectorSupport {
     throw new IllegalArgumentException(
         actionType
             + " requires target type "
-            + SelectorJsonSupport.displayName(expectedType)
+            + String.join(" or ", SelectorJsonSupport.typeIdsFor(expectedType))
             + " but got "
-            + SelectorJsonSupport.displayName(target.getClass()));
+            + SelectorJsonSupport.typeIdsFor(target.getClass()).getFirst());
   }
 }

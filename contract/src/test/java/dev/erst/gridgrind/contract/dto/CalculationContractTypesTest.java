@@ -83,15 +83,11 @@ class CalculationContractTypesTest {
     ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
     ExecutionPolicyInput customPolicy =
         new ExecutionPolicyInput(
-            new ExecutionModeInput(
-                ExecutionModeInput.ReadMode.EVENT_READ,
-                ExecutionModeInput.WriteMode.STREAMING_WRITE),
+            ExecutionModeInput.eventRead(),
             new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE),
             new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true));
     ExecutionModeInput defaultMode = ExecutionModeInput.defaults();
-    ExecutionModeInput customMode =
-        new ExecutionModeInput(
-            ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.STREAMING_WRITE);
+    ExecutionModeInput customMode = ExecutionModeInput.eventRead();
     ExecutionJournalInput defaultJournal = ExecutionJournalInput.defaults();
     ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY);
     CalculationPolicyInput defaultCalculation = CalculationPolicyInput.defaults();
@@ -116,6 +112,8 @@ class CalculationContractTypesTest {
     assertFalse(customPolicy.isDefault());
     assertTrue(defaultMode.isDefault());
     assertFalse(customMode.isDefault());
+    assertEquals("EVENT_READ", customMode.modeType());
+    assertEquals("STREAMING_WRITE", ExecutionModeInput.streamingWrite().modeType());
     assertTrue(defaultJournal.isDefault());
     assertFalse(customJournal.isDefault());
     assertEquals(

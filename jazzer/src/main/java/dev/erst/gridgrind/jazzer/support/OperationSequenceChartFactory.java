@@ -219,13 +219,13 @@ final class OperationSequenceChartFactory {
       case 11 ->
           new ChartPlotInput.Surface(
               varyColors,
-              data.consumeBoolean(),
+              Boolean.valueOf(data.consumeBoolean()),
               nextChartAxesInputSurface(),
               nextChartSeriesInputs(data, false));
       default ->
           new ChartPlotInput.Surface3D(
               varyColors,
-              data.consumeBoolean(),
+              Boolean.valueOf(data.consumeBoolean()),
               nextChartAxesInputSurface(),
               nextChartSeriesInputs(data, false));
     };

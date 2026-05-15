@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelPicturePoiBridge;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
 import java.lang.invoke.MethodHandle;
@@ -25,7 +26,8 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * Keeps POI's private workbook picture catalog aligned with the actual OOXML package media parts.
  */
-final class ExcelWorkbookImageCatalogSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelWorkbookImageCatalogSupport {
   static final PoiPrivateContract PICTURES_FIELD_CONTRACT =
       PoiPrivateContract.field(
           XSSFWorkbook.class, "pictures", "workbook picture-catalog synchronization");
@@ -49,7 +51,7 @@ final class ExcelWorkbookImageCatalogSupport {
    * Adds one picture after reconciling any image parts POI did not register in its workbook-level
    * catalog, such as VML-backed signature-line previews.
    */
-  static int addPicture(XSSFWorkbook workbook, byte[] bytes, int poiPictureType) {
+  public static int addPicture(XSSFWorkbook workbook, byte[] bytes, int poiPictureType) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(bytes, "bytes must not be null");
     synchronizePictureCatalog(workbook);
@@ -67,7 +69,7 @@ final class ExcelWorkbookImageCatalogSupport {
   }
 
   /** Rebuilds POI's private picture registry from the actual OOXML package media parts. */
-  static void synchronizePictureCatalog(XSSFWorkbook workbook) {
+  public static void synchronizePictureCatalog(XSSFWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     List<XSSFPictureData> pictures = mutablePictures(workbook);
     pictures.clear();
@@ -143,12 +145,12 @@ final class ExcelWorkbookImageCatalogSupport {
     return PICTURE_CONSTRUCTOR.apply(part);
   }
 
-  static XSSFPictureData pictureDataForPart(PackagePart part) {
+  public static XSSFPictureData pictureDataForPart(PackagePart part) {
     Objects.requireNonNull(part, "part must not be null");
     return newPictureData(part);
   }
 
-  static POIXMLRelation pictureRelation(ExcelPictureFormat format) {
+  public static POIXMLRelation pictureRelation(ExcelPictureFormat format) {
     Objects.requireNonNull(format, "format must not be null");
     return switch (format) {
       case EMF -> XSSFRelation.IMAGE_EMF;
@@ -165,7 +167,7 @@ final class ExcelWorkbookImageCatalogSupport {
     };
   }
 
-  static POIXMLRelation pictureRelation(int poiPictureType) {
+  public static POIXMLRelation pictureRelation(int poiPictureType) {
     return pictureRelation(ExcelPicturePoiBridge.fromPoiPictureType(poiPictureType));
   }
 

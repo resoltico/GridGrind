@@ -34,6 +34,15 @@ replay_pid*
 /tmp/
 /jazzer/.local/
 
+# Gradle-created project-discovery root that contains no tracked source in this repo.
+/buildSrc/
+
+# Project-local Gradle user home when GRADLE_USER_HOME is pointed at the project root.
+/.gradle-home/
+
+# Generated workbooks produced by sync-generated-examples.sh and local runs.
+/generated-workbooks/
+
 # OS and local scratch files
 .claude/
 .gemini/

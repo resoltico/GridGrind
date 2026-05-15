@@ -48,8 +48,7 @@ class InspectionStepTest {
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()));
 
     assertEquals(
-        "GET_WORKBOOK_SUMMARY requires target type WorkbookSelector but got"
-            + " RangeSelector.ByRange",
+        "GET_WORKBOOK_SUMMARY requires target type WORKBOOK_CURRENT but got RANGE_BY_RANGE",
         incompatibleTargetFailure.getMessage());
   }
 }

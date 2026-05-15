@@ -285,7 +285,6 @@ class ExecutionJournalCoverageTest {
     List<ExecutionJournal.Event> emitted = new ArrayList<>();
     ExecutionJournalRecorder recorder = ExecutionJournalRecorder.start(request, emitted::add);
 
-    recorder.setWarnings(null);
     ExecutionJournalRecorder.PhaseHandle validation = recorder.beginValidation();
     validation.succeed();
     assertThrows(IllegalStateException.class, validation::succeed);
@@ -327,7 +326,6 @@ class ExecutionJournalCoverageTest {
 
     ExecutionJournal journal = recorder.buildFailure(3, GridGrindProblemCode.IO_ERROR, 2, "step-3");
 
-    assertEquals(List.of(), journal.warnings());
     assertFalse(journal.events().isEmpty());
     assertFalse(emitted.isEmpty());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());

@@ -26,6 +26,23 @@ import org.junit.jupiter.api.Test;
 /** Tests for step-keyed inspection result payloads. */
 class InspectionResultTest {
   @Test
+  void sheetsResultCopiesSheetNamesAndRejectsBlankStepId() {
+    List<String> names = new ArrayList<>(List.of("Budget", "Report"));
+    WorkbookInspectionResult.SheetsResult result =
+        new WorkbookInspectionResult.SheetsResult("sheets", names);
+    names.clear();
+
+    assertEquals("sheets", result.stepId());
+    assertEquals(List.of("Budget", "Report"), result.sheetNames());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookInspectionResult.SheetsResult(" ", List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookInspectionResult.SheetsResult("sheets", null));
+  }
+
+  @Test
   void introspectionResultsUseStepIdsAndCopyCollections() {
     List<dev.erst.gridgrind.contract.dto.CellReport> cells = new ArrayList<>();
     cells.add(

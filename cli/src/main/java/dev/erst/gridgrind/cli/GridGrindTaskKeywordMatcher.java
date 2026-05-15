@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.TaskArtifactKind;
 import dev.erst.gridgrind.cli.discovery.TaskAssetMode;
 import dev.erst.gridgrind.cli.discovery.TaskCapabilityRef;
+import dev.erst.gridgrind.cli.discovery.TaskDiscoveryProfile;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskExecutionProfile;
+import dev.erst.gridgrind.cli.discovery.TaskGoalKind;
 import dev.erst.gridgrind.cli.discovery.TaskInputKind;
 import dev.erst.gridgrind.cli.discovery.TaskKeywordMatchReport;
 import dev.erst.gridgrind.cli.discovery.TaskMutationMode;
@@ -55,6 +58,8 @@ final class GridGrindTaskKeywordMatcher {
           "show",
           "sheet",
           "sheets",
+          "spreadsheet",
+          "spreadsheets",
           "the",
           "to",
           "want",
@@ -67,10 +72,14 @@ final class GridGrindTaskKeywordMatcher {
 
   private GridGrindTaskKeywordMatcher() {}
 
-  /** Returns ranked task matches plus starter scaffolds for one English keyword query string. */
+  /** Returns ranked task matches for one English keyword query string. */
   static TaskKeywordMatchReport reportFor(String query) {
-    String requestedQuery = requireNonBlank(query, "query");
+    String requestedQuery = Objects.requireNonNull(query, "query must not be null");
     List<String> normalizedTerms = normalizedTerms(requestedQuery);
+    if (normalizedTerms.isEmpty()) {
+      throw new IllegalArgumentException(
+          "query must contain at least one searchable term after normalization");
+    }
     List<TaskKeywordMatchReport.Candidate> candidates =
         GridGrindTaskCatalog.catalog().tasks().stream()
             .map(task -> candidateFor(task, normalizedTerms))
@@ -91,27 +100,42 @@ final class GridGrindTaskKeywordMatcher {
     TaskMatchAccumulator accumulator = new TaskMatchAccumulator(task);
     scoreSurface(
         queryTerms, List.of(task.id().replace('_', ' ')), "task id", 14, true, accumulator);
-    scoreSurface(queryTerms, task.intentTags(), "intent tag", 12, true, accumulator);
+    scoreDiscoveryProfile(queryTerms, task.discoveryProfile(), accumulator);
     scoreTypedTaskSurface(
-        queryTerms, task.requiredInputKinds(), task.verificationKinds(), accumulator);
-    scoreSurface(queryTerms, List.of(task.summary()), "summary", 7, true, accumulator);
-    scoreSurface(queryTerms, task.outcomes(), "outcome", 5, true, accumulator);
-    scoreSurface(queryTerms, task.requiredInputs(), "required input", 5, true, accumulator);
-    scoreSurface(queryTerms, task.optionalFeatures(), "optional feature", 4, true, accumulator);
-    scoreSurface(queryTerms, task.commonPitfalls(), "common pitfall", 2, true, accumulator);
+        queryTerms,
+        task.discoveryProfile().intentProfile().goals(),
+        task.discoveryProfile().intentProfile().artifacts(),
+        task.interactionProfile().requiredInputKinds(),
+        task.interactionProfile().verificationKinds(),
+        accumulator);
+    scoreSurface(queryTerms, List.of(task.narrative().summary()), "summary", 6, true, accumulator);
+    scoreSurface(queryTerms, task.narrative().outcomes(), "outcome", 4, true, accumulator);
+    scoreSurface(
+        queryTerms, task.narrative().requiredInputs(), "required input", 3, false, accumulator);
+    scoreSurface(
+        queryTerms, task.narrative().optionalFeatures(), "optional feature", 2, false, accumulator);
     scoreExecutionProfileSurface(queryTerms, task.executionProfile(), accumulator);
-    scorePhaseSurface(queryTerms, task.phases(), accumulator);
-    scoreCapabilitySurface(queryTerms, task.phases(), accumulator);
+    scorePhaseSurface(queryTerms, task.workflow().phases(), accumulator);
+    scoreCapabilitySurface(queryTerms, task.workflow().phases(), accumulator);
     if (accumulator.score == 0 || !accumulator.hasSemanticMatch) {
       return Optional.empty();
     }
     return Optional.of(
         new TaskKeywordMatchReport.Candidate(
-            task,
+            task.id(),
+            task.narrative().summary(),
             accumulator.score,
             List.copyOf(accumulator.matchedTerms),
-            List.copyOf(accumulator.reasons),
-            GridGrindTaskPlanner.planFor(task)));
+            List.copyOf(accumulator.matchSources)));
+  }
+
+  private static void scoreDiscoveryProfile(
+      List<String> queryTerms,
+      TaskDiscoveryProfile discoveryProfile,
+      TaskMatchAccumulator accumulator) {
+    scoreSurface(
+        queryTerms, discoveryProfile.discoveryTerms(), "discovery term", 13, true, accumulator);
+    scoreSurface(queryTerms, discoveryProfile.intentTags(), "intent tag", 11, true, accumulator);
   }
 
   private static void scorePhaseSurface(
@@ -122,11 +146,11 @@ final class GridGrindTaskKeywordMatcher {
           List.of(phasePurposeSurface(phase.purpose())),
           "phase purpose",
           4,
-          false,
+          true,
           accumulator);
       scoreSurface(queryTerms, List.of(phase.label()), "phase label", 2, true, accumulator);
-      scoreSurface(queryTerms, List.of(phase.objective()), "phase objective", 2, true, accumulator);
-      scoreSurface(queryTerms, phase.notes(), "phase note", 1, true, accumulator);
+      scoreSurface(
+          queryTerms, List.of(phase.objective()), "phase objective", 1, false, accumulator);
     }
   }
 
@@ -164,9 +188,18 @@ final class GridGrindTaskKeywordMatcher {
 
   private static void scoreTypedTaskSurface(
       List<String> queryTerms,
+      List<TaskGoalKind> goals,
+      List<TaskArtifactKind> artifacts,
       List<TaskInputKind> requiredInputKinds,
       List<TaskVerificationKind> verificationKinds,
       TaskMatchAccumulator accumulator) {
+    for (TaskGoalKind goal : goals) {
+      scoreSurface(queryTerms, List.of(goalSurface(goal)), "task goal", 10, true, accumulator);
+    }
+    for (TaskArtifactKind artifact : artifacts) {
+      scoreSurface(
+          queryTerms, List.of(artifactSurface(artifact)), "artifact", 3, false, accumulator);
+    }
     for (TaskInputKind inputKind : requiredInputKinds) {
       scoreSurface(
           queryTerms,
@@ -200,7 +233,7 @@ final class GridGrindTaskKeywordMatcher {
                         queryTerms,
                         List.of(entry.summary()),
                         "capability summary",
-                        5,
+                        2,
                         false,
                         accumulator));
       }
@@ -222,8 +255,7 @@ final class GridGrindTaskKeywordMatcher {
       accumulator.score += scorePerTerm * matchedTerms.size();
       accumulator.matchedTerms.addAll(matchedTerms);
       accumulator.hasSemanticMatch |= semanticSurface;
-      accumulator.reasons.add(
-          "Matched " + surfaceLabel + " \"" + surface + "\" via " + humanJoin(matchedTerms) + ".");
+      accumulator.matchSources.add(surfaceLabel);
     }
   }
 
@@ -240,7 +272,7 @@ final class GridGrindTaskKeywordMatcher {
     return Comparator.comparingInt(TaskKeywordMatchReport.Candidate::score)
         .reversed()
         .thenComparing(candidate -> candidate.matchedTerms().size(), Comparator.reverseOrder())
-        .thenComparing(candidate -> candidate.task().id());
+        .thenComparing(TaskKeywordMatchReport.Candidate::taskId);
   }
 
   static List<String> suggestedIntentTags(
@@ -254,7 +286,8 @@ final class GridGrindTaskKeywordMatcher {
       if (candidate.score() * 4 < topScore) {
         continue;
       }
-      for (String tag : candidate.task().intentTags()) {
+      TaskEntry task = GridGrindTaskCatalog.entryFor(candidate.taskId()).orElseThrow();
+      for (String tag : task.discoveryProfile().intentTags()) {
         int overlapCount = intersection(queryTerms, normalizedTerms(tag)).size();
         int weightedScore = candidate.score() + (overlapCount * 10_000);
         mergeTagSuggestion(suggestionScores, tag, weightedScore);
@@ -371,6 +404,39 @@ final class GridGrindTaskKeywordMatcher {
     };
   }
 
+  static String goalSurface(TaskGoalKind goal) {
+    return switch (goal) {
+      case AUTHOR -> "author create build";
+      case VERIFY -> "verify validate confirm";
+      case INSPECT -> "inspect read discover";
+      case ANALYZE -> "analyze findings diagnose";
+      case IMPORT -> "import ingest load";
+      case EXPORT -> "export extract emit";
+      case MAINTAIN -> "maintain normalize repair";
+    };
+  }
+
+  static String artifactSurface(TaskArtifactKind artifact) {
+    return switch (artifact) {
+      case WORKBOOK -> "workbook spreadsheet file";
+      case SHEET -> "sheet worksheet tab";
+      case CELL -> "cell grid value";
+      case TABLE -> "table rows columns";
+      case CHART -> "chart graph dashboard";
+      case PIVOT_TABLE -> "pivot pivot table summary";
+      case DATA_VALIDATION -> "validation input rules";
+      case COMMENT -> "comment annotation remark";
+      case PROTECTION -> "protection locked guardrail";
+      case CUSTOM_XML_MAPPING -> "custom xml mapping";
+      case XML_PAYLOAD -> "xml payload import export";
+      case DRAWING_OBJECT -> "drawing picture shape object";
+      case SIGNATURE_LINE -> "signature line signing";
+      case PACKAGE_SECURITY -> "package security encryption ooxml";
+      case FORMULA_SURFACE -> "formula surface formulas";
+      case NAMED_RANGE -> "named range name reference";
+    };
+  }
+
   static String verificationKindSurface(TaskVerificationKind verificationKind) {
     return switch (verificationKind) {
       case FACT_READBACK -> "inspect readback factual verification";
@@ -404,28 +470,10 @@ final class GridGrindTaskKeywordMatcher {
     return token;
   }
 
-  private static String humanJoin(List<String> values) {
-    if (values.size() == 1) {
-      return values.getFirst();
-    }
-    if (values.size() == 2) {
-      return values.get(0) + " and " + values.get(1);
-    }
-    return String.join(", ", values.subList(0, values.size() - 1)) + ", and " + values.getLast();
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
   /** Mutable scoring state while one task is being matched against one normalized query. */
   private static final class TaskMatchAccumulator {
     private final Set<String> matchedTerms = new LinkedHashSet<>();
-    private final List<String> reasons = new ArrayList<>();
+    private final Set<String> matchSources = new LinkedHashSet<>();
     private boolean hasSemanticMatch;
     private int score;
 

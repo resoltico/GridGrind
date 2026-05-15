@@ -8,7 +8,8 @@ import java.util.function.BiPredicate;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 
 /** Package-owned seam for POI relation removal, including reflective lookup hardening. */
-final class PoiRelationRemoval {
+@SuppressWarnings("PMD.CommentRequired")
+public final class PoiRelationRemoval {
   static final PoiPrivateContract REMOVE_RELATION_CONTRACT =
       PoiPrivateContract.virtualMethod(
           POIXMLDocumentPart.class,
@@ -18,7 +19,7 @@ final class PoiRelationRemoval {
 
   private PoiRelationRemoval() {}
 
-  static BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> defaultRemover() {
+  public static BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> defaultRemover() {
     BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> invoker =
         removePoiRelationInvoker(MethodHandles.lookup());
     return (parent, child) -> invokePoiRelationRemoval(invoker, parent, child);

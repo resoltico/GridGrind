@@ -15,8 +15,8 @@ import java.util.Optional;
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = GridGrindResponse.Success.class, name = "SUCCESS"),
-  @JsonSubTypes.Type(value = GridGrindResponse.Failure.class, name = "ERROR")
+  @JsonSubTypes.Type(value = GridGrindResponse.Success.class, name = "SUCCEEDED"),
+  @JsonSubTypes.Type(value = GridGrindResponse.Failure.class, name = "FAILED")
 })
 public sealed interface GridGrindResponse {
   /** Protocol version negotiated for this response. */
@@ -60,12 +60,16 @@ public sealed interface GridGrindResponse {
       GridGrindProtocolVersion protocolVersion,
       ExecutionJournal journal,
       CalculationReport calculation,
+      List<AssertionResult> assertions,
       Problem problem)
       implements GridGrindResponse {
     public Failure {
       Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
       Objects.requireNonNull(journal, "journal must not be null");
       Objects.requireNonNull(calculation, "calculation must not be null");
+      assertions =
+          GridGrindResponseSupport.copyValues(
+              Objects.requireNonNull(assertions, "assertions must not be null"), "assertions");
       Objects.requireNonNull(problem, "problem must not be null");
     }
   }

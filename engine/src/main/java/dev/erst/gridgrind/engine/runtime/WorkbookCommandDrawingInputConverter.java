@@ -16,14 +16,14 @@ import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.ExcelPictureDefinition;
-import dev.erst.gridgrind.excel.ExcelShapeDefinition;
-import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelShapeDefinition;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
 
 /** Converts drawing-oriented structured contract inputs. */
 final class WorkbookCommandDrawingInputConverter {

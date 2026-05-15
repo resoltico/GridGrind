@@ -3,10 +3,10 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
-import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
+import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 
 /** Converts table and pivot-table contract inputs. */
 final class WorkbookCommandTabularInputConverter {

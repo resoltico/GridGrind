@@ -212,6 +212,22 @@ class AssertionExecutorCoverageTest {
                     List.of(),
                     List.of(
                         assertThat(
+                            "present-sheet-all",
+                            new SheetSelector.All(),
+                            new PresenceAssertion.SheetPresent()),
+                        assertThat(
+                            "present-sheet-by-name",
+                            new SheetSelector.ByName("Budget"),
+                            new PresenceAssertion.SheetPresent()),
+                        assertThat(
+                            "absent-sheet-by-name",
+                            new SheetSelector.ByName("NonExistent"),
+                            new PresenceAssertion.SheetAbsent()),
+                        assertThat(
+                            "present-sheet-by-names",
+                            new SheetSelector.ByNames(List.of("Budget")),
+                            new PresenceAssertion.SheetPresent()),
+                        assertThat(
                             "present-named-range",
                             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
                             new PresenceAssertion.NamedRangePresent()),
@@ -350,6 +366,10 @@ class AssertionExecutorCoverageTest {
     assertFalse(asserted.assertions().isEmpty());
     assertEquals(
         List.of(
+            "present-sheet-all",
+            "present-sheet-by-name",
+            "absent-sheet-by-name",
+            "present-sheet-by-names",
             "present-named-range",
             "absent-named-range",
             "present-table",
@@ -490,6 +510,35 @@ class AssertionExecutorCoverageTest {
     WorkbookAnalysisResult.FormulaHealthResult formulaHealth =
         inspection(inspected, "formulaHealth", WorkbookAnalysisResult.FormulaHealthResult.class);
     AnalysisFindingReport firstFinding = formulaHealth.analysis().findings().getFirst();
+
+    GridGrindResponse.Failure presentMissingSheet =
+        assertionFailure(
+            executor,
+            workbookPath,
+            "present-missing-sheet",
+            new SheetSelector.ByName("NonExistent"),
+            new PresenceAssertion.SheetPresent());
+    assertTrue(presentMissingSheet.problem().message().contains("EXPECT_SHEET_PRESENT"));
+    assertEquals(
+        List.of(),
+        assertInstanceOf(
+                WorkbookInspectionResult.SheetsResult.class,
+                presentMissingSheet
+                    .problem()
+                    .assertionFailure()
+                    .orElseThrow()
+                    .observations()
+                    .getFirst())
+            .sheetNames());
+
+    GridGrindResponse.Failure absentPresentSheet =
+        assertionFailure(
+            executor,
+            workbookPath,
+            "absent-present-sheet",
+            new SheetSelector.ByName("Budget"),
+            new PresenceAssertion.SheetAbsent());
+    assertTrue(absentPresentSheet.problem().message().contains("EXPECT_SHEET_ABSENT"));
 
     GridGrindResponse.Failure presentMissing =
         assertionFailure(
@@ -1214,9 +1263,7 @@ class AssertionExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.FULL_XSSF,
-                        ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                    ExecutionModeInput.streamingWrite(),
                     null,
                     List.of(
                         mutate(
@@ -1244,6 +1291,46 @@ class AssertionExecutorCoverageTest {
             .map(dev.erst.gridgrind.contract.assertion.AssertionResult::stepId)
             .toList());
 
+    GridGrindResponse.Failure streamingAssertionFailure =
+        failure(
+            executor.execute(
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.streamingWrite(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new CellMutationAction.AppendRow(
+                                List.of(textCell("Owner"), textCell("Ada"))))),
+                    List.of(
+                        assertThat(
+                            "stream-pass",
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                    "Owner"))),
+                        assertThat(
+                            "stream-fail",
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                    "WrongValue")))),
+                    List.of())));
+    assertEquals(2, streamingAssertionFailure.assertions().size());
+    assertEquals(
+        dev.erst.gridgrind.contract.assertion.AssertionOutcome.PASSED,
+        streamingAssertionFailure.assertions().get(0).outcome());
+    assertEquals("stream-pass", streamingAssertionFailure.assertions().get(0).stepId());
+    assertEquals(
+        dev.erst.gridgrind.contract.assertion.AssertionOutcome.FAILED,
+        streamingAssertionFailure.assertions().get(1).outcome());
+    assertEquals("stream-fail", streamingAssertionFailure.assertions().get(1).stepId());
+
     IllegalStateException assertionModeFailure =
         assertThrows(
             IllegalStateException.class,
@@ -1257,7 +1344,7 @@ class AssertionExecutorCoverageTest {
                                 "Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
-                    ExecutionModeInput.ReadMode.EVENT_READ));
+                    ExecutionModeInput.eventRead()));
     assertTrue(assertionModeFailure.getMessage().contains("does not support assertion steps"));
 
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
@@ -1275,7 +1362,7 @@ class AssertionExecutorCoverageTest {
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary()),
                 new WorkbookLocation.StoredWorkbook(workbookPath),
-                ExecutionModeInput.ReadMode.EVENT_READ,
+                ExecutionModeInput.eventRead(),
                 workbookPath));
     assertEquals("event-summary", eventSummary.stepId());
 
@@ -1290,8 +1377,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
+            ExecutionModeInput.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1299,8 +1385,7 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(),
                 List.of()),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
+            ExecutionModeInput.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1312,8 +1397,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
+            ExecutionModeInput.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1323,8 +1407,7 @@ class AssertionExecutorCoverageTest {
                     mutate(
                         new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
                 List.of()),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
+            ExecutionModeInput.eventRead()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1336,8 +1419,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF)));
+            ExecutionModeInput.fullXssf()));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
@@ -1349,9 +1431,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))),
-            new ExecutionModeSelection(
-                ExecutionModeInput.ReadMode.EVENT_READ,
-                ExecutionModeInput.WriteMode.STREAMING_WRITE)));
+            ExecutionModeInput.streamingWrite()));
 
     assertEquals(
         java.util.Optional.of("2+3"),
@@ -1366,9 +1446,7 @@ class AssertionExecutorCoverageTest {
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
-                    new ExecutionModeInput(
-                        ExecutionModeInput.ReadMode.FULL_XSSF,
-                        ExecutionModeInput.WriteMode.STREAMING_WRITE),
+                    ExecutionModeInput.streamingWrite(),
                     null,
                     List.of(),
                     List.of(

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BooleanSupplier;
@@ -14,14 +15,15 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTTitle;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTTx;
 
 /** Chart authoring helpers. */
-final class ExcelChartMutationSupport {
+@SuppressWarnings("PMD.CommentRequired")
+public final class ExcelChartMutationSupport {
   private ExcelChartMutationSupport() {}
 
-  static void validateChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void validateChart(XSSFSheet sheet, ExcelChartDefinition definition) {
     validateChart(sheet, definition, null);
   }
 
-  static void validateChart(
+  public static void validateChart(
       XSSFSheet sheet,
       ExcelChartDefinition definition,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
@@ -34,11 +36,11 @@ final class ExcelChartMutationSupport {
     }
   }
 
-  static void createChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+  public static void createChart(XSSFSheet sheet, ExcelChartDefinition definition) {
     createChart(sheet, definition, null);
   }
 
-  static void createChart(
+  public static void createChart(
       XSSFSheet sheet,
       ExcelChartDefinition definition,
       @Nullable ExcelFormulaRuntime formulaRuntime) {

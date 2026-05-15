@@ -169,10 +169,10 @@ final class InspectionCommandConverter {
     };
   }
 
-  private static dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator
+  private static dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator
       toExcelCustomXmlMappingLocator(
           dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
-    return new dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator(
+    return new dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator(
         locator.mapId(), locator.name());
   }
 }

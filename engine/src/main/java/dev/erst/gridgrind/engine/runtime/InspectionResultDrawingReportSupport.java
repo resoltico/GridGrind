@@ -6,10 +6,10 @@ import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.ExcelDrawingObjectPayload;
-import dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import java.util.Base64;
 
 /** Converts drawing and chart workbook snapshots into protocol report records. */

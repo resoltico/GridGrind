@@ -9,12 +9,21 @@ import java.util.Optional;
  */
 public sealed interface PayloadException
     permits InvalidJsonException, InvalidRequestException, InvalidRequestShapeException {
+  /** Normalized JSON location variant for the payload failure. */
+  PayloadLocation jsonLocation();
+
   /** JSON pointer path to the element that triggered the failure. */
-  Optional<String> jsonPath();
+  default Optional<String> jsonPath() {
+    return jsonLocation().jsonPath();
+  }
 
   /** Line number within the JSON payload where the error was detected. */
-  Optional<Integer> jsonLine();
+  default Optional<Integer> jsonLine() {
+    return jsonLocation().jsonLine();
+  }
 
   /** Column number within the JSON payload where the error was detected. */
-  Optional<Integer> jsonColumn();
+  default Optional<Integer> jsonColumn() {
+    return jsonLocation().jsonColumn();
+  }
 }
