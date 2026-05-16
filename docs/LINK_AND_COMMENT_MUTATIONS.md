@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: LINK_COMMENT_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, hyperlink mutations, comment mutations, set-hyperlink, clear-hyperlink, set-comment, clear-comment]
   questions: ["how do i set hyperlinks in gridgrind", "how do i clear comments in gridgrind", "how do i manage comments in gridgrind"]
@@ -43,7 +43,7 @@ Attach or replace a hyperlink on one cell. The cell is created if needed.
 |:------|:---------|:------------|
 | `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
-| `target` | Yes | Typed hyperlink target payload. |
+| `action.target` | Yes | Typed hyperlink target payload. |
 
 Supported target variants:
 

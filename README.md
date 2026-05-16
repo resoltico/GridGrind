@@ -1,10 +1,3 @@
-[![GridGrind Art](https://raw.githubusercontent.com/resoltico/GridGrind/main/images/GridGrind.jpg)](https://github.com/resoltico/GridGrind)
-
-[![Release](https://img.shields.io/github/v/release/resoltico/GridGrind?label=release)](https://github.com/resoltico/GridGrind/releases)
-[![CI](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml/badge.svg)](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Java 26](https://img.shields.io/badge/java-26-orange.svg)](https://openjdk.org/projects/jdk/26/)
-
 # GridGrind — .xlsx workbook automation from a JSON request
 
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
@@ -21,13 +14,28 @@ succeeds.
 - Assert workbook state mid-run — a failed assertion stops the plan before saving
 - Run from Docker or a self-contained JAR, against new workbooks or existing `.xlsx` files
 
-[First run →](docs/QUICK_START.md) · [Snippets](docs/QUICK_REFERENCE.md)
+## Where it fits
+
+Good fit:
+- Recurring `.xlsx` workbook jobs that should run the same way each time — filing, updating,
+  checking, extracting
+- Automation and agent pipelines that create or maintain Excel files without a UI
+- Workbook health checks and fact extraction without saving a file
+- Environments without Excel — Linux containers, CI pipelines, server-side workflows
+
+Skip it when:
+- You need `.xls`, `.xlsm`, or `.xlsb` — GridGrind handles `.xlsx` only
+- Your work is truly one-off and hand-writing JSON adds more friction than it saves
+- You need interactive formula recalculation during editing (GridGrind evaluates on request)
 
 ## One request, one result
 
-Alice logs green coffee arrivals at High Ground Roasters every Monday. One JSON request writes new
-lot data, asserts the workbook is clean, reads facts back, and saves — or stops cleanly if any step
-fails:
+A single JSON request describes every step: create a sheet, write cells, assert workbook state,
+read facts back, and save. GridGrind executes the steps in order and writes the file only when
+every step succeeds. If an assertion fails or any step errors, nothing is saved.
+
+The request below creates a sheet, writes a cell, asserts the workbook has no malformed hyperlinks,
+and reads the written cell back:
 
 ```json
 {
@@ -79,37 +87,11 @@ fails:
 }
 ```
 
-Write, assert, read — one plan. GridGrind saves the file only if every step, including the
-assertion, succeeds.
+Write, assert, read — one plan. The file is saved only if every step passes.
 
-## Where it fits
+## Documentation
 
-Good fit:
-- Recurring `.xlsx` workbook jobs that should run the same way each time — filing, updating,
-  checking, extracting
-- Automation and agent pipelines that create or maintain Excel files without a UI
-- Workbook health checks and fact extraction without saving a file
-- Environments without Excel — Linux containers, CI pipelines, server-side workflows
-
-Skip it when:
-- You need `.xls`, `.xlsm`, or `.xlsb` — GridGrind handles `.xlsx` only
-- Your work is truly one-off and hand-writing JSON adds more friction than it saves
-- You need interactive formula recalculation during editing (GridGrind evaluates on request)
-
-## Get it
-
-**Docker** (recommended — no install, runs on macOS, Linux, Windows, x64 and ARM):
-
-```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
-```
-
-**JAR** (requires Java 26) — download from [Releases](https://github.com/resoltico/GridGrind/releases/latest):
-
-```bash
-java -jar gridgrind.jar --help
-```
-
+- [Full docs index](docs/INDEX.md) — every reference file organized by topic
 - [First run guide](docs/QUICK_START.md) — first successful run, Docker or JAR
 - [Snippets](docs/QUICK_REFERENCE.md) — copy-paste request patterns
 - [Java authoring](docs/JAVA_AUTHORING.md) — build requests from Java instead of JSON
