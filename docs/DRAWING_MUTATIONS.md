@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: DRAWING_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, drawing mutations, picture, shape, embedded-object, chart, signature-line, anchor]
   questions: ["how do i author drawings in gridgrind", "how do i create charts in gridgrind", "how do i move a drawing object in gridgrind"]
@@ -25,36 +25,42 @@ currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to`
 
 ```json
 {
-  "type": "SET_PICTURE",
-  "sheetName": "Ops",
-  "picture": {
-    "name": "OpsPicture",
-    "image": {
-      "format": "PNG",
-      "source": {
-        "type": "INLINE_BASE64",
-        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+  "stepId": "set-picture",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Ops"
+  },
+  "action": {
+    "type": "SET_PICTURE",
+    "picture": {
+      "name": "OpsPicture",
+      "image": {
+        "format": "PNG",
+        "source": {
+          "type": "INLINE_BASE64",
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+        }
+      },
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 0,
+          "rowIndex": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 2,
+          "rowIndex": 8,
+          "dx": 0,
+          "dy": 0
+        },
+        "behavior": "MOVE_AND_RESIZE"
+      },
+      "description": {
+        "type": "INLINE",
+        "text": "Queue preview"
       }
-    },
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 0,
-        "rowIndex": 4,
-        "dx": 0,
-        "dy": 0
-      },
-      "to": {
-        "columnIndex": 2,
-        "rowIndex": 8,
-        "dx": 0,
-        "dy": 0
-      },
-      "behavior": "MOVE_AND_RESIZE"
-    },
-    "description": {
-      "type": "INLINE",
-      "text": "Queue preview"
     }
   }
 }
@@ -110,31 +116,37 @@ Create or replace one named simple shape or connector on one sheet.
 
 ```json
 {
-  "type": "SET_SHAPE",
-  "sheetName": "Ops",
-  "shape": {
-    "name": "OpsShape",
-    "kind": "SIMPLE_SHAPE",
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 3,
-        "rowIndex": 4,
-        "dx": 0,
-        "dy": 0
+  "stepId": "set-shape",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Ops"
+  },
+  "action": {
+    "type": "SET_SHAPE",
+    "shape": {
+      "name": "OpsShape",
+      "kind": "SIMPLE_SHAPE",
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 3,
+          "rowIndex": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 5,
+          "rowIndex": 7,
+          "dx": 0,
+          "dy": 0
+        },
+        "behavior": "MOVE_DONT_RESIZE"
       },
-      "to": {
-        "columnIndex": 5,
-        "rowIndex": 7,
-        "dx": 0,
-        "dy": 0
-      },
-      "behavior": "MOVE_DONT_RESIZE"
-    },
-    "presetGeometryToken": "roundRect",
-    "text": {
-      "type": "INLINE",
-      "text": "Queue"
+      "presetGeometryToken": "roundRect",
+      "text": {
+        "type": "INLINE",
+        "text": "Queue"
+      }
     }
   }
 }
@@ -142,26 +154,32 @@ Create or replace one named simple shape or connector on one sheet.
 
 ```json
 {
-  "type": "SET_SHAPE",
-  "sheetName": "Ops",
-  "shape": {
-    "name": "OpsConnector",
-    "kind": "CONNECTOR",
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 3,
-        "rowIndex": 8,
-        "dx": 0,
-        "dy": 0
-      },
-      "to": {
-        "columnIndex": 6,
-        "rowIndex": 9,
-        "dx": 0,
-        "dy": 0
-      },
-      "behavior": "MOVE_AND_RESIZE"
+  "stepId": "set-connector",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Ops"
+  },
+  "action": {
+    "type": "SET_SHAPE",
+    "shape": {
+      "name": "OpsConnector",
+      "kind": "CONNECTOR",
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 3,
+          "rowIndex": 8,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 6,
+          "rowIndex": 9,
+          "dx": 0,
+          "dy": 0
+        },
+        "behavior": "MOVE_AND_RESIZE"
+      }
     }
   }
 }
@@ -195,38 +213,44 @@ image.
 
 ```json
 {
-  "type": "SET_EMBEDDED_OBJECT",
-  "sheetName": "Ops",
-  "embeddedObject": {
-    "name": "OpsEmbed",
-    "label": "Ops payload",
-    "fileName": "ops-payload.txt",
-    "command": "open",
-    "previewImage": {
-      "format": "PNG",
-      "source": {
-        "type": "INLINE_BASE64",
-        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
-      }
-    },
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 6,
-        "rowIndex": 4,
-        "dx": 0,
-        "dy": 0
+  "stepId": "set-embedded-object",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Ops"
+  },
+  "action": {
+    "type": "SET_EMBEDDED_OBJECT",
+    "embeddedObject": {
+      "name": "OpsEmbed",
+      "label": "Ops payload",
+      "fileName": "ops-payload.txt",
+      "command": "open",
+      "previewImage": {
+        "format": "PNG",
+        "source": {
+          "type": "INLINE_BASE64",
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+        }
       },
-      "to": {
-        "columnIndex": 8,
-        "rowIndex": 9,
-        "dx": 0,
-        "dy": 0
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 6,
+          "rowIndex": 4,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 8,
+          "rowIndex": 9,
+          "dx": 0,
+          "dy": 0
+        }
+      },
+      "payload": {
+        "type": "INLINE_BASE64",
+        "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ="
       }
-    },
-    "payload": {
-      "type": "INLINE_BASE64",
-      "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ="
     }
   }
 }
@@ -263,82 +287,88 @@ authoritative mutation.
 
 ```json
 {
-  "type": "SET_CHART",
-  "sheetName": "Ops",
-  "chart": {
-    "name": "OpsChart",
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 4,
-        "rowIndex": 0,
-        "dx": 0,
-        "dy": 0
+  "stepId": "set-chart",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Ops"
+  },
+  "action": {
+    "type": "SET_CHART",
+    "chart": {
+      "name": "OpsChart",
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 4,
+          "rowIndex": 0,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 8,
+          "rowIndex": 12,
+          "dx": 0,
+          "dy": 0
+        },
+        "behavior": "MOVE_AND_RESIZE"
       },
-      "to": {
-        "columnIndex": 8,
-        "rowIndex": 12,
-        "dx": 0,
-        "dy": 0
+      "title": {
+        "type": "TEXT",
+        "source": {
+          "type": "INLINE",
+          "text": "Roadmap"
+        }
       },
-      "behavior": "MOVE_AND_RESIZE"
-    },
-    "title": {
-      "type": "TEXT",
-      "source": {
-        "type": "INLINE",
-        "text": "Roadmap"
-      }
-    },
-    "legend": {
-      "type": "VISIBLE",
-      "position": "TOP_RIGHT"
-    },
-    "displayBlanksAs": "SPAN",
-    "plotOnlyVisibleCells": false,
-    "plots": [
-      {
-        "type": "BAR",
-        "varyColors": true,
-        "barDirection": "COLUMN",
-        "series": [
-          {
-            "title": {
-              "type": "TEXT",
-              "source": {
-                "type": "INLINE",
-                "text": "Plan"
+      "legend": {
+        "type": "VISIBLE",
+        "position": "TOP_RIGHT"
+      },
+      "displayBlanksAs": "SPAN",
+      "plotOnlyVisibleCells": false,
+      "plots": [
+        {
+          "type": "BAR",
+          "varyColors": true,
+          "barDirection": "COLUMN",
+          "series": [
+            {
+              "title": {
+                "type": "TEXT",
+                "source": {
+                  "type": "INLINE",
+                  "text": "Plan"
+                }
+              },
+              "categories": {
+                "type": "REFERENCE",
+                "formula": "ChartCategories"
+              },
+              "values": {
+                "type": "REFERENCE",
+                "formula": "Ops!$B$2:$B$4"
               }
             },
-            "categories": {
-              "type": "REFERENCE",
-              "formula": "ChartCategories"
-            },
-            "values": {
-              "type": "REFERENCE",
-              "formula": "Ops!$B$2:$B$4"
-            }
-          },
-          {
-            "title": {
-              "type": "TEXT",
-              "source": {
-                "type": "INLINE",
-                "text": "Actual"
+            {
+              "title": {
+                "type": "TEXT",
+                "source": {
+                  "type": "INLINE",
+                  "text": "Actual"
+                }
+              },
+              "categories": {
+                "type": "REFERENCE",
+                "formula": "ChartCategories"
+              },
+              "values": {
+                "type": "REFERENCE",
+                "formula": "ChartActual"
               }
-            },
-            "categories": {
-              "type": "REFERENCE",
-              "formula": "ChartCategories"
-            },
-            "values": {
-              "type": "REFERENCE",
-              "formula": "ChartActual"
             }
-          }
-        ]
-      }
-    ]
+          ]
+        }
+      ]
+    }
   }
 }
 ```
@@ -417,37 +447,43 @@ optional plain-signature preview image.
 
 ```json
 {
-  "type": "SET_SIGNATURE_LINE",
-  "sheetName": "Approvals",
-  "signatureLine": {
-    "name": "BudgetSignature",
-    "anchor": {
-      "type": "TWO_CELL",
-      "from": {
-        "columnIndex": 1,
-        "rowIndex": 1,
-        "dx": 0,
-        "dy": 0
+  "stepId": "set-signature-line",
+  "target": {
+    "type": "SHEET_BY_NAME",
+    "name": "Approvals"
+  },
+  "action": {
+    "type": "SET_SIGNATURE_LINE",
+    "signatureLine": {
+      "name": "BudgetSignature",
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": {
+          "columnIndex": 1,
+          "rowIndex": 1,
+          "dx": 0,
+          "dy": 0
+        },
+        "to": {
+          "columnIndex": 4,
+          "rowIndex": 6,
+          "dx": 0,
+          "dy": 0
+        },
+        "behavior": "MOVE_AND_RESIZE"
       },
-      "to": {
-        "columnIndex": 4,
-        "rowIndex": 6,
-        "dx": 0,
-        "dy": 0
-      },
-      "behavior": "MOVE_AND_RESIZE"
-    },
-    "allowComments": false,
-    "signingInstructions": "Review the budget before signing.",
-    "suggestedSigner": "Ada Lovelace",
-    "suggestedSigner2": "Finance",
-    "suggestedSignerEmail": "ada@example.com",
-    "invalidStamp": "invalid",
-    "plainSignature": {
-      "format": "PNG",
-      "source": {
-        "type": "INLINE_BASE64",
-        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      "allowComments": false,
+      "signingInstructions": "Review the budget before signing.",
+      "suggestedSigner": "Ada Lovelace",
+      "suggestedSigner2": "Finance",
+      "suggestedSignerEmail": "ada@example.com",
+      "invalidStamp": "invalid",
+      "plainSignature": {
+        "format": "PNG",
+        "source": {
+          "type": "INLINE_BASE64",
+          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+        }
       }
     }
   }

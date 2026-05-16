@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.65.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-05-01"
+updated: "2026-05-16"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -424,8 +424,7 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `target` | Yes | Selector payload for the target workbook location. |
-| `target` | Yes | `ALL_ON_SHEET` or `BY_RANGES` selector for the target ranges. |
+| `target` | Yes | Selector: `RANGE_ALL_ON_SHEET` to clear all validations on the sheet, or `RANGE_BY_RANGES` to clear by specific A1-style ranges. |
 
 ---
 
