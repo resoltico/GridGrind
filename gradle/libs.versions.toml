@@ -13,7 +13,7 @@ bouncycastle = "1.84"
 # Santuario xmlsec 4.x declares transitive JPMS requires on these APIs while publishing them as
 # provided dependencies, so GridGrind must own them explicitly for modular compile/runtime use.
 jakarta-activation = "2.1.4"
-jakarta-xml-bind = "4.0.2"
+jakarta-xml-bind = "4.0.5"
 xmlsec = "4.0.4"
 slf4j = "2.0.18"
 errorprone = "2.49.0"
