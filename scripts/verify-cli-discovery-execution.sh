@@ -32,6 +32,7 @@ source "${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
 
 mode='jar'
 target=''
+docker_run_user="${GRIDGRIND_DOCKER_RUN_USER:-}"
 if [[ $# -eq 0 ]]; then
     target="$(ensure_cli_shadow_jar "${repo_root}")"
 elif [[ $# -eq 1 ]]; then
@@ -61,6 +62,9 @@ case "${mode}" in
     docker-image)
         command -v docker >/dev/null 2>&1 || die "docker is required for docker-image verification"
         [[ -n "${target}" ]] || die "docker-image mode requires an image reference"
+        if [[ -z "${docker_run_user}" ]] && command -v id >/dev/null 2>&1; then
+            docker_run_user="$(id -u):$(id -g)"
+        fi
         ;;
     *)
         die "unsupported mode ${mode}; expected jar or docker-image"
@@ -74,7 +78,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${python3_path}" - "${repo_root}" "${mode}" "${target}" "${temp_dir}" <<'PY'
+"${python3_path}" - "${repo_root}" "${mode}" "${target}" "${temp_dir}" "${docker_run_user}" <<'PY'
 import json
 import shutil
 import subprocess
@@ -85,6 +89,7 @@ repo_root = Path(sys.argv[1])
 mode = sys.argv[2]
 artifact_target = sys.argv[3]
 temp_root = Path(sys.argv[4])
+docker_run_user = sys.argv[5]
 examples_root = repo_root / "examples"
 
 
@@ -97,16 +102,25 @@ def launcher(command: list[str], cwd: Path) -> list[str]:
     if mode == "jar":
         return ["java", "-jar", artifact_target, *command]
     if mode == "docker-image":
-        return [
+        docker_command = [
             "docker",
             "run",
             "--rm",
-            "-v",
-            f"{cwd}:/workdir",
-            "-w",
-            "/workdir",
-            artifact_target,
-            *command,
+        ]
+        if docker_run_user:
+            docker_command.extend(["--user", docker_run_user])
+        docker_command.extend(
+            [
+                "-v",
+                f"{cwd}:/workdir",
+                "-w",
+                "/workdir",
+                artifact_target,
+                *command,
+            ]
+        )
+        return [
+            *docker_command,
         ]
     die(f"unsupported launcher mode {mode}")
 
