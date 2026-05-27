@@ -98,6 +98,10 @@ def die(message: str) -> None:
     raise SystemExit(1)
 
 
+def progress(message: str) -> None:
+    print(message, flush=True)
+
+
 def launcher(command: list[str], cwd: Path) -> list[str]:
     if mode == "jar":
         return ["java", "-jar", artifact_target, *command]
@@ -173,6 +177,8 @@ def copy_required_assets(request_dir: Path, required_paths: list[str]) -> None:
 def execute_plan(
     kind: str,
     stable_id: str,
+    ordinal: int,
+    total: int,
     request_command: list[str],
     suggested_request_path: str,
     required_paths: list[str],
@@ -184,6 +190,7 @@ def execute_plan(
     doctor_path = workspace / "doctor.json"
     response_path = workspace / "response.json"
 
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request")
     printed = run(
         [*request_command, "--response", artifact_path(request_path, workspace)], workspace
     )
@@ -196,8 +203,10 @@ def execute_plan(
     if not request_path.exists():
         die(f"{kind} {stable_id} did not create request file {request_path}")
 
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} copying required assets")
     copy_required_assets(request_path.parent, required_paths)
 
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request")
     doctor = run(
         [
             "--doctor-request",
@@ -219,6 +228,7 @@ def execute_plan(
     if doctor_report.get("valid") is not True:
         die(f"{kind} {stable_id} doctor report was not valid: {doctor_report}")
 
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} executing request")
     executed = run(
         [
             "--request",
@@ -238,6 +248,7 @@ def execute_plan(
     response = json.loads(response_path.read_text())
     if "problem" in response:
         die(f"{kind} {stable_id} returned a failure response: {response}")
+    progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} succeeded")
 
 
 catalog_workspace = temp_root / "_catalog"
@@ -245,20 +256,27 @@ catalog_workspace.mkdir(parents=True, exist_ok=True)
 example_catalog = run_json(["--print-example-catalog"], catalog_workspace)
 task_catalog = run_json(["--print-task-catalog"], catalog_workspace)
 
-for example in example_catalog["examples"]:
+example_entries = example_catalog["examples"]
+task_entries = task_catalog["tasks"]
+
+for index, example in enumerate(example_entries, start=1):
     execute_plan(
         "examples",
         example["id"],
+        index,
+        len(example_entries),
         ["--print-example", "--lookup", example["id"]],
         example["suggestedRequestPath"],
         example["requiredPaths"],
     )
 
-for task in task_catalog["tasks"]:
+for index, task in enumerate(task_entries, start=1):
     starter = task["starter"]
     execute_plan(
         "tasks",
         task["id"],
+        index,
+        len(task_entries),
         ["--print-task-plan", "--lookup", task["id"]],
         starter["suggestedRequestPath"],
         starter["requiredPaths"],
