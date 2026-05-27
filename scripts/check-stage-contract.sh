@@ -43,6 +43,7 @@ readonly check_stage5_script_paths=(
     scripts/test-verify-release-candidate-tag.sh
     scripts/test-verify-release-primary-checkout.sh
     scripts/test-verify-cli-contract.sh
+    scripts/test-verify-cli-discovery-execution.sh
     scripts/verify-cli-discovery-execution.sh
     scripts/test-verify-container-publication.sh
     scripts/test-publication-contract.sh
