@@ -18,7 +18,7 @@ COPY executor ./executor
 RUN chmod +x gradlew
 RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
 
-FROM azul/zulu-openjdk-alpine:26-jre@sha256:2d273c8744d90ab91a7b5c22c40047f43c7ca9a360650da23daa1ec292c543d4
+FROM azul/zulu-openjdk-alpine:26-jre@sha256:4202b612ef7e434db932b8c23d4d97c7bbd2b5a2d86be4e934c2676f2ee6bb57
 
 LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"
