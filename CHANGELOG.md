@@ -82,6 +82,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moved the contract JSON tests onto Jackson 3 context-aware parser entry points and replaced raw
   reflective coverage casts in the engine helper tests with typed extraction helpers, removing the
   deprecated-parser and unchecked-cast warning churn from the release gates.
+- Made the published-example and task-starter discovery verifier emit per-plan progress heartbeats
+  during both jar and Docker release-surface checks, and added a focused shell regression so the
+  merge-handoff gate cannot fail on quiet watchdog timeouts while black-box artifact verification
+  is actively running.
 
 ## [0.65.0] - 2026-05-15
 
