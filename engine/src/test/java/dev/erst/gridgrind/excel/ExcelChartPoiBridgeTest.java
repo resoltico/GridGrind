@@ -50,15 +50,16 @@ class ExcelChartPoiBridgeTest {
 
     assertEquals(
         ExcelChartBarGrouping.STANDARD,
-        ExcelChartPoiBridge.fromPoiBarGrouping(BarGrouping.STANDARD));
+        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.STANDARD));
     assertEquals(
         ExcelChartBarGrouping.CLUSTERED,
-        ExcelChartPoiBridge.fromPoiBarGrouping(BarGrouping.CLUSTERED));
+        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.CLUSTERED));
     assertEquals(
-        ExcelChartBarGrouping.STACKED, ExcelChartPoiBridge.fromPoiBarGrouping(BarGrouping.STACKED));
+        ExcelChartBarGrouping.STACKED,
+        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.STACKED));
     assertEquals(
         ExcelChartBarGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.fromPoiBarGrouping(BarGrouping.PERCENT_STACKED));
+        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.PERCENT_STACKED));
     assertEquals(
         ExcelChartBarGrouping.CLUSTERED, ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(null));
     assertEquals(
@@ -190,31 +191,31 @@ class ExcelChartPoiBridgeTest {
         ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.SMOOTH_MARKER));
 
     assertEquals(
-        ExcelChartMarkerStyle.CIRCLE, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.CIRCLE));
+        ExcelChartMarkerStyle.CIRCLE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.CIRCLE));
     assertEquals(
-        ExcelChartMarkerStyle.DASH, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.DASH));
+        ExcelChartMarkerStyle.DASH, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DASH));
     assertEquals(
-        ExcelChartMarkerStyle.DIAMOND, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.DIAMOND));
+        ExcelChartMarkerStyle.DIAMOND, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DIAMOND));
     assertEquals(
-        ExcelChartMarkerStyle.DOT, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.DOT));
+        ExcelChartMarkerStyle.DOT, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DOT));
     assertEquals(
-        ExcelChartMarkerStyle.NONE, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.NONE));
+        ExcelChartMarkerStyle.NONE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.NONE));
     assertEquals(
-        ExcelChartMarkerStyle.PICTURE, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.PICTURE));
+        ExcelChartMarkerStyle.PICTURE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.PICTURE));
     assertEquals(
-        ExcelChartMarkerStyle.PLUS, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.PLUS));
+        ExcelChartMarkerStyle.PLUS, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.PLUS));
     assertEquals(
-        ExcelChartMarkerStyle.SQUARE, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.SQUARE));
+        ExcelChartMarkerStyle.SQUARE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.SQUARE));
     assertEquals(
-        ExcelChartMarkerStyle.STAR, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.STAR));
+        ExcelChartMarkerStyle.STAR, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.STAR));
     assertEquals(
         ExcelChartMarkerStyle.TRIANGLE,
-        ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.TRIANGLE));
-    assertEquals(ExcelChartMarkerStyle.X, ExcelChartPoiBridge.fromPoiMarkerStyle(MarkerStyle.X));
+        ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.TRIANGLE));
+    assertEquals(ExcelChartMarkerStyle.X, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.X));
     for (ExcelChartMarkerStyle style : ExcelChartMarkerStyle.values()) {
       assertEquals(
           style,
-          ExcelChartPoiBridge.fromPoiMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(style)));
+          ExcelChartMarkerStylePoiBridge.fromPoi(ExcelChartMarkerStylePoiBridge.toPoi(style)));
     }
 
     assertEquals(
@@ -249,21 +250,13 @@ class ExcelChartPoiBridgeTest {
 
     assertEquals(
         ExcelChartDisplayBlanksAs.GAP,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(
-            org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs.INT_GAP, "gap"));
+        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.GAP));
     assertEquals(
         ExcelChartDisplayBlanksAs.SPAN,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(
-            org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs.INT_SPAN, "span"));
+        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.SPAN));
     assertEquals(
         ExcelChartDisplayBlanksAs.ZERO,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(
-            org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs.INT_ZERO, "zero"));
-    IllegalArgumentException unsupportedDisplayBlanks =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> ExcelChartPoiBridge.fromPoiDisplayBlanks(99, "bogus"));
-    assertTrue(unsupportedDisplayBlanks.getMessage().contains("Unsupported displayBlanksAs token"));
+        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.ZERO));
     assertEquals(
         ExcelChartDisplayBlanksAs.GAP,
         ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.GAP));
@@ -311,10 +304,11 @@ class ExcelChartPoiBridgeTest {
     assertEquals(AxisCrosses.MAX, ExcelChartPoiBridge.toPoiAxisCrosses(ExcelChartAxisCrosses.MAX));
     assertEquals(AxisCrosses.MIN, ExcelChartPoiBridge.toPoiAxisCrosses(ExcelChartAxisCrosses.MIN));
 
-    assertEquals("AREA", ExcelChartPoiBridge.canonicalPlotTypeToken("XDDFAreaChartData"));
-    assertEquals("CUSTOMPLOT", ExcelChartPoiBridge.canonicalPlotTypeToken("CustomPlot"));
+    assertEquals("AREA", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("XDDFAreaChartData"));
+    assertEquals("CUSTOMPLOT", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("CustomPlot"));
     // startsWith("XDDF") true but endsWith("ChartData") false — falls through to toUpperCase.
-    assertEquals("XDDFUNKNOWN", ExcelChartPoiBridge.canonicalPlotTypeToken("XDDFUnknown"));
+    assertEquals(
+        "XDDFUNKNOWN", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("XDDFUnknown"));
   }
 
   @Test
@@ -331,8 +325,8 @@ class ExcelChartPoiBridgeTest {
                     0, 0, 0, 0, 1 + (chartIndex * 6), 1, 6 + (chartIndex * 6), 10));
         chartIndex++;
         XDDFChartData data = createChartData(chart, plotType);
-        assertEquals(plotType, ExcelChartPoiBridge.plotType(data));
-        assertEquals(plotType.name(), ExcelChartPoiBridge.plotTypeToken(data));
+        assertEquals(plotType, ExcelChartDataFamilyPoiBridge.plotType(data));
+        assertEquals(plotType.name(), ExcelChartDataFamilyPoiBridge.plotTypeToken(data));
       }
 
       XSSFChart axisChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 12, 6, 20));
@@ -340,32 +334,38 @@ class ExcelChartPoiBridgeTest {
       XDDFValueAxis valueAxis = axisChart.createValueAxis(AxisPosition.LEFT);
       XDDFDateAxis dateAxis = axisChart.createDateAxis(AxisPosition.TOP);
       XDDFSeriesAxis seriesAxis = axisChart.createSeriesAxis(AxisPosition.RIGHT);
-      assertEquals(ExcelChartAxisKind.CATEGORY, ExcelChartPoiBridge.axisKind(categoryAxis));
-      assertEquals(ExcelChartAxisKind.VALUE, ExcelChartPoiBridge.axisKind(valueAxis));
-      assertEquals(ExcelChartAxisKind.DATE, ExcelChartPoiBridge.axisKind(dateAxis));
-      assertEquals(ExcelChartAxisKind.SERIES, ExcelChartPoiBridge.axisKind(seriesAxis));
+      assertEquals(ExcelChartAxisKind.CATEGORY, ExcelChartAxisPoiBridge.axisKind(categoryAxis));
+      assertEquals(ExcelChartAxisKind.VALUE, ExcelChartAxisPoiBridge.axisKind(valueAxis));
+      assertEquals(ExcelChartAxisKind.DATE, ExcelChartAxisPoiBridge.axisKind(dateAxis));
+      assertEquals(ExcelChartAxisKind.SERIES, ExcelChartAxisPoiBridge.axisKind(seriesAxis));
     }
   }
 
   @Test
   void plotTypeMappingMatchesPoiChartTypeEnum() {
-    assertEquals(ChartTypes.AREA, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.AREA));
-    assertEquals(ChartTypes.AREA3D, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.AREA_3D));
-    assertEquals(ChartTypes.BAR, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.BAR));
-    assertEquals(ChartTypes.BAR3D, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.BAR_3D));
+    assertEquals(ChartTypes.AREA, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.AREA));
     assertEquals(
-        ChartTypes.DOUGHNUT, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.DOUGHNUT));
-    assertEquals(ChartTypes.LINE, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.LINE));
-    assertEquals(ChartTypes.LINE3D, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.LINE_3D));
-    assertEquals(ChartTypes.PIE, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.PIE));
-    assertEquals(ChartTypes.PIE3D, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.PIE_3D));
-    assertEquals(ChartTypes.RADAR, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.RADAR));
+        ChartTypes.AREA3D, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.AREA_3D));
+    assertEquals(ChartTypes.BAR, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.BAR));
     assertEquals(
-        ChartTypes.SCATTER, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SCATTER));
+        ChartTypes.BAR3D, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.BAR_3D));
     assertEquals(
-        ChartTypes.SURFACE, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE));
+        ChartTypes.DOUGHNUT, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.DOUGHNUT));
+    assertEquals(ChartTypes.LINE, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.LINE));
     assertEquals(
-        ChartTypes.SURFACE3D, ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE_3D));
+        ChartTypes.LINE3D, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.LINE_3D));
+    assertEquals(ChartTypes.PIE, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.PIE));
+    assertEquals(
+        ChartTypes.PIE3D, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.PIE_3D));
+    assertEquals(
+        ChartTypes.RADAR, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.RADAR));
+    assertEquals(
+        ChartTypes.SCATTER, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SCATTER));
+    assertEquals(
+        ChartTypes.SURFACE, ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE));
+    assertEquals(
+        ChartTypes.SURFACE3D,
+        ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE_3D));
   }
 
   @Test
@@ -373,16 +373,17 @@ class ExcelChartPoiBridgeTest {
     IllegalArgumentException unsupportedAxis =
         assertThrows(
             IllegalArgumentException.class,
-            () -> ExcelChartPoiBridge.axisKind(new UnsupportedAxis()));
+            () -> ExcelChartAxisPoiBridge.axisKind(new UnsupportedAxis()));
     assertTrue(unsupportedAxis.getMessage().contains("Unsupported chart axis family"));
 
     UnsupportedChartData unsupportedChartData = new UnsupportedChartData();
     IllegalArgumentException unsupportedPlot =
         assertThrows(
             IllegalArgumentException.class,
-            () -> ExcelChartPoiBridge.plotType(unsupportedChartData));
+            () -> ExcelChartDataFamilyPoiBridge.plotType(unsupportedChartData));
     assertTrue(unsupportedPlot.getMessage().contains("Unsupported chart data family"));
-    assertEquals("UNSUPPORTEDCHARTDATA", ExcelChartPoiBridge.plotTypeToken(unsupportedChartData));
+    assertEquals(
+        "UNSUPPORTEDCHARTDATA", ExcelChartDataFamilyPoiBridge.plotTypeToken(unsupportedChartData));
   }
 
   private static XDDFChartData createChartData(XSSFChart chart, ExcelChartPlotType plotType) {

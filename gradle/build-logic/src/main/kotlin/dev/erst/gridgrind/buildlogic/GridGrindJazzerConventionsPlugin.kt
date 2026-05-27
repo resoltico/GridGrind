@@ -351,6 +351,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 argumentProviders.add(
                     jazzerToolArgumentsProvider("status") {
                         target.set(providers.gradleProperty("jazzerTarget"))
+                        jsonOutput.set(
+                            providers.gradleProperty("jazzerJsonOutput").map { it == "true" }.orElse(false),
+                        )
                     },
                 )
             }
@@ -362,6 +365,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 argumentProviders.add(
                     jazzerToolArgumentsProvider("report") {
                         target.set(providers.gradleProperty("jazzerTarget"))
+                        jsonOutput.set(
+                            providers.gradleProperty("jazzerJsonOutput").map { it == "true" }.orElse(false),
+                        )
                     },
                 )
             }
@@ -373,6 +379,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 argumentProviders.add(
                     jazzerToolArgumentsProvider("list-findings") {
                         target.set(providers.gradleProperty("jazzerTarget"))
+                        jsonOutput.set(
+                            providers.gradleProperty("jazzerJsonOutput").map { it == "true" }.orElse(false),
+                        )
                     },
                 )
             }
@@ -384,6 +393,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 argumentProviders.add(
                     jazzerToolArgumentsProvider("list-corpus") {
                         target.set(providers.gradleProperty("jazzerTarget"))
+                        jsonOutput.set(
+                            providers.gradleProperty("jazzerJsonOutput").map { it == "true" }.orElse(false),
+                        )
                     },
                 )
             }
@@ -450,6 +462,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
         private val JAZZER_COVERAGE_EXCLUSIONS =
             listOf(
                 "dev/erst/gridgrind/jazzer/support/FuzzDataDecoders*.class",
+                "dev/erst/gridgrind/jazzer/support/FuzzAddressDecoders*.class",
+                "dev/erst/gridgrind/jazzer/support/FuzzStyleDecoders*.class",
+                "dev/erst/gridgrind/jazzer/support/FuzzValueDecoders*.class",
                 "dev/erst/gridgrind/jazzer/support/GeneratedProtocolWorkflow*.class",
                 "dev/erst/gridgrind/jazzer/support/HarnessTelemetry*.class",
                 "dev/erst/gridgrind/jazzer/support/JazzerGridGrindFuzzData*.class",
@@ -490,6 +505,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                             if (target.isPresent) {
                                 add("--target")
                                 add(target.get())
+                            }
+                            if (jsonOutput.get()) {
+                                add("--json")
                             }
                         }
 

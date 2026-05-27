@@ -15,7 +15,7 @@ class ExcelSheetStateControllerTest {
   void setSelectedSheetsRepairsInvalidActiveSheetIndexes() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook
@@ -40,7 +40,7 @@ class ExcelSheetStateControllerTest {
   void setSelectedSheetsRepairsOutOfRangeActiveSheetIndexes() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook
@@ -65,7 +65,7 @@ class ExcelSheetStateControllerTest {
   void setSheetVisibilityAllowsRevealingHiddenSheets() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       controller.setSheetVisibility(workbook, "Beta", ExcelSheetVisibility.HIDDEN);
@@ -81,7 +81,7 @@ class ExcelSheetStateControllerTest {
   void deleteSheetRejectsDeletingTheLastVisibleSheet() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       controller.setSheetVisibility(workbook, "Beta", ExcelSheetVisibility.HIDDEN);
@@ -90,7 +90,7 @@ class ExcelSheetStateControllerTest {
           assertThrows(
               IllegalArgumentException.class, () -> controller.deleteSheet(workbook, "Alpha"));
       assertEquals("cannot delete the last visible sheet 'Alpha'", exception.getMessage());
-      assertEquals(List.of("Alpha", "Beta"), workbook.sheetNames());
+      assertEquals(List.of("Alpha", "Beta"), workbook.sheets().sheetNames());
       assertEquals(
           ExcelSheetVisibility.VISIBLE, controller.summarizeSheet(workbook, "Alpha").visibility());
       assertEquals(
@@ -102,7 +102,7 @@ class ExcelSheetStateControllerTest {
   void workbookProtectionReadsLockAndPasswordHashFlags() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.xssfWorkbook().lockStructure();
       workbook.xssfWorkbook().lockWindows();
@@ -126,7 +126,7 @@ class ExcelSheetStateControllerTest {
   void workbookProtectionDefaultsToAllFalseWithoutWorkbookProtectionXml() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
 
       assertEquals(
@@ -139,7 +139,7 @@ class ExcelSheetStateControllerTest {
   void setAndClearWorkbookProtectionRoundTripsAndRemovesEmptyNodes() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       ExcelWorkbookProtectionSettings protectedSettings =
           new ExcelWorkbookProtectionSettings(
@@ -170,19 +170,19 @@ class ExcelSheetStateControllerTest {
 
   @Test
   void excelWorkbookDelegatesWorkbookProtectionMutations() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       ExcelWorkbookProtectionSettings settings =
           new ExcelWorkbookProtectionSettings(
               true, false, true, Optional.of("secret"), Optional.empty());
 
-      workbook.setWorkbookProtection(settings);
+      workbook.protection().setWorkbookProtection(settings);
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(true, false, true, true, false),
           workbook.workbookProtection());
 
-      workbook.clearWorkbookProtection();
+      workbook.protection().clearWorkbookProtection();
 
       assertEquals(
           new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
@@ -195,7 +195,7 @@ class ExcelSheetStateControllerTest {
       throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       var protection = workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
       protection.setWorkbookPassword(new byte[] {0x01, 0x02});
@@ -238,7 +238,7 @@ class ExcelSheetStateControllerTest {
   void clearWorkbookProtectionIsIdempotentOnFreshWorkbooks() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
 
       controller.clearWorkbookProtection(workbook);
@@ -255,7 +255,7 @@ class ExcelSheetStateControllerTest {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
     // normalizeWorkbookProtectionNode: hasLocks — windowsLocked is the first true.
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       controller.setWorkbookProtection(
           workbook,
@@ -265,7 +265,7 @@ class ExcelSheetStateControllerTest {
     }
 
     // normalizeWorkbookProtectionNode: hasLocks — revisionsLocked is the first true.
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       controller.setWorkbookProtection(
           workbook,
@@ -277,7 +277,7 @@ class ExcelSheetStateControllerTest {
     // workbookPasswordHashPresent: each sub-condition as the first true.
     // Also covers: hasPasswords — workbookPasswordHashPresent=false,
     // revisionsPasswordHashPresent=true.
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       var protection = workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
 
@@ -325,7 +325,7 @@ class ExcelSheetStateControllerTest {
   void setWorkbookProtectionReusesExistingNodeAndRemovesItWhenNothingRemains() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
 
@@ -342,7 +342,7 @@ class ExcelSheetStateControllerTest {
   void setWorkbookProtectionRetainsNodeWhenOnlyPasswordHashesRemain() throws IOException {
     ExcelSheetStateController controller = new ExcelSheetStateController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
 
       controller.setWorkbookProtection(
@@ -356,7 +356,7 @@ class ExcelSheetStateControllerTest {
       assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
 
       controller.setWorkbookProtection(

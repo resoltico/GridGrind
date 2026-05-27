@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -67,10 +68,11 @@ class XlsxPicturePackageInvariantSupportTest {
       throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-picture-package-embedded-copy-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -84,8 +86,8 @@ class XlsxPicturePackageInvariantSupportTest {
                       new ExcelDrawingMarker(1, 1, 0, 0),
                       new ExcelDrawingMarker(4, 6, 0, 0),
                       null)));
-      workbook.copySheet("Ops", "Ops Copy", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.save(workbookPath);
+      workbook.sheets().copySheet("Ops", "Ops Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.persistence().save(workbookPath);
     }
 
     assertDoesNotThrow(
@@ -97,10 +99,11 @@ class XlsxPicturePackageInvariantSupportTest {
       throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-picture-package-sheet-preview-", ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -114,7 +117,7 @@ class XlsxPicturePackageInvariantSupportTest {
                       new ExcelDrawingMarker(1, 1, 0, 0),
                       new ExcelDrawingMarker(4, 6, 0, 0),
                       null)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     Path mutatedWorkbook =
@@ -137,10 +140,11 @@ class XlsxPicturePackageInvariantSupportTest {
   private static Path workbookWithPicture(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook
           .sheet("Ops")
+          .drawings()
           .setPicture(
               new ExcelPictureDefinition(
                   "OpsPicture",
@@ -149,7 +153,7 @@ class XlsxPicturePackageInvariantSupportTest {
                   new ExcelDrawingAnchor.TwoCell(
                       new ExcelDrawingMarker(1, 1, 0, 0), new ExcelDrawingMarker(4, 6, 0, 0), null),
                   Optional.of("Queue preview")));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
     return workbookPath;
   }

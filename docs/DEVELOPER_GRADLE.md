@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-05-15"
 route:
@@ -132,8 +132,8 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202605081121` via Maven coordinate
-  `0.8.15-20260508.112122-100`; the published snapshot artifact exposes that same trunk build in
+  official JaCoCo trunk build `0.8.15.202605250925` via Maven coordinate
+  `0.8.15-20260525.212539-111`; the published snapshot artifact exposes that same trunk build in
   its bundle metadata while keeping the snapshot timestamp/build-number form required by the Maven
   repository, and that line is where official Java 26 support remains ahead of the next JaCoCo
   release
@@ -156,6 +156,22 @@ Large `.gradle.kts` files are hard to test, hard to refactor, and easy to let dr
 configuration-plus-implementation blobs. GridGrind therefore keeps reusable typed logic in
 `gradle/build-logic` and keeps consumer scripts thin. `jazzer/build.gradle.kts` is intentionally a
 single plugin application for exactly that reason.
+
+### Source-shape gate
+
+Root `check` now depends on `verifyJavaSourceShape`, which is implemented in
+`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`. That task parses every production Java
+source, writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned policy
+stored in `gradle/source-shape-policy.tsv`.
+
+Rules:
+- treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for production
+  Java file size and API breadth
+- keep policy ownership explicit in `gradle/source-shape-policy.tsv`; broad exceptions without a
+  stated owner are invalid
+- document any new role family in the policy file instead of smuggling one-off ceilings into tests
+- keep seam/documentation audits in JUnit tests and keep generic source-shape enforcement in build
+  logic so the two do not drift into one mixed-purpose blob
 
 ### Coverage gate protocol
 
@@ -201,6 +217,9 @@ Repository-specific note:
   it impossible to forget
 - the nested Jazzer build remains intentionally separate from root product-module coverage; its own
   `./gradlew --project-dir jazzer check` is the authoritative Jazzer coverage gate
+- Jazzer support coverage measures the deterministic support-contract surface, not the raw fuzz
+  input generator plumbing; when decoder utilities split, keep the coverage exclusions aligned so
+  helper extraction does not silently widen the measured subset
 
 ---
 
@@ -212,7 +231,7 @@ Use this routing table before changing the build:
 |:-----------------------|:------------------|
 | root project membership, plugin resolution | `settings.gradle.kts` |
 | thin root build wiring | `build.gradle.kts` |
-| repository-wide project-file formatting and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
+| repository-wide project-file formatting, source-shape, and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
 | shared Java subproject conventions | `gradle/build-logic/.../GridGrindJavaConventionsPlugin.kt` |
 | shared Jazzer build behavior, Jazzer task registration, Jazzer PMD and coverage profiles, cleanup tasks | `gradle/build-logic/.../GridGrindJazzerConventionsPlugin.kt` |
 | dependency versions shared across product and Jazzer | `gradle/libs.versions.toml` |

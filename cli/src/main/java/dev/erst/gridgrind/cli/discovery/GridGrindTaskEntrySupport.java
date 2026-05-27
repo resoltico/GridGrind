@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import dev.erst.gridgrind.cli.examples.GridGrindTaskStarterPlans;
 import java.util.List;
 
 /** Shared builders for the CLI-owned task descriptor registry. */
@@ -22,7 +23,13 @@ final class GridGrindTaskEntrySupport {
       TaskInteractionProfile interactionProfile,
       TaskWorkflow workflow) {
     return new TaskEntry(
-        id, discoveryProfile, narrative, executionProfile, interactionProfile, workflow);
+        id,
+        discoveryProfile,
+        narrative,
+        executionProfile,
+        interactionProfile,
+        GridGrindTaskStarterPlans.contractFor(id),
+        workflow);
   }
 
   static TaskDiscoveryProfile discovery(

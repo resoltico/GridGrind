@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: DEVELOPER
-updated: "2026-05-15"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -134,7 +134,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
 | Jackson Databind | 3.1.2 |
-| JUnit Jupiter | 6.1.0-RC1 |
+| JUnit Jupiter | 6.1.0 |
 | Log4j Core | 2.25.3 |
 
 GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
@@ -151,8 +151,8 @@ Jackson design, not a GridGrind version-skew bug.
 ## Commands
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
-explicit-import verification, Error Prone with NullAway on `@NullMarked` production packages,
-PMD, tests, and JaCoCo coverage verification for
+explicit-import verification, the root `verifyJavaSourceShape` policy gate, Error Prone with
+NullAway on `@NullMarked` production packages, PMD, tests, and JaCoCo coverage verification for
 `engine`, `contract`, `executor`, `authoring-java`, and `cli`. `./check.sh` is the supported
 whole-repo deterministic gate: root `check` plus `coverage`, nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
@@ -194,6 +194,7 @@ overlay contract in `.devcontainer/devcontainer.json`.
 
 # Run the root-project CI gate
 ./gradlew check
+./gradlew verifyJavaSourceShape
 
 # Targeted iteration during development
 ./gradlew test                   # tests only, no quality gates
@@ -213,6 +214,7 @@ overlay contract in `.devcontainer/devcontainer.json`.
 ./gradlew :cli:run --args="--print-task-catalog"
 ./gradlew :cli:run --args="--print-task-plan --lookup DASHBOARD"
 ./gradlew :cli:run --args='--print-task-keyword-match --query "monthly sales dashboard with charts"'
+./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ./scripts/docker-smoke.sh
 ./scripts/validate-devcontainer.sh
 ```
@@ -227,13 +229,14 @@ instead of thin downstream string copies. `GridGrindContractText` owns stable wo
 rules plus their validation messages. CLI-specific presentation lives downstream in `cli`:
 `CliSurface` and `GridGrindCliHelp` own the help section labels, key/value entries, flags,
 docs links, and example routing that the transport renders. `cli` owns the high-level task
-descriptors plus typed discovery profiles, while `GridGrindTaskPlanner` and
-`GridGrindTaskKeywordMatcher` own the downstream discovery policy: starter requests are
-derived generically from the published task descriptors, and English keyword query ranking is
-anchored first in typed goal/artifact metadata rather than loose notes or pitfalls. Request linting
-is also part of that authoritative public surface now: `engine` exports a narrow request-doctor
-API alongside the request executor, and the packaged-artifact verifier exercises the emitted
-doctor report instead of relying only on module-local tests. The build now also includes
+descriptors plus typed discovery profiles, while `GridGrindTaskStarterPlans`,
+`GridGrindTaskPlanner`, and `GridGrindTaskKeywordMatcher` own the downstream discovery policy:
+official task ids resolve to curated executable starter requests, the planner keeps only the
+generic fallback for ad hoc task entries, and English keyword query ranking is anchored first in
+typed goal/artifact metadata rather than loose notes or pitfalls. Request linting is also part of
+that authoritative public surface now: `engine` exports a narrow request-doctor API alongside the
+request executor, and the packaged-artifact verifiers exercise the emitted doctor report plus every
+published built-in example and task starter instead of relying only on module-local tests. The build now also includes
 contract-side and CLI-side public-surface
 linters that fail if docs, generated help, catalog summaries, shipped examples, or shared runtime
 diagnostics mention a canonical mutation, assertion, or inspection id that is not registered in
@@ -315,13 +318,18 @@ Compile-time static analysis. These checks are promoted to errors (build fails):
 
 ### PMD
 
-Structural analysis. Two rulesets:
+Structural analysis plus a root-owned source-shape ratchet.
 
-- `gradle/pmd/ruleset.xml` — production code: full `errorprone`, `bestpractices`, `design`,
-  `multithreading`, `performance`, `security`, documentation (`CommentRequired` enforces Javadoc
-  on all public types and methods).
+- `gradle/pmd/ruleset.xml` — baseline production rules. It enforces `errorprone`,
+  `bestpractices`, `multithreading`, `performance`, `security`, documentation, and the
+  production-safe subset of `design`.
+- `gradle/pmd/semantic-shape-ruleset.xml` — stricter production design thresholds applied only
+  where broad complexity heuristics are signal-rich enough to ratchet in CI.
 - `gradle/pmd/test-ruleset.xml` — test code: same categories with relaxed assertion volume and
   method-count limits; `CommentRequired` enforces class-level Javadoc only.
+- `verifyJavaSourceShape` — root build-logic task that parses every production Java source,
+  writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
+  `gradle/source-shape-policy.tsv`.
 
 ### Spotless
 
@@ -350,6 +358,10 @@ After the `contract` plus `executor` split, `contract` coverage intentionally in
 consumer execution data from `executor` and `cli` in addition to `contract`'s own tests. That is
 not a loophole: it is the correct ownership model for a canonical public contract whose behavior
 is exercised both by direct DTO/catalog tests and by the executor and CLI seams that consume it.
+
+`engine` coverage also intentionally includes downstream consumer execution data from `executor`.
+That reflects the same ownership model: the exported engine seam is proven both by local engine
+tests and by the request-execution layer that consumes it.
 
 | Module | Line Coverage | Branch Coverage |
 |:-------|:-------------|:----------------|

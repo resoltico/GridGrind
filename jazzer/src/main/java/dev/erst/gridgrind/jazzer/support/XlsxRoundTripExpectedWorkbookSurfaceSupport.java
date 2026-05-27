@@ -112,7 +112,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
             XlsxRoundTripExpectedStateSupport.NamedRangeKey,
             XlsxRoundTripExpectedStateSupport.ExpectedNamedRange>
         expectedNamedRanges = new LinkedHashMap<>();
-    for (ExcelNamedRangeSnapshot namedRange : workbook.namedRanges()) {
+    for (ExcelNamedRangeSnapshot namedRange : workbook.names().namedRanges()) {
       ExcelNamedRangeTarget target =
           switch (namedRange) {
             case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot -> rangeSnapshot.target();
@@ -142,7 +142,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummary> expected =
         new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       expected.put(
           sheetName,
           ((dev.erst.gridgrind.excel.WorkbookSheetResult.SheetSummaryResult)
@@ -160,9 +160,9 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations(
       ExcelWorkbook workbook) {
     LinkedHashMap<String, List<ExcelDataValidationSnapshot>> expected = new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       List<ExcelDataValidationSnapshot> validations =
-          workbook.sheet(sheetName).dataValidations(new ExcelRangeSelection.All());
+          workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
       if (!validations.isEmpty()) {
         expected.put(sheetName, validations);
       }
@@ -175,7 +175,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<ExcelConditionalFormattingBlockSnapshot>> expected =
         new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
               readExecutor
@@ -194,7 +194,7 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters(ExcelWorkbook workbook) {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, List<ExcelAutofilterSnapshot>> expected = new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       var result =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)
               readExecutor
@@ -210,16 +210,16 @@ final class XlsxRoundTripExpectedWorkbookSurfaceSupport {
   static Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects(
       ExcelWorkbook workbook) {
     LinkedHashMap<String, List<ExcelDrawingObjectSnapshot>> expected = new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
-      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawingObjects()));
+    for (String sheetName : workbook.sheets().sheetNames()) {
+      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawings().drawingObjects()));
     }
     return Map.copyOf(expected);
   }
 
   static Map<String, List<ExcelChartSnapshot>> expectedCharts(ExcelWorkbook workbook) {
     LinkedHashMap<String, List<ExcelChartSnapshot>> expected = new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
-      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).charts()));
+    for (String sheetName : workbook.sheets().sheetNames()) {
+      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawings().charts()));
     }
     return Map.copyOf(expected);
   }

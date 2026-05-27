@@ -23,6 +23,7 @@ import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
 import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -179,7 +180,7 @@ final class XlsxParityTest {
       assertDoesNotThrow(
           () -> {
             try (ExcelWorkbook workbook =
-                ExcelWorkbook.open(
+                ExcelWorkbooks.open(
                     scenario.workbookPath(),
                     new ExcelFormulaEnvironment(
                         List.of(

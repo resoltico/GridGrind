@@ -30,6 +30,9 @@ class ArchitectureSeamAuditTest {
       "executor/   The only execution bridge from the canonical contract into the";
   private static final String STALE_CLI_EXECUTOR_GUIDANCE =
       "or --request file, delegates to executor, writes the response,";
+  private static final String STALE_KOTLIN_PROTOCOL_LOAD = ".codex/AGENTS_KOTLIN24_GRADLE.md";
+  private static final String CURRENT_SQLITE_SURFACE =
+      "SQLite3 Multiple Ciphers 2.3.4 / SQLite 3.53.1";
 
   @Test
   void contractModuleOnlyImportsExcelFoundationTypes() throws IOException {
@@ -81,136 +84,6 @@ class ArchitectureSeamAuditTest {
   }
 
   @Test
-  void keyGodFilesStaySplit() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalog.java"),
-        600);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/CatalogFieldMetadataSupport.java"),
-        350);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/catalog/GridGrindProtocolCatalogStyleTypeGroups.java"),
-        200);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/dto/GridGrindResponse.java"),
-        875);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "contract/src/main/java/dev/erst/gridgrind/contract/dto/ProblemContext.java"),
-        998);
-    assertLineCountAtMost(
-        repositoryRoot.resolve("engine/src/main/java/dev/erst/gridgrind/excel/ExcelSheet.java"),
-        700);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "engine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCopySupport.java"),
-        700);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "engine/src/main/java/dev/erst/gridgrind/excel/ooxml/ExcelOoxmlPackageSecuritySupport.java"),
-        700);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "engine/src/main/java/dev/erst/gridgrind/engine/runtime/WorkbookCommandStructuredInputConverter.java"),
-        350);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/examples/GridGrindShippedExamples.java"),
-        220);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookAuthoringExamples.java"),
-        300);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookAuditExamples.java"),
-        300);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/examples/WorkbookVisualizationExamples.java"),
-        300);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/TabularReportTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DashboardTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DataEntryWorkflowTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/PivotReportTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/AuditExistingWorkbookTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/CustomXmlWorkflowTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/DrawingAndSignatureWorkflowTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "cli/src/main/java/dev/erst/gridgrind/cli/discovery/WorkbookMaintenanceTaskDefinition.java"),
-        140);
-    assertLineCountAtMost(
-        repositoryRoot.resolve(
-            "jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/WorkbookInvariantAnalysisSurfaceChecks.java"),
-        700);
-  }
-
-  @Test
-  void productionJavaFilesStayBelowTheAbsoluteCeiling() throws IOException {
-    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
-    List<String> violations = new ArrayList<>();
-    List<Path> sourceRoots =
-        List.of(
-            repositoryRoot.resolve("authoring-java/src/main/java"),
-            repositoryRoot.resolve("cli/src/main/java"),
-            repositoryRoot.resolve("contract/src/main/java"),
-            repositoryRoot.resolve("engine/src/main/java"),
-            repositoryRoot.resolve("excel-foundation/src/main/java"),
-            repositoryRoot.resolve("executor/src/main/java"),
-            repositoryRoot.resolve("jazzer/src/main/java"));
-    for (Path sourceRoot : sourceRoots) {
-      if (!Files.isDirectory(sourceRoot)) {
-        continue;
-      }
-      try (Stream<Path> files = Files.walk(sourceRoot)) {
-        for (Path path :
-            files
-                .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".java"))
-                .toList()) {
-          long lineCount;
-          try (Stream<String> lines = Files.lines(path)) {
-            lineCount = lines.count();
-          }
-          if (lineCount > 1000L) {
-            violations.add(path + " (" + lineCount + " lines)");
-          }
-        }
-      }
-    }
-    assertTrue(
-        violations.isEmpty(),
-        () -> "Production Java sources must stay under 1000 lines: " + violations);
-  }
-
-  @Test
   void pmdRulesetCommentsStayCurrent() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
     String ruleset = Files.readString(repositoryRoot.resolve("gradle/pmd/ruleset.xml"));
@@ -222,20 +95,42 @@ class ArchitectureSeamAuditTest {
         !ruleset.contains(STALE_PMD_EXCEPTION_HELPER),
         "gradle/pmd/ruleset.xml must not justify exclusions with deleted withExceptionData()");
     assertTrue(
-        ruleset.contains("ArchitectureSeamAuditTest"),
-        "gradle/pmd/ruleset.xml must point at the active split ratchet owner");
+        ruleset.contains("verifyJavaSourceShape"),
+        "gradle/pmd/ruleset.xml must point at the build-owned source-shape gate");
   }
 
   @Test
   void currentArchitectureGuidanceDoesNotReintroduceTheDeletedProtocolModule() throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
+    String agents = Files.readString(repositoryRoot.resolve("AGENTS.md"));
     String agentsExtra = Files.readString(repositoryRoot.resolve(".codex/AGENTS_EXTRA.md"));
     String developerGuide = Files.readString(repositoryRoot.resolve("docs/DEVELOPER.md"));
+    String developerGradle = Files.readString(repositoryRoot.resolve("docs/DEVELOPER_GRADLE.md"));
     String developerJazzer = Files.readString(repositoryRoot.resolve("docs/DEVELOPER_JAZZER.md"));
+    String rootConventions =
+        Files.readString(
+            repositoryRoot.resolve(
+                "gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindRootConventionsPlugin.kt"));
+    String javaConventions =
+        Files.readString(
+            repositoryRoot.resolve(
+                "gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindJavaConventionsPlugin.kt"));
 
+    assertTrue(
+        !agents.contains("- Kotlin 2.4+ / Gradle: " + STALE_KOTLIN_PROTOCOL_LOAD),
+        "AGENTS.md must not require the Kotlin protocol for GridGrind work");
+    assertTrue(
+        agents.contains("GridGrind's Kotlin build logic is not an application surface"),
+        "AGENTS.md must teach the Java/Gradle-only rule for GridGrind build logic");
+    assertTrue(
+        agents.contains(CURRENT_SQLITE_SURFACE),
+        "AGENTS.md must publish one current SQLite dependency surface");
     assertTrue(
         !agentsExtra.contains(STALE_MODULE_GRAPH),
         ".codex/AGENTS_EXTRA.md must not teach the deleted cli -> protocol -> engine graph");
+    assertTrue(
+        agentsExtra.contains("Do not read `AGENTS_KOTLIN24_GRADLE.md`."),
+        ".codex/AGENTS_EXTRA.md must preserve the Kotlin-protocol ban");
     assertTrue(
         !agentsExtra.contains(STALE_NULL_DEFAULT_GUIDANCE),
         ".codex/AGENTS_EXTRA.md must not permit null-return protocol default methods");
@@ -259,12 +154,37 @@ class ArchitectureSeamAuditTest {
         developerGuide.contains("exported `dev.erst.gridgrind.engine.api` seam"),
         "docs/DEVELOPER.md must name the narrow exported engine API seam");
     assertTrue(
+        developerGuide.contains("verifyJavaSourceShape"),
+        "docs/DEVELOPER.md must document the build-owned source-shape gate");
+    assertTrue(
+        developerGuide.contains("production-safe subset of `design`"),
+        "docs/DEVELOPER.md must describe PMD as a scoped design gate rather than the whole category");
+    assertTrue(
+        developerGuide.contains(
+            "engine` coverage also intentionally includes downstream consumer execution data from `executor`"),
+        "docs/DEVELOPER.md must explain engine downstream coverage ownership");
+    assertTrue(
+        developerGradle.contains("verifyJavaSourceShape"),
+        "docs/DEVELOPER_GRADLE.md must document the root source-shape task");
+    assertTrue(
+        developerGradle.contains("Root `check` now depends on `verifyJavaSourceShape`"),
+        "docs/DEVELOPER_GRADLE.md must teach that source-shape is a build gate");
+    assertTrue(
         !developerJazzer.contains(STALE_JAZZER_MODULES),
         "docs/DEVELOPER_JAZZER.md must not claim Jazzer consumes a live protocol module");
     assertTrue(
         developerJazzer.contains(
             "local `engine` and `contract` modules, plus the verification-only `executor` project"),
         "docs/DEVELOPER_JAZZER.md must point at the current local module set");
+    assertTrue(
+        rootConventions.contains("tasks.register(\"verifyJavaSourceShape\""),
+        "GridGrindRootConventionsPlugin must register verifyJavaSourceShape");
+    assertTrue(
+        rootConventions.contains("checkTask.dependsOn(verifyJavaSourceShape)"),
+        "GridGrindRootConventionsPlugin must wire verifyJavaSourceShape into root check");
+    assertTrue(
+        javaConventions.contains("setOf(\"contract\", \"engine\", \"excel-foundation\")"),
+        "GridGrindJavaConventionsPlugin must apply the semantic-shape PMD ruleset to engine");
   }
 
   @Test
@@ -296,15 +216,5 @@ class ArchitectureSeamAuditTest {
       }
     }
     return violations;
-  }
-
-  private static void assertLineCountAtMost(Path path, int limit) throws IOException {
-    long lineCount;
-    try (Stream<String> lines = Files.lines(path)) {
-      lineCount = lines.count();
-    }
-    assertTrue(
-        lineCount <= limit,
-        () -> path + " must stay under " + limit + " lines but is " + lineCount);
   }
 }

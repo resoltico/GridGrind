@@ -54,22 +54,22 @@ class ExecutorConverterDelegationCoverageTest {
 
     assertEquals(
         7L,
-        WorkbookCommandConverter.toExcelCustomXmlMappingLocator(
+        WorkbookCommandDrawingInputConverter.toExcelCustomXmlMappingLocator(
                 new CustomXmlMappingLocator(7L, "CourseMap"))
             .mapId());
     assertEquals(
         "Bold",
-        WorkbookCommandConverter.toExcelRichText(new CellInput.RichText(List.of(run)))
+        WorkbookCommandCellInputConverter.toExcelRichText(new CellInput.RichText(List.of(run)))
             .runs()
             .getFirst()
             .text());
-    assertEquals("Bold", WorkbookCommandConverter.toExcelRichTextRun(run).text());
-    assertTrue(WorkbookCommandConverter.toExcelCellAlignment(null).isEmpty());
-    assertTrue(WorkbookCommandConverter.toExcelCellFont(null).isEmpty());
-    assertTrue(WorkbookCommandConverter.toExcelCellFill(null).isEmpty());
-    assertTrue(WorkbookCommandConverter.toExcelCellProtection(null).isEmpty());
-    assertTrue(WorkbookCommandConverter.toExcelBorderSide(null).isEmpty());
-    assertTrue(WorkbookCommandConverter.toExcelDifferentialStyle(null).isEmpty());
+    assertEquals("Bold", WorkbookCommandCellInputConverter.toExcelRichTextRun(run).text());
+    assertTrue(WorkbookCommandCellInputConverter.toExcelCellAlignment(null).isEmpty());
+    assertTrue(WorkbookCommandCellInputConverter.toExcelCellFont(null).isEmpty());
+    assertTrue(WorkbookCommandCellInputConverter.toExcelCellFill(null).isEmpty());
+    assertTrue(WorkbookCommandCellInputConverter.toExcelCellProtection(null).isEmpty());
+    assertTrue(WorkbookCommandCellInputConverter.toExcelBorderSide(null).isEmpty());
+    assertTrue(WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(null).isEmpty());
   }
 
   @Test
@@ -113,12 +113,13 @@ class ExecutorConverterDelegationCoverageTest {
     ExcelCellFill.PatternOnly patternOnly =
         assertInstanceOf(
             ExcelCellFill.PatternOnly.class,
-            WorkbookCommandConverter.toExcelCellFill(CellFillInput.pattern(ExcelFillPattern.NONE))
+            WorkbookCommandCellInputConverter.toExcelCellFill(
+                    CellFillInput.pattern(ExcelFillPattern.NONE))
                 .orElseThrow());
     ExcelCellFill.PatternBackground backgroundOnlyInput =
         assertInstanceOf(
             ExcelCellFill.PatternBackground.class,
-            WorkbookCommandConverter.toExcelCellFill(
+            WorkbookCommandCellInputConverter.toExcelCellFill(
                     CellFillInput.patternBackground(
                         ExcelFillPattern.BRICKS, ColorInput.indexed(10)))
                 .orElseThrow());

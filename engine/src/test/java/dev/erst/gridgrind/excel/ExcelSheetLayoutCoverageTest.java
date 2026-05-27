@@ -23,12 +23,12 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setCell("A1", ExcelCellValue.text("ID"));
-      sheet.setCell("B1", ExcelCellValue.text("Riga onboarding checklist"));
-      sheet.setCell("C1", ExcelCellValue.text("Q1"));
-      sheet.autoSizeColumns();
+      sheet.cells().setCell("A1", ExcelCellValue.text("ID"));
+      sheet.cells().setCell("B1", ExcelCellValue.text("Riga onboarding checklist"));
+      sheet.cells().setCell("C1", ExcelCellValue.text("Q1"));
+      sheet.columns().autoSize();
 
-      WorkbookSheetResult.SheetLayout layout = sheet.layout();
+      WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
       assertTrue(
           layout.columns().get(1).widthCharacters() > layout.columns().get(0).widthCharacters());
       assertTrue(
@@ -44,50 +44,53 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+      ExcelSheetLayout layout = sheet.layout();
+      ExcelSheetColumns columns = sheet.columns();
+      ExcelSheetRows rows = sheet.rows();
 
-      assertSame(sheet, sheet.mergeCells("B2:A1"));
+      assertSame(layout, layout.mergeCells("B2:A1"));
       assertEquals(1, poiSheet.getNumMergedRegions());
       assertEquals("A1:B2", poiSheet.getMergedRegion(0).formatAsString());
-      assertSame(sheet, sheet.mergeCells("A1:B2"));
+      assertSame(layout, layout.mergeCells("A1:B2"));
       assertEquals(1, poiSheet.getNumMergedRegions());
-      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells("B2:C3"));
+      assertThrows(IllegalArgumentException.class, () -> layout.mergeCells("B2:C3"));
 
-      assertSame(sheet, sheet.setColumnWidth(0, 1, 16.0));
+      assertSame(columns, columns.setWidth(0, 1, 16.0));
       assertEquals(4096, poiSheet.getColumnWidth(0));
       assertEquals(4096, poiSheet.getColumnWidth(1));
 
-      assertSame(sheet, sheet.setRowHeight(0, 1, 28.5));
+      assertSame(rows, rows.setHeight(0, 1, 28.5));
       assertEquals((short) 570, poiSheet.getRow(0).getHeight());
       assertEquals((short) 570, poiSheet.getRow(1).getHeight());
-      sheet.setRowHeight(0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS);
+      rows.setHeight(0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS);
       assertEquals(
           ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS,
-          sheet.layout().rows().get(0).heightPoints());
+          layout.snapshot().rows().get(0).heightPoints());
 
-      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(1, 2, 3, 4)));
+      assertSame(layout, layout.setPane(new ExcelSheetPane.Frozen(1, 2, 3, 4)));
       assertNotNull(poiSheet.getPaneInformation());
       assertEquals(1, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(3, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(4, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
-      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(0, 2, 0, 2)));
+      assertSame(layout, layout.setPane(new ExcelSheetPane.Frozen(0, 2, 0, 2)));
       assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
-      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(2, 0, 2, 0)));
+      assertSame(layout, layout.setPane(new ExcelSheetPane.Frozen(2, 0, 2, 0)));
       assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
       assertSame(
-          sheet,
-          sheet.setPane(new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT)));
+          layout,
+          layout.setPane(new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT)));
       assertEquals(
           new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
-          sheet.layout().pane());
-      assertSame(sheet, sheet.setZoom(125));
-      assertEquals(125, sheet.layout().zoomPercent());
+          layout.snapshot().pane());
+      assertSame(layout, layout.setZoom(125));
+      assertEquals(125, layout.snapshot().zoomPercent());
       ExcelPrintLayout printLayout =
           new ExcelPrintLayout(
               new ExcelPrintLayout.Area.Range("A1:B20"),
@@ -97,10 +100,10 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
               new ExcelPrintLayout.TitleColumns.Band(0, 0),
               new ExcelHeaderFooterText("Budget", "", ""),
               new ExcelHeaderFooterText("", "Page &P", ""));
-      assertSame(sheet, sheet.setPrintLayout(printLayout));
-      assertEquals(printLayout, sheet.printLayout());
-      assertSame(sheet, sheet.clearPrintLayout());
-      ExcelPrintLayout clearedPrintLayout = sheet.printLayout();
+      assertSame(layout, layout.setPrintLayout(printLayout));
+      assertEquals(printLayout, layout.printLayout());
+      assertSame(layout, layout.clearPrintLayout());
+      ExcelPrintLayout clearedPrintLayout = layout.printLayout();
       assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
       assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
       assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
@@ -109,7 +112,7 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.header());
       assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.footer());
 
-      assertSame(sheet, sheet.unmergeCells("A1:B2"));
+      assertSame(layout, layout.unmergeCells("A1:B2"));
       assertEquals(0, poiSheet.getNumMergedRegions());
     }
   }
@@ -119,36 +122,52 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
     ExcelRange exactRange = ExcelRange.parse("A1:B2");
     CellRangeAddress exactAddress = new CellRangeAddress(0, 1, 0, 1);
 
-    assertTrue(ExcelSheet.matches(exactAddress, exactRange));
-    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A2:B3")));
-    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A1:B3")));
-    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("B1:C2")));
-    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A1:C2")));
+    assertTrue(ExcelSheetStructureSupport.matches(exactAddress, exactRange));
+    assertFalse(ExcelSheetStructureSupport.matches(exactAddress, ExcelRange.parse("A2:B3")));
+    assertFalse(ExcelSheetStructureSupport.matches(exactAddress, ExcelRange.parse("A1:B3")));
+    assertFalse(ExcelSheetStructureSupport.matches(exactAddress, ExcelRange.parse("B1:C2")));
+    assertFalse(ExcelSheetStructureSupport.matches(exactAddress, ExcelRange.parse("A1:C2")));
 
-    assertTrue(ExcelSheet.intersects(exactAddress, ExcelRange.parse("B2:C3")));
-    assertFalse(ExcelSheet.intersects(new CellRangeAddress(3, 4, 0, 1), ExcelRange.parse("A1:B2")));
-    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("A4:B5")));
-    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 3, 4), ExcelRange.parse("A1:B2")));
-    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("C1:D2")));
+    assertTrue(ExcelSheetStructureSupport.intersects(exactAddress, ExcelRange.parse("B2:C3")));
+    assertFalse(
+        ExcelSheetStructureSupport.intersects(
+            new CellRangeAddress(3, 4, 0, 1), ExcelRange.parse("A1:B2")));
+    assertFalse(
+        ExcelSheetStructureSupport.intersects(
+            new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("A4:B5")));
+    assertFalse(
+        ExcelSheetStructureSupport.intersects(
+            new CellRangeAddress(0, 1, 3, 4), ExcelRange.parse("A1:B2")));
+    assertFalse(
+        ExcelSheetStructureSupport.intersects(
+            new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("C1:D2")));
 
-    assertEquals(4096, ExcelSheet.toColumnWidthUnits(16.0d));
-    assertThrows(IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(256.0d));
+    assertEquals(4096, ExcelSheetStructureSupport.toColumnWidthUnits(16.0d));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(Double.MIN_VALUE));
+        IllegalArgumentException.class,
+        () -> ExcelSheetStructureSupport.toColumnWidthUnits(256.0d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ExcelSheetStructureSupport.toColumnWidthUnits(Double.MIN_VALUE));
 
-    assertEquals(28.5f, ExcelSheet.toRowHeightPoints(28.5d));
+    assertEquals(28.5f, ExcelSheetStructureSupport.toRowHeightPoints(28.5d));
     assertDoesNotThrow(
-        () -> ExcelSheet.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
+        () ->
+            ExcelSheetStructureSupport.toRowHeightPoints(
+                ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            ExcelSheet.toRowHeightPoints(
+            ExcelSheetStructureSupport.toRowHeightPoints(
                 Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelSheet.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
+        () ->
+            ExcelSheetStructureSupport.toRowHeightPoints(
+                ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.toRowHeightPoints(Double.MIN_VALUE));
+        IllegalArgumentException.class,
+        () -> ExcelSheetStructureSupport.toRowHeightPoints(Double.MIN_VALUE));
   }
 
   @Test
@@ -302,18 +321,25 @@ class ExcelSheetLayoutCoverageTest extends ExcelSheetTestSupport {
       mergedSheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 1));
       mergedSheet.addMergedRegion(new CellRangeAddress(3, 4, 3, 4));
 
-      assertEquals(-1, ExcelSheet.findMergedRegionIndex(emptySheet, exactRange));
-      assertEquals(0, ExcelSheet.findMergedRegionIndex(mergedSheet, exactRange));
-      assertEquals(1, ExcelSheet.findMergedRegionIndex(mergedSheet, ExcelRange.parse("D4:E5")));
-      assertEquals(-1, ExcelSheet.findMergedRegionIndex(mergedSheet, ExcelRange.parse("A1:B3")));
+      assertEquals(-1, ExcelSheetStructureSupport.findMergedRegionIndex(emptySheet, exactRange));
+      assertEquals(0, ExcelSheetStructureSupport.findMergedRegionIndex(mergedSheet, exactRange));
+      assertEquals(
+          1,
+          ExcelSheetStructureSupport.findMergedRegionIndex(mergedSheet, ExcelRange.parse("D4:E5")));
+      assertEquals(
+          -1,
+          ExcelSheetStructureSupport.findMergedRegionIndex(mergedSheet, ExcelRange.parse("A1:B3")));
 
       assertDoesNotThrow(
-          () -> ExcelSheet.requireNoMergedRegionOverlap(mergedSheet, ExcelRange.parse("G1:H2")));
+          () ->
+              ExcelSheetStructureSupport.requireNoMergedRegionOverlap(
+                  mergedSheet, ExcelRange.parse("G1:H2")));
       IllegalArgumentException overlap =
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  ExcelSheet.requireNoMergedRegionOverlap(mergedSheet, ExcelRange.parse("B2:C3")));
+                  ExcelSheetStructureSupport.requireNoMergedRegionOverlap(
+                      mergedSheet, ExcelRange.parse("B2:C3")));
       assertEquals("Merged range overlaps existing merged region: A1:B2", overlap.getMessage());
     }
   }

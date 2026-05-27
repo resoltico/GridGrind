@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -39,19 +38,17 @@ class ExcelDrawingRefactorCoverageTest {
 
   @Test
   void extractedControllerFacadesDelegateWithoutReinflatingTheController() throws Throwable {
-    ExcelDrawingController controller = new ExcelDrawingController();
-
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
       XSSFObjectData objectData =
           createEmbeddedObject(workbook, sheet.createDrawingPatriarch(), "OpsEmbed", 0, 0, 3, 3);
 
-      assertEquals("OpsEmbed", controller.snapshotEmbeddedObject(objectData).name());
-      assertTrue(controller.oleObjectPart(objectData).isPresent());
-      assertTrue(controller.blankAsOptional(" ").isEmpty());
+      assertEquals("OpsEmbed", ExcelDrawingBinarySupport.snapshotEmbeddedObject(objectData).name());
+      assertTrue(ExcelDrawingBinarySupport.oleObjectPart(objectData).isPresent());
+      assertTrue(ExcelDrawingBinarySupport.blankAsOptional(" ").isEmpty());
 
-      ExcelDrawingController.RasterDimensions dimensions =
-          ExcelDrawingController.rasterDimensions(PNG_PIXEL_BYTES);
+      ExcelDrawingSnapshotSupport.RasterDimensions dimensions =
+          ExcelDrawingSnapshotSupport.rasterDimensions(PNG_PIXEL_BYTES);
       assertEquals(1, dimensions.widthPixels());
       assertEquals(1, dimensions.heightPixels());
     }

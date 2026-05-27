@@ -20,18 +20,18 @@ class CellInputTest {
   void convertsAllSupportedInputTypesToExcelValues() {
     assertInstanceOf(
         ExcelCellValue.BlankValue.class,
-        WorkbookCommandConverter.toExcelCellValue(new CellInput.Blank()));
+        WorkbookCommandCellInputConverter.toExcelCellValue(new CellInput.Blank()));
 
     ExcelCellValue.TextValue textValue =
         assertInstanceOf(
             ExcelCellValue.TextValue.class,
-            WorkbookCommandConverter.toExcelCellValue(textCell("Budget")));
+            WorkbookCommandCellInputConverter.toExcelCellValue(textCell("Budget")));
     assertEquals("Budget", textValue.value());
 
     ExcelCellValue.RichTextValue richTextValue =
         assertInstanceOf(
             ExcelCellValue.RichTextValue.class,
-            WorkbookCommandConverter.toExcelCellValue(
+            WorkbookCommandCellInputConverter.toExcelCellValue(
                 new CellInput.RichText(
                     List.of(
                         richTextRun("Budget"),
@@ -65,39 +65,39 @@ class CellInputTest {
     ExcelCellValue.NumberValue numberValue =
         assertInstanceOf(
             ExcelCellValue.NumberValue.class,
-            WorkbookCommandConverter.toExcelCellValue(new CellInput.Numeric(42.5)));
+            WorkbookCommandCellInputConverter.toExcelCellValue(new CellInput.Numeric(42.5)));
     assertEquals(42.5, numberValue.value());
 
     ExcelCellValue.BooleanValue booleanValue =
         assertInstanceOf(
             ExcelCellValue.BooleanValue.class,
-            WorkbookCommandConverter.toExcelCellValue(new CellInput.BooleanValue(true)));
+            WorkbookCommandCellInputConverter.toExcelCellValue(new CellInput.BooleanValue(true)));
     assertTrue(booleanValue.value());
 
     ExcelCellValue.FormulaValue formulaValue =
         assertInstanceOf(
             ExcelCellValue.FormulaValue.class,
-            WorkbookCommandConverter.toExcelCellValue(formulaCell("SUM(B2:B4)")));
+            WorkbookCommandCellInputConverter.toExcelCellValue(formulaCell("SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", formulaValue.expression());
 
     // Leading = is stripped automatically so callers can use Excel-native syntax
     ExcelCellValue.FormulaValue strippedFormulaValue =
         assertInstanceOf(
             ExcelCellValue.FormulaValue.class,
-            WorkbookCommandConverter.toExcelCellValue(formulaCell("=SUM(B2:B4)")));
+            WorkbookCommandCellInputConverter.toExcelCellValue(formulaCell("=SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", strippedFormulaValue.expression());
 
     ExcelCellValue.DateValue dateValue =
         assertInstanceOf(
             ExcelCellValue.DateValue.class,
-            WorkbookCommandConverter.toExcelCellValue(
+            WorkbookCommandCellInputConverter.toExcelCellValue(
                 new CellInput.Date(LocalDate.of(2026, 3, 23))));
     assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
 
     ExcelCellValue.DateTimeValue dateTimeValue =
         assertInstanceOf(
             ExcelCellValue.DateTimeValue.class,
-            WorkbookCommandConverter.toExcelCellValue(
+            WorkbookCommandCellInputConverter.toExcelCellValue(
                 new CellInput.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30))));
     assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
   }

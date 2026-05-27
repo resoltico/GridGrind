@@ -46,17 +46,21 @@ readonly retry_delay_seconds="${GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS:-10}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly expected_description="$(load_expected_description "${repo_root}")"
-readonly verify_cli_contract_script="${repo_root}/scripts/verify-cli-contract.sh"
+readonly verify_cli_contract_script="${GRIDGRIND_VERIFY_CLI_CONTRACT_SCRIPT:-${repo_root}/scripts/verify-cli-contract.sh}"
+readonly verify_cli_discovery_execution_script="${GRIDGRIND_VERIFY_CLI_DISCOVERY_EXECUTION_SCRIPT:-${repo_root}/scripts/verify-cli-discovery-execution.sh}"
 readonly docker_config_parent="${repo_root}/tmp/verify-container-publication"
 docker_config_dir=''
 docker_endpoint=''
 cli_contract_log_path=''
+cli_discovery_log_path=''
 
 [[ -n "${image_name}" ]] || die "image name is required"
 [[ -n "${expected_version}" ]] || die "expected version is required"
 command -v docker >/dev/null 2>&1 || die "docker is required for publication verification"
 [[ -x "${verify_cli_contract_script}" ]] || die \
     "missing executable CLI contract verifier at ${verify_cli_contract_script}"
+[[ -x "${verify_cli_discovery_execution_script}" ]] || die \
+    "missing executable CLI discovery verifier at ${verify_cli_discovery_execution_script}"
 
 expected_output="$(printf 'GridGrind %s\n%s' "${expected_version}" "${expected_description}")"
 
@@ -105,6 +109,24 @@ run_verify_cli_contract() {
     fi
 }
 
+run_verify_cli_discovery_execution() {
+    local image_ref=$1
+    cli_discovery_log_path="${docker_config_dir}/$(basename "${image_ref}").cli-discovery.log"
+    if [[ -n "${docker_endpoint}" ]]; then
+        if ! DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
+            "${verify_cli_discovery_execution_script}" docker-image "${image_ref}" >"${cli_discovery_log_path}" 2>&1; then
+            cat "${cli_discovery_log_path}" >&2
+            die "published container ${image_ref} failed the discovery execution verifier"
+        fi
+        return
+    fi
+    if ! DOCKER_CONFIG="${docker_config_dir}" \
+        "${verify_cli_discovery_execution_script}" docker-image "${image_ref}" >"${cli_discovery_log_path}" 2>&1; then
+        cat "${cli_discovery_log_path}" >&2
+        die "published container ${image_ref} failed the discovery execution verifier"
+    fi
+}
+
 verify_ref() {
     local tag_ref=$1
     local image_ref="${image_name}:${tag_ref}"
@@ -132,3 +154,5 @@ verify_ref latest
 
 run_verify_cli_contract "${image_name}:${expected_version}"
 run_verify_cli_contract "${image_name}:latest"
+run_verify_cli_discovery_execution "${image_name}:${expected_version}"
+run_verify_cli_discovery_execution "${image_name}:latest"

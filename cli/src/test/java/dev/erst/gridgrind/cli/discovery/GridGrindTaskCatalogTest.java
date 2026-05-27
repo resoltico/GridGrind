@@ -51,6 +51,7 @@ class GridGrindTaskCatalogTest {
             TaskTestFixtures.narrative("one"),
             profile(),
             TaskTestFixtures.interactionProfile(),
+            TaskStarterContract.selfContained("tasks/duplicate-request.json"),
             TaskTestFixtures.workflow(java.util.List.of(newSourcePhase)));
     TaskEntry right =
         new TaskEntry(
@@ -59,6 +60,7 @@ class GridGrindTaskCatalogTest {
             TaskTestFixtures.narrative("two"),
             profile(),
             TaskTestFixtures.interactionProfile(),
+            TaskStarterContract.selfContained("tasks/duplicate-request.json"),
             TaskTestFixtures.workflow(
                 java.util.List.of(
                     new TaskPhase(

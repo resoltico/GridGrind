@@ -288,7 +288,7 @@ final class ExcelChartSeriesSnapshotSupport {
       @Nullable Long explosion,
       @Nullable ExcelFormulaRuntime formulaRuntime) {
     return new ExcelChartSnapshot.Series(
-        ExcelChartSnapshotSupport.snapshotSeriesTitle(contextSheet, title, formulaRuntime),
+        ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(contextSheet, title, formulaRuntime),
         snapshotDataSource(contextSheet, series.getCategoryData(), formulaRuntime),
         snapshotDataSource(contextSheet, series.getValuesData(), formulaRuntime),
         Optional.ofNullable(smooth),
@@ -360,21 +360,7 @@ final class ExcelChartSeriesSnapshotSupport {
     if (marker == null || !marker.isSetSymbol()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(
-        switch (marker.getSymbol().getVal().toString().toUpperCase(java.util.Locale.ROOT)) {
-          case "CIRCLE" -> ExcelChartMarkerStyle.CIRCLE;
-          case "DASH" -> ExcelChartMarkerStyle.DASH;
-          case "DIAMOND" -> ExcelChartMarkerStyle.DIAMOND;
-          case "DOT" -> ExcelChartMarkerStyle.DOT;
-          case "NONE" -> ExcelChartMarkerStyle.NONE;
-          case "PICTURE" -> ExcelChartMarkerStyle.PICTURE;
-          case "PLUS" -> ExcelChartMarkerStyle.PLUS;
-          case "SQUARE" -> ExcelChartMarkerStyle.SQUARE;
-          case "STAR" -> ExcelChartMarkerStyle.STAR;
-          case "TRIANGLE" -> ExcelChartMarkerStyle.TRIANGLE;
-          case "X" -> ExcelChartMarkerStyle.X;
-          default -> null;
-        });
+    return ExcelChartMarkerStylePoiBridge.fromSymbolToken(marker.getSymbol().getVal().toString());
   }
 
   static @Nullable Short markerSize(CTMarker marker) {

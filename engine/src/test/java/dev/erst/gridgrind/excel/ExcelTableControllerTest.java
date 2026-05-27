@@ -21,10 +21,10 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_createsTableOwnedAutofilterAndClearsOverlappingSheetAutofilter() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setAutofilter("A1:B3");
+      sheet.metadata().setAutofilter("A1:B3");
 
       controller.setTable(
           workbook,
@@ -43,11 +43,11 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_replacesSameNameOnSameSheetAndSupportsNamedStylesAndTotalsRow() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
 
       controller.setTable(
           workbook,
@@ -75,11 +75,11 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_acceptsCaseInsensitiveTotalsRowFunctions() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Amount");
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.number(3));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.number(3));
 
       controller.setTable(
           workbook,
@@ -108,11 +108,11 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_roundTripsAndClearsAdvancedMetadata() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
 
       controller.setTable(
           workbook,
@@ -219,11 +219,11 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_canRemoveExistingTableAutofilter() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
 
       controller.setTable(
           workbook,
@@ -272,7 +272,7 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_rejectsOutOfRangeColumnsAndUnsupportedTotalsFunctions() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
 
@@ -328,14 +328,14 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_acceptsFormulaAndNumericHeaders() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setCell("A1", ExcelCellValue.formula("A2"));
-      sheet.setCell("B1", ExcelCellValue.number(12.0));
-      sheet.setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.setCell("A3", ExcelCellValue.text("Lin"));
-      sheet.setCell("B3", ExcelCellValue.text("Pack"));
+      sheet.cells().setCell("A1", ExcelCellValue.formula("A2"));
+      sheet.cells().setCell("B1", ExcelCellValue.number(12.0));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
+      sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
 
       controller.setTable(
           workbook,
@@ -352,7 +352,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tables_selectByNamesPreservesRequestOrderAndIgnoresMissingNames() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet ops = workbook.getOrCreateSheet("Ops");
       ExcelSheet archive = workbook.getOrCreateSheet("Archive");
       populateTableCells(ops, "Owner", "Task");
@@ -381,7 +381,7 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_rejectsBlankHeaders() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "", "Task");
 
@@ -400,7 +400,7 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_rejectsCaseInsensitiveDuplicateHeaders() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "owner");
 
@@ -420,18 +420,18 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_rejectsOverlapAndDefinedNameConflicts() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("C1", ExcelCellValue.text("Desk"));
-      sheet.setCell("C2", ExcelCellValue.text("A1"));
-      sheet.setCell("C3", ExcelCellValue.text("B1"));
-      sheet.setCell("D1", ExcelCellValue.text("Region"));
-      sheet.setCell("E1", ExcelCellValue.text("Desk"));
-      sheet.setCell("D2", ExcelCellValue.text("North"));
-      sheet.setCell("E2", ExcelCellValue.text("A1"));
-      sheet.setCell("D3", ExcelCellValue.text("South"));
-      sheet.setCell("E3", ExcelCellValue.text("B1"));
+      sheet.cells().setCell("C1", ExcelCellValue.text("Desk"));
+      sheet.cells().setCell("C2", ExcelCellValue.text("A1"));
+      sheet.cells().setCell("C3", ExcelCellValue.text("B1"));
+      sheet.cells().setCell("D1", ExcelCellValue.text("Region"));
+      sheet.cells().setCell("E1", ExcelCellValue.text("Desk"));
+      sheet.cells().setCell("D2", ExcelCellValue.text("North"));
+      sheet.cells().setCell("E2", ExcelCellValue.text("A1"));
+      sheet.cells().setCell("D3", ExcelCellValue.text("South"));
+      sheet.cells().setCell("E3", ExcelCellValue.text("B1"));
 
       controller.setTable(
           workbook,
@@ -451,14 +451,16 @@ class ExcelTableControllerTest {
           overlapFailure.getMessage());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "Queue",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Ops", "A1")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "Queue",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Ops", "A1")));
 
       IllegalArgumentException definedNameFailure =
           assertThrows(
@@ -477,7 +479,7 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_rejectsUnsupportedShapesUnknownStylesAndCrossSheetNameReuse() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet ops = workbook.getOrCreateSheet("Ops");
       populateTableCells(ops, "Owner", "Task");
       ExcelSheet archive = workbook.getOrCreateSheet("Archive");
@@ -528,7 +530,7 @@ class ExcelTableControllerTest {
 
   @Test
   void deleteTable_rejectsMissingExpectedSheet() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -545,7 +547,7 @@ class ExcelTableControllerTest {
 
   @Test
   void deleteTable_removesExistingTableByWorkbookGlobalName() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -561,7 +563,7 @@ class ExcelTableControllerTest {
 
   @Test
   void deleteTable_rejectsBlankExpectedSheet() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class, () -> controller.deleteTable(workbook, "Queue", " "));
@@ -607,11 +609,11 @@ class ExcelTableControllerTest {
 
   @Test
   void tableHealthAndAutofilterHealthReturnEmptyForHealthyStyledTotalsTable() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
 
       controller.setTable(
           workbook,
@@ -634,13 +636,13 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_keepsNonOverlappingSheetAutofilter() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("D1", ExcelCellValue.text("Desk"));
-      sheet.setCell("D2", ExcelCellValue.text("A1"));
-      sheet.setCell("D3", ExcelCellValue.text("B1"));
-      sheet.setAutofilter("D1:D3");
+      sheet.cells().setCell("D1", ExcelCellValue.text("Desk"));
+      sheet.cells().setCell("D2", ExcelCellValue.text("A1"));
+      sheet.cells().setCell("D3", ExcelCellValue.text("B1"));
+      sheet.metadata().setAutofilter("D1:D3");
 
       controller.setTable(
           workbook,
@@ -654,7 +656,7 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_ignoresInvalidSheetAutofilterMetadata() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       workbook.sheet("Ops").xssfSheet().getCTWorksheet().addNewAutoFilter().setRef("A0:B3");
@@ -697,7 +699,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tableHealthFindings_flagsBrokenRangeMetadata() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -717,7 +719,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tableAutofilterHealthFindings_flagsMismatchedTableFilterRanges() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -737,7 +739,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tableAutofilterHealthFindings_flagsInvalidRangesAndBlankHeaders() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -755,14 +757,14 @@ class ExcelTableControllerTest {
           AnalysisFindingCode.AUTOFILTER_INVALID_RANGE, invalidRangeFindings.getFirst().code());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
           workbook,
           new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
-      sheet.setCell("A1", ExcelCellValue.blank());
-      sheet.setCell("B1", ExcelCellValue.blank());
+      sheet.cells().setCell("A1", ExcelCellValue.blank());
+      sheet.cells().setCell("B1", ExcelCellValue.blank());
 
       List<WorkbookAnalysis.AnalysisFinding> findings =
           controller.tableAutofilterHealthFindings(workbook, "Ops");
@@ -775,7 +777,7 @@ class ExcelTableControllerTest {
   @Test
   void tableAutofilterHealthFindings_usesSheetLocationWhenTableRangeMetadataIsInvalid()
       throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -853,7 +855,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tableOwnedAutofiltersReadsEmptyWhenSheetHasNoOwnedFilters() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet ops = workbook.getOrCreateSheet("Ops");
       populateTableCells(ops, "Owner", "Task");
       controller.setTable(
@@ -867,7 +869,7 @@ class ExcelTableControllerTest {
 
   @Test
   void tableAutofilterHealthFindingsReturnsEmptyWhenSheetHasNoRelevantTables() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet ops = workbook.getOrCreateSheet("Ops");
       populateTableCells(ops, "Owner", "Task");
       controller.setTable(
@@ -881,17 +883,19 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_ignoresNullNamedRangeNamesAndInvalidExistingTableRanges() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
 
       org.apache.poi.ss.usermodel.Name unnamed = workbook.xssfWorkbook().createName();
       unnamed.setRefersToFormula("Ops!$D$1");
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "OtherAnchor",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Ops", "I1")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "OtherAnchor",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Ops", "I1")));
 
       XSSFTable invalidTable =
           workbook
@@ -916,23 +920,25 @@ class ExcelTableControllerTest {
 
   @Test
   void setTable_replacesSameNameWhileIgnoringSelfForOverlapChecks() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
-      sheet.setCell("C1", ExcelCellValue.text("Desk"));
-      sheet.setCell("C2", ExcelCellValue.text("A1"));
-      sheet.setCell("C3", ExcelCellValue.text("B1"));
-      sheet.setCell("E1", ExcelCellValue.text("Region"));
-      sheet.setCell("F1", ExcelCellValue.text("Lead"));
-      sheet.setCell("E2", ExcelCellValue.text("North"));
-      sheet.setCell("F2", ExcelCellValue.text("Ada"));
-      sheet.setCell("E3", ExcelCellValue.text("South"));
-      sheet.setCell("F3", ExcelCellValue.text("Lin"));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "OpsAnchor",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Ops", "H1")));
+      sheet.cells().setCell("C1", ExcelCellValue.text("Desk"));
+      sheet.cells().setCell("C2", ExcelCellValue.text("A1"));
+      sheet.cells().setCell("C3", ExcelCellValue.text("B1"));
+      sheet.cells().setCell("E1", ExcelCellValue.text("Region"));
+      sheet.cells().setCell("F1", ExcelCellValue.text("Lead"));
+      sheet.cells().setCell("E2", ExcelCellValue.text("North"));
+      sheet.cells().setCell("F2", ExcelCellValue.text("Ada"));
+      sheet.cells().setCell("E3", ExcelCellValue.text("South"));
+      sheet.cells().setCell("F3", ExcelCellValue.text("Lin"));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "OpsAnchor",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Ops", "H1")));
       controller.setTable(
           workbook,
           new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
@@ -967,7 +973,7 @@ class ExcelTableControllerTest {
       throws Exception {
     Path workbookPath = tempDirectory.resolve("table-header-cell-sync.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "c]cc", "Task");
       controller.setTable(
@@ -976,17 +982,17 @@ class ExcelTableControllerTest {
               "BudgetTable", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
-      sheet.setCell("A1", ExcelCellValue.text("QQQQq"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("QQQQq"));
 
       assertEquals("QQQQq", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals(
           List.of("QQQQq", "Task"),
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           List.of("QQQQq", "Task"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
@@ -998,7 +1004,7 @@ class ExcelTableControllerTest {
       @TempDir Path tempDirectory) throws Exception {
     Path workbookPath = tempDirectory.resolve("table-header-range-sync.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       controller.setTable(
@@ -1006,16 +1012,18 @@ class ExcelTableControllerTest {
           new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
 
       XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
-      sheet.setRange(
-          "A1:B2",
-          List.of(
-              List.of(ExcelCellValue.text("Desk"), ExcelCellValue.text("Lane")),
-              List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue"))));
+      sheet
+          .cells()
+          .setRange(
+              "A1:B2",
+              List.of(
+                  List.of(ExcelCellValue.text("Desk"), ExcelCellValue.text("Lane")),
+                  List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue"))));
 
       assertEquals("Desk", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals("Lane", table.getCTTable().getTableColumns().getTableColumnArray(1).getName());
 
-      sheet.clearRange("A1");
+      sheet.cells().clearRange("A1");
 
       assertEquals("", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertTrue(
@@ -1024,10 +1032,10 @@ class ExcelTableControllerTest {
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelTableSnapshot table =
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
       assertEquals(List.of("", "Lane"), table.columnNames());
@@ -1044,15 +1052,17 @@ class ExcelTableControllerTest {
       @TempDir Path tempDirectory) throws Exception {
     Path workbookPath = tempDirectory.resolve("table-header-style-sync.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("V");
-      sheet.appendRow(
-          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
-          ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
-      sheet.setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.setCell("A3", ExcelCellValue.text("Totals"));
-      sheet.setCell("B3", ExcelCellValue.text("Done"));
+      sheet
+          .cells()
+          .appendRow(
+              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+              ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B3", ExcelCellValue.text("Done"));
       controller.setTable(
           workbook,
           new ExcelTableDefinition(
@@ -1067,7 +1077,7 @@ class ExcelTableControllerTest {
           "2026-02-06 00:19:17",
           table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
-      sheet.applyStyle("A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd"));
+      sheet.cells().applyStyle("A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd"));
 
       assertEquals(
           "2026-02-06", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
@@ -1075,10 +1085,10 @@ class ExcelTableControllerTest {
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
@@ -1090,15 +1100,17 @@ class ExcelTableControllerTest {
       throws Exception {
     Path workbookPath = tempDirectory.resolve("table-header-save-normalization.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("V");
-      sheet.appendRow(
-          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
-          ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
-      sheet.setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.setCell("A3", ExcelCellValue.text("Totals"));
-      sheet.setCell("B3", ExcelCellValue.text("Done"));
+      sheet
+          .cells()
+          .appendRow(
+              ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+              ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B3", ExcelCellValue.text("Done"));
       controller.setTable(
           workbook,
           new ExcelTableDefinition(
@@ -1119,10 +1131,10 @@ class ExcelTableControllerTest {
           "2026-02-06 00:19:17",
           table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
@@ -1131,11 +1143,11 @@ class ExcelTableControllerTest {
 
   private static void populateTableCells(
       ExcelSheet sheet, String firstHeader, String secondHeader) {
-    sheet.setCell("A1", ExcelCellValue.text(firstHeader));
-    sheet.setCell("B1", ExcelCellValue.text(secondHeader));
-    sheet.setCell("A2", ExcelCellValue.text("Ada"));
-    sheet.setCell("B2", ExcelCellValue.text("Queue"));
-    sheet.setCell("A3", ExcelCellValue.text("Lin"));
-    sheet.setCell("B3", ExcelCellValue.text("Pack"));
+    sheet.cells().setCell("A1", ExcelCellValue.text(firstHeader));
+    sheet.cells().setCell("B1", ExcelCellValue.text(secondHeader));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+    sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
+    sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
   }
 }

@@ -20,12 +20,13 @@ final class WorkbookCommandStructuredMutationConverter {
     return switch (action) {
       case StructuredMutationAction.ImportCustomXmlMapping importCustomXmlMapping ->
           new WorkbookMetadataCommand.ImportCustomXmlMapping(
-              WorkbookCommandConverter.toExcelCustomXmlImportDefinition(
+              WorkbookCommandDrawingInputConverter.toExcelCustomXmlImportDefinition(
                   importCustomXmlMapping.mapping()));
       case StructuredMutationAction.SetPivotTable setPivotTable -> {
         WorkbookCommandSelectorSupport.ensurePivotTableIdentity(target, setPivotTable);
         yield new WorkbookTabularCommand.SetPivotTable(
-            WorkbookCommandConverter.toExcelPivotTableDefinition(setPivotTable.pivotTable()));
+            WorkbookCommandTabularInputConverter.toExcelPivotTableDefinition(
+                setPivotTable.pivotTable()));
       }
       case StructuredMutationAction.SetDataValidation setDataValidation -> {
         RangeSelector.ByRange selector =
@@ -33,7 +34,7 @@ final class WorkbookCommandStructuredMutationConverter {
         yield new WorkbookFormattingCommand.SetDataValidation(
             selector.sheetName(),
             selector.range(),
-            WorkbookCommandConverter.toExcelDataValidationDefinition(
+            WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(
                 setDataValidation.validation()));
       }
       case StructuredMutationAction.ClearDataValidations _ -> {
@@ -45,7 +46,7 @@ final class WorkbookCommandStructuredMutationConverter {
       case StructuredMutationAction.SetConditionalFormatting setConditionalFormatting ->
           new WorkbookFormattingCommand.SetConditionalFormatting(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandConverter.toExcelConditionalFormattingBlock(
+              WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
                   setConditionalFormatting.conditionalFormatting()));
       case StructuredMutationAction.ClearConditionalFormatting _ -> {
         SelectorConverter.SheetLocalRangeSelection selection =
@@ -72,7 +73,7 @@ final class WorkbookCommandStructuredMutationConverter {
       case StructuredMutationAction.SetTable setTable -> {
         WorkbookCommandSelectorSupport.ensureTableIdentity(target, setTable);
         yield new WorkbookTabularCommand.SetTable(
-            WorkbookCommandConverter.toExcelTableDefinition(setTable.table()));
+            WorkbookCommandTabularInputConverter.toExcelTableDefinition(setTable.table()));
       }
       case StructuredMutationAction.DeleteTable _ -> {
         TableSelector.ByNameOnSheet selector =
@@ -89,15 +90,16 @@ final class WorkbookCommandStructuredMutationConverter {
         yield new WorkbookMetadataCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
                 setNamedRange.name(),
-                WorkbookCommandConverter.toExcelNamedRangeScope(setNamedRange.scope()),
-                WorkbookCommandConverter.toExcelNamedRangeTarget(setNamedRange.target())));
+                WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(setNamedRange.scope()),
+                WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(
+                    setNamedRange.target())));
       }
       case StructuredMutationAction.DeleteNamedRange _ -> {
         NamedRangeSelector.ScopedExact selector =
             WorkbookCommandSelectorSupport.namedRangeScopedExact(target, action);
         yield new WorkbookMetadataCommand.DeleteNamedRange(
-            WorkbookCommandConverter.toExcelNamedRangeName(selector),
-            WorkbookCommandConverter.toExcelNamedRangeScope(selector));
+            WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(selector),
+            WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(selector));
       }
     };
   }

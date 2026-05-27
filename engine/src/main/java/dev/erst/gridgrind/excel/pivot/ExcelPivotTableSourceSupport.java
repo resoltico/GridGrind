@@ -142,40 +142,57 @@ public final class ExcelPivotTableSourceSupport {
       XSSFSheet sheet, AreaReference area, String description) {
     CellReference firstCell = area.getFirstCell();
     CellReference lastCell = area.getLastCell();
+    requireBodyRows(firstCell, lastCell, description);
+    Row headerRow = requiredHeaderRow(sheet, firstCell, description);
+
+    List<SourceColumn> columns = new ArrayList<>();
+    Set<String> seenNames = new java.util.LinkedHashSet<>();
+    for (int columnIndex = firstCell.getCol(); columnIndex <= lastCell.getCol(); columnIndex++) {
+      String name = requiredHeaderName(headerRow, columnIndex, description);
+      requireUniqueHeaderName(seenNames, name, description);
+      columns.add(new SourceColumn(name, columnIndex - firstCell.getCol()));
+    }
+    return new SourceColumns(columns);
+  }
+
+  private static void requireBodyRows(
+      CellReference firstCell, CellReference lastCell, String description) {
     if (lastCell.getRow() <= firstCell.getRow()) {
       throw new IllegalArgumentException(
           "pivot source " + description + " must include a header row plus at least one data row");
     }
+  }
+
+  private static Row requiredHeaderRow(
+      XSSFSheet sheet, CellReference firstCell, String description) {
     Row headerRow = sheet.getRow(firstCell.getRow());
     if (headerRow == null) {
       throw new IllegalArgumentException(
           "pivot source " + description + " is missing its header row");
     }
+    return headerRow;
+  }
 
-    List<SourceColumn> columns = new ArrayList<>();
-    Set<String> seenNames = new java.util.LinkedHashSet<>();
-    for (int columnIndex = firstCell.getCol(); columnIndex <= lastCell.getCol(); columnIndex++) {
-      var cell = headerRow.getCell(columnIndex);
-      if (cell == null || cell.getCellType() != org.apache.poi.ss.usermodel.CellType.STRING) {
-        throw new IllegalArgumentException(
-            "pivot source " + description + " header cells must all be strings");
-      }
-      String name = cell.getStringCellValue();
-      if (name.isBlank()) {
-        throw new IllegalArgumentException(
-            "pivot source " + description + " contains a blank header cell");
-      }
-      String key = name.toUpperCase(Locale.ROOT);
-      if (!seenNames.add(key)) {
-        throw new IllegalArgumentException(
-            "pivot source "
-                + description
-                + " header row must be unique case-insensitively: "
-                + name);
-      }
-      columns.add(new SourceColumn(name, columnIndex - firstCell.getCol()));
+  private static String requiredHeaderName(Row headerRow, int columnIndex, String description) {
+    var cell = headerRow.getCell(columnIndex);
+    if (cell == null || cell.getCellType() != org.apache.poi.ss.usermodel.CellType.STRING) {
+      throw new IllegalArgumentException(
+          "pivot source " + description + " header cells must all be strings");
     }
-    return new SourceColumns(columns);
+    String name = cell.getStringCellValue();
+    if (name.isBlank()) {
+      throw new IllegalArgumentException(
+          "pivot source " + description + " contains a blank header cell");
+    }
+    return name;
+  }
+
+  private static void requireUniqueHeaderName(
+      Set<String> seenNames, String name, String description) {
+    if (!seenNames.add(name.toUpperCase(Locale.ROOT))) {
+      throw new IllegalArgumentException(
+          "pivot source " + description + " header row must be unique case-insensitively: " + name);
+    }
   }
 
   public static String sourceColumnName(List<String> sourceColumnNames, int sourceColumnIndex) {

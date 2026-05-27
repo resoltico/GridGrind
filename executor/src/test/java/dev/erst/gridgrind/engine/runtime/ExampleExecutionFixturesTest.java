@@ -54,12 +54,13 @@ class ExampleExecutionFixturesTest {
   @Test
   void builtInExamplesExecuteFromARepositoryRootWorkspace() throws IOException {
     Path workspace = Files.createDirectories(tempDir.resolve("artifact-workspace"));
-    copyExamplesDirectory(locateRepoRoot().resolve("examples"), workspace.resolve("examples"));
+    Path repositoryExamples = locateRepoRoot().resolve("examples");
     Files.createDirectories(workspace.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
     for (ShippedExampleEntry example : exampleCatalog().examples()) {
+      copyRequiredExampleAssets(example, repositoryExamples, workspace);
       WorkbookPlan request = printedBuiltInExample(example.id());
       GridGrindResponse.Success success =
           assertInstanceOf(
@@ -203,6 +204,16 @@ class ExampleExecutionFixturesTest {
         Files.createDirectories(targetPath.getParent());
         Files.copy(path, targetPath);
       }
+    }
+  }
+
+  private static void copyRequiredExampleAssets(
+      ShippedExampleEntry example, Path repositoryExamples, Path workspace) throws IOException {
+    for (String requiredPath : example.requiredPaths()) {
+      Path sourcePath = repositoryExamples.resolve(requiredPath);
+      Path targetPath = workspace.resolve(requiredPath);
+      Files.createDirectories(targetPath.getParent());
+      Files.copy(sourcePath, targetPath);
     }
   }
 

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 class WorkbookExecutionEngineCoverageTest {
   @Test
   void readsFromIterableCommandsUsingUnsavedWorkbookContext() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookExecutionEngine engine = new WorkbookExecutionEngine();
 
       assertEquals(List.of(), engine.read(workbook, List.of()));

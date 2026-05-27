@@ -26,6 +26,7 @@ final class WorkbookInvariantWorkbookChecks {
 
     requireEngineWorkbookSummaryShape(workbookSummary);
     workbook
+        .sheets()
         .sheetNames()
         .forEach(
             sheetName -> {

@@ -19,7 +19,7 @@ class ExcelPivotTableHealthCoverageTest extends ExcelPivotTableCoverageTestSuppo
   @Test
   @SuppressWarnings("PMD.NcssCount")
   void pivotTableHealthCoversMalformedNamesLocationsAndCacheRelations() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
       workbook.getOrCreateSheet("OtherReport");

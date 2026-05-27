@@ -162,25 +162,7 @@ final class GridGrindJsonMessageSupport {
       }
       return withCandidates(defaultMessage, exception, typeId);
     }
-    if (containerName.isPresent() && "assertion".equals(containerName.orElseThrow())) {
-      return switch (typeId) {
-        case "EXPECT_PRESENT" ->
-            legacyPresenceAssertionMessage(defaultMessage, exception, "_PRESENT");
-        case "EXPECT_ABSENT" ->
-            legacyPresenceAssertionMessage(defaultMessage, exception, "_ABSENT");
-        default -> withCandidates(defaultMessage, exception, typeId);
-      };
-    }
     return withCandidates(defaultMessage, exception, typeId);
-  }
-
-  private static String legacyPresenceAssertionMessage(
-      String base, tools.jackson.databind.exc.InvalidTypeIdException exception, String suffix) {
-    List<String> candidates =
-        GridGrindJsonSubtypeSupport.typeIds(exception.getBaseType().getRawClass()).stream()
-            .filter(id -> id.endsWith(suffix))
-            .toList();
-    return base + "; use one explicit family assertion such as " + String.join(", ", candidates);
   }
 
   private static String withCandidates(

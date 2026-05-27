@@ -136,7 +136,7 @@ public record CliSurface(
       List<String> lines,
       String builtInExamplesLabel,
       String printOneExampleLabel,
-      List<String> protocolCatalogNotes,
+      List<WorkflowEntry> guidanceEntries,
       String printOneExampleCommand) {
     public CliDiscoverySection {
       label = CliSurfaceValidation.requireNonBlank(label, "label");
@@ -145,8 +145,11 @@ public record CliSurface(
           CliSurfaceValidation.requireNonBlank(builtInExamplesLabel, "builtInExamplesLabel");
       printOneExampleLabel =
           CliSurfaceValidation.requireNonBlank(printOneExampleLabel, "printOneExampleLabel");
-      protocolCatalogNotes =
-          CliSurfaceValidation.copyStrings(protocolCatalogNotes, "protocolCatalogNotes");
+      Objects.requireNonNull(guidanceEntries, "guidanceEntries must not be null");
+      guidanceEntries =
+          guidanceEntries.stream()
+              .map(entry -> Objects.requireNonNull(entry, "guidanceEntries must not contain nulls"))
+              .toList();
       printOneExampleCommand =
           CliSurfaceValidation.requireNonBlank(printOneExampleCommand, "printOneExampleCommand");
     }

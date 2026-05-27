@@ -176,8 +176,8 @@ public final class XlsxRoundTrip {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      return workbook.sheet(sheetName).layout();
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      return workbook.sheet(sheetName).layout().snapshot();
     }
   }
 
@@ -208,7 +208,7 @@ public final class XlsxRoundTrip {
           XSSFCellStyle style = cell.getCellStyle();
           XSSFFont font = style.getFont();
           return new ExcelCellStyleSnapshot(
-              WorkbookStyleRegistry.resolveNumberFormat(style.getDataFormatString()),
+              ExcelCellStyleSnapshotSupport.resolveNumberFormat(style.getDataFormatString()),
               new ExcelCellAlignmentSnapshot(
                   style.getWrapText(),
                   fromPoi(style.getAlignment()),
@@ -287,8 +287,8 @@ public final class XlsxRoundTrip {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      return workbook.sheet(sheetName).dataValidations(new ExcelRangeSelection.All());
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      return workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
     }
   }
 
@@ -417,7 +417,7 @@ public final class XlsxRoundTrip {
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
       return Optional.empty();
     }
-    return ExcelSheet.commentSnapshot(cell);
+    return ExcelSheetAnnotationSupport.commentSnapshot(cell);
   }
 
   private static boolean shouldExpose(org.apache.poi.ss.usermodel.Name name) {

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: QUICK_START
-updated: "2026-05-15"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -56,6 +56,14 @@ during repeated local runs if you want.
 The published image already includes the font stack required for signature-line preview
 generation, so signature-line requests work in Docker without extra image customization.
 
+If you are already in a repository checkout and want the same runtime container without fetching a
+release asset first, build the root Dockerfile directly:
+
+```bash
+docker buildx build --load -t gridgrind-local .
+docker run --rm gridgrind-local --help
+```
+
 ### Release JAR
 
 If you want the standalone JAR, download it from the
@@ -73,9 +81,9 @@ Use the built-in `BUDGET` example for the first pass. It writes a sample workboo
 response, so you can see both the output file and the run result. If you are already in a repo
 checkout, [budget-request.json](../examples/budget-request.json) is the matching checked-in copy.
 `BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
-examples are repo-asset-backed and expect copied `examples/` assets; [EXAMPLES.md](./EXAMPLES.md)
-calls those out explicitly, and `--print-example-catalog` now exposes that distinction through each
-example's `workspaceMode` and asset-backed `requiredPaths`.
+examples are repo-asset-backed and expect the copied asset paths named by `requiredPaths`;
+[EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and `--print-example-catalog` exposes
+that distinction through each example's `workspaceMode` plus asset-backed `requiredPaths`.
 
 ### Docker Example
 
@@ -89,6 +97,24 @@ docker run --pull=always --rm -i \
   -v "$(pwd)":/workdir \
   -w /workdir \
   ghcr.io/resoltico/gridgrind:latest \
+  --request budget-request.json \
+  --response response.json
+```
+
+### Docker Example From A Repository Checkout
+
+Build the runtime image locally once, then use that local tag in the same mounted-directory flow:
+
+```bash
+docker buildx build --load -t gridgrind-local .
+
+docker run --rm gridgrind-local --print-example --lookup BUDGET \
+  --response budget-request.json
+
+docker run --rm -i \
+  -v "$(pwd)":/workdir \
+  -w /workdir \
+  gridgrind-local \
   --request budget-request.json \
   --response response.json
 ```
@@ -118,9 +144,9 @@ After a successful run:
 - Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
   - `--print-task-catalog --response tasks.json` lists the CLI-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
-  - `--print-task-plan --lookup DASHBOARD --response dashboard-request.json` emits one runnable starter request for one task.
+  - `--print-task-plan --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
   - `--print-task-keyword-match --query "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
-  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report without mutating a workbook.
+  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem without mutating a workbook.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)

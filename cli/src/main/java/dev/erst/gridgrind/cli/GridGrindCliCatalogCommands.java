@@ -191,6 +191,7 @@ final class GridGrindCliCatalogCommands {
               Optional.of(
                   "Resolve one valid task id first, then rerun --print-task-plan --lookup <id>.")));
     }
+    emitTaskStarterPortabilityWarning(task.get(), stderr);
     return writePayload(
         responseWriter,
         command.responsePath(),
@@ -343,10 +344,31 @@ final class GridGrindCliCatalogCommands {
     stderr.write(
         ("Printed example "
                 + example.id()
-                + " requires copied examples/ assets beside the request before execution;"
+                + " requires copied asset paths beside the request file before execution;"
                 + " required paths: "
                 + requiredPaths
                 + ". Inspect --print-example-catalog or --help-guidance for portability details.\n")
+            .getBytes(StandardCharsets.UTF_8));
+    stderr.flush();
+  }
+
+  private static void emitTaskStarterPortabilityWarning(
+      dev.erst.gridgrind.cli.discovery.TaskEntry task, OutputStream stderr) throws IOException {
+    Objects.requireNonNull(task, "task must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
+    if (task.starter().workspaceMode()
+        != dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
+      return;
+    }
+    String requiredPaths = String.join(", ", task.starter().requiredPaths());
+    stderr.write(
+        ("Printed task starter "
+                + task.id()
+                + " requires copied asset paths beside the request file before execution;"
+                + " required paths: "
+                + requiredPaths
+                + ". Inspect --print-task-catalog or --help-guidance for starter portability"
+                + " details.\n")
             .getBytes(StandardCharsets.UTF_8));
     stderr.flush();
   }

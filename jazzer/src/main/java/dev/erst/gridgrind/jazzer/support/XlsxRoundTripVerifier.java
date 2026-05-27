@@ -14,6 +14,7 @@ import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelGradientStopSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
@@ -40,7 +41,6 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
-import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
@@ -163,9 +163,9 @@ public final class XlsxRoundTripVerifier {
   }
 
   static ExcelCellStyleSnapshot defaultStyleSnapshot() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Default");
-      return workbook.sheet("Default").snapshotCell("A1").style();
+      return workbook.sheet("Default").cells().snapshotCell("A1").style();
     }
   }
 
@@ -184,20 +184,23 @@ public final class XlsxRoundTripVerifier {
             font.getItalic(),
             font.getFontName(),
             new ExcelFontHeight(font.getFontHeight()),
-            toColorSnapshot(font.getXSSFColor()),
+            toColorSnapshot(font.getXSSFColor()).orElse(null),
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),
         fillSnapshot(workbook, style),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderTop()), toColorSnapshot(style.getTopBorderXSSFColor())),
+                fromPoi(style.getBorderTop()),
+                toColorSnapshot(style.getTopBorderXSSFColor()).orElse(null)),
             new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderRight()), toColorSnapshot(style.getRightBorderXSSFColor())),
+                fromPoi(style.getBorderRight()),
+                toColorSnapshot(style.getRightBorderXSSFColor()).orElse(null)),
             new ExcelBorderSideSnapshot(
                 fromPoi(style.getBorderBottom()),
-                toColorSnapshot(style.getBottomBorderXSSFColor())),
+                toColorSnapshot(style.getBottomBorderXSSFColor()).orElse(null)),
             new ExcelBorderSideSnapshot(
-                fromPoi(style.getBorderLeft()), toColorSnapshot(style.getLeftBorderXSSFColor()))),
+                fromPoi(style.getBorderLeft()),
+                toColorSnapshot(style.getLeftBorderXSSFColor()).orElse(null))),
         new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
   }
 
@@ -211,16 +214,16 @@ public final class XlsxRoundTripVerifier {
     if (pattern == ExcelFillPattern.NONE) {
       return ExcelCellFillSnapshot.pattern(pattern);
     }
-    ExcelColorSnapshot foreground = toColorSnapshot(style.getFillForegroundColorColor());
+    Optional<ExcelColorSnapshot> foreground = toColorSnapshot(style.getFillForegroundColorColor());
     ExcelColorSnapshot background =
         pattern == ExcelFillPattern.SOLID
             ? null
-            : toColorSnapshot(style.getFillBackgroundColorColor());
-    if (foreground != null && background != null) {
-      return ExcelCellFillSnapshot.patternColors(pattern, foreground, background);
+            : toColorSnapshot(style.getFillBackgroundColorColor()).orElse(null);
+    if (foreground.isPresent() && background != null) {
+      return ExcelCellFillSnapshot.patternColors(pattern, foreground.orElseThrow(), background);
     }
-    if (foreground != null) {
-      return ExcelCellFillSnapshot.patternForeground(pattern, foreground);
+    if (foreground.isPresent()) {
+      return ExcelCellFillSnapshot.patternForeground(pattern, foreground.orElseThrow());
     }
     if (background != null) {
       return ExcelCellFillSnapshot.patternBackground(pattern, background);
@@ -256,7 +259,8 @@ public final class XlsxRoundTripVerifier {
     }
     ExcelColorSnapshot snapshot =
         java.util.Objects.requireNonNull(
-            toColorSnapshot(color), "gradient stop color must resolve to one snapshot");
+            toColorSnapshot(color).orElse(null),
+            "gradient stop color must resolve to one snapshot");
     return new ExcelGradientStopSnapshot(stop.getPosition(), snapshot);
   }
 
@@ -269,15 +273,15 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  private static @Nullable ExcelColorSnapshot toColorSnapshot(@Nullable XSSFColor color) {
+  private static Optional<ExcelColorSnapshot> toColorSnapshot(XSSFColor color) {
     if (color == null) {
-      return null;
+      return Optional.empty();
     }
     byte[] rgb = color.getRGB();
     String rgbHex = null;
     if (rgb != null) {
       if (rgb.length != 3) {
-        return null;
+        return Optional.empty();
       }
       rgbHex = "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
     }
@@ -288,16 +292,17 @@ public final class XlsxRoundTripVerifier {
       rgbHex = null;
     }
     if (rgbHex == null && theme == null && indexed == null) {
-      return null;
+      return Optional.empty();
     }
     if (rgbHex != null) {
-      return ExcelColorSnapshot.rgb(rgbHex, tint);
+      return Optional.of(ExcelColorSnapshot.rgb(rgbHex, tint));
     }
     if (theme != null) {
-      return ExcelColorSnapshot.theme(theme, tint);
+      return Optional.of(ExcelColorSnapshot.theme(theme, tint));
     }
-    return ExcelColorSnapshot.indexed(
-        java.util.Objects.requireNonNull(indexed, "indexed color must be present"), tint);
+    return Optional.of(
+        ExcelColorSnapshot.indexed(
+            java.util.Objects.requireNonNull(indexed, "indexed color must be present"), tint));
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
@@ -336,38 +341,38 @@ public final class XlsxRoundTripVerifier {
     };
   }
 
-  static @Nullable ExcelHyperlink hyperlink(Cell cell) {
+  static Optional<ExcelHyperlink> hyperlink(Cell cell) {
     XSSFHyperlink hyperlink = (XSSFHyperlink) cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
-      return null;
+      return Optional.empty();
     }
     String target = hyperlink.getAddress();
     if (target == null || target.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     try {
       return switch (hyperlink.getType()) {
-        case URL -> new ExcelHyperlink.Url(target);
-        case EMAIL -> new ExcelHyperlink.Email(target);
-        case FILE -> new ExcelHyperlink.File(target);
-        case DOCUMENT -> new ExcelHyperlink.Document(target);
-        case NONE -> null;
+        case URL -> Optional.of(new ExcelHyperlink.Url(target));
+        case EMAIL -> Optional.of(new ExcelHyperlink.Email(target));
+        case FILE -> Optional.of(new ExcelHyperlink.File(target));
+        case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(target));
+        case NONE -> Optional.empty();
       };
     } catch (IllegalArgumentException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 
-  static @Nullable ExcelComment comment(Cell cell) {
+  static Optional<ExcelComment> comment(Cell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
-      return null;
+      return Optional.empty();
     }
     String text = comment.getString().getString();
     String author = comment.getAuthor();
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelComment(text, author, comment.isVisible());
+    return Optional.of(new ExcelComment(text, author, comment.isVisible()));
   }
 }

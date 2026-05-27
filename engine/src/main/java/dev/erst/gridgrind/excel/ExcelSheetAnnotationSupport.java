@@ -1,470 +1,121 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.common.usermodel.HyperlinkType;
-import org.apache.poi.ooxml.POIXMLDocumentPart;
-import org.apache.poi.ooxml.POIXMLDocumentPart.RelationPart;
-import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellAddress;
-import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.xssf.model.Comments;
-import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
-import org.apache.poi.xssf.usermodel.XSSFComment;
-import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
-import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-/** Hyperlink, comment, and cell-annotation support for one sheet facade. */
+/** Facade that composes hyperlink and comment helpers for one sheet. */
 final class ExcelSheetAnnotationSupport {
-  private final Sheet sheet;
-  private final ExcelDrawingController drawingController;
+  private final ExcelSheetHyperlinkSupport hyperlinkSupport;
+  private final ExcelSheetCommentSupport commentSupport;
 
   ExcelSheetAnnotationSupport(Sheet sheet, ExcelDrawingController drawingController) {
-    this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
-    this.drawingController =
-        Objects.requireNonNull(drawingController, "drawingController must not be null");
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    Objects.requireNonNull(drawingController, "drawingController must not be null");
+    this.hyperlinkSupport = new ExcelSheetHyperlinkSupport(sheet);
+    this.commentSupport = new ExcelSheetCommentSupport(sheet, drawingController);
   }
 
   void setHyperlink(String address, ExcelHyperlink hyperlink) {
-    ExcelSheet.requireNonBlank(address, "address");
-    Objects.requireNonNull(hyperlink, "hyperlink must not be null");
-
-    CellReference cellReference = parseCellReference(address);
-    Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
-    requireHyperlinkCapacity(cell);
-    cell.removeHyperlink();
-    org.apache.poi.ss.usermodel.Hyperlink poiHyperlink =
-        sheet.getWorkbook().getCreationHelper().createHyperlink(toPoi(hyperlink.type()));
-    poiHyperlink.setAddress(toPoiTarget(hyperlink));
-    cell.setHyperlink(poiHyperlink);
+    hyperlinkSupport.setHyperlink(address, hyperlink);
   }
 
   void clearHyperlink(String address) {
-    ExcelSheet.requireNonBlank(address, "address");
-    optionalCell(address).ifPresent(Cell::removeHyperlink);
+    hyperlinkSupport.clearHyperlink(address);
   }
 
   void setComment(String address, ExcelComment comment) {
-    ExcelSheet.requireNonBlank(address, "address");
-    Objects.requireNonNull(comment, "comment must not be null");
-
-    CellReference cellReference = parseCellReference(address);
-    repairBrokenLegacyDrawingReference((XSSFSheet) sheet);
-    Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
-    cell.setCellComment(newComment(cellReference.getRow(), cellReference.getCol(), comment));
-    ensureLegacyDrawingReference((XSSFSheet) sheet);
-    drawingController.cleanupEmptyDrawingPatriarch((org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
+    commentSupport.setComment(address, comment);
   }
 
   void clearComment(String address) {
-    ExcelSheet.requireNonBlank(address, "address");
-    optionalCell(address).ifPresent(ExcelSheetAnnotationSupport::clearCellComment);
-    drawingController.cleanupEmptyDrawingPatriarch((org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
-  }
-
-  static void clearCellComment(Cell cell) {
-    Objects.requireNonNull(cell, "cell must not be null");
-    if (!(cell.getSheet() instanceof XSSFSheet xssfSheet)
-        || !(cell.getCellComment() instanceof XSSFComment)) {
-      cell.removeCellComment();
-      return;
-    }
-
-    CellAddress address = new CellAddress(cell);
-    removeCommentFromTable(xssfSheet, address);
-    removeCommentShapeIfPresent(xssfSheet, address);
+    commentSupport.clearComment(address);
   }
 
   ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return ExcelCellMetadataSnapshot.of(optionalHyperlink(cell), optionalCommentSnapshot(cell));
+    return commentSupport.metadata(cell);
   }
 
   List<WorkbookSheetResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return switch (selection) {
-      case ExcelCellSelection.AllUsedCells _ -> allUsedHyperlinks();
-      case ExcelCellSelection.Selected selected -> selectedHyperlinks(selected.addresses());
-    };
+    return hyperlinkSupport.hyperlinks(selection);
   }
 
   List<WorkbookSheetResult.CellComment> comments(ExcelCellSelection selection) {
-    Objects.requireNonNull(selection, "selection must not be null");
-    return switch (selection) {
-      case ExcelCellSelection.AllUsedCells _ -> allUsedComments();
-      case ExcelCellSelection.Selected selected -> selectedComments(selected.addresses());
-    };
+    return commentSupport.comments(selection);
+  }
+
+  static void clearCellComment(Cell cell) {
+    ExcelSheetCommentSupport.clearCellComment(cell);
   }
 
   static Optional<ExcelHyperlink> hyperlink(Cell cell) {
-    return optionalHyperlink(cell);
+    return ExcelSheetHyperlinkSupport.hyperlink(cell);
   }
 
   static Optional<ExcelHyperlink> hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    return optionalHyperlink(hyperlink);
+    return ExcelSheetHyperlinkSupport.hyperlink(hyperlink);
   }
 
   static Optional<ExcelHyperlink> hyperlink(HyperlinkType hyperlinkType, String target) {
-    return optionalHyperlink(hyperlinkType, target);
-  }
-
-  static Optional<ExcelComment> comment(Cell cell) {
-    return optionalComment(cell);
-  }
-
-  static Optional<ExcelComment> comment(Comment comment) {
-    return optionalComment(comment);
-  }
-
-  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
-    return optionalComment(text, author, visible);
-  }
-
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
-    return optionalCommentSnapshot(cell);
-  }
-
-  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
-    return optionalCommentSnapshot(comment);
+    return ExcelSheetHyperlinkSupport.hyperlink(hyperlinkType, target);
   }
 
   static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
-    return switch (hyperlinkType) {
-      case URL -> HyperlinkType.URL;
-      case EMAIL -> HyperlinkType.EMAIL;
-      case FILE -> HyperlinkType.FILE;
-      case DOCUMENT -> HyperlinkType.DOCUMENT;
-    };
+    return ExcelSheetHyperlinkSupport.toPoi(hyperlinkType);
   }
 
   static String toPoiTarget(ExcelHyperlink hyperlink) {
-    return switch (hyperlink) {
-      case ExcelHyperlink.Url url -> url.target();
-      case ExcelHyperlink.Email email -> "mailto:" + email.target();
-      case ExcelHyperlink.File file -> ExcelFileHyperlinkTargets.toPoiAddress(file.path());
-      case ExcelHyperlink.Document document -> document.target();
-    };
+    return ExcelSheetHyperlinkSupport.toPoiTarget(hyperlink);
   }
 
-  private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
-    ExcelCellTextLimits.requireSupportedLength(comment.text(), "comment.text"); // LIM-010
-    ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    Optional<ExcelCommentAnchor> authoredAnchor = comment.anchor();
-    anchor.setRow1(authoredAnchor.map(ExcelCommentAnchor::firstRow).orElse(rowIndex));
-    anchor.setRow2(authoredAnchor.map(ExcelCommentAnchor::lastRow).orElse(rowIndex + 3));
-    anchor.setCol1(authoredAnchor.map(ExcelCommentAnchor::firstColumn).orElse(columnIndex));
-    anchor.setCol2(authoredAnchor.map(ExcelCommentAnchor::lastColumn).orElse(columnIndex + 3));
-    Comment poiComment = sheet.createDrawingPatriarch().createCellComment(anchor);
-    poiComment.setAuthor(comment.author());
-    poiComment.setVisible(comment.visible());
-    poiComment.setString(
-        comment.runs().isEmpty()
-            ? new XSSFRichTextString(comment.text())
-            : ExcelRichTextSupport.toPoiRichText(
-                (XSSFWorkbook) sheet.getWorkbook(), comment.runs().orElseThrow()));
-    return poiComment;
+  static Optional<ExcelComment> comment(Cell cell) {
+    return ExcelSheetCommentSupport.comment(cell);
   }
 
-  private List<WorkbookSheetResult.CellHyperlink> allUsedHyperlinks() {
-    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
-    for (Row row : sheet) {
-      for (Cell cell : row) {
-        Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
-        if (hyperlink.isPresent()) {
-          hyperlinks.add(
-              new WorkbookSheetResult.CellHyperlink(
-                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                  hyperlink.orElseThrow()));
-        }
-      }
-    }
-    return List.copyOf(hyperlinks);
+  static Optional<ExcelComment> comment(Comment comment) {
+    return ExcelSheetCommentSupport.comment(comment);
   }
 
-  private List<WorkbookSheetResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
-    List<WorkbookSheetResult.CellHyperlink> hyperlinks = new ArrayList<>();
-    for (String address : addresses) {
-      Cell cell = cellOrNull(address).orElse(null);
-      if (cell == null) {
-        continue;
-      }
-      Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
-      if (hyperlink.isPresent()) {
-        hyperlinks.add(new WorkbookSheetResult.CellHyperlink(address, hyperlink.orElseThrow()));
-      }
-    }
-    return List.copyOf(hyperlinks);
+  static Optional<ExcelComment> comment(String text, String author, boolean visible) {
+    return ExcelSheetCommentSupport.comment(text, author, visible);
   }
 
-  private List<WorkbookSheetResult.CellComment> allUsedComments() {
-    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
-    for (Row row : sheet) {
-      for (Cell cell : row) {
-        Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
-        if (comment.isPresent()) {
-          comments.add(
-              new WorkbookSheetResult.CellComment(
-                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                  comment.orElseThrow()));
-        }
-      }
-    }
-    return List.copyOf(comments);
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Cell cell) {
+    return ExcelSheetCommentSupport.commentSnapshot(cell);
   }
 
-  private List<WorkbookSheetResult.CellComment> selectedComments(List<String> addresses) {
-    List<WorkbookSheetResult.CellComment> comments = new ArrayList<>();
-    for (String address : addresses) {
-      Cell cell = cellOrNull(address).orElse(null);
-      if (cell == null) {
-        continue;
-      }
-      Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
-      if (comment.isPresent()) {
-        comments.add(new WorkbookSheetResult.CellComment(address, comment.orElseThrow()));
-      }
-    }
-    return List.copyOf(comments);
-  }
-
-  private void requireHyperlinkCapacity(Cell cell) {
-    if (optionalHyperlink(cell).isPresent()) {
-      return;
-    }
-    int hyperlinkCount = 0;
-    for (Row row : sheet) {
-      for (Cell candidate : row) {
-        if (optionalHyperlink(candidate).isPresent()) {
-          hyperlinkCount++;
-        }
-      }
-    }
-    ExcelHyperlinkLimits.requireWorksheetHyperlinkCapacity(hyperlinkCount); // LIM-012
-  }
-
-  private Optional<Cell> cellOrNull(String address) {
-    CellReference reference = parseCellReference(address);
-    Row row = sheet.getRow(reference.getRow());
-    return row == null ? Optional.empty() : Optional.ofNullable(row.getCell(reference.getCol()));
-  }
-
-  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(
-      Optional<Workbook> workbook, Comment comment) {
-    if (!(comment instanceof XSSFComment xssfComment)
-        || xssfComment.getString() == null
-        || xssfComment.getAuthor() == null
-        || xssfComment.getAuthor().isBlank()) {
-      return Optional.empty();
-    }
-    Optional<ExcelComment> plainComment =
-        optionalComment(
-            xssfComment.getString().getString(), xssfComment.getAuthor(), xssfComment.isVisible());
-    if (plainComment.isEmpty()) {
-      return Optional.empty();
-    }
-    Optional<ExcelCommentAnchorSnapshot> anchor = Optional.empty();
-    if (xssfComment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
-      anchor =
-          Optional.of(
-              new ExcelCommentAnchorSnapshot(
-                  clientAnchor.getCol1(),
-                  clientAnchor.getRow1(),
-                  clientAnchor.getCol2(),
-                  clientAnchor.getRow2()));
-    }
-    Optional<ExcelRichTextSnapshot> runs =
-        workbook.isEmpty()
-            ? Optional.empty()
-            : ExcelRichTextSupport.snapshot(
-                (XSSFWorkbook) workbook.orElseThrow(),
-                xssfComment.getString(),
-                WorkbookStyleRegistry.snapshotFont(
-                    ((XSSFWorkbook) workbook.orElseThrow()).getFontAt(0)));
-    return Optional.of(
-        new ExcelCommentSnapshot(
-            plainComment.orElseThrow().text(),
-            plainComment.orElseThrow().author(),
-            plainComment.orElseThrow().visible(),
-            runs,
-            anchor));
+  static Optional<ExcelCommentSnapshot> commentSnapshot(Comment comment) {
+    return ExcelSheetCommentSupport.commentSnapshot(comment);
   }
 
   static void removeCommentFromTable(XSSFSheet sheet, CellAddress address) {
-    for (POIXMLDocumentPart relation : sheet.getRelations()) {
-      if (relation instanceof Comments comments) {
-        comments.removeComment(address);
-        return;
-      }
-    }
+    ExcelSheetCommentSupport.removeCommentFromTable(sheet, address);
   }
 
   static void removeCommentShapeIfPresent(XSSFSheet sheet, CellAddress address) {
-    XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
-    if (vmlDrawing == null) {
-      return;
-    }
-    var commentShape = vmlDrawing.findCommentShape(address.getRow(), address.getColumn());
-    if (commentShape != null) {
-      try (var cursor = commentShape.newCursor()) {
-        cursor.removeXml();
-      }
-    }
+    ExcelSheetCommentSupport.removeCommentShapeIfPresent(sheet, address);
   }
 
   static void repairBrokenLegacyDrawingReference(XSSFSheet sheet) {
-    if (sheet.getCTWorksheet().isSetLegacyDrawing() && legacyDrawingRelationId(sheet).isEmpty()) {
-      sheet.getCTWorksheet().unsetLegacyDrawing();
-    }
+    ExcelSheetCommentSupport.repairBrokenLegacyDrawingReference(sheet);
   }
 
   static void ensureLegacyDrawingReference(XSSFSheet sheet) {
-    String relationId = vmlDrawingRelationId(sheet).orElse(null);
-    if (relationId == null) {
-      return;
-    }
-    if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
-      sheet.getCTWorksheet().addNewLegacyDrawing();
-    }
-    sheet.getCTWorksheet().getLegacyDrawing().setId(relationId);
+    ExcelSheetCommentSupport.ensureLegacyDrawingReference(sheet);
   }
 
   static Optional<String> legacyDrawingRelationId(XSSFSheet sheet) {
-    if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
-      return Optional.empty();
-    }
-    String legacyDrawingId = sheet.getCTWorksheet().getLegacyDrawing().getId();
-    for (RelationPart relationPart : sheet.getRelationParts()) {
-      if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing
-          && legacyDrawingId.equals(relationPart.getRelationship().getId())) {
-        return Optional.of(legacyDrawingId);
-      }
-    }
-    return Optional.empty();
+    return ExcelSheetCommentSupport.legacyDrawingRelationId(sheet);
   }
 
   static Optional<String> vmlDrawingRelationId(XSSFSheet sheet) {
-    for (RelationPart relationPart : sheet.getRelationParts()) {
-      if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing) {
-        return Optional.of(relationPart.getRelationship().getId());
-      }
-    }
-    return Optional.empty();
-  }
-
-  private CellReference parseCellReference(String address) {
-    try {
-      CellReference reference = new CellReference(address);
-      requireValidCellReference(address, reference);
-      return reference;
-    } catch (IllegalArgumentException exception) {
-      throw new InvalidCellAddressException(address, exception);
-    }
-  }
-
-  private static void requireValidCellReference(String address, CellReference cellReference) {
-    int row = cellReference.getRow();
-    int col = cellReference.getCol();
-    if (row < 0
-        || col < 0
-        || row > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
-        || col > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
-      throw new InvalidCellAddressException(
-          address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
-    }
-  }
-
-  private Optional<Cell> optionalCell(String address) {
-    CellReference cellReference = parseCellReference(address);
-    Row row = sheet.getRow(cellReference.getRow());
-    if (row == null) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(row.getCell(cellReference.getCol()));
-  }
-
-  private Cell getOrCreateCell(int rowIndex, int columnIndex) {
-    return getOrCreateRow(rowIndex)
-        .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
-  }
-
-  private Row getOrCreateRow(int rowIndex) {
-    Row row = sheet.getRow(rowIndex);
-    if (row == null) {
-      row = sheet.createRow(rowIndex);
-    }
-    return row;
-  }
-
-  private static Optional<ExcelHyperlink> optionalHyperlink(Cell cell) {
-    return cell == null ? Optional.empty() : optionalHyperlink(cell.getHyperlink());
-  }
-
-  private static Optional<ExcelHyperlink> optionalHyperlink(
-      org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    return hyperlink == null || hyperlink.getType() == null
-        ? Optional.empty()
-        : optionalHyperlink(hyperlink.getType(), hyperlink.getAddress());
-  }
-
-  private static Optional<ExcelHyperlink> optionalHyperlink(
-      HyperlinkType hyperlinkType, String target) {
-    if (hyperlinkType == null || target == null || target.isBlank()) {
-      return Optional.empty();
-    }
-    return switch (hyperlinkType) {
-      case URL ->
-          ExcelHyperlinkValidation.isValidUrlTarget(target)
-              ? Optional.of(new ExcelHyperlink.Url(target))
-              : Optional.empty();
-      case EMAIL ->
-          ExcelHyperlinkValidation.isValidEmailTarget(target)
-              ? Optional.of(new ExcelHyperlink.Email(target))
-              : Optional.empty();
-      case FILE ->
-          ExcelHyperlinkValidation.isValidFileTarget(target)
-              ? Optional.of(new ExcelHyperlink.File(target))
-              : Optional.empty();
-      case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(target));
-      case NONE -> Optional.empty();
-    };
-  }
-
-  private static Optional<ExcelComment> optionalComment(Cell cell) {
-    return cell == null ? Optional.empty() : optionalComment(cell.getCellComment());
-  }
-
-  private static Optional<ExcelComment> optionalComment(Comment comment) {
-    return comment == null || comment.getString() == null
-        ? Optional.empty()
-        : optionalComment(
-            comment.getString().getString(), comment.getAuthor(), comment.isVisible());
-  }
-
-  private static Optional<ExcelComment> optionalComment(
-      String text, String author, boolean visible) {
-    return text == null || text.isBlank() || author == null || author.isBlank()
-        ? Optional.empty()
-        : Optional.of(new ExcelComment(text, author, visible));
-  }
-
-  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Cell cell) {
-    return cell == null
-        ? Optional.empty()
-        : optionalCommentSnapshot(
-            Optional.of(cell.getSheet().getWorkbook()), cell.getCellComment());
-  }
-
-  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Comment comment) {
-    return optionalCommentSnapshot(Optional.empty(), comment);
+    return ExcelSheetCommentSupport.vmlDrawingRelationId(sheet);
   }
 }

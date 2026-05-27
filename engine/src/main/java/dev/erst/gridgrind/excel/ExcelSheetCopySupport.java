@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,10 +28,10 @@ final class ExcelSheetCopySupport {
   }
 
   static void repairPrintLayout(ExcelPrintLayout expectedPrintLayout, ExcelSheet targetSheet) {
-    if (expectedPrintLayout.equals(targetSheet.printLayout())) {
+    if (expectedPrintLayout.equals(targetSheet.layout().printLayout())) {
       return;
     }
-    targetSheet.setPrintLayout(expectedPrintLayout);
+    targetSheet.layout().setPrintLayout(expectedPrintLayout);
   }
 
   static void replaceLocalNamedRanges(
@@ -40,16 +39,12 @@ final class ExcelSheetCopySupport {
       String sourceSheetName,
       String targetSheetName,
       List<ExcelNamedRangeSnapshot> localNamedRanges) {
-    deleteLocalNamedRanges(workbook, targetSheetName);
-    copyLocalNamedRanges(workbook, sourceSheetName, targetSheetName, localNamedRanges);
+    ExcelSheetCopyNamedRangeSupport.replaceLocalNamedRanges(
+        workbook, sourceSheetName, targetSheetName, localNamedRanges);
   }
 
   static void deleteLocalNamedRanges(ExcelWorkbook workbook, String sheetName) {
-    ExcelNamedRangeScope.SheetScope scope = new ExcelNamedRangeScope.SheetScope(sheetName);
-    for (ExcelNamedRangeSnapshot localName :
-        copyableLocalNames(workbook.namedRanges(), sheetName)) {
-      workbook.deleteNamedRange(localName.name(), scope);
-    }
+    ExcelSheetCopyNamedRangeSupport.deleteLocalNamedRanges(workbook, sheetName);
   }
 
   static void replaceDataValidations(
@@ -58,10 +53,8 @@ final class ExcelSheetCopySupport {
       ExcelWorkbook workbook,
       String sourceSheetName,
       String newSheetName) {
-    if (targetPoiSheet.getCTWorksheet().isSetDataValidations()) {
-      targetPoiSheet.getCTWorksheet().unsetDataValidations();
-    }
-    copyDataValidations(validations, targetPoiSheet, workbook, sourceSheetName, newSheetName);
+    ExcelSheetCopyValidationSupport.replaceDataValidations(
+        validations, targetPoiSheet, workbook, sourceSheetName, newSheetName);
   }
 
   static void replaceConditionalFormatting(
@@ -70,94 +63,18 @@ final class ExcelSheetCopySupport {
       ExcelWorkbook workbook,
       String sourceSheetName,
       String newSheetName) {
-    targetSheet.clearConditionalFormatting(new ExcelRangeSelection.All());
-    copyConditionalFormatting(blocks, targetSheet, workbook, sourceSheetName, newSheetName);
+    ExcelSheetCopyConditionalFormattingSupport.replaceConditionalFormatting(
+        blocks, targetSheet, workbook, sourceSheetName, newSheetName);
   }
 
   static void replaceTables(
       ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
-    List<String> existingTableNames =
-        workbook.sheet(targetSheetName).xssfSheet().getTables().stream()
-            .map(table -> table.getName())
-            .toList();
-    for (String existingTableName : existingTableNames) {
-      workbook.deleteTable(existingTableName, targetSheetName);
-    }
-    copyTables(workbook, targetSheetName, tables);
+    ExcelSheetCopyTableSupport.replaceTables(workbook, targetSheetName, tables);
   }
 
   static void replaceAutofilter(
       Optional<ExcelAutofilterSnapshot.SheetOwned> sheetAutofilter, ExcelSheet targetSheet) {
-    targetSheet.clearAutofilter();
-    sheetAutofilter.ifPresent(value -> copyAutofilter(value, targetSheet));
-  }
-
-  private static void copyDataValidations(
-      List<CTDataValidation> validations,
-      XSSFSheet targetPoiSheet,
-      ExcelWorkbook workbook,
-      String sourceSheetName,
-      String newSheetName) {
-    if (validations.isEmpty()) {
-      return;
-    }
-    var targetDataValidations = targetPoiSheet.getCTWorksheet().addNewDataValidations();
-    int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(newSheetName);
-    for (CTDataValidation validation : validations) {
-      CTDataValidation copiedValidation = targetDataValidations.addNewDataValidation();
-      copiedValidation.set(validation);
-      retargetValidationFormulas(
-          workbook, copiedValidation, targetSheetIndex, sourceSheetName, newSheetName);
-    }
-    targetDataValidations.setCount(targetDataValidations.sizeOfDataValidationArray());
-  }
-
-  private static void copyConditionalFormatting(
-      List<ExcelConditionalFormattingBlockDefinition> blocks,
-      ExcelSheet targetSheet,
-      ExcelWorkbook workbook,
-      String sourceSheetName,
-      String newSheetName) {
-    for (ExcelConditionalFormattingBlockDefinition block : blocks) {
-      targetSheet.setConditionalFormatting(
-          retargetConditionalFormattingBlock(workbook, block, sourceSheetName, newSheetName));
-    }
-  }
-
-  private static void copyTables(
-      ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
-    for (ExcelTableSnapshot table : tables) {
-      workbook.setTable(copiedTableDefinition(workbook, targetSheetName, table));
-    }
-  }
-
-  private static void copyAutofilter(
-      ExcelAutofilterSnapshot.SheetOwned sheetAutofilter, ExcelSheet targetSheet) {
-    targetSheet.setAutofilter(
-        sheetAutofilter.range(),
-        sheetAutofilter.filterColumns().stream()
-            .map(ExcelSheetCopySupport::copyableAutofilterColumn)
-            .toList(),
-        copyableSortState(sheetAutofilter.sortState()));
-  }
-
-  private static void copyLocalNamedRanges(
-      ExcelWorkbook workbook,
-      String sourceSheetName,
-      String targetSheetName,
-      List<ExcelNamedRangeSnapshot> localNamedRanges) {
-    ExcelNamedRangeScope.SheetScope scope = new ExcelNamedRangeScope.SheetScope(targetSheetName);
-    int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(targetSheetName);
-    for (ExcelNamedRangeSnapshot localNamedRange : localNamedRanges) {
-      workbook.setNamedRange(
-          copiedLocalNamedRange(
-              workbook,
-              localNamedRange,
-              scope,
-              targetSheetIndex,
-              sourceSheetName,
-              targetSheetName));
-    }
+    ExcelSheetCopyAutofilterSupport.replaceAutofilter(sheetAutofilter, targetSheet);
   }
 
   static void copyProtection(XSSFSheet sourceSheet, XSSFSheet targetSheet) {
@@ -173,484 +90,62 @@ final class ExcelSheetCopySupport {
 
   static List<ExcelNamedRangeSnapshot> copyableLocalNames(
       List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    Objects.requireNonNull(namedRanges, "namedRanges must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
-    List<ExcelNamedRangeSnapshot> localNamedRanges = new ArrayList<>();
-    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-      switch (namedRange.scope()) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> {}
-        case ExcelNamedRangeScope.SheetScope sheetScope -> {
-          if (sheetScope.sheetName().equals(sheetName)) {
-            localNamedRanges.add(namedRange);
-          }
-        }
-      }
-    }
-    return List.copyOf(localNamedRanges);
+    return ExcelSheetCopyNamedRangeSupport.copyableLocalNames(namedRanges, sheetName);
   }
 
   static List<ExcelNamedRangeSnapshot.RangeSnapshot> copyableLocalRangeNames(
       List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    return copyableLocalNames(namedRanges, sheetName).stream()
-        .flatMap(
-            namedRange ->
-                namedRange instanceof ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot
-                    ? java.util.stream.Stream.of(rangeSnapshot)
-                    : java.util.stream.Stream.empty())
-        .toList();
+    return ExcelSheetCopyNamedRangeSupport.copyableLocalRangeNames(namedRanges, sheetName);
   }
 
   static void requireNoUncopyableLocalNamedRanges(
       List<ExcelNamedRangeSnapshot> namedRanges, String sheetName) {
-    Objects.requireNonNull(namedRanges, "namedRanges must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
+    ExcelSheetCopyNamedRangeSupport.requireNoUncopyableLocalNamedRanges(namedRanges, sheetName);
   }
 
   static void requireNoTables(XSSFSheet sheet, String sheetName) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
+    ExcelSheetCopyTableSupport.requireNoTables(sheet, sheetName);
   }
 
   static List<ExcelConditionalFormattingBlockDefinition> supportedConditionalFormatting(
       List<ExcelConditionalFormattingBlockSnapshot> blocks, String sourceSheetName) {
-    Objects.requireNonNull(blocks, "blocks must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
-    List<ExcelConditionalFormattingBlockDefinition> copyableBlocks = new ArrayList<>();
-    for (ExcelConditionalFormattingBlockSnapshot block : blocks) {
-      copyableBlocks.add(
-          copyableConditionalFormattingBlock(
-              block, copyableConditionalFormattingRules(block.rules(), sourceSheetName)));
-    }
-    return List.copyOf(copyableBlocks);
+    return ExcelSheetCopyConditionalFormattingSupport.supportedConditionalFormatting(
+        blocks, sourceSheetName);
   }
 
   static List<CTDataValidation> copiedDataValidations(XSSFSheet sourcePoiSheet) {
-    if (!sourcePoiSheet.getCTWorksheet().isSetDataValidations()) {
-      return List.of();
-    }
-    List<CTDataValidation> copiedValidations = new ArrayList<>();
-    for (CTDataValidation validation :
-        sourcePoiSheet.getCTWorksheet().getDataValidations().getDataValidationArray()) {
-      copiedValidations.add((CTDataValidation) validation.copy());
-    }
-    return List.copyOf(copiedValidations);
-  }
-
-  private static ExcelConditionalFormattingBlockDefinition copyableConditionalFormattingBlock(
-      ExcelConditionalFormattingBlockSnapshot block, List<ExcelConditionalFormattingRule> rules) {
-    return new ExcelConditionalFormattingBlockDefinition(block.ranges(), List.copyOf(rules));
-  }
-
-  private static List<ExcelConditionalFormattingRule> copyableConditionalFormattingRules(
-      List<ExcelConditionalFormattingRuleSnapshot> rules, String sourceSheetName) {
-    List<ExcelConditionalFormattingRule> copyableRules = new ArrayList<>();
-    for (ExcelConditionalFormattingRuleSnapshot rule : rules) {
-      copyableRules.add(copyableRule(rule, sourceSheetName));
-    }
-    return List.copyOf(copyableRules);
+    return ExcelSheetCopyValidationSupport.copiedDataValidations(sourcePoiSheet);
   }
 
   static ExcelConditionalFormattingRule copyableRule(
       ExcelConditionalFormattingRuleSnapshot rule, String sourceSheetName) {
-    Objects.requireNonNull(rule, "rule must not be null");
-    ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
-    return switch (rule) {
-      case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule ->
-          new ExcelConditionalFormattingRule.FormulaRule(
-              formulaRule.formula(),
-              formulaRule.stopIfTrue(),
-              copyableStyle(formulaRule.style(), sourceSheetName));
-      case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
-          new ExcelConditionalFormattingRule.CellValueRule(
-              cellValueRule.operator(),
-              cellValueRule.formula1(),
-              Optional.ofNullable(cellValueRule.formula2()),
-              cellValueRule.stopIfTrue(),
-              copyableStyle(cellValueRule.style(), sourceSheetName));
-      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule ->
-          new ExcelConditionalFormattingRule.ColorScaleRule(
-              colorScaleRule.thresholds().stream()
-                  .map(ExcelSheetCopySupport::copyableThreshold)
-                  .toList(),
-              colorScaleRule.colors().stream()
-                  .map(color -> (ExcelColor) ExcelColor.rgb(color))
-                  .toList(),
-              colorScaleRule.stopIfTrue());
-      case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
-          new ExcelConditionalFormattingRule.DataBarRule(
-              ExcelColor.rgb(dataBarRule.color()),
-              dataBarRule.iconOnly(),
-              dataBarRule.widthMin(),
-              dataBarRule.widthMax(),
-              copyableThreshold(dataBarRule.minThreshold()),
-              copyableThreshold(dataBarRule.maxThreshold()),
-              dataBarRule.stopIfTrue());
-      case ExcelConditionalFormattingRuleSnapshot.IconSetRule iconSetRule ->
-          new ExcelConditionalFormattingRule.IconSetRule(
-              iconSetRule.iconSet(),
-              iconSetRule.iconOnly(),
-              iconSetRule.reversed(),
-              iconSetRule.thresholds().stream()
-                  .map(ExcelSheetCopySupport::copyableThreshold)
-                  .toList(),
-              iconSetRule.stopIfTrue());
-      case ExcelConditionalFormattingRuleSnapshot.Top10Rule top10Rule ->
-          new ExcelConditionalFormattingRule.Top10Rule(
-              top10Rule.rank(),
-              top10Rule.percent(),
-              top10Rule.bottom(),
-              top10Rule.stopIfTrue(),
-              copyableStyle(top10Rule.style(), sourceSheetName));
-      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
-          throw new IllegalArgumentException(
-              "cannot copy sheet '"
-                  + sourceSheetName
-                  + "': unsupported conditional-formatting rule '"
-                  + unsupportedRule.kind()
-                  + "' is not copyable");
-    };
+    return ExcelSheetCopyConditionalFormattingSupport.copyableRule(rule, sourceSheetName);
   }
 
   static Optional<ExcelDifferentialStyle> copyableStyle(
       @Nullable ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
-    ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
-    if (style == null) {
-      return Optional.empty();
-    }
-    if (!style.unsupportedFeatures().isEmpty()) {
-      throw new IllegalArgumentException(
-          "cannot copy sheet '"
-              + sourceSheetName
-              + "': conditional-formatting rules with unsupported differential-style features are"
-              + " not copyable");
-    }
-    return Optional.of(
-        new ExcelDifferentialStyle(
-            Optional.ofNullable(style.numberFormat()),
-            Optional.ofNullable(style.bold()),
-            Optional.ofNullable(style.italic()),
-            Optional.ofNullable(style.fontHeight()),
-            Optional.ofNullable(style.fontColor()),
-            Optional.ofNullable(style.underline()),
-            Optional.ofNullable(style.strikeout()),
-            Optional.ofNullable(style.fillColor()),
-            Optional.ofNullable(style.border())));
+    return ExcelSheetCopyConditionalFormattingSupport.copyableStyle(style, sourceSheetName);
   }
 
   static Optional<ExcelAutofilterSnapshot.SheetOwned> sheetOwnedAutofilter(
       List<ExcelAutofilterSnapshot> autofilters) {
-    Objects.requireNonNull(autofilters, "autofilters must not be null");
-    if (autofilters.isEmpty()) {
-      return Optional.empty();
-    }
-    ExcelAutofilterSnapshot autofilter = autofilters.getFirst();
-    return switch (autofilter) {
-      case ExcelAutofilterSnapshot.SheetOwned sheetOwned -> Optional.of(sheetOwned);
-      case ExcelAutofilterSnapshot.TableOwned _ ->
-          throw new IllegalStateException(
-              "sheetOwnedAutofilters must not return table-owned autofilter snapshots");
-    };
+    return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilter(autofilters);
   }
 
   static Optional<String> sheetOwnedAutofilterRange(List<ExcelAutofilterSnapshot> autofilters) {
-    return sheetOwnedAutofilter(autofilters).map(ExcelAutofilterSnapshot.SheetOwned::range);
-  }
-
-  private static ExcelConditionalFormattingThreshold copyableThreshold(
-      ExcelConditionalFormattingThresholdSnapshot threshold) {
-    return new ExcelConditionalFormattingThreshold(
-        threshold.type(), threshold.formula(), threshold.value());
-  }
-
-  private static ExcelAutofilterFilterColumn copyableAutofilterColumn(
-      ExcelAutofilterFilterColumnSnapshot filterColumn) {
-    return new ExcelAutofilterFilterColumn(
-        filterColumn.columnId(),
-        filterColumn.showButton(),
-        copyableAutofilterCriterion(filterColumn.criterion()));
-  }
-
-  private static ExcelAutofilterFilterCriterion copyableAutofilterCriterion(
-      ExcelAutofilterFilterCriterionSnapshot criterion) {
-    return switch (criterion) {
-      case ExcelAutofilterFilterCriterionSnapshot.Values values ->
-          new ExcelAutofilterFilterCriterion.Values(values.values(), values.includeBlank());
-      case ExcelAutofilterFilterCriterionSnapshot.Custom custom ->
-          new ExcelAutofilterFilterCriterion.Custom(
-              custom.and(),
-              custom.conditions().stream()
-                  .map(
-                      condition ->
-                          new ExcelAutofilterFilterCriterion.CustomCondition(
-                              condition.operator(), condition.value()))
-                  .toList());
-      case ExcelAutofilterFilterCriterionSnapshot.Dynamic dynamic ->
-          new ExcelAutofilterFilterCriterion.Dynamic(
-              dynamic.type(), dynamic.value(), dynamic.maxValue());
-      case ExcelAutofilterFilterCriterionSnapshot.Top10 top10 ->
-          new ExcelAutofilterFilterCriterion.Top10(
-              (int) Math.round(top10.value()), top10.top(), top10.percent());
-      case ExcelAutofilterFilterCriterionSnapshot.Color color ->
-          new ExcelAutofilterFilterCriterion.Color(
-              color.cellColor(),
-              Objects.requireNonNull(
-                  ExcelColorSupport.copyOf(color.color()), "autofilter color must not be null"));
-      case ExcelAutofilterFilterCriterionSnapshot.Icon icon ->
-          new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
-    };
-  }
-
-  private static Optional<ExcelAutofilterSortState> copyableSortState(
-      Optional<ExcelAutofilterSortStateSnapshot> sortState) {
-    return Objects.requireNonNull(sortState, "sortState must not be null")
-        .map(
-            snapshot ->
-                new ExcelAutofilterSortState(
-                    snapshot.range(),
-                    snapshot.caseSensitive(),
-                    snapshot.columnSort(),
-                    snapshot.sortMethod(),
-                    snapshot.conditions().stream()
-                        .map(ExcelSheetCopySupport::copyableSortCondition)
-                        .toList()));
+    return ExcelSheetCopyAutofilterSupport.sheetOwnedAutofilterRange(autofilters);
   }
 
   static ExcelAutofilterSortCondition copyableSortCondition(
       ExcelAutofilterSortConditionSnapshot condition) {
-    return switch (condition) {
-      case ExcelAutofilterSortConditionSnapshot.Value value ->
-          new ExcelAutofilterSortCondition.Value(value.range(), value.descending());
-      case ExcelAutofilterSortConditionSnapshot.CellColor cellColor ->
-          new ExcelAutofilterSortCondition.CellColor(
-              cellColor.range(),
-              cellColor.descending(),
-              Objects.requireNonNull(
-                  ExcelColorSupport.copyOf(cellColor.color()), "cell sort color must not be null"));
-      case ExcelAutofilterSortConditionSnapshot.FontColor fontColor ->
-          new ExcelAutofilterSortCondition.FontColor(
-              fontColor.range(),
-              fontColor.descending(),
-              Objects.requireNonNull(
-                  ExcelColorSupport.copyOf(fontColor.color()), "font sort color must not be null"));
-      case ExcelAutofilterSortConditionSnapshot.Icon icon ->
-          new ExcelAutofilterSortCondition.Icon(icon.range(), icon.descending(), icon.iconId());
-    };
+    return ExcelSheetCopyAutofilterSupport.copyableSortCondition(condition);
   }
 
   static List<ExcelTableSnapshot> tablesOnSheet(XSSFSheet sourcePoiSheet) {
-    List<ExcelTableSnapshot> tables = new ArrayList<>();
-    for (var table : sourcePoiSheet.getTables()) {
-      tables.add(ExcelTableCatalogSupport.toSnapshot(sourcePoiSheet.getSheetName(), table));
-    }
-    return List.copyOf(tables);
+    return ExcelSheetCopyTableSupport.tablesOnSheet(sourcePoiSheet);
   }
 
-  private static ExcelTableDefinition copiedTableDefinition(
-      ExcelWorkbook workbook, String targetSheetName, ExcelTableSnapshot table) {
-    return new ExcelTableDefinition(
-        uniqueCopiedTableName(workbook, table.name()),
-        targetSheetName,
-        table.range(),
-        table.totalsRowCount() > 0,
-        table.hasAutofilter(),
-        switch (table.style()) {
-          case ExcelTableStyleSnapshot.None _ -> new ExcelTableStyle.None();
-          case ExcelTableStyleSnapshot.Named named ->
-              new ExcelTableStyle.Named(
-                  named.name(),
-                  named.showFirstColumn(),
-                  named.showLastColumn(),
-                  named.showRowStripes(),
-                  named.showColumnStripes());
-        },
-        table.comment(),
-        table.published(),
-        table.insertRow(),
-        table.insertRowShift(),
-        table.headerRowCellStyle(),
-        table.dataCellStyle(),
-        table.totalsRowCellStyle(),
-        table.columns().stream()
-            .map(
-                column ->
-                    new ExcelTableColumnDefinition(
-                        Math.toIntExact(column.id() - 1L),
-                        column.uniqueName(),
-                        column.totalsRowLabel(),
-                        column.totalsRowFunction(),
-                        column.calculatedColumnFormula()))
-            .toList());
-  }
-
-  private static String uniqueCopiedTableName(ExcelWorkbook workbook, String baseName) {
-    String candidate = baseName;
-    int suffix = 2;
-    while (tableNameExists(workbook, candidate)) {
-      candidate = baseName + "_Copy" + suffix;
-      suffix++;
-    }
-    return candidate;
-  }
-
-  private static boolean tableNameExists(ExcelWorkbook workbook, String candidate) {
-    for (String sheetName : workbook.sheetNames()) {
-      XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
-      for (var table : sheet.getTables()) {
-        if (Objects.requireNonNullElse(table.getName(), "").equalsIgnoreCase(candidate)) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private static void retargetValidationFormulas(
-      ExcelWorkbook workbook,
-      CTDataValidation validation,
-      int targetSheetIndex,
-      String sourceSheetName,
-      String newSheetName) {
-    String type = validationType(validation);
-    if ("list".equals(type)) {
-      String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
-      if (shouldRetargetValidationListFormula(formula1)) {
-        validation.setFormula1(
-            retargetFormula(
-                workbook,
-                formula1,
-                FormulaType.DATAVALIDATION_LIST,
-                targetSheetIndex,
-                sourceSheetName,
-                newSheetName));
-      }
-      return;
-    }
-    if (validation.isSetFormula1() && !validation.getFormula1().isBlank()) {
-      validation.setFormula1(
-          retargetFormula(
-              workbook,
-              validation.getFormula1(),
-              FormulaType.CELL,
-              targetSheetIndex,
-              sourceSheetName,
-              newSheetName));
-    }
-    if (validation.isSetFormula2() && !validation.getFormula2().isBlank()) {
-      validation.setFormula2(
-          retargetFormula(
-              workbook,
-              validation.getFormula2(),
-              FormulaType.CELL,
-              targetSheetIndex,
-              sourceSheetName,
-              newSheetName));
-    }
-  }
-
-  private static String validationType(CTDataValidation validation) {
-    return validation.isSetType()
-        ? validation.getType().toString().toLowerCase(java.util.Locale.ROOT)
-        : "";
-  }
-
-  private static ExcelNamedRangeDefinition copiedLocalNamedRange(
-      ExcelWorkbook workbook,
-      ExcelNamedRangeSnapshot localNamedRange,
-      ExcelNamedRangeScope.SheetScope scope,
-      int targetSheetIndex,
-      String sourceSheetName,
-      String targetSheetName) {
-    return switch (localNamedRange) {
-      case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot ->
-          new ExcelNamedRangeDefinition(
-              rangeSnapshot.name(),
-              scope,
-              ExcelNamedRangeTarget.range(
-                  targetSheetName, ((ExcelNamedRangeTarget.Range) rangeSnapshot.target()).range()));
-      case ExcelNamedRangeSnapshot.FormulaSnapshot formulaSnapshot ->
-          new ExcelNamedRangeDefinition(
-              formulaSnapshot.name(),
-              scope,
-              ExcelNamedRangeTarget.formula(
-                  ExcelFormulaSheetRenameSupport.renameSheet(
-                      workbook.xssfWorkbook(),
-                      formulaSnapshot.refersToFormula(),
-                      FormulaType.NAMEDRANGE,
-                      targetSheetIndex,
-                      sourceSheetName,
-                      targetSheetName)));
-    };
-  }
-
-  private static boolean shouldRetargetValidationListFormula(String formula1) {
-    return !formula1.isBlank() && !isQuotedListLiteral(formula1);
-  }
-
-  private static boolean isQuotedListLiteral(String formula) {
-    return formula.length() >= 2 && formula.startsWith("\"") && formula.endsWith("\"");
-  }
-
-  private static ExcelConditionalFormattingBlockDefinition retargetConditionalFormattingBlock(
-      ExcelWorkbook workbook,
-      ExcelConditionalFormattingBlockDefinition block,
-      String sourceSheetName,
-      String newSheetName) {
-    int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(newSheetName);
-    return new ExcelConditionalFormattingBlockDefinition(
-        block.ranges(),
-        block.rules().stream()
-            .map(
-                rule ->
-                    retargetConditionalFormattingRule(
-                        workbook, rule, targetSheetIndex, sourceSheetName, newSheetName))
-            .toList());
-  }
-
-  private static ExcelConditionalFormattingRule retargetConditionalFormattingRule(
-      ExcelWorkbook workbook,
-      ExcelConditionalFormattingRule rule,
-      int targetSheetIndex,
-      String sourceSheetName,
-      String newSheetName) {
-    return switch (rule) {
-      case ExcelConditionalFormattingRule.FormulaRule formulaRule ->
-          new ExcelConditionalFormattingRule.FormulaRule(
-              retargetFormula(
-                  workbook,
-                  formulaRule.formula(),
-                  FormulaType.CONDFORMAT,
-                  targetSheetIndex,
-                  sourceSheetName,
-                  newSheetName),
-              formulaRule.stopIfTrue(),
-              formulaRule.style());
-      case ExcelConditionalFormattingRule.CellValueRule cellValueRule ->
-          new ExcelConditionalFormattingRule.CellValueRule(
-              cellValueRule.operator(),
-              retargetFormula(
-                  workbook,
-                  cellValueRule.formula1(),
-                  FormulaType.CONDFORMAT,
-                  targetSheetIndex,
-                  sourceSheetName,
-                  newSheetName),
-              retargetOptionalFormula(
-                  workbook,
-                  cellValueRule.formula2(),
-                  FormulaType.CONDFORMAT,
-                  targetSheetIndex,
-                  sourceSheetName,
-                  newSheetName),
-              cellValueRule.stopIfTrue(),
-              cellValueRule.style());
-      case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule -> colorScaleRule;
-      case ExcelConditionalFormattingRule.DataBarRule dataBarRule -> dataBarRule;
-      case ExcelConditionalFormattingRule.IconSetRule iconSetRule -> iconSetRule;
-      case ExcelConditionalFormattingRule.Top10Rule top10Rule -> top10Rule;
-    };
-  }
-
-  private static String retargetFormula(
+  static String retargetFormula(
       ExcelWorkbook workbook,
       String formula,
       FormulaType formulaType,
@@ -666,7 +161,7 @@ final class ExcelSheetCopySupport {
         newSheetName);
   }
 
-  private static Optional<String> retargetOptionalFormula(
+  static Optional<String> retargetOptionalFormula(
       ExcelWorkbook workbook,
       Optional<String> formula,
       FormulaType formulaType,

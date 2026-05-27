@@ -286,7 +286,7 @@ public final class ExcelDrawingBinarySupport {
         packagingKind, label, fileName, command, contentType, payload, previewFormat, previewImage);
   }
 
-  private static Optional<org.apache.poi.openxml4j.opc.PackagePart> oleObjectPart(
+  public static Optional<org.apache.poi.openxml4j.opc.PackagePart> oleObjectPart(
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     return relatedInternalPart(sheetPart(objectData), objectData.getOleObject().getId());
   }
@@ -295,32 +295,45 @@ public final class ExcelDrawingBinarySupport {
       XSSFWorkbook workbook, org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
     ExcelSignatureLineController signatureLineController = new ExcelSignatureLineController();
     for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
-      org.apache.poi.xssf.usermodel.XSSFDrawing drawing = sheet.getDrawingPatriarch();
-      if (drawing == null) {
-        if (signatureLineController.usesImagePart(sheet, imagePartName)) {
-          return true;
-        }
-      } else {
-        for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
-          if (shape instanceof XSSFPicture picture
-              && imagePartName.equals(
-                  ExcelDrawingPictureSupport.imagePartNameOrNull(picture).orElse(null))) {
-            return true;
-          }
-          if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-            Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart =
-                previewImagePart(objectData);
-            if (previewPart.isPresent()
-                && previewPart.orElseThrow().getPartName().equals(imagePartName)) {
-              return true;
-            }
-          }
-        }
-        if (signatureLineController.usesImagePart(sheet, imagePartName)) {
-          return true;
-        }
+      if (sheetUsesImagePart(
+          workbook.getSheetAt(sheetIndex), imagePartName, signatureLineController)) {
+        return true;
       }
+    }
+    return false;
+  }
+
+  private static boolean sheetUsesImagePart(
+      XSSFSheet sheet,
+      org.apache.poi.openxml4j.opc.PackagePartName imagePartName,
+      ExcelSignatureLineController signatureLineController) {
+    org.apache.poi.xssf.usermodel.XSSFDrawing drawing = sheet.getDrawingPatriarch();
+    return (drawing != null && drawingUsesImagePart(drawing, imagePartName))
+        || signatureLineController.usesImagePart(sheet, imagePartName);
+  }
+
+  private static boolean drawingUsesImagePart(
+      org.apache.poi.xssf.usermodel.XSSFDrawing drawing,
+      org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
+    for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
+      if (shapeUsesImagePart(shape, imagePartName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean shapeUsesImagePart(
+      org.apache.poi.xssf.usermodel.XSSFShape shape,
+      org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
+    if (shape instanceof XSSFPicture picture) {
+      return imagePartName.equals(
+          ExcelDrawingPictureSupport.imagePartNameOrNull(picture).orElse(null));
+    }
+    if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
+      Optional<org.apache.poi.openxml4j.opc.PackagePart> previewPart = previewImagePart(objectData);
+      return previewPart.isPresent()
+          && previewPart.orElseThrow().getPartName().equals(imagePartName);
     }
     return false;
   }

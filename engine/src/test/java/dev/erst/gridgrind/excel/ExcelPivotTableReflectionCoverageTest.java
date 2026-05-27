@@ -95,16 +95,20 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
           invoke(
               controller, "numberFormat", Optional.class, workbook.xssfWorkbook(), Long.MAX_VALUE));
 
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "ScopedRange",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "ScopedRange",
-              new ExcelNamedRangeScope.SheetScope("Data"),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "ScopedRange",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "ScopedRange",
+                  new ExcelNamedRangeScope.SheetScope("Data"),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
       assertEquals(
           2,
           invoke(
@@ -205,22 +209,29 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
 
       populatePivotSource(workbook, "TableDataA");
       populatePivotSource(workbook, "TableDataB");
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "SalesTableA", "TableDataA", "A1:D5", false, new ExcelTableStyle.None()));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "SalesTableB", "TableDataB", "A1:D5", false, new ExcelTableStyle.None()));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "SalesTableA", "TableDataA", "A1:D5", false, new ExcelTableStyle.None()));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "SalesTableB", "TableDataB", "A1:D5", false, new ExcelTableStyle.None()));
       XSSFTable duplicateTable =
           workbook.xssfWorkbook().getSheet("TableDataB").getTables().getFirst();
       duplicateTable.setName("SalesTableA");
       duplicateTable.setDisplayName("SalesTableA");
       populatePivotSource(workbook, "TableDataC");
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "SheetTableA", "TableDataC", "A1:D5", false, new ExcelTableStyle.None()));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "SheetTableA", "TableDataC", "A1:D5", false, new ExcelTableStyle.None()));
       workbook
           .getOrCreateSheet("TableDataC")
+          .cells()
           .setRange(
               "F1:I5",
               List.of(
@@ -249,9 +260,11 @@ class ExcelPivotTableReflectionCoverageTest extends ExcelPivotTableCoverageTestS
                       ExcelCellValue.text("Do"),
                       ExcelCellValue.text("Lin"),
                       ExcelCellValue.number(12))));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "SheetTableB", "TableDataC", "F1:I5", false, new ExcelTableStyle.None()));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "SheetTableB", "TableDataC", "F1:I5", false, new ExcelTableStyle.None()));
       XSSFTable sameSheetDuplicate =
           workbook.xssfWorkbook().getSheet("TableDataC").getTables().get(1);
       sameSheetDuplicate.setName("SheetTableA");

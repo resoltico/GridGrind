@@ -375,7 +375,9 @@ final class ExcelSheetCommentRepairSupport {
           richText == null
               ? Optional.empty()
               : ExcelRichTextSupport.snapshot(
-                  workbook, richText, WorkbookStyleRegistry.snapshotFont(workbook.getFontAt(0)));
+                  workbook,
+                  richText,
+                  ExcelCellStyleSnapshotSupport.snapshotFont(workbook.getFontAt(0)));
       return new CommentRewriteSnapshot(
           addressString(address.getRow(), address.getColumn()),
           richText == null ? "" : richText.getString(),

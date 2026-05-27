@@ -94,34 +94,55 @@ final class ExecutionModeRules {
     }
     boolean seenEnsureSheet = false;
     for (WorkbookStep step : request.steps()) {
-      switch (step) {
-        case MutationStep mutationStep -> {
-          if (!STREAMING_WRITE_MUTATION_ACTION_TYPES.contains(mutationStep.action().getClass())) {
-            return Optional.of(
-                STREAMING_WRITE.unsupportedActionMessage(mutationStep.action().actionType()));
-          }
-          if (mutationStep.action() instanceof WorkbookMutationAction.EnsureSheet) {
-            seenEnsureSheet = true;
-          }
-          if (mutationStep.action() instanceof CellMutationAction.AppendRow && !seenEnsureSheet) {
-            return Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage());
-          }
-        }
-        case AssertionStep _ -> {
-          if (!seenEnsureSheet) {
-            return Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeAssertionMessage());
-          }
-        }
-        case InspectionStep _ -> {
-          if (!seenEnsureSheet) {
-            return Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeInspectionMessage());
-          }
-        }
+      Optional<String> failure = streamingWriteStepFailure(step, seenEnsureSheet);
+      if (failure.isPresent()) {
+        return failure;
       }
+      seenEnsureSheet |= isEnsureSheet(step);
     }
     if (!seenEnsureSheet) {
       return Optional.of(STREAMING_WRITE.missingEnsureSheetMutationMessage());
     }
     return Optional.empty();
+  }
+
+  private static Optional<String> streamingWriteStepFailure(
+      WorkbookStep step, boolean seenEnsureSheet) {
+    return switch (step) {
+      case MutationStep mutationStep ->
+          unsupportedStreamingMutationAction(mutationStep.action())
+              .or(
+                  () ->
+                      requiresEnsureSheetBeforeAppend(mutationStep.action(), seenEnsureSheet)
+                          ? Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage())
+                          : Optional.empty());
+      case AssertionStep _ ->
+          missingEnsureSheetBeforeObservation(
+              seenEnsureSheet, STREAMING_WRITE.missingEnsureSheetBeforeAssertionMessage());
+      case InspectionStep _ ->
+          missingEnsureSheetBeforeObservation(
+              seenEnsureSheet, STREAMING_WRITE.missingEnsureSheetBeforeInspectionMessage());
+    };
+  }
+
+  private static Optional<String> unsupportedStreamingMutationAction(MutationAction action) {
+    return STREAMING_WRITE_MUTATION_ACTION_TYPES.contains(action.getClass())
+        ? Optional.empty()
+        : Optional.of(STREAMING_WRITE.unsupportedActionMessage(action.actionType()));
+  }
+
+  private static boolean requiresEnsureSheetBeforeAppend(
+      MutationAction action, boolean seenEnsureSheet) {
+    return action instanceof CellMutationAction.AppendRow && !seenEnsureSheet;
+  }
+
+  private static Optional<String> missingEnsureSheetBeforeObservation(
+      boolean seenEnsureSheet, String message) {
+    return seenEnsureSheet ? Optional.empty() : Optional.of(message);
+  }
+
+  private static boolean isEnsureSheet(WorkbookStep step) {
+    return step instanceof MutationStep mutationStep
+        && mutationStep.action() instanceof WorkbookMutationAction.EnsureSheet;
   }
 }

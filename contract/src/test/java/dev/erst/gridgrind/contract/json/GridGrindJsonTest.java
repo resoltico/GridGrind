@@ -427,7 +427,7 @@ class GridGrindJsonTest {
 
   @Test
   void surfacesProductOwnedSuggestionsForCommonFirstContactTypeMistakes() {
-    InvalidRequestShapeException legacyAssertion =
+    InvalidRequestShapeException deletedAssertionName =
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
@@ -445,7 +445,7 @@ class GridGrindJsonTest {
                     }
                     """
                         .getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestShapeException legacyAbsentAssertion =
+    InvalidRequestShapeException deletedAbsentAssertionName =
         assertThrows(
             InvalidRequestShapeException.class,
             () ->
@@ -512,12 +512,8 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertTrue(
-        legacyAssertion.getMessage().contains("EXPECT_CHART_PRESENT"),
-        "legacy assertion failures must point at one of the new explicit family assertions");
-    assertTrue(
-        legacyAbsentAssertion.getMessage().contains("EXPECT_CHART_ABSENT"),
-        "legacy absence failures must point at one of the new explicit family assertions");
+    assertEquals("Unknown type value 'EXPECT_PRESENT'", deletedAssertionName.getMessage());
+    assertEquals("Unknown type value 'EXPECT_ABSENT'", deletedAbsentAssertionName.getMessage());
     assertEquals("Unknown type value 'EXPECT_LEGACYISH'", unknownAssertionType.getMessage());
     assertTrue(
         wrongSourceType.getMessage().contains("source.type='EXISTING'"),
@@ -806,13 +802,13 @@ class GridGrindJsonTest {
     MismatchedInputException floatingInteger =
         (MismatchedInputException)
             MismatchedInputException.from(
-                    jsonFactory.createParser("2.5"),
+                    utf8Parser(jsonFactory, "2.5"),
                     Integer.class,
                     "Cannot coerce Floating-point value (2.5) to `int` value"
                         + " (but could if coercion was enabled using `CoercionConfig`)")
                 .prependPath(WorkbookPlan.class, "rowCount");
     InvalidTypeIdException invalidType =
-        InvalidTypeIdException.from(jsonFactory.createParser("\"x\""), "bad type", null, "NOPE");
+        InvalidTypeIdException.from(utf8Parser(jsonFactory, "\"x\""), "bad type", null, "NOPE");
 
     assertEquals(
         "Field 'rowCount' must be an integer value",
@@ -822,7 +818,7 @@ class GridGrindJsonTest {
         "Unknown field 'reads'",
         GridGrindJson.message(
             UnrecognizedPropertyException.from(
-                jsonFactory.createParser("{}"), WorkbookPlan.class, "reads", List.of())));
+                utf8Parser(jsonFactory, "{}"), WorkbookPlan.class, "reads", List.of())));
     assertEquals(
         "JSON object is missing required fields or has the wrong shape",
         GridGrindJson.message(new IllegalArgumentException("Cannot construct instance of `x`")));
@@ -938,5 +934,12 @@ class GridGrindJsonTest {
     public void close() {
       closed = true;
     }
+  }
+
+  private static tools.jackson.core.JsonParser utf8Parser(JsonFactory jsonFactory, String json)
+      throws IOException {
+    return jsonFactory.createParser(
+        tools.jackson.core.ObjectReadContext.empty(),
+        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
   }
 }

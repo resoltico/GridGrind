@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: QUICK_REFERENCE
-updated: "2026-05-16"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -24,6 +24,7 @@ gridgrind --print-protocol-catalog --response protocol-catalog.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
 gridgrind --print-example --lookup BUDGET --response budget-request.json
+gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
 gridgrind --print-example --lookup WORKBOOK_HEALTH --response workbook-health.json
 gridgrind --print-example --lookup ASSERTION --response assertion.json
@@ -33,9 +34,11 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 
 `--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, and
 `--help-guidance` is the workflow/example playbook. `--doctor-request` validates request shape,
-resolves source-backed inputs, and preflights existing workbook-source access without mutating a
-workbook. `--response <path>` works across execution, doctoring, and discovery commands, so the
-primary output can be captured to a file instead of stdout.
+resolves source-backed inputs, preflights existing workbook-source access, and returns every
+independently provable blocking problem without mutating a workbook. `--response <path>` works
+across execution, doctoring, and discovery commands, so the primary output can be captured to a
+file instead of stdout. Built-in example and task catalogs also publish `workspaceMode` plus
+`requiredPaths` so you can see whether a printed request is self-contained before executing it.
 
 `--search` is the fast discovery path when you only know part of an id or summary. Use
 `--lookup <group>:<id>` once you want one exact machine-readable entry. Search now ranks published

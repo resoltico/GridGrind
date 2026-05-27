@@ -21,7 +21,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookCellCommand.SetCell(
             cellTarget.sheetName(),
             cellTarget.address(),
-            WorkbookCommandConverter.toExcelCellValue(setCell.value()));
+            WorkbookCommandCellInputConverter.toExcelCellValue(setCell.value()));
       }
       case CellMutationAction.SetRange setRange -> {
         RangeSelector.ByRange selector =
@@ -30,7 +30,11 @@ final class WorkbookCommandCellMutationConverter {
             selector.sheetName(),
             selector.range(),
             setRange.rows().stream()
-                .map(row -> row.stream().map(WorkbookCommandConverter::toExcelCellValue).toList())
+                .map(
+                    row ->
+                        row.stream()
+                            .map(WorkbookCommandCellInputConverter::toExcelCellValue)
+                            .toList())
                 .toList());
       }
       case CellMutationAction.ClearRange _ -> {
@@ -44,7 +48,8 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookCellCommand.SetArrayFormula(
             selector.sheetName(),
             selector.range(),
-            WorkbookCommandConverter.toExcelArrayFormulaDefinition(setArrayFormula.formula()));
+            WorkbookCommandCellInputConverter.toExcelArrayFormulaDefinition(
+                setArrayFormula.formula()));
       }
       case CellMutationAction.ClearArrayFormula _ -> {
         SelectorConverter.SingleCellTarget cellTarget =
@@ -60,7 +65,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookAnnotationCommand.SetHyperlink(
             cellTarget.sheetName(),
             cellTarget.address(),
-            WorkbookCommandConverter.toExcelHyperlink(setHyperlink.target()));
+            WorkbookCommandCellInputConverter.toExcelHyperlink(setHyperlink.target()));
       }
       case CellMutationAction.ClearHyperlink _ -> {
         SelectorConverter.SingleCellTarget cellTarget =
@@ -76,7 +81,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookAnnotationCommand.SetComment(
             cellTarget.sheetName(),
             cellTarget.address(),
-            WorkbookCommandConverter.toExcelComment(setComment.comment()));
+            WorkbookCommandCellInputConverter.toExcelComment(setComment.comment()));
       }
       case CellMutationAction.ClearComment _ -> {
         SelectorConverter.SingleCellTarget cellTarget =
@@ -91,12 +96,14 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookFormattingCommand.ApplyStyle(
             selector.sheetName(),
             selector.range(),
-            WorkbookCommandConverter.toExcelCellStyle(applyStyle.style()));
+            WorkbookCommandCellInputConverter.toExcelCellStyle(applyStyle.style()));
       }
       case CellMutationAction.AppendRow appendRow ->
           new WorkbookCellCommand.AppendRow(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              appendRow.values().stream().map(WorkbookCommandConverter::toExcelCellValue).toList());
+              appendRow.values().stream()
+                  .map(WorkbookCommandCellInputConverter::toExcelCellValue)
+                  .toList());
     };
   }
 }

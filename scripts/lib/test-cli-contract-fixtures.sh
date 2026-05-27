@@ -94,12 +94,12 @@ load_test_cli_contract_fixtures() {
             rm -f "${tmp_stdout}" "${tmp_stderr}"
             return 1
         }
-        [[ ! -s "${tmp_stdout}" ]] || {
-            printf 'error: expected empty stdout for no-arg failure fixture\n' >&2
+        [[ ! -s "${tmp_stderr}" ]] || {
+            printf 'error: expected empty stderr for no-arg failure fixture\n' >&2
             rm -f "${tmp_stdout}" "${tmp_stderr}"
             return 1
         }
-        tr -d '\r' < "${tmp_stderr}"
+        tr -d '\r' < "${tmp_stdout}"
         rm -f "${tmp_stdout}" "${tmp_stderr}"
     )"
 }

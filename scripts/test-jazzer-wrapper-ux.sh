@@ -64,6 +64,10 @@ readonly temp_parent="${repo_root}/tmp/test-jazzer-wrapper-ux"
 mkdir -p "${temp_parent}"
 tmp_dir="$(mktemp -d "${temp_parent%/}/run.XXXXXX")"
 cleanup() {
+    if [[ -n "${fake_lock_pid}" ]]; then
+        kill "${fake_lock_pid}" >/dev/null 2>&1 || true
+    fi
+    rm -rf "${jazzer_lock_dir}" || true
     rm -rf "${tmp_dir}"
 }
 trap cleanup EXIT
@@ -74,23 +78,51 @@ capture_output() {
     "$@" 2>&1 | tee "${output_path}" >/dev/null
 }
 readonly status_help_path="${tmp_dir}/status-help.txt"
+readonly report_help_path="${tmp_dir}/report-help.txt"
+readonly findings_help_path="${tmp_dir}/findings-help.txt"
+readonly corpus_help_path="${tmp_dir}/corpus-help.txt"
 readonly protocol_help_path="${tmp_dir}/fuzz-protocol-request-help.txt"
 readonly fuzz_all_help_path="${tmp_dir}/fuzz-all-help.txt"
 readonly replay_help_path="${tmp_dir}/replay-help.txt"
 readonly promote_help_path="${tmp_dir}/promote-help.txt"
+readonly status_json_output_path="${tmp_dir}/status-json.txt"
 readonly invalid_report_output_path="${tmp_dir}/invalid-report.txt"
 readonly invalid_replay_target_output_path="${tmp_dir}/invalid-replay-target.txt"
 readonly missing_replay_input_output_path="${tmp_dir}/missing-replay-input.txt"
 readonly invalid_promote_target_output_path="${tmp_dir}/invalid-promote-target.txt"
 readonly missing_promote_input_output_path="${tmp_dir}/missing-promote-input.txt"
+readonly locked_status_output_path="${tmp_dir}/locked-status.txt"
+readonly jazzer_lock_dir="${repo_root}/jazzer/.local/run-lock"
+readonly jazzer_lock_pid_file="${jazzer_lock_dir}/pid"
+fake_lock_pid=''
 
 capture_output "${status_help_path}" "${repo_root}/jazzer/bin/status" --help
 require_file_contains "${status_help_path}" "Usage: jazzer/bin/status" \
     "status --help no longer prints project-owned wrapper usage"
+require_file_contains "${status_help_path}" "[--json]" \
+    "status --help no longer documents the JSON mode"
 require_file_absent "${status_help_path}" "USAGE: gradlew" \
     "status --help leaked Gradle help instead of wrapper usage"
 require_file_absent "${status_help_path}" "Welcome to Gradle" \
     "status --help booted Gradle instead of returning wrapper usage"
+
+capture_output "${report_help_path}" "${repo_root}/jazzer/bin/report" --help
+require_file_contains "${report_help_path}" "Usage: jazzer/bin/report" \
+    "report --help no longer prints project-owned wrapper usage"
+require_file_contains "${report_help_path}" "[--json]" \
+    "report --help no longer documents the JSON mode"
+
+capture_output "${findings_help_path}" "${repo_root}/jazzer/bin/list-findings" --help
+require_file_contains "${findings_help_path}" "Usage: jazzer/bin/list-findings" \
+    "list-findings --help no longer prints project-owned wrapper usage"
+require_file_contains "${findings_help_path}" "[--json]" \
+    "list-findings --help no longer documents the JSON mode"
+
+capture_output "${corpus_help_path}" "${repo_root}/jazzer/bin/list-corpus" --help
+require_file_contains "${corpus_help_path}" "Usage: jazzer/bin/list-corpus" \
+    "list-corpus --help no longer prints project-owned wrapper usage"
+require_file_contains "${corpus_help_path}" "[--json]" \
+    "list-corpus --help no longer documents the JSON mode"
 
 capture_output "${protocol_help_path}" "${repo_root}/jazzer/bin/fuzz-protocol-request" --help
 require_file_contains "${protocol_help_path}" "Usage: jazzer/bin/fuzz-protocol-request" \
@@ -117,6 +149,37 @@ require_file_contains "${promote_help_path}" "Usage: jazzer/bin/promote" \
     "promote --help no longer prints project-owned wrapper usage"
 require_file_contains "${promote_help_path}" "Valid targets:" \
     "promote --help no longer lists valid promotion targets"
+
+capture_output "${status_json_output_path}" "${repo_root}/jazzer/bin/status" --json --console=plain
+require_file_contains "${status_json_output_path}" "\"summaries\"" \
+    "status --json no longer emits a machine-readable summary payload"
+require_file_absent "${status_json_output_path}" "Jazzer Status" \
+    "status --json fell back to the text renderer instead of JSON"
+
+rm -rf "${jazzer_lock_dir}"
+mkdir -p "${jazzer_lock_dir}"
+sleep 30 &
+fake_lock_pid=$!
+printf '%s\n' "${fake_lock_pid}" > "${jazzer_lock_pid_file}"
+
+set +e
+capture_output "${locked_status_output_path}" "${repo_root}/jazzer/bin/status"
+locked_status_exit=$?
+set -e
+
+kill "${fake_lock_pid}" >/dev/null 2>&1 || true
+fake_lock_pid=''
+rm -rf "${jazzer_lock_dir}"
+
+[[ ${locked_status_exit} -eq 1 ]] || die \
+    "status under a held Jazzer lock exited ${locked_status_exit}; expected wrapper-level lock rejection with code 1"
+require_file_contains "${locked_status_output_path}" \
+    "another Jazzer wrapper command is already starting; run one Jazzer wrapper command at a time" \
+    "status lock rejection no longer uses the project-owned Jazzer lock wording"
+require_file_absent "${locked_status_output_path}" "${repo_root}/jazzer/bin/_run-task" \
+    "status lock rejection leaked the internal _run-task command line"
+require_file_absent "${locked_status_output_path}" "jazzerStatus" \
+    "status lock rejection leaked the Gradle task identity instead of the wrapper identity"
 
 set +e
 capture_output "${invalid_report_output_path}" \

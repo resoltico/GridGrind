@@ -72,12 +72,7 @@ class ExcelSheetStructureSupportTest {
   void defaultConstructorAndPreviewHelpersCoverBlankAndAnnotatedCells() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Ops");
-      var support =
-          new ExcelSheetStructureSupport(
-              sheet,
-              ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
-
-      assertEquals(0, support.physicalRowCount());
+      assertEquals(0, sheet.getPhysicalNumberOfRows());
       assertFalse(
           ExcelSheetStructureSupport.shouldPreview((org.apache.poi.ss.usermodel.Cell) null));
 

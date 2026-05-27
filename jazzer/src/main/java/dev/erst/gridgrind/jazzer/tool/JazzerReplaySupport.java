@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
@@ -202,7 +203,7 @@ public final class JazzerReplaySupport {
     List<WorkbookCommand> commands = List.of();
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
-      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
         new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
       }
@@ -232,10 +233,10 @@ public final class JazzerReplaySupport {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
       directory = Files.createTempDirectory("gridgrind-jazzer-replay-");
       Path workbookPath = directory.resolve("workbook.xlsx");
-      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
         new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
-        workbook.save(workbookPath);
+        workbook.persistence().save(workbookPath);
         XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
       }
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);

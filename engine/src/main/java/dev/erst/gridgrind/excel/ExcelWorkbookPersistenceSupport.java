@@ -47,7 +47,7 @@ final class ExcelWorkbookPersistenceSupport {
   }
 
   static ExcelOoxmlPackageSecuritySnapshot packageSecurity(ExcelWorkbook workbook) {
-    return workbook.wasMutatedSinceOpen()
+    return workbook.persistence().wasMutatedSinceOpen()
         ? workbook.context().loadedPackageSecurity().afterMutation()
         : workbook.context().loadedPackageSecurity();
   }

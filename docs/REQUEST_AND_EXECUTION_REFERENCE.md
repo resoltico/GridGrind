@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: REQUEST_EXECUTION_REFERENCE
 updated: "2026-05-15"
 route:

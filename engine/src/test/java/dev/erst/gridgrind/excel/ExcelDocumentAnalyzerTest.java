@@ -15,11 +15,12 @@ import org.junit.jupiter.api.Test;
 class ExcelDocumentAnalyzerTest {
   @Test
   void dataValidationHealthHonorsSelectedSheets() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.getOrCreateSheet("Archive");
       workbook
           .sheet("Budget")
+          .metadata()
           .setDataValidation(
               "A1:A3",
               new ExcelDataValidationDefinition(
@@ -30,6 +31,7 @@ class ExcelDocumentAnalyzerTest {
                   Optional.empty()));
       workbook
           .sheet("Archive")
+          .metadata()
           .setDataValidation(
               "A1:A3",
               new ExcelDataValidationDefinition(
@@ -58,24 +60,26 @@ class ExcelDocumentAnalyzerTest {
 
   @Test
   void autofilterAndTableHealthHonorTheirSelections() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Owner"));
-      budget.setCell("B1", ExcelCellValue.text("Task"));
-      budget.setCell("A2", ExcelCellValue.text("Ada"));
-      budget.setCell("B2", ExcelCellValue.text("Queue"));
-      budget.setCell("A3", ExcelCellValue.text("Lin"));
-      budget.setCell("B3", ExcelCellValue.text("Pack"));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "BudgetQueue", "Budget", "A1:B3", false, new ExcelTableStyle.None()));
+      budget.cells().setCell("A1", ExcelCellValue.text("Owner"));
+      budget.cells().setCell("B1", ExcelCellValue.text("Task"));
+      budget.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      budget.cells().setCell("B2", ExcelCellValue.text("Queue"));
+      budget.cells().setCell("A3", ExcelCellValue.text("Lin"));
+      budget.cells().setCell("B3", ExcelCellValue.text("Pack"));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "BudgetQueue", "Budget", "A1:B3", false, new ExcelTableStyle.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("A1:B2");
 
       ExcelSheet archive = workbook.getOrCreateSheet("Archive");
-      archive.setCell("D1", ExcelCellValue.text(""));
-      archive.setCell("E1", ExcelCellValue.text(""));
-      archive.setCell("D2", ExcelCellValue.text("Old"));
-      archive.setCell("E2", ExcelCellValue.text("Done"));
+      archive.cells().setCell("D1", ExcelCellValue.text(""));
+      archive.cells().setCell("E1", ExcelCellValue.text(""));
+      archive.cells().setCell("D2", ExcelCellValue.text("Old"));
+      archive.cells().setCell("E2", ExcelCellValue.text("Done"));
       archive.xssfSheet().getCTWorksheet().addNewAutoFilter().setRef("D1:E2");
 
       ExcelDocumentAnalyzer analyzer = new ExcelDocumentAnalyzer();

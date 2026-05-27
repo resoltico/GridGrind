@@ -77,8 +77,7 @@ class ExcelDrawingIoAndSecurityCoverageTest extends ExcelDrawingCoverageTestSupp
       XSSFObjectData objectData = createEmbeddedObject(workbook, drawing, "OpsEmbed", 3, 0, 6, 4);
 
       PackagePart previewPart =
-          ((Optional<PackagePart>)
-                  invoke(controller, "previewImagePart", Optional.class, objectData))
+          invokeOptional(controller, "previewImagePart", PackagePart.class, objectData)
               .orElseThrow();
       assertTrue(
           invoke(

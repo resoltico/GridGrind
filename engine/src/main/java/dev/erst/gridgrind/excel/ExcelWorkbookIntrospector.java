@@ -45,14 +45,16 @@ final class ExcelWorkbookIntrospector {
               getWorkbookProtection.stepId(), workbook.workbookProtection());
       case WorkbookReadCommand.GetCustomXmlMappings getCustomXmlMappings ->
           new WorkbookCoreResult.CustomXmlMappingsResult(
-              getCustomXmlMappings.stepId(), workbook.customXmlMappings());
+              getCustomXmlMappings.stepId(), workbook.customXml().customXmlMappings());
       case WorkbookReadCommand.ExportCustomXmlMapping exportCustomXmlMapping ->
           new WorkbookCoreResult.CustomXmlExportResult(
               exportCustomXmlMapping.stepId(),
-              workbook.exportCustomXmlMapping(
-                  exportCustomXmlMapping.mapping(),
-                  exportCustomXmlMapping.validateSchema(),
-                  exportCustomXmlMapping.encoding()));
+              workbook
+                  .customXml()
+                  .exportCustomXmlMapping(
+                      exportCustomXmlMapping.mapping(),
+                      exportCustomXmlMapping.validateSchema(),
+                      exportCustomXmlMapping.encoding()));
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
           new WorkbookCoreResult.NamedRangesResult(
               getNamedRanges.stepId(), selectNamedRanges(workbook, getNamedRanges.selection()));
@@ -178,7 +180,7 @@ final class ExcelWorkbookIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
-    List<ExcelNamedRangeSnapshot> namedRanges = workbook.namedRanges();
+    List<ExcelNamedRangeSnapshot> namedRanges = workbook.names().namedRanges();
     return switch (selection) {
       case ExcelNamedRangeSelection.All _ -> namedRanges;
       case ExcelNamedRangeSelection.Selected selected ->
@@ -199,36 +201,34 @@ final class ExcelWorkbookIntrospector {
   static List<ExcelNamedRangeSnapshot> matchSelector(
       List<ExcelNamedRangeSnapshot> namedRanges, ExcelNamedRangeSelector selector) {
     List<ExcelNamedRangeSnapshot> matches = new ArrayList<>();
-    switch (selector) {
-      case ExcelNamedRangeSelector.ByName byName -> {
-        for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-          if (namedRange.name().equalsIgnoreCase(byName.name())) {
-            matches.add(namedRange);
-          }
-        }
-      }
-      case ExcelNamedRangeSelector.WorkbookScope workbookScope -> {
-        for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-          if (namedRange.name().equalsIgnoreCase(workbookScope.name())
-              && namedRange.scope() instanceof ExcelNamedRangeScope.WorkbookScope) {
-            matches.add(namedRange);
-          }
-        }
-      }
-      case ExcelNamedRangeSelector.SheetScope sheetScope -> {
-        for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
-          if (namedRange.name().equalsIgnoreCase(sheetScope.name())
-              && namedRange.scope() instanceof ExcelNamedRangeScope.SheetScope namedRangeScope
-              && namedRangeScope.sheetName().equals(sheetScope.sheetName())) {
-            matches.add(namedRange);
-          }
-        }
+    for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
+      if (matchesSelector(namedRange, selector)) {
+        matches.add(namedRange);
       }
     }
     if (matches.isEmpty()) {
       throw notFound(selector);
     }
     return List.copyOf(matches);
+  }
+
+  private static boolean matchesSelector(
+      ExcelNamedRangeSnapshot namedRange, ExcelNamedRangeSelector selector) {
+    return switch (selector) {
+      case ExcelNamedRangeSelector.ByName byName ->
+          namedRange.name().equalsIgnoreCase(byName.name());
+      case ExcelNamedRangeSelector.WorkbookScope workbookScope ->
+          namedRange.name().equalsIgnoreCase(workbookScope.name())
+              && namedRange.scope() instanceof ExcelNamedRangeScope.WorkbookScope;
+      case ExcelNamedRangeSelector.SheetScope sheetScope ->
+          namedRange.name().equalsIgnoreCase(sheetScope.name())
+              && matchesSheetScope(namedRange.scope(), sheetScope.sheetName());
+    };
+  }
+
+  private static boolean matchesSheetScope(ExcelNamedRangeScope scope, String sheetName) {
+    return scope instanceof ExcelNamedRangeScope.SheetScope namedRangeScope
+        && namedRangeScope.sheetName().equals(sheetName);
   }
 
   private static NamedRangeNotFoundException notFound(ExcelNamedRangeSelector selector) {
@@ -256,7 +256,7 @@ final class ExcelWorkbookIntrospector {
     int totalFormulaCellCount = 0;
     for (String sheetName : sheetNames) {
       ExcelSheet sheet = workbook.sheet(sheetName);
-      List<ExcelCellSnapshot.FormulaSnapshot> formulaCells = sheet.formulaCells();
+      List<ExcelCellSnapshot.FormulaSnapshot> formulaCells = sheet.cells().formulaCells();
       Map<String, List<String>> formulas = new LinkedHashMap<>();
       for (ExcelCellSnapshot.FormulaSnapshot formulaCell : formulaCells) {
         formulas
@@ -285,7 +285,7 @@ final class ExcelWorkbookIntrospector {
     List<String> sheetNames = selectSheets(workbook, selection);
     List<ExcelArrayFormulaSnapshot> formulas = new ArrayList<>();
     for (String sheetName : sheetNames) {
-      formulas.addAll(workbook.sheet(sheetName).arrayFormulas());
+      formulas.addAll(workbook.sheet(sheetName).cells().arrayFormulas());
     }
     return List.copyOf(formulas);
   }
@@ -406,7 +406,7 @@ final class ExcelWorkbookIntrospector {
 
   private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheetNames();
+      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
       case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
     };
   }

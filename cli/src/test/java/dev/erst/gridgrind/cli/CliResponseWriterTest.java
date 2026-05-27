@@ -204,12 +204,12 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the request failure report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains(
+                "GridGrind wrote the request failure report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST_SHAPE:"));
     CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
   }
@@ -241,11 +241,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertFalse(fallback.valid());
     assertEquals(java.util.Optional.of(summary), fallback.summary());
     assertEquals(List.of(warning), fallback.warnings());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().orElseThrow().code());
-    assertEquals("WRITE_RESPONSE", fallback.problem().orElseThrow().context().stage());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().orElseThrow().code());
+    assertEquals("WRITE_RESPONSE", fallback.primaryProblem().orElseThrow().context().stage());
     assertTrue(
         fallback
-            .problem()
+            .primaryProblem()
             .orElseThrow()
             .message()
             .startsWith("Could not write response file " + responseDirectory.toAbsolutePath()),
@@ -253,7 +253,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(
         java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
         writeResponseContext(fallback).responsePath());
-    assertEquals(1, fallback.problem().orElseThrow().causes().size());
+    assertEquals(1, fallback.primaryProblem().orElseThrow().causes().size());
   }
 
   @Test
@@ -276,12 +276,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the response to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains("GridGrind wrote the response to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST: bad request]"));
     assertInstanceOf(
         GridGrindResponse.Failure.class,
         GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
@@ -305,6 +304,40 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertInstanceOf(
         GridGrindResponse.Success.class,
         GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+  }
+
+  @Test
+  void writeWithExplicitLogicalExitCodeEmitsCompactPointerForSuccessPayloads() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-explicit-stderr-response-", ".json");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        responseWriter.write(
+            Optional.of(responsePath),
+            stdout,
+            stderr,
+            GridGrindResponses.success(
+                java.util.List.of(), java.util.List.of(), java.util.List.of()),
+            2);
+
+    assertEquals(2, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(
+        "GridGrind wrote the response to "
+            + responsePath.toAbsolutePath()
+            + "; inspect that file for failure."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void formattedProblemSummaryOmitsBlankTextAndFormatsVisibleText() {
+    assertEquals("", CliResponseWriter.formattedProblemSummary(Optional.empty()));
+    assertEquals("", CliResponseWriter.formattedProblemSummary(Optional.of(" ")));
+    assertEquals(
+        " [INVALID_REQUEST: bad request]",
+        CliResponseWriter.formattedProblemSummary(Optional.of("INVALID_REQUEST: bad request")));
   }
 
   @Test
@@ -348,12 +381,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the doctor report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for problems."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains("GridGrind wrote the doctor report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST: bad request]"));
     assertFalse(GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath)).valid());
   }
 
@@ -383,9 +415,9 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(1, exitCode);
     assertFalse(fallback.valid());
     assertEquals(java.util.Optional.of(summary), fallback.summary());
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().orElseThrow().code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.primaryProblem().orElseThrow().code());
     assertTrue(
-        fallback.problem().orElseThrow().causes().stream()
+        fallback.primaryProblem().orElseThrow().causes().stream()
             .anyMatch(
                 cause ->
                     cause.code() == GridGrindProblemCode.INVALID_REQUEST

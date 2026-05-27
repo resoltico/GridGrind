@@ -117,7 +117,7 @@ class ExcelResidualHelperCoverageTest {
                   XDDFDataSourcesFactory.fromArray(new String[] {"Jan", "Feb"}),
                   XDDFDataSourcesFactory.fromArray(new Double[] {10d, 12d}));
       for (ExcelChartMarkerStyle markerStyle : ExcelChartMarkerStyle.values()) {
-        lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle));
+        lineSeries.setMarkerStyle(ExcelChartMarkerStylePoiBridge.toPoi(markerStyle));
         assertEquals(markerStyle, invokeMarkerStyle(lineSeries.getCTLineSer().getMarker()));
       }
       lineSeries.setMarkerSize((short) 11);
@@ -426,34 +426,37 @@ class ExcelResidualHelperCoverageTest {
 
   @Test
   void workbookCommandsArrayFormulaAndTempHelpersCoverResidualBranches() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setRange(
-          "B2:C4",
-          List.of(
-              List.of(ExcelCellValue.number(2d), ExcelCellValue.number(3d)),
-              List.of(ExcelCellValue.number(4d), ExcelCellValue.number(5d)),
-              List.of(ExcelCellValue.number(6d), ExcelCellValue.number(7d))));
-      sheet.setCell("A1", ExcelCellValue.formula("1+1"));
-      assertEquals(List.of(), sheet.arrayFormulas());
+      sheet
+          .cells()
+          .setRange(
+              "B2:C4",
+              List.of(
+                  List.of(ExcelCellValue.number(2d), ExcelCellValue.number(3d)),
+                  List.of(ExcelCellValue.number(4d), ExcelCellValue.number(5d)),
+                  List.of(ExcelCellValue.number(6d), ExcelCellValue.number(7d))));
+      sheet.cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      assertEquals(List.of(), sheet.cells().arrayFormulas());
 
       WorkbookCommandExecutor.applyCellValueCommand(
           workbook,
           new WorkbookCellCommand.SetArrayFormula(
               "Ops", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")));
-      assertEquals(1, sheet.arrayFormulas().size());
+      assertEquals(1, sheet.cells().arrayFormulas().size());
 
       WorkbookCommandExecutor.applyCellValueCommand(
           workbook, new WorkbookCellCommand.ClearArrayFormula("Ops", "D2"));
-      assertEquals(List.of(), sheet.arrayFormulas());
+      assertEquals(List.of(), sheet.cells().arrayFormulas());
 
       assertThrows(
           InvalidFormulaException.class,
-          () -> sheet.setArrayFormula("E2:E4", new ExcelArrayFormulaDefinition("SUM(")));
-      assertThrows(CellNotFoundException.class, () -> sheet.clearArrayFormula("Z99"));
+          () -> sheet.cells().setArrayFormula("E2:E4", new ExcelArrayFormulaDefinition("SUM(")));
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("Z99"));
       sheet.xssfSheet().createRow(0);
-      assertThrows(CellNotFoundException.class, () -> sheet.clearArrayFormula("B1"));
-      assertThrows(InvalidCellAddressException.class, () -> sheet.clearArrayFormula("XFE1048577"));
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().clearArrayFormula("B1"));
+      assertThrows(
+          InvalidCellAddressException.class, () -> sheet.cells().clearArrayFormula("XFE1048577"));
       assertThrows(
           InvalidCellAddressException.class,
           () ->
@@ -523,6 +526,7 @@ class ExcelResidualHelperCoverageTest {
           "Ops",
           workbook
               .sheet("Foglio1")
+              .cells()
               .window("A1", 1, 1)
               .rows()
               .getFirst()
@@ -573,25 +577,29 @@ class ExcelResidualHelperCoverageTest {
 
   @Test
   void customXmlAndSheetCopyResidualHelpersCoverBranches() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       workbook.getOrCreateSheet("Target");
-      workbook.sheet("Target").setCell("A1", ExcelCellValue.formula("1+1"));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "LocalName",
-              new ExcelNamedRangeScope.SheetScope("Target"),
-              ExcelNamedRangeTarget.range("Target", "A1")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "WorkbookName",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Target", "A1")));
+      workbook.sheet("Target").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "LocalName",
+                  new ExcelNamedRangeScope.SheetScope("Target"),
+                  ExcelNamedRangeTarget.range("Target", "A1")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "WorkbookName",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Target", "A1")));
 
       ExcelSheetCopyController.deleteLocalNamedRanges(workbook, "Target");
       assertEquals(
           List.of("WorkbookName"),
-          workbook.namedRanges().stream().map(ExcelNamedRangeSnapshot::name).toList());
+          workbook.names().namedRanges().stream().map(ExcelNamedRangeSnapshot::name).toList());
       assertTrue(ExcelSheetCopyController.mayReferenceCopiedSheet("Source!A1", "Source"));
       assertTrue(
           ExcelSheetCopyController.mayReferenceCopiedSheet("'Source Name'!A1", "Source Name"));

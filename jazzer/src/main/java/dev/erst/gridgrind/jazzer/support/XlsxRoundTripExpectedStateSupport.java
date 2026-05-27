@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -21,6 +22,7 @@ import dev.erst.gridgrind.excel.validation.ExcelDataValidationSnapshot;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.poi.ss.util.CellReference;
 import org.jspecify.annotations.Nullable;
 
@@ -86,11 +88,10 @@ final class XlsxRoundTripExpectedStateSupport {
     }
   }
 
-  record ExpectedCellMetadata(@Nullable ExcelHyperlink hyperlink, @Nullable ExcelComment comment) {
+  record ExpectedCellMetadata(Optional<ExcelHyperlink> hyperlink, Optional<ExcelComment> comment) {
     static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
-          metadata.hyperlink().orElse(null),
-          metadata.comment().map(derivedComment -> derivedComment.toPlainComment()).orElse(null));
+          metadata.hyperlink(), metadata.comment().map(ExcelCommentSnapshot::toPlainComment));
     }
   }
 

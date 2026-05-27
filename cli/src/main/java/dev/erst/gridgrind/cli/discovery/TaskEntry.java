@@ -9,6 +9,7 @@ public record TaskEntry(
     TaskNarrative narrative,
     TaskExecutionProfile executionProfile,
     TaskInteractionProfile interactionProfile,
+    TaskStarterContract starter,
     TaskWorkflow workflow) {
   public TaskEntry {
     id = CliDiscoveryValidation.requireNonBlank(id, "id");
@@ -16,6 +17,7 @@ public record TaskEntry(
     Objects.requireNonNull(narrative, "narrative must not be null");
     Objects.requireNonNull(executionProfile, "executionProfile must not be null");
     Objects.requireNonNull(interactionProfile, "interactionProfile must not be null");
+    Objects.requireNonNull(starter, "starter must not be null");
     Objects.requireNonNull(workflow, "workflow must not be null");
   }
 }

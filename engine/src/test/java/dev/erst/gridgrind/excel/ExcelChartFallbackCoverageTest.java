@@ -121,25 +121,29 @@ class ExcelChartFallbackCoverageTest {
           "FallbackChart",
           ExcelChartSnapshotSupport.snapshotChartDrawingObject(chart, chart.getGraphicFrame())
               .name());
-      assertEquals("Plan", ExcelChartSnapshotSupport.resolvedTitleFormulaText(chart, "B1"));
+      assertEquals("Plan", ExcelChartTitleSnapshotSupport.resolvedTitleFormulaText(chart, "B1"));
 
       XSSFChart untitledChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 10, 1, 16, 10));
-      assertEquals("", ExcelChartSnapshotSupport.cachedTitleText(untitledChart, "'Missing'!$A$1"));
-      assertEquals("", ExcelChartSnapshotSupport.resolvedTitleFormulaText(chart, "'Missing'!$A$1"));
+      assertEquals(
+          "", ExcelChartTitleSnapshotSupport.cachedTitleText(untitledChart, "'Missing'!$A$1"));
+      assertEquals(
+          "", ExcelChartTitleSnapshotSupport.resolvedTitleFormulaText(chart, "'Missing'!$A$1"));
 
       XSSFChart titleWithoutTxChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 17, 1, 23, 10));
       titleWithoutTxChart.getCTChart().addNewTitle();
       assertEquals(
-          "", ExcelChartSnapshotSupport.cachedTitleText(titleWithoutTxChart, "'Missing'!$A$1"));
+          "",
+          ExcelChartTitleSnapshotSupport.cachedTitleText(titleWithoutTxChart, "'Missing'!$A$1"));
 
       XSSFChart titleWithoutReferenceChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 24, 1, 30, 10));
       titleWithoutReferenceChart.getCTChart().addNewTitle().addNewTx();
       assertEquals(
           "",
-          ExcelChartSnapshotSupport.cachedTitleText(titleWithoutReferenceChart, "'Missing'!$A$1"));
+          ExcelChartTitleSnapshotSupport.cachedTitleText(
+              titleWithoutReferenceChart, "'Missing'!$A$1"));
 
       XSSFChart titleWithoutCacheChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 31, 1, 37, 10));
@@ -150,7 +154,8 @@ class ExcelChartFallbackCoverageTest {
           .addNewStrRef()
           .setF("'Missing'!$A$1");
       assertEquals(
-          "", ExcelChartSnapshotSupport.cachedTitleText(titleWithoutCacheChart, "'Missing'!$A$1"));
+          "",
+          ExcelChartTitleSnapshotSupport.cachedTitleText(titleWithoutCacheChart, "'Missing'!$A$1"));
 
       XSSFChart titleWithEmptyCacheChart =
           drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 38, 1, 44, 10));
@@ -160,7 +165,8 @@ class ExcelChartFallbackCoverageTest {
       emptyCacheRef.addNewStrCache();
       assertEquals(
           "",
-          ExcelChartSnapshotSupport.cachedTitleText(titleWithEmptyCacheChart, "'Missing'!$A$1"));
+          ExcelChartTitleSnapshotSupport.cachedTitleText(
+              titleWithEmptyCacheChart, "'Missing'!$A$1"));
 
       var titleRef = chart.getCTChart().addNewTitle().addNewTx().addNewStrRef();
       titleRef.setF("'Missing'!$A$1");
@@ -170,7 +176,7 @@ class ExcelChartFallbackCoverageTest {
       titlePoint.setV("cached-title");
 
       assertEquals(
-          "cached-title", ExcelChartSnapshotSupport.cachedTitleText(chart, "'Missing'!$A$1"));
+          "cached-title", ExcelChartTitleSnapshotSupport.cachedTitleText(chart, "'Missing'!$A$1"));
 
       CTSerTx seriesTitle = CTSerTx.Factory.newInstance();
       var seriesRef = seriesTitle.addNewStrRef();
@@ -182,7 +188,7 @@ class ExcelChartFallbackCoverageTest {
 
       ExcelChartSnapshot.Title.Formula fallbackSeriesTitle =
           (ExcelChartSnapshot.Title.Formula)
-              ExcelChartSnapshotSupport.snapshotSeriesTitle(sheet, seriesTitle, null);
+              ExcelChartTitleSnapshotSupport.snapshotSeriesTitle(sheet, seriesTitle, null);
       assertEquals("'Missing'!$B$1", fallbackSeriesTitle.formula());
       assertEquals("cached-series", fallbackSeriesTitle.cachedText());
     }
@@ -211,22 +217,22 @@ class ExcelChartFallbackCoverageTest {
 
       var graphicFrame = chart.getGraphicFrame();
       assertEquals(
-          Optional.empty(), ExcelChartSnapshotSupport.contextSheet((XSSFGraphicFrame) null));
-      assertNull(ExcelChartSnapshotSupport.contextSheet(null, null));
-      assertEquals(sheet, ExcelChartSnapshotSupport.contextSheet(chart, null));
-      assertEquals(sheet, ExcelChartSnapshotSupport.contextSheet(null, graphicFrame));
+          Optional.empty(), ExcelChartRelationSupport.contextSheet((XSSFGraphicFrame) null));
+      assertNull(ExcelChartRelationSupport.contextSheet(null, null));
+      assertEquals(sheet, ExcelChartRelationSupport.contextSheet(chart, null));
+      assertEquals(sheet, ExcelChartRelationSupport.contextSheet(null, graphicFrame));
       assertEquals(
           Optional.empty(),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(null, null, "B1", null));
+          ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(null, null, "B1", null));
       assertEquals(
           Optional.of("Plan"),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
+          ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
       assertEquals(
           Optional.of("Plan"),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+          ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(
               null, graphicFrame, "B1", null));
       assertEquals(
-          "Plan", ExcelChartSnapshotSupport.cachedTitleText(chart, graphicFrame, "B1", null));
+          "Plan", ExcelChartTitleSnapshotSupport.cachedTitleText(chart, graphicFrame, "B1", null));
 
       ExcelChartSnapshot snapshot = ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame);
       assertEquals("DetachedFrame", snapshot.name());
@@ -256,8 +262,8 @@ class ExcelChartFallbackCoverageTest {
 
       assertEquals(
           Optional.empty(),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
-      assertEquals("", ExcelChartSnapshotSupport.resolvedTitleFormulaText(chart, "B1"));
+          ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
+      assertEquals("", ExcelChartTitleSnapshotSupport.resolvedTitleFormulaText(chart, "B1"));
     }
   }
 
@@ -276,13 +282,13 @@ class ExcelChartFallbackCoverageTest {
 
       assertEquals(
           Optional.empty(),
-          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+          ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(
               chart, null, "not-a-cell-reference", null));
       IllegalStateException runtimeFailure =
           assertThrows(
               IllegalStateException.class,
               () ->
-                  ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+                  ExcelChartTitleSnapshotSupport.optionalResolvedTitleFormulaText(
                       chart,
                       null,
                       "B1",

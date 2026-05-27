@@ -115,10 +115,10 @@ class ExcelDrawingControllerChartSeamsTest {
                 "(?s)<xdr:graphicFrame><xdr:nvGraphicFramePr><xdr:cNvPr[^>]*name=\"FrameLess\".*?</xdr:graphicFrame>",
                 ""));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Charts");
-      assertEquals(List.of(), sheet.charts());
-      assertEquals(List.of(), sheet.drawingObjects());
+      assertEquals(List.of(), sheet.drawings().charts());
+      assertEquals(List.of(), sheet.drawings().drawingObjects());
     }
   }
 
@@ -169,13 +169,16 @@ class ExcelDrawingControllerChartSeamsTest {
                 "(?s)<xdr:graphicFrame><xdr:nvGraphicFramePr><xdr:cNvPr[^>]*name=\"FrameLess\".*?</xdr:graphicFrame>",
                 ""));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Charts");
       assertEquals(
-          List.of("LiveChart"), sheet.charts().stream().map(ExcelChartSnapshot::name).toList());
+          List.of("LiveChart"),
+          sheet.drawings().charts().stream().map(ExcelChartSnapshot::name).toList());
       assertEquals(
           List.of("LiveChart"),
-          sheet.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          sheet.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
     }
   }
 

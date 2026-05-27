@@ -22,54 +22,63 @@ class WorkbookAnalyzerTest {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-analyzer-", ".xlsx");
     writeAnalyzerFixture(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet budget = workbook.sheet("Budget");
-      budget.setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
-      budget.setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
-      budget.setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
-      budget.setCell("D1", ExcelCellValue.text("Owner"));
-      budget.setCell("E1", ExcelCellValue.text("Task"));
-      budget.setCell("D2", ExcelCellValue.text("Ada"));
-      budget.setCell("E2", ExcelCellValue.text("Queue"));
-      budget.setCell("D3", ExcelCellValue.text("Lin"));
-      budget.setCell("E3", ExcelCellValue.text("Pack"));
-      budget.setConditionalFormatting(
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("B2:B3"),
-              List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule(
-                      "B2>0",
-                      false,
-                      Optional.of(
-                          new ExcelDifferentialStyle(
-                              Optional.of("0.00"),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty()))))));
-      workbook.setTable(
-          new ExcelTableDefinition("Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
+      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
+      budget.annotations().setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
+      budget
+          .annotations()
+          .setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
+      budget.cells().setCell("D1", ExcelCellValue.text("Owner"));
+      budget.cells().setCell("E1", ExcelCellValue.text("Task"));
+      budget.cells().setCell("D2", ExcelCellValue.text("Ada"));
+      budget.cells().setCell("E2", ExcelCellValue.text("Queue"));
+      budget.cells().setCell("D3", ExcelCellValue.text("Lin"));
+      budget.cells().setCell("E3", ExcelCellValue.text("Pack"));
+      budget
+          .metadata()
+          .setConditionalFormatting(
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("B2:B3"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.FormulaRule(
+                          "B2>0",
+                          false,
+                          Optional.of(
+                              new ExcelDifferentialStyle(
+                                  Optional.of("0.00"),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty()))))));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
       workbook.getOrCreateSheet("PivotReport");
-      workbook.setPivotTable(
-          new ExcelPivotTableDefinition(
-              "Queue Pivot",
-              "PivotReport",
-              new ExcelPivotTableDefinition.Source.Range("Budget", "D1:E3"),
-              new ExcelPivotTableDefinition.Anchor("A3"),
-              List.of("Owner"),
-              List.of(),
-              List.of(),
-              List.of(
-                  new ExcelPivotTableDefinition.DataField(
-                      "Task",
-                      ExcelPivotDataConsolidateFunction.COUNT,
-                      "Task Count",
-                      Optional.empty()))));
+      workbook
+          .pivots()
+          .setPivotTable(
+              new ExcelPivotTableDefinition(
+                  "Queue Pivot",
+                  "PivotReport",
+                  new ExcelPivotTableDefinition.Source.Range("Budget", "D1:E3"),
+                  new ExcelPivotTableDefinition.Anchor("A3"),
+                  List.of("Owner"),
+                  List.of(),
+                  List.of(),
+                  List.of(
+                      new ExcelPivotTableDefinition.DataField(
+                          "Task",
+                          ExcelPivotDataConsolidateFunction.COUNT,
+                          "Task Count",
+                          Optional.empty()))));
       workbook.xssfWorkbook().getPivotTables().getFirst().getCTPivotTableDefinition().setName(null);
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
@@ -210,22 +219,24 @@ class WorkbookAnalyzerTest {
 
   @Test
   void respectsSelectedSheetsAndNamedRanges() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Item"));
-      budget.setCell("B1", ExcelCellValue.formula("NOW()"));
-      budget.setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
+      budget.cells().setCell("A1", ExcelCellValue.text("Item"));
+      budget.cells().setCell("B1", ExcelCellValue.formula("NOW()"));
+      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
 
       ExcelSheet forecast = workbook.getOrCreateSheet("Forecast");
-      forecast.setCell("A1", ExcelCellValue.text("Item"));
-      forecast.setCell("B1", ExcelCellValue.formula("1+1"));
-      forecast.setHyperlink("C1", new ExcelHyperlink.File("relative-report.xlsx"));
+      forecast.cells().setCell("A1", ExcelCellValue.text("Item"));
+      forecast.cells().setCell("B1", ExcelCellValue.formula("1+1"));
+      forecast.annotations().setHyperlink("C1", new ExcelHyperlink.File("relative-report.xlsx"));
 
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Budget", "B1")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "B1")));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -275,12 +286,13 @@ class WorkbookAnalyzerTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            analyzer.execute(ExcelWorkbook.create(), new WorkbookLocation.UnsavedWorkbook(), null));
+            analyzer.execute(
+                ExcelWorkbooks.create(), new WorkbookLocation.UnsavedWorkbook(), null));
     assertThrows(
         NullPointerException.class,
         () ->
             analyzer.execute(
-                ExcelWorkbook.create(),
+                ExcelWorkbooks.create(),
                 null,
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
                     "formulaHealth", new ExcelSheetSelection.All())));
@@ -288,24 +300,25 @@ class WorkbookAnalyzerTest {
         NullPointerException.class,
         () -> analyzer.formulaHealth(null, new ExcelSheetSelection.All()));
     assertThrows(
-        NullPointerException.class, () -> analyzer.formulaHealth(ExcelWorkbook.create(), null));
+        NullPointerException.class, () -> analyzer.formulaHealth(ExcelWorkbooks.create(), null));
     assertThrows(
         NullPointerException.class,
         () -> analyzer.hyperlinkHealth(null, new ExcelSheetSelection.All()));
     assertThrows(
-        NullPointerException.class, () -> analyzer.hyperlinkHealth(ExcelWorkbook.create(), null));
+        NullPointerException.class, () -> analyzer.hyperlinkHealth(ExcelWorkbooks.create(), null));
     assertThrows(
         NullPointerException.class,
         () -> analyzer.namedRangeHealth(null, new ExcelNamedRangeSelection.All()));
     assertThrows(
-        NullPointerException.class, () -> analyzer.namedRangeHealth(ExcelWorkbook.create(), null));
+        NullPointerException.class, () -> analyzer.namedRangeHealth(ExcelWorkbooks.create(), null));
   }
 
   @Test
   void workbookFindingsDefaultsToAnUnsavedWorkbookLocation() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook
           .getOrCreateSheet("Budget")
+          .annotations()
           .setHyperlink("A1", new ExcelHyperlink.File("reports/q1.xlsx"));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
@@ -398,7 +411,7 @@ class WorkbookAnalyzerTest {
       fail(exception);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookAnalysis.NamedRangeHealth analysis =
           new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
 

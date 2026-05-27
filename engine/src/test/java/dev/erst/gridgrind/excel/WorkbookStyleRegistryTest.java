@@ -24,15 +24,15 @@ import org.junit.jupiter.api.Test;
 class WorkbookStyleRegistryTest {
   @Test
   void resolveNumberFormat_returnsGeneralForNullOrBlank() {
-    assertEquals("General", WorkbookStyleRegistry.resolveNumberFormat(null));
-    assertEquals("General", WorkbookStyleRegistry.resolveNumberFormat(""));
-    assertEquals("General", WorkbookStyleRegistry.resolveNumberFormat("   "));
+    assertEquals("General", ExcelCellStyleSnapshotSupport.resolveNumberFormat(null));
+    assertEquals("General", ExcelCellStyleSnapshotSupport.resolveNumberFormat(""));
+    assertEquals("General", ExcelCellStyleSnapshotSupport.resolveNumberFormat("   "));
   }
 
   @Test
   void resolveNumberFormat_returnsFormatStringWhenPopulated() {
-    assertEquals("#,##0.00", WorkbookStyleRegistry.resolveNumberFormat("#,##0.00"));
-    assertEquals("yyyy-mm-dd", WorkbookStyleRegistry.resolveNumberFormat("yyyy-mm-dd"));
+    assertEquals("#,##0.00", ExcelCellStyleSnapshotSupport.resolveNumberFormat("#,##0.00"));
+    assertEquals("yyyy-mm-dd", ExcelCellStyleSnapshotSupport.resolveNumberFormat("yyyy-mm-dd"));
   }
 
   @Test

@@ -20,7 +20,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       XSSFSheet splitSheet = workbook.createSheet("SplitRows");
       seedDataValidation(splitSheet);
 
-      controller.insertRows(splitSheet, 2, 1);
+      rowController.insertRows(splitSheet, 2, 1);
 
       assertEquals(List.of("A2", "A4:A5"), dataValidationRanges(splitSheet));
 
@@ -37,7 +37,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   Optional.empty()));
       setString(formulaSheet, "A2", "Ready");
 
-      controller.insertRows(formulaSheet, 1, 1);
+      rowController.insertRows(formulaSheet, 1, 1);
 
       ExcelDataValidationSnapshot.Supported supported =
           assertInstanceOf(
@@ -57,7 +57,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
       XSSFSheet splitSheet = workbook.createSheet("SplitColumns");
       seedDataValidation(splitSheet);
 
-      controller.insertColumns(splitSheet, 0, 1);
+      columnController.insertColumns(splitSheet, 0, 1);
 
       assertEquals(List.of("B2:B4"), dataValidationRanges(splitSheet));
 
@@ -73,7 +73,7 @@ class ExcelStructureValidationRewriteCoverageTest extends ExcelRowColumnStructur
                   Optional.empty(),
                   Optional.empty()));
 
-      controller.insertColumns(formulaSheet, 0, 1);
+      columnController.insertColumns(formulaSheet, 0, 1);
 
       ExcelDataValidationSnapshot.Supported supported =
           assertInstanceOf(

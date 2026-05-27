@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: LINK_COMMENT_MUTATIONS
 updated: "2026-05-16"
 route:

@@ -68,7 +68,7 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
               firstPivot.getPivotCacheDefinition()));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
       controller.setPivotTable(
@@ -89,14 +89,16 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
       assertEquals(List.of(), fieldNames(snapshot.rowLabels()));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "DupReadSource",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "DupReadSource",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
       controller.setPivotTable(
           workbook,
           definition(
@@ -107,11 +109,13 @@ class ExcelPivotTableDeletionCoverageTest extends ExcelPivotTableCoverageTestSup
               List.of(),
               List.of("Region"),
               List.of()));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "DupReadSource",
-              new ExcelNamedRangeScope.SheetScope("Data"),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "DupReadSource",
+                  new ExcelNamedRangeScope.SheetScope("Data"),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
 
       IllegalArgumentException failure =
           assertInvocationFailure(

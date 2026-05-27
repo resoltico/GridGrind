@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-05-15"
+updated: "2026-05-27"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -114,6 +114,11 @@ by committing them on the bootstrap branch or copying them into the release work
 Step 2 staging checkpoint. Never fall back to running release verification from the dirty or
 problematic primary checkout just because the unpublished release payload currently lives there.
 
+When you bootstrap a dirty primary checkout into a clean release worktree, record the release
+worktree path and any copied-untracked manifest under `tmp/release-bootstrap/` in the primary
+checkout before you leave it. Release closeout must be able to reconnect the published branch and
+tag work back to the user's long-lived checkout without guesswork.
+
 Before running any build or release command, verify the local Java and Gradle runtime:
 
 ```bash
@@ -141,8 +146,9 @@ Then run `./check.sh`. It must exit 0. If it fails, fix all failures before proc
 Then verify every item in this checklist. All must be true before any commit or tag:
 
 - `gradle.properties` `version=` equals the target release version exactly (e.g. `0.3.0`).
-- `CHANGELOG.md` has a `## [X.Y.Z] - YYYY-MM-DD` section (not `[Unreleased]`) with at least
-  one entry.
+- `CHANGELOG.md` preserves the project's normal top-level structure. If the file carries
+  `## [Unreleased]`, leave that section in place and add a separate `## [X.Y.Z] - YYYY-MM-DD`
+  release section with at least one entry.
 - `CHANGELOG.md` link footer has:
   - `[Unreleased]: .../compare/vX.Y.Z...HEAD`
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
@@ -451,13 +457,14 @@ duplicate release workflow run failed after the release was already created.
 
 The release workflow is expected to perform this same verification internally after publication.
 Before publication, that workflow also black-box verifies the packaged fat JAR with
-`./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` so the shipped `--help`
-surface, the interactive no-arg failure path, plus `--print-protocol-catalog`,
-`--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and `--doctor-request` cannot
-drift from the core contract silently. The operator-side `gh release view` check remains
-mandatory because workflow success is still not the authoritative state. The packaged verifier
-uses repo-local disposable scratch under `tmp/` so local operators and CI hit the same
-deterministic contract-verification path.
+`./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` plus
+`./scripts/verify-cli-discovery-execution.sh jar ./cli/build/libs/gridgrind.jar` so the shipped
+`--help` surface, the interactive no-arg failure path, `--print-protocol-catalog`,
+`--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, `--doctor-request`,
+and every published built-in example and task starter cannot drift from the core contract
+silently. The operator-side `gh release view` check remains mandatory because workflow success is
+still not the authoritative state. The packaged verifiers use repo-local disposable scratch under
+`tmp/` so local operators and CI hit the same deterministic contract-verification path.
 
 ### Step 9 — Verify public availability
 
@@ -476,13 +483,15 @@ that both `docker run ... --version` results match the two-line product header f
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
 second — and that both published tags still expose the expected `--help`, interactive no-arg failure,
 `--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-task-keyword-match`, and
-`--doctor-request` contract. The verifier uses a disposable anonymous Docker config rooted under
-repo-local `tmp/`, so a passing local run matches CI's anonymous publication check instead of
-relying on whatever owner credentials happen to be cached in the shell. A successful `docker pull`
-alone is not sufficient verification. In particular: a multi-arch `docker pull` can succeed even
-when the platform
+`--doctor-request` contract, while also executing every published built-in example and task
+starter from the published container surface. The verifier uses a disposable anonymous Docker
+config rooted under repo-local `tmp/`, so a passing local run matches CI's anonymous publication
+check instead of relying on whatever owner credentials happen to be cached in the shell. A
+successful `docker pull` alone is not sufficient verification. In particular: a multi-arch
+`docker pull` can succeed even when the platform
 manifests have been deleted — the index manifest is still present but the image is not actually
-runnable. The `docker run --version` plus CLI-contract checks remain the definitive test.
+runnable. The `docker run --version`, CLI-contract checks, and published-example/task execution
+checks remain the definitive test.
 
 If the verifier script fails, inspect the published state, fix the release surface, and rerun the
 same verification command. Do not switch to the operator's normal Docker config as a fallback.

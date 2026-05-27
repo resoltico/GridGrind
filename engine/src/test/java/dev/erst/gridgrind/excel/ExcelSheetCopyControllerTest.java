@@ -40,13 +40,13 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void copySheetPreservesProtectionOnEmptySourceSheets() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.setSheetProtection("Source", protectionSettings());
+      workbook.sheets().setSheetProtection("Source", protectionSettings());
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
-      assertEquals(List.of("Source", "Replica"), workbook.sheetNames());
+      assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
       assertEquals(
           new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
@@ -72,13 +72,17 @@ class ExcelSheetCopyControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       assertDoesNotThrow(
-          () -> workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+          () ->
+              workbook
+                  .sheets()
+                  .copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
       assertEquals(
           "Review",
           workbook
               .sheet("Replica")
+              .annotations()
               .comments(new ExcelCellSelection.AllUsedCells())
               .getFirst()
               .comment()
@@ -88,11 +92,13 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void copySheetPreservesSheetProtectionPasswordHashes() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
+      workbook
+          .sheets()
+          .setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       assertTrue(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-copy"));
@@ -107,7 +113,7 @@ class ExcelSheetCopyControllerTest {
   @Test
   void copySheetPreservesAdvancedPrintSetupWhenOnlyPageSetupAttrsAreNonDefault()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       ExcelPrintLayout advancedPrintLayout =
           new ExcelPrintLayout(
@@ -131,11 +137,11 @@ class ExcelSheetCopyControllerTest {
                   4,
                   List.of(6),
                   List.of(3)));
-      workbook.sheet("Source").setPrintLayout(advancedPrintLayout);
+      workbook.sheet("Source").layout().setPrintLayout(advancedPrintLayout);
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
-      assertEquals(advancedPrintLayout, workbook.sheet("Replica").printLayout());
+      assertEquals(advancedPrintLayout, workbook.sheet("Replica").layout().printLayout());
     }
   }
 
@@ -143,48 +149,54 @@ class ExcelSheetCopyControllerTest {
   void copySheetPreservesDrawingObjectsAndRetargetsCopiedCharts() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-drawings-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
       ExcelChartTestSupport.seedChartData(source);
-      source.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              ExcelChartTestSupport.anchor(0, 5, 3, 9),
-              Optional.of("Queue preview")));
-      source.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsChart",
-              ExcelChartTestSupport.anchor(6, 1, 12, 14),
-              new ExcelChartDefinition.Title.Text("Roadmap"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Text("Plan"),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
+      source
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  ExcelChartTestSupport.anchor(0, 5, 3, 9),
+                  Optional.of("Queue preview")));
+      source
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  ExcelChartTestSupport.anchor(6, 1, 12, 14),
+                  new ExcelChartDefinition.Title.Text("Roadmap"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Text("Plan"),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
           List.of("OpsPicture", "OpsChart"),
-          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          replica.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
       ExcelDrawingObjectSnapshot.Picture copiedPicture =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Picture.class,
-              replica.drawingObjects().stream()
+              replica.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
       assertEquals(ExcelChartTestSupport.anchor(0, 5, 3, 9), copiedPicture.anchor());
 
-      ExcelChartSnapshot copiedChart = replica.charts().getFirst();
+      ExcelChartSnapshot copiedChart = replica.drawings().charts().getFirst();
       assertEquals("OpsChart", copiedChart.name());
       assertEquals(ExcelChartTestSupport.anchor(6, 1, 12, 14), copiedChart.anchor());
       ExcelChartSnapshot.Series copiedSeries =
@@ -202,15 +214,17 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet replica = reopened.sheet("Replica");
       assertEquals(
           List.of("OpsPicture", "OpsChart"),
-          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
-      ExcelChartSnapshot copiedChart = replica.charts().getFirst();
+          replica.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
+      ExcelChartSnapshot copiedChart = replica.drawings().charts().getFirst();
       ExcelChartSnapshot.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
               .series()
@@ -225,48 +239,54 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void copySheetPreservesMultipleChartsWithoutFramelessRelations() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
       ExcelChartTestSupport.seedChartData(source);
-      source.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsBar",
-              ExcelChartTestSupport.anchor(0, 5, 6, 16),
-              new ExcelChartDefinition.Title.Text("Plan"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Text("Plan"),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      source.setChart(
-          ExcelChartTestSupport.lineChart(
-              "OpsLine",
-              ExcelChartTestSupport.anchor(7, 5, 13, 16),
-              new ExcelChartDefinition.Title.Formula("C1"),
-              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
-              ExcelChartDisplayBlanksAs.SPAN,
-              true,
-              false,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Text("Actual"),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("C2:C4")))));
+      source
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsBar",
+                  ExcelChartTestSupport.anchor(0, 5, 6, 16),
+                  new ExcelChartDefinition.Title.Text("Plan"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Text("Plan"),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      source
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.lineChart(
+                  "OpsLine",
+                  ExcelChartTestSupport.anchor(7, 5, 13, 16),
+                  new ExcelChartDefinition.Title.Formula("C1"),
+                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+                  ExcelChartDisplayBlanksAs.SPAN,
+                  true,
+                  false,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Text("Actual"),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("C2:C4")))));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
       assertEquals(
           List.of("OpsBar", "OpsLine"),
-          replica.charts().stream().map(ExcelChartSnapshot::name).toList());
+          replica.drawings().charts().stream().map(ExcelChartSnapshot::name).toList());
       assertEquals(
           List.of("OpsBar", "OpsLine"),
-          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          replica.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
 
       XSSFDrawing drawing = replica.xssfSheet().getDrawingPatriarch();
       assertNotNull(drawing);
@@ -279,31 +299,36 @@ class ExcelSheetCopyControllerTest {
   void copySheetSupportsChartsBackedByWorkbookNamedRanges() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-chart-names-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
       ExcelChartTestSupport.seedChartData(source);
       ExcelChartTestSupport.seedChartNamedRanges(workbook, "Source");
-      source.setChart(
-          ExcelChartTestSupport.barChart(
-              "NamedRangeChart",
-              ExcelChartTestSupport.anchor(4, 1, 10, 14),
-              new ExcelChartDefinition.Title.Text("Named ranges"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Text("Plan"),
-                      ExcelChartTestSupport.ref("ChartCategories"),
-                      ExcelChartTestSupport.ref("ChartPlan")))));
+      source
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "NamedRangeChart",
+                  ExcelChartTestSupport.anchor(4, 1, 10, 14),
+                  new ExcelChartDefinition.Title.Text("Named ranges"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Text("Plan"),
+                          ExcelChartTestSupport.ref("ChartCategories"),
+                          ExcelChartTestSupport.ref("ChartPlan")))));
 
       assertDoesNotThrow(
-          () -> workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
-      assertEquals(List.of("Source", "Replica"), workbook.sheetNames());
+          () ->
+              workbook
+                  .sheets()
+                  .copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(List.of("Source", "Replica"), workbook.sheets().sheetNames());
 
-      ExcelChartSnapshot sourceChart = workbook.sheet("Source").charts().getFirst();
+      ExcelChartSnapshot sourceChart = workbook.sheet("Source").drawings().charts().getFirst();
       ExcelChartSnapshot.Series sourceSeries =
           ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
               .series()
@@ -319,7 +344,7 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
-      ExcelChartSnapshot copiedChart = workbook.sheet("Replica").charts().getFirst();
+      ExcelChartSnapshot copiedChart = workbook.sheet("Replica").drawings().charts().getFirst();
       ExcelChartSnapshot.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
               .series()
@@ -335,11 +360,11 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot sourceChart = reopened.sheet("Source").charts().getFirst();
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot sourceChart = reopened.sheet("Source").drawings().charts().getFirst();
       ExcelChartSnapshot.Series sourceSeries =
           ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
               .series()
@@ -355,7 +380,7 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
               .formula());
 
-      ExcelChartSnapshot copiedChart = reopened.sheet("Replica").charts().getFirst();
+      ExcelChartSnapshot copiedChart = reopened.sheet("Replica").drawings().charts().getFirst();
       ExcelChartSnapshot.Series copiedSeries =
           ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
               .series()
@@ -378,17 +403,18 @@ class ExcelSheetCopyControllerTest {
     ExcelAutofilterController autofilterController = new ExcelAutofilterController();
     ExcelTableController tableController = new ExcelTableController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
       List<WorkbookSheetResult.CellComment> sourceComments =
-          source.comments(new ExcelCellSelection.Selected(List.of("E2")));
+          source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       ExcelSheet replica = workbook.sheet("Replica");
-      assertEquals("SUM(Replica!B2:B3)", replica.formula("C2"));
+      assertEquals("SUM(Replica!B2:B3)", replica.cells().formula("C2"));
       assertEquals(
-          sourceComments, replica.comments(new ExcelCellSelection.Selected(List.of("E2"))));
+          sourceComments,
+          replica.annotations().comments(new ExcelCellSelection.Selected(List.of("E2"))));
       assertEquals(
           List.of(
               new ExcelAutofilterSnapshot.SheetOwned(
@@ -439,7 +465,7 @@ class ExcelSheetCopyControllerTest {
                               new ExcelAutofilterSortConditionSnapshot.Icon("B2:B3", false, 4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
       List<ExcelDataValidationSnapshot> replicaValidations =
-          replica.dataValidations(new ExcelRangeSelection.All());
+          replica.metadata().dataValidations(new ExcelRangeSelection.All());
       assertEquals(2, replicaValidations.size());
       ExcelDataValidationSnapshot.Supported formulaList =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
@@ -457,7 +483,7 @@ class ExcelSheetCopyControllerTest {
       assertTrue(rawReplicaValidations.get(1).getFormula2().contains("Replica"));
       assertTrue(rawReplicaValidations.get(1).getFormula2().contains("$B$2:$B$3"));
       List<ExcelNamedRangeSnapshot> replicaNames =
-          workbook.namedRanges().stream()
+          workbook.names().namedRanges().stream()
               .filter(
                   namedRange ->
                       namedRange.scope() instanceof ExcelNamedRangeScope.SheetScope scope
@@ -487,7 +513,7 @@ class ExcelSheetCopyControllerTest {
                           && formulaSnapshot.refersToFormula().contains("Replica")
                           && formulaSnapshot.refersToFormula().contains("$B$2:$B$3")));
       ExcelConditionalFormattingBlockSnapshot copiedFormatting =
-          replica.conditionalFormatting(new ExcelRangeSelection.All()).getFirst();
+          replica.metadata().conditionalFormatting(new ExcelRangeSelection.All()).getFirst();
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
@@ -521,18 +547,22 @@ class ExcelSheetCopyControllerTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-comment-reopen-");
 
     List<WorkbookSheetResult.CellComment> sourceComments;
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = seedAdvancedCopySource(workbook);
-      sourceComments = source.comments(new ExcelCellSelection.Selected(List.of("E2")));
+      sourceComments =
+          source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.save(workbookPath);
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           sourceComments,
-          reopened.sheet("Replica").comments(new ExcelCellSelection.Selected(List.of("E2"))));
+          reopened
+              .sheet("Replica")
+              .annotations()
+              .comments(new ExcelCellSelection.Selected(List.of("E2"))));
     }
   }
 
@@ -542,97 +572,103 @@ class ExcelSheetCopyControllerTest {
     ExcelAutofilterController autofilterController = new ExcelAutofilterController();
     ExcelTableController tableController = new ExcelTableController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
-      source.setCell("A1", ExcelCellValue.text("Owner"));
-      source.setCell("B1", ExcelCellValue.text("Amount"));
-      source.setCell("C1", ExcelCellValue.text("Flag"));
-      source.setCell("A2", ExcelCellValue.text("Ada"));
-      source.setCell("A3", ExcelCellValue.text("Lin"));
-      source.setCell("B2", ExcelCellValue.number(2));
-      source.setCell("B3", ExcelCellValue.number(4));
-      source.setCell("E1", ExcelCellValue.text("Desk"));
-      source.setCell("F1", ExcelCellValue.text("Region"));
-      source.setCell("E2", ExcelCellValue.text("A1"));
-      source.setCell("E3", ExcelCellValue.text("B1"));
-      source.setCell("E4", ExcelCellValue.text("Totals"));
-      source.setCell("F2", ExcelCellValue.text("North"));
-      source.setCell("F3", ExcelCellValue.text("South"));
-      source.setCell("F4", ExcelCellValue.text("2"));
+      source.cells().setCell("A1", ExcelCellValue.text("Owner"));
+      source.cells().setCell("B1", ExcelCellValue.text("Amount"));
+      source.cells().setCell("C1", ExcelCellValue.text("Flag"));
+      source.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      source.cells().setCell("A3", ExcelCellValue.text("Lin"));
+      source.cells().setCell("B2", ExcelCellValue.number(2));
+      source.cells().setCell("B3", ExcelCellValue.number(4));
+      source.cells().setCell("E1", ExcelCellValue.text("Desk"));
+      source.cells().setCell("F1", ExcelCellValue.text("Region"));
+      source.cells().setCell("E2", ExcelCellValue.text("A1"));
+      source.cells().setCell("E3", ExcelCellValue.text("B1"));
+      source.cells().setCell("E4", ExcelCellValue.text("Totals"));
+      source.cells().setCell("F2", ExcelCellValue.text("North"));
+      source.cells().setCell("F3", ExcelCellValue.text("South"));
+      source.cells().setCell("F4", ExcelCellValue.text("2"));
 
-      source.setAutofilter(
-          "A1:B3",
-          List.of(
-              new ExcelAutofilterFilterColumn(
-                  0L, true, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), false))),
-          Optional.empty());
+      source
+          .metadata()
+          .setAutofilter(
+              "A1:B3",
+              List.of(
+                  new ExcelAutofilterFilterColumn(
+                      0L, true, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), false))),
+              Optional.empty());
       var rawValidations = source.xssfSheet().getCTWorksheet().addNewDataValidations();
       CTDataValidation rawValidation = rawValidations.addNewDataValidation();
       rawValidation.setSqref(List.of("C2:C3"));
       rawValidation.setFormula1("SUM(Source!$B$2:$B$3)");
       rawValidations.setCount(rawValidations.sizeOfDataValidationArray());
-      source.setConditionalFormatting(
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("C2:C3"),
-              List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule(
-                      "SUM(Source!$B$2:$B$3)>0", false, Optional.empty()),
-                  new ExcelConditionalFormattingRule.CellValueRule(
-                      ExcelComparisonOperator.GREATER_THAN,
-                      "SUM(Source!$B$2:$B$3)",
-                      Optional.empty(),
-                      false,
-                      Optional.empty()),
-                  new ExcelConditionalFormattingRule.ColorScaleRule(
-                      List.of(
+      source
+          .metadata()
+          .setConditionalFormatting(
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("C2:C3"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.FormulaRule(
+                          "SUM(Source!$B$2:$B$3)>0", false, Optional.empty()),
+                      new ExcelConditionalFormattingRule.CellValueRule(
+                          ExcelComparisonOperator.GREATER_THAN,
+                          "SUM(Source!$B$2:$B$3)",
+                          Optional.empty(),
+                          false,
+                          Optional.empty()),
+                      new ExcelConditionalFormattingRule.ColorScaleRule(
+                          List.of(
+                              new ExcelConditionalFormattingThreshold(
+                                  ExcelConditionalFormattingThresholdType.MIN, null, null),
+                              new ExcelConditionalFormattingThreshold(
+                                  ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                          List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566")),
+                          false),
+                      new ExcelConditionalFormattingRule.DataBarRule(
+                          ExcelColor.rgb("#223344"),
+                          false,
+                          0,
+                          100,
                           new ExcelConditionalFormattingThreshold(
                               ExcelConditionalFormattingThresholdType.MIN, null, null),
                           new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                      List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#445566")),
-                      false),
-                  new ExcelConditionalFormattingRule.DataBarRule(
-                      ExcelColor.rgb("#223344"),
-                      false,
-                      0,
-                      100,
-                      new ExcelConditionalFormattingThreshold(
-                          ExcelConditionalFormattingThresholdType.MIN, null, null),
-                      new ExcelConditionalFormattingThreshold(
-                          ExcelConditionalFormattingThresholdType.MAX, null, null),
-                      false),
-                  new ExcelConditionalFormattingRule.IconSetRule(
-                      ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
-                      false,
-                      true,
-                      List.of(
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.PERCENT, null, 50.0d),
-                          new ExcelConditionalFormattingThreshold(
-                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
-                      false),
-                  new ExcelConditionalFormattingRule.Top10Rule(
-                      5, false, false, false, Optional.empty()))));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "Queue",
-              "Source",
-              "E1:F4",
-              true,
-              false,
-              new ExcelTableStyle.None(),
-              "",
-              false,
-              false,
-              false,
-              "",
-              "",
-              "",
-              List.of()));
+                              ExcelConditionalFormattingThresholdType.MAX, null, null),
+                          false),
+                      new ExcelConditionalFormattingRule.IconSetRule(
+                          ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
+                          false,
+                          true,
+                          List.of(
+                              new ExcelConditionalFormattingThreshold(
+                                  ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
+                              new ExcelConditionalFormattingThreshold(
+                                  ExcelConditionalFormattingThresholdType.PERCENT, null, 50.0d),
+                              new ExcelConditionalFormattingThreshold(
+                                  ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                          false),
+                      new ExcelConditionalFormattingRule.Top10Rule(
+                          5, false, false, false, Optional.empty()))));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "Queue",
+                  "Source",
+                  "E1:F4",
+                  true,
+                  false,
+                  new ExcelTableStyle.None(),
+                  "",
+                  false,
+                  false,
+                  false,
+                  "",
+                  "",
+                  "",
+                  List.of()));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       assertEquals(
           List.of(
@@ -657,7 +693,11 @@ class ExcelSheetCopyControllerTest {
               .getFormula1());
 
       ExcelConditionalFormattingBlockSnapshot copiedFormatting =
-          workbook.sheet("Replica").conditionalFormatting(new ExcelRangeSelection.All()).getFirst();
+          workbook
+              .sheet("Replica")
+              .metadata()
+              .conditionalFormatting(new ExcelRangeSelection.All())
+              .getFirst();
       assertEquals(
           "SUM(Replica!$B$2:$B$3)>0",
           assertInstanceOf(
@@ -765,10 +805,11 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void copySheetPreservesAndRetargetsRawDataValidations() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       workbook
           .sheet("Source")
+          .metadata()
           .setDataValidation(
               "A1:A3",
               new ExcelDataValidationDefinition(
@@ -782,10 +823,10 @@ class ExcelSheetCopyControllerTest {
       addRawValidation(
           workbook.xssfWorkbook().getSheet("Source"), "C1:C3", STDataValidationType.LIST, null);
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       List<ExcelDataValidationSnapshot> replicaValidations =
-          workbook.sheet("Replica").dataValidations(new ExcelRangeSelection.All());
+          workbook.sheet("Replica").metadata().dataValidations(new ExcelRangeSelection.All());
       assertEquals(3, replicaValidations.size());
       ExcelDataValidationSnapshot.Supported formulaList =
           assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, replicaValidations.get(0));
@@ -819,7 +860,7 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void copySheetHandlesEdgeCasesInValidationFormulaRetargeting() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
       var sheet = workbook.xssfWorkbook().getSheet("Source");
       // List validation: formula1.length() < 2 — covers isQuotedListLiteral length < 2 branch.
@@ -844,7 +885,7 @@ class ExcelSheetCopyControllerTest {
       missingType.setFormula1("Source!$A$1");
       validations.setCount(validations.sizeOfDataValidationArray());
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       List<CTDataValidation> rawReplica =
           List.of(
@@ -1040,120 +1081,138 @@ class ExcelSheetCopyControllerTest {
 
   private static ExcelSheet seedAdvancedCopySource(ExcelWorkbook workbook) throws IOException {
     ExcelSheet source = workbook.getOrCreateSheet("Source");
-    source.setCell("A1", ExcelCellValue.text("Owner"));
-    source.setCell("B1", ExcelCellValue.text("Amount"));
-    source.setCell("C1", ExcelCellValue.text("Formula"));
-    source.setCell("D1", ExcelCellValue.text("Stage"));
-    source.setCell("E1", ExcelCellValue.text("Comment"));
-    source.setCell("F1", ExcelCellValue.text("Flag"));
-    source.setCell("G1", ExcelCellValue.text("List"));
-    source.setCell("H1", ExcelCellValue.text("Whole"));
-    source.setCell("I1", ExcelCellValue.text("Note"));
-    source.setCell("J1", ExcelCellValue.text("Statuses"));
-    source.setCell("A2", ExcelCellValue.text("Ada"));
-    source.setCell("A3", ExcelCellValue.text("Lin"));
-    source.setCell("B2", ExcelCellValue.number(2));
-    source.setCell("B3", ExcelCellValue.number(4));
-    source.setCell("C2", ExcelCellValue.formula("SUM(Source!B2:B3)"));
-    source.setCell("D2", ExcelCellValue.text("Today"));
-    source.setCell("D3", ExcelCellValue.text("Today"));
-    source.setCell("F2", ExcelCellValue.text("High"));
-    source.setCell("F3", ExcelCellValue.text("Low"));
-    source.setCell("J2", ExcelCellValue.text("Ready"));
-    source.setCell("J3", ExcelCellValue.text("Done"));
-    source.setCell("H2", ExcelCellValue.number(1));
-    source.setCell("H3", ExcelCellValue.number(2));
-    source.setCell("E2", ExcelCellValue.text("Quarterly Review"));
-    source.setComment(
-        "E2",
-        new ExcelComment(
-            "Quarterly Review",
-            "GridGrind",
-            true,
-            Optional.of(
-                new ExcelRichText(
-                    List.of(
-                        new ExcelRichTextRun("Quarterly", Optional.empty()),
-                        new ExcelRichTextRun(
-                            " Review",
-                            Optional.of(
-                                new ExcelCellFont(
-                                    Optional.of(true),
-                                    Optional.of(false),
-                                    Optional.of("Aptos"),
-                                    Optional.empty(),
-                                    Optional.of(ExcelColor.rgb("#112233")),
-                                    Optional.empty(),
-                                    Optional.empty())))))),
-            Optional.of(new ExcelCommentAnchor(1, 1, 4, 5))));
-    source.setAutofilter(
-        "A1:F3", advancedAutofilterCriteria(), Optional.of(advancedAutofilterSortState()));
-    source.setDataValidation(
-        "G2:G3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.FormulaList("Source!$J$2:$J$3"),
-            false,
-            false,
-            Optional.empty(),
-            Optional.empty()));
-    source.setDataValidation(
-        "H2:H3",
-        new ExcelDataValidationDefinition(
-            new ExcelDataValidationRule.WholeNumber(
-                ExcelComparisonOperator.BETWEEN, "1", Optional.of("SUM(Source!$B$2:$B$3)")),
-            false,
-            false,
-            Optional.empty(),
-            Optional.empty()));
-    source.setConditionalFormatting(
-        new ExcelConditionalFormattingBlockDefinition(
-            List.of("I2:I3"),
-            List.of(
-                new ExcelConditionalFormattingRule.FormulaRule(
-                    "SUM(Source!$B$2:$B$3)>0",
-                    false,
-                    ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")),
-                new ExcelConditionalFormattingRule.CellValueRule(
-                    ExcelComparisonOperator.BETWEEN,
-                    "1",
-                    Optional.of("SUM(Source!$B$2:$B$3)"),
-                    false,
-                    ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")))));
-    workbook.setNamedRange(
-        new ExcelNamedRangeDefinition(
-            "LocalRange",
-            new ExcelNamedRangeScope.SheetScope("Source"),
-            ExcelNamedRangeTarget.range("Source", "A2:A3")));
-    workbook.setNamedRange(
-        new ExcelNamedRangeDefinition(
-            "LocalFormula",
-            new ExcelNamedRangeScope.SheetScope("Source"),
-            ExcelNamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
-    source.setCell("L1", ExcelCellValue.text("Region"));
-    source.setCell("M1", ExcelCellValue.text("Desk"));
-    source.setCell("L2", ExcelCellValue.text("North"));
-    source.setCell("M2", ExcelCellValue.text("A1"));
-    source.setCell("L3", ExcelCellValue.text("South"));
-    source.setCell("M3", ExcelCellValue.text("B1"));
-    workbook.setTable(
-        new ExcelTableDefinition(
-            "ReplicaTable",
-            "Source",
-            "L1:M3",
-            false,
-            true,
-            new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false),
-            "replica table",
-            true,
-            true,
-            false,
-            "HeaderStyle",
-            "DataStyle",
-            "TotalsStyle",
-            List.of(
-                new ExcelTableColumnDefinition(0, "Region", "", "", ""),
-                new ExcelTableColumnDefinition(1, "Desk", "", "", "UPPER([@Desk])"))));
-    workbook.setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
+    source.cells().setCell("A1", ExcelCellValue.text("Owner"));
+    source.cells().setCell("B1", ExcelCellValue.text("Amount"));
+    source.cells().setCell("C1", ExcelCellValue.text("Formula"));
+    source.cells().setCell("D1", ExcelCellValue.text("Stage"));
+    source.cells().setCell("E1", ExcelCellValue.text("Comment"));
+    source.cells().setCell("F1", ExcelCellValue.text("Flag"));
+    source.cells().setCell("G1", ExcelCellValue.text("List"));
+    source.cells().setCell("H1", ExcelCellValue.text("Whole"));
+    source.cells().setCell("I1", ExcelCellValue.text("Note"));
+    source.cells().setCell("J1", ExcelCellValue.text("Statuses"));
+    source.cells().setCell("A2", ExcelCellValue.text("Ada"));
+    source.cells().setCell("A3", ExcelCellValue.text("Lin"));
+    source.cells().setCell("B2", ExcelCellValue.number(2));
+    source.cells().setCell("B3", ExcelCellValue.number(4));
+    source.cells().setCell("C2", ExcelCellValue.formula("SUM(Source!B2:B3)"));
+    source.cells().setCell("D2", ExcelCellValue.text("Today"));
+    source.cells().setCell("D3", ExcelCellValue.text("Today"));
+    source.cells().setCell("F2", ExcelCellValue.text("High"));
+    source.cells().setCell("F3", ExcelCellValue.text("Low"));
+    source.cells().setCell("J2", ExcelCellValue.text("Ready"));
+    source.cells().setCell("J3", ExcelCellValue.text("Done"));
+    source.cells().setCell("H2", ExcelCellValue.number(1));
+    source.cells().setCell("H3", ExcelCellValue.number(2));
+    source.cells().setCell("E2", ExcelCellValue.text("Quarterly Review"));
+    source
+        .annotations()
+        .setComment(
+            "E2",
+            new ExcelComment(
+                "Quarterly Review",
+                "GridGrind",
+                true,
+                Optional.of(
+                    new ExcelRichText(
+                        List.of(
+                            new ExcelRichTextRun("Quarterly", Optional.empty()),
+                            new ExcelRichTextRun(
+                                " Review",
+                                Optional.of(
+                                    new ExcelCellFont(
+                                        Optional.of(true),
+                                        Optional.of(false),
+                                        Optional.of("Aptos"),
+                                        Optional.empty(),
+                                        Optional.of(ExcelColor.rgb("#112233")),
+                                        Optional.empty(),
+                                        Optional.empty())))))),
+                Optional.of(new ExcelCommentAnchor(1, 1, 4, 5))));
+    source
+        .metadata()
+        .setAutofilter(
+            "A1:F3", advancedAutofilterCriteria(), Optional.of(advancedAutofilterSortState()));
+    source
+        .metadata()
+        .setDataValidation(
+            "G2:G3",
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.FormulaList("Source!$J$2:$J$3"),
+                false,
+                false,
+                Optional.empty(),
+                Optional.empty()));
+    source
+        .metadata()
+        .setDataValidation(
+            "H2:H3",
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.WholeNumber(
+                    ExcelComparisonOperator.BETWEEN, "1", Optional.of("SUM(Source!$B$2:$B$3)")),
+                false,
+                false,
+                Optional.empty(),
+                Optional.empty()));
+    source
+        .metadata()
+        .setConditionalFormatting(
+            new ExcelConditionalFormattingBlockDefinition(
+                List.of("I2:I3"),
+                List.of(
+                    new ExcelConditionalFormattingRule.FormulaRule(
+                        "SUM(Source!$B$2:$B$3)>0",
+                        false,
+                        ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")),
+                    new ExcelConditionalFormattingRule.CellValueRule(
+                        ExcelComparisonOperator.BETWEEN,
+                        "1",
+                        Optional.of("SUM(Source!$B$2:$B$3)"),
+                        false,
+                        ExcelSheetCopyController.copyableStyle(supportedStyle(), "Source")))));
+    workbook
+        .names()
+        .setNamedRange(
+            new ExcelNamedRangeDefinition(
+                "LocalRange",
+                new ExcelNamedRangeScope.SheetScope("Source"),
+                ExcelNamedRangeTarget.range("Source", "A2:A3")));
+    workbook
+        .names()
+        .setNamedRange(
+            new ExcelNamedRangeDefinition(
+                "LocalFormula",
+                new ExcelNamedRangeScope.SheetScope("Source"),
+                ExcelNamedRangeTarget.formula("SUM(Source!$B$2:$B$3)")));
+    source.cells().setCell("L1", ExcelCellValue.text("Region"));
+    source.cells().setCell("M1", ExcelCellValue.text("Desk"));
+    source.cells().setCell("L2", ExcelCellValue.text("North"));
+    source.cells().setCell("M2", ExcelCellValue.text("A1"));
+    source.cells().setCell("L3", ExcelCellValue.text("South"));
+    source.cells().setCell("M3", ExcelCellValue.text("B1"));
+    workbook
+        .tables()
+        .setTable(
+            new ExcelTableDefinition(
+                "ReplicaTable",
+                "Source",
+                "L1:M3",
+                false,
+                true,
+                new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false),
+                "replica table",
+                true,
+                true,
+                false,
+                "HeaderStyle",
+                "DataStyle",
+                "TotalsStyle",
+                List.of(
+                    new ExcelTableColumnDefinition(0, "Region", "", "", ""),
+                    new ExcelTableColumnDefinition(1, "Desk", "", "", "UPPER([@Desk])"))));
+    workbook
+        .sheets()
+        .setSheetProtection("Source", protectionSettings(), Optional.of("gridgrind-copy"));
     return source;
   }
 

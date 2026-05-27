@@ -19,6 +19,9 @@ jazzer_root="${repo_root}/jazzer"
 local_root="${jazzer_root}/.local"
 lock_dir="${local_root}/run-lock"
 pid_file="${lock_dir}/pid"
+lock_scope_name="Jazzer wrapper command"
+lock_scope_advice="run one Jazzer wrapper command at a time"
+lock_include_owner_command=false
 
 # shellcheck source=/dev/null
 source "${script_dir}/_run-lock-support"
@@ -112,28 +115,28 @@ EOF
       ;;
     jazzerStatus)
       cat <<EOF
-Usage: jazzer/bin/status [target] [gradle-options...]
+Usage: jazzer/bin/status [target] [--json] [gradle-options...]
 Prints the latest local Jazzer run summaries.
 Valid targets: ${target_list}
 EOF
       ;;
     jazzerReport)
       cat <<EOF
-Usage: jazzer/bin/report [target] [gradle-options...]
+Usage: jazzer/bin/report [target] [--json] [gradle-options...]
 Prints the detailed latest local Jazzer summary for one target or all targets.
 Valid targets: ${target_list}
 EOF
       ;;
     jazzerListFindings)
       cat <<EOF
-Usage: jazzer/bin/list-findings [target] [gradle-options...]
+Usage: jazzer/bin/list-findings [target] [--json] [gradle-options...]
 Lists saved finding artifacts for one target or all targets.
 Valid targets: ${target_list}
 EOF
       ;;
     jazzerListCorpus)
       cat <<EOF
-Usage: jazzer/bin/list-corpus [target] [gradle-options...]
+Usage: jazzer/bin/list-corpus [target] [--json] [gradle-options...]
 Lists local corpus and promoted inputs for one target or all targets.
 Valid targets: ${target_list}
 EOF

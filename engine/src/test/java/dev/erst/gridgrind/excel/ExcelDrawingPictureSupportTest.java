@@ -41,41 +41,45 @@ class ExcelDrawingPictureSupportTest {
             xml -> xml.replaceFirst("r:embed=\"[^\"]+\"", "r:embed=\"rIdMissing\""));
     Path repairedWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-picture-delete-recovery-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(mutatedWorkbook)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(mutatedWorkbook)) {
       ExcelSheet sheet = workbook.sheet("Ops");
 
       IllegalStateException drawingObjectsFailure =
-          assertThrows(IllegalStateException.class, sheet::drawingObjects);
+          assertThrows(IllegalStateException.class, () -> sheet.drawings().drawingObjects());
       assertTrue(drawingObjectsFailure.getMessage().contains("OpsPicture"));
       assertTrue(drawingObjectsFailure.getMessage().contains("rIdMissing"));
 
       IllegalStateException payloadFailure =
-          assertThrows(IllegalStateException.class, () -> sheet.drawingObjectPayload("OpsPicture"));
+          assertThrows(
+              IllegalStateException.class,
+              () -> sheet.drawings().drawingObjectPayload("OpsPicture"));
       assertTrue(payloadFailure.getMessage().contains("OpsPicture"));
       assertTrue(payloadFailure.getMessage().contains("rIdMissing"));
 
-      assertDoesNotThrow(() -> sheet.deleteDrawingObject("OpsPicture"));
+      assertDoesNotThrow(() -> sheet.drawings().deleteDrawingObject("OpsPicture"));
       assertEquals(0, sheet.xssfSheet().getDrawingPatriarch().getShapes().size());
 
-      workbook.save(repairedWorkbook);
+      workbook.persistence().save(repairedWorkbook);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(repairedWorkbook)) {
-      assertEquals(List.of(), reopened.sheet("Ops").drawingObjects());
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(repairedWorkbook)) {
+      assertEquals(List.of(), reopened.sheet("Ops").drawings().drawingObjects());
     }
   }
 
   @Test
   void pictureHelpersHandleBlankMissingAndMismatchedRelationships() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       ExcelDrawingPictureSupport.PictureReadback readback =
           ExcelDrawingPictureSupport.requiredPictureReadback(picture);
@@ -136,15 +140,17 @@ class ExcelDrawingPictureSupportTest {
 
   @Test
   void pictureDataFallbackUsesWorkbookCatalogWhenLoadedDrawingRelationDrifts() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       String detachedRelationId = "rIdDetached";
       String originalRelationId =
@@ -175,15 +181,17 @@ class ExcelDrawingPictureSupportTest {
 
   @Test
   void pictureDataFallbackRejectsNonImageRelationshipTargets() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       picture
           .getDrawing()
@@ -210,15 +218,17 @@ class ExcelDrawingPictureSupportTest {
 
   @Test
   void pictureReadbackRejectsBlankContentType() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       ExcelDrawingPictureSupport.PictureReadback readback =
           ExcelDrawingPictureSupport.requiredPictureReadback(picture);
@@ -239,15 +249,17 @@ class ExcelDrawingPictureSupportTest {
 
   @Test
   void pictureHelpersTreatMissingBlipFillAsMissingRelationship() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
 
       removeBlipFill(picture);
@@ -275,16 +287,18 @@ class ExcelDrawingPictureSupportTest {
 
   private static Path workbookWithPicture(String prefix) throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath(prefix);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
-      workbook.save(workbookPath);
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
+      workbook.persistence().save(workbookPath);
     }
     return workbookPath;
   }

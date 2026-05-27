@@ -11,6 +11,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -471,7 +472,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   void persistWorkbookRejectsOverwriteForNewSources() throws Exception {
     ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       IllegalArgumentException exception =
           assertThrows(
               IllegalArgumentException.class,
@@ -501,7 +502,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       GridGrindResponsePersistence.PersistenceOutcome outcome =
           workbookSupport.persistWorkbook(
               workbook,

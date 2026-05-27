@@ -5,27 +5,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilter;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilterColumn;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPatternFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortCondition;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortState;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDynamicFilterType;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STFilterOperator;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STIconSetType;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortBy;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortMethod;
 
@@ -52,66 +44,7 @@ final class ExcelAutofilterOoxmlSupport {
       XSSFWorkbook workbook,
       CTFilterColumn filterColumn,
       ExcelAutofilterFilterCriterion criterion) {
-    switch (criterion) {
-      case ExcelAutofilterFilterCriterion.Values values -> {
-        CTFilters filters = filterColumn.addNewFilters();
-        for (String value : values.values()) {
-          filters.addNewFilter().setVal(value);
-        }
-        if (values.includeBlank()) {
-          filters.setBlank(true);
-        }
-      }
-      case ExcelAutofilterFilterCriterion.Custom custom -> {
-        CTCustomFilters customFilters = filterColumn.addNewCustomFilters();
-        customFilters.setAnd(custom.and());
-        for (ExcelAutofilterFilterCriterion.CustomCondition condition : custom.conditions()) {
-          CTCustomFilter customFilter = customFilters.addNewCustomFilter();
-          STFilterOperator.Enum operator = STFilterOperator.Enum.forString(condition.operator());
-          if (operator == null) {
-            throw new IllegalArgumentException(
-                "unsupported autofilter custom operator: " + condition.operator());
-          }
-          customFilter.setOperator(operator);
-          customFilter.setVal(condition.value());
-        }
-      }
-      case ExcelAutofilterFilterCriterion.Dynamic dynamic -> {
-        CTDynamicFilter dynamicFilter = filterColumn.addNewDynamicFilter();
-        STDynamicFilterType.Enum type = STDynamicFilterType.Enum.forString(dynamic.type());
-        if (type == null) {
-          throw new IllegalArgumentException(
-              "unsupported autofilter dynamic type: " + dynamic.type());
-        }
-        dynamicFilter.setType(type);
-        if (dynamic.value() != null) {
-          dynamicFilter.setVal(dynamic.value());
-        }
-        if (dynamic.maxValue() != null) {
-          dynamicFilter.setMaxVal(dynamic.maxValue());
-        }
-      }
-      case ExcelAutofilterFilterCriterion.Top10 top10 -> {
-        CTTop10 top10Filter = filterColumn.addNewTop10();
-        top10Filter.setVal(top10.value());
-        top10Filter.setTop(top10.top());
-        top10Filter.setPercent(top10.percent());
-      }
-      case ExcelAutofilterFilterCriterion.Color color -> {
-        CTColorFilter colorFilter = filterColumn.addNewColorFilter();
-        colorFilter.setCellColor(color.cellColor());
-        colorFilter.setDxfId(putColorDxf(workbook, color.color(), color.cellColor()) - 1L);
-      }
-      case ExcelAutofilterFilterCriterion.Icon icon -> {
-        CTIconFilter iconFilter = filterColumn.addNewIconFilter();
-        STIconSetType.Enum iconSet = STIconSetType.Enum.forString(icon.iconSet());
-        if (iconSet == null) {
-          throw new IllegalArgumentException("unsupported autofilter icon set: " + icon.iconSet());
-        }
-        iconFilter.setIconSet(iconSet);
-        iconFilter.setIconId(icon.iconId());
-      }
-    }
+    ExcelAutofilterCriterionWriteSupport.applyCriterion(workbook, filterColumn, criterion);
   }
 
   static void replaceSortState(
@@ -159,30 +92,21 @@ final class ExcelAutofilterOoxmlSupport {
       }
       case ExcelAutofilterSortCondition.CellColor cellColor -> {
         sortCondition.setSortBy(STSortBy.CELL_COLOR);
-        sortCondition.setDxfId(putColorDxf(workbook, cellColor.color(), true) - 1L);
+        sortCondition.setDxfId(
+            ExcelAutofilterCriterionWriteSupport.putColorDxf(workbook, cellColor.color(), true)
+                - 1L);
       }
       case ExcelAutofilterSortCondition.FontColor fontColor -> {
         sortCondition.setSortBy(STSortBy.FONT_COLOR);
-        sortCondition.setDxfId(putColorDxf(workbook, fontColor.color(), false) - 1L);
+        sortCondition.setDxfId(
+            ExcelAutofilterCriterionWriteSupport.putColorDxf(workbook, fontColor.color(), false)
+                - 1L);
       }
       case ExcelAutofilterSortCondition.Icon icon -> {
         sortCondition.setSortBy(STSortBy.ICON);
         sortCondition.setIconId(icon.iconId());
       }
     }
-  }
-
-  private static long putColorDxf(XSSFWorkbook workbook, ExcelColor color, boolean cellColor) {
-    CTDxf dxf = CTDxf.Factory.newInstance();
-    if (cellColor) {
-      CTPatternFill patternFill = dxf.addNewFill().addNewPatternFill();
-      patternFill.setPatternType(STPatternType.SOLID);
-      patternFill.addNewFgColor().set(ExcelColorSupport.toXssfColor(workbook, color).getCTColor());
-    } else {
-      CTFont font = dxf.addNewFont();
-      font.addNewColor().set(ExcelColorSupport.toXssfColor(workbook, color).getCTColor());
-    }
-    return workbook.getStylesSource().putDxf(dxf);
   }
 
   static List<ExcelAutofilterFilterColumnSnapshot> filterColumns(
@@ -363,36 +287,6 @@ final class ExcelAutofilterOoxmlSupport {
 
   static Optional<ExcelColorSnapshot> dxfColor(
       XSSFWorkbook workbook, long dxfId, boolean cellColor) {
-    CTDxf dxf = dxfAt(workbook.getStylesSource(), dxfId).orElse(null);
-    if (dxf == null) {
-      return Optional.empty();
-    }
-    if (cellColor
-        && dxf.isSetFill()
-        && dxf.getFill().isSetPatternFill()
-        && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return ExcelColorSnapshotSupport.snapshot(
-          workbook, dxf.getFill().getPatternFill().getFgColor());
-    }
-    if (!cellColor && dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
-    }
-    if (dxf.isSetFill()
-        && dxf.getFill().isSetPatternFill()
-        && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return ExcelColorSnapshotSupport.snapshot(
-          workbook, dxf.getFill().getPatternFill().getFgColor());
-    }
-    if (dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
-    }
-    return Optional.empty();
-  }
-
-  static Optional<CTDxf> dxfAt(StylesTable stylesTable, long dxfId) {
-    if (dxfId < 0L || dxfId >= stylesTable._getDXfsSize()) {
-      return Optional.empty();
-    }
-    return Optional.of(stylesTable.getDxfAt(Math.toIntExact(dxfId)));
+    return ExcelAutofilterDxfColorSupport.dxfColor(workbook, dxfId, cellColor);
   }
 }

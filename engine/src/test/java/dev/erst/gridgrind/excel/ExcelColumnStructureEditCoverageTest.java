@@ -20,7 +20,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException emptyFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(emptySheet, new ExcelColumnSpan(0, 0)));
+              () -> columnController.deleteColumns(emptySheet, new ExcelColumnSpan(0, 0)));
       assertTrue(emptyFailure.getMessage().contains("requires at least one existing column"));
 
       XSSFSheet boundsSheet = workbook.createSheet("BoundsColumns");
@@ -28,7 +28,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException boundsFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(boundsSheet, new ExcelColumnSpan(1, 1)));
+              () -> columnController.deleteColumns(boundsSheet, new ExcelColumnSpan(1, 1)));
       assertTrue(boundsFailure.getMessage().contains("last existing column is 0 (Excel column A)"));
       assertTrue(
           boundsFailure.getMessage().contains("requested lastColumnIndex 1 (Excel column B)"));
@@ -41,7 +41,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       XSSFSheet insertRowBounds = workbook.createSheet("InsertRowBounds");
       IllegalArgumentException rowGapFailure =
           assertThrows(
-              IllegalArgumentException.class, () -> controller.insertRows(insertRowBounds, 1, 1));
+              IllegalArgumentException.class,
+              () -> rowController.insertRows(insertRowBounds, 1, 1));
       assertTrue(rowGapFailure.getMessage().contains("rowIndex 1 (Excel row 2)"));
       assertTrue(rowGapFailure.getMessage().contains("last existing row + 1: 0 (Excel row 1)"));
 
@@ -50,7 +51,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException rowOverflowFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.insertRows(insertRowLimit, ExcelRowSpan.MAX_ROW_INDEX, 2));
+              () -> rowController.insertRows(insertRowLimit, ExcelRowSpan.MAX_ROW_INDEX, 2));
       assertTrue(
           rowOverflowFailure
               .getMessage()
@@ -63,7 +64,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException columnGapFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.insertColumns(insertColumnBounds, 2, 1));
+              () -> columnController.insertColumns(insertColumnBounds, 2, 1));
       assertTrue(columnGapFailure.getMessage().contains("columnIndex 2 (Excel column C)"));
       assertTrue(
           columnGapFailure.getMessage().contains("last existing column + 1: 1 (Excel column B)"));
@@ -74,7 +75,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  controller.insertColumns(insertColumnLimit, ExcelColumnSpan.MAX_COLUMN_INDEX, 2));
+                  columnController.insertColumns(
+                      insertColumnLimit, ExcelColumnSpan.MAX_COLUMN_INDEX, 2));
       assertTrue(
           columnOverflowFailure
               .getMessage()
@@ -85,7 +87,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftRowLowFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftRows(insertRowBounds, new ExcelRowSpan(0, 0), -1));
+              () -> rowController.shiftRows(insertRowBounds, new ExcelRowSpan(0, 0), -1));
       assertTrue(
           shiftRowLowFailure.getMessage().contains("firstRowIndex 0 (Excel row 1) by delta -1"));
       assertTrue(
@@ -95,7 +97,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  controller.shiftRows(
+                  rowController.shiftRows(
                       insertRowBounds,
                       new ExcelRowSpan(ExcelRowSpan.MAX_ROW_INDEX, ExcelRowSpan.MAX_ROW_INDEX),
                       1));
@@ -109,7 +111,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftColumnLowFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(insertColumnBounds, new ExcelColumnSpan(0, 0), -1));
+              () ->
+                  columnController.shiftColumns(insertColumnBounds, new ExcelColumnSpan(0, 0), -1));
       assertTrue(
           shiftColumnLowFailure
               .getMessage()
@@ -123,7 +126,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  controller.shiftColumns(
+                  columnController.shiftColumns(
                       insertColumnBounds,
                       new ExcelColumnSpan(
                           ExcelColumnSpan.MAX_COLUMN_INDEX, ExcelColumnSpan.MAX_COLUMN_INDEX),
@@ -143,7 +146,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       XSSFSheet sheet = workbook.createSheet("Budget");
       seedSupportedScenario(workbook, sheet, false);
 
-      controller.shiftColumns(sheet, new ExcelColumnSpan(0, 5), 2);
+      columnController.shiftColumns(sheet, new ExcelColumnSpan(0, 5), 2);
 
       assertEquals("Budget!$D$2:$D$4", workbook.getName("BudgetValues").getRefersToFormula());
       assertEquals("G2:H3", sheet.getMergedRegion(0).formatAsString());
@@ -168,7 +171,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       seedSupportedScenario(workbook, formulaSheet, true);
       IllegalArgumentException formulaFailure =
           assertThrows(
-              IllegalArgumentException.class, () -> controller.insertColumns(formulaSheet, 1, 1));
+              IllegalArgumentException.class,
+              () -> columnController.insertColumns(formulaSheet, 1, 1));
       assertTrue(formulaFailure.getMessage().contains("formulas are present"));
 
       XSSFWorkbook namedWorkbook = new XSSFWorkbook();
@@ -181,7 +185,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
         IllegalArgumentException nameFailure =
             assertThrows(
-                IllegalArgumentException.class, () -> controller.insertColumns(namedSheet, 0, 1));
+                IllegalArgumentException.class,
+                () -> columnController.insertColumns(namedSheet, 0, 1));
         assertTrue(nameFailure.getMessage().contains("formula-defined names are present"));
       }
     }
@@ -198,7 +203,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(sheet, new ExcelColumnSpan(2, 2)));
+              () -> columnController.deleteColumns(sheet, new ExcelColumnSpan(2, 2)));
       assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
     }
   }
@@ -216,7 +221,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
+              () -> columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
       assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
     }
   }
@@ -232,7 +237,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(sheet, "K1", "Tail");
       seedNamedRange(workbook, "UntouchedColumns", "Budget!$F$1:$G$1");
 
-      assertDoesNotThrow(() -> controller.shiftColumns(sheet, new ExcelColumnSpan(0, 0), 10));
+      assertDoesNotThrow(() -> columnController.shiftColumns(sheet, new ExcelColumnSpan(0, 0), 10));
       assertEquals("Budget!$F$1:$G$1", workbook.getName("UntouchedColumns").getRefersToFormula());
     }
   }
@@ -249,7 +254,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
+              () -> columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
       assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
     }
   }
@@ -263,12 +268,14 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(deleteSheet, "A1", "Header");
       setString(deleteSheet, "D1", "Tail");
 
-      assertDoesNotThrow(() -> controller.deleteColumns(deleteSheet, new ExcelColumnSpan(2, 2)));
+      assertDoesNotThrow(
+          () -> columnController.deleteColumns(deleteSheet, new ExcelColumnSpan(2, 2)));
 
       XSSFSheet shiftSheet = workbook.createSheet("ShiftColumns");
       setString(shiftSheet, "K1", "Tail");
 
-      assertDoesNotThrow(() -> controller.shiftColumns(shiftSheet, new ExcelColumnSpan(10, 10), 1));
+      assertDoesNotThrow(
+          () -> columnController.shiftColumns(shiftSheet, new ExcelColumnSpan(10, 10), 1));
     }
   }
 
@@ -279,7 +286,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       seedTable(tableSheet, workbook);
       IllegalArgumentException tableFailure =
           assertThrows(
-              IllegalArgumentException.class, () -> controller.insertColumns(tableSheet, 1, 1));
+              IllegalArgumentException.class,
+              () -> columnController.insertColumns(tableSheet, 1, 1));
       assertTrue(tableFailure.getMessage().contains("table 'BudgetTable'"));
 
       XSSFSheet autofilterSheet = workbook.createSheet("Autofilter");
@@ -287,7 +295,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException autofilterFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(autofilterSheet, new ExcelColumnSpan(1, 1)));
+              () -> columnController.deleteColumns(autofilterSheet, new ExcelColumnSpan(1, 1)));
       assertTrue(autofilterFailure.getMessage().contains("sheet autofilter"));
 
       XSSFSheet validationSheet = workbook.createSheet("Validations");
@@ -295,7 +303,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException validationFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(validationSheet, new ExcelColumnSpan(0, 0), 1));
+              () -> columnController.shiftColumns(validationSheet, new ExcelColumnSpan(0, 0), 1));
       assertTrue(validationFailure.getMessage().contains("data validation"));
     }
   }
@@ -308,12 +316,12 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException insertAutofilterFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.insertRows(insertAutofilterSheet, 1, 1));
+              () -> rowController.insertRows(insertAutofilterSheet, 1, 1));
       assertTrue(insertAutofilterFailure.getMessage().contains("sheet autofilter"));
 
       XSSFSheet insertValidationSheet = workbook.createSheet("InsertValidationRows");
       seedDataValidation(insertValidationSheet);
-      assertDoesNotThrow(() -> controller.insertRows(insertValidationSheet, 1, 1));
+      assertDoesNotThrow(() -> rowController.insertRows(insertValidationSheet, 1, 1));
       assertEquals(List.of("A3:A5"), dataValidationRanges(insertValidationSheet));
 
       XSSFSheet deleteValidationSheet = workbook.createSheet("DeleteValidationRows");
@@ -321,7 +329,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException deleteValidationFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteRows(deleteValidationSheet, new ExcelRowSpan(1, 1)));
+              () -> rowController.deleteRows(deleteValidationSheet, new ExcelRowSpan(1, 1)));
       assertTrue(deleteValidationFailure.getMessage().contains("data validation"));
 
       XSSFSheet shiftAutofilterSheet = workbook.createSheet("ShiftAutofilterRows");
@@ -329,7 +337,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftAutofilterFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftRows(shiftAutofilterSheet, new ExcelRowSpan(1, 1), 1));
+              () -> rowController.shiftRows(shiftAutofilterSheet, new ExcelRowSpan(1, 1), 1));
       assertTrue(shiftAutofilterFailure.getMessage().contains("sheet autofilter"));
 
       XSSFSheet untouchedValidationSheet = workbook.createSheet("UntouchedValidationRows");
@@ -337,7 +345,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(untouchedValidationSheet, "A11", "Tail");
 
       assertDoesNotThrow(
-          () -> controller.shiftRows(untouchedValidationSheet, new ExcelRowSpan(10, 10), 1));
+          () -> rowController.shiftRows(untouchedValidationSheet, new ExcelRowSpan(10, 10), 1));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -346,7 +354,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException deleteTableFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteRows(deleteTableSheet, new ExcelRowSpan(1, 1)));
+              () -> rowController.deleteRows(deleteTableSheet, new ExcelRowSpan(1, 1)));
       assertTrue(deleteTableFailure.getMessage().contains("table 'BudgetTable'"));
     }
 
@@ -356,7 +364,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftTableFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftRows(shiftTableSheet, new ExcelRowSpan(1, 1), 1));
+              () -> rowController.shiftRows(shiftTableSheet, new ExcelRowSpan(1, 1), 1));
       assertTrue(shiftTableFailure.getMessage().contains("table 'BudgetTable'"));
     }
   }
@@ -370,12 +378,12 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException insertAutofilterFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.insertColumns(insertAutofilterSheet, 1, 1));
+              () -> columnController.insertColumns(insertAutofilterSheet, 1, 1));
       assertTrue(insertAutofilterFailure.getMessage().contains("sheet autofilter"));
 
       XSSFSheet insertValidationSheet = workbook.createSheet("InsertValidationColumns");
       seedDataValidation(insertValidationSheet);
-      assertDoesNotThrow(() -> controller.insertColumns(insertValidationSheet, 0, 1));
+      assertDoesNotThrow(() -> columnController.insertColumns(insertValidationSheet, 0, 1));
       assertEquals(List.of("B2:B4"), dataValidationRanges(insertValidationSheet));
 
       XSSFSheet deleteValidationSheet = workbook.createSheet("DeleteValidationColumns");
@@ -383,7 +391,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException deleteValidationFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(deleteValidationSheet, new ExcelColumnSpan(0, 0)));
+              () ->
+                  columnController.deleteColumns(deleteValidationSheet, new ExcelColumnSpan(0, 0)));
       assertTrue(deleteValidationFailure.getMessage().contains("data validation"));
 
       XSSFSheet shiftAutofilterSheet = workbook.createSheet("ShiftAutofilterColumns");
@@ -391,7 +400,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftAutofilterFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(shiftAutofilterSheet, new ExcelColumnSpan(0, 0), 1));
+              () ->
+                  columnController.shiftColumns(
+                      shiftAutofilterSheet, new ExcelColumnSpan(0, 0), 1));
       assertTrue(shiftAutofilterFailure.getMessage().contains("sheet autofilter"));
 
       XSSFSheet untouchedValidationSheet = workbook.createSheet("UntouchedValidationColumns");
@@ -399,7 +410,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(untouchedValidationSheet, "K1", "Tail");
 
       assertDoesNotThrow(
-          () -> controller.shiftColumns(untouchedValidationSheet, new ExcelColumnSpan(10, 10), 1));
+          () ->
+              columnController.shiftColumns(
+                  untouchedValidationSheet, new ExcelColumnSpan(10, 10), 1));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -408,7 +421,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException deleteTableFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.deleteColumns(deleteTableSheet, new ExcelColumnSpan(1, 1)));
+              () -> columnController.deleteColumns(deleteTableSheet, new ExcelColumnSpan(1, 1)));
       assertTrue(deleteTableFailure.getMessage().contains("table 'BudgetTable'"));
     }
 
@@ -418,7 +431,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       IllegalArgumentException shiftTableFailure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> controller.shiftColumns(shiftTableSheet, new ExcelColumnSpan(1, 1), 1));
+              () -> columnController.shiftColumns(shiftTableSheet, new ExcelColumnSpan(1, 1), 1));
       assertTrue(shiftTableFailure.getMessage().contains("table 'BudgetTable'"));
     }
   }
@@ -432,8 +445,8 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       workbook.getCTWorkbook().addNewDefinedNames().addNewDefinedName().setName("PendingBudget");
       workbook.getCTWorkbook().getDefinedNames().getDefinedNameArray(0).setStringValue(" ");
 
-      assertDoesNotThrow(() -> controller.insertColumns(sheet, 1, 1));
-      assertEquals(2, controller.lastColumnIndex(sheet));
+      assertDoesNotThrow(() -> columnController.insertColumns(sheet, 1, 1));
+      assertEquals(2, columnController.lastColumnIndex(sheet));
     }
   }
 
@@ -443,18 +456,18 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       XSSFSheet tableSheet = workbook.createSheet("InsertTableColumnsSafe");
       seedTable(tableSheet, workbook, "InsertColumnsTable");
 
-      assertDoesNotThrow(() -> controller.insertColumns(tableSheet, 2, 1));
+      assertDoesNotThrow(() -> columnController.insertColumns(tableSheet, 2, 1));
 
       XSSFSheet autofilterSheet = workbook.createSheet("InsertAutofilterColumnsSafe");
       seedSheetAutofilter(autofilterSheet);
 
-      assertDoesNotThrow(() -> controller.insertColumns(autofilterSheet, 2, 1));
+      assertDoesNotThrow(() -> columnController.insertColumns(autofilterSheet, 2, 1));
 
       XSSFSheet validationSheet = workbook.createSheet("InsertValidationColumnsSafe");
       seedDataValidation(validationSheet);
       setString(validationSheet, "C1", "Tail");
 
-      assertDoesNotThrow(() -> controller.insertColumns(validationSheet, 1, 1));
+      assertDoesNotThrow(() -> columnController.insertColumns(validationSheet, 1, 1));
     }
   }
 
@@ -465,21 +478,22 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       seedTable(tableSheet, workbook, "DeleteColumnsTable");
       setString(tableSheet, "C1", "Tail");
 
-      assertDoesNotThrow(() -> controller.deleteColumns(tableSheet, new ExcelColumnSpan(2, 2)));
+      assertDoesNotThrow(
+          () -> columnController.deleteColumns(tableSheet, new ExcelColumnSpan(2, 2)));
 
       XSSFSheet autofilterSheet = workbook.createSheet("DeleteAutofilterColumnsSafe");
       seedSheetAutofilter(autofilterSheet);
       setString(autofilterSheet, "C1", "Tail");
 
       assertDoesNotThrow(
-          () -> controller.deleteColumns(autofilterSheet, new ExcelColumnSpan(2, 2)));
+          () -> columnController.deleteColumns(autofilterSheet, new ExcelColumnSpan(2, 2)));
 
       XSSFSheet validationSheet = workbook.createSheet("DeleteValidationColumnsSafe");
       seedDataValidation(validationSheet);
       setString(validationSheet, "C1", "Tail");
 
       assertDoesNotThrow(
-          () -> controller.deleteColumns(validationSheet, new ExcelColumnSpan(2, 2)));
+          () -> columnController.deleteColumns(validationSheet, new ExcelColumnSpan(2, 2)));
     }
   }
 
@@ -493,9 +507,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       sheet.setColumnWidth(2, 4096);
       sheet.setColumnHidden(2, true);
 
-      controller.insertColumns(sheet, 1, 1);
+      columnController.insertColumns(sheet, 1, 1);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(4, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(16.0d, columns.get(3).widthCharacters());
@@ -513,9 +527,10 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       metadataSheet.setColumnWidth(3, 4096);
       metadataSheet.setColumnHidden(3, true);
 
-      controller.deleteColumns(metadataSheet, new ExcelColumnSpan(1, 1));
+      columnController.deleteColumns(metadataSheet, new ExcelColumnSpan(1, 1));
 
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(metadataSheet);
+      List<WorkbookSheetResult.ColumnLayout> columns =
+          columnController.columnLayouts(metadataSheet);
       assertEquals(3, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(16.0d, columns.get(2).widthCharacters());
@@ -526,9 +541,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(tailSheet, "B1", "Middle");
       setString(tailSheet, "C1", "Tail");
 
-      controller.deleteColumns(tailSheet, new ExcelColumnSpan(2, 2));
+      columnController.deleteColumns(tailSheet, new ExcelColumnSpan(2, 2));
 
-      assertEquals(1, controller.lastColumnIndex(tailSheet));
+      assertEquals(1, columnController.lastColumnIndex(tailSheet));
     }
   }
 
@@ -549,9 +564,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       sheet.setColumnWidth(5, 6144);
       sheet.setColumnWidth(6, 7168);
 
-      controller.shiftColumns(sheet, new ExcelColumnSpan(2, 3), 2);
+      columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), 2);
 
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(7, columns.size());
       assertEquals(8.0d, columns.get(0).widthCharacters());
       assertEquals(12.0d, columns.get(4).widthCharacters());
@@ -570,9 +585,9 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       sheet.setColumnWidth(1, 4096);
       sheet.setColumnWidth(2, 2048);
 
-      controller.deleteColumns(sheet, new ExcelColumnSpan(1, 1));
+      columnController.deleteColumns(sheet, new ExcelColumnSpan(1, 1));
 
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(2, columns.size());
       assertEquals(8.0d, columns.get(1).widthCharacters());
     }
@@ -587,10 +602,10 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       groupedRange.setHidden(true);
       groupedRange.setOutlineLevel((short) 1);
 
-      controller.insertColumns(sheet, 0, 1);
+      columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(3, columns.size(), "columns=" + columns);
       assertTrue(columns.get(0).hidden(), "columns=" + columns);
       assertTrue(columns.get(1).hidden(), "columns=" + columns);
@@ -605,7 +620,7 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       setString(sheet, "A1", "Live");
       addRawColumnDefinition(sheet, 0, 0);
 
-      controller.insertColumns(sheet, 0, 1);
+      columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
       assertEquals(0, sheet.getCTWorksheet().getColsArray(0).sizeOfColArray());
@@ -625,10 +640,10 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       CTCol second = addRawColumnDefinition(sheet, 1, 2);
       second.setOutlineLevel((short) 2);
 
-      controller.insertColumns(sheet, 0, 1);
+      columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(4, columns.size(), "columns=" + columns);
       assertEquals(1, columns.get(1).outlineLevel(), "columns=" + columns);
       assertEquals(2, columns.get(2).outlineLevel(), "columns=" + columns);
@@ -649,10 +664,10 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
       CTCol nested = addRawColumnDefinition(sheet, 0, 0);
       nested.setOutlineLevel((short) 2);
 
-      controller.insertColumns(sheet, 0, 1);
+      columnController.insertColumns(sheet, 0, 1);
 
       assertCanonicalColumnDefinitions(sheet);
-      List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
       assertEquals(2, columns.size(), "columns=" + columns);
       assertEquals(2, columns.get(1).outlineLevel(), "columns=" + columns);
       assertTrue(columns.get(1).hidden(), "columns=" + columns);

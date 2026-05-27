@@ -138,7 +138,7 @@ final class ExcelDocumentAnalyzer {
 
   private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheetNames();
+      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
       case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
     };
   }

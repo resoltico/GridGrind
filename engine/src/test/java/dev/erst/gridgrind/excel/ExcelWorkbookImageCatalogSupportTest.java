@@ -42,10 +42,10 @@ class ExcelWorkbookImageCatalogSupportTest {
 
   @Test
   void synchronizePictureCatalogIncludesSignatureLinePreviewImages() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
-      sheet.setSignatureLine(signatureDefinition("OpsSignature", 5, 1, 8, 6));
+      sheet.drawings().setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
+      sheet.drawings().setSignatureLine(signatureDefinition("OpsSignature", 5, 1, 8, 6));
 
       assertEquals(
           List.of("/xl/media/image1.png"),
@@ -66,28 +66,30 @@ class ExcelWorkbookImageCatalogSupportTest {
   void embeddedObjectCreationSurvivesExistingSignaturePreviewMediaParts() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-drawing-media-catalog-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
-      sheet.setSignatureLine(signatureDefinition("OpsSignature", 5, 1, 8, 6));
+      sheet.drawings().setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
+      sheet.drawings().setSignatureLine(signatureDefinition("OpsSignature", 5, 1, 8, 6));
 
       assertDoesNotThrow(
           () ->
-              sheet.setEmbeddedObject(
-                  new ExcelEmbeddedObjectDefinition(
-                      "OpsEmbed",
-                      "Payload",
-                      "payload.txt",
-                      "payload.txt",
-                      new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
-                      ExcelPictureFormat.PNG,
-                      new ExcelBinaryData(PNG_PIXEL_BYTES),
-                      anchor(9, 1, 12, 6))));
+              sheet
+                  .drawings()
+                  .setEmbeddedObject(
+                      new ExcelEmbeddedObjectDefinition(
+                          "OpsEmbed",
+                          "Payload",
+                          "payload.txt",
+                          "payload.txt",
+                          new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                          ExcelPictureFormat.PNG,
+                          new ExcelBinaryData(PNG_PIXEL_BYTES),
+                          anchor(9, 1, 12, 6))));
       assertEquals(
           List.of("/xl/media/image1.png", "/xl/media/image2.png", "/xl/media/image3.png"),
           ExcelWorkbookImageCatalogSupport.packageImagePartNames(workbook.xssfWorkbook()));
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -101,15 +103,15 @@ class ExcelWorkbookImageCatalogSupportTest {
               .toList());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
       assertEquals(
           List.of("OpsPicture", "OpsEmbed", "OpsSignature"),
-          workbook.sheet("Ops").drawingObjects().stream()
+          workbook.sheet("Ops").drawings().drawingObjects().stream()
               .map(ExcelDrawingObjectSnapshot::name)
               .toList());
     }
@@ -117,21 +119,23 @@ class ExcelWorkbookImageCatalogSupportTest {
 
   @Test
   void addPictureSurvivesNonContiguousExistingImagePartNumbers() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
-      sheet.setEmbeddedObject(
-          new ExcelEmbeddedObjectDefinition(
-              "OpsEmbed",
-              "Payload",
-              "payload.txt",
-              "payload.txt",
-              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
-              ExcelPictureFormat.PNG,
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              anchor(5, 1, 8, 6)));
+      sheet.drawings().setPicture(pictureDefinition("OpsPicture", 1, 1, 4, 6));
+      sheet
+          .drawings()
+          .setEmbeddedObject(
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  anchor(5, 1, 8, 6)));
 
-      sheet.deleteDrawingObject("OpsPicture");
+      sheet.drawings().deleteDrawingObject("OpsPicture");
 
       assertEquals(
           List.of("/xl/media/image2.png"),
@@ -140,13 +144,16 @@ class ExcelWorkbookImageCatalogSupportTest {
           List.of("/xl/media/image2.png"),
           ExcelWorkbookImageCatalogSupport.pictureCatalogPartNames(workbook.xssfWorkbook()));
 
-      assertDoesNotThrow(() -> sheet.setPicture(pictureDefinition("OpsPicture2", 9, 1, 12, 6)));
+      assertDoesNotThrow(
+          () -> sheet.drawings().setPicture(pictureDefinition("OpsPicture2", 9, 1, 12, 6)));
       assertEquals(
           List.of("/xl/media/image2.png", "/xl/media/image3.png"),
           ExcelWorkbookImageCatalogSupport.packageImagePartNames(workbook.xssfWorkbook()));
       assertEquals(
           List.of("OpsEmbed", "OpsPicture2"),
-          sheet.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          sheet.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
     }
   }
 

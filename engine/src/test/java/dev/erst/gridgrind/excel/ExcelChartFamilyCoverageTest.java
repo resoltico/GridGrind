@@ -30,158 +30,184 @@ class ExcelChartFamilyCoverageTest {
   @SuppressWarnings("PMD.NcssCount")
   void everyModeledChartFamilyRoundTripsThroughMutationSnapshotAndDrawingInventory()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
 
-      sheet.setChart(
-          chart(
-              "AreaOps",
-              ExcelChartTestSupport.anchor(1, 1, 7, 11),
-              new ExcelChartDefinition.Area(
-                  true,
-                  ExcelChartGrouping.STACKED,
-                  categoryAxes(),
-                  List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "Area3DOps",
-              ExcelChartTestSupport.anchor(8, 1, 14, 11),
-              new ExcelChartDefinition.Area3D(
-                  false,
-                  ExcelChartGrouping.PERCENT_STACKED,
-                  Optional.of(140),
-                  dateAxes(),
-                  List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "BarOps",
-              ExcelChartTestSupport.anchor(15, 1, 21, 11),
-              new ExcelChartDefinition.Bar(
-                  true,
-                  ExcelChartBarDirection.BAR,
-                  ExcelChartBarGrouping.STACKED,
-                  Optional.of(90),
-                  Optional.of(40),
-                  categoryAxes(),
-                  List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "Bar3DOps",
-              ExcelChartTestSupport.anchor(22, 1, 28, 11),
-              new ExcelChartDefinition.Bar3D(
-                  false,
-                  ExcelChartBarDirection.COLUMN,
-                  ExcelChartBarGrouping.PERCENT_STACKED,
-                  Optional.of(120),
-                  Optional.of(80),
-                  Optional.of(ExcelChartBarShape.CYLINDER),
-                  categoryAxes(),
-                  List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "DoughnutOps",
-              ExcelChartTestSupport.anchor(29, 1, 35, 11),
-              new ExcelChartDefinition.Doughnut(
-                  true,
-                  Optional.of(35),
-                  Optional.of(65),
-                  List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, 30L)))));
-      sheet.setChart(
-          chart(
-              "LineOps",
-              ExcelChartTestSupport.anchor(36, 1, 42, 11),
-              new ExcelChartDefinition.Line(
-                  false,
-                  ExcelChartGrouping.PERCENT_STACKED,
-                  categoryAxes(),
-                  List.of(
-                      series(
-                          "Plan",
-                          "A2:A4",
-                          "B2:B4",
-                          true,
-                          ExcelChartMarkerStyle.CIRCLE,
-                          (short) 8,
-                          null)))));
-      sheet.setChart(
-          chart(
-              "Line3DOps",
-              ExcelChartTestSupport.anchor(43, 1, 49, 11),
-              new ExcelChartDefinition.Line3D(
-                  true,
-                  ExcelChartGrouping.STACKED,
-                  Optional.of(175),
-                  categoryAxes(),
-                  List.of(
-                      series(
-                          "Actual",
-                          "A2:A4",
-                          "C2:C4",
-                          false,
-                          ExcelChartMarkerStyle.DIAMOND,
-                          (short) 9,
-                          null)))));
-      sheet.setChart(
-          chart(
-              "PieOps",
-              ExcelChartTestSupport.anchor(50, 1, 56, 11),
-              new ExcelChartDefinition.Pie(
-                  true,
-                  Optional.of(120),
-                  List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, 45L)))));
-      sheet.setChart(
-          chart(
-              "Pie3DOps",
-              ExcelChartTestSupport.anchor(57, 1, 63, 11),
-              new ExcelChartDefinition.Pie3D(
-                  false, List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, 10L)))));
-      sheet.setChart(
-          chart(
-              "RadarOps",
-              ExcelChartTestSupport.anchor(64, 1, 70, 11),
-              new ExcelChartDefinition.Radar(
-                  true,
-                  ExcelChartRadarStyle.MARKER,
-                  categoryAxes(),
-                  List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "ScatterOps",
-              ExcelChartTestSupport.anchor(71, 1, 77, 11),
-              new ExcelChartDefinition.Scatter(
-                  false,
-                  ExcelChartScatterStyle.SMOOTH_MARKER,
-                  scatterAxes(),
-                  List.of(
-                      series(
-                          "Trend",
-                          "B2:B4",
-                          "C2:C4",
-                          true,
-                          ExcelChartMarkerStyle.STAR,
-                          (short) 11,
-                          null)))));
-      sheet.setChart(
-          chart(
-              "SurfaceOps",
-              ExcelChartTestSupport.anchor(78, 1, 84, 11),
-              new ExcelChartDefinition.Surface(
-                  true,
-                  true,
-                  surfaceAxes(),
-                  List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
-      sheet.setChart(
-          chart(
-              "Surface3DOps",
-              ExcelChartTestSupport.anchor(85, 1, 91, 11),
-              new ExcelChartDefinition.Surface3D(
-                  false,
-                  false,
-                  surfaceAxes(),
-                  List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "AreaOps",
+                  ExcelChartTestSupport.anchor(1, 1, 7, 11),
+                  new ExcelChartDefinition.Area(
+                      true,
+                      ExcelChartGrouping.STACKED,
+                      categoryAxes(),
+                      List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "Area3DOps",
+                  ExcelChartTestSupport.anchor(8, 1, 14, 11),
+                  new ExcelChartDefinition.Area3D(
+                      false,
+                      ExcelChartGrouping.PERCENT_STACKED,
+                      Optional.of(140),
+                      dateAxes(),
+                      List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "BarOps",
+                  ExcelChartTestSupport.anchor(15, 1, 21, 11),
+                  new ExcelChartDefinition.Bar(
+                      true,
+                      ExcelChartBarDirection.BAR,
+                      ExcelChartBarGrouping.STACKED,
+                      Optional.of(90),
+                      Optional.of(40),
+                      categoryAxes(),
+                      List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "Bar3DOps",
+                  ExcelChartTestSupport.anchor(22, 1, 28, 11),
+                  new ExcelChartDefinition.Bar3D(
+                      false,
+                      ExcelChartBarDirection.COLUMN,
+                      ExcelChartBarGrouping.PERCENT_STACKED,
+                      Optional.of(120),
+                      Optional.of(80),
+                      Optional.of(ExcelChartBarShape.CYLINDER),
+                      categoryAxes(),
+                      List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "DoughnutOps",
+                  ExcelChartTestSupport.anchor(29, 1, 35, 11),
+                  new ExcelChartDefinition.Doughnut(
+                      true,
+                      Optional.of(35),
+                      Optional.of(65),
+                      List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, 30L)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "LineOps",
+                  ExcelChartTestSupport.anchor(36, 1, 42, 11),
+                  new ExcelChartDefinition.Line(
+                      false,
+                      ExcelChartGrouping.PERCENT_STACKED,
+                      categoryAxes(),
+                      List.of(
+                          series(
+                              "Plan",
+                              "A2:A4",
+                              "B2:B4",
+                              true,
+                              ExcelChartMarkerStyle.CIRCLE,
+                              (short) 8,
+                              null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "Line3DOps",
+                  ExcelChartTestSupport.anchor(43, 1, 49, 11),
+                  new ExcelChartDefinition.Line3D(
+                      true,
+                      ExcelChartGrouping.STACKED,
+                      Optional.of(175),
+                      categoryAxes(),
+                      List.of(
+                          series(
+                              "Actual",
+                              "A2:A4",
+                              "C2:C4",
+                              false,
+                              ExcelChartMarkerStyle.DIAMOND,
+                              (short) 9,
+                              null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "PieOps",
+                  ExcelChartTestSupport.anchor(50, 1, 56, 11),
+                  new ExcelChartDefinition.Pie(
+                      true,
+                      Optional.of(120),
+                      List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, 45L)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "Pie3DOps",
+                  ExcelChartTestSupport.anchor(57, 1, 63, 11),
+                  new ExcelChartDefinition.Pie3D(
+                      false, List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, 10L)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "RadarOps",
+                  ExcelChartTestSupport.anchor(64, 1, 70, 11),
+                  new ExcelChartDefinition.Radar(
+                      true,
+                      ExcelChartRadarStyle.MARKER,
+                      categoryAxes(),
+                      List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "ScatterOps",
+                  ExcelChartTestSupport.anchor(71, 1, 77, 11),
+                  new ExcelChartDefinition.Scatter(
+                      false,
+                      ExcelChartScatterStyle.SMOOTH_MARKER,
+                      scatterAxes(),
+                      List.of(
+                          series(
+                              "Trend",
+                              "B2:B4",
+                              "C2:C4",
+                              true,
+                              ExcelChartMarkerStyle.STAR,
+                              (short) 11,
+                              null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "SurfaceOps",
+                  ExcelChartTestSupport.anchor(78, 1, 84, 11),
+                  new ExcelChartDefinition.Surface(
+                      true,
+                      true,
+                      surfaceAxes(),
+                      List.of(series("Plan", "A2:A4", "B2:B4", null, null, null, null)))));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "Surface3DOps",
+                  ExcelChartTestSupport.anchor(85, 1, 91, 11),
+                  new ExcelChartDefinition.Surface3D(
+                      false,
+                      false,
+                      surfaceAxes(),
+                      List.of(series("Actual", "A2:A4", "C2:C4", null, null, null, null)))));
 
-      List<ExcelChartSnapshot> charts = sheet.charts();
+      List<ExcelChartSnapshot> charts = sheet.drawings().charts();
       assertEquals(13, charts.size());
 
       ExcelChartSnapshot.Area area =
@@ -269,7 +295,7 @@ class ExcelChartFamilyCoverageTest {
       assertFalse(surface3D.wireframe());
 
       List<ExcelDrawingObjectSnapshot.Chart> drawingCharts =
-          sheet.drawingObjects().stream()
+          sheet.drawings().drawingObjects().stream()
               .map(snapshot -> assertInstanceOf(ExcelDrawingObjectSnapshot.Chart.class, snapshot))
               .toList();
       assertEquals(13, drawingCharts.size());

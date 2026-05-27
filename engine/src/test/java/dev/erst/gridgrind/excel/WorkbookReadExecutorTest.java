@@ -10,15 +10,17 @@ import org.junit.jupiter.api.Test;
 class WorkbookReadExecutorTest {
   @Test
   void appliesVarargsAndIterableCommandsInOrder() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
-      sheet.setCell("A1", ExcelCellValue.text("Report"));
-      sheet.setCell("B2", ExcelCellValue.number(61.0));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Budget", "B2")));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Report"));
+      sheet.cells().setCell("B2", ExcelCellValue.number(61.0));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "B2")));
 
       WorkbookReadExecutor executor = new WorkbookReadExecutor();
 
@@ -55,7 +57,7 @@ class WorkbookReadExecutorTest {
 
   @Test
   void rejectsNullWorkbookCommandsAndCommandEntries() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookReadExecutor executor = new WorkbookReadExecutor();
 
       assertThrows(

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: EXAMPLES
-updated: "2026-05-15"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -21,10 +21,11 @@ refresh and verify them.
 GridGrind ships the same example workflows in two forms:
 
 - **Built-in artifact examples** from `gridgrind --print-example --lookup <ID> --response request.json`.
-  These are designed to run from an artifact working directory and use artifact-rooted paths such
-  as `examples/...` or `generated-workbooks/...`. They are not all equally portable:
-  most are self-contained in a blank working directory, while a few are intentionally
-  repo-asset-backed.
+  These are designed to run from an artifact working directory and use request-relative paths such
+  as `generated-workbooks/...`. The suggested request path usually lives under `examples/...`,
+  while any repo-backed asset requirements are published separately through `requiredPaths`.
+  They are not all equally portable: most are self-contained in a blank working directory, while a
+  few are intentionally repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
   the same CLI-owned registry, but their relative paths are rooted from the request file's own
   directory so they run in place from a repository checkout.
@@ -34,8 +35,8 @@ GridGrind ships the same example workflows in two forms:
 - Built-in examples are for the release JAR, Docker image, or `:cli:run` when you first print the
   example into your own working directory.
 - Self-contained built-ins can run from a blank artifact workspace after you print the request.
-- Repo-asset-backed built-ins require the matching `examples/` asset directories to exist in the
-  working directory before you run them.
+- Repo-asset-backed built-ins require the matching asset paths named in `requiredPaths` to exist
+  in the working directory before you run them.
 - Any example that saves a workbook writes under `generated-workbooks/` beside the request file.
 - Checked-in `examples/*.json` therefore persist into `examples/generated-workbooks/` because the
   request files themselves live under `examples/`.
@@ -62,8 +63,8 @@ Self-contained built-ins execute from a blank artifact workspace after `--print-
 | `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | file/document hyperlink analysis |
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
-Repo-asset-backed built-ins still use `--print-example --lookup <ID>`, but they also require copied
-`examples/` assets in the working directory:
+Repo-asset-backed built-ins still use `--print-example --lookup <ID>`, but they also require the
+copied asset paths named in `requiredPaths`:
 
 | Built-in ID | Matching fixture | Required assets |
 |:------------|:-----------------|:----------------|
@@ -124,6 +125,7 @@ The authoritative verification loop for the shipped examples is:
 ./gradlew :cli:test --tests dev.erst.gridgrind.cli.discovery.ExampleRequestFixturesTest
 ./gradlew :executor:test --tests dev.erst.gridgrind.engine.runtime.ExampleExecutionFixturesTest
 ./gradlew :authoring-java:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
+./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ```
 
 For a direct packaged-CLI spot check from a repository checkout, this also works:

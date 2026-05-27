@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.tool;
 
 import dev.erst.gridgrind.jazzer.support.JazzerRunTarget;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -17,38 +18,72 @@ public final class JazzerCli {
 
   /** Dispatches one local Jazzer operator command. */
   public static void main(String[] arguments) throws IOException {
-    try {
-      run(arguments);
-    } catch (IllegalArgumentException exception) {
-      String subcommand = arguments.length == 0 ? "" : arguments[0];
-      System.err.println(exception.getMessage());
-      System.err.println();
-      System.err.println(usageText(subcommand));
-      System.exit(2);
+    int exitCode = run(arguments, System.out, System.err);
+    if (exitCode != 0) {
+      System.exit(exitCode);
     }
   }
 
-  private static void run(String[] arguments) throws IOException {
-    if (arguments.length == 0) {
+  /** Runs one local Jazzer operator command against injected text streams. */
+  static int run(String[] arguments, PrintStream standardOutput, PrintStream errorOutput)
+      throws IOException {
+    Objects.requireNonNull(arguments, "arguments must not be null");
+    Objects.requireNonNull(standardOutput, "standardOutput must not be null");
+    Objects.requireNonNull(errorOutput, "errorOutput must not be null");
+    try {
+      return dispatch(Arrays.asList(arguments), standardOutput);
+    } catch (IllegalArgumentException exception) {
+      String subcommand = arguments.length == 0 ? "" : arguments[0];
+      errorOutput.println(exception.getMessage());
+      errorOutput.println();
+      errorOutput.println(usageText(subcommand));
+      return 2;
+    }
+  }
+
+  private static int dispatch(List<String> args, PrintStream standardOutput) throws IOException {
+    if (args.isEmpty()) {
       throw new IllegalArgumentException("A Jazzer subcommand is required.");
     }
-
-    List<String> args = Arrays.asList(arguments);
     switch (args.getFirst()) {
-      case "summarize-run" -> summarizeRun(args.subList(1, args.size()));
-      case "status" -> status(args.subList(1, args.size()));
-      case "report" -> report(args.subList(1, args.size()));
-      case "list-findings" -> listFindings(args.subList(1, args.size()));
-      case "list-corpus" -> listCorpus(args.subList(1, args.size()));
-      case "replay" -> replay(args.subList(1, args.size()));
-      case "promote" -> promote(args.subList(1, args.size()));
-      case "refresh-promoted-metadata" -> refreshPromotedMetadata(args.subList(1, args.size()));
+      case "summarize-run" -> {
+        summarizeRun(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "status" -> {
+        status(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "report" -> {
+        report(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "list-findings" -> {
+        listFindings(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "list-corpus" -> {
+        listCorpus(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "replay" -> {
+        return replay(args.subList(1, args.size()), standardOutput);
+      }
+      case "promote" -> {
+        promote(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
+      case "refresh-promoted-metadata" -> {
+        refreshPromotedMetadata(args.subList(1, args.size()), standardOutput);
+        return 0;
+      }
       default ->
           throw new IllegalArgumentException("Unknown Jazzer subcommand: " + args.getFirst());
     }
   }
 
-  private static void summarizeRun(List<String> args) throws IOException {
+  private static void summarizeRun(List<String> args, PrintStream standardOutput)
+      throws IOException {
     Path projectDirectory = requiredPath(args, "--project-dir");
     JazzerRunTarget target = JazzerRunTarget.fromKey(requiredValue(args, "--target"));
     LocalRunSummary summary =
@@ -64,59 +99,79 @@ public final class JazzerCli {
             new CorpusStats(
                 Long.parseLong(requiredValue(args, "--corpus-before-files")),
                 Long.parseLong(requiredValue(args, "--corpus-before-bytes"))));
-    System.out.println(JazzerTextRenderer.renderSummary(summary));
+    standardOutput.println(JazzerTextRenderer.renderSummary(summary));
   }
 
-  private static void status(List<String> args) throws IOException {
+  private static void status(List<String> args, PrintStream standardOutput) throws IOException {
     Path projectDirectory = projectDirectory(args);
     Optional<String> targetKey = optionalValue(args, "--target");
     List<LocalRunSummary> summaries =
         targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
             : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
-    System.out.println(JazzerTextRenderer.renderStatus(summaries));
+    if (hasFlag(args, "--json")) {
+      standardOutput.println(JazzerJson.toJson(new SummaryPayload(summaries)));
+      return;
+    }
+    standardOutput.println(JazzerTextRenderer.renderStatus(summaries));
   }
 
-  private static void report(List<String> args) throws IOException {
+  private static void report(List<String> args, PrintStream standardOutput) throws IOException {
     Path projectDirectory = projectDirectory(args);
     Optional<String> targetKey = optionalValue(args, "--target");
     List<LocalRunSummary> summaries =
         targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
             : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
+    if (hasFlag(args, "--json")) {
+      standardOutput.println(JazzerJson.toJson(new SummaryPayload(summaries)));
+      return;
+    }
     if (summaries.isEmpty()) {
-      System.out.println("No Jazzer summaries recorded yet.");
+      standardOutput.println("No Jazzer summaries recorded yet.");
       return;
     }
     for (int index = 0; index < summaries.size(); index++) {
       if (index > 0) {
-        System.out.println();
+        standardOutput.println();
       }
-      System.out.println(JazzerTextRenderer.renderSummary(summaries.get(index)));
+      standardOutput.println(JazzerTextRenderer.renderSummary(summaries.get(index)));
     }
   }
 
-  private static void listFindings(List<String> args) throws IOException {
+  private static void listFindings(List<String> args, PrintStream standardOutput)
+      throws IOException {
     Path projectDirectory = projectDirectory(args);
     Optional<String> targetKey = optionalValue(args, "--target");
     List<JazzerRunTarget> targets =
         targetKey.isEmpty()
             ? List.of(JazzerRunTarget.values())
             : List.of(JazzerRunTarget.fromKey(targetKey.orElseThrow()));
+    if (hasFlag(args, "--json")) {
+      ArrayList<TargetFindings> listings = new ArrayList<>();
+      for (JazzerRunTarget target : targets) {
+        listings.add(
+            new TargetFindings(
+                target.key(),
+                JazzerReportSupport.findingArtifacts(target.workingDirectory(projectDirectory))));
+      }
+      standardOutput.println(JazzerJson.toJson(new FindingsPayload(List.copyOf(listings))));
+      return;
+    }
 
     for (int index = 0; index < targets.size(); index++) {
       JazzerRunTarget target = targets.get(index);
       if (index > 0) {
-        System.out.println();
+        standardOutput.println();
       }
-      System.out.println(
+      standardOutput.println(
           JazzerTextRenderer.renderFindingListing(
               target.key(),
               JazzerReportSupport.findingArtifacts(target.workingDirectory(projectDirectory))));
     }
   }
 
-  private static void listCorpus(List<String> args) throws IOException {
+  private static void listCorpus(List<String> args, PrintStream standardOutput) throws IOException {
     Path projectDirectory = projectDirectory(args);
     Optional<String> targetKey = optionalValue(args, "--target");
     List<JazzerRunTarget> targets =
@@ -127,6 +182,30 @@ public final class JazzerCli {
                 JazzerRunTarget.engineCommandSequence(),
                 JazzerRunTarget.xlsxRoundTrip())
             : List.of(JazzerRunTarget.fromKey(targetKey.orElseThrow()));
+    if (hasFlag(args, "--json")) {
+      ArrayList<TargetCorpus> listings = new ArrayList<>();
+      for (JazzerRunTarget target : targets) {
+        List<Path> promotedInputs =
+            target.replayable()
+                ? JazzerReportSupport.promotedInputs(projectDirectory, target.replayHarness())
+                : List.of();
+        List<Path> orphans =
+            target.replayable()
+                ? JazzerReportSupport.orphanedInputs(projectDirectory, target.replayHarness())
+                : List.of();
+        listings.add(
+            new TargetCorpus(
+                target.key(),
+                JazzerReportSupport.scanCorpus(target.workingDirectory(projectDirectory)),
+                JazzerReportSupport.scanFiles(promotedInputs),
+                JazzerReportSupport.newestCorpusEntries(
+                    target.workingDirectory(projectDirectory), 10),
+                promotedInputs,
+                orphans));
+      }
+      standardOutput.println(JazzerJson.toJson(new CorpusPayload(List.copyOf(listings))));
+      return;
+    }
 
     for (int index = 0; index < targets.size(); index++) {
       JazzerRunTarget target = targets.get(index);
@@ -139,9 +218,9 @@ public final class JazzerCli {
               ? JazzerReportSupport.orphanedInputs(projectDirectory, target.replayHarness())
               : List.of();
       if (index > 0) {
-        System.out.println();
+        standardOutput.println();
       }
-      System.out.println(
+      standardOutput.println(
           JazzerTextRenderer.renderCorpusListing(
               target.key(),
               JazzerReportSupport.scanCorpus(target.workingDirectory(projectDirectory)),
@@ -153,7 +232,7 @@ public final class JazzerCli {
     }
   }
 
-  private static void replay(List<String> args) throws IOException {
+  private static int replay(List<String> args, PrintStream standardOutput) throws IOException {
     JazzerRunTarget target = JazzerRunTarget.fromKey(requiredValue(args, "--target"));
     if (!target.replayable()) {
       throw new IllegalArgumentException(
@@ -163,16 +242,14 @@ public final class JazzerCli {
     byte[] input = readRequiredInputBytes(inputPath, "Replay input");
     ReplayOutcome outcome = JazzerReplaySupport.replay(target.replayHarness(), input);
     if (hasFlag(args, "--json")) {
-      System.out.println(JazzerJson.toJson(outcome));
+      standardOutput.println(JazzerJson.toJson(outcome));
     } else {
-      System.out.println(JazzerTextRenderer.renderReplay(inputPath, outcome));
+      standardOutput.println(JazzerTextRenderer.renderReplay(inputPath, outcome));
     }
-    if (outcome instanceof ReplayOutcome.UnexpectedFailure) {
-      System.exit(1);
-    }
+    return outcome instanceof ReplayOutcome.UnexpectedFailure ? 1 : 0;
   }
 
-  private static void promote(List<String> args) throws IOException {
+  private static void promote(List<String> args, PrintStream standardOutput) throws IOException {
     Path projectDirectory = projectDirectory(args);
     JazzerRunTarget target = JazzerRunTarget.fromKey(requiredValue(args, "--target"));
     if (!target.replayable()) {
@@ -214,20 +291,21 @@ public final class JazzerCli {
             Instant.now().toString(),
             storedReplayTextPath));
 
-    System.out.println(
+    standardOutput.println(
         "Promoted input written to " + promotedInputPath.toAbsolutePath().normalize());
-    System.out.println(
+    standardOutput.println(
         "Promotion metadata written to " + replayJsonPath.toAbsolutePath().normalize());
     if (outcome instanceof ReplayOutcome.UnexpectedFailure) {
-      System.out.println("Promoted input currently reproduces an unexpected failure.");
+      standardOutput.println("Promoted input currently reproduces an unexpected failure.");
     }
   }
 
-  private static void refreshPromotedMetadata(List<String> args) throws IOException {
+  private static void refreshPromotedMetadata(List<String> args, PrintStream standardOutput)
+      throws IOException {
     Path projectDirectory = projectDirectory(args);
     int refreshed =
         PromotionMetadataRefresher.refresh(projectDirectory, optionalValue(args, "--target"));
-    System.out.println("Refreshed " + refreshed + " promoted metadata entries.");
+    standardOutput.println("Refreshed " + refreshed + " promoted metadata entries.");
   }
 
   private static List<LocalRunSummary> availableSummaries(Path projectDirectory)
@@ -309,13 +387,17 @@ public final class JazzerCli {
     String targets = String.join(", ", JazzerRunTarget.keys());
     return switch (subcommand) {
       case "status" ->
-          "Usage: jazzer/bin/status [target] [gradle-options...]\nValid targets: " + targets;
+          "Usage: jazzer/bin/status [target] [--json] [gradle-options...]\nValid targets: "
+              + targets;
       case "report" ->
-          "Usage: jazzer/bin/report [target] [gradle-options...]\nValid targets: " + targets;
+          "Usage: jazzer/bin/report [target] [--json] [gradle-options...]\nValid targets: "
+              + targets;
       case "list-findings" ->
-          "Usage: jazzer/bin/list-findings [target] [gradle-options...]\nValid targets: " + targets;
+          "Usage: jazzer/bin/list-findings [target] [--json] [gradle-options...]\nValid targets: "
+              + targets;
       case "list-corpus" ->
-          "Usage: jazzer/bin/list-corpus [target] [gradle-options...]\nValid targets: " + targets;
+          "Usage: jazzer/bin/list-corpus [target] [--json] [gradle-options...]\nValid targets: "
+              + targets;
       case "replay" ->
           "Usage: jazzer/bin/replay <target> <input-path> [--json] [gradle-options...]\nValid targets: "
               + targets;
@@ -335,4 +417,20 @@ public final class JazzerCli {
               + targets;
     };
   }
+
+  private record SummaryPayload(List<LocalRunSummary> summaries) {}
+
+  private record FindingsPayload(List<TargetFindings> targets) {}
+
+  private record TargetFindings(String target, List<FindingArtifact> findings) {}
+
+  private record CorpusPayload(List<TargetCorpus> targets) {}
+
+  private record TargetCorpus(
+      String target,
+      CorpusStats generatedLocalCorpus,
+      CorpusStats committedCustomSeeds,
+      List<Path> newestLocalCorpusEntries,
+      List<Path> promotedInputs,
+      List<Path> orphanedInputs) {}
 }

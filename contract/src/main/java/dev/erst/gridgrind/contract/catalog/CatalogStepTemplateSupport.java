@@ -81,7 +81,9 @@ final class CatalogStepTemplateSupport {
           targetIds.stream()
               .map(targetId -> findTypeEntryById(catalog, targetId))
               .flatMap(Optional::stream)
-              .min(java.util.Comparator.comparingInt(target -> selectorPreference(target.id())))
+              .min(
+                  java.util.Comparator.comparingInt(
+                      target -> CatalogStepTemplateDefaults.selectorPreference(target.id())))
               .orElseThrow(
                   () ->
                       new IllegalStateException(
@@ -214,7 +216,7 @@ final class CatalogStepTemplateSupport {
     return typeTemplate(catalog, entry, TypePlacement.topLevel(), recursionGuard, notes);
   }
 
-  private static JsonNode nestedGroupTemplate(
+  static JsonNode nestedGroupTemplate(
       Catalog catalog, String groupName, Set<String> recursionGuard, List<String> notes) {
     NestedTypeGroup group = nestedGroup(catalog, groupName);
     return typeTemplate(
@@ -266,9 +268,11 @@ final class CatalogStepTemplateSupport {
       return StringNode.valueOf(field.enumValues().getFirst());
     }
     return switch (scalarType) {
-      case STRING -> StringNode.valueOf(stringPlaceholder(field.name()));
-      case NUMBER -> JSON.numberNode(numberPlaceholder(field.name()));
-      case BOOLEAN -> JSON.booleanNode(booleanPlaceholder(field.name()));
+      case STRING ->
+          StringNode.valueOf(CatalogStepTemplateDefaults.stringPlaceholder(field.name()));
+      case NUMBER -> JSON.numberNode(CatalogStepTemplateDefaults.numberPlaceholder(field.name()));
+      case BOOLEAN ->
+          JSON.booleanNode(CatalogStepTemplateDefaults.booleanPlaceholder(field.name()));
     };
   }
 
@@ -280,7 +284,9 @@ final class CatalogStepTemplateSupport {
   private static TypeEntry chooseEntry(
       List<TypeEntry> entries, Set<String> recursionGuard, String groupName) {
     return entries.stream()
-        .sorted(java.util.Comparator.comparingInt(candidate -> entryPreference(candidate.id())))
+        .sorted(
+            java.util.Comparator.comparingInt(
+                candidate -> CatalogStepTemplateDefaults.entryPreference(candidate.id())))
         .filter(candidate -> !recursionGuard.contains(candidate.id()))
         .findFirst()
         .orElseGet(
@@ -288,7 +294,8 @@ final class CatalogStepTemplateSupport {
                 entries.stream()
                     .sorted(
                         java.util.Comparator.comparingInt(
-                            candidate -> entryPreference(candidate.id())))
+                            candidate ->
+                                CatalogStepTemplateDefaults.entryPreference(candidate.id())))
                     .findFirst()
                     .orElseThrow(
                         () ->
@@ -297,15 +304,25 @@ final class CatalogStepTemplateSupport {
   }
 
   private static List<TypeEntry> topLevelEntries(Catalog catalog, String typeSet) {
-    return switch (typeSet) {
-      case "sourceTypes" -> catalog.sourceTypes();
-      case "persistenceTypes" -> catalog.persistenceTypes();
-      case "stepTypes" -> catalog.stepTypes();
-      case "mutationActionTypes" -> catalog.mutationActionTypes();
-      case "assertionTypes" -> catalog.assertionTypes();
-      case "inspectionQueryTypes" -> catalog.inspectionQueryTypes();
-      default -> throw new IllegalArgumentException("Unsupported top-level type set: " + typeSet);
-    };
+    if ("sourceTypes".equals(typeSet)) {
+      return catalog.sourceTypes();
+    }
+    if ("persistenceTypes".equals(typeSet)) {
+      return catalog.persistenceTypes();
+    }
+    if ("stepTypes".equals(typeSet)) {
+      return catalog.stepTypes();
+    }
+    if ("mutationActionTypes".equals(typeSet)) {
+      return catalog.mutationActionTypes();
+    }
+    if ("assertionTypes".equals(typeSet)) {
+      return catalog.assertionTypes();
+    }
+    if ("inspectionQueryTypes".equals(typeSet)) {
+      return catalog.inspectionQueryTypes();
+    }
+    throw new IllegalArgumentException("Unsupported top-level type set: " + typeSet);
   }
 
   private static NestedTypeGroup nestedGroup(Catalog catalog, String group) {
@@ -340,97 +357,6 @@ final class CatalogStepTemplateSupport {
     return List.copyOf(entries);
   }
 
-  private static int selectorPreference(String typeId) {
-    return switch (typeId) {
-      case "WORKBOOK_CURRENT" -> 0;
-      case "SHEET_BY_NAME",
-          "CELL_BY_ADDRESS",
-          "RANGE_BY_RANGE",
-          "ROW_BAND_BY_INDEX",
-          "COLUMN_BAND_BY_INDEX",
-          "DRAWING_OBJECT_BY_NAME",
-          "CHART_BY_NAME",
-          "TABLE_BY_NAME",
-          "PIVOT_TABLE_BY_NAME",
-          "NAMED_RANGE_BY_NAME",
-          "TABLE_ROW_BY_KEY",
-          "TABLE_CELL_BY_KEY" ->
-          1;
-      case "SHEET_BY_NAMES",
-          "CELL_BY_ADDRESSES",
-          "RANGE_BY_RANGES",
-          "ROW_BAND_BY_INDEXES",
-          "COLUMN_BAND_BY_INDEXES" ->
-          2;
-      default -> 3;
-    };
-  }
-
-  private static int entryPreference(String typeId) {
-    return switch (typeId) {
-      case "INLINE",
-          "INLINE_TEXT",
-          "TEXT",
-          "WORKBOOK_CURRENT",
-          "SHEET_BY_NAME",
-          "CELL_BY_ADDRESS",
-          "RANGE_BY_RANGE" ->
-          0;
-      case "BOOLEAN", "NUMBER", "EXACT", "CURRENT", "NONE" -> 1;
-      case "INLINE_BASE64", "CELL_BY_ADDRESSES", "SHEET_BY_NAMES", "RANGE_BY_RANGES" -> 2;
-      default -> 3;
-    };
-  }
-
-  private static String stringPlaceholder(String fieldName) {
-    return switch (fieldName) {
-      case "sheetName", "name", "sourceSheetName", "targetSheetName" -> "Sheet1";
-      case "address", "topLeftAddress" -> "A1";
-      case "range" -> "A1:B2";
-      case "formula", "formula1" -> "1";
-      case "formula2" -> "2";
-      case "path" -> "sample-path";
-      case "pkcs12Path" -> "certificate.p12";
-      case "base64Data" -> "AA==";
-      case "rgb" -> "#336699";
-      case "text" -> "Sample text";
-      case "title" -> "Sample title";
-      case "label" -> "Sample label";
-      case "description" -> "Sample description";
-      case "displayName" -> "Sample name";
-      case "fileName" -> "sample.bin";
-      case "planId" -> "sample-plan";
-      case "stepId" -> "sample-step";
-      case "email", "suggestedSignerEmail" -> "signer@example.com";
-      case "relationshipId" -> "rId1";
-      default -> "sample-" + fieldName.replace('_', '-');
-    };
-  }
-
-  private static int numberPlaceholder(String fieldName) {
-    return switch (fieldName) {
-      case "zoomPercent" -> 100;
-      case "rowIndex",
-          "columnIndex",
-          "firstRowIndex",
-          "lastRowIndex",
-          "firstColumnIndex",
-          "lastColumnIndex",
-          "dx",
-          "dy" ->
-          0;
-      case "twips" -> 20;
-      default -> 1;
-    };
-  }
-
-  private static boolean booleanPlaceholder(String fieldName) {
-    return switch (fieldName) {
-      case "visible", "locked", "hidden" -> true;
-      default -> false;
-    };
-  }
-
   private static JsonNode recursivePlaceholder(TypeEntry entry, TypePlacement typePlacement) {
     ObjectNode placeholder = JSON.objectNode();
     typePlacement.applyDiscriminator(placeholder, entry.id());
@@ -448,43 +374,11 @@ final class CatalogStepTemplateSupport {
     Objects.requireNonNull(object, "object must not be null");
     Objects.requireNonNull(recursionGuard, "recursionGuard must not be null");
     Objects.requireNonNull(notes, "notes must not be null");
-    switch (typeId) {
-      case "SET_SHEET_ZOOM" -> object.put("zoomPercent", 100);
-      case "ChartSeriesInput" ->
-          object.set(
-              "title", nestedGroupTemplate(catalog, "chartTitleInputTypes", recursionGuard, notes));
-      case "CellStyleInput" -> object.put("numberFormat", "0.00");
-      case "CustomXmlMappingLocator" -> object.put("name", "Mapping1");
-      case "DifferentialStyleInput" -> object.put("bold", true);
-      case "FontHeightReport" -> {
-        object.put("twips", 20);
-        object.put("points", 1);
-      }
-      case "SignatureLineInput" -> object.put("caption", "Sign here");
-      case "URL" -> object.put("target", "https://example.com");
-      case "EXPECT_ANALYSIS_MAX_SEVERITY",
-          "EXPECT_ANALYSIS_FINDING_PRESENT",
-          "EXPECT_ANALYSIS_FINDING_ABSENT" ->
-          object.set(
-              "query",
-              typeTemplateById(catalog, "ANALYZE_WORKBOOK_FINDINGS", recursionGuard, notes));
-      case "ALL_OF", "ANY_OF" -> {
-        ArrayNode assertions = JSON.arrayNode();
-        assertions.add(
-            typeTemplateById(catalog, "EXPECT_ANALYSIS_MAX_SEVERITY", recursionGuard, notes));
-        object.set("assertions", assertions);
-      }
-      case "NOT" ->
-          object.set(
-              "assertion",
-              typeTemplateById(catalog, "EXPECT_ANALYSIS_MAX_SEVERITY", recursionGuard, notes));
-      default -> {
-        // Most types are valid from their required-field placeholders alone.
-      }
-    }
+    CatalogStepTemplateDefaults.applyTypeSpecificDefaults(
+        catalog, typeId, object, recursionGuard, notes);
   }
 
-  private static JsonNode typeTemplateById(
+  static JsonNode typeTemplateById(
       Catalog catalog, String typeId, Set<String> recursionGuard, List<String> notes) {
     return typeTemplate(
         catalog,

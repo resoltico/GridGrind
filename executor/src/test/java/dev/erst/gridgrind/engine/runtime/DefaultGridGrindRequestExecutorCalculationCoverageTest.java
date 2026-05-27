@@ -31,6 +31,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.nio.file.Files;
@@ -141,9 +142,12 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(calculateAll()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
 
       ExecutionCalculationSupport.CalculationExecutionOutcome preflightOutcome =
           calculationSupport.executeCalculationPolicy(
@@ -211,7 +215,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             executionPolicy(markRecalculateOnOpen()),
             null,
             java.util.List.of());
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExecutionCalculationSupport.CalculationExecutionOutcome markOnlyOutcome =
           calculationSupport.executeCalculationPolicy(
               workbook,
@@ -289,7 +293,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
   }
 
   private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    return ExcelWorkbook.wrap(workbook);
+    return ExcelWorkbooks.wrap(workbook);
   }
 
   /**

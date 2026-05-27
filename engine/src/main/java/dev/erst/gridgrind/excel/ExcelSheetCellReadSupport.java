@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.jspecify.annotations.Nullable;
 
 /** Typed cell reads, snapshots, windows, and previews for one sheet wrapper. */
 final class ExcelSheetCellReadSupport {
@@ -251,73 +252,99 @@ final class ExcelSheetCellReadSupport {
   private ExcelCellSnapshot snapshot(String address, Cell cell) {
     CellType declaredType = cell.getCellType();
     String formulaExpression = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
-    String displayValue;
-    try {
-      displayValue =
-          declaredType == CellType.FORMULA
-              ? formulaRuntime.displayValue(dataFormatter, cell)
-              : dataFormatter.formatCellValue(cell);
-    } catch (RuntimeException exception) {
-      throw FormulaExceptions.wrap(
-          formulaRuntime, sheet.getSheetName(), address, formulaExpression, exception);
-    }
+    String displayValue = displayValue(address, cell, declaredType, formulaExpression);
     ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
     ExcelCellMetadataSnapshot metadata = annotationSupport.metadata(cell);
 
     if (declaredType == CellType.FORMULA) {
-      String formula = cell.getCellFormula();
-      CellValue evaluatedCell;
-      try {
-        evaluatedCell = formulaRuntime.evaluate(cell);
-      } catch (RuntimeException exception) {
-        throw FormulaExceptions.wrap(
-            formulaRuntime, sheet.getSheetName(), address, formula, exception);
-      }
-
-      CellType evalType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
-      ExcelCellSnapshot evaluation =
-          switch (evalType) {
-            case STRING ->
-                new ExcelCellSnapshot.TextSnapshot(
-                    address,
-                    "STRING",
-                    displayValue,
-                    style,
-                    metadata,
-                    evaluatedCell.getStringValue(),
-                    null);
-            case NUMERIC ->
-                new ExcelCellSnapshot.NumberSnapshot(
-                    address,
-                    "NUMBER",
-                    displayValue,
-                    style,
-                    metadata,
-                    evaluatedCell.getNumberValue());
-            case BOOLEAN ->
-                new ExcelCellSnapshot.BooleanSnapshot(
-                    address,
-                    "BOOLEAN",
-                    displayValue,
-                    style,
-                    metadata,
-                    evaluatedCell.getBooleanValue());
-            case ERROR ->
-                new ExcelCellSnapshot.ErrorSnapshot(
-                    address,
-                    "ERROR",
-                    displayValue,
-                    style,
-                    metadata,
-                    FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
-            default ->
-                new ExcelCellSnapshot.BlankSnapshot(
-                    address, "BLANK", displayValue, style, metadata);
-          };
-      return new ExcelCellSnapshot.FormulaSnapshot(
-          address, "FORMULA", displayValue, style, metadata, formula, evaluation);
+      return formulaSnapshot(address, cell, displayValue, style, metadata);
     }
 
+    return plainSnapshot(address, cell, declaredType, displayValue, style, metadata);
+  }
+
+  private String displayValue(
+      String address, Cell cell, CellType declaredType, @Nullable String formulaExpression) {
+    try {
+      return declaredType == CellType.FORMULA
+          ? formulaRuntime.displayValue(dataFormatter, cell)
+          : dataFormatter.formatCellValue(cell);
+    } catch (RuntimeException exception) {
+      throw FormulaExceptions.wrap(
+          formulaRuntime, sheet.getSheetName(), address, formulaExpression, exception);
+    }
+  }
+
+  private ExcelCellSnapshot.FormulaSnapshot formulaSnapshot(
+      String address,
+      Cell cell,
+      String displayValue,
+      ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata) {
+    String formula = cell.getCellFormula();
+    CellValue evaluatedCell = evaluateFormulaCell(address, formula, cell);
+    return new ExcelCellSnapshot.FormulaSnapshot(
+        address,
+        "FORMULA",
+        displayValue,
+        style,
+        metadata,
+        formula,
+        evaluatedFormulaSnapshot(address, displayValue, style, metadata, evaluatedCell));
+  }
+
+  private CellValue evaluateFormulaCell(String address, String formula, Cell cell) {
+    try {
+      return formulaRuntime.evaluate(cell);
+    } catch (RuntimeException exception) {
+      throw FormulaExceptions.wrap(
+          formulaRuntime, sheet.getSheetName(), address, formula, exception);
+    }
+  }
+
+  private ExcelCellSnapshot evaluatedFormulaSnapshot(
+      String address,
+      String displayValue,
+      ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
+      CellValue evaluatedCell) {
+    CellType evaluatedType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
+    return switch (evaluatedType) {
+      case STRING ->
+          new ExcelCellSnapshot.TextSnapshot(
+              address,
+              "STRING",
+              displayValue,
+              style,
+              metadata,
+              evaluatedCell.getStringValue(),
+              null);
+      case NUMERIC ->
+          new ExcelCellSnapshot.NumberSnapshot(
+              address, "NUMBER", displayValue, style, metadata, evaluatedCell.getNumberValue());
+      case BOOLEAN ->
+          new ExcelCellSnapshot.BooleanSnapshot(
+              address, "BOOLEAN", displayValue, style, metadata, evaluatedCell.getBooleanValue());
+      case ERROR ->
+          new ExcelCellSnapshot.ErrorSnapshot(
+              address,
+              "ERROR",
+              displayValue,
+              style,
+              metadata,
+              FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
+      case BLANK, _NONE, FORMULA ->
+          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style, metadata);
+    };
+  }
+
+  private ExcelCellSnapshot plainSnapshot(
+      String address,
+      Cell cell,
+      CellType declaredType,
+      String displayValue,
+      ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata) {
     return switch (declaredType) {
       case STRING ->
           new ExcelCellSnapshot.TextSnapshot(

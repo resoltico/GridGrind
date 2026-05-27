@@ -136,14 +136,14 @@ public final class GridGrindShippedExamples {
         entry(
             "CUSTOM_XML",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "examples/custom-xml-assets/custom-xml-mapping.xlsx",
-            "examples/custom-xml-assets/custom-xml-update.xml"),
+            "custom-xml-assets/custom-xml-mapping.xlsx",
+            "custom-xml-assets/custom-xml-update.xml"),
         entry(
             "SOURCE_BACKED_INPUT",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "examples/source-backed-input-assets/title.txt",
-            "examples/source-backed-input-assets/total-formula.txt",
-            "examples/source-backed-input-assets/payload.bin"),
+            "source-backed-input-assets/title.txt",
+            "source-backed-input-assets/total-formula.txt",
+            "source-backed-input-assets/payload.bin"),
         entry("SIGNATURE_LINE", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("LARGE_FILE_MODES", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("CHART", ExampleWorkspaceMode.SELF_CONTAINED),
@@ -151,7 +151,7 @@ public final class GridGrindShippedExamples {
         entry(
             "PACKAGE_SECURITY_INSPECTION",
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
-            "examples/package-security-assets/gridgrind-package-security.xlsx"),
+            "package-security-assets/gridgrind-package-security.xlsx"),
         entry("FILE_HYPERLINK_HEALTH", ExampleWorkspaceMode.SELF_CONTAINED),
         entry("INTROSPECTION_ANALYSIS", ExampleWorkspaceMode.SELF_CONTAINED));
   }

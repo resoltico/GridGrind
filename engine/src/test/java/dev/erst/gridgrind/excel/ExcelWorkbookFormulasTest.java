@@ -19,25 +19,25 @@ class ExcelWorkbookFormulasTest {
 
   @Test
   void wrapRejectsNullPoiWorkbook() {
-    assertThrows(NullPointerException.class, () -> ExcelWorkbook.wrap(null));
+    assertThrows(NullPointerException.class, () -> ExcelWorkbooks.wrap(null));
   }
 
   @Test
   void wrapAdaptsMaterializedPoiWorkbook() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
-        ExcelWorkbook workbook = ExcelWorkbook.wrap(poiWorkbook)) {
+        ExcelWorkbook workbook = ExcelWorkbooks.wrap(poiWorkbook)) {
       poiWorkbook.createSheet("Budget");
 
-      assertEquals(List.of("Budget"), workbook.sheetNames());
+      assertEquals(List.of("Budget"), workbook.sheets().sheetNames());
     }
   }
 
   @Test
   void formulasSurfaceDelegatesToWorkbookFormulaOperations() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       ExcelWorkbookFormulas formulas = workbook.formulas();
 
@@ -48,7 +48,8 @@ class ExcelWorkbookFormulasTest {
       assertEquals(
           4.0d,
           ((ExcelCellSnapshot.NumberSnapshot)
-                  ((ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("B1"))
+                  ((ExcelCellSnapshot.FormulaSnapshot)
+                          workbook.sheet("Budget").cells().snapshotCell("B1"))
                       .evaluation())
               .numberValue());
       assertEquals(

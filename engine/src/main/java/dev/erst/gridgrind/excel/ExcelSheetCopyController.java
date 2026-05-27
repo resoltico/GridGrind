@@ -108,14 +108,14 @@ final class ExcelSheetCopyController {
       ExcelWorkbook workbook, String sheetName, XSSFSheet sourcePoiSheet) {
     ExcelSheet sourceSheet = workbook.sheet(sheetName);
     return new ExcelSheetCopySnapshot(
-        ExcelSheetCopySupport.copyableLocalNames(workbook.namedRanges(), sheetName),
-        sourceSheet.layout(),
-        sourceSheet.printLayout(),
-        sourceSheet.mergedRegions(),
-        sourceSheet.comments(new ExcelCellSelection.AllUsedCells()),
+        ExcelSheetCopySupport.copyableLocalNames(workbook.names().namedRanges(), sheetName),
+        sourceSheet.layout().snapshot(),
+        sourceSheet.layout().printLayout(),
+        sourceSheet.layout().mergedRegions(),
+        sourceSheet.annotations().comments(new ExcelCellSelection.AllUsedCells()),
         ExcelSheetCopySupport.copiedDataValidations(sourcePoiSheet),
         ExcelSheetCopySupport.supportedConditionalFormatting(
-            sourceSheet.conditionalFormatting(new ExcelRangeSelection.All()), sheetName),
+            sourceSheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()), sheetName),
         ExcelSheetCopySupport.sheetOwnedAutofilter(
             autofilterController.sheetOwnedAutofilters(sourcePoiSheet)),
         ExcelSheetCopySupport.tablesOnSheet(sourcePoiSheet));

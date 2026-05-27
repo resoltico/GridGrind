@@ -302,7 +302,7 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
 
   @Test
   void utilityFallbacksCoverPivotHealthEdges() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Report");
       PivotHandle missingCacheHandle =
           new PivotHandle(

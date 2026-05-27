@@ -13,19 +13,24 @@ import java.util.Optional;
 
 /** Reads a GridGrind protocol request from stdin or an explicit request file path. */
 final class CliRequestReader {
-  /** Reads the request from stdin when no path is present, otherwise from the given file path. */
-  WorkbookPlan read(Optional<Path> requestPath, InputStream stdin) throws IOException {
+  /** Reads raw request bytes from stdin or an explicit request file path. */
+  byte[] readBytes(Optional<Path> requestPath, InputStream stdin) throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
     if (requestPath.isEmpty()) {
-      return GridGrindJson.readRequest(stdin);
+      byte[] requestBytes = stdin.readAllBytes();
+      GridGrindJson.requireSupportedRequestLength(requestBytes.length);
+      return requestBytes;
     }
     Path normalizedRequestPath = requestPath.orElseThrow().toAbsolutePath().normalize();
     validateReadableRequestPath(normalizedRequestPath);
     GridGrindJson.requireSupportedRequestLength(Files.size(normalizedRequestPath));
-    try (InputStream requestInput = Files.newInputStream(normalizedRequestPath)) {
-      return GridGrindJson.readRequest(requestInput);
-    }
+    return Files.readAllBytes(normalizedRequestPath);
+  }
+
+  /** Reads the request from stdin when no path is present, otherwise from the given file path. */
+  WorkbookPlan read(Optional<Path> requestPath, InputStream stdin) throws IOException {
+    return GridGrindJson.readRequest(readBytes(requestPath, stdin));
   }
 
   private static void validateReadableRequestPath(Path requestPath) throws IOException {

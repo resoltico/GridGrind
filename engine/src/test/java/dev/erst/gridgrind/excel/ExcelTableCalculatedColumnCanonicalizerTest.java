@@ -24,10 +24,12 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
   void copySheetCanonicalizesMaterializedCalculatedColumnCellsAndRenameWorks() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-table-canonical-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       seedCalculatedTableSheet(workbook, "Ledger", "OpsCloseTable");
 
-      workbook.copySheet("Ledger", "Ledger Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook
+          .sheets()
+          .copySheet("Ledger", "Ledger Copy", new ExcelSheetCopyPosition.AppendAtEnd());
 
       assertNoFormulaCell(workbook.xssfWorkbook().getSheet("Ledger Copy"), "D2");
       assertNoFormulaCell(workbook.xssfWorkbook().getSheet("Ledger Copy"), "D3");
@@ -40,7 +42,7 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
       assertEquals(
           "SUBTOTAL(109,OpsCloseTable_Copy2[Delta])",
           workbook.xssfWorkbook().getSheet("Ledger Copy").getRow(3).getCell(3).getCellFormula());
-      assertDoesNotThrow(() -> workbook.renameSheet("Ledger Copy", "Ledger Final"));
+      assertDoesNotThrow(() -> workbook.sheets().renameSheet("Ledger Copy", "Ledger Final"));
 
       XSSFTable copiedTable =
           workbook.xssfWorkbook().getSheet("Ledger Final").getTables().getFirst();
@@ -53,10 +55,10 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
               .getCalculatedColumnFormula()
               .getStringValue());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       XSSFSheet renamedSheet = workbook.xssfWorkbook().getSheet("Ledger Final");
       assertNoFormulaCell(renamedSheet, "D2");
       assertNoFormulaCell(renamedSheet, "D3");
@@ -187,39 +189,41 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
   private static void seedCalculatedTableSheet(
       ExcelWorkbook workbook, String sheetName, String tableName) throws IOException {
     ExcelSheet sheet = workbook.getOrCreateSheet(sheetName);
-    sheet.setCell("A1", ExcelCellValue.text("Task"));
-    sheet.setCell("B1", ExcelCellValue.text("Actual"));
-    sheet.setCell("C1", ExcelCellValue.text("Budget"));
-    sheet.setCell("D1", ExcelCellValue.text("Delta"));
-    sheet.setCell("A2", ExcelCellValue.text("One"));
-    sheet.setCell("B2", ExcelCellValue.number(10));
-    sheet.setCell("C2", ExcelCellValue.number(7));
-    sheet.setCell("A3", ExcelCellValue.text("Two"));
-    sheet.setCell("B3", ExcelCellValue.number(5));
-    sheet.setCell("C3", ExcelCellValue.number(6));
-    sheet.setCell("A4", ExcelCellValue.text("Total"));
-    sheet.setCell("B4", ExcelCellValue.blank());
-    sheet.setCell("C4", ExcelCellValue.blank());
-    sheet.setCell("D4", ExcelCellValue.blank());
-    workbook.setTable(
-        new ExcelTableDefinition(
-            tableName,
-            sheetName,
-            "A1:D4",
-            true,
-            true,
-            new ExcelTableStyle.None(),
-            "",
-            false,
-            false,
-            false,
-            "",
-            "",
-            "",
-            List.of(
-                new ExcelTableColumnDefinition(1, "", "", "sum", ""),
-                new ExcelTableColumnDefinition(2, "", "", "sum", ""),
-                new ExcelTableColumnDefinition(3, "", "", "sum", "[@Actual]-[@Budget]"))));
+    sheet.cells().setCell("A1", ExcelCellValue.text("Task"));
+    sheet.cells().setCell("B1", ExcelCellValue.text("Actual"));
+    sheet.cells().setCell("C1", ExcelCellValue.text("Budget"));
+    sheet.cells().setCell("D1", ExcelCellValue.text("Delta"));
+    sheet.cells().setCell("A2", ExcelCellValue.text("One"));
+    sheet.cells().setCell("B2", ExcelCellValue.number(10));
+    sheet.cells().setCell("C2", ExcelCellValue.number(7));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Two"));
+    sheet.cells().setCell("B3", ExcelCellValue.number(5));
+    sheet.cells().setCell("C3", ExcelCellValue.number(6));
+    sheet.cells().setCell("A4", ExcelCellValue.text("Total"));
+    sheet.cells().setCell("B4", ExcelCellValue.blank());
+    sheet.cells().setCell("C4", ExcelCellValue.blank());
+    sheet.cells().setCell("D4", ExcelCellValue.blank());
+    workbook
+        .tables()
+        .setTable(
+            new ExcelTableDefinition(
+                tableName,
+                sheetName,
+                "A1:D4",
+                true,
+                true,
+                new ExcelTableStyle.None(),
+                "",
+                false,
+                false,
+                false,
+                "",
+                "",
+                "",
+                List.of(
+                    new ExcelTableColumnDefinition(1, "", "", "sum", ""),
+                    new ExcelTableColumnDefinition(2, "", "", "sum", ""),
+                    new ExcelTableColumnDefinition(3, "", "", "sum", "[@Actual]-[@Budget]"))));
   }
 
   private static void seedCanonicalizerWorksheet(XSSFSheet sheet) {

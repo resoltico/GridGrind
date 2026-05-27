@@ -13,6 +13,7 @@ import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.OoxmlSecurityTestSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.io.IOException;
@@ -269,9 +270,9 @@ class OoxmlSecurityRequestExecutorTest {
   @Test
   void eventReadModeRejectsPackageSecurityReadsUpFront() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-protocol-event-security-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     GridGrindResponse.Failure failure =

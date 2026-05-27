@@ -18,12 +18,6 @@ class PoiPrivateAccessCompatibilityTest {
         () -> assertDoesNotThrow(() -> PoiRelationRemoval.removePoiRelationInvoker(lookup)),
         () -> assertDoesNotThrow(() -> StylesTableFillRegistryAccess.requireFillsField(lookup)),
         () ->
-            assertDoesNotThrow(
-                () -> ExcelSheetClonePreparationSupport.requireHyperlinksField(lookup)),
-        () ->
-            assertDoesNotThrow(
-                () -> ExcelSheetClonePreparationSupport.requireHyperlinkConstructor(lookup)),
-        () ->
             assertDoesNotThrow(() -> ExcelWorkbookImageCatalogSupport.requirePicturesField(lookup)),
         () ->
             assertDoesNotThrow(
@@ -36,12 +30,6 @@ class PoiPrivateAccessCompatibilityTest {
         assertThrows(
             IllegalStateException.class,
             () -> PoiRelationRemoval.removePoiRelationInvoker(MethodHandles.publicLookup()));
-    IllegalStateException hyperlinkFailure =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExcelSheetClonePreparationSupport.requireHyperlinksField(
-                    MethodHandles.publicLookup()));
     IllegalStateException pictureFailure =
         assertThrows(
             IllegalStateException.class,
@@ -63,20 +51,6 @@ class PoiPrivateAccessCompatibilityTest {
                 relationFailure
                     .getMessage()
                     .contains(PoiRelationRemoval.REMOVE_RELATION_CONTRACT.memberSignature())),
-        () ->
-            assertTrue(
-                hyperlinkFailure
-                    .getMessage()
-                    .contains(
-                        ExcelSheetClonePreparationSupport.HYPERLINKS_FIELD_CONTRACT
-                            .affectedSurface())),
-        () ->
-            assertTrue(
-                hyperlinkFailure
-                    .getMessage()
-                    .contains(
-                        ExcelSheetClonePreparationSupport.HYPERLINKS_FIELD_CONTRACT
-                            .memberSignature())),
         () ->
             assertTrue(
                 pictureFailure

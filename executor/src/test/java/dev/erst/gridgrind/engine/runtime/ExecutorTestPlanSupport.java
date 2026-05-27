@@ -49,6 +49,7 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -502,10 +503,10 @@ final class ExecutorTestPlanSupport {
 
   static Path createWorkbookFile(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.text("Header"));
-      workbook.save(workbookPath);
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.persistence().save(workbookPath);
     }
     return workbookPath;
   }

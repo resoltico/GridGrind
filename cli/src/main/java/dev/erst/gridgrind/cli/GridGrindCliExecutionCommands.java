@@ -32,6 +32,7 @@ final class GridGrindCliExecutionCommands {
   private final CliResponseWriter responseWriter;
   private final CliJournalWriter journalWriter;
   private final BooleanSupplier standardInputIsInteractive;
+  private final CliDoctorRequestAnalyzer doctorRequestAnalyzer;
 
   GridGrindCliExecutionCommands(
       GridGrindRequestExecutor requestExecutor,
@@ -48,6 +49,7 @@ final class GridGrindCliExecutionCommands {
     this.standardInputIsInteractive =
         Objects.requireNonNull(
             standardInputIsInteractive, "standardInputIsInteractive must not be null");
+    this.doctorRequestAnalyzer = new CliDoctorRequestAnalyzer(this.requestDoctor);
   }
 
   Optional<InputStream> standardInputIfPresent(CliCommand.Execute command, InputStream stdin)
@@ -131,20 +133,10 @@ final class GridGrindCliExecutionCommands {
     }
 
     RequestDoctorReport report;
-    WorkbookPlan request;
     try {
-      request = requestReader.read(command.requestPath(), requestInput.orElseThrow());
-    } catch (InvalidJsonException
-        | InvalidRequestShapeException
-        | InvalidRequestException exception) {
-      return writeReadRequestFailure(
-          1,
-          "doctor-request",
-          command.requestPath(),
-          command.responsePath(),
-          stdout,
-          stderr,
-          exception);
+      byte[] requestBytes =
+          requestReader.readBytes(command.requestPath(), requestInput.orElseThrow());
+      report = doctorRequestAnalyzer.diagnose(command.requestPath(), requestBytes, stdin);
     } catch (IOException exception) {
       return writeReadRequestFailure(
           1,
@@ -156,28 +148,6 @@ final class GridGrindCliExecutionCommands {
           exception);
     }
 
-    if (command.requestPath().isEmpty()
-        && GridGrindRequestRequirements.requiresStandardInput(request)) {
-      return responseWriter.writeCliFailureReport(
-          command.responsePath(),
-          stdout,
-          stderr,
-          CliFailureReports.invalidArguments(
-              2,
-              "doctor-request",
-              Optional.of("--request"),
-              GridGrindContractText.standardInputRequiresRequestMessage(),
-              List.of("gridgrind --doctor-request --request request.json"),
-              Optional.of(
-                  "Doctoring uses the same STANDARD_INPUT binding rule as execution: keep the"
-                      + " request JSON in a file when authored payloads need standard input.")));
-    }
-
-    GridGrindRequestInputs bindings =
-        command.requestPath().isEmpty()
-            ? GridGrindRequestInputs.processDefault()
-            : CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
-    report = requestDoctor.diagnose(request, bindings);
     return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
   }
 

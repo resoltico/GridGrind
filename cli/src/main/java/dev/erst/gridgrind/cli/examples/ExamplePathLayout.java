@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli.examples;
 
 /** Path layout policy for generated example requests. */
 enum ExamplePathLayout {
-  BUILT_IN("generated-workbooks/", "examples/"),
+  BUILT_IN("generated-workbooks/", ""),
   REPOSITORY("generated-workbooks/", "");
 
   private final String generatedWorkbookPrefix;

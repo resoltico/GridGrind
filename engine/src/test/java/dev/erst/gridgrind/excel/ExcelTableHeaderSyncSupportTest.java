@@ -10,7 +10,7 @@ class ExcelTableHeaderSyncSupportTest {
 
   @Test
   void syncAffectedHeaders_updatesPersistedMetadataWhenHeaderRangeIsTouched() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
@@ -29,7 +29,7 @@ class ExcelTableHeaderSyncSupportTest {
 
   @Test
   void syncAffectedHeaders_ignoresRangesOutsideHeaderRows() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
@@ -48,7 +48,7 @@ class ExcelTableHeaderSyncSupportTest {
 
   @Test
   void syncAffectedHeaders_ignoresHeaderlessAndInvalidTables() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
@@ -75,7 +75,7 @@ class ExcelTableHeaderSyncSupportTest {
 
   @Test
   void syncAllHeaders_ignoresHeaderlessAndInvalidTables() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       populateTableCells(sheet, "Owner", "Task");
       tableController.setTable(
@@ -101,11 +101,11 @@ class ExcelTableHeaderSyncSupportTest {
 
   private static void populateTableCells(
       ExcelSheet sheet, String firstHeader, String secondHeader) {
-    sheet.setCell("A1", ExcelCellValue.text(firstHeader));
-    sheet.setCell("B1", ExcelCellValue.text(secondHeader));
-    sheet.setCell("A2", ExcelCellValue.text("Ada"));
-    sheet.setCell("B2", ExcelCellValue.text("Queue"));
-    sheet.setCell("A3", ExcelCellValue.text("Lin"));
-    sheet.setCell("B3", ExcelCellValue.text("Pack"));
+    sheet.cells().setCell("A1", ExcelCellValue.text(firstHeader));
+    sheet.cells().setCell("B1", ExcelCellValue.text(secondHeader));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+    sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
+    sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
   }
 }

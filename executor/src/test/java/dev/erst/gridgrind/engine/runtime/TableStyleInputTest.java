@@ -12,10 +12,10 @@ class TableStyleInputTest {
   void convertsSupportedStyleVariants() {
     assertEquals(
         new ExcelTableStyle.None(),
-        WorkbookCommandConverter.toExcelTableStyle(new TableStyleInput.None()));
+        WorkbookCommandTabularInputConverter.toExcelTableStyle(new TableStyleInput.None()));
     assertEquals(
         new ExcelTableStyle.Named("TableStyleMedium2", true, false, true, false),
-        WorkbookCommandConverter.toExcelTableStyle(
+        WorkbookCommandTabularInputConverter.toExcelTableStyle(
             new TableStyleInput.Named("TableStyleMedium2", true, false, true, false)));
   }
 

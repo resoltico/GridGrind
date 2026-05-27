@@ -20,6 +20,7 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
@@ -33,16 +34,16 @@ class ExecutionModeRequestExecutorTest {
   @Test
   void eventReadModeMatchesFullXssfForExistingWorkbookSummaries() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-event-mode-existing-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.getOrCreateSheet("Archive");
-      workbook.setSheetVisibility("Archive", ExcelSheetVisibility.HIDDEN);
-      workbook.setActiveSheet("Ops");
-      workbook.setSelectedSheets(List.of("Ops"));
+      workbook.sheets().setSheetVisibility("Archive", ExcelSheetVisibility.HIDDEN);
+      workbook.sheets().setActiveSheet("Ops");
+      workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").setCell("A1", ExcelCellValue.text("Header"));
-      workbook.sheet("Ops").setCell("C2", ExcelCellValue.number(42.0d));
-      workbook.save(workbookPath);
+      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.sheet("Ops").cells().setCell("C2", ExcelCellValue.number(42.0d));
+      workbook.persistence().save(workbookPath);
     }
 
     List<InspectionStep> reads =
@@ -245,10 +246,10 @@ class ExecutionModeRequestExecutorTest {
     Path sourcePath = Files.createTempFile("gridgrind-event-read-saveas-source-", ".xlsx");
     Path persistedCopy = Files.createTempFile("gridgrind-event-read-saveas-copy-", ".xlsx");
     Files.deleteIfExists(persistedCopy);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setCell("A1", ExcelCellValue.text("Header"));
-      workbook.save(sourcePath);
+      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.persistence().save(sourcePath);
     }
 
     GridGrindResponse.Success success =
@@ -466,9 +467,9 @@ class ExecutionModeRequestExecutorTest {
   @Test
   void validatesUnsupportedExecutionModeCombinationsUpFront() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-execution-mode-validation-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     GridGrindResponse.Failure unsupportedEventRead =

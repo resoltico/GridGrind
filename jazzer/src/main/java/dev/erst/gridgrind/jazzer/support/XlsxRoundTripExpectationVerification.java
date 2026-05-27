@@ -14,6 +14,7 @@ import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -205,11 +206,14 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedDataValidations.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       for (Map.Entry<String, List<ExcelDataValidationSnapshot>> entry :
           expectedDataValidations.entrySet()) {
         List<ExcelDataValidationSnapshot> actual =
-            workbook.sheet(entry.getKey()).dataValidations(new ExcelRangeSelection.All());
+            workbook
+                .sheet(entry.getKey())
+                .metadata()
+                .dataValidations(new ExcelRangeSelection.All());
         if (!entry.getValue().equals(actual)) {
           throw new IllegalStateException(
               "data validations changed across round-trip for sheet "
@@ -227,7 +231,7 @@ final class XlsxRoundTripExpectationVerification {
       XlsxRoundTripExpectedStateSupport.ExpectedWorkbookState expectedWorkbookState,
       Path workbookPath)
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       var actualWorkbookSummary =
           XlsxRoundTripExpectedStateSupport.expectedWorkbookSummary(workbook);
       if (!expectedWorkbookState.expectedWorkbookSummary().equals(actualWorkbookSummary)) {
@@ -264,7 +268,7 @@ final class XlsxRoundTripExpectationVerification {
         for (Map.Entry<XlsxRoundTripExpectedStateSupport.CellCoordinate, ExcelRichTextSnapshot>
             cellEntry : entry.getValue().entrySet()) {
           ExcelCellSnapshot actualSnapshot =
-              workbook.sheet(entry.getKey()).snapshotCell(cellEntry.getKey().a1Address());
+              workbook.sheet(entry.getKey()).cells().snapshotCell(cellEntry.getKey().a1Address());
           if (!(actualSnapshot instanceof ExcelCellSnapshot.TextSnapshot textSnapshot)) {
             throw new IllegalStateException(
                 "rich text cell must reopen as STRING for "
@@ -289,7 +293,7 @@ final class XlsxRoundTripExpectationVerification {
       for (Map.Entry<String, List<ExcelDrawingObjectSnapshot>> entry :
           expectedWorkbookState.expectedDrawingObjects().entrySet()) {
         List<ExcelDrawingObjectSnapshot> actualDrawingObjects =
-            workbook.sheet(entry.getKey()).drawingObjects();
+            workbook.sheet(entry.getKey()).drawings().drawingObjects();
         if (!entry.getValue().equals(actualDrawingObjects)) {
           throw new IllegalStateException(
               "drawing objects changed across round-trip for "
@@ -302,7 +306,7 @@ final class XlsxRoundTripExpectationVerification {
       }
       for (Map.Entry<String, List<ExcelChartSnapshot>> entry :
           expectedWorkbookState.expectedCharts().entrySet()) {
-        List<ExcelChartSnapshot> actualCharts = workbook.sheet(entry.getKey()).charts();
+        List<ExcelChartSnapshot> actualCharts = workbook.sheet(entry.getKey()).drawings().charts();
         if (!entry.getValue().equals(actualCharts)) {
           throw new IllegalStateException(
               "charts changed across round-trip for "
@@ -435,7 +439,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedConditionalFormatting.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
           expectedConditionalFormatting.entrySet()) {
@@ -469,7 +473,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedAutofilters.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
           expectedAutofilters.entrySet()) {
@@ -499,7 +503,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedTables.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       var actual =
           ((dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)

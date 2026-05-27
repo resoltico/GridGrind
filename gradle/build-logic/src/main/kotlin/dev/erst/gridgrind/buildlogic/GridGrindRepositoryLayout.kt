@@ -6,6 +6,7 @@ import org.gradle.api.Project
 internal data class GridGrindRepositoryLayout(
     val repositoryRoot: File,
     val productionPmdRuleset: File,
+    val semanticShapePmdRuleset: File,
     val testPmdRuleset: File,
 ) {
     companion object {
@@ -17,10 +18,13 @@ internal data class GridGrindRepositoryLayout(
                         "Unable to locate the GridGrind repository root from ${project.projectDir}",
                     )
             val productionPmdRuleset = requiredFile(repositoryRoot, "gradle/pmd/ruleset.xml")
+            val semanticShapePmdRuleset =
+                requiredFile(repositoryRoot, "gradle/pmd/semantic-shape-ruleset.xml")
             val testPmdRuleset = requiredFile(repositoryRoot, "gradle/pmd/test-ruleset.xml")
             return GridGrindRepositoryLayout(
                 repositoryRoot = repositoryRoot,
                 productionPmdRuleset = productionPmdRuleset,
+                semanticShapePmdRuleset = semanticShapePmdRuleset,
                 testPmdRuleset = testPmdRuleset,
             )
         }

@@ -10,24 +10,11 @@ public final class ProtocolDefinedNameValidation {
   /** Validates one protocol-facing defined-name identifier and returns its canonical text. */
   public static String validateName(String name) {
     Objects.requireNonNull(name, "name must not be null");
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("name must not be blank");
-    }
-    if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
-      throw new IllegalArgumentException(
-          "name must start with a letter or underscore and contain only letters, digits, underscore, or period");
-    }
-    if (name.startsWith("_xlnm.") || name.startsWith("_XLNM.")) {
-      throw new IllegalArgumentException("name must not use the reserved _xlnm. prefix");
-    }
-    if (looksLikeA1CellReference(name)) {
-      throw new IllegalArgumentException(
-          "name must not collide with A1-style cell reference syntax");
-    }
-    if (name.matches("(?i)^R[1-9][0-9]*C[1-9][0-9]*$")) {
-      throw new IllegalArgumentException(
-          "name must not collide with R1C1-style cell reference syntax");
-    }
+    requireNotBlank(name);
+    requireDefinedNameSyntax(name);
+    requireNotReservedPrefix(name);
+    requireNotA1CellReference(name);
+    requireNotR1c1CellReference(name);
     return name;
   }
 
@@ -42,5 +29,38 @@ public final class ProtocolDefinedNameValidation {
       columnNumber = (columnNumber * 26) + (columnLabel.charAt(index) - 'A' + 1);
     }
     return columnNumber <= 16384;
+  }
+
+  private static void requireNotBlank(String name) {
+    if (name.isBlank()) {
+      throw new IllegalArgumentException("name must not be blank");
+    }
+  }
+
+  private static void requireDefinedNameSyntax(String name) {
+    if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
+      throw new IllegalArgumentException(
+          "name must start with a letter or underscore and contain only letters, digits, underscore, or period");
+    }
+  }
+
+  private static void requireNotReservedPrefix(String name) {
+    if (name.regionMatches(true, 0, "_xlnm.", 0, "_xlnm.".length())) {
+      throw new IllegalArgumentException("name must not use the reserved _xlnm. prefix");
+    }
+  }
+
+  private static void requireNotA1CellReference(String name) {
+    if (looksLikeA1CellReference(name)) {
+      throw new IllegalArgumentException(
+          "name must not collide with A1-style cell reference syntax");
+    }
+  }
+
+  private static void requireNotR1c1CellReference(String name) {
+    if (name.matches("(?i)^R[1-9][0-9]*C[1-9][0-9]*$")) {
+      throw new IllegalArgumentException(
+          "name must not collide with R1C1-style cell reference syntax");
+    }
   }
 }

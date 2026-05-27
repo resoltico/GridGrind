@@ -36,7 +36,7 @@ class GridGrindTaskPlannerTest {
     assertFalse(steps(request).isEmpty());
     assertTrue(firstStep(request).has("target"));
     assertTrue(firstStep(request).has("action") || firstStep(request).has("query"));
-    assertEquals("phase-1-step-1", textField(firstStep(request), "stepId"));
+    assertEquals("ensure-ops", textField(firstStep(request), "stepId"));
     assertTrue(GridGrindEngine.requestDoctor().diagnose(request).valid());
   }
 
@@ -46,7 +46,7 @@ class GridGrindTaskPlannerTest {
 
     assertEquals("EXISTING", sourceType(request));
     assertTrue(inputPath(request).endsWith(".xlsx"));
-    assertTrue(inputPath(request).contains("audit-existing-workbook"));
+    assertTrue(inputPath(request).contains("task-starter-assets/workbook-ops-source.xlsx"));
     assertEquals("NONE", persistenceType(request));
     assertFalse(steps(request).isEmpty());
     assertTrue(firstStep(request).has("query"));
@@ -60,11 +60,13 @@ class GridGrindTaskPlannerTest {
     assertEquals("EXISTING", sourceType(customXml));
     assertEquals("SAVE_AS", persistenceType(customXml));
     assertFalse(steps(customXml).isEmpty());
+    assertEquals("generated-workbooks/custom-xml-workflow.xlsx", outputPath(customXml));
 
     assertEquals("EXISTING", sourceType(maintenance));
     assertEquals("SAVE_AS", persistenceType(maintenance));
     assertFalse(steps(maintenance).isEmpty());
     assertTrue(outputPath(maintenance).contains("workbook-maintenance"));
+    assertTrue(inputPath(maintenance).contains("task-starter-assets/workbook-ops-source.xlsx"));
   }
 
   @Test
@@ -156,6 +158,58 @@ class GridGrindTaskPlannerTest {
     assertEquals("SAVE_AS", persistenceType(saveAsRequest));
     assertEquals("starter-ad-hoc-export-output.xlsx", outputPath(saveAsRequest));
     assertFalse(steps(saveAsRequest).isEmpty());
+  }
+
+  @Test
+  void plannerDeduplicatesRepeatedCapabilityTemplatesWithinOnePhase() {
+    TaskEntry duplicateCapabilityTask =
+        task(
+            "AD_HOC_DUPLICATE_CAPABILITY",
+            new TaskExecutionProfile(
+                TaskSourceMode.NEW_WORKBOOK,
+                TaskPersistenceMode.NONE,
+                TaskMutationMode.MUTATING,
+                TaskAssetMode.SELF_CONTAINED),
+            List.of(
+                new TaskPhase(
+                    dev.erst.gridgrind.cli.discovery.TaskPhasePurpose.AUTHOR,
+                    "Phase One",
+                    "First objective",
+                    List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")),
+                    List.of("note one")),
+                new TaskPhase(
+                    dev.erst.gridgrind.cli.discovery.TaskPhasePurpose.AUTHOR,
+                    "Phase Two",
+                    "Second objective",
+                    List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")),
+                    List.of("note two"))));
+
+    WorkbookPlan request = GridGrindTaskPlanner.requestFor(duplicateCapabilityTask);
+
+    assertEquals(1, steps(request).size());
+    assertEquals("phase-1-step-1", textField(firstStep(request), "stepId"));
+  }
+
+  @Test
+  void plannerSkipsCapabilitiesWithoutPublishedStepTemplates() {
+    TaskEntry partiallyPublishedTask =
+        task(
+            "AD_HOC_PARTIAL_DISCOVERY",
+            new TaskExecutionProfile(
+                TaskSourceMode.NEW_WORKBOOK,
+                TaskPersistenceMode.NONE,
+                TaskMutationMode.MUTATING,
+                TaskAssetMode.SELF_CONTAINED),
+            List.of(
+                phase(
+                    List.of(
+                        new TaskCapabilityRef("mutationActionTypes", "SET_CELL"),
+                        new TaskCapabilityRef("mutationActionTypes", "NO_SUCH_CAPABILITY")))));
+
+    WorkbookPlan request = GridGrindTaskPlanner.requestFor(partiallyPublishedTask);
+
+    assertEquals(1, steps(request).size());
+    assertEquals("phase-1-step-1", textField(firstStep(request), "stepId"));
   }
 
   @Test

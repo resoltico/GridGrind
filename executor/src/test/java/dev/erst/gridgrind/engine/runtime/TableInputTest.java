@@ -30,7 +30,7 @@ class TableInputTest {
             "A1:C4",
             true,
             new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)),
-        WorkbookCommandConverter.toExcelTableDefinition(input));
+        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
 
     assertThrows(
         IllegalArgumentException.class,
@@ -66,7 +66,7 @@ class TableInputTest {
     assertEquals(
         new ExcelTableDefinition(
             "BudgetTable", "Budget", "A1:C4", false, new ExcelTableStyle.None()),
-        WorkbookCommandConverter.toExcelTableDefinition(input));
+        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
   }
 
   @Test
@@ -104,6 +104,6 @@ class TableInputTest {
             "",
             "",
             List.of(new ExcelTableColumnDefinition(1, "", "Total", "sum", ""))),
-        WorkbookCommandConverter.toExcelTableDefinition(input));
+        WorkbookCommandTabularInputConverter.toExcelTableDefinition(input));
   }
 }

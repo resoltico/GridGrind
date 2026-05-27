@@ -17,20 +17,22 @@ import org.junit.jupiter.api.Test;
 class ExcelChartSourceResolutionTest {
   @Test
   void sourceResolutionReadbacksAndFailuresStayDeterministic() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
       ExcelChartTestSupport.seedChartNamedRanges(workbook, "Charts");
       seedChartSourceResolutionFixtures(workbook, sheet);
 
-      sheet.setChart(
-          chart(
-              "FormulaTitle",
-              ExcelChartTestSupport.ref("NumericCategories"),
-              ExcelChartTestSupport.ref("ChartActual"),
-              new ExcelChartDefinition.Title.Formula("=B1")));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "FormulaTitle",
+                  ExcelChartTestSupport.ref("NumericCategories"),
+                  ExcelChartTestSupport.ref("ChartActual"),
+                  new ExcelChartDefinition.Title.Formula("=B1")));
       ExcelChartSnapshot formulaTitleChart =
-          ExcelChartTestSupport.chart(sheet.charts(), "FormulaTitle");
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaTitle");
       ExcelChartSnapshot.Title.Formula chartTitle =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, formulaTitleChart.title());
       assertEquals("Plan", chartTitle.cachedText());
@@ -41,14 +43,16 @@ class ExcelChartSourceResolutionTest {
               .getFirst()
               .categories());
 
-      sheet.setChart(
-          chart(
-              "SparseCategoriesChart",
-              ExcelChartTestSupport.ref("SparseCategories"),
-              ExcelChartTestSupport.ref("ChartActual"),
-              new ExcelChartDefinition.Title.None()));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "SparseCategoriesChart",
+                  ExcelChartTestSupport.ref("SparseCategories"),
+                  ExcelChartTestSupport.ref("ChartActual"),
+                  new ExcelChartDefinition.Title.None()));
       ExcelChartSnapshot sparseChart =
-          ExcelChartTestSupport.chart(sheet.charts(), "SparseCategoriesChart");
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "SparseCategoriesChart");
       assertEquals(
           List.of("true", "", ""),
           assertInstanceOf(
@@ -59,14 +63,16 @@ class ExcelChartSourceResolutionTest {
                       .categories())
               .cachedValues());
 
-      sheet.setChart(
-          chart(
-              "FormulaCategoriesChart",
-              ExcelChartTestSupport.ref("FormulaCategories"),
-              ExcelChartTestSupport.ref("FormulaValues"),
-              new ExcelChartDefinition.Title.None()));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "FormulaCategoriesChart",
+                  ExcelChartTestSupport.ref("FormulaCategories"),
+                  ExcelChartTestSupport.ref("FormulaValues"),
+                  new ExcelChartDefinition.Title.None()));
       ExcelChartSnapshot formulaCategoriesChart =
-          ExcelChartTestSupport.chart(sheet.charts(), "FormulaCategoriesChart");
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "FormulaCategoriesChart");
       assertEquals(
           List.of("Alpha", "2.0", "true", ""),
           assertInstanceOf(
@@ -80,21 +86,25 @@ class ExcelChartSourceResolutionTest {
 
       assertDoesNotThrow(
           () ->
-              sheet.setChart(
-                  chart(
-                      "LocalCategoriesChart",
-                      ExcelChartTestSupport.ref("LocalCategories"),
-                      ExcelChartTestSupport.ref("ChartActual"),
-                      new ExcelChartDefinition.Title.None())));
+              sheet
+                  .drawings()
+                  .setChart(
+                      chart(
+                          "LocalCategoriesChart",
+                          ExcelChartTestSupport.ref("LocalCategories"),
+                          ExcelChartTestSupport.ref("ChartActual"),
+                          new ExcelChartDefinition.Title.None())));
 
-      sheet.setChart(
-          chart(
-              "CrossSheetCategoriesChart",
-              ExcelChartTestSupport.ref("'Other'!A2:A4"),
-              ExcelChartTestSupport.ref("ChartActual"),
-              new ExcelChartDefinition.Title.None()));
+      sheet
+          .drawings()
+          .setChart(
+              chart(
+                  "CrossSheetCategoriesChart",
+                  ExcelChartTestSupport.ref("'Other'!A2:A4"),
+                  ExcelChartTestSupport.ref("ChartActual"),
+                  new ExcelChartDefinition.Title.None()));
       ExcelChartSnapshot crossSheetChart =
-          ExcelChartTestSupport.chart(sheet.charts(), "CrossSheetCategoriesChart");
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "CrossSheetCategoriesChart");
       assertEquals(
           List.of("North", "South", "West"),
           assertInstanceOf(
@@ -152,14 +162,14 @@ class ExcelChartSourceResolutionTest {
 
   @Test
   void runtimeAwareSourceResolutionEvaluatesFormulaCellsBeforeReadingValues() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
-      sheet.setCell("A2", ExcelCellValue.text("Ari"));
-      sheet.setCell("A3", ExcelCellValue.text("Bo"));
-      sheet.setCell("A4", ExcelCellValue.text("Cy"));
-      sheet.setCell("B2", ExcelCellValue.formula("40+2"));
-      sheet.setCell("B3", ExcelCellValue.number(7d));
-      sheet.setCell("B4", ExcelCellValue.formula("B3*2"));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
+      sheet.cells().setCell("B2", ExcelCellValue.formula("40+2"));
+      sheet.cells().setCell("B3", ExcelCellValue.number(7d));
+      sheet.cells().setCell("B4", ExcelCellValue.formula("B3*2"));
 
       ResolvedChartSource resolved =
           ExcelChartSourceSupport.resolveChartSource(
@@ -208,15 +218,18 @@ class ExcelChartSourceResolutionTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                sheet.setChart(
-                    chart(name, categories, values, new ExcelChartDefinition.Title.None())));
+                sheet
+                    .drawings()
+                    .setChart(
+                        chart(name, categories, values, new ExcelChartDefinition.Title.None())));
     assertTrue(failure.getMessage().contains(expectedMessagePart));
   }
 
   private static void seedChartSourceResolutionFixtures(ExcelWorkbook workbook, ExcelSheet sheet) {
-    sheet.setCell("D2", ExcelCellValue.bool(true));
-    sheet.setCell("D3", ExcelCellValue.blank());
+    sheet.cells().setCell("D2", ExcelCellValue.bool(true));
+    sheet.cells().setCell("D3", ExcelCellValue.blank());
     workbook
+        .names()
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "NumericCategories",
@@ -246,6 +259,7 @@ class ExcelChartSourceResolutionTest {
     workbook.xssfWorkbook().getCreationHelper().createFormulaEvaluator().evaluateAll();
 
     workbook
+        .names()
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "FormulaCategories",
@@ -276,8 +290,8 @@ class ExcelChartSourceResolutionTest {
     xssfSheet.getRow(3).createCell(6).setCellErrorValue(FormulaError.NA.getCode());
 
     ExcelSheet sourceSheet = workbook.getOrCreateSheet("Other");
-    sourceSheet.setCell("A2", ExcelCellValue.text("North"));
-    sourceSheet.setCell("A3", ExcelCellValue.text("South"));
-    sourceSheet.setCell("A4", ExcelCellValue.text("West"));
+    sourceSheet.cells().setCell("A2", ExcelCellValue.text("North"));
+    sourceSheet.cells().setCell("A3", ExcelCellValue.text("South"));
+    sourceSheet.cells().setCell("A4", ExcelCellValue.text("West"));
   }
 }

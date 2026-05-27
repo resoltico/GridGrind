@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
+val distributions = the<org.gradle.api.distribution.DistributionContainer>()
+
 description = "CLI transport adapter for the GridGrind protocol"
 
 dependencies {
@@ -23,6 +25,10 @@ application {
     mainClass = "dev.erst.gridgrind.cli.App"
 }
 
+distributions.named("shadow") {
+    distributionBaseName.set("gridgrind")
+}
+
 val cleanStartScripts by tasks.registering(Delete::class) {
     delete(layout.buildDirectory.dir("scripts"))
 }
@@ -36,6 +42,7 @@ val cleanInstalledDist by tasks.registering(Delete::class) {
 }
 
 val cleanInstalledShadowDist by tasks.registering(Delete::class) {
+    delete(layout.buildDirectory.dir("install/gridgrind"))
     delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 

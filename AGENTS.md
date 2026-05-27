@@ -1,7 +1,7 @@
 # AGENTS.md — Agent Entry Protocol
 
-**Version:** 2.4.1
-**Updated:** 2026-05-08
+**Version:** 2.4.2
+**Updated:** 2026-05-26
 
 This file is the repository entry point for agent work. It defines load order, precedence, repository-wide exceptions, and the universal minimum that applies before any specialized language, framework, database/native, domain-modeling, or documentation rule.
 
@@ -24,14 +24,13 @@ When opening a repository, load context in this order:
 2. Load `.codex/UNIVERSAL_ENGINEERING_CONTRACT.md` (v2.1.0+). This is the cross-language engineering contract.
 3. Load `.codex/AGENTS_EXTRA.md` if it exists. This contains project-specific instructions.
 4. Load the language/runtime protocol for each touched surface:
-   - Java 26+ / Gradle: `.codex/AGENTS_JAVA26_GRADLE.md` (v2.0.0+)
-   - Kotlin 2.4+ / Gradle: `.codex/AGENTS_KOTLIN24_GRADLE.md` (v2.0.0+)
+   - Java 26+ / Gradle product and build-logic work: `.codex/AGENTS_JAVA26_GRADLE.md` (v2.0.0+)
    - Python 3.13+: `.codex/AGENTS_PYTHON313.md` (v2.0.0+)
    - Rust 1.95+ / Cargo: `.codex/AGENTS_RUST195_CARGO.md` (v2.0.0+)
 5. Load the application-framework protocol for each touched surface:
    - Tauri 2.10.x: `.codex/AGENTS_TAURI210.md` (v2.0.0+)
 6. Load the database/native dependency protocol for each touched surface:
-   - SQLite3 Multiple Ciphers 2.3.3 / SQLite 3.53.0: `.codex/AGENTS_SQLITE3MC234_SQLITE3531.md` (v2.0.1+)
+   - SQLite3 Multiple Ciphers 2.3.4 / SQLite 3.53.1: `.codex/AGENTS_SQLITE3MC234_SQLITE3531.md` (v2.0.1+)
 7. Load the domain-modeling lens **only when the change touches business meaning**: `.codex/DOMAIN_DRIVEN_DESIGN_LENS.md` (v1.0.0+). Triggers include domain state, business rules, workflow names, commands, domain events, permissions, policies, calculations, lifecycle transitions, user-facing business terms, or integration contracts between models. Do not load for purely mechanical work — build wiring, generic plumbing, infrastructure with no domain meaning. The Universal Engineering Contract §1.7 *Domain meaning gate* is the formal trigger.
 8. For documentation authoring, documentation refactoring, or code changes that alter documented public contracts, load `.codex/PROTOCOL_AFAD.md` unless the only touched document is the repository root `README.md`.
 
@@ -78,9 +77,9 @@ Use this map to decide what to change, how far to widen the change, what to veri
 Language/runtime surfaces:
 
 - Java 26+ / Gradle projects use `.codex/AGENTS_JAVA26_GRADLE.md`.
-- Kotlin 2.4+ / Gradle projects use `.codex/AGENTS_KOTLIN24_GRADLE.md`.
 - Python 3.13+ projects use `.codex/AGENTS_PYTHON313.md`.
 - Rust 1.95+ / Cargo projects use `.codex/AGENTS_RUST195_CARGO.md`.
+- GridGrind's Kotlin build logic is not an application surface. For repository work, follow the Java/Gradle protocol and the project-specific ban in `.codex/AGENTS_EXTRA.md` instead of loading the Kotlin protocol.
 
 Application-framework surfaces:
 

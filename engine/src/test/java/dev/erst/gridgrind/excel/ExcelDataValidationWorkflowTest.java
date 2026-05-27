@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 class ExcelDataValidationWorkflowTest {
   @Test
   void introspectionPreservesDefinitionsAndSelectedClearSplitsCoverage() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
       ExcelDataValidationDefinition definition =
           new ExcelDataValidationDefinition(
@@ -40,7 +40,7 @@ class ExcelDataValidationWorkflowTest {
                       "Invalid status",
                       "Use one of the allowed values.",
                       true)));
-      budget.setDataValidation("A1:C3", definition);
+      budget.metadata().setDataValidation("A1:C3", definition);
 
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       WorkbookRuleResult.DataValidationsResult beforeClear =
@@ -66,7 +66,7 @@ class ExcelDataValidationWorkflowTest {
       assertEquals(definition, supported.validation());
       assertEquals(beforeClear.validations(), selected.validations());
 
-      budget.clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
+      budget.metadata().clearDataValidations(new ExcelRangeSelection.Selected(List.of("B2")));
 
       WorkbookRuleResult.DataValidationsResult afterClear =
           cast(
@@ -107,7 +107,7 @@ class ExcelDataValidationWorkflowTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
       WorkbookAnalysis.DataValidationHealth health =

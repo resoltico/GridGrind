@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSupport {
   @Test
   void setPivotTableRejectsInvalidAuthoringInputsAndReplacesSameSheetPivot() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
       workbook.getOrCreateSheet("OtherReport");
@@ -90,16 +90,20 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       List.of("Missing"),
                       List.of())));
 
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "AmbiguousSource",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "AmbiguousSource",
-              new ExcelNamedRangeScope.SheetScope("Data"),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "AmbiguousSource",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "AmbiguousSource",
+                  new ExcelNamedRangeScope.SheetScope("Data"),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -146,6 +150,7 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
 
       workbook
           .getOrCreateSheet("OneRow")
+          .cells()
           .setRange(
               "A1:D1",
               List.of(
@@ -171,8 +176,8 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
       assertTrue(oneRowFailure.getMessage().contains("header row plus at least one data row"));
 
       ExcelSheet missingHeaderSheet = workbook.getOrCreateSheet("MissingHeader");
-      missingHeaderSheet.setCell("A3", ExcelCellValue.text("North"));
-      missingHeaderSheet.setCell("B3", ExcelCellValue.number(10));
+      missingHeaderSheet.cells().setCell("A3", ExcelCellValue.text("North"));
+      missingHeaderSheet.cells().setCell("B3", ExcelCellValue.number(10));
       IllegalArgumentException missingHeaderFailure =
           assertThrows(
               IllegalArgumentException.class,
@@ -191,6 +196,7 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
 
       workbook
           .getOrCreateSheet("NumericHeader")
+          .cells()
           .setRange(
               "A1:B2",
               List.of(
@@ -214,6 +220,7 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
 
       workbook
           .getOrCreateSheet("BlankHeader")
+          .cells()
           .setRange(
               "A1:B2",
               List.of(
@@ -234,11 +241,11 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
                       List.of())));
 
       ExcelSheet missingHeaderCellSheet = workbook.getOrCreateSheet("MissingHeaderCell");
-      missingHeaderCellSheet.setCell("A1", ExcelCellValue.text("Region"));
-      missingHeaderCellSheet.setCell("C1", ExcelCellValue.text("Amount"));
-      missingHeaderCellSheet.setCell("A2", ExcelCellValue.text("North"));
-      missingHeaderCellSheet.setCell("B2", ExcelCellValue.text("Plan"));
-      missingHeaderCellSheet.setCell("C2", ExcelCellValue.number(10));
+      missingHeaderCellSheet.cells().setCell("A1", ExcelCellValue.text("Region"));
+      missingHeaderCellSheet.cells().setCell("C1", ExcelCellValue.text("Amount"));
+      missingHeaderCellSheet.cells().setCell("A2", ExcelCellValue.text("North"));
+      missingHeaderCellSheet.cells().setCell("B2", ExcelCellValue.text("Plan"));
+      missingHeaderCellSheet.cells().setCell("C2", ExcelCellValue.number(10));
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -255,6 +262,7 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
 
       workbook
           .getOrCreateSheet("DuplicateHeader")
+          .cells()
           .setRange(
               "A1:B2",
               List.of(
@@ -278,6 +286,7 @@ class ExcelPivotTableAuthoringCoverageTest extends ExcelPivotTableCoverageTestSu
 
       workbook
           .getOrCreateSheet("BlankHeader")
+          .cells()
           .setRange(
               "A1:B2",
               List.of(

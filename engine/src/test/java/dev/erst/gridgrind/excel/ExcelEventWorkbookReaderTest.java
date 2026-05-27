@@ -30,25 +30,27 @@ class ExcelEventWorkbookReaderTest {
 
     WorkbookCoreResult.WorkbookSummary expectedWorkbookSummary;
     WorkbookSheetResult.SheetSummary expectedSheetSummary;
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.getOrCreateSheet("Archive");
-      workbook.setSheetVisibility("Archive", ExcelSheetVisibility.VERY_HIDDEN);
-      workbook.setActiveSheet("Ops");
-      workbook.setSelectedSheets(List.of("Ops"));
+      workbook.sheets().setSheetVisibility("Archive", ExcelSheetVisibility.VERY_HIDDEN);
+      workbook.sheets().setActiveSheet("Ops");
+      workbook.sheets().setSelectedSheets(List.of("Ops"));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.sheet("Ops").setCell("A1", ExcelCellValue.text("Header"));
-      workbook.sheet("Ops").setCell("D3", ExcelCellValue.number(12.5d));
-      workbook.sheet("Ops").setColumnWidth(5, 5, 18.0d);
-      workbook.setSheetProtection(
-          "Ops",
-          new ExcelSheetProtectionSettings(
-              true, false, false, false, false, false, false, false, false, true, false, false,
-              true, true, false),
-          Optional.of("secret"));
+      workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
+      workbook.sheet("Ops").cells().setCell("D3", ExcelCellValue.number(12.5d));
+      workbook.sheet("Ops").columns().setWidth(5, 5, 18.0d);
+      workbook
+          .sheets()
+          .setSheetProtection(
+              "Ops",
+              new ExcelSheetProtectionSettings(
+                  true, false, false, false, false, false, false, false, false, true, false, false,
+                  true, true, false),
+              Optional.of("secret"));
       expectedWorkbookSummary = workbook.workbookSummary();
       expectedSheetSummary = workbook.sheetSummary("Ops");
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     List<WorkbookReadIntrospectionResult> reads =
@@ -75,9 +77,9 @@ class ExcelEventWorkbookReaderTest {
     Path workbookPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-event-read-unsupported-", ".xlsx");
     ExcelEventWorkbookReader reader = new ExcelEventWorkbookReader();
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     List<WorkbookReadCommand.Introspection> singleCommand = new ArrayList<>(1);
@@ -308,9 +310,9 @@ class ExcelEventWorkbookReaderTest {
   void throwsWhenSheetSummaryTargetsMissingSheet() throws IOException {
     Path workbookPath =
         ExcelTempFiles.createManagedTempFile("gridgrind-event-missing-sheet-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     SheetNotFoundException failure =
@@ -343,9 +345,9 @@ class ExcelEventWorkbookReaderTest {
 
     Path sourceWorkbook =
         ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-workbook-source-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(sourceWorkbook);
+      workbook.persistence().save(sourceWorkbook);
     }
     Path malformedWorkbook = rewriteEntry(sourceWorkbook, "xl/workbook.xml", _ -> "<workbook");
 
@@ -364,9 +366,9 @@ class ExcelEventWorkbookReaderTest {
 
     Path malformedSheetSource =
         ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-sheet-source-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(malformedSheetSource);
+      workbook.persistence().save(malformedSheetSource);
     }
     Path malformedSheetWorkbook =
         rewriteEntry(malformedSheetSource, "xl/worksheets/sheet1.xml", _ -> "<worksheet");
@@ -387,9 +389,9 @@ class ExcelEventWorkbookReaderTest {
   void wrapsNonSaxSheetParseFailuresWithSheetContext() throws IOException {
     Path sourceWorkbook =
         ExcelTempFiles.createManagedTempFile("gridgrind-event-invalid-row-source-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.save(sourceWorkbook);
+      workbook.persistence().save(sourceWorkbook);
     }
     Path malformedSheetWorkbook =
         rewriteEntry(

@@ -3,6 +3,86 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.66.0] - 2026-05-27
+
+### Changed
+
+- Replaced the contract-test-only source-size watchlist with a repository-wide Java source-shape
+  quality gate wired into root `check`: `verifyJavaSourceShape` now parses every production Java
+  source, writes `build/reports/source-shape/source-shape.tsv`, and enforces role-owned budgets
+  from `gradle/source-shape-policy.tsv`, while `ArchitectureSeamAuditTest` now focuses on
+  workbook seams, module exports, and documentation parity instead of carrying the size ratchet
+  itself.
+- Hard-split the workbook authoring API into grouped role surfaces. Workbook creation/opening now
+  lives on `ExcelWorkbooks`; `ExcelWorkbook` now exposes dedicated `formulas()`, `sheets()`,
+  `customXml()`, `protection()`, `names()`, `tables()`, `pivots()`, and `persistence()` surfaces;
+  `ExcelSheet` now exposes grouped `cells()`, `annotations()`, `drawings()`, `metadata()`,
+  `layout()`, `rows()`, and `columns()` surfaces instead of one catch-all public API.
+- Decomposed broad engine and verification internals into focused helpers: conditional-formatting
+  style IO now separates write, snapshot, color, and border-style concerns; sheet-copy replay now
+  separates named-range, validation, conditional-formatting, autofilter, and table
+  responsibilities; OOXML package security now separates orchestration, encryption, inspection,
+  signing, and file persistence; execution workflow and source-backed resolution now split into
+  dedicated direct-event, streaming, chart-input, mutation-action, and structured-input helpers;
+  Jazzer analysis, cell, and fuzz-data support now each own narrower verification slices instead
+  of carrying monolithic support blobs.
+- Applied the semantic-shape PMD profile to `contract`, `engine`, and `excel-foundation`
+  `pmdMain`, and corrected the developer docs to describe the real PMD, source-shape, and
+  downstream-coverage ownership model used by the build.
+- Updated the shared build/test dependency baseline to JUnit `6.1.0`, JaCoCo trunk build
+  `0.8.15.202605250925` (published as `0.8.15-20260525.212539-111`), Log4j `2.26.0`,
+  SLF4J `2.0.18`, and Jakarta Activation `2.1.4`.
+- Refreshed the root `README.md` to match the current CLI first-run surface: it now shows the
+  repository JAR path, the local Docker build path, the built-in example and doctor flow, the
+  current discovery commands, and the split between `--help`, `--help-protocol`, and
+  `--help-guidance`.
+- Aligned the packaged distribution identity with the executable product name: the shadow install
+  tree now materializes under `build/install/gridgrind`, and the packaged archives now publish as
+  `gridgrind-<version>.zip` and `gridgrind-<version>.tar` instead of `cli-shadow-*`.
+- Changed the repository-root runtime Docker image build into a self-contained multi-stage build:
+  `Dockerfile` now compiles `:cli:shadowJar` inside a pinned builder stage, `docker-smoke.sh`
+  verifies that path directly, and the user-facing quick-start/help/docs now teach the local
+  `docker buildx build --load -t gridgrind-local .` flow alongside the published GHCR image.
+- Rebuilt the CLI discovery surface around typed public contracts instead of stitched protocol
+  sketches: built-in examples and official task starters now publish `workspaceMode` plus
+  `requiredPaths`, `--print-task-plan` emits task-owned executable starter requests rather than
+  generic step-template composites, and the discovery/help renderers now present catalogs,
+  workflow guidance, operator notes, and follow-on commands as separate structured sections.
+- Tightened the CLI’s first-contact recovery and intent guidance: `--doctor-request` now performs
+  request-tree preflight and batches every independently provable blocking problem into one doctor
+  report, argument failures now return nearest-flag suggestions plus command-family-specific
+  recovery text, and task keyword discovery now withholds low-confidence candidates instead of
+  over-recommending workflows on nonsense queries.
+- Expanded the release-surface verification contract from help-only checks to black-box execution:
+  the jar and Docker verification stack now runs every published built-in example and official
+  task starter, verifies the packaged discovery/help surface directly, and keeps the no-stdin CLI
+  contract deterministic even when the parent shell is interactive.
+
+### Fixed
+
+- Replaced destructive `build/libs` cleanup with per-project stale-jar pruning, so composite,
+  root, and nested verification runs no longer lose sibling module jars during `check`,
+  `shadowJar`, or Jazzer verification.
+- Removed the legacy `EXPECT_PRESENT` / `EXPECT_ABSENT` compatibility hint path from JSON
+  request-shape failures. Deleted assertion names are now rejected as unknown types without
+  fallback suggestion text for retired vocabulary.
+- Removed POI-private hyperlink field/constructor dependence from sheet-clone preparation by
+  rehydrating external hyperlinks through a materialized relation wrapper, and repaired blank
+  external relationship ids before clone-time relation creation so copied sheets reopen with
+  canonical hyperlink relationships.
+- Kept the nested Jazzer coverage subset aligned with its intended deterministic support-contract
+  surface after the fuzz-decoder split by excluding `FuzzAddressDecoders`, `FuzzStyleDecoders`,
+  and `FuzzValueDecoders` alongside `FuzzDataDecoders`.
+- Added machine-readable JSON mode to the local Jazzer operator wrappers for `status`, `report`,
+  `list-findings`, and `list-corpus`, and hardened the wrapper regression suite so the help text,
+  JSON passthrough, and lock-conflict wording remain wrapper-owned instead of leaking Gradle task
+  internals.
+- Moved the contract JSON tests onto Jackson 3 context-aware parser entry points and replaced raw
+  reflective coverage casts in the engine helper tests with typed extraction helpers, removing the
+  deprecated-parser and unchecked-cast warning churn from the release gates.
+
 ## [0.65.0] - 2026-05-15
 
 ### Added
@@ -2966,7 +3046,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.65.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.66.0...HEAD
+[0.66.0]: https://github.com/resoltico/GridGrind/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/resoltico/GridGrind/compare/v0.64.0...v0.65.0
 [0.64.0]: https://github.com/resoltico/GridGrind/compare/v0.63.0...v0.64.0
 [0.63.0]: https://github.com/resoltico/GridGrind/compare/v0.62.0...v0.63.0

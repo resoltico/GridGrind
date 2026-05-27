@@ -14,7 +14,7 @@ class SheetCopyPositionTest {
 
     assertInstanceOf(
         ExcelSheetCopyPosition.AppendAtEnd.class,
-        WorkbookCommandConverter.toExcelSheetCopyPosition(position));
+        WorkbookCommandLayoutInputConverter.toExcelSheetCopyPosition(position));
   }
 
   @Test
@@ -24,7 +24,7 @@ class SheetCopyPositionTest {
     ExcelSheetCopyPosition.AtIndex converted =
         assertInstanceOf(
             ExcelSheetCopyPosition.AtIndex.class,
-            WorkbookCommandConverter.toExcelSheetCopyPosition(position));
+            WorkbookCommandLayoutInputConverter.toExcelSheetCopyPosition(position));
 
     assertEquals(2, converted.targetIndex());
     assertThrows(IllegalArgumentException.class, () -> new SheetCopyPosition.AtIndex(-1));

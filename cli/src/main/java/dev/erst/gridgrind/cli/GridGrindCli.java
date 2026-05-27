@@ -87,32 +87,10 @@ public final class GridGrindCli {
       command = CliArguments.parse(args);
     } catch (CliArgumentsException exception) {
       return responseWriter.writeCliFailureReport(
-          responsePathHint,
-          stdout,
-          stderr,
-          CliFailureReports.invalidArguments(
-              2,
-              "parse-arguments",
-              Optional.of(exception.argument()),
-              argumentFailureMessage(exception),
-              List.of(),
-              Optional.of(
-                  "Run gridgrind --help for a synopsis, --help-protocol for the authoritative"
-                      + " request contract, or --help-guidance for workflows and examples.")));
+          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(exception));
     } catch (IllegalArgumentException exception) {
       return responseWriter.writeCliFailureReport(
-          responsePathHint,
-          stdout,
-          stderr,
-          CliFailureReports.invalidArguments(
-              2,
-              "parse-arguments",
-              Optional.empty(),
-              argumentFailureMessage(exception),
-              List.of(),
-              Optional.of(
-                  "Run gridgrind --help for a synopsis, --help-protocol for the authoritative"
-                      + " request contract, or --help-guidance for workflows and examples.")));
+          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(exception));
     }
 
     return switch (command) {
@@ -148,7 +126,7 @@ public final class GridGrindCli {
         if (requestInput.isEmpty()) {
           yield responseWriter.writeCliFailureReport(
               execute.responsePath(),
-              execute.responsePath().isPresent() ? stdout : stderr,
+              stdout,
               stderr,
               CliFailureReports.invalidArguments(
                   2,
@@ -251,11 +229,6 @@ public final class GridGrindCli {
    */
   static String requestTemplateText(RequestTemplateBytesSupplier supplier) {
     return GridGrindCliProductInfo.requestTemplateText(supplier);
-  }
-
-  private static String argumentFailureMessage(RuntimeException exception) {
-    Objects.requireNonNull(exception, "exception must not be null");
-    return Objects.requireNonNullElse(exception.getMessage(), "Invalid command-line arguments");
   }
 
   private static Optional<java.nio.file.Path> responsePathHint(String[] args) {

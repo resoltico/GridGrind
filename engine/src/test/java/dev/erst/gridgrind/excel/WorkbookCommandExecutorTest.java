@@ -40,7 +40,7 @@ class WorkbookCommandExecutorTest {
   void appliesAllSupportedCommandTypesThroughVarargs() throws IOException {
     var workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-command-layout-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
       assertSame(
@@ -145,16 +145,24 @@ class WorkbookCommandExecutorTest {
                       new ExcelHeaderFooterText("", "Confidential", ""))),
               new WorkbookStructureCommand.UnmergeCells("Budget", "A1:B1")));
       workbook.formulas().markRecalculateOnOpen();
-      assertEquals(List.of("History", "Budget", "Ops"), workbook.sheetNames());
-      assertEquals("Item", workbook.sheet("Budget").text("A1"));
-      assertEquals(54.0, workbook.sheet("Budget").number("B3"));
-      assertTrue(workbook.sheet("Budget").snapshotCell("A1").metadata().hyperlink().isEmpty());
-      assertTrue(workbook.sheet("Budget").snapshotCell("B1").metadata().comment().isEmpty());
-      assertEquals(1, workbook.namedRangeCount());
+      assertEquals(List.of("History", "Budget", "Ops"), workbook.sheets().sheetNames());
+      assertEquals("Item", workbook.sheet("Budget").cells().text("A1"));
+      assertEquals(54.0, workbook.sheet("Budget").cells().number("B3"));
+      assertTrue(
+          workbook.sheet("Budget").cells().snapshotCell("A1").metadata().hyperlink().isEmpty());
+      assertTrue(
+          workbook.sheet("Budget").cells().snapshotCell("B1").metadata().comment().isEmpty());
+      assertEquals(1, workbook.names().namedRangeCount());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
-          workbook.sheet("Budget").snapshotCell("A1").style().alignment().horizontalAlignment());
-      assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell("A1")
+              .style()
+              .alignment()
+              .horizontalAlignment());
+      assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").effectiveType());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
       WorkbookRuleResult.AutofiltersResult autofilters =
@@ -176,7 +184,7 @@ class WorkbookCommandExecutorTest {
           autofilters.autofilters());
       assertEquals(
           List.of("Queue"), tables.tables().stream().map(ExcelTableSnapshot::name).toList());
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -199,7 +207,7 @@ class WorkbookCommandExecutorTest {
                 "History!$A$1",
                 ExcelNamedRangeTarget.range("History", "A1"))),
         XlsxRoundTrip.namedRanges(workbookPath));
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       WorkbookRuleResult.AutofiltersResult autofilters =
           assertInstanceOf(
               WorkbookRuleResult.AutofiltersResult.class,
@@ -227,7 +235,7 @@ class WorkbookCommandExecutorTest {
   void rejectsMutationCommandsWhenSheetDoesNotExist() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       assertThrows(
           SheetNotFoundException.class,
           () ->
@@ -341,7 +349,7 @@ class WorkbookCommandExecutorTest {
 
   @Test
   void appliesSheetPresentationThroughSheetStructureDispatch() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
       workbook.getOrCreateSheet("Budget");
       ExcelSheetPresentation presentation =
@@ -359,7 +367,7 @@ class WorkbookCommandExecutorTest {
           executor.apply(
               workbook, new WorkbookLayoutCommand.SetSheetPresentation("Budget", presentation)));
 
-      WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout();
+      WorkbookSheetResult.SheetLayout layout = workbook.sheet("Budget").layout().snapshot();
       assertEquals(presentation.display(), layout.presentation().display());
       assertEquals(
           Optional.of(ExcelColorSnapshot.rgb("#225577")), layout.presentation().tabColor());
@@ -374,7 +382,7 @@ class WorkbookCommandExecutorTest {
 
   @Test
   void appliesPivotTableCommandsAndSurfacesReadback() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
       executor.apply(
@@ -457,7 +465,7 @@ class WorkbookCommandExecutorTest {
 
   @Test
   void appliesDrawingCommandsThroughTheWorkbookCommandSurface() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
       ExcelDrawingAnchor.TwoCell firstAnchor =
           new ExcelDrawingAnchor.TwoCell(
@@ -503,7 +511,8 @@ class WorkbookCommandExecutorTest {
           new WorkbookDrawingCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
           new WorkbookDrawingCommand.DeleteDrawingObject("Ops", "OpsPicture"));
 
-      List<ExcelDrawingObjectSnapshot> drawingObjects = workbook.sheet("Ops").drawingObjects();
+      List<ExcelDrawingObjectSnapshot> drawingObjects =
+          workbook.sheet("Ops").drawings().drawingObjects();
       assertEquals(
           List.of("OpsShape", "OpsEmbed"),
           drawingObjects.stream().map(ExcelDrawingObjectSnapshot::name).toList());
@@ -518,7 +527,7 @@ class WorkbookCommandExecutorTest {
   void appliesWorkbookProtectionCommands() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       executor.apply(
@@ -543,10 +552,11 @@ class WorkbookCommandExecutorTest {
   void appliesClearPrintLayoutThroughIterableCommands() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook
           .sheet("Budget")
+          .layout()
           .setPrintLayout(
               new ExcelPrintLayout(
                   new ExcelPrintLayout.Area.Range("A1:B3"),
@@ -560,7 +570,7 @@ class WorkbookCommandExecutorTest {
       assertSame(
           workbook,
           executor.apply(workbook, List.of(new WorkbookLayoutCommand.ClearPrintLayout("Budget"))));
-      ExcelPrintLayout clearedPrintLayout = workbook.sheet("Budget").printLayout();
+      ExcelPrintLayout clearedPrintLayout = workbook.sheet("Budget").layout().printLayout();
       assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
       assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
       assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
@@ -573,7 +583,7 @@ class WorkbookCommandExecutorTest {
 
   @Test
   void appliesConditionalFormattingCommandsThroughExecutor() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
       workbook.getOrCreateSheet("Ops");
 
@@ -630,7 +640,7 @@ class WorkbookCommandExecutorTest {
   void appliesRowAndColumnStructuralCommandsThroughExecutor() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-structural-commands-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
       assertSame(
@@ -718,11 +728,11 @@ class WorkbookCommandExecutorTest {
               new WorkbookStructureCommand.ShiftColumns("Moves", new ExcelColumnSpan(2, 4), 1),
               new WorkbookStructureCommand.DeleteColumns("Moves", new ExcelColumnSpan(2, 2))));
 
-      assertEquals("Pad", workbook.sheet("Moves").text("B1"));
-      assertEquals("Hosting", workbook.sheet("Moves").text("A3"));
-      assertEquals(42.0, workbook.sheet("Moves").number("C3"));
-      assertEquals("Beta", workbook.sheet("Moves").text("E4"));
-      workbook.save(workbookPath);
+      assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
+      assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
+      assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
+      assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
+      workbook.persistence().save(workbookPath);
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
@@ -737,17 +747,17 @@ class WorkbookCommandExecutorTest {
     assertTrue(layout.columns().get(4).collapsed());
     assertTrue(layout.columns().get(5).hidden());
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      assertEquals("Pad", reopened.sheet("Moves").text("B1"));
-      assertEquals("Hosting", reopened.sheet("Moves").text("A3"));
-      assertEquals(42.0, reopened.sheet("Moves").number("C3"));
-      assertEquals("Beta", reopened.sheet("Moves").text("E4"));
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      assertEquals("Pad", reopened.sheet("Moves").cells().text("B1"));
+      assertEquals("Hosting", reopened.sheet("Moves").cells().text("A3"));
+      assertEquals(42.0, reopened.sheet("Moves").cells().number("C3"));
+      assertEquals("Beta", reopened.sheet("Moves").cells().text("E4"));
     }
   }
 
   @Test
   void appliesSheetManagementCommandsThroughExecutor() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
       assertSame(
@@ -765,8 +775,8 @@ class WorkbookCommandExecutorTest {
               new WorkbookSheetCommand.SetSheetProtection("Alpha", protectionSettings()),
               new WorkbookSheetCommand.ClearSheetProtection("Alpha")));
 
-      assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheetNames());
-      assertEquals("Live", workbook.sheet("Alpha Copy").text("A1"));
+      assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheets().sheetNames());
+      assertEquals("Live", workbook.sheet("Alpha Copy").cells().text("A1"));
 
       WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
@@ -784,7 +794,7 @@ class WorkbookCommandExecutorTest {
   void appliesUngroupCommandsThroughExecutor() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-command-ungroup-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
       executor.apply(
@@ -819,7 +829,7 @@ class WorkbookCommandExecutorTest {
           new WorkbookStructureCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
           new WorkbookStructureCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
@@ -834,12 +844,12 @@ class WorkbookCommandExecutorTest {
 
   @Test
   void routesDedicatedHelperFamiliesAcrossWorkbookSeams() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor.applyWorkbookScopeCommand(
           workbook, new WorkbookSheetCommand.CreateSheet("Budget"));
       WorkbookCommandExecutor.applyWorkbookScopeCommand(
           workbook, new WorkbookSheetCommand.CreateSheet("Ops"));
-      assertEquals(List.of("Budget", "Ops"), workbook.sheetNames());
+      assertEquals(List.of("Budget", "Ops"), workbook.sheets().sheetNames());
 
       WorkbookCommandExecutor.applyCellValueCommand(
           workbook,
@@ -857,13 +867,13 @@ class WorkbookCommandExecutorTest {
           workbook, new WorkbookLayoutCommand.SetSheetZoom("Budget", 135));
 
       double widthBeforeAutoSize =
-          workbook.sheet("Budget").layout().columns().getFirst().widthCharacters();
+          workbook.sheet("Budget").layout().snapshot().columns().getFirst().widthCharacters();
       WorkbookCommandExecutor.applySheetLayoutCommand(
           workbook, new WorkbookLayoutCommand.AutoSizeColumns("Budget"));
 
-      assertEquals(135, workbook.sheet("Budget").layout().zoomPercent());
+      assertEquals(135, workbook.sheet("Budget").layout().snapshot().zoomPercent());
       assertTrue(
-          workbook.sheet("Budget").layout().columns().getFirst().widthCharacters()
+          workbook.sheet("Budget").layout().snapshot().columns().getFirst().widthCharacters()
               > widthBeforeAutoSize);
 
       WorkbookCommandExecutor.applyAnnotationCommand(
@@ -903,16 +913,23 @@ class WorkbookCommandExecutorTest {
           new ExcelComment("Review", "GridGrind", false),
           workbook
               .sheet("Budget")
+              .cells()
               .snapshotCell("A1")
               .metadata()
               .comment()
               .orElseThrow()
               .toPlainComment());
-      assertEquals(1, workbook.namedRangeCount());
-      assertEquals(1, workbook.sheet("Budget").drawingObjects().size());
+      assertEquals(1, workbook.names().namedRangeCount());
+      assertEquals(1, workbook.sheet("Budget").drawings().drawingObjects().size());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
-          workbook.sheet("Budget").snapshotCell("A1").style().alignment().horizontalAlignment());
+          workbook
+              .sheet("Budget")
+              .cells()
+              .snapshotCell("A1")
+              .style()
+              .alignment()
+              .horizontalAlignment());
       WorkbookRuleResult.AutofiltersResult autofilters =
           assertInstanceOf(
               WorkbookRuleResult.AutofiltersResult.class,
@@ -928,7 +945,7 @@ class WorkbookCommandExecutorTest {
   void validatesNullWorkbooksCommandsAndCommandEntries() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       assertThrows(
           NullPointerException.class, () -> executor.apply(workbook, (WorkbookCommand[]) null));
       assertThrows(NullPointerException.class, () -> executor.apply(null, List.of()));
