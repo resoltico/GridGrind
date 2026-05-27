@@ -38,6 +38,8 @@ grep -Fq 'check_stage_execute "${stage_id}" "${stage_label}" "${repo_root}"' "${
     "check.sh no longer delegates fixed-stage execution through the canonical stage-contract owner"
 grep -Fq 'scripts/test-check-stage-contract.sh' "${stage_contract_script}" || die \
     "stage contract no longer includes its own regression guard in Stage 5 coverage"
+grep -Fq 'scripts/test-verify-cli-discovery-execution.sh' "${stage_contract_script}" || die \
+    "stage contract no longer includes the discovery execution heartbeat regression guard"
 
 if grep -Fq "run_stage 'quality-gates'" "${root_check_script}"; then
     die "check.sh still carries a direct fixed-stage quality-gates invocation"
