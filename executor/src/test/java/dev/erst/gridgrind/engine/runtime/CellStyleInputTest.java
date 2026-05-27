@@ -55,7 +55,7 @@ class CellStyleInputTest {
                 Optional.empty()),
             new CellProtectionInput(Optional.of(false), Optional.of(true)));
 
-    var engineStyle = WorkbookCommandConverter.toExcelCellStyle(style);
+    var engineStyle = WorkbookCommandCellInputConverter.toExcelCellStyle(style);
     assertEquals("#,##0.00", engineStyle.numberFormat().orElseThrow());
     assertTrue(engineStyle.font().orElseThrow().bold().orElseThrow());
     assertFalse(engineStyle.font().orElseThrow().italic().orElseThrow());
@@ -109,7 +109,7 @@ class CellStyleInputTest {
             null,
             null);
 
-    var engineStyle = WorkbookCommandConverter.toExcelCellStyle(style);
+    var engineStyle = WorkbookCommandCellInputConverter.toExcelCellStyle(style);
     assertEquals(Optional.empty(), engineStyle.numberFormat());
     assertEquals(Optional.empty(), engineStyle.alignment().orElseThrow().horizontalAlignment());
     assertEquals(Optional.empty(), engineStyle.alignment().orElseThrow().verticalAlignment());

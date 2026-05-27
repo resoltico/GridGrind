@@ -26,6 +26,7 @@ import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
@@ -322,9 +323,9 @@ class XlsxRoundTripVerifierTest {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       new WorkbookExecutionEngine().apply(workbook, commands);
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
       XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
     }
   }

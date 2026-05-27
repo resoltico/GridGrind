@@ -10,6 +10,7 @@ import java.lang.invoke.VarHandle;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -41,6 +42,22 @@ public final class ExcelWorkbookImageCatalogSupport {
       requirePictureConstructor(MethodHandles.lookup());
   private static final Pattern IMAGE_PART_NAME =
       Pattern.compile("^/xl/media/image(?<index>\\d+)\\.[^/]+$");
+  private static final Map<ExcelPictureFormat, POIXMLRelation> PICTURE_RELATIONS =
+      ExcelEnumMappingSupport.exactEnumMap(
+          ExcelPictureFormat.class,
+          "Workbook picture relation mapping",
+          Map.ofEntries(
+              Map.entry(ExcelPictureFormat.EMF, XSSFRelation.IMAGE_EMF),
+              Map.entry(ExcelPictureFormat.WMF, XSSFRelation.IMAGE_WMF),
+              Map.entry(ExcelPictureFormat.PICT, XSSFRelation.IMAGE_PICT),
+              Map.entry(ExcelPictureFormat.JPEG, XSSFRelation.IMAGE_JPEG),
+              Map.entry(ExcelPictureFormat.PNG, XSSFRelation.IMAGE_PNG),
+              Map.entry(ExcelPictureFormat.DIB, XSSFRelation.IMAGE_DIB),
+              Map.entry(ExcelPictureFormat.GIF, XSSFRelation.IMAGE_GIF),
+              Map.entry(ExcelPictureFormat.TIFF, XSSFRelation.IMAGE_TIFF),
+              Map.entry(ExcelPictureFormat.EPS, XSSFRelation.IMAGE_EPS),
+              Map.entry(ExcelPictureFormat.BMP, XSSFRelation.IMAGE_BMP),
+              Map.entry(ExcelPictureFormat.WPG, XSSFRelation.IMAGE_WPG)));
   private static final Comparator<PackagePart> IMAGE_PART_ORDER =
       Comparator.comparingInt(ExcelWorkbookImageCatalogSupport::imagePartIndex)
           .thenComparing(part -> part.getPartName().getName());
@@ -152,19 +169,8 @@ public final class ExcelWorkbookImageCatalogSupport {
 
   public static POIXMLRelation pictureRelation(ExcelPictureFormat format) {
     Objects.requireNonNull(format, "format must not be null");
-    return switch (format) {
-      case EMF -> XSSFRelation.IMAGE_EMF;
-      case WMF -> XSSFRelation.IMAGE_WMF;
-      case PICT -> XSSFRelation.IMAGE_PICT;
-      case JPEG -> XSSFRelation.IMAGE_JPEG;
-      case PNG -> XSSFRelation.IMAGE_PNG;
-      case DIB -> XSSFRelation.IMAGE_DIB;
-      case GIF -> XSSFRelation.IMAGE_GIF;
-      case TIFF -> XSSFRelation.IMAGE_TIFF;
-      case EPS -> XSSFRelation.IMAGE_EPS;
-      case BMP -> XSSFRelation.IMAGE_BMP;
-      case WPG -> XSSFRelation.IMAGE_WPG;
-    };
+    return ExcelEnumMappingSupport.requireMappedValue(
+        PICTURE_RELATIONS, format, "workbook picture format");
   }
 
   public static POIXMLRelation pictureRelation(int poiPictureType) {

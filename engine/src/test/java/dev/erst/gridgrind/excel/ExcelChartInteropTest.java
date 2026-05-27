@@ -56,8 +56,8 @@ class ExcelChartInteropTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot areaChart = workbook.sheet("Charts").charts().getFirst();
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot areaChart = workbook.sheet("Charts").drawings().charts().getFirst();
       assertEquals("AreaOnly", areaChart.name());
       assertInstanceOf(
           ExcelChartSnapshot.Area.class,
@@ -70,11 +70,11 @@ class ExcelChartInteropTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-literal-readback-");
     writeLiteralChartReadbackWorkbook(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Charts");
 
       ExcelChartSnapshot cachedFormulaLine =
-          sheet.charts().stream()
+          sheet.drawings().charts().stream()
               .filter(snapshot -> snapshot.name().startsWith("Chart-"))
               .findFirst()
               .orElseThrow();
@@ -98,7 +98,8 @@ class ExcelChartInteropTest {
                   ExcelChartSnapshot.DataSource.StringLiteral.class, cachedLineSeries.categories())
               .values());
 
-      ExcelChartSnapshot literalPie = ExcelChartTestSupport.chart(sheet.charts(), "LiteralPie");
+      ExcelChartSnapshot literalPie =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "LiteralPie");
       assertTrue(
           ExcelChartTestSupport.singlePlot(literalPie, ExcelChartSnapshot.Pie.class).varyColors());
       assertEquals(
@@ -109,7 +110,7 @@ class ExcelChartInteropTest {
       ExcelDrawingObjectSnapshot.Chart uncachedFormulaDrawingObject =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Chart.class,
-              sheet.drawingObjects().stream()
+              sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "FormulaNoCache".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());

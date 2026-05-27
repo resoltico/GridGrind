@@ -75,7 +75,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFAreaChartData areaData =
         (XDDFAreaChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.AREA),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.AREA),
                 axes.categoryAxis(),
                 axes.valueAxis());
     areaData.setVaryColors(area.varyColors());
@@ -94,7 +94,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFArea3DChartData areaData =
         (XDDFArea3DChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.AREA_3D),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.AREA_3D),
                 axes.categoryAxis(),
                 axes.valueAxis());
     areaData.setVaryColors(area3D.varyColors());
@@ -114,7 +114,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFBarChartData barData =
         (XDDFBarChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.BAR),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.BAR),
                 axes.categoryAxis(),
                 axes.valueAxis());
     barData.setVaryColors(bar.varyColors());
@@ -136,7 +136,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFBar3DChartData barData =
         (XDDFBar3DChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.BAR_3D),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.BAR_3D),
                 axes.categoryAxis(),
                 axes.valueAxis());
     barData.setVaryColors(bar3D.varyColors());
@@ -157,7 +157,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFDoughnutChartData doughnutData =
         (XDDFDoughnutChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.DOUGHNUT), null, null);
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.DOUGHNUT), null, null);
     doughnutData.setVaryColors(doughnut.varyColors());
     doughnut.firstSliceAngle().ifPresent(doughnutData::setFirstSliceAngle);
     doughnut.holeSize().ifPresent(doughnutData::setHoleSize);
@@ -175,7 +175,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFLineChartData lineData =
         (XDDFLineChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.LINE),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.LINE),
                 axes.categoryAxis(),
                 axes.valueAxis());
     lineData.setVaryColors(line.varyColors());
@@ -194,7 +194,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFLine3DChartData lineData =
         (XDDFLine3DChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.LINE_3D),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.LINE_3D),
                 axes.categoryAxis(),
                 axes.valueAxis());
     lineData.setVaryColors(line3D.varyColors());
@@ -212,7 +212,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFPieChartData pieData =
         (XDDFPieChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.PIE), null, null);
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.PIE), null, null);
     pieData.setVaryColors(pie.varyColors());
     pie.firstSliceAngle().ifPresent(pieData::setFirstSliceAngle);
     addSeries(sheet, pieData, pie.series(), formulaRuntime);
@@ -227,7 +227,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFPie3DChartData pieData =
         (XDDFPie3DChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.PIE_3D), null, null);
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.PIE_3D), null, null);
     pieData.setVaryColors(pie3D.varyColors());
     addSeries(sheet, pieData, pie3D.series(), formulaRuntime);
     chart.plot(pieData);
@@ -243,7 +243,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFRadarChartData radarData =
         (XDDFRadarChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.RADAR),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.RADAR),
                 axes.categoryAxis(),
                 axes.valueAxis());
     radarData.setVaryColors(radar.varyColors());
@@ -262,7 +262,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFScatterChartData scatterData =
         (XDDFScatterChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SCATTER),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SCATTER),
                 axes.xAxis(),
                 axes.yAxis());
     scatterData.setVaryColors(scatter.varyColors());
@@ -281,7 +281,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFSurfaceChartData surfaceData =
         (XDDFSurfaceChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE),
                 axes.categoryAxis(),
                 axes.valueAxis());
     surfaceData.setVaryColors(surface.varyColors());
@@ -301,7 +301,7 @@ final class ExcelChartPlotMutationSupport {
     XDDFSurface3DChartData surfaceData =
         (XDDFSurface3DChartData)
             chart.createData(
-                ExcelChartPoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE_3D),
+                ExcelChartTypePoiBridge.toPoiChartType(ExcelChartPlotType.SURFACE_3D),
                 axes.categoryAxis(),
                 axes.valueAxis());
     surfaceData.setVaryColors(surface3D.varyColors());
@@ -352,7 +352,7 @@ final class ExcelChartPlotMutationSupport {
             .markerStyle()
             .ifPresent(
                 markerStyle ->
-                    lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+                    lineSeries.setMarkerStyle(ExcelChartMarkerStylePoiBridge.toPoi(markerStyle)));
         definition.markerSize().ifPresent(lineSeries::setMarkerSize);
       }
       case XDDFLine3DChartData.Series lineSeries -> {
@@ -361,7 +361,7 @@ final class ExcelChartPlotMutationSupport {
             .markerStyle()
             .ifPresent(
                 markerStyle ->
-                    lineSeries.setMarkerStyle(ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+                    lineSeries.setMarkerStyle(ExcelChartMarkerStylePoiBridge.toPoi(markerStyle)));
         definition.markerSize().ifPresent(lineSeries::setMarkerSize);
       }
       case XDDFScatterChartData.Series scatterSeries -> {
@@ -371,7 +371,7 @@ final class ExcelChartPlotMutationSupport {
             .ifPresent(
                 markerStyle ->
                     scatterSeries.setMarkerStyle(
-                        ExcelChartPoiBridge.toPoiMarkerStyle(markerStyle)));
+                        ExcelChartMarkerStylePoiBridge.toPoi(markerStyle)));
         definition.markerSize().ifPresent(scatterSeries::setMarkerSize);
       }
       case XDDFPieChartData.Series pieSeries ->

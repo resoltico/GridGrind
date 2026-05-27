@@ -17,68 +17,113 @@ final class ExcelConditionalFormattingHealthSupport {
     XSSFEvaluationWorkbook evaluationWorkbook = XSSFEvaluationWorkbook.create(sheet.getWorkbook());
 
     for (ExcelConditionalFormattingBlockSnapshot block : blocks) {
-      if (block.ranges().isEmpty() || hasInvalidRanges(block.ranges())) {
-        findings.add(
-            new WorkbookAnalysis.AnalysisFinding(
-                AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
-                AnalysisSeverity.WARNING,
-                "Conditional-formatting block targets an empty or invalid range",
-                "Conditional-formatting block has no valid target ranges.",
-                blockLocation(sheetName, block.ranges()),
-                List.copyOf(block.ranges())));
-      }
-
+      addBlockRangeFindings(findings, sheetName, block);
       for (ExcelConditionalFormattingRuleSnapshot rule : block.rules()) {
         priorities.add(priorityContext(sheetName, block, rule));
-        switch (rule) {
-          case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule -> {
-            if (ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
-                evaluationWorkbook, sheetIndex, formulaRule.formula())) {
-              findings.add(
-                  new WorkbookAnalysis.AnalysisFinding(
-                      AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-                      AnalysisSeverity.ERROR,
-                      "Conditional-formatting formula is invalid",
-                      "Formula rule could not be parsed for conditional-formatting evaluation.",
-                      blockLocation(sheetName, block.ranges()),
-                      List.of(formulaRule.formula())));
-            }
-          }
-          case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule -> {
-            if (ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
-                    evaluationWorkbook, sheetIndex, cellValueRule.formula1())
-                || (cellValueRule.formula2() != null
-                    && ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
-                        evaluationWorkbook, sheetIndex, cellValueRule.formula2()))) {
-              findings.add(
-                  new WorkbookAnalysis.AnalysisFinding(
-                      AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
-                      AnalysisSeverity.ERROR,
-                      "Conditional-formatting operand formula is invalid",
-                      "Cell-value rule operands could not be parsed for conditional-formatting evaluation.",
-                      blockLocation(sheetName, block.ranges()),
-                      cellValueRuleEvidence(cellValueRule)));
-            }
-          }
-          case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
-              findings.add(
-                  new WorkbookAnalysis.AnalysisFinding(
-                      AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
-                      AnalysisSeverity.WARNING,
-                      "Unsupported conditional-formatting rule",
-                      unsupportedRule.detail(),
-                      blockLocation(sheetName, block.ranges()),
-                      List.of(unsupportedRule.kind())));
-          case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> {}
-          case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> {}
-          case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> {}
-          case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> {}
-        }
+        addRuleFindings(findings, evaluationWorkbook, sheetIndex, sheetName, block, rule);
       }
     }
 
     findings.addAll(priorityCollisionFindings(priorities));
     return List.copyOf(findings);
+  }
+
+  private static void addBlockRangeFindings(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      String sheetName,
+      ExcelConditionalFormattingBlockSnapshot block) {
+    if (block.ranges().isEmpty() || hasInvalidRanges(block.ranges())) {
+      findings.add(
+          new WorkbookAnalysis.AnalysisFinding(
+              AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
+              AnalysisSeverity.WARNING,
+              "Conditional-formatting block targets an empty or invalid range",
+              "Conditional-formatting block has no valid target ranges.",
+              blockLocation(sheetName, block.ranges()),
+              List.copyOf(block.ranges())));
+    }
+  }
+
+  private static void addRuleFindings(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      XSSFEvaluationWorkbook evaluationWorkbook,
+      int sheetIndex,
+      String sheetName,
+      ExcelConditionalFormattingBlockSnapshot block,
+      ExcelConditionalFormattingRuleSnapshot rule) {
+    switch (rule) {
+      case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule ->
+          addFormulaRuleFinding(
+              findings, evaluationWorkbook, sheetIndex, sheetName, block, formulaRule);
+      case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
+          addCellValueRuleFinding(
+              findings, evaluationWorkbook, sheetIndex, sheetName, block, cellValueRule);
+      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
+          findings.add(
+              new WorkbookAnalysis.AnalysisFinding(
+                  AnalysisFindingCode.CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
+                  AnalysisSeverity.WARNING,
+                  "Unsupported conditional-formatting rule",
+                  unsupportedRule.detail(),
+                  blockLocation(sheetName, block.ranges()),
+                  List.of(unsupportedRule.kind())));
+      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> {}
+      case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> {}
+      case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> {}
+      case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> {}
+    }
+  }
+
+  private static void addFormulaRuleFinding(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      XSSFEvaluationWorkbook evaluationWorkbook,
+      int sheetIndex,
+      String sheetName,
+      ExcelConditionalFormattingBlockSnapshot block,
+      ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule) {
+    if (!ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
+        evaluationWorkbook, sheetIndex, formulaRule.formula())) {
+      return;
+    }
+    findings.add(
+        new WorkbookAnalysis.AnalysisFinding(
+            AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+            AnalysisSeverity.ERROR,
+            "Conditional-formatting formula is invalid",
+            "Formula rule could not be parsed for conditional-formatting evaluation.",
+            blockLocation(sheetName, block.ranges()),
+            List.of(formulaRule.formula())));
+  }
+
+  private static void addCellValueRuleFinding(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      XSSFEvaluationWorkbook evaluationWorkbook,
+      int sheetIndex,
+      String sheetName,
+      ExcelConditionalFormattingBlockSnapshot block,
+      ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule) {
+    if (!hasBrokenCellValueOperand(evaluationWorkbook, sheetIndex, cellValueRule)) {
+      return;
+    }
+    findings.add(
+        new WorkbookAnalysis.AnalysisFinding(
+            AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+            AnalysisSeverity.ERROR,
+            "Conditional-formatting operand formula is invalid",
+            "Cell-value rule operands could not be parsed for conditional-formatting evaluation.",
+            blockLocation(sheetName, block.ranges()),
+            cellValueRuleEvidence(cellValueRule)));
+  }
+
+  private static boolean hasBrokenCellValueOperand(
+      XSSFEvaluationWorkbook evaluationWorkbook,
+      int sheetIndex,
+      ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule) {
+    return ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
+            evaluationWorkbook, sheetIndex, cellValueRule.formula1())
+        || (cellValueRule.formula2() != null
+            && ExcelConditionalFormattingSnapshotSupport.isBrokenFormula(
+                evaluationWorkbook, sheetIndex, cellValueRule.formula2()));
   }
 
   private static boolean hasInvalidRanges(List<String> ranges) {

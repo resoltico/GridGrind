@@ -144,7 +144,7 @@ class ExecutionDiagnosticFieldsTest {
         ExecutionDiagnosticFields.locationFor(new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         Optional.of("BudgetTotal"),
-        ExecutionDiagnosticFields.namedRangeNameFor(
+        ExecutionSelectorDiagnosticFields.namedRangeNameFor(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         new ProblemContextWorkbookSurfaces.ProblemLocation.Cell("Budget", "B4"),
@@ -272,14 +272,15 @@ class ExecutionDiagnosticFieldsTest {
             workbookInspection, new InvalidFormulaException("Budget", "B4", "SUM(", "bad", null)));
     assertEquals(
         Optional.of("A1:B2"),
-        ExecutionDiagnosticFields.rangeFor(new InvalidRangeAddressException("A1:B2", null)));
+        ExecutionExceptionDiagnosticFields.rangeFor(
+            new InvalidRangeAddressException("A1:B2", null)));
     assertEquals(
         Optional.of("SUM("),
-        ExecutionDiagnosticFields.formulaFor(
+        ExecutionExceptionDiagnosticFields.formulaFor(
             new InvalidFormulaException("Budget", "B4", "SUM(", "bad", null)));
     assertEquals(
         Optional.of("BudgetTotal"),
-        ExecutionDiagnosticFields.namedRangeNameFor(
+        ExecutionExceptionDiagnosticFields.namedRangeNameFor(
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
     assertInstanceOf(

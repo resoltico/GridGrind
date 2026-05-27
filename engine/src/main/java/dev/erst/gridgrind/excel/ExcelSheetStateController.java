@@ -16,20 +16,20 @@ final class ExcelSheetStateController {
   WorkbookCoreResult.WorkbookSummary summarizeWorkbook(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
-    if (workbook.sheetCount() == 0) {
+    if (workbook.sheets().sheetCount() == 0) {
       return new WorkbookCoreResult.WorkbookSummary.Empty(
           0,
           List.of(),
-          workbook.namedRangeCount(),
-          workbook.forceFormulaRecalculationOnOpenEnabledInternal());
+          workbook.names().namedRangeCount(),
+          workbook.formulas().recalculateOnOpenEnabled());
     }
     return new WorkbookCoreResult.WorkbookSummary.WithSheets(
-        workbook.sheetCount(),
-        workbook.sheetNames(),
+        workbook.sheets().sheetCount(),
+        workbook.sheets().sheetNames(),
         ExcelWorkbookSheetSupport.activeSheetName(workbook.xssfWorkbook()),
         ExcelWorkbookSheetSupport.selectedSheetNames(workbook.xssfWorkbook()),
-        workbook.namedRangeCount(),
-        workbook.forceFormulaRecalculationOnOpenEnabledInternal());
+        workbook.names().namedRangeCount(),
+        workbook.formulas().recalculateOnOpenEnabled());
   }
 
   /** Returns structural and state facts for one sheet. */
@@ -46,9 +46,9 @@ final class ExcelSheetStateController {
                 .xssfWorkbook()
                 .getSheetVisibility(workbook.xssfWorkbook().getSheetIndex(sheet))),
         ExcelSheetProtectionSupport.snapshot(sheet),
-        excelSheet.physicalRowCount(),
-        excelSheet.lastRowIndex(),
-        excelSheet.lastColumnIndex());
+        excelSheet.rows().physicalCount(),
+        excelSheet.rows().lastIndex(),
+        excelSheet.columns().lastIndex());
   }
 
   /** Returns workbook-level protection facts including password-hash presence. */

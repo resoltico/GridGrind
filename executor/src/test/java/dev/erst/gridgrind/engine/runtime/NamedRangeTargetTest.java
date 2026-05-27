@@ -15,7 +15,7 @@ class NamedRangeTargetTest {
     assertEquals("B4:A1", target.range());
     assertEquals(
         ExcelNamedRangeTarget.range("Budget", "A1:B4"),
-        WorkbookCommandConverter.toExcelNamedRangeTarget(target));
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(target));
   }
 
   @Test
@@ -24,7 +24,7 @@ class NamedRangeTargetTest {
 
     assertEquals(
         ExcelNamedRangeTarget.range("Budget", "B4:C5"),
-        WorkbookCommandConverter.toExcelNamedRangeTarget(target));
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeTarget(target));
   }
 
   @Test

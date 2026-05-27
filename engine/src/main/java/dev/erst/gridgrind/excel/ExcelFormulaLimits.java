@@ -78,52 +78,7 @@ final class ExcelFormulaLimits {
   }
 
   static FormulaShape scanFormulaShape(String formula) {
-    Deque<FunctionFrame> functions = new ArrayDeque<>();
-    boolean inString = false;
-    int maximumFunctionNesting = 0;
-    int maximumFunctionArguments = 0;
-    int index = 0;
-    while (index < formula.length()) {
-      char current = formula.charAt(index);
-      if (current == '"') {
-        if (inString && index + 1 < formula.length() && formula.charAt(index + 1) == '"') {
-          index += 2;
-          continue;
-        } else {
-          inString = !inString;
-        }
-        index++;
-        continue;
-      }
-      if (inString) {
-        index++;
-        continue;
-      }
-      if (current == '(' && looksLikeFunctionCall(formula, index)) {
-        functions.addLast(new FunctionFrame());
-        maximumFunctionNesting = Math.max(maximumFunctionNesting, functions.size());
-        index++;
-        continue;
-      }
-      if (current == ',' && !functions.isEmpty()) {
-        functions.getLast().argumentSeparators++;
-        functions.getLast().hasContent = true;
-        index++;
-        continue;
-      }
-      if (current == ')' && !functions.isEmpty()) {
-        FunctionFrame completed = functions.removeLast();
-        int argumentCount = completed.hasContent ? completed.argumentSeparators + 1 : 0;
-        maximumFunctionArguments = Math.max(maximumFunctionArguments, argumentCount);
-        index++;
-        continue;
-      }
-      if (!functions.isEmpty() && !Character.isWhitespace(current)) {
-        functions.getLast().hasContent = true;
-      }
-      index++;
-    }
-    return new FormulaShape(maximumFunctionNesting, maximumFunctionArguments);
+    return new FormulaShapeScanner(formula).scan();
   }
 
   static boolean looksLikeFunctionCall(String formula, int openParenIndex) {
@@ -150,6 +105,109 @@ final class ExcelFormulaLimits {
   private static final class FunctionFrame {
     private boolean hasContent;
     private int argumentSeparators;
+  }
+
+  /** Stateful scanner for authored formula nesting and argument-count limits. */
+  private static final class FormulaShapeScanner {
+    private final String formula;
+    private final Deque<FunctionFrame> functions = new ArrayDeque<>();
+    private boolean inString;
+    private int maximumFunctionNesting;
+    private int maximumFunctionArguments;
+    private int index;
+
+    private FormulaShapeScanner(String formula) {
+      this.formula = formula;
+    }
+
+    private FormulaShape scan() {
+      while (index < formula.length()) {
+        if (consumeQuotedText()) {
+          continue;
+        }
+        if (consumeStringBody()) {
+          continue;
+        }
+        if (consumeFunctionOpen()) {
+          continue;
+        }
+        if (consumeArgumentSeparator()) {
+          continue;
+        }
+        if (consumeFunctionClose()) {
+          continue;
+        }
+        markCurrentFunctionContent();
+        index++;
+      }
+      return new FormulaShape(maximumFunctionNesting, maximumFunctionArguments);
+    }
+
+    private boolean consumeQuotedText() {
+      if (currentChar() != '"') {
+        return false;
+      }
+      if (inString && nextCharIs('"')) {
+        index += 2;
+      } else {
+        inString = !inString;
+        index++;
+      }
+      return true;
+    }
+
+    private boolean consumeStringBody() {
+      if (!inString) {
+        return false;
+      }
+      index++;
+      return true;
+    }
+
+    private boolean consumeFunctionOpen() {
+      if (currentChar() != '(' || !looksLikeFunctionCall(formula, index)) {
+        return false;
+      }
+      functions.addLast(new FunctionFrame());
+      maximumFunctionNesting = Math.max(maximumFunctionNesting, functions.size());
+      index++;
+      return true;
+    }
+
+    private boolean consumeArgumentSeparator() {
+      if (currentChar() != ',' || functions.isEmpty()) {
+        return false;
+      }
+      functions.getLast().argumentSeparators++;
+      functions.getLast().hasContent = true;
+      index++;
+      return true;
+    }
+
+    private boolean consumeFunctionClose() {
+      if (currentChar() != ')' || functions.isEmpty()) {
+        return false;
+      }
+      FunctionFrame completed = functions.removeLast();
+      int argumentCount = completed.hasContent ? completed.argumentSeparators + 1 : 0;
+      maximumFunctionArguments = Math.max(maximumFunctionArguments, argumentCount);
+      index++;
+      return true;
+    }
+
+    private void markCurrentFunctionContent() {
+      if (!functions.isEmpty() && !Character.isWhitespace(currentChar())) {
+        functions.getLast().hasContent = true;
+      }
+    }
+
+    private char currentChar() {
+      return formula.charAt(index);
+    }
+
+    private boolean nextCharIs(char value) {
+      return index + 1 < formula.length() && formula.charAt(index + 1) == value;
+    }
   }
 
   record FormulaShape(int maximumFunctionNesting, int maximumFunctionArguments) {}

@@ -432,9 +432,9 @@ class ExcelAutofilterControllerTest {
           Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, emptyDxfId, true));
       assertEquals(Optional.empty(), ExcelAutofilterOoxmlSupport.dxfColor(workbook, 99L, true));
       assertEquals(
-          Optional.empty(), ExcelAutofilterOoxmlSupport.dxfAt(workbook.getStylesSource(), -1L));
+          Optional.empty(), ExcelAutofilterDxfColorSupport.dxfAt(workbook.getStylesSource(), -1L));
       assertTrue(
-          ExcelAutofilterOoxmlSupport.dxfAt(workbook.getStylesSource(), fillDxfId).isPresent());
+          ExcelAutofilterDxfColorSupport.dxfAt(workbook.getStylesSource(), fillDxfId).isPresent());
       // Gradient fill (no patternFill) — covers isSetPatternFill()=false in both cellColor and
       // fallback-fill branches.
       long gradientFillDxfId = putGradientFillDxf(workbook);

@@ -86,6 +86,7 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
@@ -423,13 +424,15 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithNamedRanges() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("B4", ExcelCellValue.number(61.0));
-      workbook.setNamedRange(
-          new dev.erst.gridgrind.excel.ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope(),
-              dev.erst.gridgrind.excel.ExcelNamedRangeTarget.range("Budget", "B4")));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("B4", ExcelCellValue.number(61.0));
+      workbook
+          .names()
+          .setNamedRange(
+              new dev.erst.gridgrind.excel.ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope(),
+                  dev.erst.gridgrind.excel.ExcelNamedRangeTarget.range("Budget", "B4")));
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
@@ -437,13 +440,13 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithB1SheetState() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
-      workbook.setActiveSheet("Beta");
-      workbook.setSelectedSheets(List.of("Alpha", "Beta"));
-      workbook.setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN);
-      workbook.setSheetProtection("Beta", protectionSettings());
+      workbook.sheets().setActiveSheet("Beta");
+      workbook.sheets().setSelectedSheets(List.of("Alpha", "Beta"));
+      workbook.sheets().setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN);
+      workbook.sheets().setSheetProtection("Beta", protectionSettings());
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
@@ -1055,15 +1058,15 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithCharts() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Ops").setCell("A1", ExcelCellValue.text("Month"));
-      workbook.getOrCreateSheet("Ops").setCell("B1", ExcelCellValue.text("Actual"));
-      workbook.getOrCreateSheet("Ops").setCell("A2", ExcelCellValue.text("Jan"));
-      workbook.getOrCreateSheet("Ops").setCell("B2", ExcelCellValue.number(12.0d));
-      workbook.getOrCreateSheet("Ops").setCell("A3", ExcelCellValue.text("Feb"));
-      workbook.getOrCreateSheet("Ops").setCell("B3", ExcelCellValue.number(18.0d));
-      workbook.getOrCreateSheet("Ops").setCell("A4", ExcelCellValue.text("Mar"));
-      workbook.getOrCreateSheet("Ops").setCell("B4", ExcelCellValue.number(15.0d));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Ops").cells().setCell("A1", ExcelCellValue.text("Month"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B1", ExcelCellValue.text("Actual"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A2", ExcelCellValue.text("Jan"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B2", ExcelCellValue.number(12.0d));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A3", ExcelCellValue.text("Feb"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B3", ExcelCellValue.number(18.0d));
+      workbook.getOrCreateSheet("Ops").cells().setCell("A4", ExcelCellValue.text("Mar"));
+      workbook.getOrCreateSheet("Ops").cells().setCell("B4", ExcelCellValue.number(15.0d));
       new WorkbookExecutionEngine()
           .apply(
               workbook,
@@ -1107,15 +1110,15 @@ class WorkbookInvariantChecksTest {
 
   @Test
   void acceptsWorkbookShapeWithPivots() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Month"));
-      workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.text("Actual"));
-      workbook.getOrCreateSheet("Budget").setCell("A2", ExcelCellValue.text("Jan"));
-      workbook.getOrCreateSheet("Budget").setCell("B2", ExcelCellValue.number(12.0d));
-      workbook.getOrCreateSheet("Budget").setCell("A3", ExcelCellValue.text("Feb"));
-      workbook.getOrCreateSheet("Budget").setCell("B3", ExcelCellValue.number(18.0d));
-      workbook.getOrCreateSheet("Budget").setCell("A4", ExcelCellValue.text("Mar"));
-      workbook.getOrCreateSheet("Budget").setCell("B4", ExcelCellValue.number(15.0d));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Month"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.text("Actual"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A2", ExcelCellValue.text("Jan"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B2", ExcelCellValue.number(12.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A3", ExcelCellValue.text("Feb"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B3", ExcelCellValue.number(18.0d));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A4", ExcelCellValue.text("Mar"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B4", ExcelCellValue.number(15.0d));
       workbook.getOrCreateSheet("Pivot");
       new WorkbookExecutionEngine()
           .apply(

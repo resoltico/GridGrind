@@ -23,6 +23,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             pluginManager.apply("com.diffplug.spotless")
 
             val libs = versionCatalog()
+            val repositoryLayout = GridGrindRepositoryLayout.locate(this)
 
             description = providers.gradleProperty("gridgrindDescription").get()
             configureGridGrindRepositories()
@@ -91,9 +92,22 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     }
                 }
 
+            val verifyJavaSourceShape =
+                tasks.register("verifyJavaSourceShape", VerifyJavaSourceShapeTask::class.java) { task ->
+                    task.sourceRoots.from(javaSourceShapeSourceRoots())
+                    task.javaRelease.set(providers.gradleProperty("gridgrindJavaVersion").map(String::toInt))
+                    task.policyFile.set(repositoryLayout.repositoryRoot.resolve("gradle/source-shape-policy.tsv"))
+                    task.reportFile.set(layout.buildDirectory.file("reports/source-shape/source-shape.tsv"))
+                    task.repositoryRootPath.set(repositoryLayout.repositoryRoot.absolutePath)
+                    task.group = "verification"
+                    task.description =
+                        "Fails when production Java sources outgrow their role-specific source-shape budgets."
+                }
+
             tasks.named("check") { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
                 checkTask.dependsOn(verifyExplicitImports)
+                checkTask.dependsOn(verifyJavaSourceShape)
             }
 
             val jacocoAggregatedReport =
@@ -215,6 +229,17 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(layout.projectDirectory.dir("gradle/build-logic/src/main/kotlin").asFile)
         }.distinct().filter(File::isDirectory)
 
+    private fun Project.javaSourceShapeSourceRoots(): List<File> =
+        buildList {
+            add(rootFile("authoring-java/src/main/java"))
+            add(rootFile("cli/src/main/java"))
+            add(rootFile("contract/src/main/java"))
+            add(rootFile("engine/src/main/java"))
+            add(rootFile("excel-foundation/src/main/java"))
+            add(rootFile("executor/src/main/java"))
+            add(rootFile("jazzer/src/main/java"))
+        }.filter(File::isDirectory)
+
     private fun Project.projectFileTargets(): List<Any> =
         buildList {
             repositoryProjectFiles().forEach(::add)
@@ -251,6 +276,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("gradle/build-logic/build.gradle.kts"))
             add(rootFile("gradle/build-logic/settings.gradle.kts"))
             add(rootFile("gradle/libs.versions.toml"))
+            add(rootFile("gradle/source-shape-policy.tsv"))
             add(rootFile("jazzer/README.md"))
             add(rootFile("jazzer/build.gradle.kts"))
             add(rootFile("jazzer/settings.gradle.kts"))

@@ -69,7 +69,13 @@ final class CliResponseWriter {
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
       writePayload(targetPath, GridGrindCliJson.writeCliFailureReportBytes(report));
-      writeNonSuccessPointerIfNeeded(stderr, report.exitCode(), targetPath, payloadName, "failure");
+      writeNonSuccessPointerIfNeeded(
+          stderr,
+          report.exitCode(),
+          targetPath,
+          payloadName,
+          "failure",
+          Optional.of(report.code().name() + ": " + report.message()));
       return report.exitCode();
     } catch (IOException exception) {
       writeStdoutFallbackNotice(stderr, exception, targetPath);
@@ -170,7 +176,15 @@ final class CliResponseWriter {
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
       writePayload(targetPath, GridGrindJson.writeResponseBytes(response));
-      writeNonSuccessPointerIfNeeded(stderr, logicalExitCode, targetPath, "response", "failure");
+      writeNonSuccessPointerIfNeeded(
+          stderr,
+          logicalExitCode,
+          targetPath,
+          "response",
+          "failure",
+          response instanceof GridGrindResponse.Failure failure
+              ? Optional.of(failure.problem().code().name() + ": " + failure.problem().message())
+              : Optional.empty());
       return logicalExitCode;
     } catch (IOException exception) {
       writeStdoutFallbackNotice(stderr, exception, targetPath);
@@ -227,15 +241,20 @@ final class CliResponseWriter {
     try {
       writePayload(targetPath, GridGrindJson.writeRequestDoctorReportBytes(report));
       writeNonSuccessPointerIfNeeded(
-          stderr, doctorExitCodeFor(report), targetPath, "doctor report", "problems");
+          stderr,
+          doctorExitCodeFor(report),
+          targetPath,
+          "doctor report",
+          "problems",
+          report.primaryProblem().map(problem -> problem.code().name() + ": " + problem.message()));
       return doctorExitCodeFor(report);
     } catch (IOException exception) {
       writeStdoutFallbackNotice(stderr, exception, targetPath);
       GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
-      if (report.problem().isPresent()) {
+      if (report.primaryProblem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(
-                problem, GridGrindProblems.problemCause(report.problem().orElseThrow()));
+                problem, GridGrindProblems.problemCause(report.primaryProblem().orElseThrow()));
       }
       writeDoctorReport(
           stdout, RequestDoctorReport.invalid(report.summary(), report.warnings(), problem));
@@ -278,11 +297,17 @@ final class CliResponseWriter {
   }
 
   private static void writeNonSuccessPointerIfNeeded(
-      OutputStream stderr, int exitCode, Path targetPath, String payloadName, String problemNoun)
+      OutputStream stderr,
+      int exitCode,
+      Path targetPath,
+      String payloadName,
+      String problemNoun,
+      Optional<String> problemSummary)
       throws IOException {
     if (exitCode == 0) {
       return;
     }
+    String summary = formattedProblemSummary(problemSummary);
     String line =
         "GridGrind wrote the "
             + payloadName
@@ -290,10 +315,16 @@ final class CliResponseWriter {
             + targetPath
             + "; inspect that file for "
             + problemNoun
+            + summary
             + '.'
             + System.lineSeparator();
     stderr.write(line.getBytes(StandardCharsets.UTF_8));
     stderr.flush();
+  }
+
+  static String formattedProblemSummary(Optional<String> problemSummary) {
+    Objects.requireNonNull(problemSummary, "problemSummary must not be null");
+    return problemSummary.filter(text -> !text.isBlank()).map(text -> " [" + text + "]").orElse("");
   }
 
   private static void writeStdoutFallbackNotice(

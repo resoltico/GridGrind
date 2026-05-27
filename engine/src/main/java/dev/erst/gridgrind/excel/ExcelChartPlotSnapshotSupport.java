@@ -58,14 +58,14 @@ final class ExcelChartPlotSnapshotSupport {
     List<ExcelChartSnapshot.Plot> plots = new ArrayList<>();
     PlotAreaState state = new PlotAreaState(chart);
     PlotCursor cursor = new PlotCursor();
-    XSSFSheet contextSheet = ExcelChartSnapshotSupport.contextSheet(chart, graphicFrame);
+    XSSFSheet contextSheet = ExcelChartRelationSupport.contextSheet(chart, graphicFrame);
     for (XDDFChartData data : chartData) {
       try {
         plots.add(snapshotPlot(contextSheet, state, cursor, data, formulaRuntime));
       } catch (RuntimeException exception) {
         plots.add(
             new ExcelChartSnapshot.Unsupported(
-                ExcelChartPoiBridge.plotTypeToken(data),
+                ExcelChartDataFamilyPoiBridge.plotTypeToken(data),
                 Objects.requireNonNullElse(
                     exception.getMessage(),
                     "Chart plot family is outside the current modeled chart contract.")));
@@ -220,7 +220,7 @@ final class ExcelChartPlotSnapshotSupport {
       }
       default ->
           new ExcelChartSnapshot.Unsupported(
-              ExcelChartPoiBridge.plotTypeToken(data),
+              ExcelChartDataFamilyPoiBridge.plotTypeToken(data),
               "Chart plot family is outside the current modeled chart contract.");
     };
   }
@@ -233,7 +233,7 @@ final class ExcelChartPlotSnapshotSupport {
       if (axis != null) {
         axes.add(
             new ExcelChartSnapshot.Axis(
-                ExcelChartPoiBridge.axisKind(axis),
+                ExcelChartAxisPoiBridge.axisKind(axis),
                 ExcelChartPoiBridge.fromPoiAxisPosition(axis.getPosition()),
                 ExcelChartPoiBridge.fromPoiAxisCrosses(axis.getCrosses()),
                 axis.isVisible()));

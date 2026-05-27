@@ -108,7 +108,7 @@ class ProtocolDefaultingCoverageTest {
                 new RequestDoctorReport.Summary(
                     "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0)),
             List.of(),
-            Optional.empty());
+            List.of());
 
     assertEquals(new CalculationStrategyInput.DoNotCalculate(), calculation.strategy());
     assertFalse(calculation.markRecalculateOnOpen());

@@ -27,16 +27,16 @@
         <exclude name="LoosePackageCoupling"/>
         <!-- Produces false positives on well-structured value/command objects -->
         <exclude name="DataClass"/>
-        <!-- A few remaining workbook-core facades and sealed contract hubs still breach PMD's
-             generic size and complexity thresholds. Those exclusions are transitional rather than
-             permission to grow: ArchitectureSeamAuditTest owns the repository's line-count ratchet
-             and must tighten as the split surfaces continue to come down. -->
+        <!-- PMD's broad coupling heuristics remain too blunt for a few explicit workbook facades
+             and sealed contract unions. Those exclusions are enforced instead through the root
+             verifyJavaSourceShape task and a stricter module-scoped semantic-shape PMD ruleset
+             applied where the thresholds are signal-rich rather than noisy. -->
         <exclude name="GodClass"/>
         <exclude name="TooManyMethods"/>
         <exclude name="CyclomaticComplexity"/>
         <exclude name="CognitiveComplexity"/>
         <!-- Closed-sum protocol catalogs and workbook command hubs legitimately reference many
-             shipped types at once; the split ratchet lives in ArchitectureSeamAuditTest. -->
+             shipped types at once; their import and size budgets live in verifyJavaSourceShape. -->
         <exclude name="CouplingBetweenObjects"/>
         <!-- Public wire DTOs deliberately mirror the shipped JSON shape, so wrapping a few
              distinct fields into extra helper records can make the surface less truthful. -->

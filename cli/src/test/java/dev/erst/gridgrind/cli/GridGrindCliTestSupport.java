@@ -114,7 +114,7 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.ParseArguments.class, report.problem().orElseThrow().context());
+        ProblemContext.ParseArguments.class, report.primaryProblem().orElseThrow().context());
   }
 
   protected static ProblemContext.ReadRequest readRequestContext(
@@ -124,17 +124,17 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.ReadRequest readRequestContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.ReadRequest.class, report.problem().orElseThrow().context());
+        ProblemContext.ReadRequest.class, report.primaryProblem().orElseThrow().context());
   }
 
   protected static ProblemContext.ResolveInputs resolveInputsContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.ResolveInputs.class, report.problem().orElseThrow().context());
+        ProblemContext.ResolveInputs.class, report.primaryProblem().orElseThrow().context());
   }
 
   protected static ProblemContext.OpenWorkbook openWorkbookContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.OpenWorkbook.class, report.problem().orElseThrow().context());
+        ProblemContext.OpenWorkbook.class, report.primaryProblem().orElseThrow().context());
   }
 
   protected static ProblemContext.ExecuteRequest executeRequestContext(
@@ -149,7 +149,7 @@ class GridGrindCliTestSupport {
 
   protected static ProblemContext.WriteResponse writeResponseContext(RequestDoctorReport report) {
     return assertInstanceOf(
-        ProblemContext.WriteResponse.class, report.problem().orElseThrow().context());
+        ProblemContext.WriteResponse.class, report.primaryProblem().orElseThrow().context());
   }
 
   protected static ProblemContext.ExecuteStep executeStepContext(

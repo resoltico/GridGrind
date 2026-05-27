@@ -59,7 +59,7 @@ class ExcelSheetCommentRepairSupportTest {
 
   @Test
   void hasPersistedCommentsAndRawCommentAddressesHandleEmptyState() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
 
       ExcelSheetCommentRepairSupport support =
@@ -152,9 +152,9 @@ class ExcelSheetCommentRepairSupportTest {
 
   @Test
   void replaceCommentsSupportsRawPlainAndRichComments() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setCell("C3", ExcelCellValue.text("Existing"));
+      workbook.sheet("Ops").cells().setCell("C3", ExcelCellValue.text("Existing"));
 
       ExcelSheetCommentRepairSupport support =
           new ExcelSheetCommentRepairSupport(workbook.sheet("Ops").xssfSheet());
@@ -254,26 +254,28 @@ class ExcelSheetCommentRepairSupportTest {
     Path workbookPath = Files.createTempFile("gridgrind-comment-delete-columns-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("LL");
       workbook
           .sheet("LL")
+          .annotations()
           .setComment("E2", new ExcelComment("Note BudgetTotal", "GridGrind", true));
       workbook
           .sheet("LL")
+          .annotations()
           .setComment("A2", new ExcelComment("Note Report_Value", "GridGrind", true));
       workbook.getOrCreateSheet("LL");
-      workbook.sheet("LL").deleteColumns(new ExcelColumnSpan(1, 3));
-      workbook.sheet("LL").deleteColumns(new ExcelColumnSpan(0, 0));
+      workbook.sheet("LL").columns().delete(new ExcelColumnSpan(1, 3));
+      workbook.sheet("LL").columns().delete(new ExcelColumnSpan(0, 0));
 
       assertVisibleComments(
           workbook, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Note BudgetTotal"), Map.of("1:0", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertVisibleComments(
           reopened, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
     }
@@ -284,11 +286,17 @@ class ExcelSheetCommentRepairSupportTest {
     Path workbookPath = Files.createTempFile("gridgrind-comment-insert-columns-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
-      workbook.sheet("Ops").setComment("C2", new ExcelComment("Shifted", "GridGrind", true));
-      workbook.sheet("Ops").insertColumns(1, 1);
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("C2", new ExcelComment("Shifted", "GridGrind", true));
+      workbook.sheet("Ops").columns().insert(1, 1);
 
       assertVisibleComments(
           workbook,
@@ -296,13 +304,13 @@ class ExcelSheetCommentRepairSupportTest {
           Map.of(
               "A2", new ExcelComment("Stationary", "GridGrind", true),
               "D2", new ExcelComment("Shifted", "GridGrind", true)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertCanonicalCommentParts(
         workbookPath, Map.of("A2", "Stationary", "D2", "Shifted"), Map.of("1:0", 1, "1:3", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertVisibleComments(
           reopened,
           "Ops",
@@ -317,20 +325,26 @@ class ExcelSheetCommentRepairSupportTest {
     Path workbookPath = Files.createTempFile("gridgrind-comment-shift-columns-left-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
-      workbook.sheet("Ops").setComment("B2", new ExcelComment("Moving", "GridGrind", true));
-      workbook.sheet("Ops").shiftColumns(new ExcelColumnSpan(1, 1), -1);
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("A2", new ExcelComment("Stationary", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("B2", new ExcelComment("Moving", "GridGrind", true));
+      workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(1, 1), -1);
 
       assertVisibleComments(
           workbook, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Moving"), Map.of("1:0", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertVisibleComments(
           reopened, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
     }
@@ -341,20 +355,26 @@ class ExcelSheetCommentRepairSupportTest {
     Path workbookPath = Files.createTempFile("gridgrind-comment-shift-columns-right-", ".xlsx");
     Files.deleteIfExists(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setComment("A2", new ExcelComment("Moving", "GridGrind", true));
-      workbook.sheet("Ops").setComment("B2", new ExcelComment("Stationary", "GridGrind", true));
-      workbook.sheet("Ops").shiftColumns(new ExcelColumnSpan(0, 0), 1);
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("A2", new ExcelComment("Moving", "GridGrind", true));
+      workbook
+          .sheet("Ops")
+          .annotations()
+          .setComment("B2", new ExcelComment("Stationary", "GridGrind", true));
+      workbook.sheet("Ops").columns().shift(new ExcelColumnSpan(0, 0), 1);
 
       assertVisibleComments(
           workbook, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("B2", "Moving"), Map.of("1:1", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertVisibleComments(
           reopened, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
     }
@@ -365,7 +385,7 @@ class ExcelSheetCommentRepairSupportTest {
       ExcelWorkbook workbook, String sheetName, Map<String, ExcelComment> expected) {
     Map<String, ExcelComment> actual = new java.util.LinkedHashMap<>();
     for (WorkbookSheetResult.CellComment comment :
-        workbook.sheet(sheetName).comments(new ExcelCellSelection.AllUsedCells())) {
+        workbook.sheet(sheetName).annotations().comments(new ExcelCellSelection.AllUsedCells())) {
       actual.put(comment.address(), comment.comment().toPlainComment());
     }
     assertEquals(expected, Map.copyOf(actual));

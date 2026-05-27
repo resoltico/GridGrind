@@ -60,17 +60,12 @@ class ExcelDrawingEmbeddedPreviewCoverageTest extends ExcelDrawingCoverageTestSu
                   .newInstance()));
       assertNotNull(invoke(controller, "previewDrawingRelationId", Optional.class, secondObject));
       String previewSheetRelationId =
-          ((Optional<String>)
-                  invoke(
-                      controller,
-                      "previewSheetRelationId",
-                      Optional.class,
-                      secondObject.getOleObject()))
+          invokeOptional(
+                  controller, "previewSheetRelationId", String.class, secondObject.getOleObject())
               .orElseThrow();
       sheet.getPackagePart().removeRelationship(previewSheetRelationId);
       assertNotNull(
-          ((Optional<PackagePart>)
-                  invoke(controller, "previewImagePart", Optional.class, secondObject))
+          invokeOptional(controller, "previewImagePart", PackagePart.class, secondObject)
               .orElseThrow());
 
       XSSFObjectData noObjectPr =

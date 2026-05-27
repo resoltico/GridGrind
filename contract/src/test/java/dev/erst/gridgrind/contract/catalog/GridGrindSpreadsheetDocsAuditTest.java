@@ -229,7 +229,7 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "Repo-asset-backed built-ins require the matching `examples/` asset directories"),
+                    "Repo-asset-backed built-ins require the matching asset paths named in `requiredPaths`"),
                 "examples guide must describe repo-asset-backed built-ins honestly"),
         () ->
             assertTrue(

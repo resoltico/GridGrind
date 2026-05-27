@@ -1,12 +1,8 @@
 package dev.erst.gridgrind.excel;
 
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
-import java.lang.invoke.VarHandle;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.BiFunction;
+import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackageRelationship;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
@@ -16,18 +12,6 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTHyperlink;
 
 /** Materializes POI sheet-clone prerequisites that are otherwise deferred until save-time. */
 final class ExcelSheetClonePreparationSupport {
-  static final PoiPrivateContract HYPERLINKS_FIELD_CONTRACT =
-      PoiPrivateContract.field(
-          XSSFSheet.class, "hyperlinks", "sheet-clone external hyperlink materialization");
-  static final PoiPrivateContract HYPERLINK_CONSTRUCTOR_CONTRACT =
-      PoiPrivateContract.constructor(
-          XSSFHyperlink.class,
-          MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class),
-          "sheet-clone external hyperlink materialization");
-  private static final VarHandle HYPERLINKS_FIELD = requireHyperlinksField(MethodHandles.lookup());
-  private static final BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink>
-      HYPERLINK_CONSTRUCTOR = requireHyperlinkConstructor(MethodHandles.lookup());
-
   /** Ensures a source sheet is internally consistent before handing it to POI clone logic. */
   void prepareSourceSheetForClone(XSSFSheet sourceSheet) {
     Objects.requireNonNull(sourceSheet, "sourceSheet must not be null");
@@ -35,61 +19,54 @@ final class ExcelSheetClonePreparationSupport {
   }
 
   private static void materializeExternalHyperlinkRelationships(XSSFSheet sourceSheet) {
-    List<XSSFHyperlink> hyperlinks = mutableHyperlinks(sourceSheet);
-    for (int index = 0; index < hyperlinks.size(); index++) {
-      hyperlinks.set(
-          index, materializedExternalHyperlinkRelationship(sourceSheet, hyperlinks.get(index)));
+    for (XSSFHyperlink hyperlink : List.copyOf(sourceSheet.getHyperlinkList())) {
+      materializeExternalHyperlinkRelationship(sourceSheet, hyperlink)
+          .ifPresent(
+              materialized -> {
+                sourceSheet.removeHyperlink(hyperlink);
+                sourceSheet.addHyperlink(materialized);
+              });
     }
   }
 
-  private static XSSFHyperlink materializedExternalHyperlinkRelationship(
+  private static Optional<XSSFHyperlink> materializeExternalHyperlinkRelationship(
       XSSFSheet sourceSheet, XSSFHyperlink hyperlink) {
-    if (hyperlink == null || !hyperlink.needsRelationToo()) {
-      return hyperlink;
+    if (!hyperlink.needsRelationToo()) {
+      return Optional.empty();
     }
-    String relationId = hyperlink.getCTHyperlink().getId();
-    PackagePart sheetPart = sourceSheet.getPackagePart();
-    PackageRelationship relationship =
-        relationId == null ? null : sheetPart.getRelationship(relationId);
-    if (relationship == null) {
-      relationship =
+    String relationshipId = hyperlink.getCTHyperlink().getId();
+    if (relationshipId != null
+        && !relationshipId.isBlank()
+        && sourceSheet.getPackagePart().getRelationship(relationshipId) != null) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        MaterializedHyperlink.wrapWithMaterializedRelation(
+            hyperlink, sourceSheet.getPackagePart()));
+  }
+
+  /**
+   * POI cloneSheet consumes relation-backed XSSFHyperlink objects rather than raw CT hyperlink ids.
+   * Rehydrating through the public copy constructor and protected relation materializer keeps the
+   * hyperlink list and package relationships aligned without private access.
+   */
+  private static final class MaterializedHyperlink extends XSSFHyperlink {
+    private MaterializedHyperlink(CTHyperlink ctHyperlink, PackageRelationship relationship) {
+      super(ctHyperlink, relationship);
+    }
+
+    private static XSSFHyperlink wrapWithMaterializedRelation(
+        XSSFHyperlink hyperlink, PackagePart sheetPart) {
+      String relationshipId = hyperlink.getCTHyperlink().getId();
+      String requestedRelationshipId =
+          relationshipId == null || relationshipId.isBlank() ? null : relationshipId;
+      PackageRelationship relationship =
           sheetPart.addExternalRelationship(
-              hyperlink.getAddress(), XSSFRelation.SHEET_HYPERLINKS.getRelation(), relationId);
+              hyperlink.getAddress(),
+              XSSFRelation.SHEET_HYPERLINKS.getRelation(),
+              requestedRelationshipId);
       hyperlink.getCTHyperlink().setId(relationship.getId());
+      return new MaterializedHyperlink(hyperlink.getCTHyperlink(), relationship);
     }
-    return newHyperlink(hyperlink.getCTHyperlink(), relationship);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static List<XSSFHyperlink> mutableHyperlinks(XSSFSheet sourceSheet) {
-    return (List<XSSFHyperlink>) HYPERLINKS_FIELD.get(sourceSheet);
-  }
-
-  private static XSSFHyperlink newHyperlink(
-      CTHyperlink ctHyperlink, PackageRelationship relationship) {
-    return HYPERLINK_CONSTRUCTOR.apply(ctHyperlink, relationship);
-  }
-
-  static VarHandle requireHyperlinksField(MethodHandles.Lookup lookup) {
-    return PoiPrivateAccessSupport.requireVarHandle(lookup, HYPERLINKS_FIELD_CONTRACT, List.class);
-  }
-
-  static BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink> requireHyperlinkConstructor(
-      MethodHandles.Lookup lookup) {
-    MethodHandle constructor =
-        PoiPrivateAccessSupport.requireConstructor(
-                lookup,
-                HYPERLINK_CONSTRUCTOR_CONTRACT,
-                MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class))
-            .asType(
-                MethodType.methodType(
-                    XSSFHyperlink.class, CTHyperlink.class, PackageRelationship.class));
-    return hyperlinkConstructor(constructor);
-  }
-
-  @SuppressWarnings("unchecked")
-  private static BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink> hyperlinkConstructor(
-      MethodHandle constructor) {
-    return PoiPrivateAccessSupport.asInterfaceInstance(BiFunction.class, constructor);
   }
 }

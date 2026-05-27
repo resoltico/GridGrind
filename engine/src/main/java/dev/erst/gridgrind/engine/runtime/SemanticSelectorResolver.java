@@ -168,7 +168,7 @@ final class SemanticSelectorResolver {
         rowIndex <= table.dataLastRowIndex();
         rowIndex++) {
       String address = a1Address(rowIndex, table.firstColumnIndex() + keyColumnOffset);
-      ExcelCellSnapshot snapshot = sheet.snapshotCell(address);
+      ExcelCellSnapshot snapshot = sheet.cells().snapshotCell(address);
       if (matchesKeyCell(snapshot, selector.expectedValue())) {
         if (matchedRowIndex != null) {
           throw new IllegalArgumentException(

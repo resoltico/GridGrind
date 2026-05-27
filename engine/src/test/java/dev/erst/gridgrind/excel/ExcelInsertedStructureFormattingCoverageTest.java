@@ -50,7 +50,7 @@ class ExcelInsertedStructureFormattingCoverageTest extends ExcelRowColumnStructu
       templateRowThree.createCell(1).setCellValue("Approved");
       templateRowThree.getCell(1).setCellStyle(style);
 
-      controller.insertRows(sheet, 2, 2);
+      rowController.insertRows(sheet, 2, 2);
 
       for (int rowIndex = 2; rowIndex <= 3; rowIndex++) {
         Row insertedRow = sheet.getRow(rowIndex);
@@ -88,7 +88,7 @@ class ExcelInsertedStructureFormattingCoverageTest extends ExcelRowColumnStructu
       templateRow.createCell(0).setCellValue("North");
       templateRow.getCell(0).setCellStyle(style);
 
-      controller.insertRows(sheet, 0, 1);
+      rowController.insertRows(sheet, 0, 1);
 
       Row insertedRow = sheet.getRow(0);
       assertNotNull(insertedRow);
@@ -124,7 +124,7 @@ class ExcelInsertedStructureFormattingCoverageTest extends ExcelRowColumnStructu
       setString(sheet, "B2", "Shifted");
       setString(sheet, "B3", "Sparse");
 
-      controller.insertColumns(sheet, 1, 2);
+      columnController.insertColumns(sheet, 1, 2);
 
       assertEquals(sheet.getColumnWidth(0), sheet.getColumnWidth(1));
       assertEquals(sheet.getColumnWidth(0), sheet.getColumnWidth(2));
@@ -162,7 +162,7 @@ class ExcelInsertedStructureFormattingCoverageTest extends ExcelRowColumnStructu
       setString(sheet, "A1", "North");
       sheet.getRow(0).getCell(0).setCellStyle(style);
 
-      controller.insertColumns(sheet, 0, 1);
+      columnController.insertColumns(sheet, 0, 1);
 
       assertEquals(3584, sheet.getColumnWidth(0));
       assertEquals(style.getIndex(), sheet.getColumnStyle(0).getIndex());
@@ -178,7 +178,7 @@ class ExcelInsertedStructureFormattingCoverageTest extends ExcelRowColumnStructu
       ghost.createCell(0).setCellValue("Ghost");
       sheet.removeRow(ghost);
 
-      controller.insertRows(sheet, 0, 1);
+      rowController.insertRows(sheet, 0, 1);
 
       assertNull(sheet.getRow(0));
     }

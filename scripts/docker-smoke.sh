@@ -39,30 +39,12 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
 readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX")"
 readonly docker_run_user="$(id -u):$(id -g)"
-readonly cli_shadow_jar_support="${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
 readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
 readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
 readonly pid_file="${lock_dir}/pid"
-readonly gradle_user_home="${GRIDGRIND_GRADLE_USER_HOME:-${repo_root}/tmp/gradle-user-home}"
 anonymous_docker_config=''
 docker_endpoint=''
-project_cache_dir=''
-
-prepare_project_cache_dir() {
-    local cache_root=$1
-    if [[ -z "${cache_root}" ]]; then
-        return 0
-    fi
-    mkdir -p "${cache_root}"
-    mktemp -d "${cache_root%/}/docker-smoke.XXXXXX"
-}
-
-project_cache_dir="$(prepare_project_cache_dir "${GRIDGRIND_PROJECT_CACHE_DIR:-}")"
-[[ -f "${cli_shadow_jar_support}" ]] || die "missing CLI shadow jar helper at ${cli_shadow_jar_support}"
 [[ -f "${repo_lock_support}" ]] || die "missing repo verification lock helper at ${repo_lock_support}"
-
-# shellcheck source=/dev/null
-source "${cli_shadow_jar_support}"
 # shellcheck source=/dev/null
 source "${repo_lock_support}"
 
@@ -114,9 +96,6 @@ cleanup() {
     local exit_code=$?
     # Mounted-path artifacts should stay caller-owned, but keep sudo as a defensive cleanup fallback.
     rm -rf "${smoke_root}" || sudo rm -rf "${smoke_root}" || true
-    if [[ -n "${project_cache_dir}" ]]; then
-        rm -rf "${project_cache_dir}" || true
-    fi
     if command -v docker >/dev/null 2>&1 && [[ -n "${anonymous_docker_config}" ]]; then
         docker_with_repo_config image rm -f "${image_tag}" >/dev/null 2>&1 || true
         rm -rf "${anonymous_docker_config}" || true
@@ -130,25 +109,7 @@ trap cleanup EXIT
 command -v docker >/dev/null 2>&1 || die "docker is required for the Docker smoke gate"
 docker buildx version >/dev/null 2>&1 || die "docker buildx is required for the Docker smoke gate"
 [[ -f "${repo_root}/Dockerfile" ]] || die "missing Dockerfile at ${repo_root}/Dockerfile"
-[[ -x "${repo_root}/gradlew" ]] || die "missing Gradle wrapper at ${repo_root}/gradlew"
-
-mkdir -p "${gradle_user_home}"
 acquire_lock
-
-printf 'Docker smoke: rebuilding CLI fat JAR\n'
-gradle_command=(
-    env
-    "GRADLE_USER_HOME=${gradle_user_home}"
-    "${repo_root}/gradlew"
-    --console=plain
-    --no-daemon
-)
-if [[ -n "${project_cache_dir}" ]]; then
-    gradle_command+=(--project-cache-dir "${project_cache_dir}")
-fi
-gradle_command+=(:cli:shadowJar)
-"${gradle_command[@]}" >/dev/null
-readonly cli_jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
 
 docker_endpoint="${DOCKER_HOST:-}"
 if [[ -z "${docker_endpoint}" ]]; then
@@ -552,6 +513,15 @@ if [[ -n "${docker_endpoint}" ]]; then
 else
     DOCKER_CONFIG="${anonymous_docker_config}" \
         "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"
+fi
+
+printf 'Docker smoke: executing published examples and task starters from the packaged image\n'
+if [[ -n "${docker_endpoint}" ]]; then
+    DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" \
+        "${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"
+else
+    DOCKER_CONFIG="${anonymous_docker_config}" \
+        "${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"
 fi
 
 printf 'Docker smoke: verifying custom workdir and weird paths\n'

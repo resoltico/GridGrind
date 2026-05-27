@@ -4,6 +4,15 @@ set -euo pipefail
 script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 gradle_args=()
+wrapper_args=()
+for arg in "$@"; do
+  case "${arg}" in
+    --json) gradle_args+=("-PjazzerJsonOutput=true") ;;
+    *) wrapper_args+=("${arg}") ;;
+  esac
+done
+set -- "${wrapper_args[@]}"
+
 if [[ $# -ge 1 && "$1" != -* ]]; then
   gradle_args+=("-PjazzerTarget=$1")
   shift

@@ -77,52 +77,12 @@ public final class CatalogFieldMetadataSupport {
   /** Returns the machine-readable field shape for one non-parameterized record component type. */
   public static FieldShape fieldShape(Class<?> classType) {
     Objects.requireNonNull(classType, "classType must not be null");
-    if (STRING_FIELD_TYPES.contains(classType)) {
-      return new FieldShape.Scalar(ScalarType.STRING);
-    }
-    if (BOOLEAN_FIELD_TYPES.contains(classType)) {
-      return new FieldShape.Scalar(ScalarType.BOOLEAN);
-    }
-    if (isNumericType(classType)) {
-      return new FieldShape.Scalar(ScalarType.NUMBER);
-    }
-    if (classType.isEnum()) {
-      return new FieldShape.Scalar(ScalarType.STRING);
-    }
-    Map<Class<?>, List<String>> nestedUnionGroups = nestedFieldShapeUnions();
-    Map<Class<?>, String> topLevelGroups = topLevelFieldShapeTypeSets();
-    Map<Class<?>, String> nestedGroups = nestedFieldShapeGroups();
-    Map<Class<?>, String> plainGroups = plainFieldShapeGroups();
-
-    List<String> nestedGroupUnion = nestedUnionGroups.get(classType);
-    if (nestedGroupUnion == null) {
-      nestedGroupUnion = lookupAssignableGroupList(nestedUnionGroups, classType).orElse(null);
-    }
-    if (nestedGroupUnion != null) {
-      return new FieldShape.NestedTypeGroupUnionRef(nestedGroupUnion);
-    }
-    String topLevelTypeSet = topLevelGroups.get(classType);
-    if (topLevelTypeSet == null) {
-      topLevelTypeSet = lookupAssignableGroup(topLevelGroups, classType).orElse(null);
-    }
-    if (topLevelTypeSet != null) {
-      return new FieldShape.TopLevelTypeSetRef(topLevelTypeSet);
-    }
-    String nestedGroup = nestedGroups.get(classType);
-    if (nestedGroup == null) {
-      nestedGroup = lookupAssignableGroup(nestedGroups, classType).orElse(null);
-    }
-    if (nestedGroup != null) {
-      return new FieldShape.NestedTypeGroupRef(nestedGroup);
-    }
-    String plainGroup = plainGroups.get(classType);
-    if (plainGroup == null) {
-      plainGroup = lookupAssignableGroup(plainGroups, classType).orElse(null);
-    }
-    if (plainGroup != null) {
-      return new FieldShape.PlainTypeGroupRef(plainGroup);
-    }
-    throw new IllegalStateException("Unsupported catalog field type: " + classType.getName());
+    return scalarFieldShape(classType)
+        .or(() -> groupedFieldShape(classType))
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Unsupported catalog field type: " + classType.getName()));
   }
 
   static Optional<String> lookupAssignableGroup(Map<Class<?>, String> groups, Class<?> classType) {
@@ -183,6 +143,47 @@ public final class CatalogFieldMetadataSupport {
   public static boolean isNumericType(Class<?> classType) {
     Objects.requireNonNull(classType, "classType must not be null");
     return NUMERIC_FIELD_TYPES.contains(classType);
+  }
+
+  private static Optional<FieldShape> scalarFieldShape(Class<?> classType) {
+    if (STRING_FIELD_TYPES.contains(classType) || classType.isEnum()) {
+      return Optional.of(new FieldShape.Scalar(ScalarType.STRING));
+    }
+    if (BOOLEAN_FIELD_TYPES.contains(classType)) {
+      return Optional.of(new FieldShape.Scalar(ScalarType.BOOLEAN));
+    }
+    if (isNumericType(classType)) {
+      return Optional.of(new FieldShape.Scalar(ScalarType.NUMBER));
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<FieldShape> groupedFieldShape(Class<?> classType) {
+    return resolvedGroupList(nestedFieldShapeUnions(), classType)
+        .<FieldShape>map(FieldShape.NestedTypeGroupUnionRef::new)
+        .or(
+            () ->
+                resolvedGroup(topLevelFieldShapeTypeSets(), classType)
+                    .map(FieldShape.TopLevelTypeSetRef::new))
+        .or(
+            () ->
+                resolvedGroup(nestedFieldShapeGroups(), classType)
+                    .map(FieldShape.NestedTypeGroupRef::new))
+        .or(
+            () ->
+                resolvedGroup(plainFieldShapeGroups(), classType)
+                    .map(FieldShape.PlainTypeGroupRef::new));
+  }
+
+  private static Optional<String> resolvedGroup(Map<Class<?>, String> groups, Class<?> classType) {
+    String exact = groups.get(classType);
+    return exact != null ? Optional.of(exact) : lookupAssignableGroup(groups, classType);
+  }
+
+  private static Optional<List<String>> resolvedGroupList(
+      Map<Class<?>, List<String>> groups, Class<?> classType) {
+    List<String> exact = groups.get(classType);
+    return exact != null ? Optional.of(exact) : lookupAssignableGroupList(groups, classType);
   }
 
   /** Returns the set of all sealed types registered in the nested field-shape group map. */

@@ -22,7 +22,7 @@ class DataValidationRuleInputTest {
     assertEquals(List.of("Queued", "Done"), explicitList.values());
     assertEquals(
         new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
-        WorkbookCommandConverter.toExcelDataValidationRule(explicitList));
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(explicitList));
   }
 
   @Test
@@ -33,7 +33,7 @@ class DataValidationRuleInputTest {
     assertEquals(List.of(), explicitList.values());
     assertEquals(
         new ExcelDataValidationRule.ExplicitList(List.of()),
-        WorkbookCommandConverter.toExcelDataValidationRule(explicitList));
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(explicitList));
   }
 
   @Test
@@ -53,40 +53,40 @@ class DataValidationRuleInputTest {
     assertEquals(
         new ExcelDataValidationRule.WholeNumber(
             ExcelComparisonOperator.GREATER_THAN, "1", java.util.Optional.empty()),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.WholeNumber(
                 ExcelComparisonOperator.GREATER_THAN, "1", java.util.Optional.empty())));
     assertEquals(
         new ExcelDataValidationRule.FormulaList("Statuses"),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.FormulaList("Statuses")));
     assertEquals(
         new ExcelDataValidationRule.DecimalNumber(
             ExcelComparisonOperator.GREATER_THAN, "0.5", java.util.Optional.empty()),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.DecimalNumber(
                 ExcelComparisonOperator.GREATER_THAN, "0.5", java.util.Optional.empty())));
     assertEquals(
         new ExcelDataValidationRule.DateRule(
             ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", java.util.Optional.empty()),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.DateRule(
                 ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", java.util.Optional.empty())));
     assertEquals(
         new ExcelDataValidationRule.TimeRule(
             ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", java.util.Optional.empty()),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.TimeRule(
                 ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", java.util.Optional.empty())));
     assertEquals(
         new ExcelDataValidationRule.TextLength(
             ExcelComparisonOperator.LESS_OR_EQUAL, "20", java.util.Optional.empty()),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.TextLength(
                 ExcelComparisonOperator.LESS_OR_EQUAL, "20", java.util.Optional.empty())));
     assertEquals(
         new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
-        WorkbookCommandConverter.toExcelDataValidationRule(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(
             new DataValidationRuleInput.CustomFormula("LEN(A1)>0")));
   }
 

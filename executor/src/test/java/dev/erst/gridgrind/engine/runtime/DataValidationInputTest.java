@@ -46,7 +46,7 @@ class DataValidationInputTest {
                     "Invalid date",
                     "Date must be today or later.",
                     true))),
-        WorkbookCommandConverter.toExcelDataValidationDefinition(input));
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationDefinition(input));
   }
 
   @Test
@@ -71,18 +71,18 @@ class DataValidationInputTest {
   void nestedPromptAndErrorInputsDefaultAndPreserveVisibilityFlags() {
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", true),
-        WorkbookCommandConverter.toExcelDataValidationPrompt(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
                 prompt("Ship date", "Use today or later.", null))
             .orElseThrow());
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", false),
-        WorkbookCommandConverter.toExcelDataValidationPrompt(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(
                 prompt("Ship date", "Use today or later.", false))
             .orElseThrow());
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", true),
-        WorkbookCommandConverter.toExcelDataValidationErrorAlert(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.INFORMATION,
                     "Invalid date",
@@ -92,7 +92,7 @@ class DataValidationInputTest {
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false),
-        WorkbookCommandConverter.toExcelDataValidationErrorAlert(
+        WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(
                 errorAlert(
                     ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false))
             .orElseThrow());

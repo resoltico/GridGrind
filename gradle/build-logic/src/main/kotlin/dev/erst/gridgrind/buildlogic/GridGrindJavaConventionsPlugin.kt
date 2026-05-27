@@ -10,7 +10,6 @@ import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
-import org.gradle.api.tasks.Delete
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.bundling.Jar
@@ -42,14 +41,18 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             val repositoryLayout = GridGrindRepositoryLayout.locate(this)
             val gridgrindJavaVersion =
                 providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
+            val pruneJarOutputs =
+                tasks.register("pruneJarOutputs", PruneJarOutputsTask::class.java) { pruneTask ->
+                    pruneTask.outputs.upToDateWhen { false }
+                    pruneTask.libsDirectory.set(layout.buildDirectory.dir("libs"))
+                }
+            val pruneJarOutputsTask = pruneJarOutputs.get()
 
             pluginManager.withPlugin("java") {
                 val javaExtension = extensions.getByType(JavaPluginExtension::class.java)
                 javaExtension.toolchain.languageVersion.set(JavaLanguageVersion.of(gridgrindJavaVersion))
                 javaExtension.modularity.inferModulePath.set(true)
                 javaExtension.withSourcesJar()
-                val cleanJarOutputs =
-                    tasks.register("cleanJarOutputs", Delete::class.java) { delete(layout.buildDirectory.dir("libs")) }
                 dependencies.add(
                     "testRuntimeOnly",
                     libs.findLibrary("junit-platform-launcher").get().get(),
@@ -123,7 +126,8 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(Jar::class.java).configureEach(
                 object : Action<Jar> {
                     override fun execute(jar: Jar) {
-                        jar.dependsOn("cleanJarOutputs")
+                        pruneJarOutputsTask.expectedArchiveFileNames.add(jar.archiveFileName)
+                        jar.dependsOn(pruneJarOutputsTask)
                         jar.manifest.attributes(
                             mapOf(
                                 "Implementation-Title" to project.name,
@@ -171,6 +175,10 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     override fun execute(pmd: Pmd) {
                         pmd.reports.xml.required.set(true)
                         pmd.reports.html.required.set(true)
+                        if (pmd.name == "pmdMain" && project.name in setOf("contract", "engine", "excel-foundation")) {
+                            pmd.ruleSetFiles = files(repositoryLayout.semanticShapePmdRuleset)
+                            pmd.ruleSets = emptyList()
+                        }
                     }
                 },
             )

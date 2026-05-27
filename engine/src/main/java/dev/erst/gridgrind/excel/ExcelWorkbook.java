@@ -1,21 +1,8 @@
 package dev.erst.gridgrind.excel;
 
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlController;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
-import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
-import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableController;
-import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -25,13 +12,19 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /**
  * High-level workbook wrapper around Apache POI for creation, loading, saving, and sheet access.
  */
-@SuppressWarnings({"PMD.CommentRequired", "PMD.ExcessivePublicCount"})
 public final class ExcelWorkbook implements AutoCloseable {
   private final ExcelWorkbookContext context;
   private final ExcelWorkbookFormulas formulas;
+  private final ExcelWorkbookSheets sheets;
+  private final ExcelWorkbookCustomXml customXml;
+  private final ExcelWorkbookProtection protection;
+  private final ExcelWorkbookNames names;
+  private final ExcelWorkbookTables tables;
+  private final ExcelWorkbookPivots pivots;
+  private final ExcelWorkbookPersistence persistence;
   private boolean mutatedSinceOpen;
 
-  private ExcelWorkbook(XSSFWorkbook workbook) {
+  ExcelWorkbook(XSSFWorkbook workbook) {
     this(
         workbook,
         ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()),
@@ -40,7 +33,7 @@ public final class ExcelWorkbook implements AutoCloseable {
         Optional.empty());
   }
 
-  private ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
+  ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
       throws IOException {
     this(
         workbook,
@@ -69,6 +62,13 @@ public final class ExcelWorkbook implements AutoCloseable {
         new ExcelWorkbookContext(
             workbook, formulaRuntime, sourcePath, loadedPackageSecurity, sourceEncryptionPassword);
     this.formulas = new ExcelWorkbookFormulas(this);
+    this.sheets = new ExcelWorkbookSheets(this);
+    this.customXml = new ExcelWorkbookCustomXml(this);
+    this.protection = new ExcelWorkbookProtection(this);
+    this.names = new ExcelWorkbookNames(this);
+    this.tables = new ExcelWorkbookTables(this);
+    this.pivots = new ExcelWorkbookPivots(this);
+    this.persistence = new ExcelWorkbookPersistence(this);
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -76,110 +76,44 @@ public final class ExcelWorkbook implements AutoCloseable {
     this(workbook, ExcelFormulaRuntime.poi(formulaEvaluator));
   }
 
-  /** Creates an empty XLSX workbook. */
-  public static ExcelWorkbook create() {
-    return new ExcelWorkbook(new XSSFWorkbook());
-  }
-
-  /** Wraps one already-materialized POI workbook inside the GridGrind workbook boundary. */
-  public static ExcelWorkbook wrap(XSSFWorkbook workbook) {
-    Objects.requireNonNull(workbook, "workbook must not be null");
-    return new ExcelWorkbook(workbook);
-  }
-
-  /** Creates an empty XLSX workbook with the supplied formula-evaluation environment. */
-  public static ExcelWorkbook create(ExcelFormulaEnvironment formulaEnvironment)
-      throws IOException {
-    return new ExcelWorkbook(new XSSFWorkbook(), formulaEnvironment);
-  }
-
   /** Returns the formula-operation surface for evaluation, cache management, and diagnostics. */
   public ExcelWorkbookFormulas formulas() {
     return formulas;
   }
 
-  /** Opens an existing workbook file from disk. */
-  public static ExcelWorkbook open(Path workbookPath) throws IOException {
-    return open(workbookPath, new ExcelOoxmlOpenOptions.Unencrypted());
+  /** Returns the grouped sheet lifecycle, visibility, and protection surface. */
+  public ExcelWorkbookSheets sheets() {
+    return sheets;
   }
 
-  /** Opens an existing workbook file from disk with optional OOXML package-open settings. */
-  public static ExcelWorkbook open(Path workbookPath, ExcelOoxmlOpenOptions openOptions)
-      throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, openOptions, ExcelTempFiles::createManagedTempFile);
+  /** Returns the workbook custom-XML mapping surface. */
+  public ExcelWorkbookCustomXml customXml() {
+    return customXml;
   }
 
-  /**
-   * Opens an existing workbook with explicit package-open settings and a custom temp-file factory.
-   */
-  public static ExcelWorkbook open(
-      Path workbookPath, ExcelOoxmlOpenOptions openOptions, WorkbookTempFileFactory tempFileFactory)
-      throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, openOptions, tempFileFactory);
+  /** Returns the workbook-level protection surface. */
+  public ExcelWorkbookProtection protection() {
+    return protection;
   }
 
-  /** Opens one materialized plain OOXML package with explicit source-security metadata. */
-  public static ExcelWorkbook openMaterializedWorkbook(
-      Path workbookPath,
-      Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      Optional<String> sourceEncryptionPassword)
-      throws IOException {
-    return ExcelWorkbookOpenSupport.openMaterializedWorkbook(
-        workbookPath, sourcePath, loadedPackageSecurity, sourceEncryptionPassword);
+  /** Returns the workbook defined-name authoring and inspection surface. */
+  public ExcelWorkbookNames names() {
+    return names;
   }
 
-  /** Opens an existing workbook file from disk with the supplied formula environment. */
-  public static ExcelWorkbook open(Path workbookPath, ExcelFormulaEnvironment formulaEnvironment)
-      throws IOException {
-    return open(workbookPath, formulaEnvironment, new ExcelOoxmlOpenOptions.Unencrypted());
+  /** Returns the workbook-global table authoring surface. */
+  public ExcelWorkbookTables tables() {
+    return tables;
   }
 
-  /** Opens an existing workbook file from disk with formula and OOXML package-open settings. */
-  public static ExcelWorkbook open(
-      Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
-      ExcelOoxmlOpenOptions openOptions)
-      throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, formulaEnvironment, openOptions, ExcelTempFiles::createManagedTempFile);
+  /** Returns the workbook-global pivot-table authoring surface. */
+  public ExcelWorkbookPivots pivots() {
+    return pivots;
   }
 
-  /**
-   * Opens an existing workbook with formula and package-open settings plus a custom temp-file
-   * factory.
-   */
-  public static ExcelWorkbook open(
-      Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
-      ExcelOoxmlOpenOptions openOptions,
-      WorkbookTempFileFactory tempFileFactory)
-      throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, formulaEnvironment, openOptions, tempFileFactory);
-  }
-
-  /** Opens one materialized plain OOXML package with explicit source-security metadata. */
-  public static ExcelWorkbook openMaterializedWorkbook(
-      Path workbookPath,
-      ExcelFormulaEnvironment formulaEnvironment,
-      Optional<Path> sourcePath,
-      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
-      Optional<String> sourceEncryptionPassword)
-      throws IOException {
-    return ExcelWorkbookOpenSupport.openMaterializedWorkbook(
-        workbookPath,
-        formulaEnvironment,
-        sourcePath,
-        loadedPackageSecurity,
-        sourceEncryptionPassword);
-  }
-
-  static void closeWorkbookAfterOpenFailure(XSSFWorkbook workbook, Exception exception)
-      throws IOException {
-    ExcelWorkbookOpenSupport.closeWorkbookAfterOpenFailure(workbook, exception);
+  /** Returns the workbook persistence and source-metadata surface. */
+  public ExcelWorkbookPersistence persistence() {
+    return persistence;
   }
 
   /** Returns the named sheet, creating it if necessary. */
@@ -192,176 +126,9 @@ public final class ExcelWorkbook implements AutoCloseable {
     return ExcelWorkbookSheetAccessSupport.sheet(this, sheetName);
   }
 
-  /** Renames an existing sheet to a new destination name. */
-  public ExcelWorkbook renameSheet(String sheetName, String newSheetName) {
-    return sheetStateController().renameSheet(this, sheetName, newSheetName);
-  }
-
-  /** Deletes an existing sheet from the workbook. A workbook must retain at least one sheet. */
-  public ExcelWorkbook deleteSheet(String sheetName) {
-    return sheetStateController().deleteSheet(this, sheetName);
-  }
-
-  /** Moves an existing sheet to a zero-based workbook position. */
-  public ExcelWorkbook moveSheet(String sheetName, int targetIndex) {
-    return sheetStateController().moveSheet(this, sheetName, targetIndex);
-  }
-
-  /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
-  public ExcelWorkbook copySheet(
-      String sourceSheetName, String newSheetName, ExcelSheetCopyPosition position) {
-    return sheetCopyController().copySheet(this, sourceSheetName, newSheetName, position);
-  }
-
-  /** Sets the active sheet and ensures it is selected. */
-  public ExcelWorkbook setActiveSheet(String sheetName) {
-    return sheetStateController().setActiveSheet(this, sheetName);
-  }
-
-  /** Sets the selected visible sheet set and normalizes the active tab into that selection. */
-  public ExcelWorkbook setSelectedSheets(List<String> sheetNames) {
-    return sheetStateController().setSelectedSheets(this, sheetNames);
-  }
-
-  /** Sets one sheet visibility while preserving a visible active selected sheet. */
-  public ExcelWorkbook setSheetVisibility(String sheetName, ExcelSheetVisibility visibility) {
-    return sheetStateController().setSheetVisibility(this, sheetName, visibility);
-  }
-
-  /** Returns factual workbook custom-XML mapping metadata. */
-  public List<ExcelCustomXmlMappingSnapshot> customXmlMappings() {
-    return customXmlController().mappings(context.workbook());
-  }
-
-  /** Exports XML for one existing workbook custom-XML mapping. */
-  public ExcelCustomXmlExportSnapshot exportCustomXmlMapping(
-      ExcelCustomXmlMappingLocator locator, boolean validateSchema, String encoding) {
-    return customXmlController()
-        .exportMapping(context.workbook(), locator, validateSchema, encoding);
-  }
-
-  /** Imports one XML document into one existing workbook custom-XML mapping. */
-  public ExcelWorkbook importCustomXmlMapping(ExcelCustomXmlImportDefinition definition) {
-    customXmlController().importMapping(context.workbook(), definition);
-    return this;
-  }
-
-  /** Enables sheet protection with the exact supported lock flags. */
-  public ExcelWorkbook setSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection) {
-    return setSheetProtection(sheetName, protection, Optional.empty());
-  }
-
-  /** Enables sheet protection with the exact supported lock flags. */
-  public ExcelWorkbook setSheetProtection(
-      String sheetName, ExcelSheetProtectionSettings protection, Optional<String> password) {
-    return sheetStateController().setSheetProtection(this, sheetName, protection, password);
-  }
-
-  /** Disables sheet protection entirely. */
-  public ExcelWorkbook clearSheetProtection(String sheetName) {
-    return sheetStateController().clearSheetProtection(this, sheetName);
-  }
-
-  /** Enables workbook-level protection and password hashes with authoritative settings. */
-  public ExcelWorkbook setWorkbookProtection(ExcelWorkbookProtectionSettings protection) {
-    return sheetStateController().setWorkbookProtection(this, protection);
-  }
-
-  /** Clears workbook-level protection and password hashes entirely. */
-  public ExcelWorkbook clearWorkbookProtection() {
-    return sheetStateController().clearWorkbookProtection(this);
-  }
-
-  /** Creates or replaces one named range in workbook or sheet scope. */
-  public ExcelWorkbook setNamedRange(ExcelNamedRangeDefinition definition) {
-    return ExcelWorkbookNamedRangeSupport.setNamedRange(this, definition);
-  }
-
-  /** Deletes one named range from workbook or sheet scope. */
-  public ExcelWorkbook deleteNamedRange(String name, ExcelNamedRangeScope scope) {
-    return ExcelWorkbookNamedRangeSupport.deleteNamedRange(this, name, scope);
-  }
-
-  /** Creates or replaces one workbook-global table definition. */
-  public ExcelWorkbook setTable(ExcelTableDefinition definition) {
-    Objects.requireNonNull(definition, "definition must not be null");
-    tableController().setTable(this, definition);
-    return this;
-  }
-
-  /** Deletes one existing table by workbook-global name and expected sheet name. */
-  public ExcelWorkbook deleteTable(String name, String sheetName) {
-    tableController().deleteTable(this, name, sheetName);
-    return this;
-  }
-
-  /** Creates or replaces one workbook-global pivot-table definition. */
-  public ExcelWorkbook setPivotTable(ExcelPivotTableDefinition definition) {
-    Objects.requireNonNull(definition, "definition must not be null");
-    pivotTableController().setPivotTable(this, definition);
-    return this;
-  }
-
-  /** Deletes one existing pivot table by workbook-global name and expected sheet name. */
-  public ExcelWorkbook deletePivotTable(String name, String sheetName) {
-    pivotTableController().deletePivotTable(this, name, sheetName);
-    return this;
-  }
-
-  ExcelWorkbook evaluateAllFormulasInternal() {
-    return ExcelWorkbookFormulaSupport.evaluateAllFormulas(this);
-  }
-
-  List<ExcelFormulaCapabilityAssessment> assessAllFormulaCapabilitiesInternal() {
-    return ExcelWorkbookFormulaSupport.assessAllFormulaCapabilities(this);
-  }
-
-  ExcelWorkbook evaluateFormulaCellsInternal(List<ExcelFormulaCellTarget> cells) {
-    return ExcelWorkbookFormulaSupport.evaluateFormulaCells(this, cells);
-  }
-
-  List<ExcelFormulaCapabilityAssessment> assessFormulaCellCapabilitiesInternal(
-      List<ExcelFormulaCellTarget> cells) {
-    return ExcelWorkbookFormulaSupport.assessFormulaCellCapabilities(this, cells);
-  }
-
-  ExcelWorkbook clearFormulaCachesInternal() {
-    return ExcelWorkbookFormulaSupport.clearFormulaCaches(this);
-  }
-
   /** Resets only the in-process evaluator cache after workbook mutations. */
-  ExcelWorkbook invalidateFormulaRuntime() {
+  void invalidateFormulaRuntime() {
     context.formulaRuntime().clearCachedResults();
-    return this;
-  }
-
-  ExcelWorkbook forceFormulaRecalculationOnOpenInternal() {
-    return ExcelWorkbookFormulaSupport.forceFormulaRecalculationOnOpen(this);
-  }
-
-  /** Returns the number of sheets in the workbook. */
-  public int sheetCount() {
-    return context.workbook().getNumberOfSheets();
-  }
-
-  /** Returns the number of analyzable named ranges currently present in the workbook. */
-  public int namedRangeCount() {
-    return namedRanges().size();
-  }
-
-  /** Returns an ordered list of all sheet names in the workbook. */
-  public List<String> sheetNames() {
-    return ExcelWorkbookSheetAccessSupport.sheetNames(this);
-  }
-
-  /** Returns every analyzable named range currently present in the workbook. */
-  public List<ExcelNamedRangeSnapshot> namedRanges() {
-    return ExcelWorkbookNamedRangeSupport.namedRanges(this);
-  }
-
-  boolean forceFormulaRecalculationOnOpenEnabledInternal() {
-    return context.workbook().getForceFormulaRecalculation();
   }
 
   /** Returns the evaluator environment facts used by formula reads and diagnostics. */
@@ -371,42 +138,17 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Returns the workbook-level summary facts including active and selected sheet state. */
   WorkbookCoreResult.WorkbookSummary workbookSummary() {
-    return sheetStateController().summarizeWorkbook(this);
+    return new ExcelSheetStateController().summarizeWorkbook(this);
   }
 
   /** Returns the workbook-level protection facts currently stored in the workbook. */
   ExcelWorkbookProtectionSnapshot workbookProtection() {
-    return sheetStateController().workbookProtection(this);
+    return new ExcelSheetStateController().workbookProtection(this);
   }
 
   /** Returns the summary facts for one sheet, including visibility and protection state. */
   WorkbookSheetResult.SheetSummary sheetSummary(String sheetName) {
-    return sheetStateController().summarizeSheet(this, sheetName);
-  }
-
-  /** Saves the workbook to disk, creating parent directories as needed. */
-  public void save(Path workbookPath) throws IOException {
-    save(workbookPath, ExcelOoxmlPersistenceOptions.none());
-  }
-
-  /** Saves the workbook to disk with optional OOXML package-encryption and signing settings. */
-  public void save(Path workbookPath, ExcelOoxmlPersistenceOptions persistenceOptions)
-      throws IOException {
-    save(workbookPath, persistenceOptions, ExcelTempFiles::createManagedTempFile);
-  }
-
-  /** Saves the workbook to disk with explicit package-security temp-file ownership. */
-  public void save(
-      Path workbookPath,
-      ExcelOoxmlPersistenceOptions persistenceOptions,
-      WorkbookTempFileFactory tempFileFactory)
-      throws IOException {
-    ExcelWorkbookPersistenceSupport.save(this, workbookPath, persistenceOptions, tempFileFactory);
-  }
-
-  /** Saves the plain OOXML workbook package with no encryption or signing wrapper. */
-  public void savePlainWorkbook(Path workbookPath) throws IOException {
-    ExcelWorkbookPersistenceSupport.savePlainWorkbook(this, workbookPath);
+    return new ExcelSheetStateController().summarizeSheet(this, sheetName);
   }
 
   /** Returns factual OOXML package-security state for the current in-memory workbook. */
@@ -428,19 +170,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return context;
   }
 
-  public Optional<Path> sourcePath() {
-    return context.sourcePath();
-  }
-
-  public ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
-    return context.loadedPackageSecurity();
-  }
-
-  public Optional<String> sourceEncryptionPassword() {
-    return context.sourceEncryptionPassword();
-  }
-
-  public boolean wasMutatedSinceOpen() {
+  boolean wasMutatedSinceOpenInternal() {
     return mutatedSinceOpen;
   }
 
@@ -459,35 +189,5 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Returns whether the POI defined name belongs to the requested workbook or sheet scope. */
   boolean scopeMatches(Name candidate, ExcelNamedRangeScope scope) {
     return ExcelWorkbookNamedRangeSupport.scopeMatches(this, candidate, scope);
-  }
-
-  /** Returns whether the POI defined name is a user-facing range that GridGrind should analyze. */
-  public static boolean shouldExpose(Name name) {
-    return ExcelWorkbookNamedRangeSupport.shouldExpose(name);
-  }
-
-  /** Returns whether a defined-name triple is user-facing and analyzable by GridGrind. */
-  public static boolean shouldExpose(String nameName, boolean functionName, boolean hidden) {
-    return ExcelWorkbookNamedRangeSupport.shouldExpose(nameName, functionName, hidden);
-  }
-
-  private static ExcelTableController tableController() {
-    return new ExcelTableController();
-  }
-
-  private static ExcelPivotTableController pivotTableController() {
-    return new ExcelPivotTableController();
-  }
-
-  private static ExcelCustomXmlController customXmlController() {
-    return new ExcelCustomXmlController();
-  }
-
-  private static ExcelSheetCopyController sheetCopyController() {
-    return new ExcelSheetCopyController();
-  }
-
-  private static ExcelSheetStateController sheetStateController() {
-    return new ExcelSheetStateController();
   }
 }

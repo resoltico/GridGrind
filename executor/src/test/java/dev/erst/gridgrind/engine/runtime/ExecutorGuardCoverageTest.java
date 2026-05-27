@@ -114,7 +114,7 @@ class ExecutorGuardCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    WorkbookCommandConverter.toExcelCellValue(
+                    WorkbookCommandCellInputConverter.toExcelCellValue(
                         new CellInput.Text(TextSourceInput.utf8File("title.txt"))))
             .getMessage());
 
@@ -131,7 +131,9 @@ class ExecutorGuardCoverageTest {
         "picture payload must be resolved to INLINE_BASE64 before conversion",
         assertThrows(
                 IllegalStateException.class,
-                () -> WorkbookCommandConverter.toExcelPictureDefinition(unresolvedPicture))
+                () ->
+                    WorkbookCommandDrawingInputConverter.toExcelPictureDefinition(
+                        unresolvedPicture))
             .getMessage());
   }
 
@@ -205,9 +207,10 @@ class ExecutorGuardCoverageTest {
         new CellMutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
 
     assertEquals(
-        java.util.Optional.empty(), ExecutionDiagnosticFields.formulaFor(fileBackedFormula));
+        java.util.Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(fileBackedFormula));
     assertEquals(
-        java.util.Optional.of("SUM(A1:A2)"), ExecutionDiagnosticFields.formulaFor(inlineFormula));
+        java.util.Optional.of("SUM(A1:A2)"),
+        ExecutionActionDiagnosticFields.formulaFor(inlineFormula));
   }
 
   @Test
@@ -381,7 +384,7 @@ class ExecutorGuardCoverageTest {
 
     assertEquals(
         Optional.of("Budget"),
-        ExecutionDiagnosticFields.singleSheetName(
+        ExecutionSelectorDiagnosticFields.singleSheetName(
             (dev.erst.gridgrind.contract.selector.RangeSelector)
                 new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B2")));
   }

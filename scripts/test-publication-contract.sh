@@ -31,6 +31,8 @@ readonly dockerignore_file="${repo_root}/.dockerignore"
 readonly dockerfile="${repo_root}/Dockerfile"
 readonly release_workflow="${repo_root}/.github/workflows/release.yml"
 readonly container_workflow="${repo_root}/.github/workflows/container.yml"
+readonly readme_file="${repo_root}/README.md"
+readonly quick_start_doc="${repo_root}/docs/QUICK_START.md"
 readonly root_plugin="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindRootConventionsPlugin.kt"
 readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
@@ -61,8 +63,11 @@ fixed_pattern_exists() {
 }
 
 grep -Eq \
+    '^FROM azul/zulu-openjdk-alpine:26@sha256:[0-9a-f]{64} AS build$' \
+    "${dockerfile}" || die "Dockerfile builder image is not digest-pinned"
+grep -Eq \
     '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
-    "${dockerfile}" || die "Dockerfile base image is not digest-pinned"
+    "${dockerfile}" || die "Dockerfile runtime image is not digest-pinned"
 
 git -C "${repo_root}" check-ignore -q AGENTS.md && die \
     "root AGENTS.md is still ignored, so agent instructions cannot be tracked"
@@ -80,6 +85,8 @@ grep -Eq '^!.*AGENTS\.md$' "${dockerignore_file}" && die \
     ".dockerignore unexpectedly whitelists /AGENTS.md into the Docker build context"
 grep -Eq '^!.*\.codex(/|\*\*|$)' "${dockerignore_file}" && die \
     ".dockerignore unexpectedly whitelists /.codex into the Docker build context"
+grep -Fq '!cli/build/libs/gridgrind.jar' "${dockerignore_file}" && die \
+    ".dockerignore unexpectedly whitelists a prebuilt host JAR into the Docker build context"
 
 command -v jar >/dev/null 2>&1 || die "jar is required for publication contract verification"
 [[ -f "${cli_jar}" ]] || die "missing CLI fat JAR at ${cli_jar}"
@@ -123,18 +130,44 @@ grep -Fq './scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.output
     "${container_workflow}" || die "container workflow does not enforce the shared tag verifier"
 grep -Fq './scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar' \
     "${release_workflow}" || die "release workflow does not verify the packaged CLI contract"
-grep -Fq 'gradle_command=(' "${docker_smoke_script}" || die \
-    "docker smoke no longer prepares a dedicated Gradle invocation for the packaged CLI fat JAR"
-grep -Fq '"${repo_root}/gradlew"' "${docker_smoke_script}" || die \
-    "docker smoke no longer invokes the repository Gradle wrapper"
-grep -Fq -- '--console=plain' "${docker_smoke_script}" || die \
-    "docker smoke no longer forces plain console output for the packaged CLI rebuild"
-grep -Fq -- '--no-daemon' "${docker_smoke_script}" || die \
-    "docker smoke no longer disables the Gradle daemon for the packaged CLI rebuild"
-grep -Fq 'gradle_command+=(:cli:shadowJar)' "${docker_smoke_script}" || die \
-    "docker smoke no longer rebuilds the packaged CLI fat JAR"
+grep -Fq 'COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./' "${dockerfile}" || die \
+    "Dockerfile no longer copies the Gradle entry files needed for the self-contained build"
+grep -Fq 'COPY gradle ./gradle' "${dockerfile}" || die \
+    "Dockerfile no longer copies the Gradle support directory into the builder stage"
+grep -Fq 'COPY authoring-java ./authoring-java' "${dockerfile}" || die \
+    "Dockerfile no longer copies authoring-java into the builder stage"
+grep -Fq 'COPY cli ./cli' "${dockerfile}" || die \
+    "Dockerfile no longer copies cli into the builder stage"
+grep -Fq 'COPY contract ./contract' "${dockerfile}" || die \
+    "Dockerfile no longer copies contract into the builder stage"
+grep -Fq 'COPY engine ./engine' "${dockerfile}" || die \
+    "Dockerfile no longer copies engine into the builder stage"
+grep -Fq 'COPY excel-foundation ./excel-foundation' "${dockerfile}" || die \
+    "Dockerfile no longer copies excel-foundation into the builder stage"
+grep -Fq 'COPY executor ./executor' "${dockerfile}" || die \
+    "Dockerfile no longer copies executor into the builder stage"
+grep -Fq 'RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar' "${dockerfile}" || die \
+    "Dockerfile no longer builds the packaged CLI JAR inside the pinned builder stage"
+grep -Fq 'COPY --from=build /workspace/cli/build/libs/gridgrind.jar gridgrind.jar' "${dockerfile}" || die \
+    "Dockerfile no longer copies the packaged CLI JAR from the builder stage into the runtime image"
+grep -Fq 'COPY cli/build/libs/gridgrind.jar gridgrind.jar' "${dockerfile}" && die \
+    "Dockerfile reintroduced a prebuilt host-JAR dependency"
+grep -Fq 'docker buildx build --load -t gridgrind-local .' "${readme_file}" || die \
+    "README.md no longer teaches the local repository Docker build path"
+grep -Fq 'docker buildx build --load -t gridgrind-local .' "${quick_start_doc}" || die \
+    "docs/QUICK_START.md no longer teaches the local repository Docker build path"
+grep -Fq 'cli-shadow-jar-support.sh' "${docker_smoke_script}" && die \
+    "docker smoke reintroduced the host-side CLI JAR helper dependency"
+grep -Fq ':cli:shadowJar' "${docker_smoke_script}" && die \
+    "docker smoke reintroduced a separate host-side CLI JAR rebuild"
+grep -Fq 'docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null' \
+    "${docker_smoke_script}" || die \
+    "docker smoke no longer builds the repository-root Dockerfile through buildx --load"
 grep -Fq '"${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"' \
     "${docker_smoke_script}" || die "docker smoke no longer verifies the local image CLI contract"
+grep -Fq '"${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"' \
+    "${docker_smoke_script}" || die \
+    "docker smoke no longer executes the published examples and task starters from the local image"
 grep -Fq "readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'" \
     "${docker_smoke_script}" || die "docker smoke no longer stages a separate streaming readback request"
 grep -Fq -- '--request "${streaming_read_request_rel}"' "${docker_smoke_script}" || die \
@@ -149,6 +182,12 @@ grep -Fq 'run_verify_cli_contract "${image_name}:${expected_version}"' \
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq 'run_verify_cli_contract "${image_name}:latest"' \
     "${container_verify_script}" || die "public container verification no longer checks the latest tag contract"
+grep -Fq 'run_verify_cli_discovery_execution "${image_name}:${expected_version}"' \
+    "${container_verify_script}" || die \
+    "public container verification no longer executes published examples and task starters for the version tag"
+grep -Fq 'run_verify_cli_discovery_execution "${image_name}:latest"' \
+    "${container_verify_script}" || die \
+    "public container verification no longer executes published examples and task starters for the latest tag"
 grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${stage_contract_script}" || die \
     "Stage 4 contract no longer exercises the release primary-checkout regression"
 grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
@@ -174,16 +213,16 @@ grep -Fq 'api(libs.jackson.databind)' "${contract_build}" && die \
     "contract still declares jackson-databind as api"
 
 fixed_pattern_exists 'build/jacoco/test.exec' "${root_plugin}" && die \
-    "root aggregated coverage still hardcodes test.exec"
-fixed_pattern_exists ':engine:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
-fixed_pattern_exists ':protocol:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
-fixed_pattern_exists ':cli:test' "${root_plugin}" && die "root coverage wiring still hardcodes module names"
+    "root aggregated coverage hardcodes test.exec"
+fixed_pattern_exists ':engine:test' "${root_plugin}" && die "root coverage wiring hardcodes module names"
+fixed_pattern_exists ':protocol:test' "${root_plugin}" && die "root coverage wiring hardcodes module names"
+fixed_pattern_exists ':cli:test' "${root_plugin}" && die "root coverage wiring hardcodes module names"
 fixed_pattern_exists ':engine:jacocoTestCoverageVerification' "${root_plugin}" && die \
-    "root coverage wiring still hardcodes module names"
+    "root coverage wiring hardcodes module names"
 fixed_pattern_exists ':protocol:jacocoTestCoverageVerification' "${root_plugin}" && die \
-    "root coverage wiring still hardcodes module names"
+    "root coverage wiring hardcodes module names"
 fixed_pattern_exists ':cli:jacocoTestCoverageVerification' "${root_plugin}" && die \
-    "root coverage wiring still hardcodes module names"
+    "root coverage wiring hardcodes module names"
 fixed_pattern_exists 'taskPathsByType(coverageSubprojects, Test::class.java)' "${root_plugin}" || die \
     "root aggregated coverage no longer discovers test tasks dynamically"
 fixed_pattern_exists 'coverageSubprojects().flatMap { subproject ->' "${root_plugin}" || die \

@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 class ExcelChartMutationFlowTest {
   @Test
   void lineAndPieChartsExerciseMutationExecutorAndIntrospection() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
@@ -45,35 +45,44 @@ class ExcelChartMutationFlowTest {
       ExcelChartSnapshot initialLine = ExcelChartTestSupport.chart(lineRead.charts(), "OpsLine");
       assertEquals(new ExcelChartSnapshot.Title.Text("Line roadmap"), initialLine.title());
 
-      sheet.setChart(
-          lineChartDefinition(
-              "OpsLine",
-              ExcelChartTestSupport.anchor(6, 2, 12, 18),
-              new ExcelChartDefinition.Title.Text("Line focus"),
-              new ExcelChartDefinition.Title.Text("Actual")));
-      ExcelChartSnapshot updatedLine = ExcelChartTestSupport.chart(sheet.charts(), "OpsLine");
+      sheet
+          .drawings()
+          .setChart(
+              lineChartDefinition(
+                  "OpsLine",
+                  ExcelChartTestSupport.anchor(6, 2, 12, 18),
+                  new ExcelChartDefinition.Title.Text("Line focus"),
+                  new ExcelChartDefinition.Title.Text("Actual")));
+      ExcelChartSnapshot updatedLine =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsLine");
       assertEquals(ExcelChartTestSupport.anchor(6, 2, 12, 18), updatedLine.anchor());
       assertEquals(new ExcelChartSnapshot.Title.Text("Line focus"), updatedLine.title());
 
-      sheet.setChart(
-          pieChartDefinition(
-              "OpsPie",
-              ExcelChartTestSupport.anchor(13, 1, 19, 12),
-              new ExcelChartDefinition.Title.Text("Share"),
-              90));
-      ExcelChartSnapshot initialPie = ExcelChartTestSupport.chart(sheet.charts(), "OpsPie");
+      sheet
+          .drawings()
+          .setChart(
+              pieChartDefinition(
+                  "OpsPie",
+                  ExcelChartTestSupport.anchor(13, 1, 19, 12),
+                  new ExcelChartDefinition.Title.Text("Share"),
+                  90));
+      ExcelChartSnapshot initialPie =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
       assertEquals(
           Optional.of(90),
           ExcelChartTestSupport.singlePlot(initialPie, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
 
-      sheet.setChart(
-          pieChartDefinition(
-              "OpsPie",
-              ExcelChartTestSupport.anchor(14, 2, 20, 13),
-              new ExcelChartDefinition.Title.Text("Updated share"),
-              120));
-      ExcelChartSnapshot updatedPie = ExcelChartTestSupport.chart(sheet.charts(), "OpsPie");
+      sheet
+          .drawings()
+          .setChart(
+              pieChartDefinition(
+                  "OpsPie",
+                  ExcelChartTestSupport.anchor(14, 2, 20, 13),
+                  new ExcelChartDefinition.Title.Text("Updated share"),
+                  120));
+      ExcelChartSnapshot updatedPie =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsPie");
       assertEquals(ExcelChartTestSupport.anchor(14, 2, 20, 13), updatedPie.anchor());
       assertEquals(
           Optional.of(120),
@@ -94,12 +103,14 @@ class ExcelChartMutationFlowTest {
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  sheet.setChart(
-                      lineChartDefinition(
-                          "BadTitle",
-                          ExcelChartTestSupport.anchor(28, 1, 34, 8),
-                          new ExcelChartDefinition.Title.Formula("A2:A4"),
-                          new ExcelChartDefinition.Title.Text("Plan"))));
+                  sheet
+                      .drawings()
+                      .setChart(
+                          lineChartDefinition(
+                              "BadTitle",
+                              ExcelChartTestSupport.anchor(28, 1, 34, 8),
+                              new ExcelChartDefinition.Title.Formula("A2:A4"),
+                              new ExcelChartDefinition.Title.Text("Plan"))));
       assertTrue(
           invalidChartTitle
               .getMessage()
@@ -109,12 +120,14 @@ class ExcelChartMutationFlowTest {
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  sheet.setChart(
-                      lineChartDefinition(
-                          "OpsLine",
-                          ExcelChartTestSupport.anchor(8, 3, 14, 19),
-                          new ExcelChartDefinition.Title.Text("Broken"),
-                          new ExcelChartDefinition.Title.Formula("A2:A4"))));
+                  sheet
+                      .drawings()
+                      .setChart(
+                          lineChartDefinition(
+                              "OpsLine",
+                              ExcelChartTestSupport.anchor(8, 3, 14, 19),
+                              new ExcelChartDefinition.Title.Text("Broken"),
+                              new ExcelChartDefinition.Title.Formula("A2:A4"))));
       assertTrue(
           invalidSeriesTitle
               .getMessage()
@@ -124,76 +137,89 @@ class ExcelChartMutationFlowTest {
 
   @Test
   void typeChangesSeriesRemovalAndFormulaSeriesTitlesStayDeterministic() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
       ExcelChartTestSupport.seedChartNamedRanges(workbook, "Charts");
 
-      sheet.setChart(
-          barChartDefinition(
-              "OpsBarSeries",
-              ExcelChartTestSupport.anchor(1, 32, 7, 46),
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Text("Plan"),
-                      ExcelChartTestSupport.ref("ChartCategories"),
-                      ExcelChartTestSupport.ref("ChartPlan"),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty()),
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Formula("C1"),
-                      ExcelChartTestSupport.ref("ChartCategories"),
-                      ExcelChartTestSupport.ref("ChartActual"),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty()))));
-      sheet.setChart(
-          barChartDefinition(
-              "OpsBarSeries",
-              ExcelChartTestSupport.anchor(1, 32, 7, 46),
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.None(),
-                      ExcelChartTestSupport.ref("ChartCategories"),
-                      ExcelChartTestSupport.ref("ChartPlan"),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty()))));
-      ExcelChartSnapshot barChart = ExcelChartTestSupport.chart(sheet.charts(), "OpsBarSeries");
+      sheet
+          .drawings()
+          .setChart(
+              barChartDefinition(
+                  "OpsBarSeries",
+                  ExcelChartTestSupport.anchor(1, 32, 7, 46),
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Text("Plan"),
+                          ExcelChartTestSupport.ref("ChartCategories"),
+                          ExcelChartTestSupport.ref("ChartPlan"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()),
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Formula("C1"),
+                          ExcelChartTestSupport.ref("ChartCategories"),
+                          ExcelChartTestSupport.ref("ChartActual"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
+      sheet
+          .drawings()
+          .setChart(
+              barChartDefinition(
+                  "OpsBarSeries",
+                  ExcelChartTestSupport.anchor(1, 32, 7, 46),
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.None(),
+                          ExcelChartTestSupport.ref("ChartCategories"),
+                          ExcelChartTestSupport.ref("ChartPlan"),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty()))));
+      ExcelChartSnapshot barChart =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsBarSeries");
       assertEquals(
           1,
           ExcelChartTestSupport.singlePlot(barChart, ExcelChartSnapshot.Bar.class).series().size());
 
-      sheet.setChart(
-          lineChartDefinition(
-              "OpsType",
-              ExcelChartTestSupport.anchor(8, 32, 14, 46),
-              new ExcelChartDefinition.Title.None(),
-              new ExcelChartDefinition.Title.Formula("B2")));
-      sheet.setChart(
-          pieChartDefinition(
-              "OpsType",
-              ExcelChartTestSupport.anchor(8, 32, 14, 46),
-              new ExcelChartDefinition.Title.Text("Type change"),
-              45));
+      sheet
+          .drawings()
+          .setChart(
+              lineChartDefinition(
+                  "OpsType",
+                  ExcelChartTestSupport.anchor(8, 32, 14, 46),
+                  new ExcelChartDefinition.Title.None(),
+                  new ExcelChartDefinition.Title.Formula("B2")));
+      sheet
+          .drawings()
+          .setChart(
+              pieChartDefinition(
+                  "OpsType",
+                  ExcelChartTestSupport.anchor(8, 32, 14, 46),
+                  new ExcelChartDefinition.Title.Text("Type change"),
+                  45));
 
-      ExcelChartSnapshot updatedChart = ExcelChartTestSupport.chart(sheet.charts(), "OpsType");
+      ExcelChartSnapshot updatedChart =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsType");
       assertEquals(
           Optional.of(45),
           ExcelChartTestSupport.singlePlot(updatedChart, ExcelChartSnapshot.Pie.class)
               .firstSliceAngle());
 
-      sheet.setChart(
-          lineChartDefinition(
-              "OpsFormula",
-              ExcelChartTestSupport.anchor(8, 32, 14, 46),
-              new ExcelChartDefinition.Title.None(),
-              new ExcelChartDefinition.Title.Formula("B2")));
-      ExcelChartSnapshot lineChart = ExcelChartTestSupport.chart(sheet.charts(), "OpsFormula");
+      sheet
+          .drawings()
+          .setChart(
+              lineChartDefinition(
+                  "OpsFormula",
+                  ExcelChartTestSupport.anchor(8, 32, 14, 46),
+                  new ExcelChartDefinition.Title.None(),
+                  new ExcelChartDefinition.Title.Formula("B2")));
+      ExcelChartSnapshot lineChart =
+          ExcelChartTestSupport.chart(sheet.drawings().charts(), "OpsFormula");
       ExcelChartSnapshot.Series firstSeries =
           ExcelChartTestSupport.singlePlot(lineChart, ExcelChartSnapshot.Line.class)
               .series()

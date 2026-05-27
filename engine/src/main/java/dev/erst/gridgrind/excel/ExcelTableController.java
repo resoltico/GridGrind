@@ -294,53 +294,71 @@ final class ExcelTableController {
   private static void applyColumnMetadata(
       XSSFTable table, List<ExcelTableColumnDefinition> columns) {
     for (ExcelTableColumnDefinition definition : columns) {
-      if (definition.columnIndex() >= table.getColumns().size()) {
-        throw new IllegalArgumentException(
-            "table columnIndex is outside the table range: " + definition.columnIndex());
-      }
-      CTTableColumn column =
-          table.getCTTable().getTableColumns().getTableColumnArray(definition.columnIndex());
-      setOrUnset(
-          definition.uniqueName(),
-          column::setUniqueName,
-          () -> {
-            if (column.isSetUniqueName()) {
-              column.unsetUniqueName();
-            }
-          });
-      setOrUnset(
-          definition.totalsRowLabel(),
-          column::setTotalsRowLabel,
-          () -> {
-            if (column.isSetTotalsRowLabel()) {
-              column.unsetTotalsRowLabel();
-            }
-          });
-      if (definition.totalsRowFunction().isBlank()) {
-        if (column.isSetTotalsRowFunction()) {
-          column.unsetTotalsRowFunction();
-        }
-      } else {
-        STTotalsRowFunction.Enum totalsRowFunction =
-            STTotalsRowFunction.Enum.forString(definition.totalsRowFunction());
-        if (totalsRowFunction == null) {
-          throw new IllegalArgumentException(
-              "unsupported table totalsRowFunction: " + definition.totalsRowFunction());
-        }
-        column.setTotalsRowFunction(totalsRowFunction);
-      }
-      if (definition.calculatedColumnFormula().isBlank()) {
-        if (column.isSetCalculatedColumnFormula()) {
-          column.unsetCalculatedColumnFormula();
-        }
-      } else {
-        var formula =
-            column.isSetCalculatedColumnFormula()
-                ? column.getCalculatedColumnFormula()
-                : column.addNewCalculatedColumnFormula();
-        formula.setStringValue(definition.calculatedColumnFormula());
-      }
+      CTTableColumn column = requiredColumn(table, definition.columnIndex());
+      applyColumnUniqueName(column, definition.uniqueName());
+      applyTotalsRowLabel(column, definition.totalsRowLabel());
+      applyTotalsRowFunction(column, definition.totalsRowFunction());
+      applyCalculatedColumnFormula(column, definition.calculatedColumnFormula());
     }
+  }
+
+  private static CTTableColumn requiredColumn(XSSFTable table, int columnIndex) {
+    if (columnIndex >= table.getColumns().size()) {
+      throw new IllegalArgumentException(
+          "table columnIndex is outside the table range: " + columnIndex);
+    }
+    return table.getCTTable().getTableColumns().getTableColumnArray(columnIndex);
+  }
+
+  private static void applyColumnUniqueName(CTTableColumn column, String uniqueName) {
+    setOrUnset(
+        uniqueName,
+        column::setUniqueName,
+        () -> {
+          if (column.isSetUniqueName()) {
+            column.unsetUniqueName();
+          }
+        });
+  }
+
+  private static void applyTotalsRowLabel(CTTableColumn column, String totalsRowLabel) {
+    setOrUnset(
+        totalsRowLabel,
+        column::setTotalsRowLabel,
+        () -> {
+          if (column.isSetTotalsRowLabel()) {
+            column.unsetTotalsRowLabel();
+          }
+        });
+  }
+
+  private static void applyTotalsRowFunction(CTTableColumn column, String totalsRowFunction) {
+    if (totalsRowFunction.isBlank()) {
+      if (column.isSetTotalsRowFunction()) {
+        column.unsetTotalsRowFunction();
+      }
+      return;
+    }
+    STTotalsRowFunction.Enum resolved = STTotalsRowFunction.Enum.forString(totalsRowFunction);
+    if (resolved == null) {
+      throw new IllegalArgumentException(
+          "unsupported table totalsRowFunction: " + totalsRowFunction);
+    }
+    column.setTotalsRowFunction(resolved);
+  }
+
+  private static void applyCalculatedColumnFormula(CTTableColumn column, String formulaText) {
+    if (formulaText.isBlank()) {
+      if (column.isSetCalculatedColumnFormula()) {
+        column.unsetCalculatedColumnFormula();
+      }
+      return;
+    }
+    var formula =
+        column.isSetCalculatedColumnFormula()
+            ? column.getCalculatedColumnFormula()
+            : column.addNewCalculatedColumnFormula();
+    formula.setStringValue(formulaText);
   }
 
   private static void setOrUnset(
@@ -354,7 +372,7 @@ final class ExcelTableController {
 
   private List<TableHandle> allTables(ExcelWorkbook workbook) {
     List<TableHandle> tables = new ArrayList<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       XSSFSheet sheet = requiredSheet(workbook, sheetName);
       for (XSSFTable table : sheet.getTables()) {
         tables.add(

@@ -47,7 +47,7 @@ final class DeterministicColumnSizer {
         (columnIndex, widthCharacters) ->
             sheet.setColumnWidth(
                 columnIndex,
-                ExcelSheet.toColumnWidthUnits(
+                ExcelSheetStructureSupport.toColumnWidthUnits(
                     Math.min(
                         widthCharacters, ExcelSheetLayoutLimits.MAX_COLUMN_WIDTH_CHARACTERS))));
   }

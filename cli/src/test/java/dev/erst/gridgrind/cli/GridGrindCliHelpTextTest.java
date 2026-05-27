@@ -230,8 +230,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(guidance.contains("Workflows:"));
     assertTrue(guidance.contains("Stdin Example:"));
     assertTrue(guidance.contains("Docker Example:"));
+    assertTrue(
+        guidance.contains("build the same runtime surface with 'docker buildx build --load -t"));
+    assertTrue(guidance.contains("gridgrind-local"));
+    assertFalse(guidance.contains("{{CONTAINER_TAG}}"));
     assertTrue(guidance.contains("Discovery:"));
-    assertTrue(guidance.contains("Built-in generated examples:"));
+    assertTrue(guidance.contains("Built-in generated examples catalog:"));
     assertTrue(guidance.contains("Print one built-in example:"));
     assertFalse(guidance.contains("starter scaffolds"));
     assertFalse(guidance.contains("Authoritative Contract Scope:"));

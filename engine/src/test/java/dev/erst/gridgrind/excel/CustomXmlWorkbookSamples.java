@@ -17,7 +17,7 @@ final class CustomXmlWorkbookSamples {
         throw new IllegalStateException(
             "Missing test workbook resource " + SIMPLE_CUSTOM_XML_WORKBOOK_RESOURCE);
       }
-      return ExcelWorkbook.wrap(new XSSFWorkbook(input));
+      return ExcelWorkbooks.wrap(new XSSFWorkbook(input));
     }
   }
 }

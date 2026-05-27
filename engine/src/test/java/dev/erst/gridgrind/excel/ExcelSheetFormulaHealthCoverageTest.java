@@ -30,12 +30,15 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       InvalidFormulaException invalidWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () -> writeFailureSheet.setCell("B1", ExcelCellValue.formula("SUM(")));
+              () -> writeFailureSheet.cells().setCell("B1", ExcelCellValue.formula("SUM(")));
       assertEquals("SUM(", invalidWrite.formula());
       InvalidFormulaException parserStateWrite =
           assertThrows(
               InvalidFormulaException.class,
-              () -> writeFailureSheet.setCell("C1", ExcelCellValue.formula("[^owe_e`ffffff")));
+              () ->
+                  writeFailureSheet
+                      .cells()
+                      .setCell("C1", ExcelCellValue.formula("[^owe_e`ffffff")));
       assertEquals("[^owe_e`ffffff", parserStateWrite.formula());
 
       FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
@@ -47,13 +50,15 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   baseEvaluator, new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")));
 
       InvalidFormulaException invalidSnapshot =
-          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.snapshotCell("A1"));
+          assertThrows(
+              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().snapshotCell("A1"));
       assertEquals("1+1", invalidSnapshot.formula());
       InvalidFormulaException invalidNumber =
-          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.number("A1"));
+          assertThrows(
+              InvalidFormulaException.class, () -> invalidFormulaSheet.cells().number("A1"));
       assertEquals("1+1", invalidNumber.formula());
       InvalidFormulaException invalidBoolean =
-          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.bool("A1"));
+          assertThrows(InvalidFormulaException.class, () -> invalidFormulaSheet.cells().bool("A1"));
       assertEquals("1+1", invalidBoolean.formula());
 
       ExcelSheet displayFailureSheet =
@@ -63,7 +68,8 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               FormulaRuntimeTestDouble.alwaysFail(
                   new org.apache.poi.ss.formula.FakeFormulaFailure("display failure")));
       InvalidFormulaException displayFailure =
-          assertThrows(InvalidFormulaException.class, () -> displayFailureSheet.snapshotCell("A1"));
+          assertThrows(
+              InvalidFormulaException.class, () -> displayFailureSheet.cells().snapshotCell("A1"));
       assertEquals("1+1", displayFailure.formula());
 
       ExcelSheet unsupportedFormulaSheet =
@@ -75,7 +81,8 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                       "unsupported")));
       UnsupportedFormulaException unsupported =
           assertThrows(
-              UnsupportedFormulaException.class, () -> unsupportedFormulaSheet.snapshotCell("A1"));
+              UnsupportedFormulaException.class,
+              () -> unsupportedFormulaSheet.cells().snapshotCell("A1"));
       assertEquals("1+1", unsupported.formula());
 
       ExcelSheet nullEvaluatedCellSheet =
@@ -83,10 +90,10 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
-      ExcelCellSnapshot blankEvaluatedFormula = nullEvaluatedCellSheet.snapshotCell("A1");
+      ExcelCellSnapshot blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
       assertEquals("FORMULA", blankEvaluatedFormula.effectiveType());
-      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.number("A1"));
-      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.bool("A1"));
+      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().number("A1"));
+      assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
       assertInstanceOf(
           ExcelCellSnapshot.BlankSnapshot.class,
           ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation());
@@ -101,10 +108,10 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setCell("A1", ExcelCellValue.text("first"));
-      sheet.setCell("A3", ExcelCellValue.text("third"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("first"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("third"));
 
-      List<ExcelPreviewRow> preview = sheet.preview(3, 1);
+      List<ExcelPreviewRow> preview = sheet.cells().preview(3, 1);
       assertEquals(3, preview.size());
       assertEquals(1, preview.get(0).cells().size());
       assertEquals(0, preview.get(1).cells().size());
@@ -120,13 +127,13 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setCell("A1", ExcelCellValue.formula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
-      sheet.setCell("A2", ExcelCellValue.formula("NOW()"));
-      sheet.setCell("A3", ExcelCellValue.formula("1/0"));
+      sheet.cells().setCell("A1", ExcelCellValue.formula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
+      sheet.cells().setCell("A2", ExcelCellValue.formula("NOW()"));
+      sheet.cells().setCell("A3", ExcelCellValue.formula("1/0"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
-      assertEquals(3, sheet.formulaCellCount());
+      assertEquals(3, sheet.diagnostics().formulaCellCount());
       assertTrue(
           findings.stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
@@ -150,7 +157,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException()));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       WorkbookAnalysis.AnalysisFinding finding = findings.getFirst();
@@ -170,7 +177,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               successSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               poiWorkbook.getCreationHelper().createFormulaEvaluator());
-      assertEquals(List.of(), successful.formulaHealthFindings());
+      assertEquals(List.of(), successful.diagnostics().formulaHealthFindings());
 
       Sheet nullSheet = poiWorkbook.createSheet("NullEval");
       nullSheet.createRow(0).createCell(0).setCellFormula("1+1");
@@ -180,7 +187,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               nullSheet,
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
-      assertEquals(List.of(), nullEvaluated.formulaHealthFindings());
+      assertEquals(List.of(), nullEvaluated.diagnostics().formulaHealthFindings());
     }
   }
 
@@ -200,7 +207,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                       new LocalWorkbookNotFoundException(
                           "Could not resolve external workbook name 'Rates.xlsx'."))));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -222,7 +229,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
                       "DOUBLE")));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -247,7 +254,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                       Set.of("Rates.xlsx"), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of()),
                   null,
                   null));
-      assertEquals(List.of(), bound.formulaHealthFindings());
+      assertEquals(List.of(), bound.diagnostics().formulaHealthFindings());
 
       Sheet cachedSheet = poiWorkbook.createSheet("Cached");
       cachedSheet.createRow(0).createCell(0).setCellFormula("[Forecast.xlsx]Sheet1!A1");
@@ -261,7 +268,8 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   null,
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = cached.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings =
+          cached.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -290,7 +298,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                           "Could not resolve external workbook name 'Rates.xlsx'.")),
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(
@@ -314,7 +322,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
                   new IllegalStateException("outer", new LocalWorkbookNotFoundException(null)),
                   null));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
 
       assertEquals(1, findings.size());
       assertEquals(

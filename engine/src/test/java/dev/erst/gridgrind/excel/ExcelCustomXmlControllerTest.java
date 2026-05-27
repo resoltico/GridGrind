@@ -30,7 +30,7 @@ class ExcelCustomXmlControllerTest {
   @Test
   void readsWorkbookCustomXmlMappingsAndExportsXml() throws IOException {
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
-      List<ExcelCustomXmlMappingSnapshot> mappings = workbook.customXmlMappings();
+      List<ExcelCustomXmlMappingSnapshot> mappings = workbook.customXml().customXmlMappings();
 
       assertEquals(1, mappings.size());
       ExcelCustomXmlMappingSnapshot mapping = mappings.getFirst();
@@ -52,8 +52,10 @@ class ExcelCustomXmlControllerTest {
       assertEquals(List.of(), mapping.linkedTables());
 
       ExcelCustomXmlExportSnapshot exported =
-          workbook.exportCustomXmlMapping(
-              new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8");
+          workbook
+              .customXml()
+              .exportCustomXmlMapping(
+                  new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8");
 
       assertEquals("UTF-8", exported.encoding());
       assertTrue(exported.schemaValidated());
@@ -66,14 +68,16 @@ class ExcelCustomXmlControllerTest {
   @Test
   void importsXmlIntoExistingCustomXmlMappingAndSupportsReadCommands() throws IOException {
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
-      workbook.importCustomXmlMapping(
-          new ExcelCustomXmlImportDefinition(
-              new ExcelCustomXmlMappingLocator(null, "CORSO_mapping"),
-              "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE><TUTOR>Agent</TUTOR>"
-                  + "<CDL>Ops</CDL><DURATA>5</DURATA><ARGOMENTO>Audit</ARGOMENTO>"
-                  + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
+      workbook
+          .customXml()
+          .importCustomXmlMapping(
+              new ExcelCustomXmlImportDefinition(
+                  new ExcelCustomXmlMappingLocator(null, "CORSO_mapping"),
+                  "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE><TUTOR>Agent</TUTOR>"
+                      + "<CDL>Ops</CDL><DURATA>5</DURATA><ARGOMENTO>Audit</ARGOMENTO>"
+                      + "<PROGETTO>Parity</PROGETTO><CREDITI>10</CREDITI></CORSO>"));
 
-      WorkbookSheetResult.Window window = workbook.sheet("Foglio1").window("A1", 1, 3);
+      WorkbookSheetResult.Window window = workbook.sheet("Foglio1").cells().window("A1", 1, 3);
       assertEquals("Grid", window.rows().getFirst().cells().get(0).displayValue());
       assertEquals("Grind", window.rows().getFirst().cells().get(1).displayValue());
       assertEquals("Agent", window.rows().getFirst().cells().get(2).displayValue());
@@ -105,8 +109,10 @@ class ExcelCustomXmlControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  workbook.exportCustomXmlMapping(
-                      new ExcelCustomXmlMappingLocator(99L, "missing"), false, "UTF-8"));
+                  workbook
+                      .customXml()
+                      .exportCustomXmlMapping(
+                          new ExcelCustomXmlMappingLocator(99L, "missing"), false, "UTF-8"));
       assertTrue(failure.getMessage().contains("No custom XML mapping matched"));
     }
   }

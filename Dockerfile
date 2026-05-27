@@ -1,4 +1,23 @@
-# Pin the multi-arch base-image manifest list digest so rebuilds stay reproducible across time.
+# syntax=docker/dockerfile:1.7
+
+# Pin both builder and runtime manifest lists so local rebuilds and published images stay
+# reproducible across time.
+FROM azul/zulu-openjdk-alpine:26@sha256:33b52f3e06d325140b85bc67ddaf4731ca640b76bc1f15b78ddb292b56d9d8bf AS build
+
+WORKDIR /workspace
+
+COPY gradlew gradle.properties settings.gradle.kts build.gradle.kts ./
+COPY gradle ./gradle
+COPY authoring-java ./authoring-java
+COPY cli ./cli
+COPY contract ./contract
+COPY engine ./engine
+COPY excel-foundation ./excel-foundation
+COPY executor ./executor
+
+RUN chmod +x gradlew
+RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar
+
 FROM azul/zulu-openjdk-alpine:26-jre@sha256:2d273c8744d90ab91a7b5c22c40047f43c7ca9a360650da23daa1ec292c543d4
 
 LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND EDL-1.0"
@@ -15,9 +34,7 @@ RUN install -d -m 1777 /tmp/.cache /tmp/.cache/fontconfig
 
 WORKDIR /app
 
-# The fat JAR is built by the GitHub Actions workflow (./gradlew :cli:shadowJar)
-# before docker build is invoked. For local use, run that command first.
-COPY cli/build/libs/gridgrind.jar gridgrind.jar
+COPY --from=build /workspace/cli/build/libs/gridgrind.jar gridgrind.jar
 
 # Legal files are also embedded in META-INF/ inside gridgrind.jar.
 # Copying them to the image filesystem makes them discoverable without unpacking the JAR.

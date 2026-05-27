@@ -86,8 +86,8 @@ final class WorkbookAnalyzer {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
-      checkedFormulaCellCount += sheet.formulaCellCount();
-      findings.addAll(sheet.formulaHealthFindings());
+      checkedFormulaCellCount += sheet.diagnostics().formulaCellCount();
+      findings.addAll(sheet.diagnostics().formulaHealthFindings());
     }
     return new WorkbookAnalysis.FormulaHealth(
         checkedFormulaCellCount, summary(findings), List.copyOf(findings));
@@ -137,8 +137,8 @@ final class WorkbookAnalyzer {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
-      checkedHyperlinkCount += sheet.hyperlinkCount();
-      findings.addAll(sheet.hyperlinkHealthFindings(workbookLocation));
+      checkedHyperlinkCount += sheet.diagnostics().hyperlinkCount();
+      findings.addAll(sheet.diagnostics().hyperlinkHealthFindings(workbookLocation));
     }
     return new WorkbookAnalysis.HyperlinkHealth(
         checkedHyperlinkCount, summary(findings), List.copyOf(findings));
@@ -193,7 +193,7 @@ final class WorkbookAnalyzer {
   private List<WorkbookAnalysis.AnalysisFinding> analyzeNamedRangeHealth(
       ExcelWorkbook workbook, List<ExcelNamedRangeSnapshot> namedRanges) {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
-    Set<String> workbookSheetNames = new LinkedHashSet<>(workbook.sheetNames());
+    Set<String> workbookSheetNames = new LinkedHashSet<>(workbook.sheets().sheetNames());
     for (ExcelNamedRangeSnapshot namedRange : namedRanges) {
       WorkbookAnalysis.AnalysisLocation.NamedRange location = namedRangeLocation(namedRange);
       String refersToFormula = namedRange.refersToFormula();
@@ -273,7 +273,7 @@ final class WorkbookAnalyzer {
 
   private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     return switch (selection) {
-      case ExcelSheetSelection.All _ -> workbook.sheetNames();
+      case ExcelSheetSelection.All _ -> workbook.sheets().sheetNames();
       case ExcelSheetSelection.Selected selected -> List.copyOf(selected.sheetNames());
     };
   }

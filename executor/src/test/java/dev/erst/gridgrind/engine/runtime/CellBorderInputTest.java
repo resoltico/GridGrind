@@ -27,9 +27,9 @@ class CellBorderInputTest {
             Optional.empty(),
             Optional.ofNullable(new CellBorderSideInput(ExcelBorderStyle.DASHED)),
             Optional.ofNullable(new CellBorderSideInput(ExcelBorderStyle.DOTTED)));
-    var engineBorder = WorkbookCommandConverter.toExcelBorder(border).orElseThrow();
+    var engineBorder = WorkbookCommandCellInputConverter.toExcelBorder(border).orElseThrow();
     var bottomAndLeftEngineBorder =
-        WorkbookCommandConverter.toExcelBorder(bottomAndLeftBorder).orElseThrow();
+        WorkbookCommandCellInputConverter.toExcelBorder(bottomAndLeftBorder).orElseThrow();
 
     assertEquals(Optional.of(ExcelBorderStyle.THIN), engineBorder.all().orElseThrow().style());
     assertEquals(Optional.of(ExcelBorderStyle.DOUBLE), engineBorder.right().orElseThrow().style());
@@ -58,7 +58,7 @@ class CellBorderInputTest {
     assertEquals(Optional.of(ColorInput.rgb("#A1B2C3")), colorOnly.color());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        WorkbookCommandConverter.toExcelBorder(
+        WorkbookCommandCellInputConverter.toExcelBorder(
                 new CellBorderInput(
                     Optional.empty(),
                     Optional.ofNullable(new CellBorderSideInput(ExcelBorderStyle.THIN)),
@@ -71,7 +71,7 @@ class CellBorderInputTest {
             .style());
     assertEquals(
         Optional.of(ExcelBorderStyle.THIN),
-        WorkbookCommandConverter.toExcelBorder(
+        WorkbookCommandCellInputConverter.toExcelBorder(
                 new CellBorderInput(
                     Optional.empty(),
                     Optional.empty(),

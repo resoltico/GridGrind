@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -69,9 +68,10 @@ class ExcelDrawingControllerTest {
   void drawingObjectsSupportReadMoveDeleteAndRoundTrip() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-drawing-roundtrip-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
       sheet
+          .drawings()
           .setPicture(
               new ExcelPictureDefinition(
                   "OpsPicture",
@@ -94,7 +94,7 @@ class ExcelDrawingControllerTest {
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(12, 1, 15, 6)));
 
-      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawingObjects();
+      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
       assertEquals(
           List.of("OpsPicture", "OpsShape", "OpsConnector", "OpsEmbed"),
           snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
@@ -112,29 +112,30 @@ class ExcelDrawingControllerTest {
 
       ExcelDrawingObjectPayload.Picture picturePayload =
           assertInstanceOf(
-              ExcelDrawingObjectPayload.Picture.class, sheet.drawingObjectPayload("OpsPicture"));
+              ExcelDrawingObjectPayload.Picture.class,
+              sheet.drawings().drawingObjectPayload("OpsPicture"));
       ExcelDrawingObjectPayload.EmbeddedObject embeddedPayload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              sheet.drawingObjectPayload("OpsEmbed"));
+              sheet.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals(PNG_PIXEL_BYTES, picturePayload.data().bytes());
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), embeddedPayload.data().bytes());
 
       ExcelDrawingAnchor.TwoCell movedAnchor = anchor(6, 2, 10, 7);
-      sheet.setDrawingObjectAnchor("OpsShape", movedAnchor);
+      sheet.drawings().setDrawingObjectAnchor("OpsShape", movedAnchor);
       ExcelDrawingObjectSnapshot.Shape movedShape =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Shape.class,
-              sheet.drawingObjects().stream()
+              sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsShape".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
       assertEquals(movedAnchor, movedShape.anchor());
 
-      sheet.deleteDrawingObject("OpsConnector");
-      assertEquals(3, sheet.drawingObjects().size());
+      sheet.drawings().deleteDrawingObject("OpsConnector");
+      assertEquals(3, sheet.drawings().drawingObjects().size());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -145,11 +146,11 @@ class ExcelDrawingControllerTest {
           drawing.getShapes().stream().map(XSSFShape::getShapeName).toList());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Picture.class,
-              reopened.sheet("Ops").drawingObjects().stream()
+              reopened.sheet("Ops").drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
@@ -163,23 +164,25 @@ class ExcelDrawingControllerTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-signature-line-roundtrip-");
     ExcelDrawingAnchor.TwoCell movedAnchor = anchor(6, 2, 10, 7);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setSignatureLine(
-          new ExcelSignatureLineDefinition(
-              "OpsSignature",
-              anchor(1, 1, 4, 6),
-              false,
-              "Review the numbers before signing.",
-              "Ada Lovelace",
-              "Finance",
-              "ada@example.com",
-              null,
-              "invalid",
-              Optional.of(ExcelPictureFormat.PNG),
-              Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES))));
+      sheet
+          .drawings()
+          .setSignatureLine(
+              new ExcelSignatureLineDefinition(
+                  "OpsSignature",
+                  anchor(1, 1, 4, 6),
+                  false,
+                  "Review the numbers before signing.",
+                  "Ada Lovelace",
+                  "Finance",
+                  "ada@example.com",
+                  null,
+                  "invalid",
+                  Optional.of(ExcelPictureFormat.PNG),
+                  Optional.of(new ExcelBinaryData(PNG_PIXEL_BYTES))));
 
-      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawingObjects();
+      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawings().drawingObjects();
       assertEquals(
           List.of("OpsSignature"),
           snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
@@ -194,20 +197,21 @@ class ExcelDrawingControllerTest {
 
       IllegalArgumentException noPayload =
           assertThrows(
-              IllegalArgumentException.class, () -> sheet.drawingObjectPayload("OpsSignature"));
+              IllegalArgumentException.class,
+              () -> sheet.drawings().drawingObjectPayload("OpsSignature"));
       assertTrue(noPayload.getMessage().contains("does not expose a binary payload"));
 
-      sheet.setDrawingObjectAnchor("OpsSignature", movedAnchor);
+      sheet.drawings().setDrawingObjectAnchor("OpsSignature", movedAnchor);
       ExcelDrawingObjectSnapshot.SignatureLine movedSignature =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.SignatureLine.class,
-              sheet.drawingObjects().stream()
+              sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
       assertEquals(movedAnchor, movedSignature.anchor());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -218,12 +222,12 @@ class ExcelDrawingControllerTest {
       assertEquals(STTrueFalse.F, signatureShape.getSignaturelineArray(0).getAllowcomments());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = reopened.sheet("Ops");
       ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.SignatureLine.class,
-              sheet.drawingObjects().stream()
+              sheet.drawings().drawingObjects().stream()
                   .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
@@ -231,8 +235,8 @@ class ExcelDrawingControllerTest {
       assertEquals("Finance", signatureLine.suggestedSigner2());
       assertEquals("ada@example.com", signatureLine.suggestedSignerEmail());
 
-      sheet.deleteDrawingObject("OpsSignature");
-      reopened.save(workbookPath);
+      sheet.drawings().deleteDrawingObject("OpsSignature");
+      reopened.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -246,31 +250,33 @@ class ExcelDrawingControllerTest {
   void formulaBackedNumericChartTitlePersistsExplicitCacheAcrossSaveAndLoad() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-cache-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setCell("B1", ExcelCellValue.number(1d));
-      sheet.setCell("A2", ExcelCellValue.text("Jan"));
-      sheet.setCell("A3", ExcelCellValue.text("Feb"));
-      sheet.setCell("A4", ExcelCellValue.text("Mar"));
-      sheet.setCell("B2", ExcelCellValue.number(10d));
-      sheet.setCell("B3", ExcelCellValue.number(12d));
-      sheet.setCell("B4", ExcelCellValue.number(14d));
-      sheet.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsChart",
-              anchor(0, 0, 3, 4),
-              new ExcelChartDefinition.Title.Formula("B1"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.None(),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.save(workbookPath);
+      sheet.cells().setCell("B1", ExcelCellValue.number(1d));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
+      sheet.cells().setCell("B2", ExcelCellValue.number(10d));
+      sheet.cells().setCell("B3", ExcelCellValue.number(12d));
+      sheet.cells().setCell("B4", ExcelCellValue.number(14d));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(0, 0, 3, 4),
+                  new ExcelChartDefinition.Title.Formula("B1"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -284,8 +290,8 @@ class ExcelDrawingControllerTest {
           chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot chart = reopened.sheet("Ops").charts().getFirst();
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot chart = reopened.sheet("Ops").drawings().charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
       assertEquals("Ops!$B$1", title.formula());
@@ -294,7 +300,7 @@ class ExcelDrawingControllerTest {
       ExcelDrawingObjectSnapshot.Chart drawingChart =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Chart.class,
-              reopened.sheet("Ops").drawingObjects().getFirst());
+              reopened.sheet("Ops").drawings().drawingObjects().getFirst());
       assertEquals("1.0", drawingChart.title());
     }
   }
@@ -303,62 +309,68 @@ class ExcelDrawingControllerTest {
   void formulaChartTitleUpdateReplacesExistingRichTextAndExistingStringCache() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-rewrite-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
-      sheet.setCell("D1", ExcelCellValue.number(1d));
-      sheet.setCell("E1", ExcelCellValue.number(2d));
-      sheet.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsChart",
-              anchor(4, 1, 11, 16),
-              new ExcelChartDefinition.Title.Text("Roadmap"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.None(),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.save(workbookPath);
+      sheet.cells().setCell("D1", ExcelCellValue.number(1d));
+      sheet.cells().setCell("E1", ExcelCellValue.number(2d));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ExcelChartDefinition.Title.Text("Roadmap"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Chart");
-      sheet.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsChart",
-              anchor(4, 1, 11, 16),
-              new ExcelChartDefinition.Title.Formula("D1"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.None(),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      sheet.setChart(
-          ExcelChartTestSupport.barChart(
-              "OpsChart",
-              anchor(4, 1, 11, 16),
-              new ExcelChartDefinition.Title.Formula("E1"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.None(),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.save(workbookPath);
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ExcelChartDefinition.Title.Formula("D1"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "OpsChart",
+                  anchor(4, 1, 11, 16),
+                  new ExcelChartDefinition.Title.Formula("E1"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.None(),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -376,8 +388,8 @@ class ExcelDrawingControllerTest {
           chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot chart = reopened.sheet("Chart").charts().getFirst();
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot chart = reopened.sheet("Chart").drawings().charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
       assertEquals("Chart!$E$1", title.formula());
@@ -389,64 +401,66 @@ class ExcelDrawingControllerTest {
   void chartAuthoringSupportsMultiPlotComboCharts() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-combo-authored-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
-      sheet.setChart(
-          new ExcelChartDefinition(
-              "ComboChart",
-              anchor(4, 1, 11, 16),
-              new ExcelChartDefinition.Title.Text("Roadmap"),
-              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              List.of(
-                  new ExcelChartDefinition.Bar(
-                      true,
-                      ExcelChartBarDirection.COLUMN,
-                      ExcelChartBarGrouping.CLUSTERED,
-                      Optional.empty(),
-                      Optional.empty(),
-                      List.of(
-                          new ExcelChartDefinition.Axis(
-                              ExcelChartAxisKind.CATEGORY,
-                              ExcelChartAxisPosition.BOTTOM,
-                              ExcelChartAxisCrosses.AUTO_ZERO,
-                              true),
-                          new ExcelChartDefinition.Axis(
-                              ExcelChartAxisKind.VALUE,
-                              ExcelChartAxisPosition.LEFT,
-                              ExcelChartAxisCrosses.AUTO_ZERO,
-                              true)),
-                      List.of(
-                          new ExcelChartDefinition.Series(
-                              new ExcelChartDefinition.Title.Text("Plan"),
-                              ExcelChartTestSupport.ref("A2:A4"),
-                              ExcelChartTestSupport.ref("B2:B4")))),
-                  new ExcelChartDefinition.Line(
-                      false,
-                      ExcelChartGrouping.STANDARD,
-                      List.of(
-                          new ExcelChartDefinition.Axis(
-                              ExcelChartAxisKind.CATEGORY,
-                              ExcelChartAxisPosition.BOTTOM,
-                              ExcelChartAxisCrosses.AUTO_ZERO,
-                              true),
-                          new ExcelChartDefinition.Axis(
-                              ExcelChartAxisKind.VALUE,
-                              ExcelChartAxisPosition.LEFT,
-                              ExcelChartAxisCrosses.AUTO_ZERO,
-                              true)),
-                      List.of(
-                          new ExcelChartDefinition.Series(
-                              new ExcelChartDefinition.Title.Text("Actual"),
-                              ExcelChartTestSupport.ref("A2:A4"),
-                              ExcelChartTestSupport.ref("C2:C4")))))));
-      workbook.save(workbookPath);
+      sheet
+          .drawings()
+          .setChart(
+              new ExcelChartDefinition(
+                  "ComboChart",
+                  anchor(4, 1, 11, 16),
+                  new ExcelChartDefinition.Title.Text("Roadmap"),
+                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  List.of(
+                      new ExcelChartDefinition.Bar(
+                          true,
+                          ExcelChartBarDirection.COLUMN,
+                          ExcelChartBarGrouping.CLUSTERED,
+                          Optional.empty(),
+                          Optional.empty(),
+                          List.of(
+                              new ExcelChartDefinition.Axis(
+                                  ExcelChartAxisKind.CATEGORY,
+                                  ExcelChartAxisPosition.BOTTOM,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true),
+                              new ExcelChartDefinition.Axis(
+                                  ExcelChartAxisKind.VALUE,
+                                  ExcelChartAxisPosition.LEFT,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true)),
+                          List.of(
+                              new ExcelChartDefinition.Series(
+                                  new ExcelChartDefinition.Title.Text("Plan"),
+                                  ExcelChartTestSupport.ref("A2:A4"),
+                                  ExcelChartTestSupport.ref("B2:B4")))),
+                      new ExcelChartDefinition.Line(
+                          false,
+                          ExcelChartGrouping.STANDARD,
+                          List.of(
+                              new ExcelChartDefinition.Axis(
+                                  ExcelChartAxisKind.CATEGORY,
+                                  ExcelChartAxisPosition.BOTTOM,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true),
+                              new ExcelChartDefinition.Axis(
+                                  ExcelChartAxisKind.VALUE,
+                                  ExcelChartAxisPosition.LEFT,
+                                  ExcelChartAxisCrosses.AUTO_ZERO,
+                                  true)),
+                          List.of(
+                              new ExcelChartDefinition.Series(
+                                  new ExcelChartDefinition.Title.Text("Actual"),
+                                  ExcelChartTestSupport.ref("A2:A4"),
+                                  ExcelChartTestSupport.ref("C2:C4")))))));
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot comboChart = reopened.sheet("Chart").charts().getFirst();
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot comboChart = reopened.sheet("Chart").drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
       assertEquals(
           List.of("BAR", "LINE"),
@@ -479,30 +493,32 @@ class ExcelDrawingControllerTest {
 
   @Test
   void commentOperationsPreserveRealDrawingObjects() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet commentOnly = workbook.getOrCreateSheet("Comments");
-      commentOnly.setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      commentOnly.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
 
-      assertTrue(commentOnly.snapshotCell("A1").metadata().comment().isPresent());
+      assertTrue(commentOnly.cells().snapshotCell("A1").metadata().comment().isPresent());
 
-      commentOnly.clearComment("A1");
-      assertFalse(commentOnly.snapshotCell("A1").metadata().comment().isPresent());
+      commentOnly.annotations().clearComment("A1");
+      assertFalse(commentOnly.cells().snapshotCell("A1").metadata().comment().isPresent());
 
       ExcelSheet withDrawing = workbook.getOrCreateSheet("Ops");
-      withDrawing.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
-      List<ExcelDrawingObjectSnapshot> before = withDrawing.drawingObjects();
+      withDrawing
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
+      List<ExcelDrawingObjectSnapshot> before = withDrawing.drawings().drawingObjects();
 
-      withDrawing.setComment("A1", new ExcelComment("Review", "GridGrind", false));
-      assertEquals(before, withDrawing.drawingObjects());
+      withDrawing.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", false));
+      assertEquals(before, withDrawing.drawings().drawingObjects());
 
-      withDrawing.clearComment("A1");
-      assertEquals(before, withDrawing.drawingObjects());
+      withDrawing.annotations().clearComment("A1");
+      assertEquals(before, withDrawing.drawings().drawingObjects());
     }
   }
 
@@ -524,9 +540,9 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      workbook.sheet("Ops").clearComment("A1");
-      workbook.save(workbookPath);
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      workbook.sheet("Ops").annotations().clearComment("A1");
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -539,9 +555,10 @@ class ExcelDrawingControllerTest {
       throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-gap-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook
           .getOrCreateSheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -552,7 +569,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -571,15 +588,15 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjects().getFirst());
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
       assertNotNull(snapshot.previewByteSize());
@@ -592,9 +609,10 @@ class ExcelDrawingControllerTest {
   void embeddedObjectReadbackSurvivesMissingPreviewImageMetadata() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-missing-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook
           .getOrCreateSheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -605,7 +623,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -625,15 +643,15 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjects().getFirst());
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertNull(snapshot.previewFormat());
       assertNull(snapshot.previewByteSize());
@@ -647,9 +665,10 @@ class ExcelDrawingControllerTest {
     Path workbookPath =
         XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-sheet-drawing-fallback-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook
           .getOrCreateSheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -660,7 +679,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -673,15 +692,15 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjects().getFirst());
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
       assertNotNull(snapshot.previewByteSize());
@@ -693,39 +712,45 @@ class ExcelDrawingControllerTest {
   @Test
   void deleteEmbeddedObjectPreservesSheetDrawingWhenSheetPreviewIdTargetsSheetDrawing()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setPicture(
-          new ExcelPictureDefinition(
-              "OpsPicture",
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              ExcelPictureFormat.PNG,
-              anchor(1, 1, 4, 6),
-              Optional.of("Queue preview")));
-      sheet.setEmbeddedObject(
-          new ExcelEmbeddedObjectDefinition(
-              "OpsEmbed",
-              "Payload",
-              "payload.txt",
-              "payload.txt",
-              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
-              ExcelPictureFormat.PNG,
-              new ExcelBinaryData(PNG_PIXEL_BYTES),
-              anchor(5, 1, 8, 6)));
+      sheet
+          .drawings()
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  ExcelPictureFormat.PNG,
+                  anchor(1, 1, 4, 6),
+                  Optional.of("Queue preview")));
+      sheet
+          .drawings()
+          .setEmbeddedObject(
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  anchor(5, 1, 8, 6)));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData objectData = firstEmbeddedObject(poiSheet);
       ExcelDrawingBinarySupport.setPreviewSheetRelationId(
           objectData.getOleObject(), sheetDrawingRelationId(poiSheet));
 
-      sheet.deleteDrawingObject("OpsEmbed");
+      sheet.drawings().deleteDrawingObject("OpsEmbed");
 
       assertEquals(
           List.of("OpsPicture"),
-          sheet.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+          sheet.drawings().drawingObjects().stream()
+              .map(ExcelDrawingObjectSnapshot::name)
+              .toList());
       assertNotNull(poiSheet.getDrawingPatriarch());
       assertEquals(1, poiSheet.getDrawingPatriarch().getShapes().size());
-      assertNotNull(sheet.drawingObjectPayload("OpsPicture"));
+      assertNotNull(sheet.drawings().drawingObjectPayload("OpsPicture"));
     }
   }
 
@@ -733,9 +758,10 @@ class ExcelDrawingControllerTest {
   void embeddedObjectReadbackSurvivesEmptyPackageBytes() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-empty-package-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook
           .getOrCreateSheet("Ops")
+          .drawings()
           .setEmbeddedObject(
               new ExcelEmbeddedObjectDefinition(
                   "OpsEmbed",
@@ -746,7 +772,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -757,7 +783,7 @@ class ExcelDrawingControllerTest {
               .findFirst()
               .orElseThrow();
       org.apache.poi.openxml4j.opc.PackagePart objectPart =
-          new ExcelDrawingController().oleObjectPart(objectData).orElseThrow();
+          ExcelDrawingBinarySupport.oleObjectPart(objectData).orElseThrow();
       try (var outputStream = objectPart.getOutputStream()) {
         outputStream.write(new byte[0]);
       }
@@ -766,15 +792,15 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjects().getFirst());
+              workbook.sheet("Ops").drawings().drawingObjects().getFirst());
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Ops").drawings().drawingObjectPayload("OpsEmbed"));
 
       assertEquals(0L, snapshot.byteSize());
       assertEquals(ExcelDrawingBinarySupport.sha256(new byte[0]), snapshot.sha256());
@@ -787,10 +813,11 @@ class ExcelDrawingControllerTest {
   void chartOperationsSupportAuthoringMutationAndDeletion() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-roundtrip-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
       workbook
+          .names()
           .setNamedRange(
               new ExcelNamedRangeDefinition(
                   "ChartCategories",
@@ -802,25 +829,25 @@ class ExcelDrawingControllerTest {
                   new ExcelNamedRangeScope.WorkbookScope(),
                   ExcelNamedRangeTarget.range("Chart", "C2:C4")));
 
-      sheet.setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
+      sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
 
       assertInitialChartSnapshot(sheet);
       assertInitialChartDrawingObject(sheet);
 
       ExcelDrawingAnchor.TwoCell movedAnchor = anchor(6, 2, 12, 18);
-      sheet.setDrawingObjectAnchor("OpsChart", movedAnchor);
-      sheet.setChart(updatedChartDefinition(movedAnchor));
+      sheet.drawings().setDrawingObjectAnchor("OpsChart", movedAnchor);
+      sheet.drawings().setChart(updatedChartDefinition(movedAnchor));
 
       assertUpdatedChartSnapshot(sheet, movedAnchor);
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertPersistedChartWorkbook(workbookPath);
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      reopened.sheet("Chart").deleteDrawingObject("OpsChart");
-      reopened.save(workbookPath);
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      reopened.sheet("Chart").drawings().deleteDrawingObject("OpsChart");
+      reopened.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -865,9 +892,9 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Chart");
-      ExcelChartSnapshot comboChart = sheet.charts().getFirst();
+      ExcelChartSnapshot comboChart = sheet.drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
       assertEquals(
           List.of("BAR", "LINE"),
@@ -885,33 +912,35 @@ class ExcelDrawingControllerTest {
 
       ExcelDrawingObjectSnapshot.Chart drawingChart =
           assertInstanceOf(
-              ExcelDrawingObjectSnapshot.Chart.class, sheet.drawingObjects().getFirst());
+              ExcelDrawingObjectSnapshot.Chart.class, sheet.drawings().drawingObjects().getFirst());
       assertTrue(drawingChart.supported());
       assertEquals(List.of("BAR", "LINE"), drawingChart.plotTypeTokens());
 
-      sheet.setChart(
-          ExcelChartTestSupport.barChart(
-              "ComboChart",
-              anchor(4, 1, 11, 16),
-              new ExcelChartDefinition.Title.Text("Roadmap"),
-              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-              ExcelChartDisplayBlanksAs.SPAN,
-              false,
-              true,
-              ExcelChartBarDirection.COLUMN,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      new ExcelChartDefinition.Title.Formula("B1"),
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      ExcelChartSnapshot replaced = sheet.charts().getFirst();
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.barChart(
+                  "ComboChart",
+                  anchor(4, 1, 11, 16),
+                  new ExcelChartDefinition.Title.Text("Roadmap"),
+                  new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                  ExcelChartDisplayBlanksAs.SPAN,
+                  false,
+                  true,
+                  ExcelChartBarDirection.COLUMN,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          new ExcelChartDefinition.Title.Formula("B1"),
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      ExcelChartSnapshot replaced = sheet.drawings().charts().getFirst();
       assertEquals("ComboChart", replaced.name());
       assertInstanceOf(
           ExcelChartSnapshot.Bar.class,
           ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
 
-      sheet.setCell("F1", ExcelCellValue.text("Touch"));
-      workbook.save(workbookPath);
+      sheet.cells().setCell("F1", ExcelCellValue.text("Touch"));
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -924,7 +953,7 @@ class ExcelDrawingControllerTest {
 
   @Test
   void failedShapeAndChartValidationIsNonMutating() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
       seedChartData(sheet);
       seedChartNamedRanges(workbook);
@@ -933,34 +962,38 @@ class ExcelDrawingControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  sheet.setShape(
-                      new ExcelShapeDefinition.SimpleShape(
-                          "OpsBrokenShape",
-                          anchor(1, 1, 3, 3),
-                          "invalid-shape",
-                          Optional.empty())));
+                  sheet
+                      .drawings()
+                      .setShape(
+                          new ExcelShapeDefinition.SimpleShape(
+                              "OpsBrokenShape",
+                              anchor(1, 1, 3, 3),
+                              "invalid-shape",
+                              Optional.empty())));
       assertTrue(invalidShape.getMessage().contains("Unsupported presetGeometryToken"));
-      assertEquals(List.of(), sheet.drawingObjects());
-      assertEquals(List.of(), sheet.charts());
+      assertEquals(List.of(), sheet.drawings().drawingObjects());
+      assertEquals(List.of(), sheet.drawings().charts());
 
       IllegalArgumentException invalidChartCreate =
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  sheet.setChart(
-                      invalidBarChartDefinition("OpsBrokenChart", anchor(4, 1, 11, 16))));
+                  sheet
+                      .drawings()
+                      .setChart(invalidBarChartDefinition("OpsBrokenChart", anchor(4, 1, 11, 16))));
       assertTrue(
           invalidChartCreate
               .getMessage()
               .contains("Chart value source must resolve to numeric cells"));
-      assertEquals(List.of(), sheet.drawingObjects());
-      assertEquals(List.of(), sheet.charts());
+      assertEquals(List.of(), sheet.drawings().drawingObjects());
+      assertEquals(List.of(), sheet.drawings().charts());
 
-      sheet.setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
-      sheet.setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
-      ExcelChartSnapshot typeChanged = sheet.charts().getFirst();
-      List<ExcelDrawingObjectSnapshot> drawingObjectsBeforeFailure = sheet.drawingObjects();
-      List<ExcelChartSnapshot> chartsBeforeFailure = sheet.charts();
+      sheet.drawings().setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
+      sheet.drawings().setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
+      ExcelChartSnapshot typeChanged = sheet.drawings().charts().getFirst();
+      List<ExcelDrawingObjectSnapshot> drawingObjectsBeforeFailure =
+          sheet.drawings().drawingObjects();
+      List<ExcelChartSnapshot> chartsBeforeFailure = sheet.drawings().charts();
       assertEquals("OpsChart", typeChanged.name());
       assertInstanceOf(
           ExcelChartSnapshot.Line.class,
@@ -969,13 +1002,16 @@ class ExcelDrawingControllerTest {
       IllegalArgumentException invalidChartMutation =
           assertThrows(
               IllegalArgumentException.class,
-              () -> sheet.setChart(invalidBarChartDefinition("OpsChart", anchor(7, 3, 13, 20))));
+              () ->
+                  sheet
+                      .drawings()
+                      .setChart(invalidBarChartDefinition("OpsChart", anchor(7, 3, 13, 20))));
       assertTrue(
           invalidChartMutation
               .getMessage()
               .contains("Chart value source must resolve to numeric cells"));
-      assertEquals(drawingObjectsBeforeFailure, sheet.drawingObjects());
-      assertEquals(chartsBeforeFailure, sheet.charts());
+      assertEquals(drawingObjectsBeforeFailure, sheet.drawings().drawingObjects());
+      assertEquals(chartsBeforeFailure, sheet.drawings().charts());
     }
   }
 
@@ -1001,18 +1037,18 @@ class ExcelDrawingControllerTest {
   }
 
   private static void seedChartData(ExcelSheet sheet) {
-    sheet.setCell("A1", ExcelCellValue.text("Month"));
-    sheet.setCell("B1", ExcelCellValue.text("Plan"));
-    sheet.setCell("C1", ExcelCellValue.text("Actual"));
-    sheet.setCell("A2", ExcelCellValue.text("Jan"));
-    sheet.setCell("B2", ExcelCellValue.number(10d));
-    sheet.setCell("C2", ExcelCellValue.number(12d));
-    sheet.setCell("A3", ExcelCellValue.text("Feb"));
-    sheet.setCell("B3", ExcelCellValue.number(18d));
-    sheet.setCell("C3", ExcelCellValue.number(16d));
-    sheet.setCell("A4", ExcelCellValue.text("Mar"));
-    sheet.setCell("B4", ExcelCellValue.number(15d));
-    sheet.setCell("C4", ExcelCellValue.number(21d));
+    sheet.cells().setCell("A1", ExcelCellValue.text("Month"));
+    sheet.cells().setCell("B1", ExcelCellValue.text("Plan"));
+    sheet.cells().setCell("C1", ExcelCellValue.text("Actual"));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
+    sheet.cells().setCell("B2", ExcelCellValue.number(10d));
+    sheet.cells().setCell("C2", ExcelCellValue.number(12d));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
+    sheet.cells().setCell("B3", ExcelCellValue.number(18d));
+    sheet.cells().setCell("C3", ExcelCellValue.number(16d));
+    sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
+    sheet.cells().setCell("B4", ExcelCellValue.number(15d));
+    sheet.cells().setCell("C4", ExcelCellValue.number(21d));
   }
 
   private static CTShape firstSignatureShape(XSSFVMLDrawing vmlDrawing) {
@@ -1056,6 +1092,7 @@ class ExcelDrawingControllerTest {
 
   private static void seedChartNamedRanges(ExcelWorkbook workbook) {
     workbook
+        .names()
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ChartCategories",
@@ -1069,7 +1106,7 @@ class ExcelDrawingControllerTest {
   }
 
   private static void assertInitialChartSnapshot(ExcelSheet sheet) {
-    ExcelChartSnapshot initial = sheet.charts().getFirst();
+    ExcelChartSnapshot initial = sheet.drawings().charts().getFirst();
     ExcelChartSnapshot.Bar bar =
         ExcelChartTestSupport.singlePlot(initial, ExcelChartSnapshot.Bar.class);
     assertEquals("OpsChart", initial.name());
@@ -1105,7 +1142,8 @@ class ExcelDrawingControllerTest {
 
   private static void assertInitialChartDrawingObject(ExcelSheet sheet) {
     ExcelDrawingObjectSnapshot.Chart drawingChart =
-        assertInstanceOf(ExcelDrawingObjectSnapshot.Chart.class, sheet.drawingObjects().getFirst());
+        assertInstanceOf(
+            ExcelDrawingObjectSnapshot.Chart.class, sheet.drawings().drawingObjects().getFirst());
     assertTrue(drawingChart.supported());
     assertEquals(List.of("BAR"), drawingChart.plotTypeTokens());
     assertEquals("Roadmap", drawingChart.title());
@@ -1113,7 +1151,7 @@ class ExcelDrawingControllerTest {
 
   private static void assertUpdatedChartSnapshot(
       ExcelSheet sheet, ExcelDrawingAnchor.TwoCell movedAnchor) {
-    ExcelChartSnapshot updated = sheet.charts().getFirst();
+    ExcelChartSnapshot updated = sheet.drawings().charts().getFirst();
     ExcelChartSnapshot.Bar bar =
         ExcelChartTestSupport.singlePlot(updated, ExcelChartSnapshot.Bar.class);
     assertEquals(movedAnchor, updated.anchor());

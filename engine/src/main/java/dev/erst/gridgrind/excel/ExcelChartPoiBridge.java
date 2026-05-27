@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
 import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
@@ -9,7 +8,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartBarShape;
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.Locale;
@@ -19,34 +17,12 @@ import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.BarDirection;
 import org.apache.poi.xddf.usermodel.chart.BarGrouping;
-import org.apache.poi.xddf.usermodel.chart.ChartTypes;
 import org.apache.poi.xddf.usermodel.chart.DisplayBlanks;
 import org.apache.poi.xddf.usermodel.chart.Grouping;
 import org.apache.poi.xddf.usermodel.chart.LegendPosition;
-import org.apache.poi.xddf.usermodel.chart.MarkerStyle;
 import org.apache.poi.xddf.usermodel.chart.RadarStyle;
 import org.apache.poi.xddf.usermodel.chart.ScatterStyle;
 import org.apache.poi.xddf.usermodel.chart.Shape;
-import org.apache.poi.xddf.usermodel.chart.XDDFArea3DChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFChart;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFDateAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFLine3DChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFPie3DChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFRadarChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFScatterChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFSeriesAxis;
-import org.apache.poi.xddf.usermodel.chart.XDDFSurface3DChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFSurfaceChartData;
-import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.jspecify.annotations.Nullable;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 
@@ -55,93 +31,8 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
  *
  * <p>The import count is the direct shape of the supported POI chart enum surface.
  */
-@SuppressWarnings("PMD.ExcessiveImports")
 final class ExcelChartPoiBridge {
   private ExcelChartPoiBridge() {}
-
-  static ExcelChartAxisKind axisKind(XDDFChartAxis axis) {
-    Objects.requireNonNull(axis, "axis must not be null");
-    return switch (axis) {
-      case XDDFCategoryAxis _ -> ExcelChartAxisKind.CATEGORY;
-      case XDDFDateAxis _ -> ExcelChartAxisKind.DATE;
-      case XDDFSeriesAxis _ -> ExcelChartAxisKind.SERIES;
-      case XDDFValueAxis _ -> ExcelChartAxisKind.VALUE;
-      default ->
-          throw new IllegalArgumentException("Unsupported chart axis family: " + axis.getClass());
-    };
-  }
-
-  static XDDFChartAxis createAxis(
-      XDDFChart chart, ExcelChartAxisKind axisKind, ExcelChartAxisPosition position) {
-    Objects.requireNonNull(chart, "chart must not be null");
-    Objects.requireNonNull(axisKind, "axisKind must not be null");
-    Objects.requireNonNull(position, "position must not be null");
-    return switch (axisKind) {
-      case CATEGORY -> chart.createCategoryAxis(toPoiAxisPosition(position));
-      case DATE -> chart.createDateAxis(toPoiAxisPosition(position));
-      case SERIES -> chart.createSeriesAxis(toPoiAxisPosition(position));
-      case VALUE -> chart.createValueAxis(toPoiAxisPosition(position));
-    };
-  }
-
-  static ChartTypes toPoiChartType(ExcelChartPlotType plotType) {
-    Objects.requireNonNull(plotType, "plotType must not be null");
-    return switch (plotType) {
-      case AREA -> ChartTypes.AREA;
-      case AREA_3D -> ChartTypes.AREA3D;
-      case BAR -> ChartTypes.BAR;
-      case BAR_3D -> ChartTypes.BAR3D;
-      case DOUGHNUT -> ChartTypes.DOUGHNUT;
-      case LINE -> ChartTypes.LINE;
-      case LINE_3D -> ChartTypes.LINE3D;
-      case PIE -> ChartTypes.PIE;
-      case PIE_3D -> ChartTypes.PIE3D;
-      case RADAR -> ChartTypes.RADAR;
-      case SCATTER -> ChartTypes.SCATTER;
-      case SURFACE -> ChartTypes.SURFACE;
-      case SURFACE_3D -> ChartTypes.SURFACE3D;
-    };
-  }
-
-  static ExcelChartPlotType plotType(XDDFChartData chartData) {
-    Objects.requireNonNull(chartData, "chartData must not be null");
-    return switch (chartData) {
-      case XDDFAreaChartData _ -> ExcelChartPlotType.AREA;
-      case XDDFArea3DChartData _ -> ExcelChartPlotType.AREA_3D;
-      case XDDFBarChartData _ -> ExcelChartPlotType.BAR;
-      case XDDFBar3DChartData _ -> ExcelChartPlotType.BAR_3D;
-      case XDDFDoughnutChartData _ -> ExcelChartPlotType.DOUGHNUT;
-      case XDDFLineChartData _ -> ExcelChartPlotType.LINE;
-      case XDDFLine3DChartData _ -> ExcelChartPlotType.LINE_3D;
-      case XDDFPieChartData _ -> ExcelChartPlotType.PIE;
-      case XDDFPie3DChartData _ -> ExcelChartPlotType.PIE_3D;
-      case XDDFRadarChartData _ -> ExcelChartPlotType.RADAR;
-      case XDDFScatterChartData _ -> ExcelChartPlotType.SCATTER;
-      case XDDFSurfaceChartData _ -> ExcelChartPlotType.SURFACE;
-      case XDDFSurface3DChartData _ -> ExcelChartPlotType.SURFACE_3D;
-      default -> throw new IllegalArgumentException("Unsupported chart data family: " + chartData);
-    };
-  }
-
-  static String plotTypeToken(XDDFChartData chartData) {
-    Objects.requireNonNull(chartData, "chartData must not be null");
-    return switch (chartData) {
-      case XDDFAreaChartData _ -> "AREA";
-      case XDDFArea3DChartData _ -> "AREA_3D";
-      case XDDFBarChartData _ -> "BAR";
-      case XDDFBar3DChartData _ -> "BAR_3D";
-      case XDDFDoughnutChartData _ -> "DOUGHNUT";
-      case XDDFLineChartData _ -> "LINE";
-      case XDDFLine3DChartData _ -> "LINE_3D";
-      case XDDFPieChartData _ -> "PIE";
-      case XDDFPie3DChartData _ -> "PIE_3D";
-      case XDDFRadarChartData _ -> "RADAR";
-      case XDDFScatterChartData _ -> "SCATTER";
-      case XDDFSurfaceChartData _ -> "SURFACE";
-      case XDDFSurface3DChartData _ -> "SURFACE_3D";
-      default -> canonicalPlotTypeToken(chartData.getClass().getSimpleName());
-    };
-  }
 
   static ExcelChartBarDirection fromPoiBarDirection(BarDirection direction) {
     Objects.requireNonNull(direction, "direction must not be null");
@@ -159,18 +50,16 @@ final class ExcelChartPoiBridge {
     return BarDirection.BAR;
   }
 
-  static ExcelChartBarGrouping fromPoiBarGrouping(BarGrouping grouping) {
-    Objects.requireNonNull(grouping, "grouping must not be null");
+  static ExcelChartBarGrouping fromPoiBarGroupingOrDefault(BarGrouping grouping) {
+    if (grouping == null) {
+      return ExcelChartBarGrouping.CLUSTERED;
+    }
     return switch (grouping) {
       case STANDARD -> ExcelChartBarGrouping.STANDARD;
       case CLUSTERED -> ExcelChartBarGrouping.CLUSTERED;
       case STACKED -> ExcelChartBarGrouping.STACKED;
       case PERCENT_STACKED -> ExcelChartBarGrouping.PERCENT_STACKED;
     };
-  }
-
-  static ExcelChartBarGrouping fromPoiBarGroupingOrDefault(BarGrouping grouping) {
-    return grouping == null ? ExcelChartBarGrouping.CLUSTERED : fromPoiBarGrouping(grouping);
   }
 
   static ExcelChartBarGrouping fromBarGroupingTokenOrDefault(@Nullable String token) {
@@ -299,40 +188,6 @@ final class ExcelChartPoiBridge {
     };
   }
 
-  static ExcelChartMarkerStyle fromPoiMarkerStyle(MarkerStyle style) {
-    Objects.requireNonNull(style, "style must not be null");
-    return switch (style) {
-      case CIRCLE -> ExcelChartMarkerStyle.CIRCLE;
-      case DASH -> ExcelChartMarkerStyle.DASH;
-      case DIAMOND -> ExcelChartMarkerStyle.DIAMOND;
-      case DOT -> ExcelChartMarkerStyle.DOT;
-      case NONE -> ExcelChartMarkerStyle.NONE;
-      case PICTURE -> ExcelChartMarkerStyle.PICTURE;
-      case PLUS -> ExcelChartMarkerStyle.PLUS;
-      case SQUARE -> ExcelChartMarkerStyle.SQUARE;
-      case STAR -> ExcelChartMarkerStyle.STAR;
-      case TRIANGLE -> ExcelChartMarkerStyle.TRIANGLE;
-      case X -> ExcelChartMarkerStyle.X;
-    };
-  }
-
-  static MarkerStyle toPoiMarkerStyle(ExcelChartMarkerStyle style) {
-    Objects.requireNonNull(style, "style must not be null");
-    return switch (style) {
-      case CIRCLE -> MarkerStyle.CIRCLE;
-      case DASH -> MarkerStyle.DASH;
-      case DIAMOND -> MarkerStyle.DIAMOND;
-      case DOT -> MarkerStyle.DOT;
-      case NONE -> MarkerStyle.NONE;
-      case PICTURE -> MarkerStyle.PICTURE;
-      case PLUS -> MarkerStyle.PLUS;
-      case SQUARE -> MarkerStyle.SQUARE;
-      case STAR -> MarkerStyle.STAR;
-      case TRIANGLE -> MarkerStyle.TRIANGLE;
-      case X -> MarkerStyle.X;
-    };
-  }
-
   static ExcelChartLegendPosition fromPoiLegendPosition(LegendPosition position) {
     Objects.requireNonNull(position, "position must not be null");
     return switch (position) {
@@ -357,17 +212,13 @@ final class ExcelChartPoiBridge {
 
   static ExcelChartDisplayBlanksAs fromPoiDisplayBlanks(STDispBlanksAs.Enum displayBlanks) {
     Objects.requireNonNull(displayBlanks, "displayBlanks must not be null");
-    return fromPoiDisplayBlanks(displayBlanks.intValue(), displayBlanks.toString());
-  }
-
-  static ExcelChartDisplayBlanksAs fromPoiDisplayBlanks(int displayBlanksToken, String rawToken) {
-    return switch (displayBlanksToken) {
-      case STDispBlanksAs.INT_GAP -> ExcelChartDisplayBlanksAs.GAP;
-      case STDispBlanksAs.INT_SPAN -> ExcelChartDisplayBlanksAs.SPAN;
-      case STDispBlanksAs.INT_ZERO -> ExcelChartDisplayBlanksAs.ZERO;
-      default ->
-          throw new IllegalArgumentException("Unsupported displayBlanksAs token: " + rawToken);
-    };
+    if (displayBlanks == STDispBlanksAs.GAP) {
+      return ExcelChartDisplayBlanksAs.GAP;
+    }
+    if (displayBlanks == STDispBlanksAs.SPAN) {
+      return ExcelChartDisplayBlanksAs.SPAN;
+    }
+    return ExcelChartDisplayBlanksAs.ZERO;
   }
 
   static DisplayBlanks toPoiDisplayBlanks(ExcelChartDisplayBlanksAs displayBlanksAs) {
@@ -415,15 +266,5 @@ final class ExcelChartPoiBridge {
       case MAX -> AxisCrosses.MAX;
       case MIN -> AxisCrosses.MIN;
     };
-  }
-
-  static String canonicalPlotTypeToken(String simpleName) {
-    Objects.requireNonNull(simpleName, "simpleName must not be null");
-    if (simpleName.startsWith("XDDF") && simpleName.endsWith("ChartData")) {
-      return simpleName
-          .substring(4, simpleName.length() - "ChartData".length())
-          .toUpperCase(Locale.ROOT);
-    }
-    return simpleName.toUpperCase(Locale.ROOT);
   }
 }

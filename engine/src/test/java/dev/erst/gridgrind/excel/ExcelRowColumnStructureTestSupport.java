@@ -30,6 +30,8 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
 /** Shared helpers for row and column structure coverage slices. */
 class ExcelRowColumnStructureTestSupport {
   final ExcelRowColumnStructureController controller = new ExcelRowColumnStructureController();
+  final ExcelRowStructureController rowController = new ExcelRowStructureController();
+  final ExcelColumnStructureController columnController = new ExcelColumnStructureController();
 
   static void seedSupportedScenario(
       XSSFWorkbook workbook, XSSFSheet sheet, boolean includeFormulas) {
@@ -214,7 +216,7 @@ class ExcelRowColumnStructureTestSupport {
   }
 
   void assertColumnOutlineLevels(XSSFSheet sheet, int first, int second, int third) {
-    List<WorkbookSheetResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+    List<WorkbookSheetResult.ColumnLayout> columns = columnController.columnLayouts(sheet);
 
     assertEquals(first, columns.get(1).outlineLevel(), "columns=" + columns);
     assertEquals(second, columns.get(2).outlineLevel(), "columns=" + columns);
@@ -252,11 +254,12 @@ class ExcelRowColumnStructureTestSupport {
       String operation, int firstColumnIndex, int lastColumnIndex, boolean collapsed) {
     void apply(ExcelRowColumnStructureController controller, XSSFSheet sheet) {
       ExcelColumnSpan columns = new ExcelColumnSpan(firstColumnIndex, lastColumnIndex);
+      ExcelColumnStructureController columnController = new ExcelColumnStructureController();
       if ("group".equals(operation)) {
-        controller.groupColumns(sheet, columns, collapsed);
+        columnController.groupColumns(sheet, columns, collapsed);
         return;
       }
-      controller.ungroupColumns(sheet, columns);
+      columnController.ungroupColumns(sheet, columns);
     }
 
     @Override

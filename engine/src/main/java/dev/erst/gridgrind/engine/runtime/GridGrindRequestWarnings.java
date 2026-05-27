@@ -17,6 +17,8 @@ import java.util.stream.IntStream;
 
 /** Collects non-fatal request warnings that can be derived directly from one parsed request. */
 final class GridGrindRequestWarnings {
+  private static final String REFERENCE_BOUNDARY_TOKENS = "(,;+-*/^&=<>:";
+
   private GridGrindRequestWarnings() {}
 
   static List<RequestWarning> collect(WorkbookPlan request) {
@@ -141,13 +143,7 @@ final class GridGrindRequestWarnings {
   }
 
   private static boolean hasReferenceBoundaryBefore(String formula, int index) {
-    if (index == 0) {
-      return true;
-    }
-    return switch (formula.charAt(index - 1)) {
-      case '(', ',', ';', '+', '-', '*', '/', '^', '&', '=', '<', '>', ':' -> true;
-      default -> false;
-    };
+    return index == 0 || REFERENCE_BOUNDARY_TOKENS.indexOf(formula.charAt(index - 1)) >= 0;
   }
 
   private static boolean hasCellReferenceStartAfter(String formula, int index) {

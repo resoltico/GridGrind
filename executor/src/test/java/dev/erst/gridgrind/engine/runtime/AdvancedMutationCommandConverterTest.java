@@ -598,15 +598,20 @@ class AdvancedMutationCommandConverterTest {
                         "ChartCategories",
                         "ChartActual"))));
 
-    ExcelChartDefinition bar = WorkbookCommandConverter.toExcelChartDefinition(barInput);
+    ExcelChartDefinition bar =
+        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(barInput);
     ExcelChartDefinition.Line linePlot =
         assertInstanceOf(
             ExcelChartDefinition.Line.class,
-            WorkbookCommandConverter.toExcelChartDefinition(lineInput).plots().getFirst());
+            WorkbookCommandDrawingInputConverter.toExcelChartDefinition(lineInput)
+                .plots()
+                .getFirst());
     ExcelChartDefinition.Pie piePlot =
         assertInstanceOf(
             ExcelChartDefinition.Pie.class,
-            WorkbookCommandConverter.toExcelChartDefinition(pieInput).plots().getFirst());
+            WorkbookCommandDrawingInputConverter.toExcelChartDefinition(pieInput)
+                .plots()
+                .getFirst());
     WorkbookDrawingCommand.SetChart barCommand =
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
@@ -627,13 +632,15 @@ class AdvancedMutationCommandConverterTest {
         chartDefinitionSeries(
             new ExcelChartDefinition.Title.None(), "Summary!$A$2:$A$4", "Summary!$B$2:$B$4"),
         barPlot.series().getFirst());
-    ExcelChartDefinition line = WorkbookCommandConverter.toExcelChartDefinition(lineInput);
+    ExcelChartDefinition line =
+        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(lineInput);
     assertEquals(new ExcelChartDefinition.Title.Text("Trend"), line.title());
     assertEquals(new ExcelChartDefinition.Legend.Hidden(), line.legend());
     assertEquals(
         new ExcelChartDefinition.Title.Formula("Summary!$C$1"),
         linePlot.series().getFirst().title());
-    ExcelChartDefinition pie = WorkbookCommandConverter.toExcelChartDefinition(pieInput);
+    ExcelChartDefinition pie =
+        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(pieInput);
     assertEquals(new ExcelChartDefinition.Title.Text("Share"), pie.title());
     assertEquals(
         new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.LEFT), pie.legend());
@@ -646,7 +653,7 @@ class AdvancedMutationCommandConverterTest {
   @Test
   void convertsAdvancedStyleAndConditionalFormattingPayloads() {
     ExcelCellStyle style =
-        WorkbookCommandConverter.toExcelCellStyle(
+        WorkbookCommandCellInputConverter.toExcelCellStyle(
             new CellStyleInput(
                 Optional.empty(),
                 Optional.empty(),
@@ -722,7 +729,7 @@ class AdvancedMutationCommandConverterTest {
                     ExcelConditionalFormattingThresholdType.MAX, null, null)),
             List.of(ExcelColor.rgb("#112233"), ExcelColor.rgb("#AABBCC")),
             true),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.ColorScaleRule(
                 true,
                 List.of(
@@ -743,7 +750,7 @@ class AdvancedMutationCommandConverterTest {
             new ExcelConditionalFormattingThreshold(
                 ExcelConditionalFormattingThresholdType.PERCENTILE, null, 90.0d),
             false),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.DataBarRule(
                 false,
                 ColorInput.theme(4, 0.25d),
@@ -768,7 +775,7 @@ class AdvancedMutationCommandConverterTest {
                 new ExcelConditionalFormattingThreshold(
                     ExcelConditionalFormattingThresholdType.PERCENT, null, 67.0d)),
             true),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.IconSetRule(
                 true,
                 ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
@@ -784,7 +791,7 @@ class AdvancedMutationCommandConverterTest {
 
     assertEquals(
         new ExcelConditionalFormattingRule.Top10Rule(7, true, false, false, Optional.empty()),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.Top10Rule(false, 7, true, false, Optional.empty())));
   }
 

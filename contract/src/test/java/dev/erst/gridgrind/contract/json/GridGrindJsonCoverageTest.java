@@ -349,14 +349,14 @@ class GridGrindJsonCoverageTest {
     JsonFactory jsonFactory = new JsonFactory();
     MismatchedInputException floatingPointWithoutPath =
         MismatchedInputException.from(
-            jsonFactory.createParser("2.5"),
+            utf8Parser(jsonFactory, "2.5"),
             Integer.class,
             "Cannot coerce Floating-point value (2.5) to `int` value"
                 + " (but could if coercion was enabled using `CoercionConfig`)");
     MismatchedInputException floatingPointWithIndex =
         (MismatchedInputException)
             MismatchedInputException.from(
-                    jsonFactory.createParser("2.5"),
+                    utf8Parser(jsonFactory, "2.5"),
                     Integer.class,
                     "Cannot coerce Floating-point value (2.5) to `int` value"
                         + " (but could if coercion was enabled using `CoercionConfig`)")
@@ -364,7 +364,7 @@ class GridGrindJsonCoverageTest {
     MismatchedInputException floatingPointWithNestedPath =
         (MismatchedInputException)
             MismatchedInputException.from(
-                    jsonFactory.createParser("2.5"),
+                    utf8Parser(jsonFactory, "2.5"),
                     Integer.class,
                     "Cannot coerce Floating-point value (2.5) to `int` value"
                         + " (but could if coercion was enabled using `CoercionConfig`)")
@@ -415,7 +415,7 @@ class GridGrindJsonCoverageTest {
         "Invalid JSON payload",
         GridGrindJson.mismatchedInputMessage(
             MismatchedInputException.from(
-                jsonFactory.createParser("null"), Integer.class, (String) null)));
+                utf8Parser(jsonFactory, "null"), Integer.class, (String) null)));
     assertEquals(
         Optional.empty(), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 0, 9)));
     assertEquals(
@@ -638,6 +638,13 @@ class GridGrindJsonCoverageTest {
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {
     return GridGrindJson.invalidPayload(exception);
+  }
+
+  private static tools.jackson.core.JsonParser utf8Parser(JsonFactory jsonFactory, String json)
+      throws IOException {
+    return jsonFactory.createParser(
+        tools.jackson.core.ObjectReadContext.empty(),
+        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
   }
 
   private static void assertStreamSerializationMatchesBytes(byte[] expected, StreamWriter writer)

@@ -2,11 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static dev.erst.gridgrind.engine.runtime.SourceBackedResolutionIdentitySupport.sameReference;
 
-import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.action.StructuredMutationAction;
-import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -88,102 +84,7 @@ public final class SourceBackedPlanResolver {
 
   private static MutationAction resolveAction(
       MutationAction action, ExecutionInputBindings bindings) throws IOException {
-    return switch (action) {
-      case CellMutationAction.SetCell setCell -> {
-        CellInput resolvedValue = resolveCellInput(setCell.value(), bindings);
-        yield sameReference(resolvedValue, setCell.value())
-            ? setCell
-            : new CellMutationAction.SetCell(resolvedValue);
-      }
-      case CellMutationAction.SetRange setRange -> {
-        List<List<CellInput>> resolvedRows = resolveRows(setRange.rows(), bindings);
-        yield sameReference(resolvedRows, setRange.rows())
-            ? setRange
-            : new CellMutationAction.SetRange(resolvedRows);
-      }
-      case CellMutationAction.SetComment setComment -> {
-        var resolvedComment =
-            SourceBackedStructuredInputResolver.resolveComment(setComment.comment(), bindings);
-        yield sameReference(resolvedComment, setComment.comment())
-            ? setComment
-            : new CellMutationAction.SetComment(resolvedComment);
-      }
-      case DrawingMutationAction.SetPicture setPicture -> {
-        var resolvedPicture =
-            SourceBackedStructuredInputResolver.resolvePicture(setPicture.picture(), bindings);
-        yield sameReference(resolvedPicture, setPicture.picture())
-            ? setPicture
-            : new DrawingMutationAction.SetPicture(resolvedPicture);
-      }
-      case DrawingMutationAction.SetSignatureLine setSignatureLine -> {
-        var resolvedSignatureLine =
-            SourceBackedStructuredInputResolver.resolveSignatureLine(
-                setSignatureLine.signatureLine(), bindings);
-        yield sameReference(resolvedSignatureLine, setSignatureLine.signatureLine())
-            ? setSignatureLine
-            : new DrawingMutationAction.SetSignatureLine(resolvedSignatureLine);
-      }
-      case DrawingMutationAction.SetChart setChart -> {
-        var resolvedChart =
-            SourceBackedStructuredInputResolver.resolveChart(setChart.chart(), bindings);
-        yield sameReference(resolvedChart, setChart.chart())
-            ? setChart
-            : new DrawingMutationAction.SetChart(resolvedChart);
-      }
-      case DrawingMutationAction.SetShape setShape -> {
-        var resolvedShape =
-            SourceBackedStructuredInputResolver.resolveShape(setShape.shape(), bindings);
-        yield sameReference(resolvedShape, setShape.shape())
-            ? setShape
-            : new DrawingMutationAction.SetShape(resolvedShape);
-      }
-      case DrawingMutationAction.SetEmbeddedObject setEmbeddedObject -> {
-        var resolvedEmbeddedObject =
-            SourceBackedStructuredInputResolver.resolveEmbeddedObject(
-                setEmbeddedObject.embeddedObject(), bindings);
-        yield sameReference(resolvedEmbeddedObject, setEmbeddedObject.embeddedObject())
-            ? setEmbeddedObject
-            : new DrawingMutationAction.SetEmbeddedObject(resolvedEmbeddedObject);
-      }
-      case StructuredMutationAction.SetDataValidation setDataValidation -> {
-        var resolvedValidation =
-            SourceBackedStructuredInputResolver.resolveDataValidation(
-                setDataValidation.validation(), bindings);
-        yield sameReference(resolvedValidation, setDataValidation.validation())
-            ? setDataValidation
-            : new StructuredMutationAction.SetDataValidation(resolvedValidation);
-      }
-      case StructuredMutationAction.SetTable setTable -> {
-        var resolvedTable =
-            SourceBackedStructuredInputResolver.resolveTable(setTable.table(), bindings);
-        yield sameReference(resolvedTable, setTable.table())
-            ? setTable
-            : new StructuredMutationAction.SetTable(resolvedTable);
-      }
-      case CellMutationAction.AppendRow appendRow -> {
-        List<CellInput> resolvedValues = resolveCells(appendRow.values(), bindings);
-        yield sameReference(resolvedValues, appendRow.values())
-            ? appendRow
-            : new CellMutationAction.AppendRow(resolvedValues);
-      }
-      case WorkbookMutationAction.SetPrintLayout setPrintLayout -> {
-        var resolvedPrintLayout =
-            SourceBackedStructuredInputResolver.resolvePrintLayout(
-                setPrintLayout.printLayout(), bindings);
-        yield sameReference(resolvedPrintLayout, setPrintLayout.printLayout())
-            ? setPrintLayout
-            : new WorkbookMutationAction.SetPrintLayout(resolvedPrintLayout);
-      }
-      case StructuredMutationAction.ImportCustomXmlMapping importCustomXmlMapping -> {
-        var resolvedImport =
-            SourceBackedStructuredInputResolver.resolveCustomXmlImport(
-                importCustomXmlMapping.mapping(), bindings);
-        yield sameReference(resolvedImport, importCustomXmlMapping.mapping())
-            ? importCustomXmlMapping
-            : new StructuredMutationAction.ImportCustomXmlMapping(resolvedImport);
-      }
-      default -> action;
-    };
+    return SourceBackedMutationActionResolver.resolve(action, bindings);
   }
 
   static CellInput resolveCellInput(CellInput value, ExecutionInputBindings bindings)
@@ -348,7 +249,7 @@ public final class SourceBackedPlanResolver {
                     inputKind));
   }
 
-  private static List<List<CellInput>> resolveRows(
+  static List<List<CellInput>> resolveRows(
       List<List<CellInput>> rows, ExecutionInputBindings bindings) throws IOException {
     List<List<CellInput>> resolvedRows = new ArrayList<>(rows.size());
     boolean changed = false;
@@ -360,8 +261,8 @@ public final class SourceBackedPlanResolver {
     return changed ? List.copyOf(resolvedRows) : rows;
   }
 
-  private static List<CellInput> resolveCells(
-      List<CellInput> values, ExecutionInputBindings bindings) throws IOException {
+  static List<CellInput> resolveCells(List<CellInput> values, ExecutionInputBindings bindings)
+      throws IOException {
     List<CellInput> resolvedValues = new ArrayList<>(values.size());
     boolean changed = false;
     for (CellInput value : values) {

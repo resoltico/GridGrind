@@ -13,29 +13,30 @@ class NamedRangeScopeTest {
   void convertsWorkbookAndSheetScopes() {
     assertEquals(
         new ExcelNamedRangeScope.WorkbookScope(),
-        WorkbookCommandConverter.toExcelNamedRangeScope(new NamedRangeScope.Workbook()));
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(new NamedRangeScope.Workbook()));
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
-        WorkbookCommandConverter.toExcelNamedRangeScope(new NamedRangeScope.Sheet("Budget")));
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
+            new NamedRangeScope.Sheet("Budget")));
   }
 
   @Test
   void convertsSelectorScopedNamedRangeDeletionTargets() {
     assertEquals(
         new ExcelNamedRangeScope.WorkbookScope(),
-        WorkbookCommandConverter.toExcelNamedRangeScope(
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
-        WorkbookCommandConverter.toExcelNamedRangeScope(
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeScope(
             new NamedRangeSelector.SheetScope("LocalItem", "Budget")));
     assertEquals(
         "BudgetTotal",
-        WorkbookCommandConverter.toExcelNamedRangeName(
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         "LocalItem",
-        WorkbookCommandConverter.toExcelNamedRangeName(
+        WorkbookCommandLayoutInputConverter.toExcelNamedRangeName(
             new NamedRangeSelector.SheetScope("LocalItem", "Budget")));
   }
 

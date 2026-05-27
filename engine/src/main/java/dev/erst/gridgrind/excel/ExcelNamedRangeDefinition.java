@@ -19,22 +19,38 @@ public record ExcelNamedRangeDefinition(
     if (name.isBlank()) {
       throw new IllegalArgumentException("name must not be blank");
     }
+    requireSupportedIdentifier(name);
+    requireNonReservedPrefix(name);
+    requireNotA1Reference(name);
+    requireNotR1C1Reference(name);
+    return name;
+  }
+
+  private static void requireSupportedIdentifier(String name) {
     if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
       throw new IllegalArgumentException(
           "name must start with a letter or underscore and contain only letters, digits, underscore, or period");
     }
+  }
+
+  private static void requireNonReservedPrefix(String name) {
     if (name.startsWith("_xlnm.") || name.startsWith("_XLNM.")) {
       throw new IllegalArgumentException("name must not use the reserved _xlnm. prefix");
     }
+  }
+
+  private static void requireNotA1Reference(String name) {
     if (CellReference.classifyCellReference(name, SpreadsheetVersion.EXCEL2007)
         == CellReference.NameType.CELL) {
       throw new IllegalArgumentException(
           "name must not collide with A1-style cell reference syntax");
     }
+  }
+
+  private static void requireNotR1C1Reference(String name) {
     if (name.matches("(?i)^R[1-9][0-9]*C[1-9][0-9]*$")) {
       throw new IllegalArgumentException(
           "name must not collide with R1C1-style cell reference syntax");
     }
-    return name;
   }
 }

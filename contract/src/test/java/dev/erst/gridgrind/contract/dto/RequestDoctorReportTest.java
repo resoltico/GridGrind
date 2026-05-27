@@ -27,11 +27,14 @@ class RequestDoctorReportTest {
     RequestDoctorReport clean = RequestDoctorReport.clean(summary);
     RequestDoctorReport warnings = RequestDoctorReport.warnings(summary, mutableWarnings);
     RequestDoctorReport invalid = RequestDoctorReport.invalid(summary, mutableWarnings, problem);
+    RequestDoctorReport invalidBatch =
+        RequestDoctorReport.invalid(summary, mutableWarnings, List.of(problem));
     mutableWarnings.add(new RequestWarning(1, "step-2", "SET_RANGE", "ignored"));
 
     assertEquals(AnalysisSeverity.INFO, clean.severity());
     assertEquals(AnalysisSeverity.WARNING, warnings.severity());
     assertEquals(AnalysisSeverity.ERROR, invalid.severity());
+    assertEquals(List.of(problem), invalidBatch.problems());
     assertEquals(List.of(warning), warnings.warnings());
     assertEquals(GridGrindProtocolVersion.current(), clean.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> warnings.warnings().add(warning));
@@ -50,7 +53,7 @@ class RequestDoctorReportTest {
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE")));
 
     assertEquals(
-        "summary must not be null for a valid doctor report",
+        "valid doctor report requires a summary",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -60,10 +63,10 @@ class RequestDoctorReportTest {
                         true,
                         Optional.empty(),
                         List.of(),
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
     assertEquals(
-        "problem must be null for a valid doctor report",
+        "valid doctor report cannot contain problems",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -73,10 +76,10 @@ class RequestDoctorReportTest {
                         true,
                         Optional.of(summary),
                         List.of(),
-                        Optional.of(problem)))
+                        List.of(problem)))
             .getMessage());
     assertEquals(
-        "problem must not be null for an invalid doctor report",
+        "invalid doctor report requires at least one problem",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -86,10 +89,10 @@ class RequestDoctorReportTest {
                         false,
                         Optional.of(summary),
                         List.of(),
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
     assertEquals(
-        "severity must be INFO when a valid doctor report contains no warnings",
+        "clean valid doctor report requires INFO severity",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -99,10 +102,10 @@ class RequestDoctorReportTest {
                         true,
                         Optional.of(summary),
                         List.of(),
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
     assertEquals(
-        "severity must be ERROR when a doctor report is invalid",
+        "invalid doctor report requires ERROR severity",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -112,10 +115,10 @@ class RequestDoctorReportTest {
                         false,
                         Optional.of(summary),
                         List.of(),
-                        Optional.of(problem)))
+                        List.of(problem)))
             .getMessage());
     assertEquals(
-        "severity must be WARNING when a valid doctor report contains warnings",
+        "valid doctor report warnings require WARNING severity",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -125,7 +128,7 @@ class RequestDoctorReportTest {
                         true,
                         Optional.of(summary),
                         List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")),
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
     assertEquals(
         "mutationStepCount + assertionStepCount + inspectionStepCount must equal stepCount",
@@ -183,7 +186,7 @@ class RequestDoctorReportTest {
                         false,
                         Optional.empty(),
                         null,
-                        Optional.of(problem)))
+                        List.of(problem)))
             .getMessage());
     assertEquals(
         "warnings must not contain nulls",
@@ -207,7 +210,7 @@ class RequestDoctorReportTest {
                                 0,
                                 0)),
                         warningsWithNull,
-                        Optional.empty()))
+                        List.of()))
             .getMessage());
   }
 }

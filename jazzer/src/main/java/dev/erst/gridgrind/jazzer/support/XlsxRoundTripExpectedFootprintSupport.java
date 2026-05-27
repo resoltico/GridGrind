@@ -332,7 +332,8 @@ final class XlsxRoundTripExpectedFootprintSupport {
           entry.getValue().stream()
               .map(XlsxRoundTripExpectedStateSupport.CellCoordinate::a1Address)
               .toList();
-      List<ExcelCellSnapshot> snapshots = workbook.sheet(entry.getKey()).snapshotCells(addresses);
+      List<ExcelCellSnapshot> snapshots =
+          workbook.sheet(entry.getKey()).cells().snapshotCells(addresses);
       if (!snapshots.isEmpty()) {
         snapshotsBySheet.put(entry.getKey(), snapshots);
       }

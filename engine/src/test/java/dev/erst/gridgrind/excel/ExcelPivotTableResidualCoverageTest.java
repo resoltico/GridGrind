@@ -69,8 +69,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
           invoke(controller, "requiredCacheDefinition", XSSFPivotCacheDefinition.class, pivot);
       assertSame(pivot.getPivotCacheDefinition(), cacheDefinition);
       XSSFPivotCacheRecords cacheRecords =
-          ((Optional<XSSFPivotCacheRecords>)
-                  invoke(controller, "cacheRecords", Optional.class, cacheDefinition))
+          invokeOptional(controller, "cacheRecords", XSSFPivotCacheRecords.class, cacheDefinition)
               .orElseThrow();
       assertNotNull(cacheRecords);
     }
@@ -78,7 +77,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
 
   @Test
   void createPivotTableRejectsMissingNamedRangeAndTablePayloads() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Report");
       var sheet = workbook.xssfWorkbook().getSheet("Report");
       var area = new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007);
@@ -200,7 +199,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               new XSSFPivotCacheDefinition()));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Report");
       ExcelPivotTableController permissiveController =
           new ExcelPivotTableController((parent, child) -> true);
@@ -287,11 +286,13 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
               .getCTPivotCacheDefinition()
               .getCacheSource()
               .getWorksheetSource();
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "SalesTableA",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "SalesTableA",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
       worksheetSource.setRef(" ");
       worksheetSource.setName("SalesTableA");
       assertDoesNotThrow(
@@ -354,7 +355,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
                   " "));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Data").xssfSheet();
       sheet.createRow(0).createCell(0).setCellValue(42d);
       sheet.getRow(0).createCell(1).setCellValue("Amount");
@@ -373,7 +374,7 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
                   "Data!A1:B2"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       var sheet = workbook.getOrCreateSheet("Data").xssfSheet();
       sheet.createRow(0).createCell(0).setCellValue("");
       sheet.getRow(0).createCell(1).setCellValue("Amount");

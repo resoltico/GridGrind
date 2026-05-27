@@ -65,25 +65,27 @@ class ExcelChartReadbackTest {
   void referenceReadbackUsesCurrentCellValuesInsteadOfStaleChartCaches() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-live-readback-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Summary");
       seedFormulaBackedChartData(sheet);
       workbook.formulas().evaluateAll();
-      sheet.setChart(
-          ExcelChartTestSupport.lineChart(
-              "ProjectedLoad",
-              anchor(1, 5, 10, 18),
-              new ExcelChartDefinition.Title.Text("Projected Load"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      null,
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("C2:C4")))));
-      workbook.save(workbookPath);
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.lineChart(
+                  "ProjectedLoad",
+                  anchor(1, 5, 10, 18),
+                  new ExcelChartDefinition.Title.Text("Projected Load"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          null,
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("C2:C4")))));
+      workbook.persistence().save(workbookPath);
     }
 
     rewriteWorkbookEntry(
@@ -91,8 +93,8 @@ class ExcelChartReadbackTest {
         "/xl/charts/chart1.xml",
         xml -> xml.replace(">4.0<", ">0.0<").replace(">6.0<", ">0.0<").replace(">10.0<", ">0.0<"));
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot chart = reopened.sheet("Summary").charts().getFirst();
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      ExcelChartSnapshot chart = reopened.sheet("Summary").drawings().charts().getFirst();
       ExcelChartSnapshot.Line line =
           ExcelChartTestSupport.singlePlot(chart, ExcelChartSnapshot.Line.class);
       ExcelChartSnapshot.DataSource.NumericReference values =
@@ -109,32 +111,34 @@ class ExcelChartReadbackTest {
   void chartAuthoringPersistsEvaluatedFormulaBackedValueCaches() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-live-authoring-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Summary");
-      sheet.setCell("A1", ExcelCellValue.text("Owner"));
-      sheet.setCell("B1", ExcelCellValue.text("Projected"));
-      sheet.setCell("A2", ExcelCellValue.text("Ari"));
-      sheet.setCell("A3", ExcelCellValue.text("Bo"));
-      sheet.setCell("A4", ExcelCellValue.text("Cy"));
-      sheet.setCell("B2", ExcelCellValue.formula("40+2"));
-      sheet.setCell("B3", ExcelCellValue.number(7d));
-      sheet.setCell("B4", ExcelCellValue.formula("B3*2"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
+      sheet.cells().setCell("B1", ExcelCellValue.text("Projected"));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
+      sheet.cells().setCell("B2", ExcelCellValue.formula("40+2"));
+      sheet.cells().setCell("B3", ExcelCellValue.number(7d));
+      sheet.cells().setCell("B4", ExcelCellValue.formula("B3*2"));
 
-      sheet.setChart(
-          ExcelChartTestSupport.lineChart(
-              "ProjectedLoad",
-              anchor(1, 5, 10, 18),
-              new ExcelChartDefinition.Title.Formula("B1"),
-              new ExcelChartDefinition.Legend.Hidden(),
-              ExcelChartDisplayBlanksAs.GAP,
-              true,
-              false,
-              List.of(
-                  new ExcelChartDefinition.Series(
-                      null,
-                      ExcelChartTestSupport.ref("A2:A4"),
-                      ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.save(workbookPath);
+      sheet
+          .drawings()
+          .setChart(
+              ExcelChartTestSupport.lineChart(
+                  "ProjectedLoad",
+                  anchor(1, 5, 10, 18),
+                  new ExcelChartDefinition.Title.Formula("B1"),
+                  new ExcelChartDefinition.Legend.Hidden(),
+                  ExcelChartDisplayBlanksAs.GAP,
+                  true,
+                  false,
+                  List.of(
+                      new ExcelChartDefinition.Series(
+                          null,
+                          ExcelChartTestSupport.ref("A2:A4"),
+                          ExcelChartTestSupport.ref("B2:B4")))));
+      workbook.persistence().save(workbookPath);
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -148,18 +152,18 @@ class ExcelChartReadbackTest {
   }
 
   private static void seedFormulaBackedChartData(ExcelSheet sheet) {
-    sheet.setCell("A1", ExcelCellValue.text("Owner"));
-    sheet.setCell("B1", ExcelCellValue.text("Hours"));
-    sheet.setCell("C1", ExcelCellValue.text("Projected"));
-    sheet.setCell("A2", ExcelCellValue.text("Ari"));
-    sheet.setCell("A3", ExcelCellValue.text("Bo"));
-    sheet.setCell("A4", ExcelCellValue.text("Cy"));
-    sheet.setCell("B2", ExcelCellValue.number(2d));
-    sheet.setCell("B3", ExcelCellValue.number(3d));
-    sheet.setCell("B4", ExcelCellValue.number(5d));
-    sheet.setCell("C2", ExcelCellValue.formula("B2*2"));
-    sheet.setCell("C3", ExcelCellValue.formula("B3*2"));
-    sheet.setCell("C4", ExcelCellValue.formula("B4*2"));
+    sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
+    sheet.cells().setCell("B1", ExcelCellValue.text("Hours"));
+    sheet.cells().setCell("C1", ExcelCellValue.text("Projected"));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Ari"));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Bo"));
+    sheet.cells().setCell("A4", ExcelCellValue.text("Cy"));
+    sheet.cells().setCell("B2", ExcelCellValue.number(2d));
+    sheet.cells().setCell("B3", ExcelCellValue.number(3d));
+    sheet.cells().setCell("B4", ExcelCellValue.number(5d));
+    sheet.cells().setCell("C2", ExcelCellValue.formula("B2*2"));
+    sheet.cells().setCell("C3", ExcelCellValue.formula("B3*2"));
+    sheet.cells().setCell("C4", ExcelCellValue.formula("B4*2"));
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

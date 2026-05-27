@@ -11,6 +11,7 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -147,7 +148,7 @@ final class ExecutionStepSupport {
     Path tempPath = null;
     try {
       tempPath = tempFileFactory.createTempFile("gridgrind-event-read-", ".xlsx");
-      workbook.savePlainWorkbook(tempPath);
+      workbook.persistence().savePlainWorkbook(tempPath);
       return executeEventInspection(tempPath, inspectionStep);
     } finally {
       ExecutionWorkbookSupport.deleteIfExists(tempPath);
@@ -188,7 +189,7 @@ final class ExecutionStepSupport {
       InspectionStep inspectionStep, WorkbookLocation workbookLocation, Path materializedPath)
       throws IOException {
     try (ExcelWorkbook workbook =
-        ExcelWorkbook.open(
+        ExcelWorkbooks.open(
             materializedPath, FormulaEnvironmentConverter.toExcelFormulaEnvironment(null))) {
       return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
     }
@@ -198,7 +199,7 @@ final class ExecutionStepSupport {
       AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
       throws IOException, AssertionFailedException {
     try (ExcelWorkbook workbook =
-        ExcelWorkbook.open(
+        ExcelWorkbooks.open(
             materializedPath, FormulaEnvironmentConverter.toExcelFormulaEnvironment(null))) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
     }

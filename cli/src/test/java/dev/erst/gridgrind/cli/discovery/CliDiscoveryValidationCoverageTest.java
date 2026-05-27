@@ -98,6 +98,7 @@ class CliDiscoveryValidationCoverageTest {
             TaskTestFixtures.narrative("Broken task for direct validation coverage"),
             profile(),
             TaskTestFixtures.interactionProfile(),
+            TaskStarterContract.selfContained("tasks/broken-request.json"),
             new TaskWorkflow(
                 List.of(
                     new TaskPhase(
@@ -141,6 +142,7 @@ class CliDiscoveryValidationCoverageTest {
                         TaskTestFixtures.narrative("summary"),
                         profile(),
                         TaskTestFixtures.interactionProfile(),
+                        TaskStarterContract.selfContained("tasks/no-terms-request.json"),
                         TaskTestFixtures.workflow(
                             List.of(
                                 new TaskPhase(

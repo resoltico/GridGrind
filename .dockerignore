@@ -1,12 +1,23 @@
-# Exclude everything — the Docker image only needs the pre-built fat JAR.
-# Build the JAR first: ./gradlew :cli:shadowJar
+# Exclude everything by default. The Docker build assembles GridGrind from source in a multi-stage
+# build, so only the Gradle entrypoint, production modules, and legal files belong in context.
 **
 
-# Allow only the fat JAR produced by the Shadow plugin.
-!cli/build/libs/
-!cli/build/libs/*.jar
+# Root Gradle entrypoint and shared build logic.
+!build.gradle.kts
+!gradle.properties
+!gradlew
+!settings.gradle.kts
+!gradle/
 
-# Allow the legal files that the image now publishes into /usr/share/doc/gridgrind.
+# Production modules needed for :cli:shadowJar.
+!authoring-java/
+!cli/
+!contract/
+!engine/
+!excel-foundation/
+!executor/
+
+# Legal files published into the runtime image.
 !LICENSE
 !NOTICE
 !PATENTS.md
@@ -14,3 +25,9 @@
 !LICENSE-BSD-2-CLAUSE
 !LICENSE-BSD-3-CLAUSE
 !LICENSE-EDL-1.0
+
+# Drop generated and local-only state from otherwise included trees.
+.gradle/
+tmp/
+**/.local/
+**/build/

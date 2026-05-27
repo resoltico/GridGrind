@@ -52,9 +52,9 @@ emit_fixture_file() {
 case "${1:-}" in
     '')
         if [[ -t 0 || -t 1 || -t 2 ]]; then
-            emit_fixture_file "${FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE:-${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}}" >&2
+            emit_fixture_file "${FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE:-${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}}"
         else
-            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}" >&2
+            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}"
         fi
         exit 2
         ;;
@@ -287,8 +287,8 @@ run_verify_expect_failure \
     "${success_task_catalog}" \
     "$(replace_fixture_token \
         "${success_task_plan}" \
-        'dashboard-output.xlsx' \
-        'dashboard-output.xls')"
+        'generated-workbooks/dashboard.xlsx' \
+        'generated-workbooks/dashboard.xls')"
 
 run_verify_expect_failure \
     "${success_help_overview}" \

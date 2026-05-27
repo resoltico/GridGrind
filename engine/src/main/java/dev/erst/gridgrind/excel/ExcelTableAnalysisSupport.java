@@ -24,26 +24,44 @@ final class ExcelTableAnalysisSupport {
 
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     Optional<ExcelRange> parsedRange = ExcelSheetStructureSupport.parseOptionalRange(table.range());
-    WorkbookAnalysis.AnalysisLocation location =
-        parsedRange.isEmpty()
-            ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
-            : new WorkbookAnalysis.AnalysisLocation.Range(
-                table.sheetName(),
-                ExcelSheetStructureSupport.formatRange(parsedRange.orElseThrow()));
+    WorkbookAnalysis.AnalysisLocation location = tableLocation(table, parsedRange);
     if (parsedRange.isEmpty()) {
-      findings.add(
-          new WorkbookAnalysis.AnalysisFinding(
-              AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
-              AnalysisSeverity.ERROR,
-              "Table range is invalid",
-              "Table range could not be parsed from workbook metadata.",
-              location,
-              List.of(table.name(), table.range())));
-      return List.copyOf(findings);
+      return brokenReferenceFindings(table, location);
     }
 
-    int minimumRows = table.headerRowCount() + table.totalsRowCount() + 1;
     ExcelRange range = parsedRange.orElseThrow();
+    addRowCountFinding(findings, table, range, location);
+    addHeaderFindings(findings, table, location);
+    addStyleFinding(findings, workbook, table, location);
+    return List.copyOf(findings);
+  }
+
+  private static WorkbookAnalysis.AnalysisLocation tableLocation(
+      ExcelTableSnapshot table, Optional<ExcelRange> parsedRange) {
+    return parsedRange.isEmpty()
+        ? new WorkbookAnalysis.AnalysisLocation.Sheet(table.sheetName())
+        : new WorkbookAnalysis.AnalysisLocation.Range(
+            table.sheetName(), ExcelSheetStructureSupport.formatRange(parsedRange.orElseThrow()));
+  }
+
+  private static List<WorkbookAnalysis.AnalysisFinding> brokenReferenceFindings(
+      ExcelTableSnapshot table, WorkbookAnalysis.AnalysisLocation location) {
+    return List.of(
+        new WorkbookAnalysis.AnalysisFinding(
+            AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
+            AnalysisSeverity.ERROR,
+            "Table range is invalid",
+            "Table range could not be parsed from workbook metadata.",
+            location,
+            List.of(table.name(), table.range())));
+  }
+
+  private static void addRowCountFinding(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      ExcelTableSnapshot table,
+      ExcelRange range,
+      WorkbookAnalysis.AnalysisLocation location) {
+    int minimumRows = table.headerRowCount() + table.totalsRowCount() + 1;
     if (table.headerRowCount() < 1 || range.rowCount() < minimumRows) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
@@ -58,7 +76,12 @@ final class ExcelTableAnalysisSupport {
               location,
               List.of(table.range())));
     }
+  }
 
+  private static void addHeaderFindings(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      ExcelTableSnapshot table,
+      WorkbookAnalysis.AnalysisLocation location) {
     List<String> duplicateHeaders = new ArrayList<>();
     List<String> blankHeaders = new ArrayList<>();
     Set<String> seen = new LinkedHashSet<>();
@@ -67,8 +90,7 @@ final class ExcelTableAnalysisSupport {
         blankHeaders.add(header);
         continue;
       }
-      String key = header.toUpperCase(Locale.ROOT);
-      if (!seen.add(key)) {
+      if (!seen.add(header.toUpperCase(Locale.ROOT))) {
         duplicateHeaders.add(header);
       }
     }
@@ -92,7 +114,13 @@ final class ExcelTableAnalysisSupport {
               location,
               List.copyOf(duplicateHeaders)));
     }
+  }
 
+  private static void addStyleFinding(
+      List<WorkbookAnalysis.AnalysisFinding> findings,
+      ExcelWorkbook workbook,
+      ExcelTableSnapshot table,
+      WorkbookAnalysis.AnalysisLocation location) {
     switch (table.style()) {
       case ExcelTableStyleSnapshot.None _ -> {}
       case ExcelTableStyleSnapshot.Named named -> {
@@ -109,7 +137,6 @@ final class ExcelTableAnalysisSupport {
         }
       }
     }
-    return List.copyOf(findings);
   }
 
   /** Returns derived overlap findings for one factual table snapshot against a peer set. */

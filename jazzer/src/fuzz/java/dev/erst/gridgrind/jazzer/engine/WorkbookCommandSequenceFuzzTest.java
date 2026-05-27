@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.engine;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
@@ -32,7 +33,7 @@ class WorkbookCommandSequenceFuzzTest {
     }
     TELEMETRY.recordSequenceKinds(SequenceIntrospection.commandKinds(commands));
     TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKindsFromCommands(commands));
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookExecutionEngine executor = new WorkbookExecutionEngine();
 
       try {

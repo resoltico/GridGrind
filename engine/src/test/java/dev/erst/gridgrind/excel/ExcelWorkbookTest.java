@@ -36,7 +36,7 @@ class ExcelWorkbookTest {
   void snapshotsAndPreviewExposeFormulaResults() throws IOException {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-engine-", ".xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCommandExecutor commandExecutor = new WorkbookCommandExecutor();
       commandExecutor.apply(
           workbook,
@@ -52,21 +52,21 @@ class ExcelWorkbookTest {
               new WorkbookCellCommand.SetCell(
                   "Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
       workbook.formulas().evaluateAll();
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Budget");
 
       ExcelCellSnapshot.FormulaSnapshot totalSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("B4");
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("B4");
       assertEquals("FORMULA", totalSnapshot.declaredType());
       assertEquals("FORMULA", totalSnapshot.effectiveType());
       assertEquals("SUM(B2:B3)", totalSnapshot.formula());
       assertEquals(
           61.0, ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation()).numberValue());
 
-      List<ExcelPreviewRow> preview = sheet.preview(4, 2);
+      List<ExcelPreviewRow> preview = sheet.cells().preview(4, 2);
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address());
       assertEquals(
@@ -82,20 +82,20 @@ class ExcelWorkbookTest {
         ExcelTempFiles.createManagedTempDirectory("gridgrind-workbook-")
             .resolve("nested/book.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Hello"));
-      workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.number(12.0));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.number(12.0));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
 
-      assertEquals(1, workbook.sheetCount());
-      assertEquals(List.of("Budget"), workbook.sheetNames());
+      assertEquals(1, workbook.sheets().sheetCount());
+      assertEquals(List.of("Budget"), workbook.sheets().sheetNames());
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      assertEquals("Hello", workbook.sheet("Budget").text("A1"));
-      assertEquals(12.0, workbook.sheet("Budget").number("B1"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      assertEquals("Hello", workbook.sheet("Budget").cells().text("A1"));
+      assertEquals(12.0, workbook.sheet("Budget").cells().number("B1"));
     }
   }
 
@@ -121,14 +121,14 @@ class ExcelWorkbookTest {
                 new ExcelFormulaUdfToolpack(
                     "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2")))));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create(environment)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create(environment)) {
       assertTrue(workbook.formulaRuntimeContext().hasExternalWorkbookBinding("RATES.XLSX"));
       assertTrue(workbook.formulaRuntimeContext().hasUserDefinedFunction("double"));
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
       workbook.formulas().evaluateAll();
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
 
       assertThrows(
           IllegalArgumentException.class,
@@ -141,7 +141,7 @@ class ExcelWorkbookTest {
           () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath, environment)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath, environment)) {
       assertTrue(reopened.formulaRuntimeContext().hasExternalWorkbookBinding("rates.xlsx"));
       assertTrue(reopened.formulaRuntimeContext().hasUserDefinedFunction("DOUBLE"));
     }
@@ -151,18 +151,18 @@ class ExcelWorkbookTest {
   void renamesDeletesAndMovesSheetsAcrossSaves() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-management-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Live"));
-      workbook.getOrCreateSheet("Archive").setCell("A1", ExcelCellValue.text("Old"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Live"));
+      workbook.getOrCreateSheet("Archive").cells().setCell("A1", ExcelCellValue.text("Old"));
       workbook.getOrCreateSheet("Scratch");
 
-      workbook.renameSheet("Archive", "History");
-      workbook.moveSheet("History", 0);
-      workbook.deleteSheet("Scratch");
-      workbook.save(workbookPath);
+      workbook.sheets().renameSheet("Archive", "History");
+      workbook.sheets().moveSheet("History", 0);
+      workbook.sheets().deleteSheet("Scratch");
+      workbook.persistence().save(workbookPath);
 
-      assertEquals(List.of("History", "Budget"), workbook.sheetNames());
-      assertEquals("Old", workbook.sheet("History").text("A1"));
+      assertEquals(List.of("History", "Budget"), workbook.sheets().sheetNames());
+      assertEquals("Old", workbook.sheet("History").cells().text("A1"));
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Archive"));
     }
 
@@ -171,7 +171,7 @@ class ExcelWorkbookTest {
 
   @Test
   void workbookSummaryUsesExplicitEmptyAndWithSheetsStates() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       WorkbookCoreResult.WorkbookSummary emptySummary = workbook.workbookSummary();
       WorkbookCoreResult.WorkbookSummary.Empty empty =
           assertInstanceOf(WorkbookCoreResult.WorkbookSummary.Empty.class, emptySummary);
@@ -181,9 +181,9 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook.getOrCreateSheet("Gamma");
-      workbook.setActiveSheet("Beta");
-      workbook.setSelectedSheets(List.of("Gamma", "Alpha"));
-      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+      workbook.sheets().setActiveSheet("Beta");
+      workbook.sheets().setSelectedSheets(List.of("Gamma", "Alpha"));
+      workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
 
       WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
@@ -198,17 +198,17 @@ class ExcelWorkbookTest {
   void sheetStateRoundTripsAcrossSaveAndReopen() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-state-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Live"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Alpha").cells().setCell("A1", ExcelCellValue.text("Live"));
       workbook.getOrCreateSheet("Beta");
       workbook.getOrCreateSheet("Gamma");
-      workbook.copySheet("Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1));
-      workbook.setActiveSheet("Beta");
-      workbook.setSelectedSheets(List.of("Gamma", "Alpha"));
-      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
-      workbook.setSheetVisibility("Replica", ExcelSheetVisibility.VERY_HIDDEN);
-      workbook.setSheetProtection("Alpha", protectionSettings());
-      workbook.save(workbookPath);
+      workbook.sheets().copySheet("Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1));
+      workbook.sheets().setActiveSheet("Beta");
+      workbook.sheets().setSelectedSheets(List.of("Gamma", "Alpha"));
+      workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+      workbook.sheets().setSheetVisibility("Replica", ExcelSheetVisibility.VERY_HIDDEN);
+      workbook.sheets().setSheetProtection("Alpha", protectionSettings());
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(
@@ -222,7 +222,7 @@ class ExcelWorkbookTest {
         new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
               WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
@@ -247,14 +247,14 @@ class ExcelWorkbookTest {
   void clearSheetProtectionIsIdempotentForUnprotectedSheets() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-clear-sheet-protection-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
-      workbook.clearSheetProtection("Alpha");
-      workbook.save(workbookPath);
+      workbook.sheets().clearSheetProtection("Alpha");
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       assertInstanceOf(
           WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
@@ -265,18 +265,18 @@ class ExcelWorkbookTest {
   void clearSheetProtectionRemovesExistingProtectionAcrossSaveAndReopen() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-clear-existing-sheet-protection-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
-      workbook.setSheetProtection("Alpha", protectionSettings());
-      workbook.clearSheetProtection("Alpha");
-      workbook.save(workbookPath);
+      workbook.sheets().setSheetProtection("Alpha", protectionSettings());
+      workbook.sheets().clearSheetProtection("Alpha");
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(
         new WorkbookSheetResult.SheetProtection.Unprotected(),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
       assertInstanceOf(
           WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
@@ -288,17 +288,24 @@ class ExcelWorkbookTest {
       throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Source");
-      workbook.sheet("Source").setCell("A1", ExcelCellValue.text("Item"));
-      workbook.sheet("Source").setCell("B1", ExcelCellValue.text("Amount"));
-      workbook.sheet("Source").setCell("A2", ExcelCellValue.text("Hosting"));
-      workbook.sheet("Source").setCell("B2", ExcelCellValue.number(49.0));
-      workbook.sheet("Source").setCell("B3", ExcelCellValue.formula("SUM(B2:B2)"));
-      workbook.sheet("Source").setHyperlink("A2", new ExcelHyperlink.Url("https://example.com/h"));
-      workbook.sheet("Source").setComment("A2", new ExcelComment("Review", "GridGrind", false));
+      workbook.sheet("Source").cells().setCell("A1", ExcelCellValue.text("Item"));
+      workbook.sheet("Source").cells().setCell("B1", ExcelCellValue.text("Amount"));
+      workbook.sheet("Source").cells().setCell("A2", ExcelCellValue.text("Hosting"));
+      workbook.sheet("Source").cells().setCell("B2", ExcelCellValue.number(49.0));
+      workbook.sheet("Source").cells().setCell("B3", ExcelCellValue.formula("SUM(B2:B2)"));
       workbook
           .sheet("Source")
+          .annotations()
+          .setHyperlink("A2", new ExcelHyperlink.Url("https://example.com/h"));
+      workbook
+          .sheet("Source")
+          .annotations()
+          .setComment("A2", new ExcelComment("Review", "GridGrind", false));
+      workbook
+          .sheet("Source")
+          .metadata()
           .setDataValidation(
               "C2:C4",
               new ExcelDataValidationDefinition(
@@ -310,6 +317,7 @@ class ExcelWorkbookTest {
                   Optional.empty()));
       workbook
           .sheet("Source")
+          .metadata()
           .setConditionalFormatting(
               new ExcelConditionalFormattingBlockDefinition(
                   List.of("B2:B4"),
@@ -328,11 +336,12 @@ class ExcelWorkbookTest {
                                   Optional.empty(),
                                   Optional.of("#E0F0AA"),
                                   Optional.empty()))))));
-      workbook.sheet("Source").mergeCells("A1:B1");
-      workbook.sheet("Source").setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
-      workbook.sheet("Source").setZoom(140);
+      workbook.sheet("Source").layout().mergeCells("A1:B1");
+      workbook.sheet("Source").layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      workbook.sheet("Source").layout().setZoom(140);
       workbook
           .sheet("Source")
+          .layout()
           .setPrintLayout(
               new ExcelPrintLayout(
                   new ExcelPrintLayout.Area.Range("A1:C20"),
@@ -342,13 +351,15 @@ class ExcelWorkbookTest {
                   new ExcelPrintLayout.TitleColumns.None(),
                   new ExcelHeaderFooterText("Source", "", ""),
                   new ExcelHeaderFooterText("", "&P", "")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "LocalBudget",
-              new ExcelNamedRangeScope.SheetScope("Source"),
-              ExcelNamedRangeTarget.range("Source", "A1:B3")));
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.save(workbookPath);
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "LocalBudget",
+                  new ExcelNamedRangeScope.SheetScope("Source"),
+                  ExcelNamedRangeTarget.range("Source", "A1:B3")));
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(
@@ -383,12 +394,13 @@ class ExcelWorkbookTest {
                     Optional.empty()))),
         XlsxRoundTrip.dataValidations(workbookPath, "Replica"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      assertEquals("Item", workbook.sheet("Replica").text("A1"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      assertEquals("Item", workbook.sheet("Replica").cells().text("A1"));
       assertEquals(
           "https://example.com/h",
           workbook
               .sheet("Replica")
+              .cells()
               .snapshotCell("A2")
               .metadata()
               .hyperlink()
@@ -396,16 +408,24 @@ class ExcelWorkbookTest {
               .target());
       assertEquals(
           "Review",
-          workbook.sheet("Replica").snapshotCell("A2").metadata().comment().orElseThrow().text());
+          workbook
+              .sheet("Replica")
+              .cells()
+              .snapshotCell("A2")
+              .metadata()
+              .comment()
+              .orElseThrow()
+              .text());
       assertEquals(
           List.of("A1:B1"),
-          workbook.sheet("Replica").mergedRegions().stream()
+          workbook.sheet("Replica").layout().mergedRegions().stream()
               .map(WorkbookSheetResult.MergedRegion::range)
               .toList());
       assertEquals(
           List.of("B2:B4"),
           workbook
               .sheet("Replica")
+              .metadata()
               .conditionalFormatting(new ExcelRangeSelection.All())
               .getFirst()
               .ranges());
@@ -415,36 +435,42 @@ class ExcelWorkbookTest {
   @Test
   void copySheetRejectsUnsupportedSourceStructuresAndVisibilityRulesStayHonest()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
-      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
-      assertDoesNotThrow(() -> workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN));
+      workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+      assertDoesNotThrow(
+          () -> workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN));
 
       IllegalArgumentException lastVisible =
           assertThrows(
               IllegalArgumentException.class,
-              () -> workbook.setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN));
+              () -> workbook.sheets().setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN));
       assertEquals("cannot hide the last visible sheet 'Alpha'", lastVisible.getMessage());
 
       IllegalArgumentException deleteLastVisible =
-          assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet("Alpha"));
+          assertThrows(
+              IllegalArgumentException.class, () -> workbook.sheets().deleteSheet("Alpha"));
       assertEquals("cannot delete the last visible sheet 'Alpha'", deleteLastVisible.getMessage());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Tables");
-      workbook.sheet("Tables").setCell("A1", ExcelCellValue.text("Name"));
-      workbook.sheet("Tables").setCell("B1", ExcelCellValue.text("Value"));
-      workbook.sheet("Tables").setCell("A2", ExcelCellValue.text("Ops"));
-      workbook.sheet("Tables").setCell("B2", ExcelCellValue.number(1.0));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "OpsTable", "Tables", "A1:B2", false, new ExcelTableStyle.None()));
+      workbook.sheet("Tables").cells().setCell("A1", ExcelCellValue.text("Name"));
+      workbook.sheet("Tables").cells().setCell("B1", ExcelCellValue.text("Value"));
+      workbook.sheet("Tables").cells().setCell("A2", ExcelCellValue.text("Ops"));
+      workbook.sheet("Tables").cells().setCell("B2", ExcelCellValue.number(1.0));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "OpsTable", "Tables", "A1:B2", false, new ExcelTableStyle.None()));
 
-      workbook.copySheet("Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook
+          .sheets()
+          .copySheet("Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd());
 
-      assertEquals(List.of("Tables", "Tables Copy"), workbook.sheetNames());
+      assertEquals(List.of("Tables", "Tables Copy"), workbook.sheets().sheetNames());
       assertEquals(1, workbook.xssfWorkbook().getSheet("Tables").getTables().size());
       assertEquals(1, workbook.xssfWorkbook().getSheet("Tables Copy").getTables().size());
       assertEquals(
@@ -454,15 +480,16 @@ class ExcelWorkbookTest {
           workbook.xssfWorkbook().getSheet("Tables Copy").getTables().getFirst().getName());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("FormulaNames");
       Name localFormula = workbook.xssfWorkbook().createName();
       localFormula.setNameName("LocalFormula");
       localFormula.setSheetIndex(workbook.xssfWorkbook().getSheetIndex("FormulaNames"));
       localFormula.setRefersToFormula("SUM(FormulaNames!$A$1:$A$2)");
 
-      workbook.copySheet(
-          "FormulaNames", "FormulaNames Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook
+          .sheets()
+          .copySheet("FormulaNames", "FormulaNames Copy", new ExcelSheetCopyPosition.AppendAtEnd());
 
       assertEquals(
           List.of(
@@ -474,7 +501,7 @@ class ExcelWorkbookTest {
                   "LocalFormula",
                   new ExcelNamedRangeScope.SheetScope("FormulaNames Copy"),
                   "SUM('FormulaNames Copy'!$A$1:$A$2)")),
-          workbook.namedRanges());
+          workbook.names().namedRanges());
     }
   }
 
@@ -482,24 +509,26 @@ class ExcelWorkbookTest {
   void persistsStructuralLayoutOperationsAcrossSaves() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Quarterly"));
-      budget.mergeCells("A1:B1");
-      budget.setColumnWidth(0, 1, 16.0);
-      budget.setRowHeight(0, 0, 28.5);
-      budget.setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
-      budget.setZoom(125);
-      budget.setPrintLayout(
-          new ExcelPrintLayout(
-              new ExcelPrintLayout.Area.Range("A1:B12"),
-              ExcelPrintOrientation.LANDSCAPE,
-              new ExcelPrintLayout.Scaling.Fit(1, 0),
-              new ExcelPrintLayout.TitleRows.Band(0, 0),
-              new ExcelPrintLayout.TitleColumns.Band(0, 0),
-              new ExcelHeaderFooterText("Budget", "", ""),
-              new ExcelHeaderFooterText("", "Page &P", "")));
-      workbook.save(workbookPath);
+      budget.cells().setCell("A1", ExcelCellValue.text("Quarterly"));
+      budget.layout().mergeCells("A1:B1");
+      budget.columns().setWidth(0, 1, 16.0);
+      budget.rows().setHeight(0, 0, 28.5);
+      budget.layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      budget.layout().setZoom(125);
+      budget
+          .layout()
+          .setPrintLayout(
+              new ExcelPrintLayout(
+                  new ExcelPrintLayout.Area.Range("A1:B12"),
+                  ExcelPrintOrientation.LANDSCAPE,
+                  new ExcelPrintLayout.Scaling.Fit(1, 0),
+                  new ExcelPrintLayout.TitleRows.Band(0, 0),
+                  new ExcelPrintLayout.TitleColumns.Band(0, 0),
+                  new ExcelHeaderFooterText("Budget", "", ""),
+                  new ExcelHeaderFooterText("", "Page &P", "")));
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -521,7 +550,7 @@ class ExcelWorkbookTest {
                 FormulaRuntimeTestDouble.failingEvaluation(
                     poiWorkbook.getCreationHelper().createFormulaEvaluator(),
                     new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")))) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
 
       InvalidFormulaException exception =
           assertThrows(InvalidFormulaException.class, workbook.formulas()::evaluateAll);
@@ -537,26 +566,27 @@ class ExcelWorkbookTest {
         ExcelWorkbook workbook =
             new ExcelWorkbook(
                 poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
 
       workbook.formulas().evaluateAll();
 
       ExcelCellSnapshot.FormulaSnapshot snapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("A1");
+          (ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").cells().snapshotCell("A1");
       assertEquals("2", snapshot.displayValue());
     }
   }
 
   @Test
   void setCellLiteralReplacesExistingFormulaCell() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
 
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(0.0d));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(0.0d));
 
       ExcelCellSnapshot.NumberSnapshot snapshot =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("A1"));
+              ExcelCellSnapshot.NumberSnapshot.class,
+              workbook.sheet("Budget").cells().snapshotCell("A1"));
       assertEquals("NUMBER", snapshot.declaredType());
       assertEquals(0.0d, snapshot.numberValue());
     }
@@ -564,21 +594,24 @@ class ExcelWorkbookTest {
 
   @Test
   void setRangeLiteralReplacesExistingFormulaCells() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
-      workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.formula("2+2"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.formula("2+2"));
 
       workbook
           .sheet("Budget")
+          .cells()
           .setRange(
               "A1:B1", List.of(List.of(ExcelCellValue.number(0.0d), ExcelCellValue.number(5.0d))));
 
       ExcelCellSnapshot.NumberSnapshot first =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("A1"));
+              ExcelCellSnapshot.NumberSnapshot.class,
+              workbook.sheet("Budget").cells().snapshotCell("A1"));
       ExcelCellSnapshot.NumberSnapshot second =
           assertInstanceOf(
-              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("B1"));
+              ExcelCellSnapshot.NumberSnapshot.class,
+              workbook.sheet("Budget").cells().snapshotCell("B1"));
       assertEquals(0.0d, first.numberValue());
       assertEquals(5.0d, second.numberValue());
     }
@@ -586,16 +619,17 @@ class ExcelWorkbookTest {
 
   @Test
   void validatesWorkbookInputsAndMissingResources() throws IOException {
-    assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null));
+    assertThrows(NullPointerException.class, () -> ExcelWorkbooks.open(null));
 
     Path missingPath =
         ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-").resolve("missing.xlsx");
     WorkbookNotFoundException missingWorkbook =
-        assertThrows(WorkbookNotFoundException.class, () -> ExcelWorkbook.open(missingPath));
+        assertThrows(WorkbookNotFoundException.class, () -> ExcelWorkbooks.open(missingPath));
     assertTrue(missingWorkbook.getMessage().contains("Workbook does not exist"));
     assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      ExcelWorkbookSheets sheets = workbook.sheets();
       assertThrows(NullPointerException.class, () -> workbook.getOrCreateSheet(null));
       assertThrows(IllegalArgumentException.class, () -> workbook.getOrCreateSheet(" "));
       assertThrows(NullPointerException.class, () -> workbook.sheet(null));
@@ -605,33 +639,32 @@ class ExcelWorkbookTest {
       assertEquals("Missing", missingSheet.sheetName());
       workbook.getOrCreateSheet("Budget");
       workbook.getOrCreateSheet("Archive");
-      assertSame(workbook, workbook.renameSheet("Budget", "Budget"));
-      assertThrows(NullPointerException.class, () -> workbook.renameSheet(null, "Summary"));
-      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet(" ", "Summary"));
-      assertThrows(NullPointerException.class, () -> workbook.renameSheet("Budget", null));
-      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet("Budget", " "));
-      assertThrows(SheetNotFoundException.class, () -> workbook.renameSheet("Missing", "Summary"));
-      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet("Budget", "Archive"));
-      assertThrows(
-          IllegalArgumentException.class, () -> workbook.renameSheet("Budget", "Bad/Name"));
-      assertThrows(NullPointerException.class, () -> workbook.deleteSheet(null));
-      assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet(" "));
-      assertThrows(SheetNotFoundException.class, () -> workbook.deleteSheet("Missing"));
-      workbook.deleteSheet("Archive"); // leaves only Budget; next delete must be rejected
+      assertSame(sheets, sheets.renameSheet("Budget", "Budget"));
+      assertThrows(NullPointerException.class, () -> sheets.renameSheet(null, "Summary"));
+      assertThrows(IllegalArgumentException.class, () -> sheets.renameSheet(" ", "Summary"));
+      assertThrows(NullPointerException.class, () -> sheets.renameSheet("Budget", null));
+      assertThrows(IllegalArgumentException.class, () -> sheets.renameSheet("Budget", " "));
+      assertThrows(SheetNotFoundException.class, () -> sheets.renameSheet("Missing", "Summary"));
+      assertThrows(IllegalArgumentException.class, () -> sheets.renameSheet("Budget", "Archive"));
+      assertThrows(IllegalArgumentException.class, () -> sheets.renameSheet("Budget", "Bad/Name"));
+      assertThrows(NullPointerException.class, () -> sheets.deleteSheet(null));
+      assertThrows(IllegalArgumentException.class, () -> sheets.deleteSheet(" "));
+      assertThrows(SheetNotFoundException.class, () -> sheets.deleteSheet("Missing"));
+      sheets.deleteSheet("Archive"); // leaves only Budget; next delete must be rejected
       IllegalArgumentException lastSheet =
-          assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet("Budget"));
+          assertThrows(IllegalArgumentException.class, () -> sheets.deleteSheet("Budget"));
       assertTrue(lastSheet.getMessage().contains("at least one sheet"));
       workbook.getOrCreateSheet("Archive"); // restore two-sheet state for moveSheet tests
-      assertThrows(NullPointerException.class, () -> workbook.moveSheet(null, 0));
-      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet(" ", 0));
-      assertThrows(SheetNotFoundException.class, () -> workbook.moveSheet("Missing", 0));
+      assertThrows(NullPointerException.class, () -> sheets.moveSheet(null, 0));
+      assertThrows(IllegalArgumentException.class, () -> sheets.moveSheet(" ", 0));
+      assertThrows(SheetNotFoundException.class, () -> sheets.moveSheet("Missing", 0));
       IllegalArgumentException negativeIndex =
-          assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", -1));
+          assertThrows(IllegalArgumentException.class, () -> sheets.moveSheet("Budget", -1));
       assertTrue(negativeIndex.getMessage().contains("workbook has"));
       IllegalArgumentException tooLargeIndex =
-          assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", 2));
+          assertThrows(IllegalArgumentException.class, () -> sheets.moveSheet("Budget", 2));
       assertTrue(tooLargeIndex.getMessage().contains("valid positions are 0 to 1"));
-      assertThrows(NullPointerException.class, () -> workbook.save(null));
+      assertThrows(NullPointerException.class, () -> workbook.persistence().save(null));
     }
   }
 
@@ -646,7 +679,7 @@ class ExcelWorkbookTest {
     }
 
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> ExcelWorkbook.open(workbookPath));
+        assertThrows(IllegalArgumentException.class, () -> ExcelWorkbooks.open(workbookPath));
     assertEquals("Only .xlsx workbooks are supported", exception.getMessage());
   }
 
@@ -655,14 +688,14 @@ class ExcelWorkbookTest {
   void validatesFormulaEnvironmentOverloadsAndCloseFailureAggregation() throws Exception {
     ExcelFormulaEnvironment defaults = ExcelFormulaEnvironment.defaults();
 
-    assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null, defaults));
+    assertThrows(NullPointerException.class, () -> ExcelWorkbooks.open(null, defaults));
 
     Path missingPath =
         ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-env-")
             .resolve("missing-with-env.xlsx");
     WorkbookNotFoundException missingWorkbook =
         assertThrows(
-            WorkbookNotFoundException.class, () -> ExcelWorkbook.open(missingPath, defaults));
+            WorkbookNotFoundException.class, () -> ExcelWorkbooks.open(missingPath, defaults));
     assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
 
     Path legacyWorkbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-legacy-env-", ".xls");
@@ -673,13 +706,14 @@ class ExcelWorkbookTest {
     }
     IllegalArgumentException unsupportedFormat =
         assertThrows(
-            IllegalArgumentException.class, () -> ExcelWorkbook.open(legacyWorkbookPath, defaults));
+            IllegalArgumentException.class,
+            () -> ExcelWorkbooks.open(legacyWorkbookPath, defaults));
     assertEquals("Only .xlsx workbooks are supported", unsupportedFormat.getMessage());
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create(null)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create(null)) {
       assertEquals(
           ExcelFormulaEnvironment.defaults().runtimeContext(), workbook.formulaRuntimeContext());
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Header"));
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Header"));
       assertThrows(
           CellNotFoundException.class,
           () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
@@ -715,8 +749,11 @@ class ExcelWorkbookTest {
 
   @Test
   void clearFormulaCachesRemovesInlineStringAndTypeMetadata() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("\"hello\""));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook
+          .getOrCreateSheet("Budget")
+          .cells()
+          .setCell("A1", ExcelCellValue.formula("\"hello\""));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -740,8 +777,8 @@ class ExcelWorkbookTest {
 
   @Test
   void clearFormulaCachesLeavesUnsetTypeMetadataUnset() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
       workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
@@ -762,12 +799,12 @@ class ExcelWorkbookTest {
   void saveWithEmptyPersistenceOptionsActsLikePlainSave() throws IOException {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-empty-persist-", ".xlsx");
     try {
-      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-        workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Hello"));
-        workbook.save(workbookPath, ExcelOoxmlPersistenceOptions.none());
+      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+        workbook.getOrCreateSheet("Alpha").cells().setCell("A1", ExcelCellValue.text("Hello"));
+        workbook.persistence().save(workbookPath, ExcelOoxmlPersistenceOptions.none());
       }
-      try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-        assertEquals("Hello", reopened.sheet("Alpha").text("A1"));
+      try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+        assertEquals("Hello", reopened.sheet("Alpha").cells().text("A1"));
       }
     } finally {
       Files.deleteIfExists(workbookPath);
@@ -778,9 +815,9 @@ class ExcelWorkbookTest {
   void savesToPathsWithoutParentDirectories() throws IOException {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Hello"));
-      workbook.save(relativePath);
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
+      workbook.persistence().save(relativePath);
       assertTrue(Files.exists(relativePath));
     } finally {
       Files.deleteIfExists(relativePath);
@@ -816,10 +853,11 @@ class ExcelWorkbookTest {
   void savesAndReopensFormattingDepthStyles() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-style-roundtrip-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Item"));
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Item"));
       workbook
           .sheet("Budget")
+          .cells()
           .applyStyle(
               "A1",
               new ExcelCellStyle(
@@ -851,7 +889,7 @@ class ExcelWorkbookTest {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     ExcelCellStyleSnapshot style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
@@ -876,30 +914,32 @@ class ExcelWorkbookTest {
   void savesAndReopensCompatibleGradientGeometryWithProtection() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-gradient-style-roundtrip-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Linear"));
-      budget.applyStyle(
-          "A1",
-          new ExcelCellStyle(
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.of(
-                  ExcelCellFill.gradient(
-                      ExcelGradientFill.linear(
-                          Optional.of(42.5d),
-                          List.of(
-                              new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
-                              new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
-              Optional.empty(),
-              Optional.of(new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
-      workbook.save(workbookPath);
+      budget.cells().setCell("A1", ExcelCellValue.text("Linear"));
+      budget
+          .cells()
+          .applyStyle(
+              "A1",
+              new ExcelCellStyle(
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.of(
+                      ExcelCellFill.gradient(
+                          ExcelGradientFill.linear(
+                              Optional.of(42.5d),
+                              List.of(
+                                  new ExcelGradientStop(0.0d, ExcelColor.rgb("#736C00")),
+                                  new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
+                  Optional.empty(),
+                  Optional.of(new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopenedWorkbook = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopenedWorkbook = ExcelWorkbooks.open(workbookPath)) {
       ExcelCellStyleSnapshot linearStyle =
-          reopenedWorkbook.sheet("Budget").snapshotCell("A1").style();
+          reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style();
 
       ExcelGradientFillSnapshot gradient = fillGradient(linearStyle.fill());
       assertEquals("LINEAR", gradientType(gradient));
@@ -916,23 +956,27 @@ class ExcelWorkbookTest {
   void persistsHyperlinksCommentsAndNamedRangesAcrossSaves() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Report"));
-      budget.setCell("B4", ExcelCellValue.number(61.0));
-      budget.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      budget.setComment("A1", new ExcelComment("Review", "GridGrind", true));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Budget", "B4")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "LocalItem",
-              new ExcelNamedRangeScope.SheetScope("Budget"),
-              ExcelNamedRangeTarget.range("Budget", "A1:B2")));
-      workbook.save(workbookPath);
+      budget.cells().setCell("A1", ExcelCellValue.text("Report"));
+      budget.cells().setCell("B4", ExcelCellValue.number(61.0));
+      budget.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      budget.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "B4")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "LocalItem",
+                  new ExcelNamedRangeScope.SheetScope("Budget"),
+                  ExcelNamedRangeTarget.range("Budget", "A1:B2")));
+      workbook.persistence().save(workbookPath);
     }
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
@@ -966,11 +1010,11 @@ class ExcelWorkbookTest {
                     .refersToFormula(),
                 ExcelNamedRangeTarget.range("Budget", "A1:B2"))));
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      assertEquals(2, workbook.namedRangeCount());
-      assertEquals(2, workbook.namedRanges().size());
-      workbook.deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
-      assertEquals(1, workbook.namedRangeCount());
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+      assertEquals(2, workbook.names().namedRangeCount());
+      assertEquals(2, workbook.names().namedRanges().size());
+      workbook.names().deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+      assertEquals(1, workbook.names().namedRangeCount());
     }
   }
 
@@ -978,11 +1022,13 @@ class ExcelWorkbookTest {
   void persistsLatestHyperlinkTargetAfterRepeatedWrites() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-hyperlink-replace-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("C");
-      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
-      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
-      workbook.save(workbookPath);
+      sheet.annotations().setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
+      sheet
+          .annotations()
+          .setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+      workbook.persistence().save(workbookPath);
     }
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "C", "F18");
@@ -1000,16 +1046,20 @@ class ExcelWorkbookTest {
                     poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
       poiWorkbook.createSheet("Budget");
 
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Budget", "B4")));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Budget", "C1")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "B4")));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Budget", "C1")));
 
       Name formulaName = poiWorkbook.createName();
       formulaName.setNameName("BudgetRollup");
@@ -1027,12 +1077,12 @@ class ExcelWorkbookTest {
       sheetScoped.setSheetIndex(poiWorkbook.getSheetIndex("Budget"));
       sheetScoped.setRefersToFormula("Budget!$A$1");
 
-      assertTrue(ExcelWorkbook.shouldExpose(workbookScoped));
-      assertFalse(ExcelWorkbook.shouldExpose(null, false, false));
-      assertFalse(ExcelWorkbook.shouldExpose("HiddenBudgetTotal", false, true));
-      assertFalse(ExcelWorkbook.shouldExpose("_xlnm.Print_Area", false, false));
-      assertFalse(ExcelWorkbook.shouldExpose("_XLNM.PRINT_TITLES", false, false));
-      assertFalse(ExcelWorkbook.shouldExpose("BudgetFn", true, false));
+      assertTrue(ExcelWorkbookNames.shouldExpose(workbookScoped));
+      assertFalse(ExcelWorkbookNames.shouldExpose(null, false, false));
+      assertFalse(ExcelWorkbookNames.shouldExpose("HiddenBudgetTotal", false, true));
+      assertFalse(ExcelWorkbookNames.shouldExpose("_xlnm.Print_Area", false, false));
+      assertFalse(ExcelWorkbookNames.shouldExpose("_XLNM.PRINT_TITLES", false, false));
+      assertFalse(ExcelWorkbookNames.shouldExpose("BudgetFn", true, false));
 
       assertTrue(workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.WorkbookScope()));
       assertFalse(
@@ -1059,46 +1109,53 @@ class ExcelWorkbookTest {
                   new ExcelNamedRangeScope.SheetScope("Budget"),
                   "Budget!$A$1",
                   ExcelNamedRangeTarget.range("Budget", "A1"))),
-          workbook.namedRanges());
+          workbook.names().namedRanges());
     }
   }
 
   @Test
   void validatesNamedRangeOperations() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
-      assertThrows(NullPointerException.class, () -> workbook.setNamedRange(null));
+      assertThrows(NullPointerException.class, () -> workbook.names().setNamedRange(null));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              workbook.setNamedRange(
-                  new ExcelNamedRangeDefinition(
-                      "A1",
-                      new ExcelNamedRangeScope.WorkbookScope(),
-                      ExcelNamedRangeTarget.range("Budget", "B4"))));
+              workbook
+                  .names()
+                  .setNamedRange(
+                      new ExcelNamedRangeDefinition(
+                          "A1",
+                          new ExcelNamedRangeScope.WorkbookScope(),
+                          ExcelNamedRangeTarget.range("Budget", "B4"))));
       assertThrows(
           NullPointerException.class,
-          () -> workbook.deleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
+          () -> workbook.names().deleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
       assertThrows(
-          NullPointerException.class, () -> workbook.deleteNamedRange("BudgetTotal", null));
+          NullPointerException.class, () -> workbook.names().deleteNamedRange("BudgetTotal", null));
       assertThrows(
           NamedRangeNotFoundException.class,
-          () -> workbook.deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+          () ->
+              workbook
+                  .names()
+                  .deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
       assertThrows(
           SheetNotFoundException.class,
           () ->
-              workbook.setNamedRange(
-                  new ExcelNamedRangeDefinition(
-                      "BudgetTotal",
-                      new ExcelNamedRangeScope.SheetScope("Missing"),
-                      ExcelNamedRangeTarget.range("Missing", "A1"))));
+              workbook
+                  .names()
+                  .setNamedRange(
+                      new ExcelNamedRangeDefinition(
+                          "BudgetTotal",
+                          new ExcelNamedRangeScope.SheetScope("Missing"),
+                          ExcelNamedRangeTarget.range("Missing", "A1"))));
     }
   }
 
   @Test
   void rejectsSheetNamesExceeding31Characters() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       String exactly31 = "A".repeat(31);
       String tooLong = "A".repeat(32);
 
@@ -1113,7 +1170,7 @@ class ExcelWorkbookTest {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-column-save-", ".xlsx");
 
     try {
-      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
         XSSFSheet sheet = workbook.xssfWorkbook().createSheet("Budget");
 
         sheet.groupColumn(2, 3);
@@ -1126,7 +1183,7 @@ class ExcelWorkbookTest {
             columnDefinitionsAreCanonical(sheet),
             "raw Apache POI grouping should leave ambiguous overlapping column definitions");
 
-        workbook.save(workbookPath);
+        workbook.persistence().save(workbookPath);
       }
 
       try (XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

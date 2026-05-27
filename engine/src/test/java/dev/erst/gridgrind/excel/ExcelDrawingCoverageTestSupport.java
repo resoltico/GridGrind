@@ -3,8 +3,11 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.drawing.ExcelDrawingRemovalSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingSnapshotSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.io.ByteArrayInputStream;
@@ -14,6 +17,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -188,97 +192,115 @@ class ExcelDrawingCoverageTestSupport {
     return returnType.cast(dispatch(target, name, args));
   }
 
+  static <T> Optional<T> invokeOptional(
+      Object target, String name, Class<T> elementType, Object... args) throws Exception {
+    Object value = dispatch(target, name, args);
+    if (!(value instanceof Optional<?> optional)) {
+      throw new ClassCastException("Expected Optional result from helper invocation: " + name);
+    }
+    if (optional.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.of(elementType.cast(optional.orElseThrow()));
+  }
+
   static void invokeVoid(Object target, String name, Object... args) throws Exception {
     dispatch(target, name, args);
   }
 
   static Object dispatch(Object target, String name, Object... args) throws Exception {
-    if (target instanceof ExcelDrawingController controller) {
+    if (target instanceof ExcelDrawingController) {
       return switch (name) {
-        case "behavior" -> controller.behavior((STEditAs.Enum) args[0]);
-        case "binary" -> controller.binary((byte[]) args[0], (String) args[1]);
+        case "behavior" -> ExcelDrawingAnchorSupport.behavior((STEditAs.Enum) args[0]);
+        case "binary" -> ExcelDrawingBinarySupport.binary((byte[]) args[0], (String) args[1]);
         case "cleanupPackagePartIfUnused" -> {
-          controller.cleanupPackagePartIfUnused(
+          ExcelDrawingRemovalSupport.cleanupPackagePartIfUnused(
               (OPCPackage) args[0], (org.apache.poi.openxml4j.opc.PackagePartName) args[1]);
           yield null;
         }
         case "cleanupWorkbookImagePartIfUnused" -> {
-          controller.cleanupWorkbookImagePartIfUnused(
+          ExcelDrawingBinarySupport.cleanupWorkbookImagePartIfUnused(
               (XSSFWorkbook) args[0], (org.apache.poi.openxml4j.opc.PackagePartName) args[1]);
           yield null;
         }
-        case "defaultName" -> controller.defaultName((XSSFShape) args[0]);
-        case "firstNonBlank" -> controller.firstNonBlank((String) args[0], (String) args[1]);
+        case "defaultName" -> ExcelDrawingAnchorSupport.defaultName((XSSFShape) args[0]);
+        case "firstNonBlank" ->
+            ExcelDrawingBinarySupport.firstNonBlank((String) args[0], (String) args[1]);
         case "imagePartUsed" ->
-            controller.imagePartUsed(
+            ExcelDrawingBinarySupport.imagePartUsed(
                 (XSSFWorkbook) args[0], (org.apache.poi.openxml4j.opc.PackagePartName) args[1]);
-        case "looksLikeOle2Storage" -> controller.looksLikeOle2Storage((byte[]) args[0]);
-        case "parentAnchor" -> controller.parentAnchor((org.apache.xmlbeans.XmlObject) args[0]);
-        case "partBytes" -> controller.partBytes((PackagePart) args[0]);
-        case "partFileName" -> controller.partFileName((PackagePart) args[0]);
+        case "looksLikeOle2Storage" ->
+            ExcelDrawingBinarySupport.looksLikeOle2Storage((byte[]) args[0]);
+        case "parentAnchor" ->
+            ExcelDrawingAnchorSupport.parentAnchor((org.apache.xmlbeans.XmlObject) args[0]);
+        case "partBytes" -> ExcelDrawingBinarySupport.partBytes((PackagePart) args[0]);
+        case "partFileName" -> ExcelDrawingBinarySupport.partFileName((PackagePart) args[0]);
         case "previewDrawingRelationId" ->
-            controller.previewDrawingRelationId((XSSFObjectData) args[0]);
-        case "previewImagePart" -> controller.previewImagePart((XSSFObjectData) args[0]);
+            ExcelDrawingBinarySupport.previewDrawingRelationId((XSSFObjectData) args[0]);
+        case "previewImagePart" ->
+            ExcelDrawingBinarySupport.previewImagePart((XSSFObjectData) args[0]);
         case "previewSheetRelationId" ->
-            controller.previewSheetRelationId(
+            ExcelDrawingBinarySupport.previewSheetRelationId(
                 (org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject) args[0]);
-        case "rasterDimensions" -> ExcelDrawingController.rasterDimensions((byte[]) args[0]);
+        case "rasterDimensions" -> ExcelDrawingSnapshotSupport.rasterDimensions((byte[]) args[0]);
         case "relatedInternalPart" ->
-            controller.relatedInternalPart((PackagePart) args[0], (String) args[1]);
+            ExcelDrawingBinarySupport.relatedInternalPart((PackagePart) args[0], (String) args[1]);
         case "removeAbsoluteAnchor" -> {
-          controller.removeAbsoluteAnchor((CTDrawing) args[0], (CTAbsoluteAnchor) args[1]);
+          ExcelDrawingRemovalSupport.removeAbsoluteAnchor(
+              (CTDrawing) args[0], (CTAbsoluteAnchor) args[1]);
           yield null;
         }
         case "removeOleObject" -> {
-          controller.removeOleObject(
+          ExcelDrawingBinarySupport.removeOleObject(
               (XSSFSheet) args[0],
               (org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject) args[1]);
           yield null;
         }
         case "removeOneCellAnchor" -> {
-          controller.removeOneCellAnchor((CTDrawing) args[0], (CTOneCellAnchor) args[1]);
+          ExcelDrawingRemovalSupport.removeOneCellAnchor(
+              (CTDrawing) args[0], (CTOneCellAnchor) args[1]);
           yield null;
         }
         case "removeParentAnchor" -> {
-          controller.removeParentAnchor(
+          ExcelDrawingRemovalSupport.removeParentAnchor(
               (XSSFDrawing) args[0], (org.apache.xmlbeans.XmlObject) args[1]);
           yield null;
         }
         case "removeRelationshipsToPart" -> {
-          controller.removeRelationshipsToPart(
+          ExcelDrawingBinarySupport.removeRelationshipsToPart(
               (PackagePart) args[0], (org.apache.poi.openxml4j.opc.PackagePartName) args[1]);
           yield null;
         }
         case "removeTwoCellAnchor" -> {
-          controller.removeTwoCellAnchor((CTDrawing) args[0], (CTTwoCellAnchor) args[1]);
+          ExcelDrawingRemovalSupport.removeTwoCellAnchor(
+              (CTDrawing) args[0], (CTTwoCellAnchor) args[1]);
           yield null;
         }
-        case "requireNonBlank" -> controller.requireNonBlank((String) args[0], (String) args[1]);
-        case "resolvedName" -> controller.resolvedName((XSSFShape) args[0]);
-        case "sha256" -> controller.sha256((byte[]) args[0]);
-        case "shapeType" -> controller.shapeType((String) args[0]);
-        case "shapeXml" -> controller.shapeXml((XSSFShape) args[0]);
+        case "requireNonBlank" ->
+            dev.erst.gridgrind.excel.drawing.ExcelDrawingArgumentSupport.requireNonBlank(
+                (String) args[0], (String) args[1]);
+        case "resolvedName" -> ExcelDrawingAnchorSupport.resolvedName((XSSFShape) args[0]);
+        case "sha256" -> ExcelDrawingBinarySupport.sha256((byte[]) args[0]);
+        case "shapeType" -> ExcelDrawingAnchorSupport.shapeType((String) args[0]);
+        case "shapeXml" -> ExcelDrawingAnchorSupport.shapeXml((XSSFShape) args[0]);
         case "snapshot" ->
             ExcelDrawingSnapshotSupport.snapshot((XSSFDrawing) args[0], (XSSFShape) args[1]);
-        case "snapshotAnchor" -> controller.snapshotAnchor((org.apache.xmlbeans.XmlObject) args[0]);
-        case "snapshotShape" -> controller.snapshotShape((XSSFSimpleShape) args[0]);
-        case "toPoiBehavior" -> controller.toPoiBehavior((ExcelDrawingAnchorBehavior) args[0]);
-        case "toPoiEditAs" -> controller.toPoiEditAs((ExcelDrawingAnchorBehavior) args[0]);
+        case "snapshotAnchor" ->
+            ExcelDrawingAnchorSupport.snapshotAnchor((org.apache.xmlbeans.XmlObject) args[0]);
+        case "snapshotShape" ->
+            ExcelDrawingSnapshotSupport.snapshotShape((XSSFSimpleShape) args[0]);
+        case "toPoiBehavior" ->
+            ExcelDrawingAnchorSupport.toPoiBehavior((ExcelDrawingAnchorBehavior) args[0]);
+        case "toPoiEditAs" ->
+            ExcelDrawingAnchorSupport.toPoiEditAs((ExcelDrawingAnchorBehavior) args[0]);
         case "updateAnchorInPlace" -> {
-          controller.updateAnchorInPlace(
+          ExcelDrawingAnchorSupport.updateAnchorInPlace(
               (XSSFSheet) args[0],
               (String) args[1],
               (org.apache.xmlbeans.XmlObject) args[2],
               (ExcelDrawingAnchor.TwoCell) args[3]);
           yield null;
         }
-        default -> throw new IllegalArgumentException("Unsupported helper invocation: " + name);
-      };
-    }
-    if (target instanceof ExcelDrawingController.RasterDimensions dimensions) {
-      return switch (name) {
-        case "widthPixels" -> dimensions.widthPixels();
-        case "heightPixels" -> dimensions.heightPixels();
         default -> throw new IllegalArgumentException("Unsupported helper invocation: " + name);
       };
     }

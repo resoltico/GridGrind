@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,11 +34,11 @@ final class ExecutionWorkbookSupport {
       throws IOException {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ ->
-          ExcelWorkbook.create(
+          ExcelWorkbooks.create(
               FormulaEnvironmentConverter.toExcelFormulaEnvironment(
                   formulaEnvironment, workingDirectory));
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          ExcelWorkbook.open(
+          ExcelWorkbooks.open(
               ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory),
               FormulaEnvironmentConverter.toExcelFormulaEnvironment(
                   formulaEnvironment, workingDirectory),
@@ -66,10 +67,12 @@ final class ExecutionWorkbookSupport {
           new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
         Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
-        workbook.save(
-            executionPath,
-            ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
-            tempFileFactory::createTempFile);
+        workbook
+            .persistence()
+            .save(
+                executionPath,
+                ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
+                tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
             saveAs.path(), executionPath.toString());
       }
@@ -79,10 +82,12 @@ final class ExecutionWorkbookSupport {
         }
         Path executionPath =
             ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory);
-        workbook.save(
-            executionPath,
-            ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
-            tempFileFactory::createTempFile);
+        workbook
+            .persistence()
+            .save(
+                executionPath,
+                ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
+                tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
             existingFile.path(), executionPath.toString());
       }

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: DEVELOPER_DOCKER
-updated: "2026-05-01"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, docker, docker desktop, devcontainer, contributor container, docker smoke, check.sh, anonymous docker config, docker context, container]
   questions: ["how should i set up docker for gridgrind", "what is the difference between the gridgrind devcontainer and runtime container", "why should gridgrind use an anonymous docker config for docker smoke", "what docker runtime is supported for gridgrind", "how do i verify docker before running check.sh"]
@@ -48,8 +48,9 @@ Two separate container surfaces matter in this repository:
   glibc-based, full Zulu 26 JDK, official Docker-outside-of-Docker wiring so the contributor shell
   talks to the host Docker Desktop engine, and an optional VS Code overlay under
   `customizations.vscode`
-- published runtime container: `Dockerfile`, Alpine-based, minimal JRE surface for executing the
-  shipped `gridgrind.jar`
+- published runtime container: `Dockerfile`, Alpine-based, minimal JRE surface that builds
+  `gridgrind.jar` inside a pinned builder stage and then copies only the packaged runtime artifact
+  into the final image
 
 Do not collapse those two roles into one image. Contributor ergonomics and extension compatibility
 have different needs than the published runtime artifact.
@@ -57,6 +58,8 @@ have different needs than the published runtime artifact.
 Release-build reproducibility is part of that contract too:
 - `Dockerfile` pins the Azul Java 26 base image to a manifest-list digest instead of a floating
   tag; update that digest deliberately when the runtime base moves forward
+- `Dockerfile` builds `:cli:shadowJar` inside the pinned builder stage, so the repository-root
+  image build is self-contained and does not depend on a separately materialized host jar
 - the production image must keep the minimal headless font stack required by signature-line
   preview generation (`fontconfig` plus DejaVu today) so Docker matches the fat-JAR drawing
   surface instead of silently dropping `SET_SIGNATURE_LINE`
@@ -114,7 +117,8 @@ verification lock as `./check.sh`, `./scripts/docker-smoke.sh`, and `jazzer/bin/
 top-level verification entrypoints are intentionally serialized.
 
 `./check.sh` Stage 5 invokes `scripts/docker-smoke.sh`, which:
-- builds the local image from the repository root through `docker buildx build --load`
+- builds the local image from the repository root through `docker buildx build --load`, letting
+  the pinned builder stage materialize the packaged JAR inside the image build itself
 - runs mounted-path container commands under the caller's UID:GID so response files and saved
   workbooks stay owned by the invoking operator on both macOS Docker Desktop and Linux CI runners
 - verifies `--help` and `--version`

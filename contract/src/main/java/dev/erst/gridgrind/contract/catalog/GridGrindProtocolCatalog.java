@@ -215,35 +215,51 @@ public final class GridGrindProtocolCatalog {
   /** Validates that a tagged union and the catalog expose the same ordered discriminator ids. */
   static void validateCoverage(Class<?> sealedType, Map<Class<?>, String> catalogIds) {
     if (sealedType.equals(WorkbookStep.class)) {
-      Set<Class<?>> permitted =
-          Arrays.stream(sealedType.getPermittedSubclasses())
-              .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
-      if (!permitted.equals(catalogIds.keySet())) {
-        throw new IllegalStateException(
-            "Catalog coverage mismatch for "
-                + sealedType.getName()
-                + ": permitted="
-                + permitted
-                + ", catalog="
-                + catalogIds.keySet());
-      }
+      validateWorkbookStepCoverage(sealedType, catalogIds);
       return;
     }
     CatalogTypeEntryFactory.discriminatorFieldFor(sealedType);
-    Map<Class<?>, String> annotationIds =
-        toOrderedMap(
-            List.copyOf(ProtocolTypeMetadataSupport.typeIdsByClass(sealedType).entrySet()),
-            Map.Entry::getKey,
-            Map.Entry::getValue,
-            "annotation subtype");
+    Map<Class<?>, String> annotationIds = annotationIds(sealedType);
+    validateCatalogRecords(catalogIds);
+    validateCoveredTypes(sealedType, annotationIds, catalogIds);
+    validateCoveredIds(annotationIds, catalogIds);
+  }
 
+  private static void validateWorkbookStepCoverage(
+      Class<?> sealedType, Map<Class<?>, String> catalogIds) {
+    Set<Class<?>> permitted =
+        Arrays.stream(sealedType.getPermittedSubclasses())
+            .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
+    if (!permitted.equals(catalogIds.keySet())) {
+      throw new IllegalStateException(
+          "Catalog coverage mismatch for "
+              + sealedType.getName()
+              + ": permitted="
+              + permitted
+              + ", catalog="
+              + catalogIds.keySet());
+    }
+  }
+
+  private static Map<Class<?>, String> annotationIds(Class<?> sealedType) {
+    return toOrderedMap(
+        List.copyOf(ProtocolTypeMetadataSupport.typeIdsByClass(sealedType).entrySet()),
+        Map.Entry::getKey,
+        Map.Entry::getValue,
+        "annotation subtype");
+  }
+
+  private static void validateCatalogRecords(Map<Class<?>, String> catalogIds) {
     for (Class<?> recordType : catalogIds.keySet()) {
       if (!recordType.isRecord()) {
         throw new IllegalStateException(
             "Catalog entry %s does not target a record type".formatted(recordType));
       }
     }
+  }
 
+  private static void validateCoveredTypes(
+      Class<?> sealedType, Map<Class<?>, String> annotationIds, Map<Class<?>, String> catalogIds) {
     if (!annotationIds.keySet().equals(catalogIds.keySet())) {
       throw new IllegalStateException(
           "Catalog coverage mismatch for "
@@ -253,7 +269,10 @@ public final class GridGrindProtocolCatalog {
               + ", catalog="
               + catalogIds.keySet());
     }
+  }
 
+  private static void validateCoveredIds(
+      Map<Class<?>, String> annotationIds, Map<Class<?>, String> catalogIds) {
     for (Map.Entry<Class<?>, String> annotationEntry : annotationIds.entrySet()) {
       String catalogId = catalogIds.get(annotationEntry.getKey());
       if (!annotationEntry.getValue().equals(catalogId)) {

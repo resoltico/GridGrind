@@ -31,11 +31,11 @@ class ExcelConditionalFormattingControllerTest {
   void authoredBlocksRoundTripAndSelectedClearRenumbersPriorities() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-conditional-formatting-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       ExcelSheet sheet = workbook.sheet("Ops");
-      sheet.setConditionalFormatting(primaryBlock("A1:A3"));
-      sheet.setConditionalFormatting(secondaryBlock("C1:C3"));
+      sheet.metadata().setConditionalFormatting(primaryBlock("A1:A3"));
+      sheet.metadata().setConditionalFormatting(secondaryBlock("C1:C3"));
 
       assertEquals(
           List.of(
@@ -78,9 +78,9 @@ class ExcelConditionalFormattingControllerTest {
                           new ExcelDifferentialStyleSnapshot(
                               null, false, null, null, "#223344", null, null, null, null,
                               List.of()))))),
-          sheet.conditionalFormatting(new ExcelRangeSelection.All()));
+          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
-      sheet.clearConditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
+      sheet.metadata().clearConditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
 
       assertEquals(
           List.of(
@@ -94,12 +94,12 @@ class ExcelConditionalFormattingControllerTest {
                           new ExcelDifferentialStyleSnapshot(
                               null, false, null, null, "#223344", null, null, null, null,
                               List.of()))))),
-          sheet.conditionalFormatting(new ExcelRangeSelection.All()));
+          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           List.of(
               new ExcelConditionalFormattingBlockSnapshot(
@@ -112,7 +112,7 @@ class ExcelConditionalFormattingControllerTest {
                           new ExcelDifferentialStyleSnapshot(
                               null, false, null, null, "#223344", null, null, null, null,
                               List.of()))))),
-          reopened.sheet("Ops").conditionalFormatting(new ExcelRangeSelection.All()));
+          reopened.sheet("Ops").metadata().conditionalFormatting(new ExcelRangeSelection.All()));
     }
   }
 
@@ -312,38 +312,42 @@ class ExcelConditionalFormattingControllerTest {
 
   @Test
   void healthyGreaterThanRuleSupportsSelectionFilteringAndSheetDelegation() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setCell("A1", ExcelCellValue.number(5));
-      sheet.setCell("A2", ExcelCellValue.number(9));
-      sheet.setConditionalFormatting(
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A2"),
-              List.of(
-                  new ExcelConditionalFormattingRule.CellValueRule(
-                      ExcelComparisonOperator.GREATER_THAN,
-                      "1",
-                      Optional.empty(),
-                      false,
-                      Optional.of(
-                          new ExcelDifferentialStyle(
-                              Optional.of("0.00"),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty()))))));
+      sheet.cells().setCell("A1", ExcelCellValue.number(5));
+      sheet.cells().setCell("A2", ExcelCellValue.number(9));
+      sheet
+          .metadata()
+          .setConditionalFormatting(
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("A1:A2"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.CellValueRule(
+                          ExcelComparisonOperator.GREATER_THAN,
+                          "1",
+                          Optional.empty(),
+                          false,
+                          Optional.of(
+                              new ExcelDifferentialStyle(
+                                  Optional.of("0.00"),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty()))))));
 
-      assertEquals(1, sheet.conditionalFormattingBlockCount());
+      assertEquals(1, sheet.diagnostics().conditionalFormattingBlockCount());
       assertEquals(
           List.of(),
-          sheet.conditionalFormatting(new ExcelRangeSelection.Selected(List.of("C1:C2"))));
+          sheet
+              .metadata()
+              .conditionalFormatting(new ExcelRangeSelection.Selected(List.of("C1:C2"))));
 
       List<ExcelConditionalFormattingBlockSnapshot> selected =
-          sheet.conditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
+          sheet.metadata().conditionalFormatting(new ExcelRangeSelection.Selected(List.of("A2")));
       assertEquals(1, selected.size());
       ExcelConditionalFormattingRuleSnapshot.CellValueRule rule =
           assertInstanceOf(
@@ -359,9 +363,10 @@ class ExcelConditionalFormattingControllerTest {
                       finding.code()
                           == AnalysisFindingCode.CONDITIONAL_FORMATTING_PRIORITY_COLLISION));
 
-      sheet.clearConditionalFormatting(new ExcelRangeSelection.All());
-      assertEquals(0, sheet.conditionalFormattingBlockCount());
-      assertEquals(List.of(), sheet.conditionalFormatting(new ExcelRangeSelection.All()));
+      sheet.metadata().clearConditionalFormatting(new ExcelRangeSelection.All());
+      assertEquals(0, sheet.diagnostics().conditionalFormattingBlockCount());
+      assertEquals(
+          List.of(), sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
     }
   }
 
@@ -1094,31 +1099,33 @@ class ExcelConditionalFormattingControllerTest {
 
   @Test
   void excelSheetDelegatesConditionalFormattingHealthAnalysis() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setCell("A1", ExcelCellValue.number(1));
-      sheet.setConditionalFormatting(
-          new ExcelConditionalFormattingBlockDefinition(
-              List.of("A1:A2"),
-              List.of(
-                  new ExcelConditionalFormattingRule.FormulaRule(
-                      "#REF!",
-                      false,
-                      Optional.of(
-                          new ExcelDifferentialStyle(
-                              Optional.of("0.00"),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty(),
-                              Optional.empty()))))));
+      sheet.cells().setCell("A1", ExcelCellValue.number(1));
+      sheet
+          .metadata()
+          .setConditionalFormatting(
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("A1:A2"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.FormulaRule(
+                          "#REF!",
+                          false,
+                          Optional.of(
+                              new ExcelDifferentialStyle(
+                                  Optional.of("0.00"),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty(),
+                                  Optional.empty()))))));
 
       assertEquals(
           List.of(AnalysisFindingCode.CONDITIONAL_FORMATTING_BROKEN_FORMULA),
-          sheet.conditionalFormattingHealthFindings().stream()
+          sheet.diagnostics().conditionalFormattingHealthFindings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()
               .toList());

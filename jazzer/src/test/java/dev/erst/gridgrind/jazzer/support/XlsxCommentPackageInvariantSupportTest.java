@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -49,10 +50,13 @@ class XlsxCommentPackageInvariantSupportTest {
   private static Path workbookWithComment(String prefix) throws IOException {
     Path workbookPath = Files.createTempFile(prefix, ".xlsx");
     Files.deleteIfExists(workbookPath);
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setComment("A1", new ExcelComment("Review", "GridGrind", true));
-      workbook.save(workbookPath);
+      workbook
+          .sheet("Budget")
+          .annotations()
+          .setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      workbook.persistence().save(workbookPath);
     }
     return workbookPath;
   }

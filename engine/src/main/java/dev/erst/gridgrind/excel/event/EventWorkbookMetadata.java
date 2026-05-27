@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.excel.event;
 
-import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbookNames;
 import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.io.InputStream;
@@ -77,7 +77,7 @@ public record EventWorkbookMetadata(
     for (CTDefinedName definedName : workbook.getDefinedNames().getDefinedNameList()) {
       boolean function = definedName.isSetFunction() && definedName.getFunction();
       boolean hidden = definedName.isSetHidden() && definedName.getHidden();
-      if (ExcelWorkbook.shouldExpose(definedName.getName(), function, hidden)) {
+      if (ExcelWorkbookNames.shouldExpose(definedName.getName(), function, hidden)) {
         count++;
       }
     }

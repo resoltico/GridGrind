@@ -28,66 +28,71 @@ Skip it when:
 - Your work is truly one-off and hand-writing JSON adds more friction than it saves
 - You need interactive formula recalculation during editing (GridGrind evaluates on request)
 
-## One request, one result
+## Quick Start
+
+From a repository checkout, the shortest reliable path is:
+
+```bash
+./gradlew :cli:shadowJar
+java -jar cli/build/libs/gridgrind.jar --help
+java -jar cli/build/libs/gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
+java -jar cli/build/libs/gridgrind.jar --doctor-request --request budget-request.json --response doctor-report.json
+java -jar cli/build/libs/gridgrind.jar --request budget-request.json --response response.json
+```
+
+If you already have the release artifact, replace `cli/build/libs/gridgrind.jar` with your
+downloaded `gridgrind.jar`.
+
+If you want the container surface from a repository checkout, the root Dockerfile now builds the
+packaged runtime image on its own:
+
+```bash
+docker buildx build --load -t gridgrind-local .
+docker run --rm gridgrind-local --help
+```
+
+Fast Docker first-contact:
+
+```bash
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
+```
+
+## Find The Right Starting Point
+
+GridGrind can print valid starting material instead of making you invent request shape by hand:
+
+```bash
+java -jar cli/build/libs/gridgrind.jar --print-request-template --response request.json
+java -jar cli/build/libs/gridgrind.jar --print-example-catalog --response examples.json
+java -jar cli/build/libs/gridgrind.jar --print-task-catalog --response tasks.json
+java -jar cli/build/libs/gridgrind.jar --print-task-plan --lookup DASHBOARD --response dashboard-request.json
+java -jar cli/build/libs/gridgrind.jar --print-task-keyword-match --query "monthly sales dashboard" --response task-match.json
+java -jar cli/build/libs/gridgrind.jar --print-protocol-catalog --search pivot --response pivot-search.json
+```
+
+The example and task catalogs publish `workspaceMode` plus `requiredPaths`, so you can tell
+whether a printed request is self-contained before you try to run it.
+
+Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
+contract, and `--help-guidance` for workflow-oriented help.
+
+## One Request, One Result
 
 A single JSON request describes every step: create a sheet, write cells, assert workbook state,
 read facts back, and save. GridGrind executes the steps in order and writes the file only when
 every step succeeds. If an assertion fails or any step errors, nothing is saved.
 
-The request below creates a sheet, writes a cell, asserts the workbook has no malformed hyperlinks,
-and reads the written cell back:
+The top-level envelope is always explicit: `protocolVersion`, `source`, `persistence`,
+`execution`, `formulaEnvironment`, and ordered `steps`. Steps can mix mutation, assertion, and
+inspection in the same plan.
 
-```json
-{
-  "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "SAVE_AS", "path": "lots.xlsx" },
-  "execution": {
-    "mode": { "type": "FULL_XSSF" },
-    "journal": { "level": "NORMAL" },
-    "calculation": {
-      "strategy": { "type": "DO_NOT_CALCULATE" },
-      "markRecalculateOnOpen": false
-    }
-  },
-  "formulaEnvironment": {
-    "externalWorkbooks": [],
-    "missingWorkbookPolicy": "ERROR",
-    "udfToolpacks": []
-  },
-  "steps": [
-    {
-      "stepId": "sheet",
-      "target": { "type": "SHEET_BY_NAME", "name": "Lots" },
-      "action": { "type": "ENSURE_SHEET" }
-    },
-    {
-      "stepId": "log-lot",
-      "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Lots", "address": "A1" },
-      "action": {
-        "type": "SET_CELL",
-        "value": { "type": "TEXT", "source": { "type": "INLINE", "text": "Ethiopia Yirgacheffe" } }
-      }
-    },
-    {
-      "stepId": "check",
-      "target": { "type": "WORKBOOK_CURRENT" },
-      "assertion": {
-        "type": "EXPECT_ANALYSIS_FINDING_ABSENT",
-        "query": { "type": "ANALYZE_WORKBOOK_FINDINGS" },
-        "code": "HYPERLINK_MALFORMED_TARGET"
-      }
-    },
-    {
-      "stepId": "read-back",
-      "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Lots", "addresses": ["A1"] },
-      "query": { "type": "GET_CELLS" }
-    }
-  ]
-}
+The safest way to start is to ask GridGrind to emit a valid request for you:
+
+```bash
+java -jar cli/build/libs/gridgrind.jar --print-request-template --response request.json
+java -jar cli/build/libs/gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
+java -jar cli/build/libs/gridgrind.jar --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 ```
-
-Write, assert, read — one plan. The file is saved only if every step passes.
 
 ## Documentation
 

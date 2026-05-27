@@ -31,10 +31,10 @@ class ExcelSheetCopyPictureSupportTest {
   void repairCopiedPicturesRestoresCorruptedClonePictureRelationships() throws IOException {
     ExcelSheetCopyPictureSupport support = new ExcelSheetCopyPictureSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
-      sourceSheet.setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
 
       ExcelSheetCopyPictureSupport.CopySnapshot snapshot =
           support.snapshot(sourceSheet.xssfSheet());
@@ -67,7 +67,7 @@ class ExcelSheetCopyPictureSupportTest {
       ExcelDrawingObjectPayload.Picture payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.Picture.class,
-              workbook.sheet("Replica").drawingObjectPayload("OpsPicture2"));
+              workbook.sheet("Replica").drawings().drawingObjectPayload("OpsPicture2"));
       assertArrayEquals(PNG_PIXEL_BYTES, payload.data().bytes());
     }
   }
@@ -76,12 +76,12 @@ class ExcelSheetCopyPictureSupportTest {
   void copySheetPreservesPicturesBeforeAndAfterRoundTrip() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-picture-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
-      sourceSheet.setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       XSSFSheet replicaPoiSheet = workbook.xssfWorkbook().getSheet("Replica");
       assertTrue(
@@ -91,25 +91,25 @@ class ExcelSheetCopyPictureSupportTest {
               .allMatch(picture -> picture.getPictureData() != null));
       assertEquals(
           List.of("OpsPicture1", "OpsPicture2"),
-          workbook.sheet("Replica").drawingObjects().stream()
+          workbook.sheet("Replica").drawings().drawingObjects().stream()
               .map(ExcelDrawingObjectSnapshot::name)
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       assertEquals(
           List.of("OpsPicture1", "OpsPicture2"),
-          reopened.sheet("Replica").drawingObjects().stream()
+          reopened.sheet("Replica").drawings().drawingObjects().stream()
               .map(ExcelDrawingObjectSnapshot::name)
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
       ExcelDrawingObjectPayload.Picture payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.Picture.class,
-              reopened.sheet("Replica").drawingObjectPayload("OpsPicture2"));
+              reopened.sheet("Replica").drawings().drawingObjectPayload("OpsPicture2"));
       assertArrayEquals(PNG_PIXEL_BYTES, payload.data().bytes());
     }
   }
@@ -118,9 +118,9 @@ class ExcelSheetCopyPictureSupportTest {
   void repairCopiedPicturesRejectsMissingTargetDrawingPatriarch() throws IOException {
     ExcelSheetCopyPictureSupport support = new ExcelSheetCopyPictureSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
       ExcelSheetCopyPictureSupport.CopySnapshot snapshot =
           support.snapshot(sourceSheet.xssfSheet());
       XSSFSheet targetSheet = workbook.getOrCreateSheet("Replica").xssfSheet();
@@ -138,15 +138,15 @@ class ExcelSheetCopyPictureSupportTest {
   void repairCopiedPicturesRejectsPictureCountMismatch() throws IOException {
     ExcelSheetCopyPictureSupport support = new ExcelSheetCopyPictureSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
-      sourceSheet.setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture1", 1, 1, 4, 6));
+      sourceSheet.drawings().setPicture(pictureDefinition("OpsPicture2", 6, 1, 9, 6));
       ExcelSheetCopyPictureSupport.CopySnapshot snapshot =
           support.snapshot(sourceSheet.xssfSheet());
 
       ExcelSheet targetSheet = workbook.getOrCreateSheet("Replica");
-      targetSheet.setPicture(pictureDefinition("ReplicaPicture", 1, 1, 4, 6));
+      targetSheet.drawings().setPicture(pictureDefinition("ReplicaPicture", 1, 1, 4, 6));
 
       IllegalStateException pictureCountMismatch =
           assertThrows(
@@ -162,9 +162,9 @@ class ExcelSheetCopyPictureSupportTest {
   void repairCopiedPicturesRejectsMissingAndInvalidSourceImageParts() throws Exception {
     ExcelSheetCopyPictureSupport support = new ExcelSheetCopyPictureSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet targetSheet = workbook.getOrCreateSheet("Replica");
-      targetSheet.setPicture(pictureDefinition("ReplicaPicture", 1, 1, 4, 6));
+      targetSheet.drawings().setPicture(pictureDefinition("ReplicaPicture", 1, 1, 4, 6));
 
       IllegalStateException missingImagePart =
           assertThrows(

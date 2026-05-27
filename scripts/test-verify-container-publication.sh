@@ -50,6 +50,7 @@ trap cleanup EXIT
 
 readonly fake_bin="${test_root}/bin"
 readonly fake_log="${test_root}/docker.log"
+readonly fake_discovery_verify="${test_root}/fake-verify-cli-discovery-execution.sh"
 mkdir -p "${fake_bin}"
 
 cat > "${fake_bin}/docker" <<'EOF'
@@ -102,7 +103,7 @@ case "${command}" in
         cli_flag=${args[$((run_index + 1))]:-}
         case "${cli_flag}" in
             '')
-                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}" >&2
+                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}"
                 exit 2
                 ;;
             --version)
@@ -158,6 +159,19 @@ case "${command}" in
 esac
 EOF
 chmod +x "${fake_bin}/docker"
+
+cat > "${fake_discovery_verify}" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf 'discovery %s\n' "$*" >> "${FAKE_DOCKER_LOG:?}"
+if [[ "${FAKE_DISCOVERY_SHOULD_FAIL:-0}" == 1 ]]; then
+    printf 'forced discovery failure for %s\n' "$*" >&2
+    exit 1
+fi
+exit 0
+EOF
+chmod +x "${fake_discovery_verify}"
 
 verify_case_counter=0
 
@@ -223,6 +237,7 @@ run_verify_with_fixture_texts() {
 
     PATH="${fake_bin}:${PATH}" \
         FAKE_DOCKER_LOG="${fake_log}" \
+        GRIDGRIND_VERIFY_CLI_DISCOVERY_EXECUTION_SCRIPT="${fake_discovery_verify}" \
         FAKE_DOCKER_VERSION_OUTPUT_FILE="${version_output_file}" \
         FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE="${latest_version_output_file}" \
         FAKE_DOCKER_HELP_OVERVIEW_OUTPUT_FILE="${help_overview_output_file}" \
@@ -283,10 +298,29 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-plan --lookup D
     "verifier did not inspect the latest tag task-plan surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-keyword-match --query monthly sales dashboard with charts' "${fake_log}" || die \
     "verifier did not inspect the latest tag task-keyword-match surface"
+grep -Fq 'discovery docker-image ghcr.io/example/gridgrind:9.9.9' "${fake_log}" || die \
+    "verifier did not run discovery execution against the version tag"
+grep -Fq 'discovery docker-image ghcr.io/example/gridgrind:latest' "${fake_log}" || die \
+    "verifier did not run discovery execution against the latest tag"
 grep -Fq 'run --rm -i -t ghcr.io/example/gridgrind:latest' "${fake_log}" || die \
     "verifier did not inspect the latest tag interactive no-arg failure surface"
 grep -Fq 'run --rm -i ghcr.io/example/gridgrind:latest --doctor-request' "${fake_log}" || die \
     "verifier did not inspect the latest tag doctor surface"
+
+FAKE_DISCOVERY_SHOULD_FAIL=1 run_verify_expect_failure \
+    "${expected_header}" \
+    "${expected_header}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
+    "${success_catalog}" \
+    "${success_example_catalog}" \
+    "${success_task_catalog}" \
+    "${success_task_plan}" \
+    "${success_task_keyword_match}" \
+    "${success_doctor_report}" \
+    "${success_noargs_failure}"
+unset FAKE_DISCOVERY_SHOULD_FAIL
 
 run_verify_expect_failure \
     "$(printf 'gridgrind 9.9.9')" \

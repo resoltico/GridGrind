@@ -297,7 +297,7 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
       sheet.getCTWorksheet().addNewAutoFilter().setRef("NOT_A_RANGE");
 
       IllegalArgumentException failure =
-          assertThrows(IllegalArgumentException.class, () -> controller.insertRows(sheet, 0, 1));
+          assertThrows(IllegalArgumentException.class, () -> rowController.insertRows(sheet, 0, 1));
       assertTrue(failure.getMessage().contains("Stored sheet autofilter range is invalid"));
     }
   }

@@ -209,7 +209,7 @@ class ExcelChartWrapperCoverageTest {
           graphicData.getOwnerDocument().createElementNS(TEST_NAMESPACE, TEST_NON_CHART_QNAME));
 
       assertNull(ExcelDrawingChartSupport.chartForGraphicFrame(drawing, graphicFrame));
-      assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(graphicFrame));
+      assertEquals(Optional.empty(), ExcelChartRelationSupport.chartRelationId(graphicFrame));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -228,7 +228,7 @@ class ExcelChartWrapperCoverageTest {
       assertEquals(chart, ExcelDrawingChartSupport.chartForGraphicFrame(drawing, graphicFrame));
       assertEquals(Node.COMMENT_NODE, graphicData.getFirstChild().getNodeType());
       assertTrue(
-          ExcelChartSnapshotSupport.chartRelationId(graphicFrame).orElseThrow().startsWith("rId"));
+          ExcelChartRelationSupport.chartRelationId(graphicFrame).orElseThrow().startsWith("rId"));
     }
   }
 
@@ -237,26 +237,26 @@ class ExcelChartWrapperCoverageTest {
     var document = DocumentBuilderFactory.newDefaultInstance().newDocumentBuilder().newDocument();
 
     assertTrue(
-        ExcelChartSnapshotSupport.isChartNode(
+        ExcelChartRelationSupport.isChartNode(
             document.createElementNS(CHART_NAMESPACE, "c:chart")));
-    assertTrue(ExcelChartSnapshotSupport.isChartNode(document.createElement("c:chart")));
+    assertTrue(ExcelChartRelationSupport.isChartNode(document.createElement("c:chart")));
     assertFalse(
-        ExcelChartSnapshotSupport.isChartNode(
+        ExcelChartRelationSupport.isChartNode(
             document.createElementNS(TEST_NAMESPACE, TEST_CHART_QNAME)));
-    assertFalse(ExcelChartSnapshotSupport.isChartNode(null));
+    assertFalse(ExcelChartRelationSupport.isChartNode(null));
   }
 
   @Test
   void graphicFrameRelationHelperHandlesMissingGraphicContainers() {
     assertEquals(
-        Optional.empty(), ExcelChartSnapshotSupport.chartRelationId((XSSFGraphicFrame) null));
+        Optional.empty(), ExcelChartRelationSupport.chartRelationId((XSSFGraphicFrame) null));
 
     CTGraphicalObjectFrame missingGraphic = CTGraphicalObjectFrame.Factory.newInstance();
-    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(missingGraphic));
+    assertEquals(Optional.empty(), ExcelChartRelationSupport.chartRelationId(missingGraphic));
 
     CTGraphicalObjectFrame missingGraphicData = CTGraphicalObjectFrame.Factory.newInstance();
     missingGraphicData.addNewGraphic();
-    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(missingGraphicData));
+    assertEquals(Optional.empty(), ExcelChartRelationSupport.chartRelationId(missingGraphicData));
   }
 
   @Test
@@ -266,22 +266,22 @@ class ExcelChartWrapperCoverageTest {
 
     assertEquals(
         Optional.empty(),
-        ExcelChartSnapshotSupport.chartRelationId(document.createComment("noise")));
-    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.relationAttributeValue(null));
-    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(chartNode));
+        ExcelChartRelationSupport.chartRelationId(document.createComment("noise")));
+    assertEquals(Optional.empty(), ExcelChartRelationSupport.relationAttributeValue(null));
+    assertEquals(Optional.empty(), ExcelChartRelationSupport.chartRelationId(chartNode));
 
     chartNode.setAttributeNS(
         "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", " ");
-    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(chartNode));
+    assertEquals(Optional.empty(), ExcelChartRelationSupport.chartRelationId(chartNode));
 
     chartNode.setAttributeNS(
         "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", "rId7");
-    assertEquals(Optional.of("rId7"), ExcelChartSnapshotSupport.chartRelationId(chartNode));
+    assertEquals(Optional.of("rId7"), ExcelChartRelationSupport.chartRelationId(chartNode));
     assertEquals(
         Optional.of("rId7"),
-        ExcelChartSnapshotSupport.relationAttributeValue(chartNode.getAttributes()));
+        ExcelChartRelationSupport.relationAttributeValue(chartNode.getAttributes()));
     assertEquals(
-        Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(attributeLessChartNode()));
+        Optional.empty(), ExcelChartRelationSupport.chartRelationId(attributeLessChartNode()));
   }
 
   private static ExcelChartDefinition lineChartDefinition(String name) {

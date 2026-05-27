@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchorSupport;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingBinarySupport;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelEmbeddedObjectDefinition;
@@ -30,11 +29,10 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
   @Test
   void repairCopiedEmbeddedObjectsRestoresPoiCloneSheetPackageRelationships() throws IOException {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
-    ExcelDrawingController drawingController = new ExcelDrawingController();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
       workbook
@@ -43,20 +41,20 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
 
       XSSFSheet replicaPoiSheet = workbook.xssfWorkbook().getSheet("Replica");
       XSSFObjectData copiedObject = requiredEmbeddedObject(replicaPoiSheet, "OpsEmbed");
-      assertEquals(Optional.empty(), drawingController.oleObjectPart(copiedObject));
+      assertEquals(Optional.empty(), ExcelDrawingBinarySupport.oleObjectPart(copiedObject));
       assertNull(previewSheetPart(copiedObject));
       assertNull(previewDrawingPart(copiedObject));
 
       support.repairCopiedEmbeddedObjects(workbook.sheet("Replica"), snapshot);
 
       XSSFObjectData repairedObject = requiredEmbeddedObject(replicaPoiSheet, "OpsEmbed");
-      assertTrue(drawingController.oleObjectPart(repairedObject).isPresent());
+      assertTrue(ExcelDrawingBinarySupport.oleObjectPart(repairedObject).isPresent());
       assertNotNull(previewSheetPart(repairedObject));
       assertNotNull(previewDrawingPart(repairedObject));
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Replica").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -65,35 +63,35 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
   void copySheetPreservesEmbeddedObjectPayloadsBeforeAndAfterRoundTrip() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-embedded-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
-      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("Replica").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
       assertEquals(
           1L,
-          workbook.sheet("Replica").drawingObjects().stream()
+          workbook.sheet("Replica").drawings().drawingObjects().stream()
               .filter(snapshot -> "OpsEmbed".equals(snapshot.name()))
               .count());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              reopened.sheet("Replica").drawingObjectPayload("OpsEmbed"));
+              reopened.sheet("Replica").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
       assertEquals(
           1L,
-          reopened.sheet("Replica").drawingObjects().stream()
+          reopened.sheet("Replica").drawings().drawingObjects().stream()
               .filter(snapshot -> "OpsEmbed".equals(snapshot.name()))
               .count());
     }
@@ -105,12 +103,14 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
     Path workbookPath =
         XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-embedded-comment-relations-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("LL");
-      sourceSheet.setComment("C11", new ExcelComment("Note Name3", "GridGrind", false));
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet
+          .annotations()
+          .setComment("C11", new ExcelComment("Note Name3", "GridGrind", false));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
-      workbook.copySheet("LL", "LL_B1", new ExcelSheetCopyPosition.AtIndex(0));
+      workbook.sheets().copySheet("LL", "LL_B1", new ExcelSheetCopyPosition.AtIndex(0));
       workbook.getOrCreateSheet("LL");
       workbook.getOrCreateSheet("LL");
       workbook.getOrCreateSheet("LL");
@@ -119,20 +119,20 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
       ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              workbook.sheet("LL_B1").drawingObjectPayload("OpsEmbed"));
+              workbook.sheet("LL_B1").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelDrawingObjectPayload.EmbeddedObject copiedPayload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              reopened.sheet("LL_B1").drawingObjectPayload("OpsEmbed"));
+              reopened.sheet("LL_B1").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
       assertEquals(
           1L,
-          reopened.sheet("LL_B1").drawingObjects().stream()
+          reopened.sheet("LL_B1").drawings().drawingObjects().stream()
               .filter(snapshot -> "OpsEmbed".equals(snapshot.name()))
               .count());
     }

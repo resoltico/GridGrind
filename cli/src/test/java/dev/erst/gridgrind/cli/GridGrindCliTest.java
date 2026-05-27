@@ -519,12 +519,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the request failure report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains(
+                "GridGrind wrote the request failure report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST_SHAPE:"));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
     assertTrue(failure.message().contains("WORKBOOK"));
   }

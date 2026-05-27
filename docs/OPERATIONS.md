@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.65.0"
+version: "0.66.0"
 domain: OPERATIONS
-updated: "2026-05-16"
+updated: "2026-05-26"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -50,13 +50,17 @@ Task discovery is layered on top of that same catalog surface:
 `--print-task-plan --lookup <id> --response task-request.json`,
 and `--print-task-keyword-match --query "<query>" --response task-keyword-match.json` now cover
 dashboards, tabular reports, data-entry flows, pivot reports, custom XML workflows, workbook
-maintenance, and drawing/signature workflows. Task-plan output is one executable starter request;
-keyword-match responses stay compact, are weighted by typed goal/artifact metadata first, and
-point at the matched task id plus why it ranked.
+maintenance, and drawing/signature workflows. Each published task entry also carries
+`starter.suggestedRequestPath`, `starter.workspaceMode`, and `starter.requiredPaths`, so callers
+can stage the right workspace before printing or executing the starter. Task-plan output is one
+curated executable starter request validated from the packaged artifact; keyword-match responses
+stay compact, are weighted by typed goal/artifact metadata first, and point at the matched task
+id plus why it ranked.
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits,
 source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
-workbook. `--response <path>` applies across execution, doctoring, and discovery, so primary
-outputs can be written directly to files during artifact, shell, or Docker workflows.
+workbook and returns every independently provable blocking problem in one report. `--response
+<path>` applies across execution, doctoring, and discovery, so primary outputs can be written
+directly to files during artifact, shell, or Docker workflows.
 
 ## Canonical Terminology
 

@@ -177,7 +177,7 @@ class ExcelFormulaEnvironmentTest {
     Path outputPath = XlsxRoundTrip.newWorkbookPath("gridgrind-external-formula-");
 
     try (ExcelWorkbook workbook =
-        ExcelWorkbook.open(
+        ExcelWorkbooks.open(
             scenario.workbookPath(),
             new ExcelFormulaEnvironment(
                 List.of(
@@ -186,7 +186,7 @@ class ExcelFormulaEnvironmentTest {
                 ExcelFormulaMissingWorkbookPolicy.ERROR,
                 List.of()))) {
       workbook.formulas().evaluateAll();
-      workbook.save(outputPath);
+      workbook.persistence().save(outputPath);
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -198,12 +198,12 @@ class ExcelFormulaEnvironmentTest {
     Path outputPath = XlsxRoundTrip.newWorkbookPath("gridgrind-external-cached-");
 
     try (ExcelWorkbook workbook =
-        ExcelWorkbook.open(
+        ExcelWorkbooks.open(
             scenario.workbookPath(),
             new ExcelFormulaEnvironment(
                 List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()))) {
       workbook.formulas().evaluateAll();
-      workbook.save(outputPath);
+      workbook.persistence().save(outputPath);
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -215,7 +215,7 @@ class ExcelFormulaEnvironmentTest {
     Path outputPath = XlsxRoundTrip.newWorkbookPath("gridgrind-udf-formula-");
 
     try (ExcelWorkbook workbook =
-        ExcelWorkbook.open(
+        ExcelWorkbooks.open(
             workbookPath,
             new ExcelFormulaEnvironment(
                 List.of(),
@@ -225,7 +225,7 @@ class ExcelFormulaEnvironmentTest {
                         "math",
                         List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))))) {
       workbook.formulas().evaluateAll();
-      workbook.save(outputPath);
+      workbook.persistence().save(outputPath);
     }
 
     assertEquals(42.0d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -235,15 +235,15 @@ class ExcelFormulaEnvironmentTest {
   void targetedFormulaEvaluationRefreshesOnlyRequestedCachedResults() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-targeted-formula-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
       workbook.formulas().evaluateAll();
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(4.0d));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(4.0d));
       workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertEquals(8.0d, cachedFormulaValue(workbookPath, "Budget", "B1"));
@@ -254,14 +254,14 @@ class ExcelFormulaEnvironmentTest {
   void clearFormulaCachesRemovesPersistedCachedResults() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-cleared-formula-caches-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.formulas().clearCaches();
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "B1"));
@@ -274,10 +274,10 @@ class ExcelFormulaEnvironmentTest {
     Path udfWorkbookPath = createUdfFormulaWorkbook();
     Path unsupportedWorkbookPath = createUnsupportedFormulaWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       assertEquals(
           List.of(
@@ -286,7 +286,7 @@ class ExcelFormulaEnvironmentTest {
           workbook.formulas().assessAllCapabilities());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(externalScenario.workbookPath())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(externalScenario.workbookPath())) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -295,7 +295,7 @@ class ExcelFormulaEnvironmentTest {
       assertTrue(assessment.message().contains("Missing external workbook"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(udfWorkbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(udfWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -305,7 +305,7 @@ class ExcelFormulaEnvironmentTest {
       assertTrue(assessment.message().contains("DOUBLE"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(unsupportedWorkbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(unsupportedWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -318,10 +318,10 @@ class ExcelFormulaEnvironmentTest {
   @Test
   void assessFormulaCellCapabilitiesSupportsExplicitTargetsAndRejectsInvalidTargets()
       throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       assertEquals(
           List.of(
@@ -355,7 +355,7 @@ class ExcelFormulaEnvironmentTest {
     }
 
     Path invalidWorkbookPath = createInvalidFormulaWorkbook();
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(invalidWorkbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(invalidWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook
               .formulas()
@@ -379,7 +379,7 @@ class ExcelFormulaEnvironmentTest {
                 poiWorkbook,
                 FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom")))) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.formula("1+1"));
 
       IllegalStateException failure =
           assertThrows(IllegalStateException.class, workbook.formulas()::assessAllCapabilities);

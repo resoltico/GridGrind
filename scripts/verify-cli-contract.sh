@@ -314,12 +314,15 @@ printf '%s' "${protocol_help_output}" > "${help_protocol_path}"
 printf '%s' "${guidance_help_output}" > "${help_guidance_path}"
 
 set +e
-"${launcher[@]}" > "${noargs_stdout_path}" 2> "${noargs_stderr_path}"
+# Force the batch no-arg contract through a non-interactive stdin. The interactive PTY path is
+# verified separately below, so inheriting a caller TTY here would make the verifier itself
+# environment-sensitive instead of testing one stable surface.
+"${launcher[@]}" < /dev/null > "${noargs_stdout_path}" 2> "${noargs_stderr_path}"
 noargs_exit_code=$?
 set -e
 [[ ${noargs_exit_code} -eq 2 ]] || die "${label} bare invocation exited ${noargs_exit_code} instead of 2"
-[[ ! -s "${noargs_stdout_path}" ]] || die "${label} bare invocation wrote unexpected stdout"
-verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher[@]}"
+[[ ! -s "${noargs_stderr_path}" ]] || die "${label} bare invocation wrote unexpected stderr"
+verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher[@]}"
 
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
@@ -389,7 +392,7 @@ required_guidance_help_snippets = (
         "guidance help no longer includes the CLI-owned featured example command",
     ),
     (
-        "REQUIRES_EXAMPLE_ASSETS needs copied examples/ assets beside",
+        "requiredPaths names those paths directly.",
         "guidance help no longer explains asset-backed built-in example portability",
     ),
 )
@@ -438,16 +441,16 @@ for example in shipped_examples:
 
 expected_required_paths = {
         "CUSTOM_XML": [
-        "examples/custom-xml-assets/custom-xml-mapping.xlsx",
-        "examples/custom-xml-assets/custom-xml-update.xml",
+        "custom-xml-assets/custom-xml-mapping.xlsx",
+        "custom-xml-assets/custom-xml-update.xml",
     ],
     "SOURCE_BACKED_INPUT": [
-        "examples/source-backed-input-assets/title.txt",
-        "examples/source-backed-input-assets/total-formula.txt",
-        "examples/source-backed-input-assets/payload.bin",
+        "source-backed-input-assets/title.txt",
+        "source-backed-input-assets/total-formula.txt",
+        "source-backed-input-assets/payload.bin",
     ],
     "PACKAGE_SECURITY_INSPECTION": [
-        "examples/package-security-assets/gridgrind-package-security.xlsx",
+        "package-security-assets/gridgrind-package-security.xlsx",
     ],
 }
 for example_id, required_paths in expected_required_paths.items():
@@ -639,8 +642,8 @@ if doctor_summary.get("requiresStandardInputBinding") is not False:
     die("doctor report no longer reports STANDARD_INPUT requirements correctly")
 if doctor_report.get("warnings") != []:
     die("doctor report no longer emits an empty warnings list for the minimal request")
-if doctor_report.get("problem") is not None:
-    die("doctor report must omit the blocking problem for valid requests")
+if doctor_report.get("problems") != []:
+    die("doctor report must emit an empty problems list for the minimal request")
 PY
 
 printf 'Verified CLI contract surface: %s\n' "${label}"

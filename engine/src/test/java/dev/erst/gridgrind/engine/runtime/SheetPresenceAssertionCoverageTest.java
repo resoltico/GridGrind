@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import java.io.IOException;
@@ -23,7 +24,7 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(
@@ -105,7 +106,7 @@ class SheetPresenceAssertionCoverageTest {
     AssertionExecutor executor = new AssertionExecutor(workbookEngine, selectorResolver);
     WorkbookLocation location = new WorkbookLocation.UnsavedWorkbook();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       assertDoesNotThrow(

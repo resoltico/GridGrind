@@ -12,6 +12,7 @@ import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -77,7 +79,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .orElseThrow()
             .workspaceMode());
     assertEquals(
-        java.util.List.of("examples/package-security-assets/gridgrind-package-security.xlsx"),
+        java.util.List.of("package-security-assets/gridgrind-package-security.xlsx"),
         catalog.examples().stream()
             .filter(example -> "PACKAGE_SECURITY_INSPECTION".equals(example.id()))
             .findFirst()
@@ -104,7 +106,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(
         GridGrindShippedExamples.find("PACKAGE_SECURITY_INSPECTION").orElseThrow().plan(), request);
     assertTrue(
-        stderr.toString(StandardCharsets.UTF_8).contains("requires copied examples/ assets"),
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains("requires copied asset paths beside the request file"),
         "asset-backed example printing must warn about copied assets");
     assertTrue(
         stderr
@@ -160,12 +164,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the CLI failure report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains(
+                "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
     assertTrue(failure.message().contains("BOGUS_EXAMPLE"));
   }
@@ -367,6 +371,35 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void printAssetBackedTaskStarterWarnsOnStderrBeforeExecution() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-task-plan", "--lookup", "AUDIT_EXISTING_WORKBOOK"},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(GridGrindTaskPlanner.requestFor("AUDIT_EXISTING_WORKBOOK"), request);
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains("requires copied asset paths beside the request file"),
+        "asset-backed task starter printing must warn about copied assets");
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains("task-starter-assets/workbook-ops-source.xlsx"),
+        "asset-backed task starter printing must name the required copied asset paths");
+  }
+
+  @Test
   void printTaskPlanWithUnknownTaskReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -430,6 +463,27 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("DASHBOARD", report.candidates().getFirst().taskId());
     assertTrue(report.candidates().getFirst().matchedTerms().contains("dashboard"));
     assertTrue(report.candidates().getFirst().matchedTerms().contains("chart"));
+  }
+
+  @Test
+  void printTaskKeywordMatchReturnsNoCandidatesForGibberishQueries() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-task-keyword-match", "--query", "zzzz no such workflow"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    TaskKeywordMatchReport report =
+        GridGrindCliJson.readTaskKeywordMatchReport(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(List.of("zzzz"), report.normalizedTerms());
+    assertEquals(List.of("zzzz"), report.unmatchedTerms());
+    assertEquals(List.of(), report.suggestedIntentTags());
+    assertEquals(List.of(), report.candidates());
   }
 
   @Test
@@ -535,14 +589,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    RequestDoctorReport report = doctorReport(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_JSON, failure.code());
-    assertEquals("doctor-request", failure.command());
-    assertEquals(java.util.Optional.of(1), failure.location().jsonLine());
-    assertEquals(java.util.Optional.of(2), failure.location().jsonColumn());
-    assertEquals(java.util.Optional.empty(), failure.argument());
+    assertFalse(report.valid());
+    assertEquals(GridGrindProblemCode.INVALID_JSON, report.primaryProblem().orElseThrow().code());
+    assertEquals(java.util.Optional.of(1), readRequestContext(report).jsonLine());
+    assertEquals(java.util.Optional.of(2), readRequestContext(report).jsonColumn());
   }
 
   @Test
@@ -598,12 +651,81 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    RequestDoctorReport report = doctorReport(stdout, stderr);
 
-    assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals(java.util.Optional.of("--request"), failure.argument());
-    assertTrue(failure.message().contains("STANDARD_INPUT"));
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertTrue(report.primaryProblem().orElseThrow().message().contains("STANDARD_INPUT"));
+  }
+
+  @Test
+  void doctorRequestBatchesIndependentProblemsWhenOneRequestHasMultipleDefects()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request"},
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "EXISTING" },
+                      "persistence": { "type": "SAVE_AS" },
+                      "execution": {
+                        "mode": { "type": "EVENT_READ" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "EVALUATE_ALL" },
+                          "markRecalculateOnOpen": true
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": [
+                        {
+                          "stepId": "duplicate-step",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        },
+                        {
+                          "stepId": "duplicate-step",
+                          "target": {
+                            "type": "CELL_BY_ADDRESS",
+                            "sheetName": "Summary",
+                            "address": "A1"
+                          },
+                          "assertion": {
+                            "type": "EXPECT_CELL_VALUE",
+                            "expectedValue": { "type": "TEXT", "text": "x" }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(3, report.problems().size());
+    assertTrue(problemMessages.contains("Missing required field 'source.path'"));
+    assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
+    assertTrue(
+        problemMessages.stream()
+            .anyMatch(message -> message.contains("duplicate stepId values: duplicate-step")));
   }
 
   @Test
@@ -699,9 +821,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
-    assertEquals("RESOLVE_INPUTS", report.problem().orElseThrow().context().stage());
-    assertEquals("cell text must not be blank", report.problem().orElseThrow().message());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().stage());
+    assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
   }
 
   @Test
@@ -724,7 +847,8 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
     assertEquals("NEW", report.summary().orElseThrow().sourceType());
   }
 
@@ -754,11 +878,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(
         "GridGrind wrote the doctor report to "
             + responsePath.toAbsolutePath()
-            + "; inspect that file for problems."
+            + "; inspect that file for problems [INVALID_REQUEST: OVERWRITE persistence requires an"
+            + " EXISTING source; a NEW workbook has no source file to overwrite]."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
   }
 
   @Test
@@ -795,8 +921,9 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.problem().orElseThrow().code());
-    assertEquals("OPEN_WORKBOOK", report.problem().orElseThrow().context().stage());
+    assertEquals(
+        GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.primaryProblem().orElseThrow().code());
+    assertEquals("OPEN_WORKBOOK", report.primaryProblem().orElseThrow().context().stage());
     assertEquals(
         java.util.Optional.of(requestDirectory.resolve("missing-workbook.xlsx").toString()),
         openWorkbookContext(report).sourceWorkbookPath());
@@ -1082,12 +1209,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the CLI failure report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains(
+                "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
     assertTrue(failure.message().contains("BOGUS_XYZ"));
   }

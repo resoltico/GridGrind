@@ -39,18 +39,18 @@ class GridGrindCliHelpUnitTest {
   void renderHelpersCoverEmptyDefinitionAndReferenceSections() {
     assertEquals(
         "Limits:",
-        GridGrindCliHelp.renderDefinitions(
+        GridGrindCliHelpRenderSupport.renderDefinitions(
             new CliSurface.CliDefinitionSection("Limits", List.of())));
     assertEquals(
         "Docs:",
-        GridGrindCliHelp.renderReferences(
+        GridGrindCliHelpRenderSupport.renderReferences(
             new CliSurface.CliReferenceSection("Docs", List.of()), "https://example.invalid/root"));
   }
 
   @Test
   void renderHelpersWrapLongReferenceDescriptions() {
     String rendered =
-        GridGrindCliHelp.renderReferences(
+        GridGrindCliHelpRenderSupport.renderReferences(
             new CliSurface.CliReferenceSection(
                 "Docs",
                 List.of(
@@ -73,13 +73,29 @@ class GridGrindCliHelpUnitTest {
   void renderHelpersKeepOversizedSingleTokensOnTheirCurrentLine() {
     String longToken = "x".repeat(160);
     String rendered =
-        GridGrindCliHelp.renderReferences(
+        GridGrindCliHelpRenderSupport.renderReferences(
             new CliSurface.CliReferenceSection(
                 "Docs",
                 List.of(new CliSurface.ReferenceEntry("Quick Start", "QUICK_START.md", longToken))),
             "https://example.invalid/root");
 
     assertTrue(rendered.contains("\n    " + longToken));
+  }
+
+  @Test
+  void renderSectionWrapsBulletListsWithStableContinuationIndentation() {
+    String rendered =
+        GridGrindCliHelpRenderSupport.renderSection(
+            new CliSurface.CliSection(
+                "Notes",
+                List.of(
+                    "- One deliberately long bullet entry that needs continuation alignment for the"
+                        + " public help surface so wrapped lines remain easy to scan.")));
+
+    List<String> lines = rendered.lines().toList();
+    assertEquals("Notes:", lines.getFirst());
+    assertTrue(lines.get(1).startsWith("  - "));
+    assertTrue(lines.stream().skip(2).allMatch(line -> line.startsWith("    ")));
   }
 
   @Test

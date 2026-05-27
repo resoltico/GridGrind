@@ -130,18 +130,18 @@ final class ExcelChartTestSupport {
   }
 
   static void seedChartData(ExcelSheet sheet) {
-    sheet.setCell("A1", ExcelCellValue.text("Month"));
-    sheet.setCell("B1", ExcelCellValue.text("Plan"));
-    sheet.setCell("C1", ExcelCellValue.text("Actual"));
-    sheet.setCell("A2", ExcelCellValue.text("Jan"));
-    sheet.setCell("B2", ExcelCellValue.number(10d));
-    sheet.setCell("C2", ExcelCellValue.number(12d));
-    sheet.setCell("A3", ExcelCellValue.text("Feb"));
-    sheet.setCell("B3", ExcelCellValue.number(18d));
-    sheet.setCell("C3", ExcelCellValue.number(16d));
-    sheet.setCell("A4", ExcelCellValue.text("Mar"));
-    sheet.setCell("B4", ExcelCellValue.number(15d));
-    sheet.setCell("C4", ExcelCellValue.number(21d));
+    sheet.cells().setCell("A1", ExcelCellValue.text("Month"));
+    sheet.cells().setCell("B1", ExcelCellValue.text("Plan"));
+    sheet.cells().setCell("C1", ExcelCellValue.text("Actual"));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
+    sheet.cells().setCell("B2", ExcelCellValue.number(10d));
+    sheet.cells().setCell("C2", ExcelCellValue.number(12d));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
+    sheet.cells().setCell("B3", ExcelCellValue.number(18d));
+    sheet.cells().setCell("C3", ExcelCellValue.number(16d));
+    sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
+    sheet.cells().setCell("B4", ExcelCellValue.number(15d));
+    sheet.cells().setCell("C4", ExcelCellValue.number(21d));
   }
 
   static void seedChartData(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
@@ -161,6 +161,7 @@ final class ExcelChartTestSupport {
 
   static void seedChartNamedRanges(ExcelWorkbook workbook, String sheetName) {
     workbook
+        .names()
         .setNamedRange(
             new ExcelNamedRangeDefinition(
                 "ChartCategories",

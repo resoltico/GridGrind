@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,14 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals("parse-arguments", failure.command());
     assertEquals(java.util.Optional.of("--unknown"), failure.argument());
     assertEquals("Unknown argument: --unknown", failure.message());
+    assertEquals(
+        List.of("gridgrind --help", "gridgrind --help-protocol", "gridgrind --help-guidance"),
+        failure.suggestions());
+    assertEquals(
+        java.util.Optional.of(
+            "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the"
+                + " grammar, or --help-guidance for workflow-oriented commands."),
+        failure.resolution());
   }
 
   @Test
@@ -136,6 +145,16 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals("parse-arguments", failure.command());
     assertEquals(java.util.Optional.of("--request"), failure.argument());
     assertEquals("Missing value for --request", failure.message());
+    assertEquals(
+        List.of(
+            "gridgrind --request request.json --response response.json",
+            "gridgrind --doctor-request --request request.json --response doctor.json"),
+        failure.suggestions());
+    assertEquals(
+        java.util.Optional.of(
+            "Provide one readable request JSON file path, or omit --request and pipe one request"
+                + " document on standard input."),
+        failure.resolution());
   }
 
   @Test
@@ -630,12 +649,12 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the CLI failure report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for failure."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
+    assertTrue(
+        stderr
+            .toString(StandardCharsets.UTF_8)
+            .contains(
+                "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
+    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
     assertEquals("parse-arguments", failure.command());
     assertEquals("Unknown argument: --bogus-flag", failure.message());

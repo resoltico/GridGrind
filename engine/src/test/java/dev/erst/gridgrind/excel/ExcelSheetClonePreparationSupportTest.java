@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
@@ -86,73 +85,35 @@ class ExcelSheetClonePreparationSupportTest {
   }
 
   @Test
-  void prepareSourceSheetForCloneIgnoresNullHyperlinkEntries() throws Exception {
+  void prepareSourceSheetForCloneRepairsBlankExternalRelationshipIds() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Source");
-      sheet.createRow(0).createCell(0).setCellValue("Link");
+      sheet.createRow(1).createCell(0).setCellValue("Link");
       XSSFHyperlink hyperlink = workbook.getCreationHelper().createHyperlink(HyperlinkType.URL);
-      hyperlink.setAddress("https://example.com/null-guard");
-      sheet.getRow(0).getCell(0).setHyperlink(hyperlink);
+      hyperlink.setAddress("https://example.com/blank");
+      sheet.getRow(1).getCell(0).setHyperlink(hyperlink);
+      sheet.getHyperlinkList().getFirst().getCTHyperlink().setId(" ");
 
-      @SuppressWarnings("unchecked")
-      List<XSSFHyperlink> hyperlinks =
-          (List<XSSFHyperlink>)
-              ExcelSheetClonePreparationSupport.requireHyperlinksField(MethodHandles.lookup())
-                  .get(sheet);
-      hyperlinks.add(null);
+      support.prepareSourceSheetForClone(sheet);
 
-      assertDoesNotThrow(() -> support.prepareSourceSheetForClone(sheet));
-      assertNull(hyperlinks.getLast());
+      XSSFHyperlink prepared = sheet.getHyperlinkList().getFirst();
+      String relationId = prepared.getCTHyperlink().getId();
+      assertNotNull(relationId);
+      assertFalse(relationId.isBlank());
+      assertEquals(
+          "https://example.com/blank",
+          sheet.getPackagePart().getRelationship(relationId).getTargetURI().toString());
+      assertDoesNotThrow(() -> workbook.cloneSheet(workbook.getSheetIndex(sheet), "Replica"));
     }
   }
 
   @Test
-  void reflectivePoiAccessorsRejectInvalidLookups() {
-    NullPointerException hyperlinksFieldException =
-        assertThrows(
-            NullPointerException.class,
-            () -> ExcelSheetClonePreparationSupport.requireHyperlinksField(null));
-    assertEquals("lookup must not be null", hyperlinksFieldException.getMessage());
+  void prepareSourceSheetForCloneAcceptsSheetsWithoutHyperlinks() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Source");
 
-    NullPointerException hyperlinkConstructorException =
-        assertThrows(
-            NullPointerException.class,
-            () -> ExcelSheetClonePreparationSupport.requireHyperlinkConstructor(null));
-    assertEquals("lookup must not be null", hyperlinkConstructorException.getMessage());
-
-    assertDoesNotThrow(
-        () -> ExcelSheetClonePreparationSupport.requireHyperlinksField(MethodHandles.lookup()));
-    assertDoesNotThrow(
-        () ->
-            ExcelSheetClonePreparationSupport.requireHyperlinkConstructor(MethodHandles.lookup()));
-
-    IllegalStateException hyperlinksFieldLookupFailure =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExcelSheetClonePreparationSupport.requireHyperlinksField(
-                    MethodHandles.publicLookup()));
-    assertTrue(
-        hyperlinksFieldLookupFailure
-            .getMessage()
-            .contains("Apache POI private contract unavailable"));
-    assertTrue(
-        hyperlinksFieldLookupFailure
-            .getMessage()
-            .contains(
-                ExcelSheetClonePreparationSupport.HYPERLINKS_FIELD_CONTRACT.affectedSurface()));
-
-    IllegalStateException hyperlinkConstructorLookupFailure =
-        assertThrows(
-            IllegalStateException.class,
-            () ->
-                ExcelSheetClonePreparationSupport.requireHyperlinkConstructor(
-                    MethodHandles.publicLookup()));
-    assertTrue(
-        hyperlinkConstructorLookupFailure
-            .getMessage()
-            .contains(
-                ExcelSheetClonePreparationSupport.HYPERLINK_CONSTRUCTOR_CONTRACT
-                    .affectedSurface()));
+      assertDoesNotThrow(() -> support.prepareSourceSheetForClone(sheet));
+      assertEquals(List.of(), sheet.getHyperlinkList());
+    }
   }
 }

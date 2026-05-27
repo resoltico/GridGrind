@@ -74,14 +74,15 @@ class SpreadsheetSurfaceConverterCoverageTest {
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             inputPlots(inlineSeries(TextSourceInput.inline("Series"))));
-    ExcelChartDefinition definition = WorkbookCommandConverter.toExcelChartDefinition(chart);
+    ExcelChartDefinition definition =
+        WorkbookCommandDrawingInputConverter.toExcelChartDefinition(chart);
     WorkbookDrawingCommand.SetChart chartCommand =
         assertInstanceOf(
             WorkbookDrawingCommand.SetChart.class,
             WorkbookCommandConverter.toCommand(
                 new SheetSelector.ByName("Ops"), new DrawingMutationAction.SetChart(chart)));
     ExcelSignatureLineDefinition signatureLine =
-        WorkbookCommandConverter.toExcelSignatureLineDefinition(
+        WorkbookCommandDrawingInputConverter.toExcelSignatureLineDefinition(
             new SignatureLineInput(
                 "OpsSignature",
                 inputAnchor(),

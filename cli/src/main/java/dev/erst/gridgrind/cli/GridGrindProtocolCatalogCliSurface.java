@@ -27,6 +27,8 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-protocol-catalog --search <text> [--response <path>]",
                   "gridgrind --print-example --lookup <id> [--response <path>]",
                   "gridgrind --help | -h [--response <path>]",
+                  "gridgrind --help-protocol [--response <path>]",
+                  "gridgrind --help-guidance [--response <path>]",
                   "gridgrind --version [--response <path>]",
                   "gridgrind --license [--response <path>]")),
           new CliSurface.CliWorkflowSection(
@@ -37,7 +39,7 @@ final class GridGrindProtocolCatalogCliSurface {
                       List.of(
                           "List shipped task recipes: gridgrind --print-task-catalog"
                               + " --response tasks.json",
-                          "Get one starter task scaffold: gridgrind --print-task-plan"
+                          "Get one executable starter scenario: gridgrind --print-task-plan"
                               + " --lookup DASHBOARD --response dashboard-request.json",
                           "Search exact protocol shapes: gridgrind --print-protocol-catalog"
                               + " --search \"chart title\" --response catalog-search.json",
@@ -49,8 +51,8 @@ final class GridGrindProtocolCatalogCliSurface {
                       List.of(
                           "Start from the minimal request: gridgrind --print-request-template"
                               + " --response request.json",
-                          "Use --print-task-plan --lookup <id> when you want one runnable"
-                              + " starter request instead of building from scratch.",
+                          "Use --print-task-plan --lookup <id> when you want one executable"
+                              + " starter scenario instead of building from scratch.",
                           "Or copy one built-in example: gridgrind --print-example"
                               + " --lookup WORKBOOK_HEALTH --response example.json",
                           "Lint before executing: gridgrind --doctor-request --request"
@@ -279,17 +281,16 @@ final class GridGrindProtocolCatalogCliSurface {
               Optional.of(
                   "In Docker, mount the host directory that contains your request and workbook"
                       + " files, then set -w to that mount point so every relative path resolves"
-                      + " inside the mounted directory.")),
+                      + " inside the mounted directory. From a repository checkout, build the"
+                      + " same runtime surface with 'docker buildx build --load -t"
+                      + " gridgrind-local .' and replace {{CONTAINER_TAG}} with"
+                      + " 'gridgrind-local'.")),
           new CliSurface.CliDiscoverySection(
               "Discovery",
               List.of(
                   "gridgrind --print-request-template --response request.json",
                   "gridgrind --doctor-request --request request.json --response doctor.json",
                   "gridgrind --print-example-catalog --response example-catalog.json",
-                  "Use example workspaceMode before printing or running a starter request:"
-                      + " SELF_CONTAINED runs from a blank working directory;"
-                      + " REQUIRES_EXAMPLE_ASSETS needs copied examples/ assets beside the request"
-                      + " and publishes exact requiredPaths.",
                   "gridgrind --print-task-catalog --response tasks.json",
                   "gridgrind --print-task-plan --lookup <id> --response task-plan.json",
                   "gridgrind --print-task-keyword-match --query \"monthly sales dashboard with charts\""
@@ -298,28 +299,41 @@ final class GridGrindProtocolCatalogCliSurface {
               "Built-in generated examples",
               "Print one built-in example",
               List.of(
-                  "Example and diagnostics notes:",
-                  "  "
-                      + GridGrindContractText.workbookFindingsDiscoverySummary()
-                      + " Include it in any diagnostic plan with persistence.type=NONE.",
-                  "Task-catalog notes:",
-                  "  The CLI task catalog publishes high-level office-work recipes composed"
-                      + " from exact protocol capabilities.",
-                  "Protocol-catalog notes:",
-                  "  The protocol catalog remains the authoritative execution contract: it"
-                      + " lists each field, whether it is required, and the nested/plain type"
-                      + " group accepted by polymorphic fields such as target, action, query,"
-                      + " value, style, and scope.",
-                  "  Mutation, assertion, and inspection entries also publish targetSelectors"
-                      + " and stepTemplate so agents can see the allowed target families and"
-                      + " the exact step-level placement before sending a request.",
-                  "  Unqualified --lookup resolves individual type ids (SET_CELL, ENSURE_SHEET,"
-                      + " GET_CELLS, EXPECT_CELL_VALUE, …), nested/plain type-group names"
-                      + " (cellInputTypes, calculationStrategyTypes, …), and top-level operation"
-                      + " category names (mutationActionTypes, assertionTypes,"
-                      + " inspectionQueryTypes, sourceTypes, persistenceTypes, stepTypes)."
-                      + " Qualify with nestedTypes: or plainTypes: only when ids repeat across"
-                      + " groups."),
+                  new CliSurface.WorkflowEntry(
+                      "Example Portability Rules",
+                      List.of(
+                          "SELF_CONTAINED starters execute from a blank working directory.",
+                          "REQUIRES_EXAMPLE_ASSETS starters require copied asset paths beside the"
+                              + " request file; requiredPaths names those paths directly.",
+                          GridGrindContractText.workbookFindingsDiscoverySummary()
+                              + " Include it in any diagnostic plan with persistence.type=NONE.")),
+                  new CliSurface.WorkflowEntry(
+                      "Task Starter Rules",
+                      List.of(
+                          "The CLI task catalog publishes high-level office-work recipes composed"
+                              + " from exact protocol capabilities.",
+                          "Each task entry now publishes starter.suggestedRequestPath,"
+                              + " starter.workspaceMode, and starter.requiredPaths so agents can"
+                              + " decide whether one task starter is self-contained before"
+                              + " printing it.")),
+                  new CliSurface.WorkflowEntry(
+                      "Protocol Catalog Rules",
+                      List.of(
+                          "The protocol catalog remains the authoritative execution contract: it"
+                              + " lists each field, whether it is required, and the nested/plain"
+                              + " type group accepted by polymorphic fields such as target,"
+                              + " action, query, value, style, and scope.",
+                          "Mutation, assertion, and inspection entries also publish"
+                              + " targetSelectors and stepTemplate so agents can see the allowed"
+                              + " target families and the exact step-level placement before"
+                              + " sending a request.",
+                          "Unqualified --lookup resolves individual type ids (SET_CELL,"
+                              + " ENSURE_SHEET, GET_CELLS, EXPECT_CELL_VALUE, …), nested/plain"
+                              + " type-group names (cellInputTypes, calculationStrategyTypes, …),"
+                              + " and top-level operation category names (mutationActionTypes,"
+                              + " assertionTypes, inspectionQueryTypes, sourceTypes,"
+                              + " persistenceTypes, stepTypes). Qualify with nestedTypes: or"
+                              + " plainTypes: only when ids repeat across groups."))),
               "gridgrind --print-example --lookup "
                   + GridGrindShippedExamples.catalog().examples().getFirst().id()
                   + " --response example.json"),
@@ -351,8 +365,7 @@ final class GridGrindProtocolCatalogCliSurface {
                       "Lint one request, preflight source-backed input resolution plus existing"
                           + " workbook-source accessibility, and emit a machine-readable doctor"
                           + " report without mutating a workbook. The doctor response returns"
-                          + " warnings plus the first blocking problem, not a multi-problem"
-                          + " batch."),
+                          + " warnings plus every independently provable blocking problem."),
                   new CliSurface.DefinitionEntry(
                       "--print-request-template", "Print a minimal valid request JSON document."),
                   new CliSurface.DefinitionEntry(
@@ -363,7 +376,8 @@ final class GridGrindProtocolCatalogCliSurface {
                   new CliSurface.DefinitionEntry(
                       "--print-task-catalog",
                       "Print the machine-readable task catalog of high-level office-work"
-                          + " recipes."),
+                          + " recipes, including starter.suggestedRequestPath,"
+                          + " starter.workspaceMode, and starter.requiredPaths."),
                   new CliSurface.DefinitionEntry(
                       "--lookup <id>",
                       "With --print-example, --print-task-catalog, --print-task-plan, or"
@@ -376,12 +390,12 @@ final class GridGrindProtocolCatalogCliSurface {
                           + " (e.g. mutationActionTypes:SET_CELL) when ids repeat across groups."),
                   new CliSurface.DefinitionEntry(
                       "--print-task-plan --lookup <id>",
-                      "Print one runnable starter request scaffold for one task id."),
+                      "Print one executable starter scenario for one task id."),
                   new CliSurface.DefinitionEntry(
                       "--print-task-keyword-match --query <text>",
                       "Print ranked CLI-owned task matches for one English keyword query."
                           + " Use --print-task-plan --lookup <id> for the executable starter"
-                          + " request after you choose a task id. After normalization, at least"
+                          + " scenario after you choose a task id. After normalization, at least"
                           + " one searchable non-stop-word term must remain."),
                   new CliSurface.DefinitionEntry(
                       "--print-protocol-catalog", "Print the machine-readable protocol catalog."),
@@ -395,6 +409,11 @@ final class GridGrindProtocolCatalogCliSurface {
                       "--print-example --lookup <id>",
                       "Print one built-in generated example request."),
                   new CliSurface.DefinitionEntry("--help, -h", "Print the short synopsis."),
+                  new CliSurface.DefinitionEntry(
+                      "--help-protocol", "Print the authoritative CLI and request grammar only."),
+                  new CliSurface.DefinitionEntry(
+                      "--help-guidance",
+                      "Print workflow guidance, examples, Docker usage, and discovery playbooks."),
                   new CliSurface.DefinitionEntry(
                       "--version", "Print the GridGrind version and description."),
                   new CliSurface.DefinitionEntry(

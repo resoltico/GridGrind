@@ -24,6 +24,7 @@ import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityIssue;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -68,7 +69,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void preflightAndExecutionSucceedForSupportedPolicies() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       CalculationPolicyExecutor.PreflightOutcome notRequested =
           CalculationPolicyExecutor.preflight(workbook, null);
       CalculationPolicyExecutor.PreflightOutcome clearCachesOnly =
@@ -79,7 +80,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(clearCachesOnly.report().isEmpty());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       CalculationPolicyExecutor.ExecutionOutcome doNotCalculate =
           CalculationPolicyExecutor.execute(workbook, CalculationPolicyInput.defaults(), 0);
 
@@ -87,11 +88,11 @@ class CalculationPolicyExecutorTest {
       assertFalse(doNotCalculate.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
 
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
@@ -109,10 +110,10 @@ class CalculationPolicyExecutorTest {
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(5.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       CalculationPolicyInput targeted =
           calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"));
@@ -127,10 +128,10 @@ class CalculationPolicyExecutorTest {
       assertFalse(execution.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
       workbook.formulas().evaluateAll();
 
       CalculationPolicyExecutor.ExecutionOutcome clearCaches =
@@ -147,10 +148,10 @@ class CalculationPolicyExecutorTest {
       assertTrue(markOnly.report().markRecalculateOnOpenApplied());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(5.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(5.0d));
+      workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
 
       CalculationPolicyInput targetedAndMarked =
           new CalculationPolicyInput(
@@ -167,7 +168,7 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void preflightAndExecutionFailuresCarryClassificationAndValidation() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(createMixedFailureWorkbook())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createMixedFailureWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -177,7 +178,7 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(createInvalidFormulaWorkbook())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createInvalidFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
       CalculationPolicyExecutor.ExecutionOutcome targetedExecution =
@@ -197,7 +198,7 @@ class CalculationPolicyExecutorTest {
           targetedExecution.failure().orElseThrow().phase());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(createMissingExternalWorkbook())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createMissingExternalWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -206,7 +207,7 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(createUdfFormulaWorkbook())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createUdfFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -216,7 +217,7 @@ class CalculationPolicyExecutorTest {
       assertTrue(preflight.failure().orElseThrow().message().contains("DOUBLE"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.open(createUnsupportedFormulaWorkbook())) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
       CalculationPolicyExecutor.ExecutionOutcome execution =
@@ -440,7 +441,7 @@ class CalculationPolicyExecutorTest {
   }
 
   private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    return ExcelWorkbook.wrap(workbook);
+    return ExcelWorkbooks.wrap(workbook);
   }
 
   /** Workbook whose sheet iteration path fails so cache clearing can surface execution errors. */

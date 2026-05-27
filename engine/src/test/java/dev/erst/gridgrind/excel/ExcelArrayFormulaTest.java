@@ -17,20 +17,20 @@ class ExcelArrayFormulaTest {
   void arrayFormulaGroupsRoundTripThroughDirectSheetApis() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-array-formula-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
 
-      sheet.setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
-      sheet.setArrayFormula("F2", new ExcelArrayFormulaDefinition("SUM(B2:C2)"));
+      sheet.cells().setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
+      sheet.cells().setArrayFormula("F2", new ExcelArrayFormulaDefinition("SUM(B2:C2)"));
 
       ExcelArrayFormulaSnapshot multiCell =
-          sheet.arrayFormulas().stream()
+          sheet.cells().arrayFormulas().stream()
               .filter(snapshot -> "D2:D4".equals(snapshot.range()))
               .findFirst()
               .orElseThrow();
       ExcelArrayFormulaSnapshot singleCell =
-          sheet.arrayFormulas().stream()
+          sheet.cells().arrayFormulas().stream()
               .filter(snapshot -> "F2".equals(snapshot.range()))
               .findFirst()
               .orElseThrow();
@@ -40,38 +40,42 @@ class ExcelArrayFormulaTest {
       assertTrue(singleCell.singleCell());
 
       ExcelCellSnapshot.FormulaSnapshot formulaCell =
-          assertInstanceOf(ExcelCellSnapshot.FormulaSnapshot.class, sheet.snapshotCell("D3"));
+          assertInstanceOf(
+              ExcelCellSnapshot.FormulaSnapshot.class, sheet.cells().snapshotCell("D3"));
       assertEquals("B2:B4*C2:C4", formulaCell.formula());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelSheet sheet = reopened.sheet("Calc");
-      assertEquals(2, sheet.arrayFormulas().size());
+      assertEquals(2, sheet.cells().arrayFormulas().size());
       assertEquals(
           List.of("D2:D4", "F2"),
-          sheet.arrayFormulas().stream().map(ExcelArrayFormulaSnapshot::range).sorted().toList());
+          sheet.cells().arrayFormulas().stream()
+              .map(ExcelArrayFormulaSnapshot::range)
+              .sorted()
+              .toList());
 
-      sheet.clearArrayFormula("D3");
+      sheet.cells().clearArrayFormula("D3");
       assertEquals(
           List.of("F2"),
-          sheet.arrayFormulas().stream().map(ExcelArrayFormulaSnapshot::range).toList());
-      assertEquals("BLANK", sheet.snapshotCell("D2").effectiveType());
+          sheet.cells().arrayFormulas().stream().map(ExcelArrayFormulaSnapshot::range).toList());
+      assertEquals("BLANK", sheet.cells().snapshotCell("D2").effectiveType());
 
       IllegalArgumentException notArray =
-          assertThrows(IllegalArgumentException.class, () -> sheet.clearArrayFormula("A1"));
+          assertThrows(IllegalArgumentException.class, () -> sheet.cells().clearArrayFormula("A1"));
       assertTrue(notArray.getMessage().contains("is not part of an array formula"));
     }
   }
 
   @Test
   void arrayFormulaGroupsAreVisibleThroughWorkbookIntrospection() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
       ExcelSheet sheet = workbook.getOrCreateSheet("Calc");
       seedSourceData(sheet);
-      sheet.setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
+      sheet.cells().setArrayFormula("D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"));
 
       WorkbookSheetResult.ArrayFormulasResult result =
           assertInstanceOf(
@@ -88,17 +92,17 @@ class ExcelArrayFormulaTest {
   }
 
   private static void seedSourceData(ExcelSheet sheet) {
-    sheet.setCell("A1", ExcelCellValue.text("Month"));
-    sheet.setCell("B1", ExcelCellValue.text("Plan"));
-    sheet.setCell("C1", ExcelCellValue.text("Actual"));
-    sheet.setCell("A2", ExcelCellValue.text("Jan"));
-    sheet.setCell("A3", ExcelCellValue.text("Feb"));
-    sheet.setCell("A4", ExcelCellValue.text("Mar"));
-    sheet.setCell("B2", ExcelCellValue.number(10d));
-    sheet.setCell("B3", ExcelCellValue.number(18d));
-    sheet.setCell("B4", ExcelCellValue.number(15d));
-    sheet.setCell("C2", ExcelCellValue.number(12d));
-    sheet.setCell("C3", ExcelCellValue.number(16d));
-    sheet.setCell("C4", ExcelCellValue.number(21d));
+    sheet.cells().setCell("A1", ExcelCellValue.text("Month"));
+    sheet.cells().setCell("B1", ExcelCellValue.text("Plan"));
+    sheet.cells().setCell("C1", ExcelCellValue.text("Actual"));
+    sheet.cells().setCell("A2", ExcelCellValue.text("Jan"));
+    sheet.cells().setCell("A3", ExcelCellValue.text("Feb"));
+    sheet.cells().setCell("A4", ExcelCellValue.text("Mar"));
+    sheet.cells().setCell("B2", ExcelCellValue.number(10d));
+    sheet.cells().setCell("B3", ExcelCellValue.number(18d));
+    sheet.cells().setCell("B4", ExcelCellValue.number(15d));
+    sheet.cells().setCell("C2", ExcelCellValue.number(12d));
+    sheet.cells().setCell("C3", ExcelCellValue.number(16d));
+    sheet.cells().setCell("C4", ExcelCellValue.number(21d));
   }
 }

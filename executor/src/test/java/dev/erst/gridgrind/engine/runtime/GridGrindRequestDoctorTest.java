@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -111,9 +112,13 @@ class GridGrindRequestDoctorTest {
     assertFalse(invalidReport.valid());
     assertEquals(AnalysisSeverity.ERROR, invalidReport.severity());
     assertEquals(
-        GridGrindProblemCode.INVALID_REQUEST, invalidReport.problem().orElseThrow().code());
+        GridGrindProblemCode.INVALID_REQUEST, invalidReport.primaryProblem().orElseThrow().code());
     assertTrue(
-        invalidReport.problem().orElseThrow().message().contains("OVERWRITE persistence requires"));
+        invalidReport
+            .primaryProblem()
+            .orElseThrow()
+            .message()
+            .contains("OVERWRITE persistence requires"));
   }
 
   @Test
@@ -247,7 +252,7 @@ class GridGrindRequestDoctorTest {
             .diagnose(request, new ExecutionInputBindings(workingDirectory));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
         (dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs)
-            report.problem().orElseThrow().context();
+            report.primaryProblem().orElseThrow().context();
 
     assertFalse(report.valid());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
@@ -285,9 +290,10 @@ class GridGrindRequestDoctorTest {
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().orElseThrow().code());
-    assertEquals("RESOLVE_INPUTS", report.problem().orElseThrow().context().stage());
-    assertEquals("cell text must not be blank", report.problem().orElseThrow().message());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().stage());
+    assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
   }
 
   @Test
@@ -323,11 +329,11 @@ class GridGrindRequestDoctorTest {
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
     assertEquals(
-        GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND, report.problem().orElseThrow().code());
+        GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND, report.primaryProblem().orElseThrow().code());
     var context =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
-            report.problem().orElseThrow().context());
+            report.primaryProblem().orElseThrow().context());
     assertEquals("RESOLVE_INPUTS", context.stage());
     assertEquals(java.util.Optional.of("cell text"), context.inputKind());
     assertEquals(
@@ -359,11 +365,12 @@ class GridGrindRequestDoctorTest {
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
-    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.problem().orElseThrow().code());
+    assertEquals(
+        GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.primaryProblem().orElseThrow().code());
     var context =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook.class,
-            report.problem().orElseThrow().context());
+            report.primaryProblem().orElseThrow().context());
     assertEquals("OPEN_WORKBOOK", context.stage());
     assertEquals(
         java.util.Optional.of(workingDirectory.resolve("missing-workbook.xlsx").toString()),
@@ -374,8 +381,8 @@ class GridGrindRequestDoctorTest {
   void diagnoseWithBindingsAcceptsExistingWorkbookSourcesWhenOpenSucceeds() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-existing-success-");
     Path workbookPath = workingDirectory.resolve("existing.xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.save(workbookPath);
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.persistence().save(workbookPath);
     }
     WorkbookPlan request =
         readRequestWithSource(

@@ -10,6 +10,7 @@ import java.util.Objects;
 /** Normalizes and resolves local file hyperlink paths independently of Apache POI quirks. */
 final class ExcelFileHyperlinkTargets {
   private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
+  private static final String SAFE_URI_PATH_CODE_POINTS = "-._~/:";
 
   private ExcelFileHyperlinkTargets() {}
 
@@ -180,19 +181,8 @@ final class ExcelFileHyperlinkTargets {
   }
 
   private static boolean isPlainUriPathCodePoint(int codePoint) {
-    if (codePoint >= 'A' && codePoint <= 'Z') {
-      return true;
-    }
-    if (codePoint >= 'a' && codePoint <= 'z') {
-      return true;
-    }
-    if (codePoint >= '0' && codePoint <= '9') {
-      return true;
-    }
-    return switch (codePoint) {
-      case '-', '.', '_', '~', '/', ':' -> true;
-      default -> false;
-    };
+    return Character.isLetterOrDigit(codePoint)
+        || SAFE_URI_PATH_CODE_POINTS.indexOf(codePoint) >= 0;
   }
 
   private static void appendPercentEncoded(StringBuilder builder, int codePoint) {

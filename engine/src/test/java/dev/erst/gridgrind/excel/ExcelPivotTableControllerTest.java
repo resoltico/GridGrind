@@ -25,7 +25,7 @@ class ExcelPivotTableControllerTest {
   void setPivotTable_roundTripsRangeBackedPivotAcrossSaveAndLoad() throws IOException {
     var workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-pivot-range-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
 
@@ -68,10 +68,10 @@ class ExcelPivotTableControllerTest {
               .pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All())
               .isEmpty());
 
-      workbook.save(workbookPath);
+      workbook.persistence().save(workbookPath);
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
       ExcelPivotTableSnapshot.Supported snapshot =
           assertInstanceOf(
               ExcelPivotTableSnapshot.Supported.class,
@@ -88,18 +88,22 @@ class ExcelPivotTableControllerTest {
 
   @Test
   void setPivotTable_supportsNamedRangeTableSourcesAndReportFilters() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("NamedReport");
       workbook.getOrCreateSheet("TableReport");
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "PivotSource",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              ExcelNamedRangeTarget.range("Data", "A1:D5")));
-      workbook.setTable(
-          new ExcelTableDefinition(
-              "SalesTable", "Data", "A1:D5", false, new ExcelTableStyle.None()));
+      workbook
+          .names()
+          .setNamedRange(
+              new ExcelNamedRangeDefinition(
+                  "PivotSource",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  ExcelNamedRangeTarget.range("Data", "A1:D5")));
+      workbook
+          .tables()
+          .setTable(
+              new ExcelTableDefinition(
+                  "SalesTable", "Data", "A1:D5", false, new ExcelTableStyle.None()));
 
       controller.setPivotTable(
           workbook,
@@ -146,7 +150,7 @@ class ExcelPivotTableControllerTest {
 
   @Test
   void deletePivotTable_rejectsWrongSheetAndNormalizesCacheIdsAfterDelete() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("ReportA");
       workbook.getOrCreateSheet("ReportB");
@@ -207,7 +211,7 @@ class ExcelPivotTableControllerTest {
 
   @Test
   void pivotTableHealth_reportsMissingNamesAndBrokenSourcesTruthfully() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
 
@@ -254,7 +258,7 @@ class ExcelPivotTableControllerTest {
 
   @Test
   void setPivotTable_rejectsReportFilterAnchorsAboveThirdRow() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       populatePivotSource(workbook, "Data");
       workbook.getOrCreateSheet("Report");
 
@@ -303,34 +307,36 @@ class ExcelPivotTableControllerTest {
 
   private void populatePivotSource(ExcelWorkbook workbook, String sheetName) {
     ExcelSheet sheet = workbook.getOrCreateSheet(sheetName);
-    sheet.setRange(
-        "A1:D5",
-        List.of(
+    sheet
+        .cells()
+        .setRange(
+            "A1:D5",
             List.of(
-                ExcelCellValue.text("Region"),
-                ExcelCellValue.text("Stage"),
-                ExcelCellValue.text("Owner"),
-                ExcelCellValue.text("Amount")),
-            List.of(
-                ExcelCellValue.text("North"),
-                ExcelCellValue.text("Plan"),
-                ExcelCellValue.text("Ada"),
-                ExcelCellValue.number(10)),
-            List.of(
-                ExcelCellValue.text("North"),
-                ExcelCellValue.text("Do"),
-                ExcelCellValue.text("Ada"),
-                ExcelCellValue.number(15)),
-            List.of(
-                ExcelCellValue.text("South"),
-                ExcelCellValue.text("Plan"),
-                ExcelCellValue.text("Lin"),
-                ExcelCellValue.number(7)),
-            List.of(
-                ExcelCellValue.text("South"),
-                ExcelCellValue.text("Do"),
-                ExcelCellValue.text("Lin"),
-                ExcelCellValue.number(12))));
+                List.of(
+                    ExcelCellValue.text("Region"),
+                    ExcelCellValue.text("Stage"),
+                    ExcelCellValue.text("Owner"),
+                    ExcelCellValue.text("Amount")),
+                List.of(
+                    ExcelCellValue.text("North"),
+                    ExcelCellValue.text("Plan"),
+                    ExcelCellValue.text("Ada"),
+                    ExcelCellValue.number(10)),
+                List.of(
+                    ExcelCellValue.text("North"),
+                    ExcelCellValue.text("Do"),
+                    ExcelCellValue.text("Ada"),
+                    ExcelCellValue.number(15)),
+                List.of(
+                    ExcelCellValue.text("South"),
+                    ExcelCellValue.text("Plan"),
+                    ExcelCellValue.text("Lin"),
+                    ExcelCellValue.number(7)),
+                List.of(
+                    ExcelCellValue.text("South"),
+                    ExcelCellValue.text("Do"),
+                    ExcelCellValue.text("Lin"),
+                    ExcelCellValue.number(12))));
   }
 
   private List<String> fieldNames(List<ExcelPivotTableSnapshot.Field> fields) {

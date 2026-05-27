@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
 import dev.erst.gridgrind.cli.discovery.TaskCapabilityRef;
 import dev.erst.gridgrind.cli.discovery.TaskEntry;
 import dev.erst.gridgrind.cli.discovery.TaskExecutionProfile;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -27,17 +27,23 @@ final class GridGrindTaskPlanner {
   /** Returns one runnable starter request for the supplied stable task id. */
   static WorkbookPlan requestFor(String taskId) {
     String requestedTaskId = requireNonBlank(taskId, "taskId");
-    return GridGrindTaskCatalog.entryFor(requestedTaskId)
-        .map(GridGrindTaskPlanner::requestFor)
+    return dev.erst.gridgrind.cli.examples.GridGrindTaskStarterPlans.findPlan(requestedTaskId)
         .orElseThrow(
             () ->
                 new IllegalArgumentException(
                     "Unknown task id for task planning: " + requestedTaskId));
   }
 
-  /** Returns one runnable starter request for the supplied task entry. */
+  /**
+   * Returns one executable starter request for official task ids or one generic scaffold ad hoc.
+   */
   static WorkbookPlan requestFor(TaskEntry task) {
     TaskEntry taskEntry = java.util.Objects.requireNonNull(task, "task must not be null");
+    Optional<WorkbookPlan> curatedStarter =
+        dev.erst.gridgrind.cli.examples.GridGrindTaskStarterPlans.findPlan(taskEntry.id());
+    if (curatedStarter.isPresent()) {
+      return curatedStarter.orElseThrow();
+    }
     TaskExecutionProfile profile = taskEntry.executionProfile();
     WorkbookPlan.WorkbookSource source = sourceFor(taskEntry.id(), profile);
     WorkbookPlan.WorkbookPersistence persistence = persistenceFor(taskEntry, source);

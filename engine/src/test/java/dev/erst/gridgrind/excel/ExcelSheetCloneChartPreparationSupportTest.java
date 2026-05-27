@@ -24,7 +24,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
   @Test
   void rewriteDefinedNameFormulasPreservesLeadingEqualsAndRestoresOriginalText()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       XSSFSheet sourceSheet = namedRangeChartSheet(workbook);
       Node categoriesFormulaNode = formulaNode(sourceSheet, "ChartCategories");
       Node valuesFormulaNode = formulaNode(sourceSheet, "ChartPlan");
@@ -47,7 +47,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
 
   @Test
   void rewriteDefinedNameFormulasIgnoresBlankAndPayloadlessFormulaNodes() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       XSSFSheet sourceSheet = namedRangeChartSheet(workbook);
       Node categoriesFormulaNode = formulaNode(sourceSheet, "ChartCategories");
       Node valuesFormulaNode = formulaNode(sourceSheet, "ChartPlan");
@@ -65,7 +65,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
 
   @Test
   void restoreSourceFormulasFailsWhenARewrittenFormulaLosesItsTextPayload() throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       XSSFSheet sourceSheet = namedRangeChartSheet(workbook);
       Node categoriesFormulaNode = formulaNode(sourceSheet, "ChartCategories");
 
@@ -100,21 +100,23 @@ class ExcelSheetCloneChartPreparationSupportTest {
     ExcelSheet source = workbook.getOrCreateSheet("Source");
     ExcelChartTestSupport.seedChartData(source);
     ExcelChartTestSupport.seedChartNamedRanges(workbook, "Source");
-    source.setChart(
-        ExcelChartTestSupport.barChart(
-            "NamedRangeChart",
-            ExcelChartTestSupport.anchor(4, 1, 10, 14),
-            new ExcelChartDefinition.Title.Text("Named ranges"),
-            new ExcelChartDefinition.Legend.Hidden(),
-            ExcelChartDisplayBlanksAs.GAP,
-            true,
-            false,
-            ExcelChartBarDirection.COLUMN,
-            List.of(
-                new ExcelChartDefinition.Series(
-                    new ExcelChartDefinition.Title.Text("Plan"),
-                    ExcelChartTestSupport.ref("ChartCategories"),
-                    ExcelChartTestSupport.ref("ChartPlan")))));
+    source
+        .drawings()
+        .setChart(
+            ExcelChartTestSupport.barChart(
+                "NamedRangeChart",
+                ExcelChartTestSupport.anchor(4, 1, 10, 14),
+                new ExcelChartDefinition.Title.Text("Named ranges"),
+                new ExcelChartDefinition.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                ExcelChartBarDirection.COLUMN,
+                List.of(
+                    new ExcelChartDefinition.Series(
+                        new ExcelChartDefinition.Title.Text("Plan"),
+                        ExcelChartTestSupport.ref("ChartCategories"),
+                        ExcelChartTestSupport.ref("ChartPlan")))));
     return source.xssfSheet();
   }
 

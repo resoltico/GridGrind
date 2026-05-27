@@ -22,22 +22,40 @@ public final class GridGrindJson {
   /** Reads a request from an input stream without closing the caller-owned stream. */
   public static WorkbookPlan readRequest(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
-    return readRequestTree(
-        GridGrindJsonCodecSupport.readTree(
-            inputStream,
-            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-            GridGrindJsonMessageSupport::invalidRequestPayload));
+    return GridGrindJsonCodecSupport.decodeTree(
+        readRequestTree(inputStream),
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+        WorkbookPlan.class,
+        GridGrindJsonMessageSupport::invalidRequestPayload);
   }
 
   /** Reads a request from a byte array. */
   public static WorkbookPlan readRequest(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
+    return GridGrindJsonCodecSupport.decodeTree(
+        readRequestTree(bytes),
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+        WorkbookPlan.class,
+        GridGrindJsonMessageSupport::invalidRequestPayload);
+  }
+
+  /** Reads one request JSON tree from an input stream without closing the caller-owned stream. */
+  public static JsonNode readRequestTree(InputStream inputStream) throws IOException {
+    Objects.requireNonNull(inputStream, "inputStream must not be null");
+    return GridGrindJsonCodecSupport.readTree(
+        inputStream,
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+        GridGrindJsonMessageSupport::invalidRequestPayload);
+  }
+
+  /** Reads one request JSON tree from a byte array. */
+  public static JsonNode readRequestTree(byte[] bytes) throws IOException {
+    Objects.requireNonNull(bytes, "bytes must not be null");
     GridGrindJsonMapperSupport.requireSupportedRequestLength(bytes.length);
-    return readRequestTree(
-        GridGrindJsonCodecSupport.readTree(
-            bytes,
-            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-            GridGrindJsonMessageSupport::invalidRequestPayload));
+    return GridGrindJsonCodecSupport.readTree(
+        bytes,
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+        GridGrindJsonMessageSupport::invalidRequestPayload);
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */
@@ -223,14 +241,6 @@ public final class GridGrindJson {
 
   static java.util.Optional<Integer> jsonColumn(TokenStreamLocation location) {
     return GridGrindJsonMessageSupport.jsonColumn(location);
-  }
-
-  private static WorkbookPlan readRequestTree(JsonNode requestNode) throws IOException {
-    return GridGrindJsonCodecSupport.decodeTree(
-        requestNode,
-        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        WorkbookPlan.class,
-        GridGrindJsonMessageSupport::invalidRequestPayload);
   }
 
   private static void writeValue(OutputStream outputStream, Object value) throws IOException {

@@ -13,6 +13,7 @@ lock_initialization_attempts=40
 lock_initialization_sleep_seconds=0.05
 lock_scope_name="${lock_scope_name:-GridGrind verification command}"
 lock_scope_advice="${lock_scope_advice:-run one GridGrind verification command at a time}"
+lock_include_owner_command="${lock_include_owner_command:-true}"
 lock_is_reentrant=false
 lock_owned_by_current_process=false
 
@@ -56,7 +57,7 @@ current_process_descends_from_pid() {
 report_lock_conflict() {
   local lock_pid=${1:-}
   local lock_description=''
-  if [[ -n "${lock_pid}" ]]; then
+  if [[ -n "${lock_pid}" && "${lock_include_owner_command}" == true ]]; then
     lock_description="$(lock_pid_description "${lock_pid}")"
     if [[ -n "${lock_description}" ]]; then
       printf 'another %s is already running with PID %s (%s); %s\n' \

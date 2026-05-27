@@ -35,65 +35,68 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+      ExcelSheetCells cells = sheet.cells();
 
       assertSame(
-          sheet,
-          sheet.appendRow(
+          cells,
+          cells.appendRow(
               ExcelCellValue.text("Name"),
               ExcelCellValue.number(42.5),
               ExcelCellValue.bool(true),
               ExcelCellValue.formula("B1*2"),
               ExcelCellValue.formula("TRUE()"),
               ExcelCellValue.formula("\"Hi\"")));
-      sheet.appendRow(
-          ExcelCellValue.blank(),
-          ExcelCellValue.date(LocalDate.of(2026, 3, 23)),
-          ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
-          ExcelCellValue.formula("1/0"));
-      sheet.setCell("B3", ExcelCellValue.date(LocalDate.of(2026, 3, 24)));
-      sheet.setCell("C3", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
-      sheet.autoSizeColumns();
+      sheet
+          .cells()
+          .appendRow(
+              ExcelCellValue.blank(),
+              ExcelCellValue.date(LocalDate.of(2026, 3, 23)),
+              ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 23, 14, 15, 16)),
+              ExcelCellValue.formula("1/0"));
+      sheet.cells().setCell("B3", ExcelCellValue.date(LocalDate.of(2026, 3, 24)));
+      sheet.cells().setCell("C3", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
+      sheet.columns().autoSize();
 
       Row errorRow = poiSheet.createRow(3);
       Cell errorCell = errorRow.createCell(0);
       errorCell.setCellErrorValue(FormulaError.DIV0.getCode());
 
       assertEquals("Budget", sheet.name());
-      assertEquals("Name", sheet.text("A1"));
-      assertEquals(85.0, sheet.number("D1"));
-      assertTrue(sheet.bool("C1"));
-      assertTrue(sheet.bool("E1"));
-      assertEquals("B1*2", sheet.formula("D1"));
-      assertEquals(4, sheet.physicalRowCount());
-      assertEquals(3, sheet.lastRowIndex());
-      assertEquals(5, sheet.lastColumnIndex());
+      assertEquals("Name", sheet.cells().text("A1"));
+      assertEquals(85.0, sheet.cells().number("D1"));
+      assertTrue(sheet.cells().bool("C1"));
+      assertTrue(sheet.cells().bool("E1"));
+      assertEquals("B1*2", sheet.cells().formula("D1"));
+      assertEquals(4, sheet.rows().physicalCount());
+      assertEquals(3, sheet.rows().lastIndex());
+      assertEquals(5, sheet.columns().lastIndex());
 
       ExcelCellSnapshot.TextSnapshot textSnapshot =
-          (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
+          (ExcelCellSnapshot.TextSnapshot) sheet.cells().snapshotCell("A1");
       assertEquals("STRING", textSnapshot.declaredType());
       assertEquals("STRING", textSnapshot.effectiveType());
       assertEquals("Name", textSnapshot.stringValue());
       assertNull(textSnapshot.richText());
 
       ExcelCellSnapshot.NumberSnapshot numberSnapshot =
-          (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
+          (ExcelCellSnapshot.NumberSnapshot) sheet.cells().snapshotCell("B1");
       assertEquals("NUMBER", numberSnapshot.declaredType());
       assertEquals("NUMBER", numberSnapshot.effectiveType());
       assertEquals(42.5, numberSnapshot.numberValue());
 
       ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
-          (ExcelCellSnapshot.BooleanSnapshot) sheet.snapshotCell("C1");
+          (ExcelCellSnapshot.BooleanSnapshot) sheet.cells().snapshotCell("C1");
       assertEquals("BOOLEAN", booleanSnapshot.declaredType());
       assertEquals("BOOLEAN", booleanSnapshot.effectiveType());
       assertTrue(booleanSnapshot.booleanValue());
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
+          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A2");
       assertEquals("BLANK", blankSnapshot.declaredType());
       assertEquals("BLANK", blankSnapshot.effectiveType());
 
       ExcelCellSnapshot.FormulaSnapshot stringFormulaSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("F1");
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("F1");
       assertEquals("FORMULA", stringFormulaSnapshot.declaredType());
       assertEquals("FORMULA", stringFormulaSnapshot.effectiveType());
       assertEquals("\"Hi\"", stringFormulaSnapshot.formula());
@@ -102,7 +105,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation()).stringValue());
 
       ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot =
-          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("D2");
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D2");
       assertEquals("FORMULA", errorFormulaSnapshot.declaredType());
       assertEquals("FORMULA", errorFormulaSnapshot.effectiveType());
       assertEquals(
@@ -110,12 +113,12 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation()).errorValue());
 
       ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
-          (ExcelCellSnapshot.ErrorSnapshot) sheet.snapshotCell("A4");
+          (ExcelCellSnapshot.ErrorSnapshot) sheet.cells().snapshotCell("A4");
       assertEquals("ERROR", errorSnapshot.declaredType());
       assertEquals("ERROR", errorSnapshot.effectiveType());
       assertEquals("#DIV/0!", errorSnapshot.errorValue());
 
-      List<ExcelPreviewRow> preview = sheet.preview(4, 6);
+      List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address());
       assertTrue(preview.get(1).cells().stream().noneMatch(cell -> "A2".equals(cell.address())));
@@ -131,91 +134,104 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      assertThrows(NullPointerException.class, () -> sheet.setCell(null, ExcelCellValue.text("x")));
       assertThrows(
-          IllegalArgumentException.class, () -> sheet.setCell(" ", ExcelCellValue.text("x")));
-      assertThrows(NullPointerException.class, () -> sheet.setCell("A1", null));
-      assertThrows(
-          NullPointerException.class,
-          () -> sheet.setRange(null, List.of(List.of(ExcelCellValue.text("x")))));
+          NullPointerException.class, () -> sheet.cells().setCell(null, ExcelCellValue.text("x")));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setRange(" ", List.of(List.of(ExcelCellValue.text("x")))));
-      assertThrows(NullPointerException.class, () -> sheet.setRange("A1", null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setRange("A1", List.of()));
-      assertThrows(NullPointerException.class, () -> sheet.clearRange(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.clearRange(" "));
-      assertThrows(NullPointerException.class, () -> sheet.mergeCells(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells(" "));
-      assertThrows(NullPointerException.class, () -> sheet.unmergeCells(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.unmergeCells(" "));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(-1, 0, 16.0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(1, 0, 16.0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, 0.0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, 256.0));
+          () -> sheet.cells().setCell(" ", ExcelCellValue.text("x")));
+      assertThrows(NullPointerException.class, () -> sheet.cells().setCell("A1", null));
       assertThrows(
-          IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, Double.MIN_VALUE));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, Double.NaN));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(-1, 0, 28.5));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(1, 0, 28.5));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, 0.0));
+          NullPointerException.class,
+          () -> sheet.cells().setRange(null, List.of(List.of(ExcelCellValue.text("x")))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.cells().setRange(" ", List.of(List.of(ExcelCellValue.text("x")))));
+      assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().setRange("A1", List.of()));
+      assertThrows(NullPointerException.class, () -> sheet.cells().clearRange(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().clearRange(" "));
+      assertThrows(NullPointerException.class, () -> sheet.layout().mergeCells(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().mergeCells(" "));
+      assertThrows(NullPointerException.class, () -> sheet.layout().unmergeCells(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().unmergeCells(" "));
+      assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(-1, 0, 16.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(1, 0, 16.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(0, 0, 0.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.columns().setWidth(0, 0, 256.0));
+      assertThrows(
+          IllegalArgumentException.class, () -> sheet.columns().setWidth(0, 0, Double.MIN_VALUE));
+      assertThrows(
+          IllegalArgumentException.class, () -> sheet.columns().setWidth(0, 0, Double.NaN));
+      assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(-1, 0, 28.5));
+      assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(1, 0, 28.5));
+      assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, 0.0));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.setRowHeight(0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
+              sheet
+                  .rows()
+                  .setHeight(0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
       assertThrows(
-          IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.MIN_VALUE));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.NaN));
-      assertThrows(NullPointerException.class, () -> sheet.setPane(null));
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(-1, 0, 0, 0)));
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(0, 0, 0, 0)));
+          IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, Double.MIN_VALUE));
+      assertThrows(IllegalArgumentException.class, () -> sheet.rows().setHeight(0, 0, Double.NaN));
+      assertThrows(NullPointerException.class, () -> sheet.layout().setPane(null));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(0, 1, 1, 1)));
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(-1, 0, 0, 0)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(1, 0, 1, 1)));
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(0, 0, 0, 0)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(2, 1, 1, 1)));
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(0, 1, 1, 1)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setPane(new ExcelSheetPane.Frozen(1, 2, 1, 1)));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setZoom(9));
-      assertThrows(IllegalArgumentException.class, () -> sheet.setZoom(401));
-      assertThrows(NullPointerException.class, () -> sheet.setPrintLayout(null));
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 0, 1, 1)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(2, 1, 1, 1)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 2, 1, 1)));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().setZoom(9));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().setZoom(401));
+      assertThrows(NullPointerException.class, () -> sheet.layout().setPrintLayout(null));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.applyStyle(null, ExcelCellStyle.numberFormat("0")));
+          () -> sheet.cells().applyStyle(null, ExcelCellStyle.numberFormat("0")));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.applyStyle(" ", ExcelCellStyle.numberFormat("0")));
-      assertThrows(NullPointerException.class, () -> sheet.applyStyle("A1", null));
+          () -> sheet.cells().applyStyle(" ", ExcelCellStyle.numberFormat("0")));
+      assertThrows(NullPointerException.class, () -> sheet.cells().applyStyle("A1", null));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.setHyperlink(null, new ExcelHyperlink.Url("https://example.com")));
+          () ->
+              sheet
+                  .annotations()
+                  .setHyperlink(null, new ExcelHyperlink.Url("https://example.com")));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setHyperlink(" ", new ExcelHyperlink.Url("https://example.com")));
-      assertThrows(NullPointerException.class, () -> sheet.setHyperlink("A1", null));
-      assertThrows(NullPointerException.class, () -> sheet.clearHyperlink(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.clearHyperlink(" "));
+          () ->
+              sheet.annotations().setHyperlink(" ", new ExcelHyperlink.Url("https://example.com")));
+      assertThrows(NullPointerException.class, () -> sheet.annotations().setHyperlink("A1", null));
+      assertThrows(NullPointerException.class, () -> sheet.annotations().clearHyperlink(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.annotations().clearHyperlink(" "));
       assertThrows(
           NullPointerException.class,
-          () -> sheet.setComment(null, new ExcelComment("Review", "GridGrind", false)));
+          () ->
+              sheet.annotations().setComment(null, new ExcelComment("Review", "GridGrind", false)));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setComment(" ", new ExcelComment("Review", "GridGrind", false)));
-      assertThrows(NullPointerException.class, () -> sheet.setComment("A1", null));
-      assertThrows(NullPointerException.class, () -> sheet.clearComment(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.clearComment(" "));
-      assertThrows(NullPointerException.class, () -> sheet.appendRow((ExcelCellValue[]) null));
+          () ->
+              sheet.annotations().setComment(" ", new ExcelComment("Review", "GridGrind", false)));
+      assertThrows(NullPointerException.class, () -> sheet.annotations().setComment("A1", null));
+      assertThrows(NullPointerException.class, () -> sheet.annotations().clearComment(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.annotations().clearComment(" "));
       assertThrows(
-          NullPointerException.class, () -> sheet.appendRow(ExcelCellValue.text("x"), null));
+          NullPointerException.class, () -> sheet.cells().appendRow((ExcelCellValue[]) null));
+      assertThrows(
+          NullPointerException.class,
+          () -> sheet.cells().appendRow(ExcelCellValue.text("x"), null));
     }
   }
 
@@ -227,50 +243,54 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      assertThrows(NullPointerException.class, () -> sheet.snapshotCell(null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.snapshotCell(" "));
+      assertThrows(NullPointerException.class, () -> sheet.cells().snapshotCell(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().snapshotCell(" "));
       InvalidCellAddressException invalidSetCell =
           assertThrows(
               InvalidCellAddressException.class,
-              () -> sheet.setCell(":", ExcelCellValue.text("x")));
+              () -> sheet.cells().setCell(":", ExcelCellValue.text("x")));
       assertEquals(":", invalidSetCell.address());
       InvalidCellAddressException invalidSnapshotCell =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell(":"));
+          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell(":"));
       assertEquals(":", invalidSnapshotCell.address());
       InvalidCellAddressException badAddrSnapshot =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("BADADDR"));
+          assertThrows(
+              InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("BADADDR"));
       assertEquals("BADADDR", badAddrSnapshot.address());
       InvalidCellAddressException a0Snapshot =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("A0"));
+          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("A0"));
       assertEquals("A0", a0Snapshot.address());
       InvalidCellAddressException numericOnlySnapshot =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("1"));
+          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("1"));
       assertEquals("1", numericOnlySnapshot.address());
       InvalidCellAddressException outOfBoundsRow =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("A1048577"));
+          assertThrows(
+              InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("A1048577"));
       assertEquals("A1048577", outOfBoundsRow.address());
       InvalidCellAddressException outOfBoundsCol =
-          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("XFE1"));
+          assertThrows(InvalidCellAddressException.class, () -> sheet.cells().snapshotCell("XFE1"));
       assertEquals("XFE1", outOfBoundsCol.address());
       InvalidRangeAddressException invalidRangeSet =
           assertThrows(
               InvalidRangeAddressException.class,
-              () -> sheet.setRange("A1:", List.of(List.of(ExcelCellValue.text("x")))));
+              () -> sheet.cells().setRange("A1:", List.of(List.of(ExcelCellValue.text("x")))));
       assertEquals("A1:", invalidRangeSet.range());
       InvalidRangeAddressException invalidRangeClear =
-          assertThrows(InvalidRangeAddressException.class, () -> sheet.clearRange("A1:B2:C3"));
+          assertThrows(
+              InvalidRangeAddressException.class, () -> sheet.cells().clearRange("A1:B2:C3"));
       assertEquals("A1:B2:C3", invalidRangeClear.range());
       InvalidRangeAddressException invalidRangeMerge =
-          assertThrows(InvalidRangeAddressException.class, () -> sheet.mergeCells("A1:"));
+          assertThrows(InvalidRangeAddressException.class, () -> sheet.layout().mergeCells("A1:"));
       assertEquals("A1:", invalidRangeMerge.range());
       InvalidRangeAddressException invalidRangeUnmerge =
-          assertThrows(InvalidRangeAddressException.class, () -> sheet.unmergeCells("A1:"));
+          assertThrows(
+              InvalidRangeAddressException.class, () -> sheet.layout().unmergeCells("A1:"));
       assertEquals("A1:", invalidRangeUnmerge.range());
       assertThrows(
           InvalidRangeAddressException.class,
-          () -> sheet.applyStyle("A1:", ExcelCellStyle.numberFormat("0")));
-      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells("A1"));
-      assertThrows(IllegalArgumentException.class, () -> sheet.unmergeCells("A1:B2"));
+          () -> sheet.cells().applyStyle("A1:", ExcelCellStyle.numberFormat("0")));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().mergeCells("A1"));
+      assertThrows(IllegalArgumentException.class, () -> sheet.layout().unmergeCells("A1:B2"));
     }
   }
 
@@ -281,15 +301,17 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+      ExcelSheetRows rows = sheet.rows();
+      ExcelSheetColumns columns = sheet.columns();
 
-      sheet.setCell("A1", ExcelCellValue.text("Header"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Header"));
 
-      assertSame(sheet, sheet.groupRows(new ExcelRowSpan(1, 3), true));
-      assertSame(sheet, sheet.groupColumns(new ExcelColumnSpan(1, 3), true));
-      assertSame(sheet, sheet.ungroupRows(new ExcelRowSpan(1, 3)));
-      assertSame(sheet, sheet.ungroupColumns(new ExcelColumnSpan(1, 3)));
+      assertSame(rows, rows.group(new ExcelRowSpan(1, 3), true));
+      assertSame(columns, columns.group(new ExcelColumnSpan(1, 3), true));
+      assertSame(rows, rows.ungroup(new ExcelRowSpan(1, 3)));
+      assertSame(columns, columns.ungroup(new ExcelColumnSpan(1, 3)));
 
-      WorkbookSheetResult.SheetLayout layout = sheet.layout();
+      WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
       assertFalse(layout.rows().get(1).hidden());
       assertEquals(0, layout.rows().get(1).outlineLevel());
       assertFalse(layout.columns().get(1).hidden());
@@ -305,24 +327,24 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      assertThrows(IllegalArgumentException.class, () -> sheet.preview(0, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.preview(1, 0));
-      assertEquals(List.of(), sheet.preview(3, 3));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().preview(0, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().preview(1, 0));
+      assertEquals(List.of(), sheet.cells().preview(3, 3));
       CellNotFoundException missingCell =
-          assertThrows(CellNotFoundException.class, () -> sheet.text("A1"));
+          assertThrows(CellNotFoundException.class, () -> sheet.cells().text("A1"));
       assertEquals("A1", missingCell.address());
-      assertThrows(IllegalArgumentException.class, () -> sheet.text(" "));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().text(" "));
 
-      sheet.setCell("A1", ExcelCellValue.text("Name"));
-      sheet.setCell("B1", ExcelCellValue.formula("TRUE()"));
-      sheet.setCell("C1", ExcelCellValue.formula("1+1"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Name"));
+      sheet.cells().setCell("B1", ExcelCellValue.formula("TRUE()"));
+      sheet.cells().setCell("C1", ExcelCellValue.formula("1+1"));
 
-      assertThrows(CellNotFoundException.class, () -> sheet.text("B2"));
-      assertThrows(CellNotFoundException.class, () -> sheet.text("D1"));
-      assertThrows(IllegalStateException.class, () -> sheet.number("A1"));
-      assertThrows(IllegalStateException.class, () -> sheet.number("B1"));
-      assertThrows(IllegalStateException.class, () -> sheet.bool("C1"));
-      assertThrows(IllegalStateException.class, () -> sheet.formula("A1"));
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().text("B2"));
+      assertThrows(CellNotFoundException.class, () -> sheet.cells().text("D1"));
+      assertThrows(IllegalStateException.class, () -> sheet.cells().number("A1"));
+      assertThrows(IllegalStateException.class, () -> sheet.cells().number("B1"));
+      assertThrows(IllegalStateException.class, () -> sheet.cells().bool("C1"));
+      assertThrows(IllegalStateException.class, () -> sheet.cells().formula("A1"));
     }
   }
 
@@ -333,40 +355,43 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+      ExcelSheetCells cells = sheet.cells();
 
       assertSame(
-          sheet,
-          sheet.setRange(
+          cells,
+          cells.setRange(
               "B2:A1",
               List.of(
                   List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(42.0)),
                   List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(8.0)))));
-      sheet.applyStyle(
-          "A1:B1",
-          new ExcelCellStyle(
-              Optional.of("#,##0.00"),
-              Optional.of(
-                  new ExcelCellAlignment(
-                      Optional.of(true),
-                      Optional.of(ExcelHorizontalAlignment.CENTER),
-                      Optional.of(ExcelVerticalAlignment.TOP),
-                      Optional.empty(),
-                      Optional.empty())),
-              Optional.of(
-                  new ExcelCellFont(
-                      Optional.of(true),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty())),
-              Optional.empty(),
-              Optional.empty(),
-              Optional.empty()));
-      sheet.applyStyle("C1", ExcelCellStyle.emphasis(null, true));
+      sheet
+          .cells()
+          .applyStyle(
+              "A1:B1",
+              new ExcelCellStyle(
+                  Optional.of("#,##0.00"),
+                  Optional.of(
+                      new ExcelCellAlignment(
+                          Optional.of(true),
+                          Optional.of(ExcelHorizontalAlignment.CENTER),
+                          Optional.of(ExcelVerticalAlignment.TOP),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.of(
+                      new ExcelCellFont(
+                          Optional.of(true),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.empty()));
+      sheet.cells().applyStyle("C1", ExcelCellStyle.emphasis(null, true));
 
-      ExcelCellSnapshot styledValue = sheet.snapshotCell("A1");
+      ExcelCellSnapshot styledValue = sheet.cells().snapshotCell("A1");
       assertEquals("#,##0.00", styledValue.style().numberFormat());
       assertTrue(styledValue.style().font().bold());
       assertTrue(styledValue.style().alignment().wrapText());
@@ -384,14 +409,14 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().bottom().style());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().left().style());
 
-      List<ExcelPreviewRow> preview = sheet.preview(2, 3);
+      List<ExcelPreviewRow> preview = sheet.cells().preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
-      assertEquals("BLANK", sheet.snapshotCell("C1").effectiveType());
-      assertTrue(sheet.snapshotCell("C1").style().font().italic());
+      assertEquals("BLANK", sheet.cells().snapshotCell("C1").effectiveType());
+      assertTrue(sheet.cells().snapshotCell("C1").style().font().italic());
 
-      sheet.clearRange("A2:B2");
+      sheet.cells().clearRange("A2:B2");
 
-      ExcelCellSnapshot cleared = sheet.snapshotCell("A2");
+      ExcelCellSnapshot cleared = sheet.cells().snapshotCell("A2");
       assertEquals("BLANK", cleared.declaredType());
       assertEquals("General", cleared.style().numberFormat());
       assertFalse(cleared.style().font().bold());
@@ -411,29 +436,37 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setRange("A1:B2", List.of(List.of(ExcelCellValue.text("x")))));
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> sheet.setRange("A1:B2", List.of(List.of(), List.of(ExcelCellValue.text("x")))));
+          () -> sheet.cells().setRange("A1:B2", List.of(List.of(ExcelCellValue.text("x")))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.setRange(
-                  "A1:B2",
-                  List.of(
-                      List.of(ExcelCellValue.text("x")),
-                      List.of(ExcelCellValue.text("y"), ExcelCellValue.text("z")))));
+              sheet
+                  .cells()
+                  .setRange("A1:B2", List.of(List.of(), List.of(ExcelCellValue.text("x")))));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              sheet.setRange(
-                  "A1:B2",
-                  List.of(List.of(ExcelCellValue.text("x")), List.of(ExcelCellValue.text("y")))));
+              sheet
+                  .cells()
+                  .setRange(
+                      "A1:B2",
+                      List.of(
+                          List.of(ExcelCellValue.text("x")),
+                          List.of(ExcelCellValue.text("y"), ExcelCellValue.text("z")))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              sheet
+                  .cells()
+                  .setRange(
+                      "A1:B2",
+                      List.of(
+                          List.of(ExcelCellValue.text("x")), List.of(ExcelCellValue.text("y")))));
       List<List<ExcelCellValue>> rowsWithNull = new ArrayList<>();
       List<ExcelCellValue> rowWithNull = new ArrayList<>();
       rowWithNull.add(null);
       rowsWithNull.add(rowWithNull);
-      assertThrows(NullPointerException.class, () -> sheet.setRange("A1", rowsWithNull));
+      assertThrows(NullPointerException.class, () -> sheet.cells().setRange("A1", rowsWithNull));
     }
   }
 
@@ -445,63 +478,67 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setCell("A1", ExcelCellValue.text("Item"));
-      sheet.applyStyle(
-          "A1",
-          new ExcelCellStyle(
-              Optional.empty(),
-              Optional.of(
-                  new ExcelCellAlignment(
-                      Optional.of(true),
-                      Optional.of(ExcelHorizontalAlignment.CENTER),
-                      Optional.of(ExcelVerticalAlignment.TOP),
-                      Optional.empty(),
-                      Optional.empty())),
-              Optional.of(
-                  new ExcelCellFont(
-                      Optional.of(true),
-                      Optional.of(false),
-                      Optional.of("Aptos"),
-                      Optional.of(new ExcelFontHeight(280)),
-                      Optional.of(ExcelColor.rgb("#1F4E78")),
-                      Optional.of(true),
-                      Optional.of(false))),
-              Optional.of(
-                  ExcelCellFill.patternForeground(
-                      ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
-              Optional.of(
-                  new ExcelBorder(
-                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty())),
-              Optional.empty()));
-      sheet.applyStyle(
-          "A1",
-          new ExcelCellStyle(
-              Optional.empty(),
-              Optional.empty(),
-              Optional.of(
-                  new ExcelCellFont(
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.of(true))),
-              Optional.empty(),
-              Optional.of(
-                  new ExcelBorder(
-                      Optional.empty(),
-                      Optional.empty(),
-                      Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
-                      Optional.empty(),
-                      Optional.empty())),
-              Optional.empty()));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Item"));
+      sheet
+          .cells()
+          .applyStyle(
+              "A1",
+              new ExcelCellStyle(
+                  Optional.empty(),
+                  Optional.of(
+                      new ExcelCellAlignment(
+                          Optional.of(true),
+                          Optional.of(ExcelHorizontalAlignment.CENTER),
+                          Optional.of(ExcelVerticalAlignment.TOP),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.of(
+                      new ExcelCellFont(
+                          Optional.of(true),
+                          Optional.of(false),
+                          Optional.of("Aptos"),
+                          Optional.of(new ExcelFontHeight(280)),
+                          Optional.of(ExcelColor.rgb("#1F4E78")),
+                          Optional.of(true),
+                          Optional.of(false))),
+                  Optional.of(
+                      ExcelCellFill.patternForeground(
+                          ExcelFillPattern.SOLID, ExcelColor.rgb("#FFF2CC"))),
+                  Optional.of(
+                      new ExcelBorder(
+                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.THIN)),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty()));
+      sheet
+          .cells()
+          .applyStyle(
+              "A1",
+              new ExcelCellStyle(
+                  Optional.empty(),
+                  Optional.empty(),
+                  Optional.of(
+                      new ExcelCellFont(
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.of(true))),
+                  Optional.empty(),
+                  Optional.of(
+                      new ExcelBorder(
+                          Optional.empty(),
+                          Optional.empty(),
+                          Optional.ofNullable(new ExcelBorderSide(ExcelBorderStyle.DOUBLE)),
+                          Optional.empty(),
+                          Optional.empty())),
+                  Optional.empty()));
 
-      ExcelCellSnapshot styled = sheet.snapshotCell("A1");
+      ExcelCellSnapshot styled = sheet.cells().snapshotCell("A1");
       assertTrue(styled.style().font().bold());
       assertFalse(styled.style().font().italic());
       assertTrue(styled.style().alignment().wrapText());
@@ -529,11 +566,11 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      sheet.setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.annotations().setComment("A1", new ExcelComment("Review", "GridGrind", true));
 
       ExcelCellSnapshot.BlankSnapshot snapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           snapshot.metadata().hyperlink().orElseThrow());
@@ -541,31 +578,31 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelComment("Review", "GridGrind", true),
           snapshot.metadata().comment().orElseThrow().toPlainComment());
 
-      List<ExcelPreviewRow> preview = sheet.preview(1, 1);
+      List<ExcelPreviewRow> preview = sheet.cells().preview(1, 1);
       assertEquals(1, preview.size());
       assertEquals("A1", preview.getFirst().cells().getFirst().address());
 
-      sheet.clearHyperlink("A1");
-      sheet.clearComment("A1");
+      sheet.annotations().clearHyperlink("A1");
+      sheet.annotations().clearComment("A1");
       ExcelCellSnapshot.BlankSnapshot clearedMetadata =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
       assertTrue(clearedMetadata.metadata().hyperlink().isEmpty());
       assertTrue(clearedMetadata.metadata().comment().isEmpty());
 
-      sheet.setHyperlink("A1", new ExcelHyperlink.Document("Budget!B4"));
-      sheet.setComment("A1", new ExcelComment("Again", "GridGrind", false));
-      sheet.clearRange("A1");
+      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Budget!B4"));
+      sheet.annotations().setComment("A1", new ExcelComment("Again", "GridGrind", false));
+      sheet.cells().clearRange("A1");
       ExcelCellSnapshot.BlankSnapshot clearedRange =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A1");
       assertTrue(clearedRange.metadata().hyperlink().isEmpty());
       assertTrue(clearedRange.metadata().comment().isEmpty());
 
       // clearHyperlink and clearComment are no-ops on cells that do not physically exist
-      assertDoesNotThrow(() -> sheet.clearHyperlink("B2"));
-      assertDoesNotThrow(() -> sheet.clearComment("B2"));
+      assertDoesNotThrow(() -> sheet.annotations().clearHyperlink("B2"));
+      assertDoesNotThrow(() -> sheet.annotations().clearComment("B2"));
       // calling again on B2 (still non-existent) must still be a no-op, not throw
-      assertDoesNotThrow(() -> sheet.clearHyperlink("B2"));
-      assertDoesNotThrow(() -> sheet.clearComment("B2"));
+      assertDoesNotThrow(() -> sheet.annotations().clearHyperlink("B2"));
+      assertDoesNotThrow(() -> sheet.annotations().clearComment("B2"));
     }
   }
 
@@ -578,13 +615,16 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       assertDoesNotThrow(
-          () -> sheet.setHyperlink("A1", new ExcelHyperlink.File("support/budget backup.xlsx")));
+          () ->
+              sheet
+                  .annotations()
+                  .setHyperlink("A1", new ExcelHyperlink.File("support/budget backup.xlsx")));
 
       Cell cell = poiSheet.getRow(0).getCell(0);
       assertEquals("support/budget%20backup.xlsx", cell.getHyperlink().getAddress());
       assertEquals(
           Optional.of(new ExcelHyperlink.File("support/budget backup.xlsx")),
-          ExcelSheet.hyperlink(cell));
+          ExcelSheetAnnotationSupport.hyperlink(cell));
     }
   }
 
@@ -596,19 +636,19 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setCell("A1", ExcelCellValue.text("anchor"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("anchor"));
 
-      int rowsBefore = sheet.physicalRowCount();
-      int lastRowBefore = sheet.lastRowIndex();
-      int lastColBefore = sheet.lastColumnIndex();
+      int rowsBefore = sheet.rows().physicalCount();
+      int lastRowBefore = sheet.rows().lastIndex();
+      int lastColBefore = sheet.columns().lastIndex();
 
       // clear a range that has never been written
-      sheet.clearRange("B2:E5");
+      sheet.cells().clearRange("B2:E5");
 
       // physicalRowCount, lastRowIndex, and lastColumnIndex must not change
-      assertEquals(rowsBefore, sheet.physicalRowCount(), "physicalRowCount must not increase");
-      assertEquals(lastRowBefore, sheet.lastRowIndex(), "lastRowIndex must not change");
-      assertEquals(lastColBefore, sheet.lastColumnIndex(), "lastColumnIndex must not change");
+      assertEquals(rowsBefore, sheet.rows().physicalCount(), "physicalRowCount must not increase");
+      assertEquals(lastRowBefore, sheet.rows().lastIndex(), "lastRowIndex must not change");
+      assertEquals(lastColBefore, sheet.columns().lastIndex(), "lastColumnIndex must not change");
     }
   }
 
@@ -622,10 +662,10 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       // Row 2 exists (B2 is written) but C2 has never been written.
       // Clearing B2:C2 must not throw even though C2 is absent.
-      sheet.setCell("B2", ExcelCellValue.text("present"));
-      assertDoesNotThrow(() -> sheet.clearRange("B2:C2"));
+      sheet.cells().setCell("B2", ExcelCellValue.text("present"));
+      assertDoesNotThrow(() -> sheet.cells().clearRange("B2:C2"));
       // B2 must now be blank after the clear
-      ExcelCellSnapshot b2 = sheet.snapshotCell("B2");
+      ExcelCellSnapshot b2 = sheet.cells().snapshotCell("B2");
       assertEquals("BLANK", b2.effectiveType());
     }
   }
@@ -638,7 +678,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      WorkbookSheetResult.SheetLayout emptyLayout = sheet.layout();
+      WorkbookSheetResult.SheetLayout emptyLayout = sheet.layout().snapshot();
       assertEquals(new ExcelSheetPane.None(), emptyLayout.pane());
       assertEquals(100, emptyLayout.zoomPercent());
       assertEquals(ExcelSheetDisplay.defaults(), emptyLayout.presentation().display());
@@ -648,47 +688,53 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
-      sheet.setCell("B2", ExcelCellValue.text("Center"));
-      sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      sheet.setComment("C3", new ExcelComment("Review", "GridGrind", false));
-      sheet.setColumnWidth(0, 0, 12.5);
-      sheet.setRowHeight(0, 0, 19.5);
-      sheet.setPresentation(
-          new ExcelSheetPresentation(
-              new ExcelSheetDisplay(false, false, false, true, true),
-              Optional.of(ExcelColor.rgb("#112233")),
-              new ExcelSheetOutlineSummary(false, false),
-              new ExcelSheetDefaults(11, 18.5d),
-              List.of(
-                  new ExcelIgnoredError(
-                      "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
+      sheet.cells().setCell("B2", ExcelCellValue.text("Center"));
+      sheet.annotations().setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.annotations().setComment("C3", new ExcelComment("Review", "GridGrind", false));
+      sheet.columns().setWidth(0, 0, 12.5);
+      sheet.rows().setHeight(0, 0, 19.5);
+      sheet
+          .layout()
+          .setPresentation(
+              new ExcelSheetPresentation(
+                  new ExcelSheetDisplay(false, false, false, true, true),
+                  Optional.of(ExcelColor.rgb("#112233")),
+                  new ExcelSheetOutlineSummary(false, false),
+                  new ExcelSheetDefaults(11, 18.5d),
+                  List.of(
+                      new ExcelIgnoredError(
+                          "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
-      WorkbookSheetResult.Window window = sheet.window("A1", 3, 3);
+      WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 3);
       assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
       assertEquals("B2", window.rows().get(1).cells().get(1).address());
       assertEquals("Center", window.rows().get(1).cells().get(1).displayValue());
       assertEquals("C3", window.rows().get(2).cells().get(2).address());
-      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 0, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1, 0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1048577, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1, 16385));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 0, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1048577, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.cells().window("A1", 1, 16385));
 
       List<WorkbookSheetResult.CellHyperlink> allHyperlinks =
-          sheet.hyperlinks(new ExcelCellSelection.AllUsedCells());
+          sheet.annotations().hyperlinks(new ExcelCellSelection.AllUsedCells());
       assertEquals(1, allHyperlinks.size());
       assertEquals("A1", allHyperlinks.getFirst().address());
 
       List<WorkbookSheetResult.CellHyperlink> selectedHyperlinks =
-          sheet.hyperlinks(new ExcelCellSelection.Selected(List.of("A1", "B2", "B9", "D3")));
+          sheet
+              .annotations()
+              .hyperlinks(new ExcelCellSelection.Selected(List.of("A1", "B2", "B9", "D3")));
       assertEquals(1, selectedHyperlinks.size());
       assertEquals("A1", selectedHyperlinks.getFirst().address());
 
       List<WorkbookSheetResult.CellComment> selectedComments =
-          sheet.comments(new ExcelCellSelection.Selected(List.of("C3", "B2", "A9", "D3")));
+          sheet
+              .annotations()
+              .comments(new ExcelCellSelection.Selected(List.of("C3", "B2", "A9", "D3")));
       assertEquals(1, selectedComments.size());
       assertEquals("C3", selectedComments.getFirst().address());
 
-      WorkbookSheetResult.SheetLayout unfrozenLayout = sheet.layout();
+      WorkbookSheetResult.SheetLayout unfrozenLayout = sheet.layout().snapshot();
       assertEquals(new ExcelSheetPane.None(), unfrozenLayout.pane());
       assertEquals(100, unfrozenLayout.zoomPercent());
       assertEquals(
@@ -708,14 +754,14 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertEquals(3, unfrozenLayout.columns().size());
       assertEquals(3, unfrozenLayout.rows().size());
 
-      sheet.setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
-      sheet.setZoom(135);
-      WorkbookSheetResult.SheetLayout frozenLayout = sheet.layout();
+      sheet.layout().setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      sheet.layout().setZoom(135);
+      WorkbookSheetResult.SheetLayout frozenLayout = sheet.layout().snapshot();
       assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), frozenLayout.pane());
       assertEquals(135, frozenLayout.zoomPercent());
 
       poiSheet.createSplitPane(2000, 2000, 0, 0, PaneType.LOWER_RIGHT);
-      WorkbookSheetResult.SheetLayout splitLayout = sheet.layout();
+      WorkbookSheetResult.SheetLayout splitLayout = sheet.layout().snapshot();
       assertEquals(
           new ExcelSheetPane.Split(2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
           splitLayout.pane());
@@ -730,11 +776,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
-      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+      sheet.annotations().setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
+      sheet
+          .annotations()
+          .setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
 
       ExcelCellSnapshot.BlankSnapshot snapshot =
-          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("F18");
+          (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("F18");
       assertEquals(
           new ExcelHyperlink.Email("Summary.Total@example.com"),
           snapshot.metadata().hyperlink().orElseThrow());

@@ -94,14 +94,14 @@ final class ExcelDocumentIntrospector {
   List<ExcelDrawingObjectSnapshot> drawingObjects(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
-    return workbook.sheet(sheetName).drawingObjects();
+    return workbook.sheet(sheetName).drawings().drawingObjects();
   }
 
   /** Returns factual chart metadata selected by sheet-wide or exact chart selection. */
   List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, ExcelChartSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
-    List<ExcelChartSnapshot> charts = workbook.sheet(selection.sheetName()).charts();
+    List<ExcelChartSnapshot> charts = workbook.sheet(selection.sheetName()).drawings().charts();
     return switch (selection) {
       case ExcelChartSelection.AllOnSheet _ -> charts;
       case ExcelChartSelection.ByName byName ->
@@ -115,6 +115,6 @@ final class ExcelDocumentIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(objectName, "objectName must not be null");
-    return workbook.sheet(sheetName).drawingObjectPayload(objectName);
+    return workbook.sheet(sheetName).drawings().drawingObjectPayload(objectName);
   }
 }

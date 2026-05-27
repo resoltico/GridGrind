@@ -44,7 +44,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   void snapshotHandlesBlankSheetsPicturesAndPreviewlessEmbeddedObjects() throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet blankSheet = workbook.getOrCreateSheet("Blank");
       assertEquals(List.of(), support.snapshot(blankSheet).embeddedObjects());
       support.repairCopiedEmbeddedObjects(
@@ -52,7 +52,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
 
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
       createPicture(workbook.xssfWorkbook(), sourceSheet.xssfSheet(), "OpsPicture");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
       try (XmlCursor cursor = sourceObject.getOleObject().newCursor()) {
@@ -74,7 +74,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -84,9 +84,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
       workbook
@@ -105,7 +105,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -115,9 +115,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
       try (XmlCursor cursor = sourceObject.getOleObject().newCursor()) {
@@ -139,7 +139,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -148,9 +148,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   void snapshotAndRepairHandleEmbeddedObjectsWithoutDrawingPreviewRelations() throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
       sourceObject.getCTShape().getSpPr().unsetBlipFill();
@@ -167,7 +167,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -177,9 +177,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
       workbook
@@ -199,7 +199,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -209,9 +209,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       throws Exception {
     ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
-      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sourceSheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
       String previewDrawingRelationId =
@@ -238,7 +238,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,
-              replica.drawingObjectPayload("OpsEmbed"));
+              replica.drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
     }
   }
@@ -402,9 +402,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void nextWorksheetRelationIdRespectsReservedIdsAndWrapsRelationshipInspectionFailures()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       var worksheet = sheet.xssfSheet().getCTWorksheet();
       worksheet.addNewLegacyDrawingHF().setId("rIdHeaderLegacy");
@@ -432,7 +432,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void worksheetRelationHelpersRecognizeWorksheetAndOtherEmbeddedObjectReferences()
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       XSSFSheet blankSheet = workbook.xssfWorkbook().createSheet("Blank");
       blankSheet.getCTWorksheet().addNewDrawing().setId("rIdDrawing");
       blankSheet.getCTWorksheet().addNewLegacyDrawing().setId("rIdLegacy");
@@ -448,8 +448,8 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       assertEquals(Set.of(), blankReferencedIds);
 
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData firstObject = requiredEmbeddedObject(poiSheet, "OpsA");
@@ -517,9 +517,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void repairSheetDrawingRelationRebindsDrawingRelations()
       throws IOException, InvalidFormatException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       var drawingPatriarch = poiSheet.createDrawingPatriarch();
@@ -546,11 +546,11 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
               .getPartName());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet source = workbook.getOrCreateSheet("Source");
-      source.setEmbeddedObject(embeddedObjectDefinition("SourceEmbed", "payload"));
+      source.drawings().setEmbeddedObject(embeddedObjectDefinition("SourceEmbed", "payload"));
       ExcelSheet target = workbook.getOrCreateSheet("Target");
-      target.setEmbeddedObject(embeddedObjectDefinition("TargetEmbed", "payload"));
+      target.drawings().setEmbeddedObject(embeddedObjectDefinition("TargetEmbed", "payload"));
 
       XSSFSheet sourceSheet = source.xssfSheet();
       XSSFSheet targetSheet = target.xssfSheet();
@@ -605,9 +605,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void repairWorksheetBoundRelationReusesIdsForReplaceableAndMissingRelations()
       throws IOException, InvalidFormatException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
@@ -662,9 +662,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void repairWorksheetBoundRelationReusesIdsWhenRelationshipsPointAtMissingParts()
       throws IOException, InvalidFormatException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
@@ -703,9 +703,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void repairWorksheetBoundRelationReallocatesWrongRelationTargets()
       throws IOException, InvalidFormatException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
@@ -796,10 +796,10 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
   @Test
   void repairWorksheetBoundRelationReallocatesIdsOwnedByAnotherObject()
       throws IOException, InvalidFormatException {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
-      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
+      sheet.drawings().setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
 
       XSSFSheet poiSheet = sheet.xssfSheet();
       XSSFObjectData firstObject = requiredEmbeddedObject(poiSheet, "OpsA");

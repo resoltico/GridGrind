@@ -1022,21 +1022,23 @@ class ExcelEngineEdgeCoverageTest {
           List.of("10.0", "12.0"),
           ExcelChartSourceSupport.resolveChartSource(sheet, "WorkbookValues").stringValues());
 
-      try (ExcelWorkbook wrappedWorkbook = ExcelWorkbook.wrap(workbook)) {
+      try (ExcelWorkbook wrappedWorkbook = ExcelWorkbooks.wrap(workbook)) {
         ExcelSheet wrappedSheet = wrappedWorkbook.getOrCreateSheet("Ops");
-        wrappedSheet.setSignatureLine(
-            new ExcelSignatureLineDefinition(
-                "Dup",
-                ExcelChartTestSupport.anchor(5, 1, 8, 6),
-                false,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "invalid",
-                Optional.of(ExcelPictureFormat.PNG),
-                Optional.of(new ExcelBinaryData(new byte[] {1}))));
+        wrappedSheet
+            .drawings()
+            .setSignatureLine(
+                new ExcelSignatureLineDefinition(
+                    "Dup",
+                    ExcelChartTestSupport.anchor(5, 1, 8, 6),
+                    false,
+                    "instructions",
+                    "Ada",
+                    "Finance",
+                    "ada@example.com",
+                    null,
+                    "invalid",
+                    Optional.of(ExcelPictureFormat.PNG),
+                    Optional.of(new ExcelBinaryData(new byte[] {1}))));
         forceSignatureLineName(wrappedWorkbook.sheet("Ops").xssfSheet(), "Dup");
         XSSFDrawing drawing = wrappedWorkbook.sheet("Ops").xssfSheet().createDrawingPatriarch();
         XSSFSimpleShape duplicateShape =

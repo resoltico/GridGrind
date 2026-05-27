@@ -53,6 +53,7 @@ import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
@@ -993,7 +994,7 @@ class AssertionExecutorCoverageTest {
                     "charts", new WorkbookSelector.Current(), null, null));
     assertEquals("workbook must not be null", nullWorkbook.getMessage());
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       IllegalArgumentException unsupportedCharts =
           assertThrows(
               IllegalArgumentException.class,
@@ -1348,10 +1349,13 @@ class AssertionExecutorCoverageTest {
     assertTrue(assertionModeFailure.getMessage().contains("does not support assertion steps"));
 
     Path workbookPath = Files.createTempFile("gridgrind-private-event-read-", ".xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.sheet("Ops").setCell("A1", dev.erst.gridgrind.excel.ExcelCellValue.text("Owner"));
-      workbook.save(workbookPath);
+      workbook
+          .sheet("Ops")
+          .cells()
+          .setCell("A1", dev.erst.gridgrind.excel.ExcelCellValue.text("Owner"));
+      workbook.persistence().save(workbookPath);
     }
     WorkbookInspectionResult.WorkbookSummaryResult eventSummary =
         assertInstanceOf(
@@ -1435,10 +1439,10 @@ class AssertionExecutorCoverageTest {
 
     assertEquals(
         java.util.Optional.of("2+3"),
-        ExecutionDiagnosticFields.formulaFor(new CellAssertion.FormulaText("2+3")));
+        ExecutionActionDiagnosticFields.formulaFor(new CellAssertion.FormulaText("2+3")));
     assertEquals(
         java.util.Optional.empty(),
-        ExecutionDiagnosticFields.formulaFor(new PresenceAssertion.TablePresent()));
+        ExecutionActionDiagnosticFields.formulaFor(new PresenceAssertion.TablePresent()));
 
     assertTrue(
         executor
@@ -1547,7 +1551,7 @@ class AssertionExecutorCoverageTest {
     SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
     AssertionExecutor assertionExecutor = new AssertionExecutor(readExecutor, selectorResolver);
 
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
 
       InspectionResult presence =

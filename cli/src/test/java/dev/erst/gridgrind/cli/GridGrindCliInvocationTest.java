@@ -30,7 +30,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         nonInteractiveCli()
             .run(new String[0], new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -106,7 +106,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         }) {
       int exitCode = interactiveCli().run(new String[0], blockingStdin, stdout, stderr);
 
-      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
       assertEquals(2, exitCode);
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
       assertEquals(java.util.Optional.of("--request"), failure.argument());

@@ -19,7 +19,7 @@ final class XlsxRoundTripExpectedLayoutSupport {
     WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
     LinkedHashMap<String, XlsxRoundTripExpectedStateSupport.ExpectedSheetLayoutState>
         expectedLayouts = new LinkedHashMap<>();
-    for (String sheetName : workbook.sheetNames()) {
+    for (String sheetName : workbook.sheets().sheetNames()) {
       WorkbookSheetResult.SheetLayoutResult layoutResult =
           (WorkbookSheetResult.SheetLayoutResult)
               readExecutor

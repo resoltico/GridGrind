@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class ExcelTableAnalysisSupportTest {
   @Test
   void tableFindingsCoverBrokenHealthyAndStyleMismatchStates() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       List<AnalysisFindingCode> brokenCodes =
           ExcelTableAnalysisSupport.tableFindings(
                   workbook,
@@ -111,16 +111,16 @@ class ExcelTableAnalysisSupportTest {
 
   @Test
   void tableAutofilterFindingsCoverHealthyInvalidMismatchAndBlankHeaderStates() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
-      sheet.setCell("A1", ExcelCellValue.text("Owner"));
-      sheet.setCell("B1", ExcelCellValue.text("Task"));
-      sheet.setCell("A2", ExcelCellValue.text("Ada"));
-      sheet.setCell("B2", ExcelCellValue.text("Queue"));
-      sheet.setCell("A3", ExcelCellValue.text("Lin"));
-      sheet.setCell("B3", ExcelCellValue.text("Pack"));
-      sheet.setCell("A4", ExcelCellValue.text("Totals"));
-      sheet.setCell("B4", ExcelCellValue.text("Done"));
+      sheet.cells().setCell("A1", ExcelCellValue.text("Owner"));
+      sheet.cells().setCell("B1", ExcelCellValue.text("Task"));
+      sheet.cells().setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.cells().setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.cells().setCell("A3", ExcelCellValue.text("Lin"));
+      sheet.cells().setCell("B3", ExcelCellValue.text("Pack"));
+      sheet.cells().setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.cells().setCell("B4", ExcelCellValue.text("Done"));
 
       ExcelTableController controller = new ExcelTableController();
       controller.setTable(

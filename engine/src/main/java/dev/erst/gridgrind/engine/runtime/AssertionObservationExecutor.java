@@ -65,16 +65,18 @@ final class AssertionObservationExecutor {
     try {
       return switch (target) {
         case SheetSelector.All _ ->
-            new WorkbookInspectionResult.SheetsResult(stepId, workbook.sheetNames());
+            new WorkbookInspectionResult.SheetsResult(stepId, workbook.sheets().sheetNames());
         case SheetSelector.ByName byName ->
             new WorkbookInspectionResult.SheetsResult(
                 stepId,
-                workbook.sheetNames().contains(byName.name()) ? List.of(byName.name()) : List.of());
+                workbook.sheets().sheetNames().contains(byName.name())
+                    ? List.of(byName.name())
+                    : List.of());
         case SheetSelector.ByNames byNames ->
             new WorkbookInspectionResult.SheetsResult(
                 stepId,
                 byNames.names().stream()
-                    .filter(name -> workbook.sheetNames().contains(name))
+                    .filter(name -> workbook.sheets().sheetNames().contains(name))
                     .toList());
         case NamedRangeSelector selector ->
             executeObservation(

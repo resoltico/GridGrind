@@ -27,6 +27,7 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
@@ -390,7 +391,7 @@ class SemanticSelectorResolverTest {
 
     CellStyleReport expectedStyle =
         InspectionResultCellReportSupport.toCellReport(
-                workbook.sheet(expectedSheet).snapshotCell(expectedAddress))
+                workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress))
             .style();
     assertEquals(
         expectedAddress,
@@ -541,7 +542,7 @@ class SemanticSelectorResolverTest {
   }
 
   private static ExcelWorkbook workbookWithSemanticTables() throws IOException {
-    ExcelWorkbook workbook = ExcelWorkbook.create();
+    ExcelWorkbook workbook = ExcelWorkbooks.create();
     addTable(
         workbook,
         "Texts",
@@ -570,7 +571,7 @@ class SemanticSelectorResolverTest {
         ExcelCellValue.number(400.0d));
     addWideTable(workbook);
     workbook.getOrCreateSheet("Budget");
-    workbook.sheet("Budget").setCell("A1", ExcelCellValue.text("Owner"));
+    workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.text("Owner"));
     return workbook;
   }
 
@@ -581,22 +582,27 @@ class SemanticSelectorResolverTest {
       ExcelCellValue keyValue,
       ExcelCellValue amountValue) {
     workbook.getOrCreateSheet(sheetName);
-    workbook.sheet(sheetName).setCell("A1", ExcelCellValue.text("Item"));
-    workbook.sheet(sheetName).setCell("B1", ExcelCellValue.text("Amount"));
-    workbook.sheet(sheetName).setCell("A2", keyValue);
-    workbook.sheet(sheetName).setCell("B2", amountValue);
-    workbook.setTable(
-        new ExcelTableDefinition(tableName, sheetName, "A1:B2", false, new ExcelTableStyle.None()));
+    workbook.sheet(sheetName).cells().setCell("A1", ExcelCellValue.text("Item"));
+    workbook.sheet(sheetName).cells().setCell("B1", ExcelCellValue.text("Amount"));
+    workbook.sheet(sheetName).cells().setCell("A2", keyValue);
+    workbook.sheet(sheetName).cells().setCell("B2", amountValue);
+    workbook
+        .tables()
+        .setTable(
+            new ExcelTableDefinition(
+                tableName, sheetName, "A1:B2", false, new ExcelTableStyle.None()));
   }
 
   private static void addWideTable(ExcelWorkbook workbook) {
     workbook.getOrCreateSheet("Wide");
-    workbook.sheet("Wide").setCell("AA1", ExcelCellValue.text("Item"));
-    workbook.sheet("Wide").setCell("AB1", ExcelCellValue.text("Amount"));
-    workbook.sheet("Wide").setCell("AA2", ExcelCellValue.text("Hosting"));
-    workbook.sheet("Wide").setCell("AB2", ExcelCellValue.number(500.0d));
-    workbook.setTable(
-        new ExcelTableDefinition(
-            "WideTable", "Wide", "AA1:AB2", false, new ExcelTableStyle.None()));
+    workbook.sheet("Wide").cells().setCell("AA1", ExcelCellValue.text("Item"));
+    workbook.sheet("Wide").cells().setCell("AB1", ExcelCellValue.text("Amount"));
+    workbook.sheet("Wide").cells().setCell("AA2", ExcelCellValue.text("Hosting"));
+    workbook.sheet("Wide").cells().setCell("AB2", ExcelCellValue.number(500.0d));
+    workbook
+        .tables()
+        .setTable(
+            new ExcelTableDefinition(
+                "WideTable", "Wide", "AA1:AB2", false, new ExcelTableStyle.None()));
   }
 }

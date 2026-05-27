@@ -104,7 +104,7 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.of("#AAEECC"),
                             Optional.empty()))))),
-        WorkbookCommandConverter.toExcelConditionalFormattingBlock(input));
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(input));
   }
 
   @Test
@@ -292,19 +292,19 @@ class ConditionalFormattingInputTest {
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.HAIR, "#405060"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070")),
-        WorkbookCommandConverter.toExcelDifferentialBorder(border).orElseThrow());
+        WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(border).orElseThrow());
   }
 
   @Test
   void allowsStyleLessDifferentialRuleFamiliesWhenPoiSupportsThem() {
     assertEquals(
         new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, Optional.empty()),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.FormulaRule("A1>0", false, Optional.empty())));
     assertEquals(
         new ExcelConditionalFormattingRule.CellValueRule(
             ExcelComparisonOperator.GREATER_THAN, "1", Optional.empty(), false, Optional.empty()),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.CellValueRule(
                 ExcelComparisonOperator.GREATER_THAN,
                 "1",
@@ -313,7 +313,7 @@ class ConditionalFormattingInputTest {
                 Optional.empty())));
     assertEquals(
         new ExcelConditionalFormattingRule.Top10Rule(10, false, false, false, Optional.empty()),
-        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(
             new ConditionalFormattingRuleInput.Top10Rule(
                 false, 10, false, false, Optional.empty())));
   }
