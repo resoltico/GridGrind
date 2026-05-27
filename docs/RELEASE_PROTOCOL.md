@@ -553,6 +553,14 @@ gh pr merge <N> --merge --admin --delete-branch --subject "<title> (#<N>)"
 gh pr close <N> --comment "Superseded or intentionally rejected during release hygiene." --delete-branch
 ```
 
+- If several wanted Dependabot PRs have all been pushed behind `main` by the just-finished
+  release and would only churn one another through repeated "update branch, wait for `Gate`,
+  merge, repeat" cycles, prefer one deliberate post-release maintenance branch from current
+  `main`. Apply the exact wanted payloads there, run the normal gates once on that combined
+  change, land it as a normal PR, and then close the superseded Dependabot PRs with an explicit
+  replacement comment and branch deletion. Do not babysit serial stale branches when one
+  deliberate maintenance branch expresses the same reviewed outcome more clearly.
+
 - If the PR needs follow-up work before it is acceptable, do that work as a normal post-release
   change on `main` and then land or replace the Dependabot PR. Do not leave a green but
   unattended Dependabot PR parked indefinitely just because the release itself already shipped.

@@ -5,6 +5,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated the post-release maintenance baseline to Spotless `8.5.1`, Jakarta XML Bind API
+  `4.0.5`, and the pinned `azul/zulu-openjdk-alpine:26-jre` runtime digest used by the published
+  Docker image.
+- Clarified the release protocol's Dependabot hygiene step so stale, post-release maintenance
+  heads can be replaced by one deliberate current-`main` maintenance PR instead of being merged
+  through repeated branch-refresh churn one by one.
+
 ## [0.66.0] - 2026-05-27
 
 ### Changed
