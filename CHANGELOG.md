@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Updated the post-release maintenance baseline to Spotless `8.5.1`, Jakarta XML Bind API
-  `4.0.5`, and the pinned `azul/zulu-openjdk-alpine:26-jre` runtime digest used by the published
-  Docker image.
+- Consolidated the open post-release dependency queue into one current-`main` maintenance line:
+  Kotlin Gradle plugin `2.4.0`, Jackson databind `3.1.4`, Jackson annotations `2.22`, Shadow
+  `9.4.2`, Spotless `8.6.0`, JaCoCo trunk build `0.8.15.202606030734` (published as
+  `0.8.15-20260603.073432-117`), Jakarta XML Bind API `4.0.5`, and the pinned
+  `azul/zulu-openjdk-alpine:26-jre` runtime digest used by the published Docker image.
+- Refreshed the GitHub Actions publication and CI tooling pins to the current Docker-maintained
+  releases: `docker/setup-buildx-action` `4.1.0`, `docker/setup-qemu-action` `4.1.0`,
+  `docker/login-action` `4.2.0`, `docker/metadata-action` `6.1.0`, and
+  `docker/build-push-action` `7.2.0`.
 - Clarified the release protocol's Dependabot hygiene step so stale, post-release maintenance
   heads can be replaced by one deliberate current-`main` maintenance PR instead of being merged
   through repeated branch-refresh churn one by one.
@@ -41,7 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pmdMain`, and corrected the developer docs to describe the real PMD, source-shape, and
   downstream-coverage ownership model used by the build.
 - Updated the shared build/test dependency baseline to JUnit `6.1.0`, JaCoCo trunk build
-  `0.8.15.202605250925` (published as `0.8.15-20260525.212539-111`), Log4j `2.26.0`,
+  `0.8.15.202606030734` (published as `0.8.15-20260603.073432-117`), Log4j `2.26.0`,
   SLF4J `2.0.18`, and Jakarta Activation `2.1.4`.
 - Refreshed the root `README.md` to match the current CLI first-run surface: it now shows the
   repository JAR path, the local Docker build path, the built-in example and doctor flow, the
