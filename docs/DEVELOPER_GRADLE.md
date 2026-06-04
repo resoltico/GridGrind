@@ -132,8 +132,8 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202605250925` via Maven coordinate
-  `0.8.15-20260525.212539-111`; the published snapshot artifact exposes that same trunk build in
+  official JaCoCo trunk build `0.8.15.202606030734` via Maven coordinate
+  `0.8.15-20260603.073432-117`; the published snapshot artifact exposes that same trunk build in
   its bundle metadata while keeping the snapshot timestamp/build-number form required by the Maven
   repository, and that line is where official Java 26 support remains ahead of the next JaCoCo
   release
