@@ -24,7 +24,7 @@ google-java-format = "1.35.0"
 # JaCoCo trunk build 0.8.15.202605250925 is published to Maven snapshots as this exact timestamped coordinate.
 jacoco = "0.8.15-20260525.212539-111"
 pmd = "7.24.0"
-shadow = "9.4.1"
+shadow = "9.4.2"
 spotless = "8.5.1"
 
 [libraries]
