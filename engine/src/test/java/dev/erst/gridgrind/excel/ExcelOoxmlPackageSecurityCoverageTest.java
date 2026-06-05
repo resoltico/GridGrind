@@ -49,7 +49,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           .getOrCreateSheet("Plain")
           .cells()
           .setCell("A1", ExcelCellValue.text("Plain workbook"));
-      workbook.persistence().save(plainWorkbookPath);
+      workbook
+          .persistence()
+          .save(plainWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelOoxmlPackageSecuritySupport.ReadableWorkbook readableWorkbook =
@@ -110,7 +112,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path sourceWorkbookPath = directory.resolve("source.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Bridge"));
-      workbook.persistence().save(sourceWorkbookPath);
+      workbook
+          .persistence()
+          .save(sourceWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     Path copiedWorkbookPath = directory.resolve("copied.xlsx");
@@ -127,7 +131,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           ExcelOoxmlPersistenceOptions.none());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(copiedWorkbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(
+            copiedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Bridge", reopened.sheet("Budget").cells().text("A1"));
     }
   }
@@ -287,7 +293,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-materialized-open-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Materialized"));
-      workbook.persistence().save(materializedWorkbookPath);
+      workbook
+          .persistence()
+          .save(materializedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook workbook =
@@ -564,15 +572,19 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-saveworkbook-plain-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Plain save"));
-      workbook.persistence().save(plainSourcePath);
+      workbook
+          .persistence()
+          .save(plainSourcePath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     Path plainSavedPath = plainSourcePath.resolveSibling("plain-saved-via-support.xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(plainSourcePath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(plainSourcePath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook, plainSavedPath, ExcelOoxmlPersistenceOptions.none(), Files::createTempFile);
     }
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(plainSavedPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(plainSavedPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Plain save", workbook.sheet("Plain").cells().text("A1"));
     }
 
@@ -580,7 +592,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-persist-signed-plain-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Guard").cells().setCell("A1", ExcelCellValue.text("Signed guard"));
-      workbook.persistence().save(plainWorkbookPath);
+      workbook
+          .persistence()
+          .save(plainWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     ExcelOoxmlSignatureSnapshot signature =
@@ -627,7 +641,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook, memoryTarget, null, Files::createTempFile);
 
-      try (ExcelWorkbook reopened = ExcelWorkbooks.open(memoryTarget)) {
+      try (ExcelWorkbook reopened =
+          ExcelWorkbooks.open(memoryTarget, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
         assertEquals("Memory save", reopened.sheet("Memory").cells().text("A1"));
       }
     }
@@ -638,7 +653,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path copiedWorkbookPath =
         signedWorkbook.workbookPath().getParent().resolve("copied-signed.xlsx");
     AtomicInteger tempFilesCreated = new AtomicInteger();
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(signedWorkbook.workbookPath())) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            signedWorkbook.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook,
           copiedWorkbookPath,
@@ -654,7 +671,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(OoxmlSecurityTestSupport.signatureValid(copiedWorkbookPath));
 
     Path resignedWorkbookPath = signedWorkbook.workbookPath().getParent().resolve("resigned.xlsx");
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(signedWorkbook.workbookPath())) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            signedWorkbook.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook,
           resignedWorkbookPath,
@@ -930,7 +949,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           .getOrCreateSheet("Signed")
           .cells()
           .setCell("A1", ExcelCellValue.text("Signed workbook"));
-      workbook.persistence().save(signableWorkbookPath);
+      workbook
+          .persistence()
+          .save(signableWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     ExcelOoxmlPackageSigningSupport.signWorkbook(
         signableWorkbookPath,

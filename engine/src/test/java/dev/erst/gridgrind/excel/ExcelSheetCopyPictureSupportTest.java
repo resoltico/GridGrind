@@ -96,10 +96,11 @@ class ExcelSheetCopyPictureSupportTest {
               .filter(name -> name.startsWith("OpsPicture"))
               .toList());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("OpsPicture1", "OpsPicture2"),
           reopened.sheet("Replica").drawings().drawingObjects().stream()

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: OPERATIONS
-updated: "2026-05-26"
+updated: "2026-06-05"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -12,7 +12,7 @@ route:
 
 **Purpose**: Stable public map of the shipped GridGrind `.xlsx` contract.
 **Machine-readable discovery**: `gridgrind --print-protocol-catalog`
-**Ranked search**: `gridgrind --print-protocol-catalog --search <text>`
+**Summary-first search**: `gridgrind --print-protocol-catalog --search <text>`
 **Copy-paste cheat sheet**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 **Hard ceilings and unsupported boundaries**: [LIMITATIONS.md](./LIMITATIONS.md)
 
@@ -28,7 +28,7 @@ gridgrind --print-protocol-catalog --search chart --response chart-search.json
 gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL
 gridgrind --print-example --lookup BUDGET --response budget-request.json
 gridgrind --print-example --lookup ASSERTION --response assertion-request.json
-gridgrind --print-request-template | gridgrind --doctor-request
+gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
@@ -37,10 +37,10 @@ current request model, every mutation action, every assertion type, every inspec
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
 fields. Use `--search` when you only know part of the name or summary, then switch to
 `--lookup <group>:<id>` for the exact entry once you have the stable qualified id. Search now
-returns grouped operation-centered results: top-level capability hits carry their `stepTemplate`,
-and any supporting nested/plain matches attach underneath the owning capability through
-`supportingMatches` plus `relatedEntryIds` instead of leaving the consumer to reconstruct the
-parent operation manually. Discovery,
+returns summary-first matches with `catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one
+short `summary`; supporting-type context stays lightweight through optional
+`supportingQualifiedIds` or `relatedEntryIds`, and full authoring payloads remain behind the
+follow-up `--lookup` step instead of being dumped inline in the search response. Discovery,
 printed example requests, doctor reports, and normal execution responses omit absent optional
 fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
 placeholders, so the machine-readable surface is easier for agents and shell tooling to consume
@@ -60,7 +60,9 @@ id plus why it ranked.
 source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
 workbook and returns every independently provable blocking problem in one report. `--response
 <path>` applies across execution, doctoring, and discovery, so primary outputs can be written
-directly to files during artifact, shell, or Docker workflows.
+directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on
+stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative
+paths and execution scratch space resolve from one explicit directory.
 
 ## Canonical Terminology
 

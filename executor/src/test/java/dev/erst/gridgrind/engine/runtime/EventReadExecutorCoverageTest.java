@@ -14,7 +14,6 @@ import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -28,19 +27,19 @@ class EventReadExecutorCoverageTest {
     GridGrindResponse.Failure failure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "missing-sheet",
-                                new SheetSelector.ByName("Missing"),
-                                new SheetIntrospectionQuery.GetSheetSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "missing-sheet",
+                            new SheetSelector.ByName("Missing"),
+                            new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -56,19 +55,19 @@ class EventReadExecutorCoverageTest {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "summary",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "summary",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(1, success.inspections().size());
     assertEquals("summary", success.inspections().getFirst().stepId());
@@ -81,28 +80,27 @@ class EventReadExecutorCoverageTest {
     GridGrindResponse.Failure failure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            new DefaultGridGrindRequestExecutor(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
                         new WorkbookExecutionEngine(),
                         ExcelWorkbook::close,
-                        Files::createTempFile,
                         ignored -> {
                           throw new IOException("close failed");
                         },
                         dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
-                            ::markRecalculateOnOpen))
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "summary",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+                            ::markRecalculateOnOpen)),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "summary",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
@@ -115,28 +113,27 @@ class EventReadExecutorCoverageTest {
     GridGrindResponse.Failure failure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            new DefaultGridGrindRequestExecutor(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(
                     new DefaultGridGrindRequestExecutorDependencies(
                         new WorkbookExecutionEngine(),
                         ExcelWorkbook::close,
-                        Files::createTempFile,
                         ignored -> {
                           throw new IOException("close failed");
                         },
                         dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
-                            ::markRecalculateOnOpen))
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "missing-sheet",
-                                new SheetSelector.ByName("Missing"),
-                                new SheetIntrospectionQuery.GetSheetSummary())))));
+                            ::markRecalculateOnOpen)),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "missing-sheet",
+                            new SheetSelector.ByName("Missing"),
+                            new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals(2, failure.problem().causes().size());
@@ -150,19 +147,19 @@ class EventReadExecutorCoverageTest {
     GridGrindResponse.Failure failure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "summary",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "summary",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
     assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());

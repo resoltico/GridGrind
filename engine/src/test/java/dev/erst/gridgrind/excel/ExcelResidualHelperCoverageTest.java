@@ -540,25 +540,9 @@ class ExcelResidualHelperCoverageTest {
     System.clearProperty("java.io.tmpdir");
     try {
       assertNull(ExcelTempFiles.systemTempRoot());
-      Path fallbackOnlyRoot = java.nio.file.Files.createTempDirectory("gridgrind-temp-home-only-");
-      System.setProperty("user.home", fallbackOnlyRoot.toString());
-      Path tempFile = ExcelTempFiles.createManagedTempFile("gridgrind-home-only-", ".tmp");
-      assertTrue(tempFile.startsWith(fallbackOnlyRoot.resolve(".gridgrind").resolve("tmp")));
-      java.nio.file.Files.deleteIfExists(tempFile);
-      try (java.util.stream.Stream<Path> paths =
-          java.nio.file.Files.walk(fallbackOnlyRoot.resolve(".gridgrind"))) {
-        paths
-            .sorted(java.util.Comparator.reverseOrder())
-            .forEach(
-                path -> {
-                  try {
-                    java.nio.file.Files.deleteIfExists(path);
-                  } catch (java.io.IOException ignored) {
-                    // best-effort cleanup for test-owned temp roots
-                  }
-                });
-      }
-      java.nio.file.Files.deleteIfExists(fallbackOnlyRoot);
+      assertThrows(
+          java.io.IOException.class,
+          () -> ExcelTempFiles.createManagedTempFile("gridgrind-home-only-", ".tmp"));
     } finally {
       restoreProperty("java.io.tmpdir", originalSystemTemp);
       restoreProperty("user.home", originalUserHome);
@@ -566,7 +550,6 @@ class ExcelResidualHelperCoverageTest {
 
     System.clearProperty("user.home");
     try {
-      assertNull(ExcelTempFiles.userHomeFallbackRoot());
       Path tempFile = ExcelTempFiles.createManagedTempFile("gridgrind-system-only-", ".tmp");
       assertEquals("gridgrind", tempFile.getParent().getFileName().toString());
       java.nio.file.Files.deleteIfExists(tempFile);

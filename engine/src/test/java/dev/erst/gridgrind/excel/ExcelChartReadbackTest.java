@@ -85,7 +85,7 @@ class ExcelChartReadbackTest {
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("C2:C4")))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     rewriteWorkbookEntry(
@@ -93,7 +93,8 @@ class ExcelChartReadbackTest {
         "/xl/charts/chart1.xml",
         xml -> xml.replace(">4.0<", ">0.0<").replace(">6.0<", ">0.0<").replace(">10.0<", ">0.0<"));
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot chart = reopened.sheet("Summary").drawings().charts().getFirst();
       ExcelChartSnapshot.Line line =
           ExcelChartTestSupport.singlePlot(chart, ExcelChartSnapshot.Line.class);
@@ -138,7 +139,7 @@ class ExcelChartReadbackTest {
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

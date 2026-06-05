@@ -21,6 +21,15 @@ import org.junit.jupiter.api.Test;
 
 /** Argument and failure-classification integration tests for GridGrindCli. */
 class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
+  private static String[] stdinExecutionArguments(String... trailingArguments) throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-failure-stdin-");
+    String[] args = new String[2 + trailingArguments.length];
+    args[0] = "--execution-root";
+    args[1] = workspace.toString();
+    System.arraycopy(trailingArguments, 0, args, 2, trailingArguments.length);
+    return args;
+  }
+
   @Test
   void versionFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -158,6 +167,28 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void returnsStructuredJsonErrorWhenExecutionRootValueIsMissing() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--execution-root"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("parse-arguments", failure.command());
+    assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
+    assertEquals("Missing value for --execution-root", failure.message());
+  }
+
+  @Test
   void rejectsDuplicateArguments() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -193,6 +224,69 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals("Duplicate argument: --response", failure.message());
+  }
+
+  @Test
+  void rejectsDuplicateExecutionRootArguments() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--execution-root", "a", "--execution-root", "b"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals("Duplicate argument: --execution-root", failure.message());
+  }
+
+  @Test
+  void stdinExecutionRequiresExplicitExecutionRoot() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
+    assertTrue(failure.message().contains("--execution-root"));
   }
 
   @Test
@@ -321,7 +415,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     int exitCode =
         cli.run(
-            new String[] {"--response", responsePath.toString()},
+            stdinExecutionArguments("--response", responsePath.toString()),
             new ByteArrayInputStream(
                 requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
@@ -352,7 +446,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     int exitCode =
         cli.run(
-            new String[0],
+            stdinExecutionArguments(),
             new ByteArrayInputStream(
                 requestJson(
                         "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
@@ -386,7 +480,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     int exitCode =
         cli.run(
-            new String[0],
+            stdinExecutionArguments(),
             new ByteArrayInputStream(
                 requestJson(
                         "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
@@ -420,7 +514,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     try {
       int exitCode =
           cli.run(
-              new String[] {"--response", responsePath.toString()},
+              stdinExecutionArguments("--response", responsePath.toString()),
               new ByteArrayInputStream(
                   requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                       .getBytes(StandardCharsets.UTF_8)),
@@ -447,7 +541,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -471,7 +565,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
@@ -503,7 +597,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
@@ -580,7 +674,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
       int exitCode =
           new GridGrindCli()
               .run(
-                  new String[] {"--response", responsePath.toString()},
+                  stdinExecutionArguments("--response", responsePath.toString()),
                   new ByteArrayInputStream(
                       requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                           .getBytes(StandardCharsets.UTF_8)),
@@ -604,7 +698,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[] {"--response", responseDirectory.toString()},
+                stdinExecutionArguments("--response", responseDirectory.toString()),
                 new ByteArrayInputStream(
                     requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),
@@ -617,7 +711,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + ": Is a directory. Wrote the response to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -673,7 +767,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     int exitCode =
         cli.run(
-            new String[] {"--response", responseDirectory.toString()},
+            stdinExecutionArguments("--response", responseDirectory.toString()),
             new ByteArrayInputStream(
                 requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                     .getBytes(StandardCharsets.UTF_8)),
@@ -699,7 +793,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
@@ -735,7 +829,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         new TrackingInputStream(
             requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                 .getBytes(StandardCharsets.UTF_8))) {
-      int exitCode = new GridGrindCli().run(new String[0], stdin, stdout);
+      int exitCode = new GridGrindCli().run(stdinExecutionArguments(), stdin, stdout);
 
       assertEquals(0, exitCode);
       assertFalse(stdin.closed());
@@ -777,7 +871,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",

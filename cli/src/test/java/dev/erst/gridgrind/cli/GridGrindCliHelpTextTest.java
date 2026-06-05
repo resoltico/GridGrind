@@ -173,6 +173,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String protocol = assertHelpInvocationPrints("--help-protocol");
     String guidance = assertHelpInvocationPrints("--help-guidance");
 
+    assertShortHelpAliasMatchesOverview(overview);
+    assertOverviewHelpSurface(overview);
+    assertProtocolHelpSurface(protocol);
+    assertGuidanceHelpSurface(guidance);
+  }
+
+  private static void assertShortHelpAliasMatchesOverview(String overview) throws IOException {
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
         new GridGrindCli()
@@ -180,7 +187,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
     assertEquals(0, shortExitCode);
     assertEquals(overview, shortStdout.toString(StandardCharsets.UTF_8));
+  }
 
+  private static void assertOverviewHelpSurface(String overview) {
     assertTrue(overview.contains("Primary Commands:"));
     assertTrue(overview.contains("Quick Start:"));
     assertTrue(overview.contains("Command Rules:"));
@@ -190,6 +199,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--print-task-keyword-match --query <text>"));
     assertTrue(overview.contains("--print-protocol-catalog --lookup <id>|<group>:<id>"));
     assertTrue(overview.contains("--print-protocol-catalog --search <text>"));
+    assertTrue(overview.contains("--execution-root <path>"));
+    assertTrue(overview.contains("--temp-root <path>"));
     assertTrue(overview.contains("--help, -h"));
     assertTrue(overview.contains("--version"));
     assertTrue(overview.contains("--license"));
@@ -198,7 +209,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--help-guidance"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
+  }
 
+  private static void assertProtocolHelpSurface(String protocol) {
     assertTrue(protocol.contains("Authoritative Contract Scope:"));
     assertTrue(protocol.contains("Flags:"));
     assertTrue(protocol.contains("Limits:"));
@@ -210,32 +223,32 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("--print-task-plan --lookup <id>"));
     assertTrue(protocol.contains("--print-task-keyword-match --query <text>"));
     assertTrue(protocol.contains("--print-protocol-catalog --lookup <id>"));
+    assertTrue(protocol.contains("--execution-root <path>"));
+    assertTrue(protocol.contains("--temp-root <path>"));
     assertFalse(protocol.contains("--lookup GET_CELLS"));
     assertFalse(protocol.contains("--lookup nestedTypes:cellInputTypes"));
-    assertTrue(protocol.contains("relatedEntryIds on support-group hits"));
-    assertTrue(
-        protocol.contains(
-            "execution.mode is one typed variant; choose type=FULL_XSSF, EVENT_READ, or STREAMING_WRITE."));
-    assertTrue(
-        protocol.contains(
-            "formulaEnvironment.missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE."));
+    assertFalse(protocol.contains("summary-first"));
+    assertTrue(protocol.contains("execution.mode is one typed variant"));
+    assertTrue(protocol.contains("STREAMING_WRITE"));
+    assertTrue(protocol.contains("formulaEnvironment.missingWorkbookPolicy"));
+    assertTrue(protocol.contains("USE_CACHED_VALUE"));
     assertTrue(protocol.contains("formulaEnvironment.udfToolpacks[]"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
-    assertTrue(
-        protocol.contains("stepId must be unique within steps[] and must match [A-Za-z0-9._-]+."));
+    assertTrue(protocol.contains("stepId must be unique within steps[]"));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
+  }
 
+  private static void assertGuidanceHelpSurface(String guidance) {
     assertTrue(guidance.contains("Operator Guidance Scope:"));
-    assertTrue(guidance.contains("Workflows:"));
+    assertTrue(guidance.contains("Workflow Playbooks:"));
     assertTrue(guidance.contains("Stdin Example:"));
-    assertTrue(guidance.contains("Docker Example:"));
     assertTrue(
-        guidance.contains("build the same runtime surface with 'docker buildx build --load -t"));
-    assertTrue(guidance.contains("gridgrind-local"));
+        guidance.contains("gridgrind --print-request-template | gridgrind --execution-root ."));
+    assertTrue(guidance.contains("Docker Example:"));
     assertFalse(guidance.contains("{{CONTAINER_TAG}}"));
     assertTrue(guidance.contains("Discovery:"));
-    assertTrue(guidance.contains("Built-in generated examples catalog:"));
+    assertTrue(guidance.contains("Built-in generated examples catalog entries:"));
     assertTrue(guidance.contains("Print one built-in example:"));
     assertFalse(guidance.contains("starter scaffolds"));
     assertFalse(guidance.contains("Authoritative Contract Scope:"));
@@ -275,7 +288,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertTrue(Files.readString(responsePath).contains("Workflows:"));
+    assertTrue(Files.readString(responsePath).contains("Workflow Playbooks:"));
   }
 
   @Test

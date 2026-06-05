@@ -13,7 +13,9 @@ import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
+import dev.erst.gridgrind.jazzer.support.JazzerFilesystemSupport;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
+import dev.erst.gridgrind.jazzer.support.JazzerWorkbookIoSupport;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
@@ -173,7 +175,10 @@ public final class JazzerReplaySupport {
     try {
       workflow = OperationSequenceModel.nextProtocolWorkflow(data);
       request = workflow.request();
-      response = new DefaultGridGrindRequestExecutor().execute(request);
+      response =
+          new DefaultGridGrindRequestExecutor()
+              .execute(
+                  request, JazzerWorkbookIoSupport.executionBindings(workflow.executionRoot()));
       WorkbookInvariantChecks.requireResponseShape(response);
       WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
@@ -236,7 +241,7 @@ public final class JazzerReplaySupport {
       try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
         new WorkbookExecutionEngine().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
-        workbook.persistence().save(workbookPath);
+        JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
         XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
       }
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
@@ -256,7 +261,7 @@ public final class JazzerReplaySupport {
       return unexpectedFailure(JazzerHarness.xlsxRoundTrip(), unexpected, details);
     } finally {
       if (directory != null) {
-        deleteRecursively(directory);
+        JazzerFilesystemSupport.deleteRecursively(directory);
       }
     }
   }
@@ -327,28 +332,6 @@ public final class JazzerReplaySupport {
         commands.size(),
         SequenceIntrospection.commandKinds(commands),
         SequenceIntrospection.styleKindsFromCommands(commands));
-  }
-
-  private static void deleteRecursively(Path directory) {
-    try {
-      if (!Files.exists(directory)) {
-        return;
-      }
-      try (var stream = Files.walk(directory)) {
-        stream
-            .sorted((left, right) -> right.compareTo(left))
-            .forEach(
-                path -> {
-                  try {
-                    Files.deleteIfExists(path);
-                  } catch (IOException ignored) {
-                    // Best-effort cleanup for replay scratch space.
-                  }
-                });
-      }
-    } catch (IOException ignored) {
-      // Best-effort cleanup for replay scratch space.
-    }
   }
 
   private static String stackTrace(Throwable error) {

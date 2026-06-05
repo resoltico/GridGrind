@@ -257,6 +257,19 @@ run_verify_expect_failure() {
 
 run_verify_expect_success
 run_verify_expect_success_without_tmpdir
+run_verify_with_fixture_texts \
+    false \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
+    "${success_catalog}" \
+    "${success_example_catalog}" \
+    "${success_task_catalog}" \
+    "${success_task_plan}" \
+    "${success_task_keyword_match}" \
+    "${success_doctor_report}" \
+    "${success_noargs_failure}" \
+    "$(append_fixture_line "${success_noargs_failure}" 'runtime-owned trailer')"
 
 run_verify_expect_failure \
     "${success_help_overview}" \
@@ -330,6 +343,9 @@ run_verify_expect_failure \
     "${success_task_keyword_match}" \
     "${success_doctor_report}" \
     "${success_noargs_failure}" \
-    "$(append_fixture_line "${success_noargs_failure}" 'Interactive no-arg failure drifted')"
+    "$(replace_fixture_token \
+        "${success_noargs_failure}" \
+        '"command" : "execute"' \
+        '"command" : "doctor-request"')"
 
 printf 'verify-cli-contract regression: success\n'

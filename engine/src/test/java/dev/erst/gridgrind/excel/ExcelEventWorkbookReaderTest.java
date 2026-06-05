@@ -50,7 +50,7 @@ class ExcelEventWorkbookReaderTest {
               Optional.of("secret"));
       expectedWorkbookSummary = workbook.workbookSummary();
       expectedSheetSummary = workbook.sheetSummary("Ops");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     List<WorkbookReadIntrospectionResult> reads =
@@ -79,7 +79,7 @@ class ExcelEventWorkbookReaderTest {
     ExcelEventWorkbookReader reader = new ExcelEventWorkbookReader();
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     List<WorkbookReadCommand.Introspection> singleCommand = new ArrayList<>(1);
@@ -312,7 +312,7 @@ class ExcelEventWorkbookReaderTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-event-missing-sheet-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     SheetNotFoundException failure =
@@ -347,7 +347,9 @@ class ExcelEventWorkbookReaderTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-workbook-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(sourceWorkbook);
+      workbook
+          .persistence()
+          .save(sourceWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     Path malformedWorkbook = rewriteEntry(sourceWorkbook, "xl/workbook.xml", _ -> "<workbook");
 
@@ -368,7 +370,9 @@ class ExcelEventWorkbookReaderTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-sheet-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(malformedSheetSource);
+      workbook
+          .persistence()
+          .save(malformedSheetSource, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     Path malformedSheetWorkbook =
         rewriteEntry(malformedSheetSource, "xl/worksheets/sheet1.xml", _ -> "<worksheet");
@@ -391,7 +395,9 @@ class ExcelEventWorkbookReaderTest {
         ExcelTempFiles.createManagedTempFile("gridgrind-event-invalid-row-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(sourceWorkbook);
+      workbook
+          .persistence()
+          .save(sourceWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     Path malformedSheetWorkbook =
         rewriteEntry(

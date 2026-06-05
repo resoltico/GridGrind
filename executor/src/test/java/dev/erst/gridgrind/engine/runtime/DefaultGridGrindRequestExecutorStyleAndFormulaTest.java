@@ -38,68 +38,67 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        executionPolicy(calculateAll()),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1:B2"),
-                                new CellMutationAction.SetRange(
-                                    List.of(
-                                        List.of(textCell("Item"), textCell("Amount")),
-                                        List.of(
-                                            textCell("Hosting"), new CellInput.Numeric(49.0))))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1:B1"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
-                                        "#,##0.00",
-                                        new CellAlignmentInput(
-                                            Optional.of(true),
-                                            Optional.of(ExcelHorizontalAlignment.CENTER),
-                                            Optional.of(ExcelVerticalAlignment.CENTER),
-                                            Optional.empty(),
-                                            Optional.empty()),
-                                        fontInput(true, null, null, null, null, null, null),
-                                        null,
-                                        null,
-                                        null))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "C1"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
-                                        null,
-                                        new CellAlignmentInput(
-                                            Optional.empty(),
-                                            Optional.of(ExcelHorizontalAlignment.RIGHT),
-                                            Optional.of(ExcelVerticalAlignment.BOTTOM),
-                                            Optional.empty(),
-                                            Optional.empty()),
-                                        fontInput(null, true, null, null, null, null, null),
-                                        null,
-                                        null,
-                                        null))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "B3"),
-                                new CellMutationAction.SetCell(formulaCell("SUM(B2:B2)"))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A2"),
-                                new CellMutationAction.ClearRange())),
-                        inspect(
-                            "cells",
-                            new CellSelector.ByAddresses("Budget", List.of("A1", "A2", "B3", "C1")),
-                            new SheetIntrospectionQuery.GetCells()),
-                        inspect(
-                            "window",
-                            new RangeSelector.RectangularWindow("Budget", "A1", 3, 3),
-                            new SheetIntrospectionQuery.GetWindow()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    executionPolicy(calculateAll()),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1:B2"),
+                            new CellMutationAction.SetRange(
+                                List.of(
+                                    List.of(textCell("Item"), textCell("Amount")),
+                                    List.of(textCell("Hosting"), new CellInput.Numeric(49.0))))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1:B1"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    "#,##0.00",
+                                    new CellAlignmentInput(
+                                        Optional.of(true),
+                                        Optional.of(ExcelHorizontalAlignment.CENTER),
+                                        Optional.of(ExcelVerticalAlignment.CENTER),
+                                        Optional.empty(),
+                                        Optional.empty()),
+                                    fontInput(true, null, null, null, null, null, null),
+                                    null,
+                                    null,
+                                    null))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "C1"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    new CellAlignmentInput(
+                                        Optional.empty(),
+                                        Optional.of(ExcelHorizontalAlignment.RIGHT),
+                                        Optional.of(ExcelVerticalAlignment.BOTTOM),
+                                        Optional.empty(),
+                                        Optional.empty()),
+                                    fontInput(null, true, null, null, null, null, null),
+                                    null,
+                                    null,
+                                    null))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "B3"),
+                            new CellMutationAction.SetCell(formulaCell("SUM(B2:B2)"))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A2"),
+                            new CellMutationAction.ClearRange())),
+                    inspect(
+                        "cells",
+                        new CellSelector.ByAddresses("Budget", List.of("A1", "A2", "B3", "C1")),
+                        new SheetIntrospectionQuery.GetCells()),
+                    inspect(
+                        "window",
+                        new RangeSelector.RectangularWindow("Budget", "A1", 3, 3),
+                        new SheetIntrospectionQuery.GetWindow()))));
 
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
@@ -126,60 +125,59 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(textCell("Item"))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
-                                        null,
-                                        new CellAlignmentInput(
-                                            Optional.of(true),
-                                            Optional.of(ExcelHorizontalAlignment.CENTER),
-                                            Optional.of(ExcelVerticalAlignment.TOP),
-                                            Optional.of(45),
-                                            Optional.of(3)),
-                                        fontInput(
-                                            true,
-                                            false,
-                                            "Aptos",
-                                            new FontHeightInput.Points(new BigDecimal("11.5")),
-                                            ColorInput.rgb("#1F4E78"),
-                                            true,
-                                            true),
-                                        CellFillInput.patternColors(
-                                            dev.erst.gridgrind.excel.foundation.ExcelFillPattern
-                                                .THIN_HORIZONTAL_BANDS,
-                                            ColorInput.rgb("#FFF2CC"),
-                                            ColorInput.rgb("#DDEBF7")),
-                                        new CellBorderInput(
-                                            Optional.ofNullable(
-                                                new CellBorderSideInput(
-                                                    ExcelBorderStyle.THIN,
-                                                    ColorInput.rgb("#102030"))),
-                                            Optional.empty(),
-                                            Optional.ofNullable(
-                                                new CellBorderSideInput(
-                                                    ExcelBorderStyle.DOUBLE,
-                                                    ColorInput.rgb("#203040"))),
-                                            Optional.empty(),
-                                            Optional.empty()),
-                                        new CellProtectionInput(
-                                            Optional.of(false), Optional.of(true)))))),
-                        inspect(
-                            "cells",
-                            new CellSelector.ByAddresses("Budget", List.of("A1")),
-                            new SheetIntrospectionQuery.GetCells()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(textCell("Item"))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    new CellAlignmentInput(
+                                        Optional.of(true),
+                                        Optional.of(ExcelHorizontalAlignment.CENTER),
+                                        Optional.of(ExcelVerticalAlignment.TOP),
+                                        Optional.of(45),
+                                        Optional.of(3)),
+                                    fontInput(
+                                        true,
+                                        false,
+                                        "Aptos",
+                                        new FontHeightInput.Points(new BigDecimal("11.5")),
+                                        ColorInput.rgb("#1F4E78"),
+                                        true,
+                                        true),
+                                    CellFillInput.patternColors(
+                                        dev.erst.gridgrind.excel.foundation.ExcelFillPattern
+                                            .THIN_HORIZONTAL_BANDS,
+                                        ColorInput.rgb("#FFF2CC"),
+                                        ColorInput.rgb("#DDEBF7")),
+                                    new CellBorderInput(
+                                        Optional.ofNullable(
+                                            new CellBorderSideInput(
+                                                ExcelBorderStyle.THIN, ColorInput.rgb("#102030"))),
+                                        Optional.empty(),
+                                        Optional.ofNullable(
+                                            new CellBorderSideInput(
+                                                ExcelBorderStyle.DOUBLE,
+                                                ColorInput.rgb("#203040"))),
+                                        Optional.empty(),
+                                        Optional.empty()),
+                                    new CellProtectionInput(
+                                        Optional.of(false), Optional.of(true)))))),
+                    inspect(
+                        "cells",
+                        new CellSelector.ByAddresses("Budget", List.of("A1")),
+                        new SheetIntrospectionQuery.GetCells()))));
 
     CellStyleReport style =
         read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst().style();
@@ -222,73 +220,72 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1:A2"),
-                                new CellMutationAction.SetRange(
-                                    List.of(
-                                        List.of(textCell("ThemeTintStyle")),
-                                        List.of(textCell("GradientFillStyle"))))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1:A2"),
+                            new CellMutationAction.SetRange(
+                                List.of(
+                                    List.of(textCell("ThemeTintStyle")),
+                                    List.of(textCell("GradientFillStyle"))))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    null,
+                                    fontInput(
+                                        null,
+                                        true,
                                         null,
                                         null,
-                                        fontInput(
-                                            null,
-                                            true,
-                                            null,
-                                            null,
-                                            ColorInput.theme(6, -0.35d),
-                                            null,
-                                            null),
-                                        CellFillInput.patternForeground(
-                                            dev.erst.gridgrind.excel.foundation.ExcelFillPattern
-                                                .SOLID,
-                                            ColorInput.theme(3, 0.30d)),
-                                        new CellBorderInput(
-                                            Optional.empty(),
-                                            Optional.empty(),
-                                            Optional.empty(),
-                                            Optional.ofNullable(
-                                                new CellBorderSideInput(
-                                                    ExcelBorderStyle.THIN,
-                                                    ColorInput.indexed(
-                                                        Short.toUnsignedInt(
-                                                            IndexedColors.DARK_RED.getIndex())))),
-                                            Optional.empty()),
-                                        null))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A2"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
+                                        ColorInput.theme(6, -0.35d),
                                         null,
-                                        null,
-                                        null,
-                                        CellFillInput.gradient(
-                                            CellGradientFillInput.linear(
-                                                Optional.of(45.0d),
-                                                List.of(
-                                                    new CellGradientStopInput(
-                                                        0.0d, ColorInput.rgb("#1F497D")),
-                                                    new CellGradientStopInput(
-                                                        1.0d, ColorInput.theme(4, 0.45d))))),
-                                        null,
-                                        new CellProtectionInput(
-                                            Optional.of(true), Optional.of(true)))))),
-                        inspect(
-                            "cells",
-                            new CellSelector.ByAddresses("Budget", List.of("A1", "A2")),
-                            new SheetIntrospectionQuery.GetCells()))));
+                                        null),
+                                    CellFillInput.patternForeground(
+                                        dev.erst.gridgrind.excel.foundation.ExcelFillPattern.SOLID,
+                                        ColorInput.theme(3, 0.30d)),
+                                    new CellBorderInput(
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.ofNullable(
+                                            new CellBorderSideInput(
+                                                ExcelBorderStyle.THIN,
+                                                ColorInput.indexed(
+                                                    Short.toUnsignedInt(
+                                                        IndexedColors.DARK_RED.getIndex())))),
+                                        Optional.empty()),
+                                    null))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A2"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    CellFillInput.gradient(
+                                        CellGradientFillInput.linear(
+                                            Optional.of(45.0d),
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, ColorInput.rgb("#1F497D")),
+                                                new CellGradientStopInput(
+                                                    1.0d, ColorInput.theme(4, 0.45d))))),
+                                    null,
+                                    new CellProtectionInput(
+                                        Optional.of(true), Optional.of(true)))))),
+                    inspect(
+                        "cells",
+                        new CellSelector.ByAddresses("Budget", List.of("A1", "A2")),
+                        new SheetIntrospectionQuery.GetCells()))));
 
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
@@ -316,68 +313,67 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertDoesNotThrow(() -> Files.deleteIfExists(workbookPath));
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A2"),
-                                new CellMutationAction.SetCell(textCell("Linear gradient"))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A2"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
-                                        null,
-                                        null,
-                                        null,
-                                        CellFillInput.gradient(
-                                            CellGradientFillInput.linear(
-                                                Optional.of(45.0d),
-                                                List.of(
-                                                    new CellGradientStopInput(
-                                                        0.0d, ColorInput.rgb("#1F497D")),
-                                                    new CellGradientStopInput(
-                                                        1.0d, ColorInput.theme(4, 0.45d))))),
-                                        null,
-                                        new CellProtectionInput(
-                                            Optional.of(true), Optional.of(true))))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A3"),
-                                new CellMutationAction.SetCell(textCell("Path gradient"))),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A3"),
-                                new CellMutationAction.ApplyStyle(
-                                    styleInput(
-                                        null,
-                                        null,
-                                        null,
-                                        CellFillInput.gradient(
-                                            CellGradientFillInput.path(
-                                                Optional.of(0.1d),
-                                                Optional.of(0.2d),
-                                                Optional.of(0.3d),
-                                                Optional.of(0.4d),
-                                                List.of(
-                                                    new CellGradientStopInput(
-                                                        0.0d, ColorInput.rgb("#112233")),
-                                                    new CellGradientStopInput(
-                                                        1.0d,
-                                                        ColorInput.indexed(
-                                                            Short.toUnsignedInt(
-                                                                IndexedColors.DARK_RED
-                                                                    .getIndex())))))),
-                                        null,
-                                        new CellProtectionInput(
-                                            Optional.of(false), Optional.of(true)))))),
-                        inspect(
-                            "cells",
-                            new CellSelector.ByAddresses("Budget", List.of("A2", "A3")),
-                            new SheetIntrospectionQuery.GetCells()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A2"),
+                            new CellMutationAction.SetCell(textCell("Linear gradient"))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A2"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    CellFillInput.gradient(
+                                        CellGradientFillInput.linear(
+                                            Optional.of(45.0d),
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, ColorInput.rgb("#1F497D")),
+                                                new CellGradientStopInput(
+                                                    1.0d, ColorInput.theme(4, 0.45d))))),
+                                    null,
+                                    new CellProtectionInput(
+                                        Optional.of(true), Optional.of(true))))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A3"),
+                            new CellMutationAction.SetCell(textCell("Path gradient"))),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A3"),
+                            new CellMutationAction.ApplyStyle(
+                                styleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    CellFillInput.gradient(
+                                        CellGradientFillInput.path(
+                                            Optional.of(0.1d),
+                                            Optional.of(0.2d),
+                                            Optional.of(0.3d),
+                                            Optional.of(0.4d),
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, ColorInput.rgb("#112233")),
+                                                new CellGradientStopInput(
+                                                    1.0d,
+                                                    ColorInput.indexed(
+                                                        Short.toUnsignedInt(
+                                                            IndexedColors.DARK_RED.getIndex())))))),
+                                    null,
+                                    new CellProtectionInput(
+                                        Optional.of(false), Optional.of(true)))))),
+                    inspect(
+                        "cells",
+                        new CellSelector.ByAddresses("Budget", List.of("A2", "A3")),
+                        new SheetIntrospectionQuery.GetCells()))));
 
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
@@ -404,24 +400,24 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   void producesErrorReportForCellsWithErrorValues() {
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Data"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Data", "A1"),
-                                new CellMutationAction.SetCell(formulaCell("1/0")))),
-                        inspect(
-                            "cells",
-                            new CellSelector.ByAddresses("Data", List.of("A1")),
-                            new SheetIntrospectionQuery.GetCells()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Data"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Data", "A1"),
+                            new CellMutationAction.SetCell(formulaCell("1/0")))),
+                    inspect(
+                        "cells",
+                        new CellSelector.ByAddresses("Data", List.of("A1")),
+                        new SheetIntrospectionQuery.GetCells()))));
 
     dev.erst.gridgrind.contract.dto.CellReport cell =
         read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst();
@@ -448,6 +444,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void persistencePathResolvesCorrectlyForAllPersistenceAndSourceCombinations() {
+    Path workingDirectory = Path.of("/tmp/gridgrind-persistence");
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookSource existingFile =
         new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/source.xlsx");
@@ -459,18 +456,19 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
     assertEquals(
         Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
-        ExecutionRequestPaths.persistencePath(newSource, saveAs));
+        ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
     assertEquals(
         Path.of("/tmp/source.xlsx").toAbsolutePath().normalize().toString(),
-        ExecutionRequestPaths.persistencePath(existingFile, overwrite));
-    assertNull(ExecutionRequestPaths.persistencePath(newSource, overwrite));
-    assertNull(ExecutionRequestPaths.persistencePath(newSource, none));
-    assertNull(ExecutionRequestPaths.persistencePath(existingFile, none));
+        ExecutionRequestPaths.persistencePath(existingFile, overwrite, workingDirectory));
+    assertNull(ExecutionRequestPaths.persistencePath(newSource, overwrite, workingDirectory));
+    assertNull(ExecutionRequestPaths.persistencePath(newSource, none, workingDirectory));
+    assertNull(ExecutionRequestPaths.persistencePath(existingFile, none, workingDirectory));
   }
 
   @Test
   void persistWorkbookRejectsOverwriteForNewSources() throws Exception {
-    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
+    Path workingDirectory = Files.createTempDirectory("gridgrind-overwrite-reject-");
+    ExecutionWorkbookSupport workbookSupport = workbookSupport(workingDirectory);
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       IllegalArgumentException exception =
@@ -480,7 +478,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                   workbookSupport.persistWorkbook(
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
-                      new WorkbookPlan.WorkbookPersistence.OverwriteSource()));
+                      new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                      workingDirectory));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
     }
@@ -488,17 +487,20 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
 
   @Test
   void persistencePathNormalizesDoubleDotSegments() {
+    Path workingDirectory = Path.of("/tmp/gridgrind-persistence");
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs("/tmp/subdir/../out.xlsx");
 
-    assertEquals("/tmp/out.xlsx", ExecutionRequestPaths.persistencePath(newSource, saveAs));
+    assertEquals(
+        "/tmp/out.xlsx",
+        ExecutionRequestPaths.persistencePath(newSource, saveAs, workingDirectory));
   }
 
   @Test
   void persistWorkbookSaveAsReportsNormalizedExecutionPath() throws Exception {
-    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
     Path tempDir = Files.createTempDirectory("gridgrind-normalize-test-");
+    ExecutionWorkbookSupport workbookSupport = workbookSupport(tempDir);
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
@@ -507,7 +509,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
           workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
-              new WorkbookPlan.WorkbookPersistence.SaveAs(pathWithDotDot));
+              new WorkbookPlan.WorkbookPersistence.SaveAs(pathWithDotDot),
+              tempDir);
 
       GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
           assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, outcome);
@@ -534,14 +537,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     throw new IllegalStateException("catastrophic close failure");
                   }
                 },
-                Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -604,18 +607,18 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
   void returnsStructuredFailureForAppendRowWithInvalidFormula() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new CellMutationAction.AppendRow(List.of(formulaCell("SUM("))))))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new CellMutationAction.AppendRow(List.of(formulaCell("SUM("))))))));
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("APPEND_ROW", executeStepContext(failure).stepType());

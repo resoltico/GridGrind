@@ -67,7 +67,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void noArgInvocationExecutesWhenStandardInputContainsARequest() throws IOException {
+  void noArgInvocationRequiresExecutionRootWhenStandardInputContainsARequest() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -75,6 +75,31 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         nonInteractiveCli()
             .run(
                 new String[0],
+                new ByteArrayInputStream(
+                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
+    assertTrue(failure.message().contains("--execution-root"));
+  }
+
+  @Test
+  void noArgInvocationExecutesWhenStandardInputContainsARequestAndExecutionRootIsExplicit()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    Path workspace = Files.createTempDirectory("gridgrind-no-arg-root-");
+
+    int exitCode =
+        nonInteractiveCli()
+            .run(
+                new String[] {"--execution-root", workspace.toString()},
                 new ByteArrayInputStream(
                     requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
                         .getBytes(StandardCharsets.UTF_8)),

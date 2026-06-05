@@ -14,7 +14,6 @@ import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
@@ -206,7 +205,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedDataValidations.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       for (Map.Entry<String, List<ExcelDataValidationSnapshot>> entry :
           expectedDataValidations.entrySet()) {
         List<ExcelDataValidationSnapshot> actual =
@@ -231,7 +230,7 @@ final class XlsxRoundTripExpectationVerification {
       XlsxRoundTripExpectedStateSupport.ExpectedWorkbookState expectedWorkbookState,
       Path workbookPath)
       throws IOException {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       var actualWorkbookSummary =
           XlsxRoundTripExpectedStateSupport.expectedWorkbookSummary(workbook);
       if (!expectedWorkbookState.expectedWorkbookSummary().equals(actualWorkbookSummary)) {
@@ -439,7 +438,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedConditionalFormatting.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
           expectedConditionalFormatting.entrySet()) {
@@ -473,7 +472,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedAutofilters.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
           expectedAutofilters.entrySet()) {
@@ -503,7 +502,7 @@ final class XlsxRoundTripExpectationVerification {
     if (expectedTables.isEmpty()) {
       return;
     }
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = JazzerWorkbookIoSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       var actual =
           ((dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult)

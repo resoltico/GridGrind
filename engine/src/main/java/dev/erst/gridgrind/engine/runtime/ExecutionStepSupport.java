@@ -188,9 +188,12 @@ final class ExecutionStepSupport {
   private InspectionResult executeFullInspectionAgainstMaterializedPath(
       InspectionStep inspectionStep, WorkbookLocation workbookLocation, Path materializedPath)
       throws IOException {
+    Path materializedRoot = materializedWorkbookRoot(materializedPath);
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
-            materializedPath, FormulaEnvironmentConverter.toExcelFormulaEnvironment(null))) {
+            materializedPath,
+            FormulaEnvironmentConverter.toExcelFormulaEnvironment(null, materializedRoot),
+            tempFileFactory::createTempFile)) {
       return executeFullInspectionStep(inspectionStep, workbook, workbookLocation);
     }
   }
@@ -198,11 +201,20 @@ final class ExecutionStepSupport {
   private AssertionResult executeFullAssertionAgainstMaterializedPath(
       AssertionStep assertionStep, WorkbookLocation workbookLocation, Path materializedPath)
       throws IOException, AssertionFailedException {
+    Path materializedRoot = materializedWorkbookRoot(materializedPath);
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
-            materializedPath, FormulaEnvironmentConverter.toExcelFormulaEnvironment(null))) {
+            materializedPath,
+            FormulaEnvironmentConverter.toExcelFormulaEnvironment(null, materializedRoot),
+            tempFileFactory::createTempFile)) {
       return assertionExecutor.execute(assertionStep, workbook, workbookLocation);
     }
+  }
+
+  private static Path materializedWorkbookRoot(Path materializedPath) {
+    Path normalized = materializedPath.toAbsolutePath().normalize();
+    Path parent = normalized.getParent();
+    return parent == null ? normalized : parent;
   }
 
   InspectionResult executeEventInspection(Path workbookPath, InspectionStep inspectionStep)

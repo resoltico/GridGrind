@@ -3,6 +3,7 @@ package dev.erst.gridgrind.cli;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.formatExamples;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.formatTaskStarters;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCommandExample;
+import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCommandSection;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderCoordinateSystems;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderDefinitions;
 import static dev.erst.gridgrind.cli.GridGrindCliHelpRenderSupport.renderDiscovery;
@@ -63,14 +64,7 @@ public final class GridGrindCliHelp {
   private static String renderOverview(CliSurface cliSurface, String documentRef) {
     return String.join(
         "\n\n",
-        renderSection(
-            new CliSurface.CliSection(
-                "Usage",
-                List.of(
-                    "gridgrind --request <path> [--response <path>]",
-                    "gridgrind [--response <path>] < request.json",
-                    "gridgrind --doctor-request [--request <path>] [--response <path>]",
-                    "gridgrind --help-protocol | --help-guidance [--response <path>]"))),
+        renderCommandSection(cliSurface.usage()),
         renderDefinitions(
             new CliSurface.CliDefinitionSection(
                 "Primary Commands",
@@ -78,6 +72,10 @@ public final class GridGrindCliHelp {
                     new CliSurface.DefinitionEntry(
                         "--request <path>",
                         "Execute one request file and emit a structured execution response."),
+                    new CliSurface.DefinitionEntry(
+                        "--execution-root <path>",
+                        "Execute or doctor one stdin-backed request from one explicit request"
+                            + " root."),
                     new CliSurface.DefinitionEntry(
                         "--doctor-request",
                         "Lint one request and emit a structured doctor report without workbook"
@@ -108,8 +106,8 @@ public final class GridGrindCliHelp {
                             + " id."),
                     new CliSurface.DefinitionEntry(
                         "--print-protocol-catalog --search <text>",
-                        "Search authoritative catalog ids, summaries, and related support"
-                            + " groups."),
+                        "Search authoritative catalog ids and summaries; rerun --lookup for"
+                            + " one full entry or type-group definition."),
                     new CliSurface.DefinitionEntry("--help, -h", "Show the short synopsis."),
                     new CliSurface.DefinitionEntry(
                         "--help-protocol", "Show the authoritative CLI and request grammar only."),
@@ -131,14 +129,17 @@ public final class GridGrindCliHelp {
                     "3. Preflight the starter: gridgrind --doctor-request --request"
                         + " task-request.json --response doctor.json",
                     "4. Execute the request: gridgrind --request task-request.json --response"
-                        + " response.json"))),
+                        + " response.json",
+                    "5. For stdin-driven runs, pass one explicit request root:"
+                        + " gridgrind --execution-root . < request.json"))),
         renderSection(
             new CliSurface.CliSection(
                 "Command Rules",
                 List.of(
                     "Every invocation accepts exactly one primary command.",
                     "A bare gridgrind invocation expects one request JSON document on standard"
-                        + " input or --request <path>.",
+                        + " input together with --execution-root <path>, or one --request"
+                        + " <path>.",
                     "With no --response path, CLI argument and lookup failures are emitted as"
                         + " compact CLI failure reports on stdout.",
                     "--help is the short synopsis. Use --help-protocol for the contract and"
@@ -151,7 +152,7 @@ public final class GridGrindCliHelp {
   private static String renderProtocolHelp(CliSurface cliSurface) {
     return String.join(
         "\n\n",
-        renderSection(cliSurface.usage()),
+        renderCommandSection(cliSurface.usage()),
         renderDefinitions(cliSurface.flags()),
         renderSection(
             new CliSurface.CliSection(
@@ -195,7 +196,9 @@ public final class GridGrindCliHelp {
                     "This help surface contains workflows, examples, and operational playbooks.",
                     "It does not extend the request grammar; use --help-protocol for the"
                         + " authoritative contract."))),
-        renderWorkflows(cliSurface.workflows()),
+        renderWorkflows(
+            new CliSurface.CliWorkflowSection(
+                "Workflow Playbooks", cliSurface.workflows().entries())),
         renderCommandExample(cliSurface.stdinExample(), containerTag),
         renderCommandExample(cliSurface.dockerFileExample(), containerTag),
         renderDiscovery(cliSurface.discovery(), discoveryExamples, taskStarters));

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: DEVELOPER
 updated: "2026-05-26"
 route:
@@ -330,6 +330,16 @@ Structural analysis plus a root-owned source-shape ratchet.
 - `verifyJavaSourceShape` — root build-logic task that parses every production Java source,
   writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
   `gradle/source-shape-policy.tsv`.
+- `verifyJavaSourceDuplication` — root build-logic task that scans production Java sources whose
+  policy row keeps `duplicationGuard=CHECK`, writes
+  `build/reports/source-shape/java-duplication.tsv`, and fails on large duplicated token spans
+  instead of letting mirror allowances hide behind global exclusions.
+
+`gradle/source-shape-policy.tsv` is the structural-governance authority. It owns broad role
+budgets, per-role duplication ownership, and any reviewed exact-surface override. Exact reviewed
+surfaces must name an owner, declare `reviewExpiresOn` plus `splitTrigger`, tighten at least one
+metric beyond their broader role, and keep their reviewed headroom close to the current file shape
+so historical god-file budgets cannot survive after a split.
 
 ### Spotless
 

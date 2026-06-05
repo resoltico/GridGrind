@@ -52,10 +52,11 @@ class ExcelWorkbookTest {
               new WorkbookCellCommand.SetCell(
                   "Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Budget");
 
       ExcelCellSnapshot.FormulaSnapshot totalSnapshot =
@@ -86,14 +87,15 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
       workbook.getOrCreateSheet("Budget").cells().setCell("B1", ExcelCellValue.number(12.0));
       workbook.formulas().markRecalculateOnOpen();
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       assertEquals(1, workbook.sheets().sheetCount());
       assertEquals(List.of("Budget"), workbook.sheets().sheetNames());
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Hello", workbook.sheet("Budget").cells().text("A1"));
       assertEquals(12.0, workbook.sheet("Budget").cells().number("B1"));
     }
@@ -128,7 +130,7 @@ class ExcelWorkbookTest {
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(2.0d));
       workbook.sheet("Budget").cells().setCell("B1", ExcelCellValue.formula("A1*2"));
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       assertThrows(
           IllegalArgumentException.class,
@@ -141,7 +143,9 @@ class ExcelWorkbookTest {
           () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath, environment)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(
+            workbookPath, environment, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertTrue(reopened.formulaRuntimeContext().hasExternalWorkbookBinding("rates.xlsx"));
       assertTrue(reopened.formulaRuntimeContext().hasUserDefinedFunction("DOUBLE"));
     }
@@ -159,7 +163,7 @@ class ExcelWorkbookTest {
       workbook.sheets().renameSheet("Archive", "History");
       workbook.sheets().moveSheet("History", 0);
       workbook.sheets().deleteSheet("Scratch");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
 
       assertEquals(List.of("History", "Budget"), workbook.sheets().sheetNames());
       assertEquals("Old", workbook.sheet("History").cells().text("A1"));
@@ -208,7 +212,7 @@ class ExcelWorkbookTest {
       workbook.sheets().setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
       workbook.sheets().setSheetVisibility("Replica", ExcelSheetVisibility.VERY_HIDDEN);
       workbook.sheets().setSheetProtection("Alpha", protectionSettings());
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(
@@ -222,7 +226,8 @@ class ExcelWorkbookTest {
         new WorkbookSheetResult.SheetProtection.Protected(protectionSettings()),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookCoreResult.WorkbookSummary.WithSheets summary =
           assertInstanceOf(
               WorkbookCoreResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
@@ -251,10 +256,11 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Alpha");
       workbook.getOrCreateSheet("Beta");
       workbook.sheets().clearSheetProtection("Alpha");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertInstanceOf(
           WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
@@ -269,14 +275,15 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Alpha");
       workbook.sheets().setSheetProtection("Alpha", protectionSettings());
       workbook.sheets().clearSheetProtection("Alpha");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(
         new WorkbookSheetResult.SheetProtection.Unprotected(),
         XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertInstanceOf(
           WorkbookSheetResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
@@ -359,7 +366,7 @@ class ExcelWorkbookTest {
                   new ExcelNamedRangeScope.SheetScope("Source"),
                   ExcelNamedRangeTarget.range("Source", "A1:B3")));
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(
@@ -394,7 +401,8 @@ class ExcelWorkbookTest {
                     Optional.empty()))),
         XlsxRoundTrip.dataValidations(workbookPath, "Replica"));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Item", workbook.sheet("Replica").cells().text("A1"));
       assertEquals(
           "https://example.com/h",
@@ -528,7 +536,7 @@ class ExcelWorkbookTest {
                   new ExcelPrintLayout.TitleColumns.Band(0, 0),
                   new ExcelHeaderFooterText("Budget", "", ""),
                   new ExcelHeaderFooterText("", "Page &P", "")));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -619,12 +627,18 @@ class ExcelWorkbookTest {
 
   @Test
   void validatesWorkbookInputsAndMissingResources() throws IOException {
-    assertThrows(NullPointerException.class, () -> ExcelWorkbooks.open(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> ExcelWorkbooks.open(null, ExcelTempFileFactoryTestSupport.tempFileFactory()));
 
     Path missingPath =
         ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-").resolve("missing.xlsx");
     WorkbookNotFoundException missingWorkbook =
-        assertThrows(WorkbookNotFoundException.class, () -> ExcelWorkbooks.open(missingPath));
+        assertThrows(
+            WorkbookNotFoundException.class,
+            () ->
+                ExcelWorkbooks.open(
+                    missingPath, ExcelTempFileFactoryTestSupport.tempFileFactory()));
     assertTrue(missingWorkbook.getMessage().contains("Workbook does not exist"));
     assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
 
@@ -664,7 +678,10 @@ class ExcelWorkbookTest {
       IllegalArgumentException tooLargeIndex =
           assertThrows(IllegalArgumentException.class, () -> sheets.moveSheet("Budget", 2));
       assertTrue(tooLargeIndex.getMessage().contains("valid positions are 0 to 1"));
-      assertThrows(NullPointerException.class, () -> workbook.persistence().save(null));
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              workbook.persistence().save(null, ExcelTempFileFactoryTestSupport.tempFileFactory()));
     }
   }
 
@@ -679,7 +696,11 @@ class ExcelWorkbookTest {
     }
 
     IllegalArgumentException exception =
-        assertThrows(IllegalArgumentException.class, () -> ExcelWorkbooks.open(workbookPath));
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelWorkbooks.open(
+                    workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory()));
     assertEquals("Only .xlsx workbooks are supported", exception.getMessage());
   }
 
@@ -688,14 +709,20 @@ class ExcelWorkbookTest {
   void validatesFormulaEnvironmentOverloadsAndCloseFailureAggregation() throws Exception {
     ExcelFormulaEnvironment defaults = ExcelFormulaEnvironment.defaults();
 
-    assertThrows(NullPointerException.class, () -> ExcelWorkbooks.open(null, defaults));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            ExcelWorkbooks.open(null, defaults, ExcelTempFileFactoryTestSupport.tempFileFactory()));
 
     Path missingPath =
         ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-env-")
             .resolve("missing-with-env.xlsx");
     WorkbookNotFoundException missingWorkbook =
         assertThrows(
-            WorkbookNotFoundException.class, () -> ExcelWorkbooks.open(missingPath, defaults));
+            WorkbookNotFoundException.class,
+            () ->
+                ExcelWorkbooks.open(
+                    missingPath, defaults, ExcelTempFileFactoryTestSupport.tempFileFactory()));
     assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
 
     Path legacyWorkbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-legacy-env-", ".xls");
@@ -707,7 +734,11 @@ class ExcelWorkbookTest {
     IllegalArgumentException unsupportedFormat =
         assertThrows(
             IllegalArgumentException.class,
-            () -> ExcelWorkbooks.open(legacyWorkbookPath, defaults));
+            () ->
+                ExcelWorkbooks.open(
+                    legacyWorkbookPath,
+                    defaults,
+                    ExcelTempFileFactoryTestSupport.tempFileFactory()));
     assertEquals("Only .xlsx workbooks are supported", unsupportedFormat.getMessage());
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create(null)) {
@@ -801,9 +832,15 @@ class ExcelWorkbookTest {
     try {
       try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
         workbook.getOrCreateSheet("Alpha").cells().setCell("A1", ExcelCellValue.text("Hello"));
-        workbook.persistence().save(workbookPath, ExcelOoxmlPersistenceOptions.none());
+        workbook
+            .persistence()
+            .save(
+                workbookPath,
+                ExcelOoxmlPersistenceOptions.none(),
+                ExcelTempFileFactoryTestSupport.tempFileFactory());
       }
-      try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+      try (ExcelWorkbook reopened =
+          ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
         assertEquals("Hello", reopened.sheet("Alpha").cells().text("A1"));
       }
     } finally {
@@ -817,7 +854,7 @@ class ExcelWorkbookTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Hello"));
-      workbook.persistence().save(relativePath);
+      workbook.persistence().save(relativePath, ExcelTempFileFactoryTestSupport.tempFileFactory());
       assertTrue(Files.exists(relativePath));
     } finally {
       Files.deleteIfExists(relativePath);
@@ -889,7 +926,7 @@ class ExcelWorkbookTest {
                           Optional.empty(),
                           Optional.empty())),
                   Optional.empty()));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     ExcelCellStyleSnapshot style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
@@ -934,10 +971,11 @@ class ExcelWorkbookTest {
                                   new ExcelGradientStop(1.0d, ExcelColor.theme(3)))))),
                   Optional.empty(),
                   Optional.of(new ExcelCellProtection(Optional.of(true), Optional.of(true)))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopenedWorkbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopenedWorkbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelCellStyleSnapshot linearStyle =
           reopenedWorkbook.sheet("Budget").cells().snapshotCell("A1").style();
 
@@ -976,7 +1014,7 @@ class ExcelWorkbookTest {
                   "LocalItem",
                   new ExcelNamedRangeScope.SheetScope("Budget"),
                   ExcelNamedRangeTarget.range("Budget", "A1:B2")));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
@@ -1010,7 +1048,8 @@ class ExcelWorkbookTest {
                     .refersToFormula(),
                 ExcelNamedRangeTarget.range("Budget", "A1:B2"))));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(2, workbook.names().namedRangeCount());
       assertEquals(2, workbook.names().namedRanges().size());
       workbook.names().deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
@@ -1028,7 +1067,7 @@ class ExcelWorkbookTest {
       sheet
           .annotations()
           .setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "C", "F18");
@@ -1183,7 +1222,9 @@ class ExcelWorkbookTest {
             columnDefinitionsAreCanonical(sheet),
             "raw Apache POI grouping should leave ambiguous overlapping column definitions");
 
-        workbook.persistence().save(workbookPath);
+        workbook
+            .persistence()
+            .save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
       }
 
       try (XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

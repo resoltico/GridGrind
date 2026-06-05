@@ -30,16 +30,10 @@ public final class ExcelWorkbooks {
     return new ExcelWorkbook(new XSSFWorkbook(), formulaEnvironment);
   }
 
-  /** Opens an existing workbook file from disk. */
-  public static ExcelWorkbook open(Path workbookPath) throws IOException {
-    return open(workbookPath, new ExcelOoxmlOpenOptions.Unencrypted());
-  }
-
-  /** Opens an existing workbook file from disk with optional OOXML package-open settings. */
-  public static ExcelWorkbook open(Path workbookPath, ExcelOoxmlOpenOptions openOptions)
+  /** Opens an existing workbook file from disk with explicit temp-file ownership. */
+  public static ExcelWorkbook open(Path workbookPath, WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, openOptions, ExcelTempFiles::createManagedTempFile);
+    return open(workbookPath, new ExcelOoxmlOpenOptions.Unencrypted(), tempFileFactory);
   }
 
   /**
@@ -63,20 +57,14 @@ public final class ExcelWorkbooks {
         workbookPath, sourcePath, loadedPackageSecurity, sourceEncryptionPassword);
   }
 
-  /** Opens an existing workbook file from disk with the supplied formula environment. */
-  public static ExcelWorkbook open(Path workbookPath, ExcelFormulaEnvironment formulaEnvironment)
-      throws IOException {
-    return open(workbookPath, formulaEnvironment, new ExcelOoxmlOpenOptions.Unencrypted());
-  }
-
-  /** Opens an existing workbook file from disk with formula and OOXML package-open settings. */
+  /** Opens an existing workbook file from disk with formula evaluation and temp ownership. */
   public static ExcelWorkbook open(
       Path workbookPath,
       ExcelFormulaEnvironment formulaEnvironment,
-      ExcelOoxmlOpenOptions openOptions)
+      WorkbookTempFileFactory tempFileFactory)
       throws IOException {
-    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, formulaEnvironment, openOptions, ExcelTempFiles::createManagedTempFile);
+    return open(
+        workbookPath, formulaEnvironment, new ExcelOoxmlOpenOptions.Unencrypted(), tempFileFactory);
   }
 
   /**

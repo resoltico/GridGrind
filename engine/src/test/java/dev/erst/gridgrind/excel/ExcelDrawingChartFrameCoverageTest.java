@@ -44,7 +44,8 @@ class ExcelDrawingChartFrameCoverageTest extends ExcelDrawingCoverageTestSupport
       java.nio.file.Files.writeString(relationshipsPath, updatedRelationships);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       XSSFSheet sheet = workbook.xssfWorkbook().getSheet("Charts");
       XSSFDrawing drawing = sheet.getDrawingPatriarch();
       XSSFGraphicFrame orphanFrame =

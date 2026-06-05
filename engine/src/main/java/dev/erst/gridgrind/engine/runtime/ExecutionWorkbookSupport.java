@@ -22,12 +22,6 @@ final class ExecutionWorkbookSupport {
   }
 
   ExcelWorkbook openWorkbook(
-      WorkbookPlan.WorkbookSource source, FormulaEnvironmentInput formulaEnvironment)
-      throws IOException {
-    return openWorkbook(source, formulaEnvironment, Path.of(""));
-  }
-
-  ExcelWorkbook openWorkbook(
       WorkbookPlan.WorkbookSource source,
       FormulaEnvironmentInput formulaEnvironment,
       Path workingDirectory)
@@ -43,16 +37,9 @@ final class ExecutionWorkbookSupport {
               FormulaEnvironmentConverter.toExcelFormulaEnvironment(
                   formulaEnvironment, workingDirectory),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(
-                  existingFile.security().orElse(null)));
+                  existingFile.security().orElse(null)),
+              tempFileFactory::createTempFile);
     };
-  }
-
-  GridGrindResponsePersistence.PersistenceOutcome persistWorkbook(
-      ExcelWorkbook workbook,
-      WorkbookPlan.WorkbookSource source,
-      WorkbookPlan.WorkbookPersistence persistence)
-      throws IOException {
-    return persistWorkbook(workbook, source, persistence, Path.of(""));
   }
 
   GridGrindResponsePersistence.PersistenceOutcome persistWorkbook(
@@ -92,14 +79,6 @@ final class ExecutionWorkbookSupport {
             existingFile.path(), executionPath.toString());
       }
     };
-  }
-
-  GridGrindResponsePersistence.PersistenceOutcome persistStreamingWorkbook(
-      Path materializedPath,
-      WorkbookPlan.WorkbookPersistence persistence,
-      WorkbookPlan.WorkbookSource source)
-      throws IOException {
-    return persistStreamingWorkbook(materializedPath, persistence, source, Path.of(""));
   }
 
   GridGrindResponsePersistence.PersistenceOutcome persistStreamingWorkbook(

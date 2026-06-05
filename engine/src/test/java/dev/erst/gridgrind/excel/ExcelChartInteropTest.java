@@ -56,7 +56,8 @@ class ExcelChartInteropTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot areaChart = workbook.sheet("Charts").drawings().charts().getFirst();
       assertEquals("AreaOnly", areaChart.name());
       assertInstanceOf(
@@ -70,7 +71,8 @@ class ExcelChartInteropTest {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-literal-readback-");
     writeLiteralChartReadbackWorkbook(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Charts");
 
       ExcelChartSnapshot cachedFormulaLine =

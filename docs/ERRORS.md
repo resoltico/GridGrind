@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: ERRORS
 updated: "2026-05-16"
 route:
@@ -276,7 +276,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | Code | Trigger |
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
-| `INPUT_SOURCE_NOT_FOUND` | A source-backed authored field referenced a `UTF8_FILE` or `FILE` path that does not exist. When the CLI read the request via `--request <path>`, relative authored-input paths were resolved from that request file's directory, not from the shell's current working directory. |
+| `INPUT_SOURCE_NOT_FOUND` | A source-backed authored field referenced a `UTF8_FILE` or `FILE` path that does not exist. When the CLI read the request via `--request <path>`, relative authored-input paths were resolved from that request file's directory. When the request JSON arrived on stdin, the same authored-input paths were resolved from the explicit `--execution-root <path>`, not from ambient process state. |
 | `SHEET_NOT_FOUND` | A step target or nested payload references a sheet that does not exist. This can surface across sheet-backed writes and reads, layout or structure edits against existing sheets, table or pivot definitions, drawing selectors, and formula-evaluation targets. Use `ENSURE_SHEET` only for create-before-write flows; it does not replace references to already existing sheet names elsewhere in the request. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range inspection selector or delete step references a workbook- or sheet-scoped name that does not exist. |
 | `CELL_NOT_FOUND` | The request named a cell that does not physically exist for a workflow that requires a real stored cell. The current public path is `execution.calculation.strategy=EVALUATE_TARGETS`: every addressed target must point at an existing formula cell. By contrast, `GET_CELLS` returns blank snapshots for unwritten cells, and `CLEAR_HYPERLINK` / `CLEAR_COMMENT` stay no-ops when the cell does not physically exist. |

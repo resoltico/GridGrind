@@ -71,10 +71,10 @@ public final class GridGrindEngine {
         .map(
             bytes ->
                 new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                    inputs.workingDirectory(), bytes))
+                    inputs.workingDirectory(), inputs.tempRoot(), bytes))
         .orElseGet(
             () ->
                 new dev.erst.gridgrind.engine.runtime.ExecutionInputBindings(
-                    inputs.workingDirectory()));
+                    inputs.workingDirectory(), inputs.tempRoot()));
   }
 }

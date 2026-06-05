@@ -13,9 +13,13 @@ final class GridGrindProtocolCatalogCliSurface {
           new CliSurface.CliSection(
               "Usage",
               List.of(
-                  "gridgrind --request <path> [--response <path>]",
-                  "gridgrind [--response <path>] < request.json",
-                  "gridgrind --doctor-request [--request <path>] [--response <path>]",
+                  "gridgrind --request <path> [--temp-root <path>] [--response <path>]",
+                  "gridgrind --execution-root <path> [--temp-root <path>] [--response <path>]"
+                      + " < request.json",
+                  "gridgrind --doctor-request --request <path> [--temp-root <path>]"
+                      + " [--response <path>]",
+                  "gridgrind --doctor-request --execution-root <path> [--temp-root <path>]"
+                      + " [--response <path>] < request.json",
                   "gridgrind --print-request-template [--response <path>]",
                   "gridgrind --print-example-catalog [--response <path>]",
                   "gridgrind --print-task-catalog [--lookup <id>] [--response <path>]",
@@ -51,6 +55,9 @@ final class GridGrindProtocolCatalogCliSurface {
                       List.of(
                           "Start from the minimal request: gridgrind --print-request-template"
                               + " --response request.json",
+                          "For stdin-driven execution or doctoring, pass one explicit"
+                              + " --execution-root so request-owned paths and temp files"
+                              + " stay invocation-owned instead of ambient.",
                           "Use --print-task-plan --lookup <id> when you want one executable"
                               + " starter scenario instead of building from scratch.",
                           "Or copy one built-in example: gridgrind --print-example"
@@ -212,10 +219,23 @@ final class GridGrindProtocolCatalogCliSurface {
               List.of(
                   new CliSurface.DefinitionEntry(
                       "No --request flag",
-                      "read the JSON request from stdin; a bare TTY invocation with no piped"
-                          + " request is rejected."),
+                      "read the JSON request from stdin; pass --execution-root so relative"
+                          + " request-owned paths and execution temp files resolve from one"
+                          + " explicit directory. A bare TTY invocation with no piped request"
+                          + " is rejected."),
                   new CliSurface.DefinitionEntry(
-                      "--request <path>", "read the JSON request from that file."),
+                      "--request <path>",
+                      "read the JSON request from that file; the request file directory owns"
+                          + " request-root resolution."),
+                  new CliSurface.DefinitionEntry(
+                      "--execution-root <path>",
+                      "required when the request JSON arrives on stdin; relative request-owned"
+                          + " paths resolve from that directory."),
+                  new CliSurface.DefinitionEntry(
+                      "--temp-root <path>",
+                      "override execution scratch space. Without it, temp files resolve under"
+                          + " .gridgrind/tmp inside the request root or explicit"
+                          + " --execution-root."),
                   new CliSurface.DefinitionEntry(
                       "No --response flag", "write the primary command output to stdout."),
                   new CliSurface.DefinitionEntry(
@@ -267,7 +287,7 @@ final class GridGrindProtocolCatalogCliSurface {
           new CliSurface.CliTemplateSection("Minimal Valid Request"),
           new CliSurface.CliCommandExample(
               "Stdin Example",
-              List.of("gridgrind --print-request-template | gridgrind"),
+              List.of("gridgrind --print-request-template | gridgrind --execution-root ."),
               Optional.empty()),
           new CliSurface.CliCommandExample(
               "Docker Example",
@@ -300,7 +320,7 @@ final class GridGrindProtocolCatalogCliSurface {
               "Print one built-in example",
               List.of(
                   new CliSurface.WorkflowEntry(
-                      "Example Portability Rules",
+                      "Example portability",
                       List.of(
                           "SELF_CONTAINED starters execute from a blank working directory.",
                           "REQUIRES_EXAMPLE_ASSETS starters require copied asset paths beside the"
@@ -308,7 +328,7 @@ final class GridGrindProtocolCatalogCliSurface {
                           GridGrindContractText.workbookFindingsDiscoverySummary()
                               + " Include it in any diagnostic plan with persistence.type=NONE.")),
                   new CliSurface.WorkflowEntry(
-                      "Task Starter Rules",
+                      "Task starters",
                       List.of(
                           "The CLI task catalog publishes high-level office-work recipes composed"
                               + " from exact protocol capabilities.",
@@ -317,16 +337,15 @@ final class GridGrindProtocolCatalogCliSurface {
                               + " decide whether one task starter is self-contained before"
                               + " printing it.")),
                   new CliSurface.WorkflowEntry(
-                      "Protocol Catalog Rules",
+                      "Protocol catalog search",
                       List.of(
                           "The protocol catalog remains the authoritative execution contract: it"
                               + " lists each field, whether it is required, and the nested/plain"
                               + " type group accepted by polymorphic fields such as target,"
                               + " action, query, value, style, and scope.",
-                          "Mutation, assertion, and inspection entries also publish"
-                              + " targetSelectors and stepTemplate so agents can see the allowed"
-                              + " target families and the exact step-level placement before"
-                              + " sending a request.",
+                          "Search output is summary-first: it lists ids, summaries, related entry"
+                              + " ids, and supporting ids. Rerun --lookup when you need one full"
+                              + " entry or type-group definition.",
                           "Unqualified --lookup resolves individual type ids (SET_CELL,"
                               + " ENSURE_SHEET, GET_CELLS, EXPECT_CELL_VALUE, …), nested/plain"
                               + " type-group names (cellInputTypes, calculationStrategyTypes, …),"
@@ -357,6 +376,15 @@ final class GridGrindProtocolCatalogCliSurface {
               List.of(
                   new CliSurface.DefinitionEntry(
                       "--request <path>", "Read the JSON request from a file instead of stdin."),
+                  new CliSurface.DefinitionEntry(
+                      "--execution-root <path>",
+                      "Required when the request JSON arrives on stdin; relative request-owned"
+                          + " paths and execution temp files resolve from that directory."),
+                  new CliSurface.DefinitionEntry(
+                      "--temp-root <path>",
+                      "Override execution scratch space. Without it, GridGrind uses"
+                          + " .gridgrind/tmp inside the request root or explicit"
+                          + " --execution-root."),
                   new CliSurface.DefinitionEntry(
                       "--response <path>",
                       "Write the primary command output to a file instead of stdout."),

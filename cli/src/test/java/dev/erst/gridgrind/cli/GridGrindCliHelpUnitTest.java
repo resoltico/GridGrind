@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -96,6 +97,86 @@ class GridGrindCliHelpUnitTest {
     assertEquals("Notes:", lines.getFirst());
     assertTrue(lines.get(1).startsWith("  - "));
     assertTrue(lines.stream().skip(2).allMatch(line -> line.startsWith("    ")));
+  }
+
+  @Test
+  void renderCoordinateSystemsFallsBackToStackedLayoutWhenTerminalWidthIsTight() {
+    String rendered =
+        GridGrindCliHelpRenderSupport.renderCoordinateSystems(
+            new CliSurface.CliTableSection(
+                "Coordinate Systems",
+                "Pattern",
+                "Meaning",
+                List.of(
+                    new CliSurface.CoordinateSystemEntry(
+                        "R1C1_REFERENCE_STYLE",
+                        "One deliberately long convention description that cannot fit beside the"
+                            + " pattern in a narrow terminal width."))),
+            28);
+
+    assertTrue(rendered.contains("Coordinate Systems:"));
+    assertTrue(rendered.contains("  R1C1_REFERENCE_STYLE:"));
+    assertTrue(rendered.contains("    deliberately long"));
+    assertTrue(rendered.contains("    terminal width."));
+    assertFalse(rendered.contains("Pattern Meaning"));
+  }
+
+  @Test
+  void renderSectionPreservesCommandLabelsAndShellRedirections() {
+    String rendered =
+        GridGrindCliHelpRenderSupport.renderSection(
+            new CliSurface.CliSection(
+                "Examples",
+                List.of(
+                    "1. Print a minimal request: gridgrind --print-request-template < request.json"
+                        + " > rendered.json",
+                    "- Run via Docker: docker run --rm -i ghcr.io/resoltico/gridgrind:latest <"
+                        + " request.json > response.json")),
+            56);
+
+    assertTrue(rendered.contains("1. Print a minimal request:"));
+    assertTrue(rendered.contains("gridgrind --print-request-template"));
+    assertTrue(rendered.contains("< request.json"));
+    assertTrue(rendered.contains("> rendered.json"));
+    assertTrue(rendered.contains("- Run via Docker:"));
+    assertTrue(rendered.contains("docker run --rm -i"));
+    assertTrue(rendered.contains("> response.json"));
+  }
+
+  @Test
+  void wrappedIndentedLineSupportsOrderedListItemsWithoutCommandMarkers() {
+    String rendered =
+        GridGrindCliHelpRenderSupport.wrappedIndentedLine(
+            "1. One deliberately long ordered help line that must wrap without becoming a command"
+                + " block.",
+            "  ",
+            44);
+
+    List<String> lines = rendered.lines().toList();
+    assertTrue(lines.getFirst().startsWith("  1. "));
+    assertTrue(lines.stream().skip(1).allMatch(line -> line.startsWith("     ")));
+  }
+
+  @Test
+  void wrappingTokensHandlesBlankInputAndTerminalRedirectionTokens() {
+    assertEquals(List.of(), GridGrindCliWrappingSupport.wrappingTokens(""));
+    assertEquals(List.of(), GridGrindCliWrappingSupport.wrappingTokens("   "));
+    assertEquals(
+        List.of("gridgrind", "--print-request-template", ">"),
+        GridGrindCliWrappingSupport.wrappingTokens("gridgrind --print-request-template >"));
+    assertEquals(
+        List.of("gridgrind", "< request.json", "> response.json"),
+        GridGrindCliWrappingSupport.wrappingTokens("gridgrind < request.json > response.json"));
+  }
+
+  @Test
+  void helpTextWidthParsesBlankInvalidAndClampedColumnHints() {
+    assertEquals(88, GridGrindCliWrappingSupport.helpTextWidth(null));
+    assertEquals(88, GridGrindCliWrappingSupport.helpTextWidth(" "));
+    assertEquals(88, GridGrindCliWrappingSupport.helpTextWidth("wide enough?"));
+    assertEquals(72, GridGrindCliWrappingSupport.helpTextWidth("40"));
+    assertEquals(91, GridGrindCliWrappingSupport.helpTextWidth("91"));
+    assertEquals(120, GridGrindCliWrappingSupport.helpTextWidth("240"));
   }
 
   @Test

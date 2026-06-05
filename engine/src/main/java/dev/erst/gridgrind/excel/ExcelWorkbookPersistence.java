@@ -15,15 +15,9 @@ public final class ExcelWorkbookPersistence {
     this.workbook = Objects.requireNonNull(workbook, "workbook must not be null");
   }
 
-  /** Saves the workbook to disk, creating parent directories as needed. */
-  public void save(Path workbookPath) throws IOException {
-    save(workbookPath, ExcelOoxmlPersistenceOptions.none());
-  }
-
-  /** Saves the workbook to disk with optional OOXML package-encryption and signing settings. */
-  public void save(Path workbookPath, ExcelOoxmlPersistenceOptions persistenceOptions)
-      throws IOException {
-    save(workbookPath, persistenceOptions, ExcelTempFiles::createManagedTempFile);
+  /** Saves the workbook to disk with explicit temp-file ownership. */
+  public void save(Path workbookPath, WorkbookTempFileFactory tempFileFactory) throws IOException {
+    save(workbookPath, ExcelOoxmlPersistenceOptions.none(), tempFileFactory);
   }
 
   /** Saves the workbook to disk with explicit package-security temp-file ownership. */

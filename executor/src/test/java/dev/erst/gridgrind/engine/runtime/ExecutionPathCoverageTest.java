@@ -19,10 +19,10 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-/** Focused coverage for convenience overloads in execution path and workbook helpers. */
+/** Focused coverage for explicit execution-root path and workbook helpers. */
 class ExecutionPathCoverageTest {
   @Test
-  void noArgExecutionPathHelpersResolveAgainstTheProcessWorkingDirectory() {
+  void typedExecutionPathHelpersResolveAgainstTheProvidedWorkingDirectory() {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
@@ -30,20 +30,25 @@ class ExecutionPathCoverageTest {
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
+    Path workingDirectory = Path.of("/tmp/gridgrind-explicit-root");
 
     assertEquals(
-        Path.of("").toAbsolutePath().normalize().resolve("input.xlsx").normalize().toString(),
-        ExecutionRequestPaths.reqSourcePath(request));
+        workingDirectory.resolve("input.xlsx").normalize().toString(),
+        ExecutionRequestPaths.reqSourcePath(request, workingDirectory));
     assertEquals(
-        Path.of("").toAbsolutePath().normalize().resolve("input.xlsx").normalize(),
-        ExecutionRequestPaths.normalizePath("input.xlsx"));
+        workingDirectory.resolve("input.xlsx").normalize(),
+        ExecutionRequestPaths.normalizePath("input.xlsx", workingDirectory));
   }
 
   @Test
-  void workbookOpenOverloadUsesTheDefaultWorkingDirectoryForNewSources() throws IOException {
-    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
+  void workbookOpenUsesTheProvidedWorkingDirectoryForNewSources() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-open-workdir-");
+    ExecutionWorkbookSupport workbookSupport =
+        ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
 
-    try (var workbook = workbookSupport.openWorkbook(new WorkbookPlan.WorkbookSource.New(), null)) {
+    try (var workbook =
+        workbookSupport.openWorkbook(
+            new WorkbookPlan.WorkbookSource.New(), null, workingDirectory)) {
       assertNotNull(workbook);
     }
   }
@@ -213,7 +218,7 @@ class ExecutionPathCoverageTest {
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     ExecutionJournalRecorder journal =
-        ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP);
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(
             GridGrindProblemCode.INVALID_REQUEST,

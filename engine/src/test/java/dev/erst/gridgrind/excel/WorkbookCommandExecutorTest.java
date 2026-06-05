@@ -184,7 +184,7 @@ class WorkbookCommandExecutorTest {
           autofilters.autofilters());
       assertEquals(
           List.of("Queue"), tables.tables().stream().map(ExcelTableSnapshot::name).toList());
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -207,7 +207,8 @@ class WorkbookCommandExecutorTest {
                 "History!$A$1",
                 ExcelNamedRangeTarget.range("History", "A1"))),
         XlsxRoundTrip.namedRanges(workbookPath));
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookRuleResult.AutofiltersResult autofilters =
           assertInstanceOf(
               WorkbookRuleResult.AutofiltersResult.class,
@@ -732,7 +733,7 @@ class WorkbookCommandExecutorTest {
       assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
       assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
       assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
@@ -747,7 +748,8 @@ class WorkbookCommandExecutorTest {
     assertTrue(layout.columns().get(4).collapsed());
     assertTrue(layout.columns().get(5).hidden());
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Pad", reopened.sheet("Moves").cells().text("B1"));
       assertEquals("Hosting", reopened.sheet("Moves").cells().text("A3"));
       assertEquals(42.0, reopened.sheet("Moves").cells().number("C3"));
@@ -829,7 +831,7 @@ class WorkbookCommandExecutorTest {
           new WorkbookStructureCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
           new WorkbookStructureCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");

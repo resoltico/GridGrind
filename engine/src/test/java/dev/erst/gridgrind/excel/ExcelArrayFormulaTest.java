@@ -44,10 +44,11 @@ class ExcelArrayFormulaTest {
               ExcelCellSnapshot.FormulaSnapshot.class, sheet.cells().snapshotCell("D3"));
       assertEquals("B2:B4*C2:C4", formulaCell.formula());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = reopened.sheet("Calc");
       assertEquals(2, sheet.cells().arrayFormulas().size());
       assertEquals(

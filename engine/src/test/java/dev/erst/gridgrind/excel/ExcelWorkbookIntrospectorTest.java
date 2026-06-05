@@ -81,7 +81,8 @@ class ExcelWorkbookIntrospectorTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
 
       List<ExcelNamedRangeSnapshot> all =
@@ -315,7 +316,8 @@ class ExcelWorkbookIntrospectorTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
 
       WorkbookSurfaceResult.FormulaSurfaceResult formulaSurface =
@@ -459,7 +461,8 @@ class ExcelWorkbookIntrospectorTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookSurfaceResult.SheetSchemaResult schema =
           cast(
               WorkbookSurfaceResult.SheetSchemaResult.class,

@@ -13,11 +13,9 @@ import java.util.Optional;
 
 /** Default request executor that applies one GridGrind workflow against the workbook core. */
 public final class DefaultGridGrindRequestExecutor implements GridGrindRequestExecutor {
+  private final DefaultGridGrindRequestExecutorDependencies dependencies;
   private final ExecutionValidationSupport validationSupport;
-  private final ExecutionWorkbookSupport workbookSupport;
-  private final ExecutionStepSupport stepSupport;
   private final ExecutionResponseSupport responseSupport;
-  private final ExecutionWorkflowSupport workflowSupport;
 
   /** Creates the production request executor with the default workbook executors and closers. */
   public DefaultGridGrindRequestExecutor() {
@@ -26,30 +24,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
   /** Creates one executor from an explicit owned dependency bundle. */
   DefaultGridGrindRequestExecutor(DefaultGridGrindRequestExecutorDependencies dependencies) {
-    Objects.requireNonNull(dependencies, "dependencies must not be null");
-
-    SemanticSelectorResolver selectorResolver =
-        new SemanticSelectorResolver(dependencies.workbookEngine());
-    AssertionExecutor assertionExecutor =
-        new AssertionExecutor(dependencies.workbookEngine(), selectorResolver);
+    this.dependencies = Objects.requireNonNull(dependencies, "dependencies must not be null");
     this.validationSupport = new ExecutionValidationSupport();
-    this.workbookSupport = new ExecutionWorkbookSupport(dependencies.tempFileFactory());
-    this.stepSupport =
-        new ExecutionStepSupport(
-            dependencies.workbookEngine(),
-            selectorResolver,
-            assertionExecutor,
-            dependencies.tempFileFactory());
     this.responseSupport =
         new ExecutionResponseSupport(
-            dependencies.workbookCloser(), dependencies.readableWorkbookCloser());
-    this.workflowSupport =
-        new ExecutionWorkflowSupport(
-            this.workbookSupport,
-            new ExecutionCalculationSupport(dependencies.streamingCalculationApplier()),
-            this.stepSupport,
-            this.responseSupport,
-            dependencies.tempFileFactory());
+            this.dependencies.workbookCloser(), this.dependencies.readableWorkbookCloser());
   }
 
   /** Executes one complete GridGrind request with optional live verbose journal emission. */
@@ -59,6 +38,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     WorkbookPlan authoredRequest = Objects.requireNonNull(request, "request must not be null");
     ExecutionInputBindings executionBindings =
         Objects.requireNonNull(bindings, "bindings must not be null");
+    TempFileFactory tempFileFactory = executionBindings.tempFileFactory();
+    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(tempFileFactory);
+    ExecutionStepSupport stepSupport = stepSupport(this.dependencies, tempFileFactory);
+    ExecutionWorkflowSupport workflowSupport =
+        new ExecutionWorkflowSupport(
+            workbookSupport,
+            new ExecutionCalculationSupport(this.dependencies.streamingCalculationApplier()),
+            stepSupport,
+            responseSupport,
+            tempFileFactory);
     ExecutionJournalRecorder journal =
         ExecutionJournalRecorder.start(authoredRequest, sink, executionBindings.workingDirectory());
     GridGrindProtocolVersion protocolVersion = authoredRequest.protocolVersion();
@@ -172,6 +161,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                 warnings,
                 journal,
                 executionBindings.workingDirectory()));
+  }
+
+  private static ExecutionStepSupport stepSupport(
+      DefaultGridGrindRequestExecutorDependencies dependencies, TempFileFactory tempFileFactory) {
+    SemanticSelectorResolver selectorResolver =
+        new SemanticSelectorResolver(dependencies.workbookEngine());
+    AssertionExecutor assertionExecutor =
+        new AssertionExecutor(dependencies.workbookEngine(), selectorResolver);
+    return new ExecutionStepSupport(
+        dependencies.workbookEngine(), selectorResolver, assertionExecutor, tempFileFactory);
   }
 
   Optional<String> calculationPolicyFailure(WorkbookPlan request) {

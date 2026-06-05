@@ -14,7 +14,6 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
 import dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Path;
@@ -117,6 +116,7 @@ final class XlsxParityGridGrind {
       FormulaEnvironmentInput formulaEnvironment,
       InspectionStep... inspections) {
     return execute(
+        XlsxParitySupport.executionRootFor(workbookPath),
         WorkbookPlan.standard(
             existingWorkbookSource(workbookPath, sourceSecurity),
             new WorkbookPlan.WorkbookPersistence.None(),
@@ -125,9 +125,9 @@ final class XlsxParityGridGrind {
             List.of(inspections)));
   }
 
-  private static GridGrindResponse execute(WorkbookPlan request) {
+  private static GridGrindResponse execute(Path executionRoot, WorkbookPlan request) {
     return new DefaultGridGrindRequestExecutor()
-        .execute(request, ExecutionInputBindings.processDefault(), ExecutionJournalSink.NOOP);
+        .execute(request, XlsxParitySupport.bindings(executionRoot), ExecutionJournalSink.NOOP);
   }
 
   private static WorkbookPlan.WorkbookSource.ExistingFile existingWorkbookSource(
@@ -186,6 +186,7 @@ final class XlsxParityGridGrind {
       List<PendingMutation> mutations,
       InspectionStep... inspections) {
     return execute(
+        XlsxParitySupport.executionRootFor(saveAsPath),
         ParityPlanSupport.request(
             existingWorkbookSource(workbookPath, sourceSecurity),
             saveAsPersistence(saveAsPath, persistenceSecurity),
@@ -329,6 +330,7 @@ final class XlsxParityGridGrind {
       InspectionStep... inspections) {
     return success(
         execute(
+            XlsxParitySupport.executionRootFor(saveAsPath),
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 saveAsPersistence(saveAsPath, persistenceSecurity),
@@ -358,6 +360,7 @@ final class XlsxParityGridGrind {
       InspectionStep... inspections) {
     return success(
         execute(
+            XlsxParitySupport.executionRootFor(workbookPath),
             ParityPlanSupport.request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
@@ -400,6 +403,7 @@ final class XlsxParityGridGrind {
       InspectionStep... inspections) {
     GridGrindResponse response =
         execute(
+            XlsxParitySupport.executionRootFor(workbookPath),
             ParityPlanSupport.request(
                 existingWorkbookSource(workbookPath, sourceSecurity),
                 new WorkbookPlan.WorkbookPersistence.None(),

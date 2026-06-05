@@ -57,6 +57,7 @@ fi
 case "${mode}" in
     jar)
         command -v java >/dev/null 2>&1 || die "java is required for jar verification"
+        target="$(cd -P -- "$(dirname -- "${target}")" && pwd)/$(basename -- "${target}")"
         [[ -f "${target}" ]] || die "missing CLI jar: ${target}"
         ;;
     docker-image)

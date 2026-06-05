@@ -66,7 +66,8 @@ final class JavaAuthoringWorkflowExample {
     return GridGrindEngine.requestExecutor()
         .execute(
             build(workspace).toPlan(),
-            new GridGrindRequestInputs(workspace),
+            new GridGrindRequestInputs(
+                workspace, workspace.resolve(".gridgrind").resolve("tmp")),
             GridGrindJournalSink.NOOP);
   }
 }

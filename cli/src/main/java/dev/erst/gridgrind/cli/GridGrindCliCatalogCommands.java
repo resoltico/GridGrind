@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -26,6 +25,9 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "help",
+        "help text",
+        Optional.of("gridgrind --help"),
         command.responsePath(),
         stdout,
         stderr,
@@ -43,6 +45,9 @@ final class GridGrindCliCatalogCommands {
     String description = GridGrindCliProductInfo.description();
     return writePayload(
         responseWriter,
+        "version",
+        "version output",
+        Optional.of("gridgrind --version"),
         command.responsePath(),
         stdout,
         stderr,
@@ -58,6 +63,9 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "license",
+        "license output",
+        Optional.of("gridgrind --license"),
         command.responsePath(),
         stdout,
         stderr,
@@ -72,6 +80,9 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "print-request-template",
+        "request template",
+        Optional.of("gridgrind --print-request-template"),
         command.responsePath(),
         stdout,
         stderr,
@@ -86,7 +97,7 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     var example = GridGrindShippedExamples.find(command.lookupId());
     if (example.isEmpty()) {
-      String message = unknownExampleMessage(command.lookupId());
+      String message = CliCatalogCommandSupport.unknownExampleMessage(command.lookupId());
       return writeCliFailure(
           responseWriter,
           command.responsePath(),
@@ -102,9 +113,12 @@ final class GridGrindCliCatalogCommands {
                   "Use --print-example-catalog first when you need the stable example ids,"
                       + " workspaceMode, and requiredPaths.")));
     }
-    emitExamplePortabilityWarning(example.get(), stderr);
+    CliCatalogCommandSupport.emitExamplePortabilityWarning(example.get(), stderr);
     return writePayload(
         responseWriter,
+        "print-example",
+        "built-in example request",
+        Optional.of("gridgrind --print-example --lookup " + command.lookupId()),
         command.responsePath(),
         stdout,
         stderr,
@@ -119,6 +133,9 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "print-example-catalog",
+        "example catalog",
+        Optional.of("gridgrind --print-example-catalog"),
         command.responsePath(),
         stdout,
         stderr,
@@ -134,6 +151,9 @@ final class GridGrindCliCatalogCommands {
     if (command.lookupId().isEmpty()) {
       return writePayload(
           responseWriter,
+          "print-task-catalog",
+          "task catalog",
+          Optional.of("gridgrind --print-task-catalog"),
           command.responsePath(),
           stdout,
           stderr,
@@ -142,7 +162,7 @@ final class GridGrindCliCatalogCommands {
     String taskFilter = command.lookupId().orElseThrow();
     var entry = GridGrindTaskCatalog.entryFor(taskFilter);
     if (entry.isEmpty()) {
-      String message = unknownTaskMessage(taskFilter);
+      String message = CliCatalogCommandSupport.unknownTaskMessage(taskFilter);
       return writeCliFailure(
           responseWriter,
           command.responsePath(),
@@ -160,6 +180,9 @@ final class GridGrindCliCatalogCommands {
     }
     return writePayload(
         responseWriter,
+        "print-task-catalog",
+        "task catalog entry",
+        Optional.of("gridgrind --print-task-catalog --lookup " + taskFilter),
         command.responsePath(),
         stdout,
         stderr,
@@ -176,7 +199,7 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     var task = GridGrindTaskCatalog.entryFor(command.lookupId());
     if (task.isEmpty()) {
-      String message = unknownTaskMessage(command.lookupId());
+      String message = CliCatalogCommandSupport.unknownTaskMessage(command.lookupId());
       return writeCliFailure(
           responseWriter,
           command.responsePath(),
@@ -191,9 +214,12 @@ final class GridGrindCliCatalogCommands {
               Optional.of(
                   "Resolve one valid task id first, then rerun --print-task-plan --lookup <id>.")));
     }
-    emitTaskStarterPortabilityWarning(task.get(), stderr);
+    CliCatalogCommandSupport.emitTaskStarterPortabilityWarning(task.get(), stderr);
     return writePayload(
         responseWriter,
+        "print-task-plan",
+        "task starter request",
+        Optional.of("gridgrind --print-task-plan --lookup " + command.lookupId()),
         command.responsePath(),
         stdout,
         stderr,
@@ -209,6 +235,9 @@ final class GridGrindCliCatalogCommands {
     try {
       return writePayload(
           responseWriter,
+          "print-task-keyword-match",
+          "task keyword match report",
+          Optional.of("gridgrind --print-task-keyword-match --query \"" + command.query() + "\""),
           command.responsePath(),
           stdout,
           stderr,
@@ -240,6 +269,9 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "print-protocol-catalog",
+        "protocol catalog",
+        Optional.of("gridgrind --print-protocol-catalog"),
         command.responsePath(),
         stdout,
         stderr,
@@ -254,12 +286,16 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     return writePayload(
         responseWriter,
+        "print-protocol-catalog",
+        "protocol catalog search report",
+        Optional.of(
+            "gridgrind --print-protocol-catalog --search \"" + command.searchQuery() + "\""),
         command.responsePath(),
         stdout,
         stderr,
         output ->
-            GridGrindJson.writeCatalogLookupValue(
-                output, GridGrindProtocolCatalog.searchCatalog(command.searchQuery())));
+            GridGrindCliJson.writeProtocolCatalogSearchReport(
+                output, CliCatalogCommandSupport.summarizedSearchReport(command.searchQuery())));
   }
 
   static int protocolCatalogLookup(
@@ -291,7 +327,7 @@ final class GridGrindCliCatalogCommands {
     }
     var lookupValue = GridGrindProtocolCatalog.lookupValueFor(command.lookupId());
     if (lookupValue.isEmpty()) {
-      String message = unknownOperationMessage(command.lookupId());
+      String message = CliCatalogCommandSupport.unknownOperationMessage(command.lookupId());
       return writeCliFailure(
           responseWriter,
           command.responsePath(),
@@ -308,6 +344,9 @@ final class GridGrindCliCatalogCommands {
     }
     return writePayload(
         responseWriter,
+        "print-protocol-catalog",
+        "protocol catalog lookup result",
+        Optional.of("gridgrind --print-protocol-catalog --lookup " + command.lookupId()),
         command.responsePath(),
         stdout,
         stderr,
@@ -316,134 +355,25 @@ final class GridGrindCliCatalogCommands {
                 output, GridGrindProtocolCatalog.catalog().protocolVersion(), lookupValue.get()));
   }
 
-  private static String unknownExampleMessage(String exampleId) {
-    return suggestedExampleId(exampleId)
-        .map(
-            suggestion ->
-                "Unknown example: "
-                    + exampleId
-                    + ". Example ids use stable upper-case tokens; did you mean "
-                    + suggestion
-                    + "? Run gridgrind --print-example-catalog to list valid ids.")
-        .orElse(
-            "Unknown example: "
-                + exampleId
-                + ". Run gridgrind --print-example-catalog to list valid ids.");
-  }
-
-  private static void emitExamplePortabilityWarning(
-      GridGrindShippedExamples.ShippedExample example, OutputStream stderr) throws IOException {
-    Objects.requireNonNull(example, "example must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    if (GridGrindShippedExamples.workspaceModeFor(example.id()).orElseThrow()
-        != dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
-      return;
-    }
-    var requirements = GridGrindShippedExamples.requirementsFor(example);
-    String requiredPaths = String.join(", ", requirements.requiredPaths());
-    stderr.write(
-        ("Printed example "
-                + example.id()
-                + " requires copied asset paths beside the request file before execution;"
-                + " required paths: "
-                + requiredPaths
-                + ". Inspect --print-example-catalog or --help-guidance for portability details.\n")
-            .getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
-  }
-
-  private static void emitTaskStarterPortabilityWarning(
-      dev.erst.gridgrind.cli.discovery.TaskEntry task, OutputStream stderr) throws IOException {
-    Objects.requireNonNull(task, "task must not be null");
-    Objects.requireNonNull(stderr, "stderr must not be null");
-    if (task.starter().workspaceMode()
-        != dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
-      return;
-    }
-    String requiredPaths = String.join(", ", task.starter().requiredPaths());
-    stderr.write(
-        ("Printed task starter "
-                + task.id()
-                + " requires copied asset paths beside the request file before execution;"
-                + " required paths: "
-                + requiredPaths
-                + ". Inspect --print-task-catalog or --help-guidance for starter portability"
-                + " details.\n")
-            .getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
-  }
-
-  private static String unknownTaskMessage(String taskId) {
-    return suggestedTaskId(taskId)
-        .map(
-            suggestion ->
-                "Unknown task: "
-                    + taskId
-                    + ". Task ids use stable upper-case tokens; did you mean "
-                    + suggestion
-                    + "? Run gridgrind --print-task-catalog to list valid ids or"
-                    + " gridgrind --print-task-keyword-match --query <text> to discover a close"
-                    + " task id before printing its task plan.")
-        .orElse(
-            "Unknown task: "
-                + taskId
-                + ". Run gridgrind --print-task-catalog to list valid ids or"
-                + " gridgrind --print-task-keyword-match --query <text> to discover a close"
-                + " task id before printing its task plan.");
-  }
-
-  private static Optional<String> suggestedTaskId(String taskId) {
-    String normalizedTaskId = normalizeLookupToken(taskId);
-    return GridGrindTaskCatalog.catalog().tasks().stream()
-        .map(dev.erst.gridgrind.cli.discovery.TaskEntry::id)
-        .filter(
-            candidate ->
-                candidate.equalsIgnoreCase(taskId)
-                    || normalizeLookupToken(candidate).equals(normalizedTaskId))
-        .findFirst();
-  }
-
-  private static String unknownOperationMessage(String operationId) {
-    return "Unknown lookup id: "
-        + operationId
-        + ". Run gridgrind --print-protocol-catalog --search <text> or"
-        + " gridgrind --print-protocol-catalog to discover valid lookup ids.";
-  }
-
-  private static Optional<String> suggestedExampleId(String exampleId) {
-    String normalizedExampleId = normalizeLookupToken(exampleId);
-    return GridGrindShippedExamples.examples().stream()
-        .filter(
-            example ->
-                example.id().equalsIgnoreCase(exampleId)
-                    || example.requestFileName().equalsIgnoreCase(exampleId)
-                    || exampleStem(example.requestFileName()).equalsIgnoreCase(exampleId)
-                    || normalizeLookupToken(exampleStem(example.requestFileName()))
-                        .equals(normalizedExampleId))
-        .map(GridGrindShippedExamples.ShippedExample::id)
-        .findFirst();
-  }
-
-  private static String normalizeLookupToken(String value) {
-    return value.toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
-  }
-
-  private static String exampleStem(String fileName) {
-    return fileName.substring(0, fileName.length() - 5);
-  }
-
   private static int writePayload(
       CliResponseWriter responseWriter,
+      String command,
+      String payloadName,
+      Optional<String> stdoutSuggestion,
       Optional<java.nio.file.Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
       byte[] payload)
       throws IOException {
-    return responseWriter.writePayload(responsePath, stdout, stderr, payload, 0);
+    return responseWriter.writePayload(
+        command, payloadName, stdoutSuggestion, responsePath, stdout, stderr, payload, 0);
   }
 
   private static int writePayload(
       CliResponseWriter responseWriter,
+      String command,
+      String payloadName,
+      Optional<String> stdoutSuggestion,
       Optional<java.nio.file.Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
@@ -451,7 +381,15 @@ final class GridGrindCliCatalogCommands {
       throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     renderer.write(buffer);
-    return responseWriter.writePayload(responsePath, stdout, stderr, buffer.toByteArray(), 0);
+    return responseWriter.writePayload(
+        command,
+        payloadName,
+        stdoutSuggestion,
+        responsePath,
+        stdout,
+        stderr,
+        buffer.toByteArray(),
+        0);
   }
 
   private static int writeCliFailure(

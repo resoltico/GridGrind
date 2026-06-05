@@ -89,7 +89,7 @@ class ExcelWorkbookImageCatalogSupportTest {
           List.of("/xl/media/image1.png", "/xl/media/image2.png", "/xl/media/image3.png"),
           ExcelWorkbookImageCatalogSupport.packageImagePartNames(workbook.xssfWorkbook()));
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -103,7 +103,8 @@ class ExcelWorkbookImageCatalogSupportTest {
               .toList());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectPayload.EmbeddedObject payload =
           assertInstanceOf(
               ExcelDrawingObjectPayload.EmbeddedObject.class,

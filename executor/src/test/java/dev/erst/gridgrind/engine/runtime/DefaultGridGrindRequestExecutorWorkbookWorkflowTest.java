@@ -56,37 +56,37 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void executesAssertionStepsAlongsideMutationsAndInspections() {
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(textCell("Owner"))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "B2"),
-                                new CellMutationAction.SetCell(formulaCell("2+3")))),
-                        assertions(
-                            assertThat(
-                                "assert-owner",
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
-                            assertThat(
-                                "assert-formula",
-                                new CellSelector.ByAddress("Budget", "B2"),
-                                new CellAssertion.FormulaText("2+3"))),
-                        inspections(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(textCell("Owner"))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "B2"),
+                            new CellMutationAction.SetCell(formulaCell("2+3")))),
+                    assertions(
+                        assertThat(
+                            "assert-owner",
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                        assertThat(
+                            "assert-formula",
+                            new CellSelector.ByAddress("Budget", "B2"),
+                            new CellAssertion.FormulaText("2+3"))),
+                    inspections(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(List.of("assert-owner", "assert-formula"), assertionIds(success));
     assertEquals(List.of("cells"), inspectionIds(success));
@@ -102,24 +102,24 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void surfacesStructuredAssertionFailuresWithObservedFacts() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(textCell("Owner")))),
-                        assertions(
-                            assertThat(
-                                "assert-owner",
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellAssertion.CellValue(new ExpectedCellValue.Text("Wrong")))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(textCell("Owner")))),
+                    assertions(
+                        assertThat(
+                            "assert-owner",
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Wrong")))),
+                    inspections())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -137,26 +137,26 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void successResponsesCarryStructuredExecutionJournal() {
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    WorkbookPlan.identified(
-                        GridGrindProtocolVersion.current(),
-                        "ledger-audit",
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionPolicyInput.journal(
-                            new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
-                        FormulaEnvironmentInput.empty(),
-                        steps(
-                            List.of(
-                                mutate(
-                                    new SheetSelector.ByName("Ledger"),
-                                    new WorkbookMutationAction.EnsureSheet())),
-                            List.of(
-                                inspect(
-                                    "summary",
-                                    new WorkbookSelector.Current(),
-                                    new WorkbookIntrospectionQuery.GetWorkbookSummary()))))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                WorkbookPlan.identified(
+                    GridGrindProtocolVersion.current(),
+                    "ledger-audit",
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicyInput.journal(
+                        new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
+                    FormulaEnvironmentInput.empty(),
+                    steps(
+                        List.of(
+                            mutate(
+                                new SheetSelector.ByName("Ledger"),
+                                new WorkbookMutationAction.EnsureSheet())),
+                        List.of(
+                            inspect(
+                                "summary",
+                                new WorkbookSelector.Current(),
+                                new WorkbookIntrospectionQuery.GetWorkbookSummary()))))));
 
     assertEquals("ledger-audit", success.journal().planId().orElseThrow());
     assertEquals(ExecutionJournalLevel.VERBOSE, success.journal().level());
@@ -174,21 +174,21 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void failedResponsesCarryStepFailureClassificationInExecutionJournal() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    WorkbookPlan.identified(
-                        GridGrindProtocolVersion.current(),
-                        "bad-open",
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionPolicyInput.journal(
-                            new ExecutionJournalInput(ExecutionJournalLevel.NORMAL)),
-                        FormulaEnvironmentInput.empty(),
-                        List.of(
-                            new InspectionStep(
-                                "missing-sheet",
-                                new SheetSelector.ByName("Missing"),
-                                new SheetIntrospectionQuery.GetSheetSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                WorkbookPlan.identified(
+                    GridGrindProtocolVersion.current(),
+                    "bad-open",
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicyInput.journal(
+                        new ExecutionJournalInput(ExecutionJournalLevel.NORMAL)),
+                    FormulaEnvironmentInput.empty(),
+                    List.of(
+                        new InspectionStep(
+                            "missing-sheet",
+                            new SheetSelector.ByName("Missing"),
+                            new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
@@ -207,57 +207,56 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Files.deleteIfExists(workbookPath);
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
-                    null,
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new CellMutationAction.AppendRow(
-                                List.of(
-                                    textCell("Item"), textCell("Amount"), textCell("Billable")))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new CellMutationAction.AppendRow(
-                                List.of(
-                                    textCell("Hosting"),
-                                    new CellInput.Numeric(49.0),
-                                    new CellInput.BooleanValue(true)))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new CellMutationAction.AppendRow(
-                                List.of(
-                                    textCell("Domain"),
-                                    new CellInput.Numeric(12.0),
-                                    new CellInput.BooleanValue(false)))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A4"),
-                            new CellMutationAction.SetCell(textCell("Total"))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "B4"),
-                            new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.AutoSizeColumns())),
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1", "B4", "C2")),
-                        new SheetIntrospectionQuery.GetCells()),
-                    inspect(
-                        "window",
-                        new RangeSelector.RectangularWindow("Budget", "A1", 4, 3),
-                        new SheetIntrospectionQuery.GetWindow())));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
+                null,
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new CellMutationAction.AppendRow(
+                            List.of(textCell("Item"), textCell("Amount"), textCell("Billable")))),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new CellMutationAction.AppendRow(
+                            List.of(
+                                textCell("Hosting"),
+                                new CellInput.Numeric(49.0),
+                                new CellInput.BooleanValue(true)))),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new CellMutationAction.AppendRow(
+                            List.of(
+                                textCell("Domain"),
+                                new CellInput.Numeric(12.0),
+                                new CellInput.BooleanValue(false)))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A4"),
+                        new CellMutationAction.SetCell(textCell("Total"))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "B4"),
+                        new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.AutoSizeColumns())),
+                inspect(
+                    "workbook",
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary()),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1", "B4", "C2")),
+                    new SheetIntrospectionQuery.GetCells()),
+                inspect(
+                    "window",
+                    new RangeSelector.RectangularWindow("Budget", "A1", 4, 3),
+                    new SheetIntrospectionQuery.GetWindow())));
 
     GridGrindResponse.Success success = success(response);
     WorkbookSummary workbook =
@@ -324,48 +323,48 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new DrawingMutationAction.SetPicture(
-                                    picture("OpsPicture", pictureData, firstAnchor, null))),
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new DrawingMutationAction.SetShape(
-                                    simpleShape("OpsShape", firstAnchor, "rect", text("Queue")))),
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new DrawingMutationAction.SetEmbeddedObject(
-                                    new EmbeddedObjectInput(
-                                        "OpsEmbed",
-                                        "Payload",
-                                        "payload.txt",
-                                        "payload.txt",
-                                        binary("cGF5bG9hZA=="),
-                                        pictureData,
-                                        firstAnchor))),
-                            mutate(
-                                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
-                                new DrawingMutationAction.SetDrawingObjectAnchor(movedAnchor)),
-                            mutate(
-                                new DrawingObjectSelector.ByName("Ops", "OpsShape"),
-                                new DrawingMutationAction.DeleteDrawingObject())),
-                        inspect(
-                            "drawing",
-                            new DrawingObjectSelector.AllOnSheet("Ops"),
-                            new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
-                        inspect(
-                            "payload",
-                            new DrawingObjectSelector.ByName("Ops", "OpsEmbed"),
-                            new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new DrawingMutationAction.SetPicture(
+                                picture("OpsPicture", pictureData, firstAnchor, null))),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new DrawingMutationAction.SetShape(
+                                simpleShape("OpsShape", firstAnchor, "rect", text("Queue")))),
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new DrawingMutationAction.SetEmbeddedObject(
+                                new EmbeddedObjectInput(
+                                    "OpsEmbed",
+                                    "Payload",
+                                    "payload.txt",
+                                    "payload.txt",
+                                    binary("cGF5bG9hZA=="),
+                                    pictureData,
+                                    firstAnchor))),
+                        mutate(
+                            new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                            new DrawingMutationAction.SetDrawingObjectAnchor(movedAnchor)),
+                        mutate(
+                            new DrawingObjectSelector.ByName("Ops", "OpsShape"),
+                            new DrawingMutationAction.DeleteDrawingObject())),
+                    inspect(
+                        "drawing",
+                        new DrawingObjectSelector.AllOnSheet("Ops"),
+                        new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
+                    inspect(
+                        "payload",
+                        new DrawingObjectSelector.ByName("Ops", "OpsEmbed"),
+                        new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload()))));
 
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
         read(success, "drawing", WorkbookAssetInspectionResult.DrawingObjectsResult.class);
@@ -390,39 +389,39 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   @Test
   void executesRichTextCellWorkflowAndReportsStructuredRuns() {
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "A1"),
-                            new CellMutationAction.ApplyStyle(
-                                styleInput(
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "A1"),
+                        new CellMutationAction.ApplyStyle(
+                            styleInput(
+                                null,
+                                null,
+                                fontInput(
                                     null,
+                                    Boolean.TRUE,
+                                    "Aptos",
+                                    new FontHeightInput.Twips(260),
+                                    ColorInput.rgb("#112233"),
                                     null,
-                                    fontInput(
-                                        null,
-                                        Boolean.TRUE,
-                                        "Aptos",
-                                        new FontHeightInput.Twips(260),
-                                        ColorInput.rgb("#112233"),
-                                        null,
-                                        null),
-                                    null,
-                                    null,
-                                    null))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(budgetRichTextCell()))),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1")),
-                        new SheetIntrospectionQuery.GetCells())));
+                                    null),
+                                null,
+                                null,
+                                null))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetCell(budgetRichTextCell()))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new SheetIntrospectionQuery.GetCells())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -448,24 +447,24 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   @Test
   void surfacesRequestWarningsAlongsideSuccessfulExecution() {
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.None(),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget Review"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new SheetSelector.ByName("Summary"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new CellSelector.ByAddress("Budget Review", "A1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(1200.0))),
-                        mutate(
-                            new CellSelector.ByAddress("Summary", "A1"),
-                            new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.None(),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget Review"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new SheetSelector.ByName("Summary"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress("Budget Review", "A1"),
+                        new CellMutationAction.SetCell(new CellInput.Numeric(1200.0))),
+                    mutate(
+                        new CellSelector.ByAddress("Summary", "A1"),
+                        new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
 
     GridGrindResponse.Success success = success(response);
 
@@ -486,26 +485,26 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Before"));
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
-                    mutations(
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(textCell("After"))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "B1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(12.0)))),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1", "B1")),
-                        new SheetIntrospectionQuery.GetCells())));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                mutations(
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetCell(textCell("After"))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "B1"),
+                        new CellMutationAction.SetCell(new CellInput.Numeric(12.0)))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1", "B1")),
+                    new SheetIntrospectionQuery.GetCells())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -527,91 +526,89 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-ops-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(textCell("Quarterly"))),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "A1:B1"),
-                            new WorkbookMutationAction.MergeCells()),
-                        mutate(
-                            new ColumnBandSelector.Span("Budget", 0, 1),
-                            new WorkbookMutationAction.SetColumnWidth(16.0)),
-                        mutate(
-                            new RowBandSelector.Span("Budget", 0, 0),
-                            new WorkbookMutationAction.SetRowHeight(28.5)),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.SetSheetPane(
-                                new PaneInput.Frozen(1, 1, 1, 1))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.SetSheetZoom(125)),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.SetSheetPresentation(
-                                new SheetPresentationInput(
-                                    new SheetDisplayInput(false, false, false, true, true),
-                                    Optional.of(ColorInput.rgb("#112233")),
-                                    new SheetOutlineSummaryInput(false, false),
-                                    new SheetDefaultsInput(11, 18.5d),
-                                    List.of(
-                                        new IgnoredErrorInput(
-                                            "A1:B2",
-                                            List.of(
-                                                ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.SetPrintLayout(
-                                new PrintLayoutInput(
-                                    new PrintAreaInput.Range("A1:B12"),
-                                    ExcelPrintOrientation.LANDSCAPE,
-                                    new PrintScalingInput.Fit(1, 0),
-                                    new PrintTitleRowsInput.Band(0, 0),
-                                    new PrintTitleColumnsInput.Band(0, 0),
-                                    headerFooter("Budget", "", ""),
-                                    headerFooter("", "Page &P", ""),
-                                    new PrintSetupInput(
-                                        PrintSetupInput.defaults().margins(),
-                                        true,
-                                        false,
-                                        false,
-                                        PrintSetupInput.defaults().paperSize(),
-                                        false,
-                                        false,
-                                        PrintSetupInput.defaults().copies(),
-                                        false,
-                                        PrintSetupInput.defaults().firstPageNumber(),
-                                        List.of(),
-                                        List.of()))))),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1")),
-                        new SheetIntrospectionQuery.GetCells()),
-                    inspect(
-                        "merged",
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
                         new SheetSelector.ByName("Budget"),
-                        new SheetIntrospectionQuery.GetMergedRegions()),
-                    inspect(
-                        "layout",
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetCell(textCell("Quarterly"))),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "A1:B1"),
+                        new WorkbookMutationAction.MergeCells()),
+                    mutate(
+                        new ColumnBandSelector.Span("Budget", 0, 1),
+                        new WorkbookMutationAction.SetColumnWidth(16.0)),
+                    mutate(
+                        new RowBandSelector.Span("Budget", 0, 0),
+                        new WorkbookMutationAction.SetRowHeight(28.5)),
+                    mutate(
                         new SheetSelector.ByName("Budget"),
-                        new SheetIntrospectionQuery.GetSheetLayout()),
-                    inspect(
-                        "printLayout",
+                        new WorkbookMutationAction.SetSheetPane(new PaneInput.Frozen(1, 1, 1, 1))),
+                    mutate(
                         new SheetSelector.ByName("Budget"),
-                        new SheetIntrospectionQuery.GetPrintLayout()),
-                    inspect(
-                        "workbook",
-                        new WorkbookSelector.Current(),
-                        new WorkbookIntrospectionQuery.GetWorkbookSummary())));
+                        new WorkbookMutationAction.SetSheetZoom(125)),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.SetSheetPresentation(
+                            new SheetPresentationInput(
+                                new SheetDisplayInput(false, false, false, true, true),
+                                Optional.of(ColorInput.rgb("#112233")),
+                                new SheetOutlineSummaryInput(false, false),
+                                new SheetDefaultsInput(11, 18.5d),
+                                List.of(
+                                    new IgnoredErrorInput(
+                                        "A1:B2",
+                                        List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))))),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.SetPrintLayout(
+                            new PrintLayoutInput(
+                                new PrintAreaInput.Range("A1:B12"),
+                                ExcelPrintOrientation.LANDSCAPE,
+                                new PrintScalingInput.Fit(1, 0),
+                                new PrintTitleRowsInput.Band(0, 0),
+                                new PrintTitleColumnsInput.Band(0, 0),
+                                headerFooter("Budget", "", ""),
+                                headerFooter("", "Page &P", ""),
+                                new PrintSetupInput(
+                                    PrintSetupInput.defaults().margins(),
+                                    true,
+                                    false,
+                                    false,
+                                    PrintSetupInput.defaults().paperSize(),
+                                    false,
+                                    false,
+                                    PrintSetupInput.defaults().copies(),
+                                    false,
+                                    PrintSetupInput.defaults().firstPageNumber(),
+                                    List.of(),
+                                    List.of()))))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new SheetIntrospectionQuery.GetCells()),
+                inspect(
+                    "merged",
+                    new SheetSelector.ByName("Budget"),
+                    new SheetIntrospectionQuery.GetMergedRegions()),
+                inspect(
+                    "layout",
+                    new SheetSelector.ByName("Budget"),
+                    new SheetIntrospectionQuery.GetSheetLayout()),
+                inspect(
+                    "printLayout",
+                    new SheetSelector.ByName("Budget"),
+                    new SheetIntrospectionQuery.GetPrintLayout()),
+                inspect(
+                    "workbook",
+                    new WorkbookSelector.Current(),
+                    new WorkbookIntrospectionQuery.GetWorkbookSummary())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -680,77 +677,77 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-layout-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Layout"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Layout", "A1:F6"),
-                            new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(
-                                        textCell("Item"),
-                                        textCell("Qty"),
-                                        textCell("Status"),
-                                        textCell("Note"),
-                                        textCell("Owner"),
-                                        textCell("Flag")),
-                                    List.of(
-                                        textCell("Hosting"),
-                                        new CellInput.Numeric(42.0),
-                                        textCell("Open"),
-                                        textCell("Alpha"),
-                                        textCell("Ada"),
-                                        textCell("Y")),
-                                    List.of(
-                                        textCell("Support"),
-                                        new CellInput.Numeric(84.0),
-                                        textCell("Closed"),
-                                        textCell("Beta"),
-                                        textCell("Lin"),
-                                        textCell("N")),
-                                    List.of(
-                                        textCell("Ops"),
-                                        new CellInput.Numeric(168.0),
-                                        textCell("Open"),
-                                        textCell("Gamma"),
-                                        textCell("Bea"),
-                                        textCell("Y")),
-                                    List.of(
-                                        textCell("QA"),
-                                        new CellInput.Numeric(21.0),
-                                        textCell("Queued"),
-                                        textCell("Delta"),
-                                        textCell("Kai"),
-                                        textCell("N")),
-                                    List.of(
-                                        textCell("Infra"),
-                                        new CellInput.Numeric(7.0),
-                                        textCell("Done"),
-                                        textCell("Epsilon"),
-                                        textCell("Mia"),
-                                        textCell("Y"))))),
-                        mutate(
-                            new RowBandSelector.Span("Layout", 1, 3),
-                            new WorkbookMutationAction.GroupRows(true)),
-                        mutate(
-                            new RowBandSelector.Span("Layout", 5, 5),
-                            new WorkbookMutationAction.SetRowVisibility(true)),
-                        mutate(
-                            new ColumnBandSelector.Span("Layout", 1, 3),
-                            new WorkbookMutationAction.GroupColumns(true)),
-                        mutate(
-                            new ColumnBandSelector.Span("Layout", 5, 5),
-                            new WorkbookMutationAction.SetColumnVisibility(true))),
-                    inspect(
-                        "layout",
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
                         new SheetSelector.ByName("Layout"),
-                        new SheetIntrospectionQuery.GetSheetLayout())));
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Layout", "A1:F6"),
+                        new CellMutationAction.SetRange(
+                            List.of(
+                                List.of(
+                                    textCell("Item"),
+                                    textCell("Qty"),
+                                    textCell("Status"),
+                                    textCell("Note"),
+                                    textCell("Owner"),
+                                    textCell("Flag")),
+                                List.of(
+                                    textCell("Hosting"),
+                                    new CellInput.Numeric(42.0),
+                                    textCell("Open"),
+                                    textCell("Alpha"),
+                                    textCell("Ada"),
+                                    textCell("Y")),
+                                List.of(
+                                    textCell("Support"),
+                                    new CellInput.Numeric(84.0),
+                                    textCell("Closed"),
+                                    textCell("Beta"),
+                                    textCell("Lin"),
+                                    textCell("N")),
+                                List.of(
+                                    textCell("Ops"),
+                                    new CellInput.Numeric(168.0),
+                                    textCell("Open"),
+                                    textCell("Gamma"),
+                                    textCell("Bea"),
+                                    textCell("Y")),
+                                List.of(
+                                    textCell("QA"),
+                                    new CellInput.Numeric(21.0),
+                                    textCell("Queued"),
+                                    textCell("Delta"),
+                                    textCell("Kai"),
+                                    textCell("N")),
+                                List.of(
+                                    textCell("Infra"),
+                                    new CellInput.Numeric(7.0),
+                                    textCell("Done"),
+                                    textCell("Epsilon"),
+                                    textCell("Mia"),
+                                    textCell("Y"))))),
+                    mutate(
+                        new RowBandSelector.Span("Layout", 1, 3),
+                        new WorkbookMutationAction.GroupRows(true)),
+                    mutate(
+                        new RowBandSelector.Span("Layout", 5, 5),
+                        new WorkbookMutationAction.SetRowVisibility(true)),
+                    mutate(
+                        new ColumnBandSelector.Span("Layout", 1, 3),
+                        new WorkbookMutationAction.GroupColumns(true)),
+                    mutate(
+                        new ColumnBandSelector.Span("Layout", 5, 5),
+                        new WorkbookMutationAction.SetColumnVisibility(true))),
+                inspect(
+                    "layout",
+                    new SheetSelector.ByName("Layout"),
+                    new SheetIntrospectionQuery.GetSheetLayout())));
 
     GridGrindResponse.Success success = success(response);
     SheetLayoutReport layout =
@@ -787,7 +784,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
       workbook.getOrCreateSheet("Layout");
       workbook.sheet("Layout").cells().setCell("A1", ExcelCellValue.text("Header"));
       workbook.sheet("Layout").columns().setWidth(0, 0, 16.0d);
-      workbook.persistence().save(sourceWorkbook);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, sourceWorkbook);
     }
 
     Path malformedWorkbook =
@@ -803,16 +800,16 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(malformedWorkbook.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        inspect(
-                            "layout",
-                            new SheetSelector.ByName("Layout"),
-                            new SheetIntrospectionQuery.GetSheetLayout()))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(malformedWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    inspect(
+                        "layout",
+                        new SheetSelector.ByName("Layout"),
+                        new SheetIntrospectionQuery.GetSheetLayout()))));
 
     SheetLayoutReport layout =
         read(success, "layout", SheetInspectionResult.SheetLayoutResult.class).layout();
@@ -832,63 +829,62 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-geometry-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Moves"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Moves", "A1:D3"),
-                            new CellMutationAction.SetRange(
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Moves"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Moves", "A1:D3"),
+                        new CellMutationAction.SetRange(
+                            List.of(
                                 List.of(
-                                    List.of(
-                                        textCell("Item"),
-                                        textCell("Qty"),
-                                        textCell("Status"),
-                                        textCell("Note")),
-                                    List.of(
-                                        textCell("Hosting"),
-                                        new CellInput.Numeric(42.0),
-                                        textCell("Open"),
-                                        textCell("Alpha")),
-                                    List.of(
-                                        textCell("Support"),
-                                        new CellInput.Numeric(84.0),
-                                        textCell("Closed"),
-                                        textCell("Beta"))))),
-                        mutate(
-                            new RowBandSelector.Insertion("Moves", 1, 1),
-                            new WorkbookMutationAction.InsertRows()),
-                        mutate(
-                            new CellSelector.ByAddress("Moves", "A2"),
-                            new CellMutationAction.SetCell(textCell("Spacer"))),
-                        mutate(
-                            new RowBandSelector.Span("Moves", 2, 3),
-                            new WorkbookMutationAction.ShiftRows(1)),
-                        mutate(
-                            new RowBandSelector.Span("Moves", 2, 2),
-                            new WorkbookMutationAction.DeleteRows()),
-                        mutate(
-                            new ColumnBandSelector.Insertion("Moves", 1, 1),
-                            new WorkbookMutationAction.InsertColumns()),
-                        mutate(
-                            new CellSelector.ByAddress("Moves", "B1"),
-                            new CellMutationAction.SetCell(textCell("Pad"))),
-                        mutate(
-                            new ColumnBandSelector.Span("Moves", 2, 4),
-                            new WorkbookMutationAction.ShiftColumns(1)),
-                        mutate(
-                            new ColumnBandSelector.Span("Moves", 2, 2),
-                            new WorkbookMutationAction.DeleteColumns())),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses(
-                            "Moves", List.of("A2", "B1", "A3", "C3", "E4")),
-                        new SheetIntrospectionQuery.GetCells())));
+                                    textCell("Item"),
+                                    textCell("Qty"),
+                                    textCell("Status"),
+                                    textCell("Note")),
+                                List.of(
+                                    textCell("Hosting"),
+                                    new CellInput.Numeric(42.0),
+                                    textCell("Open"),
+                                    textCell("Alpha")),
+                                List.of(
+                                    textCell("Support"),
+                                    new CellInput.Numeric(84.0),
+                                    textCell("Closed"),
+                                    textCell("Beta"))))),
+                    mutate(
+                        new RowBandSelector.Insertion("Moves", 1, 1),
+                        new WorkbookMutationAction.InsertRows()),
+                    mutate(
+                        new CellSelector.ByAddress("Moves", "A2"),
+                        new CellMutationAction.SetCell(textCell("Spacer"))),
+                    mutate(
+                        new RowBandSelector.Span("Moves", 2, 3),
+                        new WorkbookMutationAction.ShiftRows(1)),
+                    mutate(
+                        new RowBandSelector.Span("Moves", 2, 2),
+                        new WorkbookMutationAction.DeleteRows()),
+                    mutate(
+                        new ColumnBandSelector.Insertion("Moves", 1, 1),
+                        new WorkbookMutationAction.InsertColumns()),
+                    mutate(
+                        new CellSelector.ByAddress("Moves", "B1"),
+                        new CellMutationAction.SetCell(textCell("Pad"))),
+                    mutate(
+                        new ColumnBandSelector.Span("Moves", 2, 4),
+                        new WorkbookMutationAction.ShiftColumns(1)),
+                    mutate(
+                        new ColumnBandSelector.Span("Moves", 2, 2),
+                        new WorkbookMutationAction.DeleteColumns())),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Moves", List.of("A2", "B1", "A3", "C3", "E4")),
+                    new SheetIntrospectionQuery.GetCells())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -916,7 +912,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(4))
             .stringValue());
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       assertEquals("Spacer", workbook.sheet("Moves").cells().text("A2"));
       assertEquals("Pad", workbook.sheet("Moves").cells().text("B1"));
       assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
@@ -929,34 +925,33 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsStructuredFailureForRowStructuralEditsThatWouldMoveTables() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new RangeSelector.ByRange("Budget", "A1:B3"),
-                                new CellMutationAction.SetRange(
-                                    List.of(
-                                        List.of(textCell("Item"), textCell("Qty")),
-                                        List.of(textCell("Hosting"), new CellInput.Numeric(42.0)),
-                                        List.of(
-                                            textCell("Support"), new CellInput.Numeric(84.0))))),
-                            mutate(
-                                new StructuredMutationAction.SetTable(
-                                    TableInput.withDefaultMetadata(
-                                        "BudgetTable",
-                                        "Budget",
-                                        "A1:B3",
-                                        false,
-                                        new TableStyleInput.None()))),
-                            mutate(
-                                new RowBandSelector.Insertion("Budget", 1, 1),
-                                new WorkbookMutationAction.InsertRows())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new RangeSelector.ByRange("Budget", "A1:B3"),
+                            new CellMutationAction.SetRange(
+                                List.of(
+                                    List.of(textCell("Item"), textCell("Qty")),
+                                    List.of(textCell("Hosting"), new CellInput.Numeric(42.0)),
+                                    List.of(textCell("Support"), new CellInput.Numeric(84.0))))),
+                        mutate(
+                            new StructuredMutationAction.SetTable(
+                                TableInput.withDefaultMetadata(
+                                    "BudgetTable",
+                                    "Budget",
+                                    "A1:B3",
+                                    false,
+                                    new TableStyleInput.None()))),
+                        mutate(
+                            new RowBandSelector.Insertion("Budget", 1, 1),
+                            new WorkbookMutationAction.InsertRows())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertTrue(failure.problem().message().contains("table 'BudgetTable'"));
@@ -967,24 +962,24 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
   void returnsStructuredFailureForColumnStructuralEditsWhenWorkbookHasFormulas() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(textCell("Item"))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "B2"),
-                                new CellMutationAction.SetCell(formulaCell("SUM(1, 1)"))),
-                            mutate(
-                                new ColumnBandSelector.Insertion("Budget", 1, 1),
-                                new WorkbookMutationAction.InsertColumns())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(textCell("Item"))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "B2"),
+                            new CellMutationAction.SetCell(formulaCell("SUM(1, 1)"))),
+                        mutate(
+                            new ColumnBandSelector.Insertion("Budget", 1, 1),
+                            new WorkbookMutationAction.InsertColumns())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertTrue(failure.problem().message().contains("workbook formulas are present"));
@@ -996,55 +991,55 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-ops-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(textCell("Report"))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "B4"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(61.0))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetHyperlink(
-                                new HyperlinkTarget.Url("https://example.com/report"))),
-                        mutate(
-                            new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetComment(
-                                CommentInput.plain(text("Review"), "GridGrind", true))),
-                        mutate(
-                            new StructuredMutationAction.SetNamedRange(
-                                "BudgetTotal",
-                                new NamedRangeScope.Workbook(),
-                                NamedRangeTarget.range("Budget", "B4"))),
-                        mutate(
-                            new StructuredMutationAction.SetNamedRange(
-                                "LocalItem",
-                                new NamedRangeScope.Sheet("Budget"),
-                                NamedRangeTarget.range("Budget", "A1:B2")))),
-                    inspect(
-                        "cells",
-                        new CellSelector.ByAddresses("Budget", List.of("A1", "B4")),
-                        new SheetIntrospectionQuery.GetCells()),
-                    inspect(
-                        "hyperlinks",
-                        new CellSelector.ByAddresses("Budget", List.of("A1")),
-                        new SheetIntrospectionQuery.GetHyperlinks()),
-                    inspect(
-                        "comments",
-                        new CellSelector.ByAddresses("Budget", List.of("A1")),
-                        new SheetIntrospectionQuery.GetComments()),
-                    inspect(
-                        "ranges",
-                        new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
-                        new WorkbookIntrospectionQuery.GetNamedRanges())));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetCell(textCell("Report"))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "B4"),
+                        new CellMutationAction.SetCell(new CellInput.Numeric(61.0))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetHyperlink(
+                            new HyperlinkTarget.Url("https://example.com/report"))),
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new CellMutationAction.SetComment(
+                            CommentInput.plain(text("Review"), "GridGrind", true))),
+                    mutate(
+                        new StructuredMutationAction.SetNamedRange(
+                            "BudgetTotal",
+                            new NamedRangeScope.Workbook(),
+                            NamedRangeTarget.range("Budget", "B4"))),
+                    mutate(
+                        new StructuredMutationAction.SetNamedRange(
+                            "LocalItem",
+                            new NamedRangeScope.Sheet("Budget"),
+                            NamedRangeTarget.range("Budget", "A1:B2")))),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1", "B4")),
+                    new SheetIntrospectionQuery.GetCells()),
+                inspect(
+                    "hyperlinks",
+                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new SheetIntrospectionQuery.GetHyperlinks()),
+                inspect(
+                    "comments",
+                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new SheetIntrospectionQuery.GetComments()),
+                inspect(
+                    "ranges",
+                    new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                    new WorkbookIntrospectionQuery.GetNamedRanges())));
 
     GridGrindResponse.Success success = success(response);
     dev.erst.gridgrind.contract.dto.CellReport.TextReport linkedCell =
@@ -1113,49 +1108,48 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-data-validation-ops-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "A2:C5"),
-                            new StructuredMutationAction.SetDataValidation(
-                                dataValidation(
-                                    new DataValidationRuleInput.ExplicitList(
-                                        List.of("Queued", "Done")),
-                                    true,
-                                    false,
-                                    prompt("Status", "Pick one workflow state.", true),
-                                    errorAlert(
-                                        ExcelDataValidationErrorStyle.STOP,
-                                        "Invalid status",
-                                        "Use one of the allowed values.",
-                                        true)))),
-                        mutate(
-                            new RangeSelector.ByRanges("Budget", List.of("B3")),
-                            new StructuredMutationAction.ClearDataValidations()),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "E2:E5"),
-                            new StructuredMutationAction.SetDataValidation(
-                                dataValidation(
-                                    new DataValidationRuleInput.FormulaList("#REF!"),
-                                    false,
-                                    false,
-                                    null,
-                                    null)))),
-                    inspect(
-                        "validations",
-                        new RangeSelector.AllOnSheet("Budget"),
-                        new SheetIntrospectionQuery.GetDataValidations()),
-                    inspect(
-                        "health",
-                        new SheetSelector.ByNames(List.of("Budget")),
-                        new InspectionAnalysisQuery.AnalyzeDataValidationHealth())));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "A2:C5"),
+                        new StructuredMutationAction.SetDataValidation(
+                            dataValidation(
+                                new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done")),
+                                true,
+                                false,
+                                prompt("Status", "Pick one workflow state.", true),
+                                errorAlert(
+                                    ExcelDataValidationErrorStyle.STOP,
+                                    "Invalid status",
+                                    "Use one of the allowed values.",
+                                    true)))),
+                    mutate(
+                        new RangeSelector.ByRanges("Budget", List.of("B3")),
+                        new StructuredMutationAction.ClearDataValidations()),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "E2:E5"),
+                        new StructuredMutationAction.SetDataValidation(
+                            dataValidation(
+                                new DataValidationRuleInput.FormulaList("#REF!"),
+                                false,
+                                false,
+                                null,
+                                null)))),
+                inspect(
+                    "validations",
+                    new RangeSelector.AllOnSheet("Budget"),
+                    new SheetIntrospectionQuery.GetDataValidations()),
+                inspect(
+                    "health",
+                    new SheetSelector.ByNames(List.of("Budget")),
+                    new InspectionAnalysisQuery.AnalyzeDataValidationHealth())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.DataValidationsResult validations =
@@ -1198,36 +1192,36 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-conditional-formatting-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "A1:B5"),
-                            new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(textCell("Status"), textCell("Amount")),
-                                    List.of(textCell("Queued"), new CellInput.Numeric(1.0)),
-                                    List.of(textCell("Done"), new CellInput.Numeric(9.0)),
-                                    List.of(textCell("Done"), new CellInput.Numeric(11.0)),
-                                    List.of(textCell("Queued"), new CellInput.Numeric(4.0))))),
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new StructuredMutationAction.SetConditionalFormatting(
-                                conditionalFormattingReadbackBlock()))),
-                    inspect(
-                        "conditional-formatting",
-                        new RangeSelector.AllOnSheet("Budget"),
-                        new SheetIntrospectionQuery.GetConditionalFormatting()),
-                    inspect(
-                        "conditional-formatting-health",
-                        new SheetSelector.ByNames(List.of("Budget")),
-                        new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth())));
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "A1:B5"),
+                        new CellMutationAction.SetRange(
+                            List.of(
+                                List.of(textCell("Status"), textCell("Amount")),
+                                List.of(textCell("Queued"), new CellInput.Numeric(1.0)),
+                                List.of(textCell("Done"), new CellInput.Numeric(9.0)),
+                                List.of(textCell("Done"), new CellInput.Numeric(11.0)),
+                                List.of(textCell("Queued"), new CellInput.Numeric(4.0))))),
+                    mutate(
+                        new SheetSelector.ByName("Budget"),
+                        new StructuredMutationAction.SetConditionalFormatting(
+                            conditionalFormattingReadbackBlock()))),
+                inspect(
+                    "conditional-formatting",
+                    new RangeSelector.AllOnSheet("Budget"),
+                    new SheetIntrospectionQuery.GetConditionalFormatting()),
+                inspect(
+                    "conditional-formatting-health",
+                    new SheetSelector.ByNames(List.of("Budget")),
+                    new InspectionAnalysisQuery.AnalyzeConditionalFormattingHealth())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.ConditionalFormattingResult conditionalFormatting =
@@ -1254,7 +1248,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(1, health.analysis().checkedConditionalFormattingBlockCount());
     assertEquals(List.of(), health.analysis().findings());
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult reopened =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.ConditionalFormattingResult)
@@ -1292,68 +1286,67 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-table-autofilter-");
 
     GridGrindResponse response =
-        new DefaultGridGrindRequestExecutor()
-            .execute(
-                request(
-                    new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                    mutations(
-                        mutate(
-                            new SheetSelector.ByName("Budget"),
-                            new WorkbookMutationAction.EnsureSheet()),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "A1:C4"),
-                            new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(
-                                        textCell("Item"), textCell("Amount"), textCell("Billable")),
-                                    List.of(
-                                        textCell("Hosting"),
-                                        new CellInput.Numeric(49.0),
-                                        new CellInput.BooleanValue(true)),
-                                    List.of(
-                                        textCell("Domain"),
-                                        new CellInput.Numeric(12.0),
-                                        new CellInput.BooleanValue(false)),
-                                    List.of(
-                                        textCell("Support"),
-                                        new CellInput.Numeric(18.0),
-                                        new CellInput.BooleanValue(true))))),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "E1:F3"),
-                            new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(textCell("Queue"), textCell("Owner")),
-                                    List.of(textCell("Late invoices"), textCell("Marta")),
-                                    List.of(textCell("Badge orders"), textCell("Rihards"))))),
-                        mutate(
-                            new RangeSelector.ByRange("Budget", "E1:F3"),
-                            new StructuredMutationAction.SetAutofilter()),
-                        mutate(
-                            new StructuredMutationAction.SetTable(
-                                TableInput.withDefaultMetadata(
-                                    "BudgetTable",
-                                    "Budget",
-                                    "A1:C4",
-                                    false,
-                                    new TableStyleInput.Named(
-                                        "TableStyleMedium2", false, false, true, false))))),
-                    inspect(
-                        "filters",
+        ExecutionContextFixtureSupport.execute(
+            new DefaultGridGrindRequestExecutor(),
+            request(
+                new WorkbookPlan.WorkbookSource.New(),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                mutations(
+                    mutate(
                         new SheetSelector.ByName("Budget"),
-                        new SheetIntrospectionQuery.GetAutofilters()),
-                    inspect(
-                        "tables",
-                        new TableSelector.All(),
-                        new WorkbookAssetIntrospectionQuery.GetTables()),
-                    inspect(
-                        "autofilter-health",
-                        new SheetSelector.ByNames(List.of("Budget")),
-                        new InspectionAnalysisQuery.AnalyzeAutofilterHealth()),
-                    inspect(
-                        "table-health",
-                        new TableSelector.All(),
-                        new InspectionAnalysisQuery.AnalyzeTableHealth())));
+                        new WorkbookMutationAction.EnsureSheet()),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "A1:C4"),
+                        new CellMutationAction.SetRange(
+                            List.of(
+                                List.of(textCell("Item"), textCell("Amount"), textCell("Billable")),
+                                List.of(
+                                    textCell("Hosting"),
+                                    new CellInput.Numeric(49.0),
+                                    new CellInput.BooleanValue(true)),
+                                List.of(
+                                    textCell("Domain"),
+                                    new CellInput.Numeric(12.0),
+                                    new CellInput.BooleanValue(false)),
+                                List.of(
+                                    textCell("Support"),
+                                    new CellInput.Numeric(18.0),
+                                    new CellInput.BooleanValue(true))))),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "E1:F3"),
+                        new CellMutationAction.SetRange(
+                            List.of(
+                                List.of(textCell("Queue"), textCell("Owner")),
+                                List.of(textCell("Late invoices"), textCell("Marta")),
+                                List.of(textCell("Badge orders"), textCell("Rihards"))))),
+                    mutate(
+                        new RangeSelector.ByRange("Budget", "E1:F3"),
+                        new StructuredMutationAction.SetAutofilter()),
+                    mutate(
+                        new StructuredMutationAction.SetTable(
+                            TableInput.withDefaultMetadata(
+                                "BudgetTable",
+                                "Budget",
+                                "A1:C4",
+                                false,
+                                new TableStyleInput.Named(
+                                    "TableStyleMedium2", false, false, true, false))))),
+                inspect(
+                    "filters",
+                    new SheetSelector.ByName("Budget"),
+                    new SheetIntrospectionQuery.GetAutofilters()),
+                inspect(
+                    "tables",
+                    new TableSelector.All(),
+                    new WorkbookAssetIntrospectionQuery.GetTables()),
+                inspect(
+                    "autofilter-health",
+                    new SheetSelector.ByNames(List.of("Budget")),
+                    new InspectionAnalysisQuery.AnalyzeAutofilterHealth()),
+                inspect(
+                    "table-health",
+                    new TableSelector.All(),
+                    new InspectionAnalysisQuery.AnalyzeTableHealth())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.AutofiltersResult filters =
@@ -1391,7 +1384,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(1, tableHealth.analysis().checkedTableCount());
     assertEquals(List.of(), tableHealth.analysis().findings());
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       WorkbookExecutionEngine readExecutor = new WorkbookExecutionEngine();
       dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult reopenedFilters =
           (dev.erst.gridgrind.excel.WorkbookRuleResult.AutofiltersResult)

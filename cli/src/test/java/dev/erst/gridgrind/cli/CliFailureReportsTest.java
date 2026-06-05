@@ -9,6 +9,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -66,6 +67,21 @@ class CliFailureReportsTest {
             "The request document decoded but violates request invariants. Correct the authored"
                 + " request and rerun --doctor-request."),
         failure.resolution());
+  }
+
+  @Test
+  void responseWriteFailureOmitsBlankStdoutSuggestionHints() {
+    CliFailureReport failure =
+        CliFailureReports.responseWriteFailure(
+            "print-request-template",
+            "request template",
+            Path.of("/tmp/response.json"),
+            new java.io.IOException("denied"),
+            Optional.of("  "));
+
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals(List.of(), failure.suggestions());
+    assertEquals(Optional.of("--response"), failure.argument());
   }
 
   private static GridGrindProblemDetail.Problem problem(GridGrindProblemCode code, String message) {

@@ -22,7 +22,8 @@ class WorkbookAnalyzerTest {
     Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-analyzer-", ".xlsx");
     writeAnalyzerFixture(workbookPath);
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet budget = workbook.sheet("Budget");
       budget.annotations().setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
       budget.annotations().setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
@@ -411,7 +412,8 @@ class WorkbookAnalyzerTest {
       fail(exception);
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookAnalysis.NamedRangeHealth analysis =
           new WorkbookAnalyzer().namedRangeHealth(workbook, new ExcelNamedRangeSelection.All());
 

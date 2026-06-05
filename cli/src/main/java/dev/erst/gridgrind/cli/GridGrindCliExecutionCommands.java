@@ -60,6 +60,11 @@ final class GridGrindCliExecutionCommands {
   int executeCommand(
       CliCommand.Execute command, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
+    if (command.requestPath().isEmpty() && command.executionRootPath().isEmpty()) {
+      return responseWriter.writeCliFailureReport(
+          command.responsePath(), stdout, stderr, stdinExecutionRootFailure("execute"));
+    }
+
     WorkbookPlan request;
     try {
       request = requestReader.read(command.requestPath(), stdin);
@@ -92,7 +97,12 @@ final class GridGrindCliExecutionCommands {
     }
 
     GridGrindRequestInputs bindings =
-        CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
+        CliExecutionBindingsFactory.create(
+            command.requestPath(),
+            command.executionRootPath(),
+            command.tempRootPath(),
+            request,
+            stdin);
     try {
       response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
     } catch (Exception exception) {
@@ -131,12 +141,22 @@ final class GridGrindCliExecutionCommands {
                   "Use --doctor-request only after you have one real request document to"
                       + " inspect.")));
     }
+    if (command.requestPath().isEmpty() && command.executionRootPath().isEmpty()) {
+      return responseWriter.writeCliFailureReport(
+          command.responsePath(), stdout, stderr, stdinExecutionRootFailure("doctor-request"));
+    }
 
     RequestDoctorReport report;
     try {
       byte[] requestBytes =
           requestReader.readBytes(command.requestPath(), requestInput.orElseThrow());
-      report = doctorRequestAnalyzer.diagnose(command.requestPath(), requestBytes, stdin);
+      report =
+          doctorRequestAnalyzer.diagnose(
+              command.requestPath(),
+              command.executionRootPath(),
+              command.tempRootPath(),
+              requestBytes,
+              stdin);
     } catch (IOException exception) {
       return writeReadRequestFailure(
           1,
@@ -149,6 +169,23 @@ final class GridGrindCliExecutionCommands {
     }
 
     return responseWriter.writeDoctorReport(command.responsePath(), stdout, stderr, report);
+  }
+
+  private static dev.erst.gridgrind.cli.discovery.CliFailureReport stdinExecutionRootFailure(
+      String command) {
+    return CliFailureReports.invalidArguments(
+        2,
+        command,
+        Optional.of("--execution-root"),
+        GridGrindContractText.stdinExecutionRootRequiredMessage(),
+        List.of(
+            "gridgrind --execution-root . < request.json",
+            "gridgrind --request request.json",
+            "gridgrind --help-protocol"),
+        Optional.of(
+            "When the request JSON arrives on stdin, pass one explicit --execution-root so"
+                + " relative request-owned paths and internal temp files resolve from one"
+                + " caller-chosen directory."));
   }
 
   private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput(

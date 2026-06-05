@@ -347,6 +347,7 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static void assertDeleteAndSourceHelpers() throws IOException {
+    Path workingDirectory = Path.of("/tmp/gridgrind-policy");
     Path deleteTarget = Files.createTempFile("gridgrind-delete-", ".tmp");
     ExecutionWorkbookSupport.deleteIfExists(deleteTarget);
     assertFalse(Files.exists(deleteTarget));
@@ -366,18 +367,21 @@ class ExecutorPolicyCoverageTest {
         });
 
     ExcelOoxmlPersistenceOptions noneOptions =
-        ExecutionRequestPaths.persistenceOptions(new WorkbookPlan.WorkbookPersistence.None());
+        ExecutionRequestPaths.persistenceOptions(
+            new WorkbookPlan.WorkbookPersistence.None(), workingDirectory);
     ExcelOoxmlPersistenceOptions saveAsOptions =
         ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "/tmp/out.xlsx",
                 new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)));
+                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
+            workingDirectory);
     ExcelOoxmlPersistenceOptions overwriteOptions =
         ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.OverwriteSource(
                 new OoxmlPersistenceSecurityInput(
-                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)));
+                    new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
+            workingDirectory);
     assertTrue(noneOptions.isEmpty());
     assertFalse(saveAsOptions.isEmpty());
     assertFalse(overwriteOptions.isEmpty());
@@ -404,13 +408,16 @@ class ExecutorPolicyCoverageTest {
   }
 
   private static void assertStreamingPersistenceBehaviors() throws IOException {
-    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
+    Path workingDirectory = Files.createTempDirectory("gridgrind-streaming-policy-");
+    ExecutionWorkbookSupport workbookSupport =
+        ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
     GridGrindResponsePersistence.PersistenceOutcome notSaved =
         workbookSupport.persistStreamingWorkbook(
             materialized,
             new WorkbookPlan.WorkbookPersistence.None(),
-            new WorkbookPlan.WorkbookSource.New());
+            new WorkbookPlan.WorkbookSource.New(),
+            workingDirectory);
     assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, notSaved);
 
     Path saveAsRoot = Files.createTempDirectory("gridgrind-streaming-saveas-");
@@ -421,7 +428,8 @@ class ExecutorPolicyCoverageTest {
             workbookSupport.persistStreamingWorkbook(
                 materialized,
                 new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
-                new WorkbookPlan.WorkbookSource.New()));
+                new WorkbookPlan.WorkbookSource.New(),
+                workingDirectory));
     assertEquals(saveAsPath.toAbsolutePath().toString(), savedAs.executionPath());
     assertTrue(Files.exists(saveAsPath));
 
@@ -433,7 +441,8 @@ class ExecutorPolicyCoverageTest {
             workbookSupport.persistStreamingWorkbook(
                 overwriteMaterialized,
                 new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
-                new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString())));
+                new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
+                workingDirectory));
     assertEquals(overwriteSourcePath.toAbsolutePath().toString(), overwritten.executionPath());
 
     IllegalArgumentException overwriteFailure =
@@ -443,7 +452,8 @@ class ExecutorPolicyCoverageTest {
                 workbookSupport.persistStreamingWorkbook(
                     materialized,
                     new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
-                    new WorkbookPlan.WorkbookSource.New()));
+                    new WorkbookPlan.WorkbookSource.New(),
+                    workingDirectory));
     assertEquals(
         "OVERWRITE persistence requires an EXISTING source", overwriteFailure.getMessage());
   }
@@ -464,7 +474,7 @@ class ExecutorPolicyCoverageTest {
             responseSupport.guardUnexpectedRuntime(
                 GridGrindProtocolVersion.V1,
                 request,
-                ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
+                ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                 () -> {
                   throw new UnsupportedOperationException("boom");
                 }));
@@ -477,7 +487,7 @@ class ExecutorPolicyCoverageTest {
               responseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V1,
                   request,
-                  ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
+                  ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                   workbook,
                   () -> {
                     throw new UnsupportedOperationException("boom");
@@ -498,7 +508,7 @@ class ExecutorPolicyCoverageTest {
               closeFailingResponseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V1,
                   request,
-                  ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
+                  ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP),
                   workbook,
                   () -> {
                     throw new UnsupportedOperationException("boom");

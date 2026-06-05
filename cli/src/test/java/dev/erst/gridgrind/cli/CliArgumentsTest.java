@@ -392,8 +392,56 @@ class CliArgumentsTest {
                 new String[] {"--doctor-request", "--response", "doctor-report.json"}));
 
     assertEquals(java.util.Optional.empty(), command.requestPath());
+    assertEquals(java.util.Optional.empty(), command.executionRootPath());
+    assertEquals(java.util.Optional.empty(), command.tempRootPath());
     assertEquals(
         java.util.Optional.of(java.nio.file.Path.of("doctor-report.json")), command.responsePath());
+  }
+
+  @Test
+  void doctorRequestParsesExecutionRootAndTempRootForStdinRequests() {
+    CliCommand.DoctorRequest command =
+        assertInstanceOf(
+            CliCommand.DoctorRequest.class,
+            CliArguments.parse(
+                new String[] {
+                  "--doctor-request",
+                  "--execution-root",
+                  "workspace",
+                  "--temp-root",
+                  "scratch",
+                  "--response",
+                  "doctor-report.json"
+                }));
+
+    assertEquals(java.util.Optional.empty(), command.requestPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("workspace")), command.executionRootPath());
+    assertEquals(java.util.Optional.of(java.nio.file.Path.of("scratch")), command.tempRootPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("doctor-report.json")), command.responsePath());
+  }
+
+  @Test
+  void executionFlagsParseIntoTheDefaultExecuteCommand() {
+    CliCommand.Execute command =
+        assertInstanceOf(
+            CliCommand.Execute.class,
+            CliArguments.parse(
+                new String[] {
+                  "--execution-root",
+                  "workspace",
+                  "--temp-root",
+                  "scratch",
+                  "--response",
+                  "run.json"
+                }));
+
+    assertEquals(java.util.Optional.empty(), command.requestPath());
+    assertEquals(
+        java.util.Optional.of(java.nio.file.Path.of("workspace")), command.executionRootPath());
+    assertEquals(java.util.Optional.of(java.nio.file.Path.of("scratch")), command.tempRootPath());
+    assertEquals(java.util.Optional.of(java.nio.file.Path.of("run.json")), command.responsePath());
   }
 
   @Test
@@ -570,6 +618,20 @@ class CliArgumentsTest {
                     }));
     assertEquals("--request", taskFailure.argument());
     assertEquals("--print-task-plan does not allow --request", taskFailure.getMessage());
+
+    CliArgumentsException helpExecutionRootFailure =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--help", "--execution-root", "workspace"}));
+    assertEquals("--execution-root", helpExecutionRootFailure.argument());
+    assertEquals("--help does not allow --execution-root", helpExecutionRootFailure.getMessage());
+
+    CliArgumentsException helpTempRootFailure =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--help", "--temp-root", "scratch"}));
+    assertEquals("--temp-root", helpTempRootFailure.argument());
+    assertEquals("--help does not allow --temp-root", helpTempRootFailure.getMessage());
   }
 
   @Test
@@ -605,5 +667,50 @@ class CliArgumentsTest {
     assertEquals(
         "--version must be the primary command and cannot follow execution arguments",
         exception.getMessage());
+  }
+
+  @Test
+  void executionRootCannotBeCombinedWithRequestFileExecution() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--request", "req.json", "--execution-root", "workspace"}));
+
+    assertEquals("--execution-root", exception.argument());
+    assertEquals(
+        "--execution-root cannot be combined with --request because the request file directory already owns request-root resolution",
+        exception.getMessage());
+  }
+
+  @Test
+  void tempRootRejectsDuplicateArgumentsAcrossDoctorAndExecuteCommands() {
+    CliArgumentsException duplicateDoctorTempRoot =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--doctor-request", "--temp-root", "scratch-a", "--temp-root", "scratch-b"
+                    }));
+    assertEquals("--temp-root", duplicateDoctorTempRoot.argument());
+    assertEquals("Duplicate argument: --temp-root", duplicateDoctorTempRoot.getMessage());
+
+    CliArgumentsException duplicateExecuteTempRoot =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--execution-root",
+                      "workspace",
+                      "--temp-root",
+                      "scratch-a",
+                      "--temp-root",
+                      "scratch-b"
+                    }));
+    assertEquals("--temp-root", duplicateExecuteTempRoot.argument());
+    assertEquals("Duplicate argument: --temp-root", duplicateExecuteTempRoot.getMessage());
   }
 }

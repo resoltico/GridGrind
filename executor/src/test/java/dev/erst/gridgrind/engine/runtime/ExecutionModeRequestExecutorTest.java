@@ -43,7 +43,7 @@ class ExecutionModeRequestExecutorTest {
       workbook.formulas().markRecalculateOnOpen();
       workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
       workbook.sheet("Ops").cells().setCell("C2", ExcelCellValue.number(42.0d));
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
     List<InspectionStep> reads =
@@ -58,24 +58,24 @@ class ExecutionModeRequestExecutorTest {
                 new SheetIntrospectionQuery.GetSheetSummary()));
     GridGrindResponse.Success full =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        reads)));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    reads)));
     GridGrindResponse.Success event =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        reads)));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    reads)));
 
     assertEquals(full.inspections(), event.inspections());
     assertEquals(full.persistence(), event.persistence());
@@ -86,22 +86,22 @@ class ExecutionModeRequestExecutorTest {
   void eventReadModeRejectsMutationWorkflowsUpFront() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet())),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
@@ -137,25 +137,24 @@ class ExecutionModeRequestExecutorTest {
 
     GridGrindResponse.Success streaming =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        executionPolicy(
-                            ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
-                        null,
-                        List.copyOf(operations),
-                        List.copyOf(reads))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
+                    null,
+                    List.copyOf(operations),
+                    List.copyOf(reads))));
     GridGrindResponse.Success reopened =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.copyOf(reads))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.copyOf(reads))));
 
     assertTrue(Files.exists(workbookPath));
     WorkbookInspectionResult.WorkbookSummaryResult streamingWorkbookSummary =
@@ -181,22 +180,22 @@ class ExecutionModeRequestExecutorTest {
   void eventReadModeRejectsMutationInspectionWorkflow() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet())),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
@@ -210,14 +209,14 @@ class ExecutionModeRequestExecutorTest {
             new DefaultGridGrindRequestExecutorDependencies(
                 new WorkbookExecutionEngine(),
                 ExcelWorkbook::close,
-                java.nio.file.Files::createTempFile,
                 dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
                 dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
                     ::markRecalculateOnOpen));
 
     GridGrindResponse.Success success =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -249,24 +248,24 @@ class ExecutionModeRequestExecutorTest {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").cells().setCell("A1", ExcelCellValue.text("Header"));
-      workbook.persistence().save(sourcePath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, sourcePath);
     }
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(persistedCopy.toString()),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(persistedCopy.toString()),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     WorkbookInspectionResult.WorkbookSummaryResult workbookSummary =
         assertInstanceOf(
@@ -288,19 +287,19 @@ class ExecutionModeRequestExecutorTest {
 
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(missingWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
     assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
@@ -310,15 +309,15 @@ class ExecutionModeRequestExecutorTest {
   void eventReadModeSupportsEmptyReadListsWithoutMaterializingTempWorkbook() {
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of())));
 
     assertEquals(List.of(), success.inspections());
     assertInstanceOf(
@@ -329,24 +328,24 @@ class ExecutionModeRequestExecutorTest {
   void eventReadModeRejectsAssertionStepsUpFront() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            assertThat(
-                                "assert-owner",
-                                new CellSelector.ByAddress("Ops", "A1"),
-                                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        assertThat(
+                            "assert-owner",
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
@@ -358,41 +357,8 @@ class ExecutionModeRequestExecutorTest {
   void streamingWriteModeAllowsAppendRowValidationButFailsIfTheSheetWasNeverCreated() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.streamingWrite(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new CellMutationAction.AppendRow(List.of(textCell("x"))))),
-                        List.of())));
-
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
-    assertTrue(failure.problem().message().contains("requires ENSURE_SHEET before APPEND_ROW"));
-  }
-
-  @Test
-  void streamingWriteModeReportsTempFileCreationIoFailure() {
-    DefaultGridGrindRequestExecutor executor =
-        new DefaultGridGrindRequestExecutor(
-            new DefaultGridGrindRequestExecutorDependencies(
-                new WorkbookExecutionEngine(),
-                ExcelWorkbook::close,
-                (_, _) -> {
-                  throw new IOException("temp creation failed");
-                },
-                dev.erst.gridgrind.excel.WorkbookArtifactIo.MaterializedWorkbook::close,
-                dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter
-                    ::markRecalculateOnOpen));
-
-    GridGrindResponse.Failure failure =
-        failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -401,8 +367,35 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Ops"),
-                            new WorkbookMutationAction.EnsureSheet())),
+                            new CellMutationAction.AppendRow(List.of(textCell("x"))))),
                     List.of())));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertTrue(failure.problem().message().contains("requires ENSURE_SHEET before APPEND_ROW"));
+  }
+
+  @Test
+  void streamingWriteModeReportsTempFileCreationIoFailure() throws IOException {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    WorkbookPlan request =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionModeInput.streamingWrite(),
+            null,
+            List.of(
+                mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet())),
+            List.of());
+    Path workingDirectory = Files.createTempDirectory("gridgrind-streaming-temp-failure-");
+    Path tempRootFile = Files.createTempFile(workingDirectory, "temp-root-blocker-", ".tmp");
+
+    GridGrindResponse.Failure failure =
+        failure(
+            executor.execute(
+                request,
+                new ExecutionInputBindings(workingDirectory, tempRootFile),
+                ExecutionJournalSink.NOOP));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
@@ -412,22 +405,22 @@ class ExecutionModeRequestExecutorTest {
   void streamingWriteModeReturnsReadFailureAfterMaterialization() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.streamingWrite(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet())),
-                        List.of(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Missing", List.of("A1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.streamingWrite(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Missing", List.of("A1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
@@ -443,18 +436,18 @@ class ExecutionModeRequestExecutorTest {
 
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        ExecutionModeInput.streamingWrite(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet())),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    ExecutionModeInput.streamingWrite(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of())));
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
@@ -469,61 +462,61 @@ class ExecutionModeRequestExecutorTest {
     Path workbookPath = Files.createTempFile("gridgrind-execution-mode-validation-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
     GridGrindResponse.Failure unsupportedEventRead =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Ops", List.of("A1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Ops", List.of("A1")),
+                            new SheetIntrospectionQuery.GetCells())))));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, unsupportedEventRead.problem().code());
     assertTrue(unsupportedEventRead.problem().message().contains("GET_CELLS"));
 
     GridGrindResponse.Failure existingStreamingSource =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.streamingWrite(),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new CellMutationAction.AppendRow(List.of(textCell("x"))))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.streamingWrite(),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new CellMutationAction.AppendRow(List.of(textCell("x"))))),
+                    inspections())));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());
     assertTrue(existingStreamingSource.problem().message().contains("requires source.type=NEW"));
 
     GridGrindResponse.Failure unsupportedStreamingOperation =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.streamingWrite(),
-                        null,
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Ops"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Ops", "A1"),
-                                new CellMutationAction.SetCell(textCell("x")))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.streamingWrite(),
+                    null,
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Ops"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Ops", "A1"),
+                            new CellMutationAction.SetCell(textCell("x")))),
+                    inspections())));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, unsupportedStreamingOperation.problem().code());
     assertTrue(unsupportedStreamingOperation.problem().message().contains("SET_CELL"));
@@ -537,16 +530,15 @@ class ExecutionModeRequestExecutorTest {
 
     GridGrindResponse.Failure missingStreamingSheetMaterialization =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(
-                            ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
-                        null,
-                        List.of(),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
+                    null,
+                    List.of(),
+                    List.of())));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         missingStreamingSheetMaterialization.problem().code());

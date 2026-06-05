@@ -48,9 +48,12 @@ JSON
 
 load_test_cli_contract_fixtures() {
     local jar_path
+    local doctor_execution_root
     # shellcheck source=/dev/null
     source "${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
     jar_path="$(ensure_cli_shadow_jar "${repo_root}")"
+    mkdir -p "${repo_root}/tmp"
+    doctor_execution_root="$(mktemp -d "${repo_root}/tmp/test-cli-contract-fixtures.XXXXXX")"
 
     success_help_overview="$(
         java -jar "${jar_path}" --help | tr -d '\r'
@@ -80,26 +83,30 @@ load_test_cli_contract_fixtures() {
         java -jar "${jar_path}" --print-request-template | tr -d '\r'
     )"
     success_doctor_report="$(
-        printf '%s' "${success_request_template}" | java -jar "${jar_path}" --doctor-request | tr -d '\r'
+        printf '%s' "${success_request_template}" \
+            | java -jar "${jar_path}" --doctor-request --execution-root "${doctor_execution_root}" | tr -d '\r'
     )"
     success_noargs_failure="$(
         tmp_stdout="$(mktemp)"
         tmp_stderr="$(mktemp)"
         set +e
-        java -jar "${jar_path}" >"${tmp_stdout}" 2>"${tmp_stderr}"
+        java -jar "${jar_path}" < /dev/null >"${tmp_stdout}" 2>"${tmp_stderr}"
         exit_code=$?
         set -e
         [[ ${exit_code} -eq 2 ]] || {
             printf 'error: expected no-arg exit code 2, got %s\n' "${exit_code}" >&2
             rm -f "${tmp_stdout}" "${tmp_stderr}"
+            rm -rf "${doctor_execution_root}"
             return 1
         }
         [[ ! -s "${tmp_stderr}" ]] || {
             printf 'error: expected empty stderr for no-arg failure fixture\n' >&2
             rm -f "${tmp_stdout}" "${tmp_stderr}"
+            rm -rf "${doctor_execution_root}"
             return 1
         }
         tr -d '\r' < "${tmp_stdout}"
         rm -f "${tmp_stdout}" "${tmp_stderr}"
     )"
+    rm -rf "${doctor_execution_root}"
 }

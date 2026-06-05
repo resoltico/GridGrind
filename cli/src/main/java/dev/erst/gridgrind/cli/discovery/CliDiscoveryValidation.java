@@ -35,6 +35,13 @@ final class CliDiscoveryValidation {
     return List.copyOf(values.stream().map(value -> requireNonBlank(value, fieldName)).toList());
   }
 
+  static List<String> copyOptionalStringsAllowEmpty(List<String> values, String fieldName) {
+    if (values == null) {
+      return List.of();
+    }
+    return copyStringsAllowEmpty(values, fieldName);
+  }
+
   static java.util.Optional<String> normalizeOptionalString(
       java.util.Optional<String> value, String fieldName) {
     java.util.Optional<String> normalized =

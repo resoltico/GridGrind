@@ -7,8 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /** Regression coverage for the package-owned managed temp-file factory. */
@@ -31,42 +29,39 @@ class ExcelTempFilesTest {
   }
 
   @Test
-  void managedTempFilesFallBackFromBrokenSystemTempRootsToUserHomeRoots() throws IOException {
-    Path invalidSystemTemp = Files.createTempFile("gridgrind-temp-root-file-", ".tmp");
-    Path fallbackUserHome = Files.createTempDirectory("gridgrind-temp-home-");
-    String originalSystemTemp = System.getProperty("java.io.tmpdir");
-    String originalUserHome = System.getProperty("user.home");
-    System.setProperty("java.io.tmpdir", invalidSystemTemp.toString());
-    System.setProperty("user.home", fallbackUserHome.toString());
-
+  void managedTempFilesUseExplicitRootsWhenSupplied() throws IOException {
+    Path explicitRoot = Files.createTempDirectory("gridgrind-explicit-root-");
     Path tempFile = null;
     Path tempDirectory = null;
     try {
-      tempFile = ExcelTempFiles.createManagedTempFile("gridgrind-fallback-", ".xlsx");
-      tempDirectory = ExcelTempFiles.createManagedTempDirectory("gridgrind-fallback-dir-");
-      assertTrue(tempFile.startsWith(fallbackUserHome.resolve(".gridgrind").resolve("tmp")));
-      assertTrue(tempDirectory.startsWith(fallbackUserHome.resolve(".gridgrind").resolve("tmp")));
+      tempFile = ExcelTempFiles.createManagedTempFile(explicitRoot, "gridgrind-explicit-", ".xlsx");
+      tempDirectory =
+          ExcelTempFiles.createManagedTempDirectory(explicitRoot, "gridgrind-explicit-dir-");
+      assertTrue(tempFile.startsWith(explicitRoot.toAbsolutePath().normalize()));
+      assertTrue(tempDirectory.startsWith(explicitRoot.toAbsolutePath().normalize()));
     } finally {
-      restoreProperty("java.io.tmpdir", originalSystemTemp);
-      restoreProperty("user.home", originalUserHome);
       Files.deleteIfExists(tempFile);
       Files.deleteIfExists(tempDirectory);
+      Files.deleteIfExists(explicitRoot);
+    }
+  }
+
+  @Test
+  void managedTempFilesRejectBrokenSystemTempRootsInsteadOfFallingBackToUserHome()
+      throws IOException {
+    Path invalidSystemTemp = Files.createTempFile("gridgrind-temp-root-file-", ".tmp");
+    String originalSystemTemp = System.getProperty("java.io.tmpdir");
+    System.setProperty("java.io.tmpdir", invalidSystemTemp.toString());
+    try {
+      assertThrows(
+          IOException.class,
+          () -> ExcelTempFiles.createManagedTempFile("gridgrind-fallback-", ".xlsx"));
+      assertThrows(
+          IOException.class,
+          () -> ExcelTempFiles.createManagedTempDirectory("gridgrind-fallback-dir-"));
+    } finally {
+      restoreProperty("java.io.tmpdir", originalSystemTemp);
       Files.deleteIfExists(invalidSystemTemp);
-      if (Files.exists(fallbackUserHome.resolve(".gridgrind").resolve("tmp"))) {
-        try (Stream<Path> paths = Files.walk(fallbackUserHome.resolve(".gridgrind"))) {
-          paths
-              .sorted(Comparator.reverseOrder())
-              .forEach(
-                  path -> {
-                    try {
-                      Files.deleteIfExists(path);
-                    } catch (IOException ignored) {
-                      // Best-effort cleanup for test-owned temp roots.
-                    }
-                  });
-        }
-      }
-      Files.deleteIfExists(fallbackUserHome);
     }
   }
 
@@ -79,9 +74,7 @@ class ExcelTempFilesTest {
     assertThrows(NullPointerException.class, () -> ExcelTempFiles.createManagedTempDirectory(null));
 
     String originalSystemTemp = System.getProperty("java.io.tmpdir");
-    String originalUserHome = System.getProperty("user.home");
     System.setProperty("java.io.tmpdir", "");
-    System.setProperty("user.home", "");
     try {
       assertThrows(
           IOException.class,
@@ -91,35 +84,29 @@ class ExcelTempFilesTest {
           () -> ExcelTempFiles.createManagedTempDirectory("gridgrind-none-dir-"));
     } finally {
       restoreProperty("java.io.tmpdir", originalSystemTemp);
-      restoreProperty("user.home", originalUserHome);
     }
   }
 
   @Test
-  void managedTempFilesPropagateThePrimaryFailureAfterAllCandidateRootsFail() throws IOException {
+  void managedTempFilesPropagateSystemTempFailures() throws IOException {
     Path invalidSystemTemp = Files.createTempFile("gridgrind-bad-system-root-", ".tmp");
-    Path invalidUserHome = Files.createTempFile("gridgrind-bad-home-root-", ".tmp");
     String originalSystemTemp = System.getProperty("java.io.tmpdir");
-    String originalUserHome = System.getProperty("user.home");
     System.setProperty("java.io.tmpdir", invalidSystemTemp.toString());
-    System.setProperty("user.home", invalidUserHome.toString());
     try {
       IOException fileFailure =
           assertThrows(
               IOException.class,
               () -> ExcelTempFiles.createManagedTempFile("gridgrind-fail-", ".tmp"));
-      assertTrue(fileFailure.getSuppressed().length >= 1);
+      assertEquals(0, fileFailure.getSuppressed().length);
 
       IOException directoryFailure =
           assertThrows(
               IOException.class,
               () -> ExcelTempFiles.createManagedTempDirectory("gridgrind-fail-dir-"));
-      assertTrue(directoryFailure.getSuppressed().length >= 1);
+      assertEquals(0, directoryFailure.getSuppressed().length);
     } finally {
       restoreProperty("java.io.tmpdir", originalSystemTemp);
-      restoreProperty("user.home", originalUserHome);
       Files.deleteIfExists(invalidSystemTemp);
-      Files.deleteIfExists(invalidUserHome);
     }
   }
 

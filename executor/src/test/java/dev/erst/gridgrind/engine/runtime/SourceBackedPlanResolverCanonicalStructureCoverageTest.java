@@ -70,7 +70,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                                     java.util.Optional.empty())))))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
+        SourceBackedPlanResolver.resolve(
+            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     CellMutationAction.SetCell richTextAction =
         assertInstanceOf(
@@ -83,6 +84,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
 
   @Test
   void resolvePreservesCanonicalStepInstancesWhenNothingChanges() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-inline-steps-");
     MutationStep mutationStep =
         new MutationStep(
             "mutate-inline",
@@ -117,7 +119,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                 dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
                 dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
                 List.of(mutationStep, inspectionStep, assertionStep)),
-            new ExecutionInputBindings(Path.of("")));
+            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertSame(mutationStep, resolved.steps().get(0));
     assertSame(inspectionStep, resolved.steps().get(1));
@@ -126,6 +128,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
 
   @Test
   void resolvePreservesAlreadyInlineMutationFamiliesWhenNothingNeedsInlining() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-inline-families-");
     MutationStep rangeStep =
         new MutationStep(
             "range-inline",
@@ -226,7 +229,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     validationStep,
                     tableStep,
                     printLayoutStep)),
-            new ExecutionInputBindings(Path.of("")));
+            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertSame(rangeStep, resolved.steps().get(0));
     assertSame(commentStep, resolved.steps().get(1));
@@ -360,7 +363,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     promptValidationStep,
                     errorValidationStep,
                     printLayoutStep)),
-            new ExecutionInputBindings(workingDirectory));
+            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     CellMutationAction.SetCell resolvedFormulaAction =
         assertInstanceOf(
@@ -494,7 +497,7 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     pictureDescriptionOnlyChanged,
                     footerOnlyChanged,
                     formulaAlreadyInline)),
-            new ExecutionInputBindings(workingDirectory));
+            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertNotSame(targetAndActionChanged, resolved.steps().get(0));
     assertNotSame(pictureDescriptionOnlyChanged, resolved.steps().get(1));
@@ -508,7 +511,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
     Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-formula-source-");
     Files.writeString(
         workingDirectory.resolve("formula.txt"), "=SUM(C1:C2)", StandardCharsets.UTF_8);
-    ExecutionInputBindings bindings = new ExecutionInputBindings(workingDirectory);
+    ExecutionInputBindings bindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
 
     TextSourceInput.Inline stableSource = TextSourceInput.inline("SUM(A1:A2)");
     assertSame(stableSource, SourceBackedPlanResolver.resolveFormulaSource(stableSource, bindings));

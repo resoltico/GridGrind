@@ -6,9 +6,6 @@ import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -16,23 +13,15 @@ import java.util.Optional;
 /** Runs contract-derived linting for one authored request without mutating workbook sources. */
 public final class GridGrindRequestDoctor {
   private final ExecutionValidationSupport validationSupport;
-  private final ExecutionWorkbookSupport workbookSupport;
 
   /** Creates the production doctor backed by the same request validator used for execution. */
   public GridGrindRequestDoctor() {
-    this(new ExecutionValidationSupport(), defaultWorkbookSupport());
+    this(new ExecutionValidationSupport());
   }
 
   GridGrindRequestDoctor(ExecutionValidationSupport validationSupport) {
-    this(validationSupport, defaultWorkbookSupport());
-  }
-
-  GridGrindRequestDoctor(
-      ExecutionValidationSupport validationSupport, ExecutionWorkbookSupport workbookSupport) {
     this.validationSupport =
         Objects.requireNonNull(validationSupport, "validationSupport must not be null");
-    this.workbookSupport =
-        Objects.requireNonNull(workbookSupport, "workbookSupport must not be null");
   }
 
   /** Returns one machine-readable lint report for the supplied request. */
@@ -123,6 +112,8 @@ public final class GridGrindRequestDoctor {
     }
     dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook context =
         openWorkbookContext(request, bindings);
+    ExecutionWorkbookSupport workbookSupport =
+        new ExecutionWorkbookSupport(bindings.tempFileFactory());
     try (ExcelWorkbook workbook =
         workbookSupport.openWorkbook(
             request.source(), request.formulaEnvironment(), bindings.workingDirectory())) {
@@ -138,13 +129,5 @@ public final class GridGrindRequestDoctor {
     return new dev.erst.gridgrind.contract.dto.ProblemContext.OpenWorkbook(
         ExecutionRequestPaths.requestShape(request),
         ExecutionRequestPaths.workbookReference(request, bindings.workingDirectory()));
-  }
-
-  private static ExecutionWorkbookSupport defaultWorkbookSupport() {
-    return new ExecutionWorkbookSupport(GridGrindRequestDoctor::createTempWorkbookFile);
-  }
-
-  static Path createTempWorkbookFile(String prefix, String suffix) throws IOException {
-    return Files.createTempFile(prefix, suffix);
   }
 }

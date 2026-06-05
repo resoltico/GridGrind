@@ -5,12 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.67.0] - 2026-06-05
+
 ### Changed
 
+- Hardened the repository-wide structural-governance contract beyond file-size ratcheting. Root
+  `check` now runs both `verifyJavaSourceShape` and `verifyJavaSourceDuplication`, the shared
+  `gradle/source-shape-policy.tsv` now owns `duplicationGuard` plus per-surface
+  `reviewExpiresOn` and `splitTrigger` metadata, reviewed exact-surface overrides now fail when
+  they drift too far above the current file shape, and the included `gradle/build-logic` tests
+  are wired into the root verification path through configuration-cache-safe compile-output
+  cleaning so the governance owner cannot drift separately from the product build.
 - Consolidated the open post-release dependency queue into one current-`main` maintenance line:
   Kotlin Gradle plugin `2.4.0`, Jackson databind `3.1.4`, Jackson annotations `2.22`, Shadow
-  `9.4.2`, Spotless `8.6.0`, JaCoCo trunk build `0.8.15.202606030734` (published as
-  `0.8.15-20260603.073432-117`), Jakarta XML Bind API `4.0.5`, and the pinned
+  `9.4.2`, Spotless `8.6.0`, NullAway `0.13.5`, JaCoCo trunk build `0.8.15.202606040741`
+  (published as `0.8.15-20260604.194125-118`), Jakarta XML Bind API `4.0.5`, and the pinned
   `azul/zulu-openjdk-alpine:26-jre` runtime digest used by the published Docker image.
 - Refreshed the GitHub Actions publication and CI tooling pins to the current Docker-maintained
   releases: `docker/setup-buildx-action` `4.1.0`, `docker/setup-qemu-action` `4.1.0`,
@@ -19,6 +28,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarified the release protocol's Dependabot hygiene step so stale, post-release maintenance
   heads can be replaced by one deliberate current-`main` maintenance PR instead of being merged
   through repeated branch-refresh churn one by one.
+- Tightened the execution contract around explicit invocation-owned state: the public Java API now
+  requires both request-root and temp-root inputs, stdin-driven CLI execution/doctoring now
+  requires `--execution-root <path>` instead of inheriting ambient process cwd semantics, the
+  engine no longer falls back to `~/.gridgrind/tmp`, and the CLI/docs/help surface now teaches
+  `.gridgrind/tmp` under the request root or explicit execution root as the default scratch
+  location unless `--temp-root <path>` overrides it.
+- Refined the public CLI discovery and help contracts around the verified artifact surface:
+  `--print-protocol-catalog --search` now returns compact summary-first matches instead of inline
+  full-entry payload dumps, `--response` write failures now fall back to the originating command
+  family’s own machine-readable failure shape instead of masquerading as execution responses, the
+  split help surfaces now render command invocations as commands rather than prose-wrapped tables,
+  and the jar/Docker CLI contract verifier now parses the first product-owned JSON document from
+  PTY output instead of treating terminal wrapping or runtime trailers as product drift.
+- Tightened the root `README.md` front-door copy so it matches the current artifact contract more
+  precisely: it now distinguishes workbook-save atomicity from response-file output, teaches the
+  explicit `--execution-root <path>` rule for stdin-driven first-contact flows, and no longer
+  describes asset-backed example directories as universally blank-workspace runnable.
 
 ## [0.66.0] - 2026-05-27
 
@@ -3065,7 +3091,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.66.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.67.0...HEAD
+[0.67.0]: https://github.com/resoltico/GridGrind/compare/v0.66.0...v0.67.0
 [0.66.0]: https://github.com/resoltico/GridGrind/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/resoltico/GridGrind/compare/v0.64.0...v0.65.0
 [0.64.0]: https://github.com/resoltico/GridGrind/compare/v0.63.0...v0.64.0

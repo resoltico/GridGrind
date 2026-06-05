@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 /** Coverage tests for the execution-journal helpers added in Phase 5. */
 class ExecutionJournalCoverageTest {
   @Test
-  void defaultExecutorMethodForwardsAndRejectsNullSink() {
+  void executorBoundaryForwardsExplicitBindings() {
     WorkbookPlan request =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -59,10 +59,11 @@ class ExecutionJournalCoverageTest {
           return expected;
         };
 
-    assertSame(expected, executor.execute(request, ExecutionJournalSink.NOOP));
+    assertSame(
+        expected,
+        executor.execute(
+            request, ExecutionContextFixtureSupport.defaultBindings(), ExecutionJournalSink.NOOP));
     assertTrue(called.get());
-    assertThrows(
-        NullPointerException.class, () -> executor.execute(request, (ExecutionJournalSink) null));
   }
 
   @Test
@@ -283,7 +284,8 @@ class ExecutionJournalCoverageTest {
   void recorderBuildsVerboseFailureAndGuardsPhaseReuse() {
     WorkbookPlan request = verbosePlan();
     List<ExecutionJournal.Event> emitted = new ArrayList<>();
-    ExecutionJournalRecorder recorder = ExecutionJournalRecorder.start(request, emitted::add);
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(request, emitted::add);
 
     ExecutionJournalRecorder.PhaseHandle validation = recorder.beginValidation();
     validation.succeed();
@@ -337,7 +339,7 @@ class ExecutionJournalCoverageTest {
   @Test
   void recorderSupportsNullRequestAndCalculationIoFailures() throws Exception {
     ExecutionJournalRecorder recorder =
-        ExecutionJournalRecorder.start(null, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(null, ExecutionJournalSink.NOOP);
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
     assertEquals(java.util.Optional.empty(), unknownJournal.planId());
     assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
@@ -345,7 +347,7 @@ class ExecutionJournalCoverageTest {
 
     WorkbookPlan request = verbosePlan();
     ExecutionJournalRecorder verboseRecorder =
-        ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP);
+        ExecutionContextFixtureSupport.startJournal(request, ExecutionJournalSink.NOOP);
     ExecutionJournalRecorder.PhaseHandle calculationPreflight =
         verboseRecorder.beginCalculationPreflight();
     calculationPreflight.succeed();

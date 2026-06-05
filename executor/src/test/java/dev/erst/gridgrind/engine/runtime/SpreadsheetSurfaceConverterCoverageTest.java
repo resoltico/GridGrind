@@ -294,7 +294,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
                         "set-signature", new SheetSelector.ByName("Ops"), signatureAction),
                     new MutationStep(
                         "import-custom-xml", new WorkbookSelector.Current(), inlineImportAction))),
-            new ExecutionInputBindings(workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
 
     DrawingMutationAction.SetChart resolvedChartAction =
         assertInstanceOf(
@@ -326,7 +327,8 @@ class SpreadsheetSurfaceConverterCoverageTest {
                         "stable-signature",
                         new SheetSelector.ByName("Ops"),
                         stableSignatureAction))),
-            new ExecutionInputBindings(workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, "stdin".getBytes(StandardCharsets.UTF_8)));
 
     assertSame(
         stableChartAction,

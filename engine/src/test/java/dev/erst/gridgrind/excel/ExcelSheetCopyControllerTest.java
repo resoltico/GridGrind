@@ -72,7 +72,8 @@ class ExcelSheetCopyControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertDoesNotThrow(
           () ->
               workbook
@@ -214,10 +215,11 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet replica = reopened.sheet("Replica");
       assertEquals(
           List.of("OpsPicture", "OpsChart"),
@@ -360,10 +362,11 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot sourceChart = reopened.sheet("Source").drawings().charts().getFirst();
       ExcelChartSnapshot.Series sourceSeries =
           ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
@@ -553,10 +556,11 @@ class ExcelSheetCopyControllerTest {
           source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           sourceComments,
           reopened

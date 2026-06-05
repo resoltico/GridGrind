@@ -24,18 +24,23 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
     assertThrows(
         WorkbookPasswordRequiredException.class,
-        () -> ExcelWorkbooks.open(encryptedWorkbook.workbookPath()));
+        () ->
+            ExcelWorkbooks.open(
+                encryptedWorkbook.workbookPath(),
+                ExcelTempFileFactoryTestSupport.tempFileFactory()));
     assertThrows(
         InvalidWorkbookPasswordException.class,
         () ->
             ExcelWorkbooks.open(
                 encryptedWorkbook.workbookPath(),
-                new ExcelOoxmlOpenOptions.Encrypted("wrong-password")));
+                new ExcelOoxmlOpenOptions.Encrypted("wrong-password"),
+                ExcelTempFileFactoryTestSupport.tempFileFactory()));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           "Encrypted workbook",
           assertInstanceOf(
@@ -70,8 +75,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
-      workbook.persistence().save(unchangedCopy);
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
+      workbook.persistence().save(unchangedCopy, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     assertEquals(
         "Encrypted workbook",
@@ -81,12 +87,13 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       new WorkbookCommandExecutor()
           .apply(
               workbook,
               new WorkbookCellCommand.SetCell("Encrypted", "B2", ExcelCellValue.text("Mutated")));
-      workbook.persistence().save(mutatedCopy);
+      workbook.persistence().save(mutatedCopy, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(
@@ -103,7 +110,9 @@ class ExcelOoxmlPackageSecuritySupportTest {
     Path resignedOutput =
         signedWorkbook.workbookPath().getParent().resolve("signed-resigned-output.xlsx");
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(signedWorkbook.workbookPath())) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            signedWorkbook.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookCoreResult.PackageSecurityResult beforeMutation =
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
@@ -132,7 +141,11 @@ class ExcelOoxmlPackageSecuritySupportTest {
 
       IllegalArgumentException unsignedSaveFailure =
           assertThrows(
-              IllegalArgumentException.class, () -> workbook.persistence().save(resignedOutput));
+              IllegalArgumentException.class,
+              () ->
+                  workbook
+                      .persistence()
+                      .save(resignedOutput, ExcelTempFileFactoryTestSupport.tempFileFactory()));
       assertTrue(unsignedSaveFailure.getMessage().contains("persistence.security.signature"));
 
       workbook
@@ -148,11 +161,13 @@ class ExcelOoxmlPackageSecuritySupportTest {
                           signedWorkbook.keyPassword(),
                           signedWorkbook.alias(),
                           ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                          "GridGrind test signature"))));
+                          "GridGrind test signature"))),
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedOutput));
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(resignedOutput)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(resignedOutput, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookCoreResult.PackageSecurityResult resignedSecurity =
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,
@@ -176,7 +191,8 @@ class ExcelOoxmlPackageSecuritySupportTest {
         signedWorkbook.workbookPath(), tamperedWorkbook, "Signed", "B2", "Broken");
 
     assertFalse(OoxmlSecurityTestSupport.signatureValid(tamperedWorkbook));
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(tamperedWorkbook)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(tamperedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookCoreResult.PackageSecurityResult securityResult =
           assertInstanceOf(
               WorkbookCoreResult.PackageSecurityResult.class,

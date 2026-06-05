@@ -271,7 +271,7 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             plan,
-            new ExecutionInputBindings(
+            ExecutionInputBindingsFixtureSupport.bindings(
                 workingDirectory, "stdin-text".getBytes(StandardCharsets.UTF_8)));
 
     CellMutationAction.SetComment commentAction =

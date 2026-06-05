@@ -36,17 +36,17 @@ class SemanticSelectorExecutionCoverageTest {
   void tableCellInspectionReturnsEmptyResultWhenKeySelectorMatchesNoRow() {
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        budgetTableMutations(),
-                        inspections(
-                            inspect(
-                                "inspect-missing-table-cell",
-                                missingAmountCellTarget(),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    budgetTableMutations(),
+                    inspections(
+                        inspect(
+                            "inspect-missing-table-cell",
+                            missingAmountCellTarget(),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     SheetInspectionResult.CellsResult cellsResult =
         assertInstanceOf(SheetInspectionResult.CellsResult.class, success.inspections().getFirst());
@@ -58,19 +58,19 @@ class SemanticSelectorExecutionCoverageTest {
   void tableCellAssertionsFailStructurallyWhenKeySelectorMatchesNoRow() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        budgetTableMutations(),
-                        ExecutorTestPlanSupport.assertions(
-                            ExecutorTestPlanSupport.assertThat(
-                                "assert-missing-table-cell",
-                                missingAmountCellTarget(),
-                                new CellAssertion.CellValue(
-                                    new ExpectedCellValue.NumericValue(999.0)))),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    budgetTableMutations(),
+                    ExecutorTestPlanSupport.assertions(
+                        ExecutorTestPlanSupport.assertThat(
+                            "assert-missing-table-cell",
+                            missingAmountCellTarget(),
+                            new CellAssertion.CellValue(
+                                new ExpectedCellValue.NumericValue(999.0)))),
+                    List.of())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
     assertTrue(
@@ -88,22 +88,22 @@ class SemanticSelectorExecutionCoverageTest {
   void semanticResolverRejectsDuplicateKeyMatchesInsteadOfGuessingOneRow() {
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        duplicateBudgetTableMutations(),
-                        inspections(
-                            inspect(
-                                "inspect-duplicate-table-cell",
-                                new TableCellSelector.ByColumnName(
-                                    new TableRowSelector.ByKeyCell(
-                                        new TableSelector.ByName("BudgetTable"),
-                                        "Item",
-                                        textCell("Hosting")),
-                                    "Amount"),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    duplicateBudgetTableMutations(),
+                    inspections(
+                        inspect(
+                            "inspect-duplicate-table-cell",
+                            new TableCellSelector.ByColumnName(
+                                new TableRowSelector.ByKeyCell(
+                                    new TableSelector.ByName("BudgetTable"),
+                                    "Item",
+                                    textCell("Hosting")),
+                                "Amount"),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertTrue(failure.problem().message().contains("matched more than one row"));

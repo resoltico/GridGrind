@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: ASSERTIONS
-updated: "2026-05-16"
+updated: "2026-06-05"
 route:
   keywords: [gridgrind, assertions, expect-cell-value, expect-display-value, expect-analysis-max-severity]
   questions: ["what assertions does gridgrind support", "how do assertions work in gridgrind", "how do i verify workbook facts in gridgrind"]
@@ -28,7 +28,7 @@ Successful responses echo passed assertion steps back through the ordered `asser
 
 ```json
 {
-  "status": "SUCCESS",
+  "status": "SUCCEEDED",
   "protocolVersion": "V1",
   "journal": {
     "planId": "assert-budget",

@@ -9,6 +9,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -78,10 +80,15 @@ class AppTest {
     java.io.ByteArrayOutputStream capturedOut = new java.io.ByteArrayOutputStream();
     java.io.ByteArrayOutputStream capturedErr = new java.io.ByteArrayOutputStream();
     AtomicInteger observedExitCode = new AtomicInteger(-1);
+    Path workspace = Files.createTempDirectory("gridgrind-app-run-");
 
     App app = new App(() -> new GridGrindCli()::run, observedExitCode::set);
 
-    app.run(new String[0], new ByteArrayInputStream(jsonRequest), capturedOut, capturedErr);
+    app.run(
+        new String[] {"--execution-root", workspace.toString()},
+        new ByteArrayInputStream(jsonRequest),
+        capturedOut,
+        capturedErr);
 
     GridGrindResponse response = GridGrindJson.readResponse(capturedOut.toByteArray());
 
@@ -96,13 +103,14 @@ class AppTest {
     SystemStreams originalStreams = captureCurrentSystemStreams();
     ByteArrayOutputStream capturedOut = new ByteArrayOutputStream();
     ByteArrayOutputStream capturedErr = new ByteArrayOutputStream();
+    Path workspace = Files.createTempDirectory("gridgrind-app-main-");
     try (PrintStream redirectedOut = new PrintStream(capturedOut, true, StandardCharsets.UTF_8);
         PrintStream redirectedErr = new PrintStream(capturedErr, true, StandardCharsets.UTF_8)) {
       System.setIn(new ByteArrayInputStream(jsonRequest));
       System.setOut(redirectedOut);
       System.setErr(redirectedErr);
 
-      App.main(new String[0]);
+      App.main(new String[] {"--execution-root", workspace.toString()});
     } finally {
       originalStreams.restore();
     }

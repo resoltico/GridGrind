@@ -25,12 +25,16 @@ import dev.erst.gridgrind.excel.ExcelSheetDefaults;
 import dev.erst.gridgrind.excel.ExcelSheetDisplay;
 import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -172,6 +176,48 @@ class DefaultGridGrindRequestExecutorTestSupport {
 
   static List<String> stepIds(GridGrindResponse.Success success) {
     return inspectionIds(success);
+  }
+
+  static ExecutionInputBindings bindings(Path workingDirectory) {
+    return ExecutionInputBindingsFixtureSupport.bindings(workingDirectory);
+  }
+
+  static ExecutionInputBindings defaultBindings() {
+    return ExecutionContextFixtureSupport.defaultBindings();
+  }
+
+  static WorkbookTempFileFactory tempFileFactory(Path workingDirectory) {
+    return ExecutionContextFixtureSupport.tempFileFactory(workingDirectory);
+  }
+
+  static WorkbookTempFileFactory tempFileFactoryFor(Path anchoredPath) {
+    return ExecutionContextFixtureSupport.tempFileFactoryFor(anchoredPath);
+  }
+
+  static ExecutionWorkbookSupport workbookSupport(Path workingDirectory) {
+    return ExecutionContextFixtureSupport.workbookSupport(workingDirectory);
+  }
+
+  static ExecutionJournalRecorder startJournal(WorkbookPlan request) {
+    return ExecutionContextFixtureSupport.startJournal(request);
+  }
+
+  static ExecutionJournalRecorder startJournal(
+      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
+    return ExecutionContextFixtureSupport.startJournal(request, sink, workingDirectory);
+  }
+
+  static GridGrindResponse execute(DefaultGridGrindRequestExecutor executor, WorkbookPlan request) {
+    return ExecutionContextFixtureSupport.execute(executor, request);
+  }
+
+  static GridGrindResponse execute(
+      DefaultGridGrindRequestExecutor executor, WorkbookPlan request, Path workingDirectory) {
+    return ExecutionContextFixtureSupport.execute(executor, request, workingDirectory);
+  }
+
+  static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
+    ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
   }
 
   static WorkbookCommand command(ExecutorTestPlanSupport.PendingMutation mutation) {

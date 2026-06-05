@@ -31,8 +31,8 @@ class GridGrindEngineApiTest {
   @Test
   void requestInputsNormalizeAndDefensivelyCopyBoundStandardInput() {
     byte[] original = new byte[] {1, 2, 3};
-    GridGrindRequestInputs inputs =
-        new GridGrindRequestInputs(Path.of("tmp", "..", "tmp", "inputs"), original);
+    Path workingDirectory = Path.of("tmp", "..", "tmp", "inputs");
+    GridGrindRequestInputs inputs = inputs(workingDirectory, original);
 
     original[0] = 9;
     byte[] firstRead = inputs.standardInputBytes().orElseThrow();
@@ -40,23 +40,22 @@ class GridGrindEngineApiTest {
 
     assertTrue(inputs.workingDirectory().isAbsolute());
     assertTrue(inputs.workingDirectory().endsWith(Path.of("tmp", "inputs")));
+    assertTrue(inputs.tempRoot().endsWith(Path.of("tmp", "inputs", ".gridgrind", "tmp")));
     assertTrue(inputs.hasStandardInput());
     assertArrayEquals(new byte[] {1, 2, 3}, inputs.standardInputBytes().orElseThrow());
   }
 
   @Test
   void requestInputsWithoutStandardInputUseNormalizedWorkingDirectories() {
-    GridGrindRequestInputs explicit = new GridGrindRequestInputs(Path.of("."));
-    GridGrindRequestInputs processDefault = GridGrindRequestInputs.processDefault();
+    GridGrindRequestInputs explicit = inputs(Path.of("."));
 
     assertTrue(explicit.workingDirectory().isAbsolute());
+    assertTrue(explicit.tempRoot().isAbsolute());
     assertFalse(explicit.hasStandardInput());
-    assertTrue(processDefault.workingDirectory().isAbsolute());
-    assertFalse(processDefault.hasStandardInput());
   }
 
   @Test
-  void requestExecutorDefaultOverloadsUseExpectedDefaultsAndRejectNullDelegates() {
+  void requestExecutorExplicitInputsRejectNullDelegatesAndPreserveCallerBindings() {
     WorkbookPlan request = GridGrindProtocolCatalog.requestTemplate();
     AtomicReference<GridGrindRequestInputs> observedInputs = new AtomicReference<>();
     AtomicReference<GridGrindJournalSink> observedSink = new AtomicReference<>();
@@ -72,22 +71,15 @@ class GridGrindEngineApiTest {
     assertSame(executor, GridGrindRequestExecutor.requireNonNull(executor));
     assertThrows(NullPointerException.class, () -> GridGrindRequestExecutor.requireNonNull(null));
 
-    GridGrindRequestInputs boundInputs =
-        new GridGrindRequestInputs(Path.of("engine-api-inputs"), new byte[] {4, 5});
+    GridGrindRequestInputs boundInputs = inputs(Path.of("engine-api-inputs"), new byte[] {4, 5});
     assertSame(success, executor.execute(request, boundInputs));
     assertSame(boundInputs, observedInputs.get());
     assertSame(GridGrindJournalSink.NOOP, observedSink.get());
 
     GridGrindJournalSink sink = event -> {};
-    assertSame(success, executor.execute(request, sink));
-    assertTrue(observedInputs.get().workingDirectory().isAbsolute());
-    assertFalse(observedInputs.get().hasStandardInput());
+    assertSame(success, executor.execute(request, boundInputs, sink));
+    assertSame(boundInputs, observedInputs.get());
     assertSame(sink, observedSink.get());
-
-    assertSame(success, executor.execute(request));
-    assertTrue(observedInputs.get().workingDirectory().isAbsolute());
-    assertFalse(observedInputs.get().hasStandardInput());
-    assertSame(GridGrindJournalSink.NOOP, observedSink.get());
   }
 
   @Test
@@ -127,17 +119,16 @@ class GridGrindEngineApiTest {
     assertNotNull(executor);
     assertNotNull(doctor);
 
-    assertInstanceOf(GridGrindResponse.Success.class, executor.execute(template));
     assertInstanceOf(
         GridGrindResponse.Success.class,
         executor.execute(
             template,
-            new GridGrindRequestInputs(Path.of("engine-api-runtime"), new byte[] {7}),
+            inputs(Path.of("engine-api-runtime"), new byte[] {7}),
             GridGrindJournalSink.NOOP));
 
     RequestDoctorReport clean = doctor.diagnose(template);
     RequestDoctorReport cleanWithInputs =
-        doctor.diagnose(template, new GridGrindRequestInputs(Path.of("engine-api-doctor")));
+        doctor.diagnose(template, inputs(Path.of("engine-api-doctor")));
     assertTrue(clean.valid());
     assertTrue(cleanWithInputs.valid());
 
@@ -178,10 +169,7 @@ class GridGrindEngineApiTest {
 
     GridGrindResponse response =
         GridGrindEngine.requestExecutor()
-            .execute(
-                verboseRequest,
-                new GridGrindRequestInputs(Path.of("engine-api-verbose")),
-                observedEvent::set);
+            .execute(verboseRequest, inputs(Path.of("engine-api-verbose")), observedEvent::set);
 
     assertInstanceOf(GridGrindResponse.Success.class, response);
     assertNotNull(observedEvent.get());
@@ -253,5 +241,20 @@ class GridGrindEngineApiTest {
         }
         """
             .getBytes(StandardCharsets.UTF_8));
+  }
+
+  private static GridGrindRequestInputs inputs(Path workingDirectory) {
+    Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
+    return new GridGrindRequestInputs(
+        normalizedWorkingDirectory,
+        normalizedWorkingDirectory.resolve(".gridgrind").resolve("tmp"));
+  }
+
+  private static GridGrindRequestInputs inputs(Path workingDirectory, byte[] standardInputBytes) {
+    Path normalizedWorkingDirectory = workingDirectory.toAbsolutePath().normalize();
+    return new GridGrindRequestInputs(
+        normalizedWorkingDirectory,
+        normalizedWorkingDirectory.resolve(".gridgrind").resolve("tmp"),
+        standardInputBytes);
   }
 }

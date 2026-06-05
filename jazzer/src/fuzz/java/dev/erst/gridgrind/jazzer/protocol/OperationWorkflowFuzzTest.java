@@ -9,6 +9,7 @@ import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
+import dev.erst.gridgrind.jazzer.support.JazzerWorkbookIoSupport;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
@@ -45,7 +46,10 @@ class OperationWorkflowFuzzTest {
         SequenceIntrospection.styleKinds(request.stepPartition().mutations()));
     try {
       try {
-        GridGrindResponse response = new DefaultGridGrindRequestExecutor().execute(request);
+        GridGrindResponse response =
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request, JazzerWorkbookIoSupport.executionBindings(workflow.executionRoot()));
         WorkbookInvariantChecks.requireResponseShape(response);
         WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
         TELEMETRY.recordResponseKind(SequenceIntrospection.responseKind(response));
