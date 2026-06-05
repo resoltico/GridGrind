@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: QUICK_REFERENCE
-updated: "2026-05-26"
+updated: "2026-06-05"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -28,12 +28,11 @@ gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
 gridgrind --print-example --lookup WORKBOOK_HEALTH --response workbook-health.json
 gridgrind --print-example --lookup ASSERTION --response assertion.json
-gridgrind --print-request-template | gridgrind --doctor-request
+gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, and
-`--help-guidance` is the workflow/example playbook. `--doctor-request` validates request shape,
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape,
 resolves source-backed inputs, preflights existing workbook-source access, and returns every
 independently provable blocking problem without mutating a workbook. `--response <path>` works
 across execution, doctoring, and discovery commands, so the primary output can be captured to a
@@ -42,8 +41,9 @@ file instead of stdout. Built-in example and task catalogs also publish `workspa
 
 `--search` is the fast discovery path when you only know part of an id or summary. Use
 `--lookup <group>:<id>` once you want one exact machine-readable entry. Search now ranks published
-top-level operations ahead of support-type groups and adds `relatedEntryIds` on support-group hits
-so agents can climb from a type family to the executable operation that uses it.
+top-level operations ahead of support-type groups, returns compact summaries by default, and adds
+`relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents
+climb from a type family to the executable operation that uses it.
 
 ## Smallest Valid Request
 
@@ -79,8 +79,7 @@ so agents can climb from a type family to the executable operation that uses it.
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within
-`steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`,
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`,
 `assertion`, or `query`; do not send `step.type`.
 `gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below
 are request fragments, not standalone full requests, unless the section explicitly shows the full
@@ -144,8 +143,11 @@ The request JSON transport is capped at `16 MiB`. Large authored text or binary 
 
 When the CLI reads a request via `--request <path>`, relative request-owned paths such as
 `source.path`, `persistence.path`, `UTF8_FILE` / `FILE`, external workbook bindings, and signing
-material resolve from that request file's directory. `--request` and `--response` themselves
-still resolve from the shell working directory.
+material resolve from that request file's directory. When the request JSON arrives on stdin, pass
+`--execution-root <path>` and those same relative paths resolve from that explicit directory.
+`--request`, `--response`, `--execution-root`, and `--temp-root` themselves resolve from the
+shell working directory. `--temp-root` is optional; without it, GridGrind uses `.gridgrind/tmp`
+inside the request root or explicit execution root.
 
 ## Execution, Formula, And Mode Rules
 

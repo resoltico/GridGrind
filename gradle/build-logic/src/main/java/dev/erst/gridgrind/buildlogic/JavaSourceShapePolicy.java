@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.buildlogic;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -26,9 +27,9 @@ public final class JavaSourceShapePolicy {
         continue;
       }
       String[] columns = rawLine.split("\t", -1);
-      if (columns.length != 12) {
+      if (columns.length != 15) {
         throw new GradleException(
-            "Source-shape policy lines must contain 12 tab-separated columns, but line "
+            "Source-shape policy lines must contain 15 tab-separated columns, but line "
                 + lineNumber
                 + " in "
                 + policyFile
@@ -50,7 +51,10 @@ public final class JavaSourceShapePolicy {
               parseLimit("maxSwitches", columns[8], lineNumber, policyFile),
               parseLimit("maxSwitchArms", columns[9], lineNumber, policyFile),
               requiredValue("owner", columns[10], lineNumber, policyFile),
-              requiredValue("rationale", columns[11], lineNumber, policyFile)));
+              DuplicationGuard.parse(columns[11], lineNumber, policyFile),
+              parseDate("reviewExpiresOn", columns[12], lineNumber, policyFile),
+              optionalValue(columns[13]),
+              requiredValue("rationale", columns[14], lineNumber, policyFile)));
     }
     validateRules(loadedRules, policyFile);
     return new JavaSourceShapePolicy(loadedRules);
@@ -156,6 +160,34 @@ public final class JavaSourceShapePolicy {
     }
   }
 
+  private static LocalDate parseDate(
+      String fieldName, String rawValue, int lineNumber, Path policyFile) {
+    String value = rawValue.trim();
+    if (value.isEmpty() || "-".equals(value)) {
+      return null;
+    }
+    try {
+      return LocalDate.parse(value);
+    } catch (RuntimeException exception) {
+      throw new GradleException(
+          "Source-shape policy "
+              + policyFile
+              + " line "
+              + lineNumber
+              + " has invalid "
+              + fieldName
+              + " value '"
+              + rawValue
+              + "'.",
+          exception);
+    }
+  }
+
+  private static String optionalValue(String rawValue) {
+    String value = rawValue.trim();
+    return value.isEmpty() || "-".equals(value) ? null : value;
+  }
+
   private static String normalizeRulePath(String rawValue, int lineNumber, Path policyFile) {
     String normalized = rawValue.trim().replace('\\', '/');
     if (normalized.startsWith("./")) {
@@ -194,6 +226,27 @@ public final class JavaSourceShapePolicy {
     }
   }
 
+  enum DuplicationGuard {
+    CHECK,
+    SKIP;
+
+    private static DuplicationGuard parse(String rawValue, int lineNumber, Path policyFile) {
+      try {
+        return DuplicationGuard.valueOf(rawValue.trim());
+      } catch (IllegalArgumentException exception) {
+        throw new GradleException(
+            "Source-shape policy "
+                + policyFile
+                + " line "
+                + lineNumber
+                + " uses unknown duplicationGuard '"
+                + rawValue
+                + "'.",
+            exception);
+      }
+    }
+  }
+
   record Rule(
       int order,
       MatchKind kind,
@@ -207,6 +260,9 @@ public final class JavaSourceShapePolicy {
       Integer maxSwitches,
       Integer maxSwitchArms,
       String owner,
+      DuplicationGuard duplicationGuard,
+      LocalDate reviewExpiresOn,
+      String splitTrigger,
       String rationale) {
     Rule {
       if (kind != MatchKind.DEFAULT && path.isEmpty()) {
@@ -214,6 +270,25 @@ public final class JavaSourceShapePolicy {
       }
       if (kind == MatchKind.DEFAULT && !("*".equals(path) || path.isEmpty())) {
         throw new GradleException("DEFAULT source-shape rules must use '*' as their path.");
+      }
+      if (duplicationGuard == null) {
+        throw new GradleException("Source-shape rules must declare duplicationGuard.");
+      }
+      if (kind == MatchKind.EXACT) {
+        if (reviewExpiresOn == null) {
+          throw new GradleException("EXACT source-shape rules must declare reviewExpiresOn.");
+        }
+        if (splitTrigger == null || splitTrigger.isBlank()) {
+          throw new GradleException("EXACT source-shape rules must declare splitTrigger.");
+        }
+      } else {
+        if (reviewExpiresOn != null) {
+          throw new GradleException(
+              "Only EXACT source-shape rules may declare reviewExpiresOn.");
+        }
+        if (splitTrigger != null) {
+          throw new GradleException("Only EXACT source-shape rules may declare splitTrigger.");
+        }
       }
     }
 

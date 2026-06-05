@@ -135,7 +135,7 @@ class ExcelDrawingControllerTest {
       sheet.drawings().deleteDrawingObject("OpsConnector");
       assertEquals(3, sheet.drawings().drawingObjects().size());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -146,7 +146,8 @@ class ExcelDrawingControllerTest {
           drawing.getShapes().stream().map(XSSFShape::getShapeName).toList());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Picture.class,
@@ -211,7 +212,7 @@ class ExcelDrawingControllerTest {
                   .orElseThrow());
       assertEquals(movedAnchor, movedSignature.anchor());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -222,7 +223,8 @@ class ExcelDrawingControllerTest {
       assertEquals(STTrueFalse.F, signatureShape.getSignaturelineArray(0).getAllowcomments());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = reopened.sheet("Ops");
       ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
           assertInstanceOf(
@@ -236,7 +238,7 @@ class ExcelDrawingControllerTest {
       assertEquals("ada@example.com", signatureLine.suggestedSignerEmail());
 
       sheet.drawings().deleteDrawingObject("OpsSignature");
-      reopened.persistence().save(workbookPath);
+      reopened.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -276,7 +278,7 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -290,7 +292,8 @@ class ExcelDrawingControllerTest {
           chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot chart = reopened.sheet("Ops").drawings().charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
@@ -331,10 +334,11 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Chart");
       sheet
           .drawings()
@@ -370,7 +374,7 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -388,7 +392,8 @@ class ExcelDrawingControllerTest {
           chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot chart = reopened.sheet("Chart").drawings().charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
@@ -456,10 +461,11 @@ class ExcelDrawingControllerTest {
                                   new ExcelChartDefinition.Title.Text("Actual"),
                                   ExcelChartTestSupport.ref("A2:A4"),
                                   ExcelChartTestSupport.ref("C2:C4")))))));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelChartSnapshot comboChart = reopened.sheet("Chart").drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
       assertEquals(
@@ -540,9 +546,10 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.sheet("Ops").annotations().clearComment("A1");
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -569,7 +576,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -588,7 +595,8 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
@@ -623,7 +631,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -643,7 +651,8 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
@@ -679,7 +688,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -692,7 +701,8 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
@@ -772,7 +782,7 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -792,7 +802,8 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.EmbeddedObject.class,
@@ -840,14 +851,15 @@ class ExcelDrawingControllerTest {
 
       assertUpdatedChartSnapshot(sheet, movedAnchor);
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertPersistedChartWorkbook(workbookPath);
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       reopened.sheet("Chart").drawings().deleteDrawingObject("OpsChart");
-      reopened.persistence().save(workbookPath);
+      reopened.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -892,7 +904,8 @@ class ExcelDrawingControllerTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Chart");
       ExcelChartSnapshot comboChart = sheet.drawings().charts().getFirst();
       assertEquals("ComboChart", comboChart.name());
@@ -940,7 +953,7 @@ class ExcelDrawingControllerTest {
           ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
 
       sheet.cells().setCell("F1", ExcelCellValue.text("Touch"));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

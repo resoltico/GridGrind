@@ -123,7 +123,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
             plan,
-            new ExecutionInputBindings(workingDirectory, "Queue".getBytes(StandardCharsets.UTF_8)));
+            ExecutionInputBindingsFixtureSupport.bindings(
+                workingDirectory, "Queue".getBytes(StandardCharsets.UTF_8)));
 
     CellMutationAction.SetCell titleAction =
         assertInstanceOf(
@@ -233,7 +234,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                             new TextSourceInput.Utf8File("mapping.xml"))))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
+        SourceBackedPlanResolver.resolve(
+            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     StructuredMutationAction.ImportCustomXmlMapping action =
         assertInstanceOf(
@@ -272,7 +274,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                     new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(125.0)))));
 
     WorkbookPlan resolved =
-        SourceBackedPlanResolver.resolve(plan, new ExecutionInputBindings(workingDirectory));
+        SourceBackedPlanResolver.resolve(
+            plan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     InspectionStep resolvedInspection =
         assertInstanceOf(InspectionStep.class, resolved.steps().get(0));
@@ -352,7 +355,7 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
                 dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
                 List.of(rangeStep, lineChartStep, pieChartStep)),
-            new ExecutionInputBindings(workingDirectory));
+            ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     MutationStep resolvedRangeStep = assertInstanceOf(MutationStep.class, resolved.steps().get(0));
     assertNotSame(rangeStep, resolvedRangeStep);

@@ -97,6 +97,9 @@ class ArchitectureSeamAuditTest {
     assertTrue(
         ruleset.contains("verifyJavaSourceShape"),
         "gradle/pmd/ruleset.xml must point at the build-owned source-shape gate");
+    assertTrue(
+        ruleset.contains("verifyJavaSourceDuplication"),
+        "gradle/pmd/ruleset.xml must point at the build-owned duplication gate");
   }
 
   @Test
@@ -157,6 +160,15 @@ class ArchitectureSeamAuditTest {
         developerGuide.contains("verifyJavaSourceShape"),
         "docs/DEVELOPER.md must document the build-owned source-shape gate");
     assertTrue(
+        developerGuide.contains("verifyJavaSourceDuplication"),
+        "docs/DEVELOPER.md must document the build-owned duplication gate");
+    assertTrue(
+        developerGuide.contains("build/reports/source-shape/java-duplication.tsv"),
+        "docs/DEVELOPER.md must publish the duplication report path");
+    assertTrue(
+        developerGuide.contains("reviewExpiresOn") && developerGuide.contains("splitTrigger"),
+        "docs/DEVELOPER.md must teach reviewed exact-surface metadata");
+    assertTrue(
         developerGuide.contains("production-safe subset of `design`"),
         "docs/DEVELOPER.md must describe PMD as a scoped design gate rather than the whole category");
     assertTrue(
@@ -167,8 +179,19 @@ class ArchitectureSeamAuditTest {
         developerGradle.contains("verifyJavaSourceShape"),
         "docs/DEVELOPER_GRADLE.md must document the root source-shape task");
     assertTrue(
+        developerGradle.contains("verifyJavaSourceDuplication"),
+        "docs/DEVELOPER_GRADLE.md must document the root duplication task");
+    assertTrue(
         developerGradle.contains("Root `check` now depends on `verifyJavaSourceShape`"),
         "docs/DEVELOPER_GRADLE.md must teach that source-shape is a build gate");
+    assertTrue(
+        developerGradle.contains("included-build `gradle/build-logic:test` task"),
+        "docs/DEVELOPER_GRADLE.md must teach that build-logic tests are part of the root gate");
+    assertTrue(
+        developerGradle.contains("duplicationGuard")
+            && developerGradle.contains("reviewExpiresOn")
+            && developerGradle.contains("splitTrigger"),
+        "docs/DEVELOPER_GRADLE.md must teach the structural-governance policy metadata");
     assertTrue(
         !developerJazzer.contains(STALE_JAZZER_MODULES),
         "docs/DEVELOPER_JAZZER.md must not claim Jazzer consumes a live protocol module");
@@ -180,8 +203,17 @@ class ArchitectureSeamAuditTest {
         rootConventions.contains("tasks.register(\"verifyJavaSourceShape\""),
         "GridGrindRootConventionsPlugin must register verifyJavaSourceShape");
     assertTrue(
+        rootConventions.contains("tasks.register(\"verifyJavaSourceDuplication\""),
+        "GridGrindRootConventionsPlugin must register verifyJavaSourceDuplication");
+    assertTrue(
         rootConventions.contains("checkTask.dependsOn(verifyJavaSourceShape)"),
         "GridGrindRootConventionsPlugin must wire verifyJavaSourceShape into root check");
+    assertTrue(
+        rootConventions.contains("checkTask.dependsOn(verifyJavaSourceDuplication)"),
+        "GridGrindRootConventionsPlugin must wire verifyJavaSourceDuplication into root check");
+    assertTrue(
+        rootConventions.contains("gradle.includedBuild(\"build-logic\").task(\":test\")"),
+        "GridGrindRootConventionsPlugin must wire build-logic tests into root check");
     assertTrue(
         javaConventions.contains("setOf(\"contract\", \"engine\", \"excel-foundation\")"),
         "GridGrindJavaConventionsPlugin must apply the semantic-shape PMD ruleset to engine");

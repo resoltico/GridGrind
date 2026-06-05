@@ -19,10 +19,10 @@ slf4j = "2.0.18"
 errorprone = "2.49.0"
 errorprone-plugin = "5.1.0"
 jspecify = "1.0.0"
-nullaway = "0.13.4"
+nullaway = "0.13.5"
 google-java-format = "1.35.0"
-# JaCoCo trunk build 0.8.15.202606030734 is published to Maven snapshots as this exact timestamped coordinate.
-jacoco = "0.8.15-20260603.073432-117"
+# JaCoCo trunk build 0.8.15.202606040741 is published to Maven snapshots as this exact timestamped coordinate.
+jacoco = "0.8.15-20260604.194125-118"
 pmd = "7.24.0"
 shadow = "9.4.2"
 spotless = "8.6.0"

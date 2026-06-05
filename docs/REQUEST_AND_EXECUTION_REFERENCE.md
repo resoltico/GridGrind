@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: REQUEST_EXECUTION_REFERENCE
 updated: "2026-05-15"
 route:
@@ -50,8 +50,8 @@ Binary-bearing mutation fields use `BinarySourceInput`:
 ```
 
 - When the CLI reads a request via `--request <path>`, relative `UTF8_FILE` and `FILE` paths
-  resolve from that request file's directory. Without `--request`, they resolve in the current
-  execution environment.
+  resolve from that request file's directory. When the request JSON arrives on stdin, pass
+  `--execution-root <path>` and those same relative paths resolve from that explicit directory.
 - `STANDARD_INPUT` authored values require `--request <path>` on the CLI because stdin cannot
   carry both the request JSON and authored input content in the same invocation.
 - The request JSON transport is capped at 16 MiB. Large authored text and binary payloads belong
@@ -73,6 +73,8 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
 - It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
+- When the request JSON arrives on stdin, pass `--execution-root <path>` so doctoring uses one
+  explicit request root instead of ambient process state.
 - `--response <path>` works here too, so the doctor report can be captured to a file instead of
   stdout when the workflow needs a saved artifact.
 
@@ -424,7 +426,8 @@ Open an existing `.xlsx` file.
 Open an encrypted existing `.xlsx` package by supplying `source.security.password`.
 
 When the CLI reads the request via `--request <path>`, relative `path` values resolve from that
-request file's directory. Without `--request`, they resolve in the current execution environment.
+request file's directory. When the request JSON arrives on stdin, pass
+`--execution-root <path>` and those same relative paths resolve from that explicit directory.
 
 GridGrind supports `.xlsx` only. Paths ending in `.xls`, `.xlsm`, `.xlsb`, or any other
 non-`.xlsx` extension are rejected as invalid requests.
@@ -475,8 +478,8 @@ the first key entry POI can resolve. `pkcs12Path` follows the same request-owned
 other request file paths.
 
 When the CLI reads the request via `--request <path>`, relative persistence `path` values resolve
-from that request file's directory. Without `--request`, they resolve in the current execution
-environment.
+from that request file's directory. When the request JSON arrives on stdin, pass
+`--execution-root <path>` and those same relative paths resolve from that explicit directory.
 
 The save path must end in `.xlsx`.
 

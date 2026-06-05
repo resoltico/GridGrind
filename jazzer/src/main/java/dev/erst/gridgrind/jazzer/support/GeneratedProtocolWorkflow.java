@@ -1,10 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,28 +17,14 @@ public record GeneratedProtocolWorkflow(WorkbookPlan request, List<Path> cleanup
 
   /** Deletes every generated local scratch directory or file owned by this workflow. */
   public void cleanup() {
-    cleanupRoots.forEach(GeneratedProtocolWorkflow::deleteRecursively);
+    cleanupRoots.forEach(JazzerFilesystemSupport::deleteRecursively);
   }
 
-  private static void deleteRecursively(Path root) {
-    try {
-      if (!Files.exists(root)) {
-        return;
-      }
-      try (var stream = Files.walk(root)) {
-        stream
-            .sorted(Comparator.reverseOrder())
-            .forEach(
-                path -> {
-                  try {
-                    Files.deleteIfExists(path);
-                  } catch (IOException ignored) {
-                    // Best-effort scratch cleanup only.
-                  }
-                });
-      }
-    } catch (IOException ignored) {
-      // Best-effort scratch cleanup only.
+  /** Returns the explicit execution root that owns this generated workflow's relative paths. */
+  public Path executionRoot() {
+    if (cleanupRoots.isEmpty()) {
+      throw new IllegalStateException("generated workflow must declare one execution root");
     }
+    return cleanupRoots.getFirst().toAbsolutePath().normalize();
   }
 }

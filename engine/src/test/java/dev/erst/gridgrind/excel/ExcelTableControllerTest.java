@@ -989,10 +989,11 @@ class ExcelTableControllerTest {
           List.of("QQQQq", "Task"),
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("QQQQq", "Task"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
@@ -1032,10 +1033,11 @@ class ExcelTableControllerTest {
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelTableSnapshot table =
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
       assertEquals(List.of("", "Lane"), table.columnNames());
@@ -1085,10 +1087,11 @@ class ExcelTableControllerTest {
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
@@ -1131,10 +1134,11 @@ class ExcelTableControllerTest {
           "2026-02-06 00:19:17",
           table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());

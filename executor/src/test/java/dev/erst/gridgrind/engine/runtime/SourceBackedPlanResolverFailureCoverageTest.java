@@ -67,7 +67,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 IllegalArgumentException.class,
                 () ->
                     SourceBackedPlanResolver.resolve(
-                        blankCellTextPlan, new ExecutionInputBindings(workingDirectory)))
+                        blankCellTextPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)))
             .getMessage());
 
     WorkbookPlan emptyRichTextRunPlan =
@@ -89,7 +90,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 IllegalArgumentException.class,
                 () ->
                     SourceBackedPlanResolver.resolve(
-                        emptyRichTextRunPlan, new ExecutionInputBindings(workingDirectory)))
+                        emptyRichTextRunPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)))
             .getMessage());
 
     WorkbookPlan directoryPlan =
@@ -107,7 +109,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    directoryPlan, new ExecutionInputBindings(workingDirectory)));
+                    directoryPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertTrue(directoryFailure.getMessage().contains("must resolve to a file"));
 
     WorkbookPlan invalidPathPlan =
@@ -124,7 +127,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    invalidPathPlan, new ExecutionInputBindings(workingDirectory)));
+                    invalidPathPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertTrue(invalidPathFailure.getMessage().contains("Invalid cell text path"));
 
     WorkbookPlan textLoopPlan =
@@ -141,7 +145,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    textLoopPlan, new ExecutionInputBindings(workingDirectory)));
+                    textLoopPlan, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     // LIM-029: circular symlinks are caught as path-escape violations before the read stage;
     // the message is "Invalid cell text path" rather than "Failed to read cell text file".
     assertTrue(textLoopFailure.getMessage().contains("Invalid cell text path"));
@@ -165,7 +169,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceNotFoundException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    missingBinaryPlan, new ExecutionInputBindings(workingDirectory)));
+                    missingBinaryPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertEquals("picture payload", missingBinaryFailure.inputKind());
 
     WorkbookPlan binaryLoopPlan =
@@ -187,7 +192,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceReadException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    binaryLoopPlan, new ExecutionInputBindings(workingDirectory)));
+                    binaryLoopPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     // LIM-029: circular symlinks are caught as path-escape violations before the read stage.
     assertTrue(binaryLoopFailure.getMessage().contains("Invalid picture payload path"));
 
@@ -212,7 +218,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               InputSourceReadException.class,
               () ->
                   SourceBackedPlanResolver.resolve(
-                      ioTextFailurePlan, new ExecutionInputBindings(workingDirectory)));
+                      ioTextFailurePlan,
+                      ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
       assertTrue(ioTextFailure.getMessage().contains("Failed to read cell text file"));
       unreadableTextFile.toFile().setReadable(true, false);
     }
@@ -241,7 +248,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
               InputSourceReadException.class,
               () ->
                   SourceBackedPlanResolver.resolve(
-                      ioBinaryFailurePlan, new ExecutionInputBindings(workingDirectory)));
+                      ioBinaryFailurePlan,
+                      ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
       assertTrue(ioBinaryFailure.getMessage().contains("Failed to read picture payload file"));
       unreadableBinaryFile.toFile().setReadable(true, false);
     }
@@ -268,7 +276,9 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 IllegalArgumentException.class,
                 () ->
                     SourceBackedPlanResolver.resolve(
-                        emptyBinaryPlan, new ExecutionInputBindings(workingDirectory, new byte[0])))
+                        emptyBinaryPlan,
+                        ExecutionInputBindingsFixtureSupport.bindings(
+                            workingDirectory, new byte[0])))
             .getMessage());
   }
 
@@ -435,6 +445,7 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
 
   @Test
   void resolveReportsMissingFilesAndUnavailableStandardInput() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-source-backed-missing-");
     WorkbookPlan missingFilePlan =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -449,7 +460,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceNotFoundException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    missingFilePlan, new ExecutionInputBindings(Path.of(""))));
+                    missingFilePlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertEquals("cell text", notFound.inputKind());
 
     WorkbookPlan standardInputPlan =
@@ -466,7 +478,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             InputSourceUnavailableException.class,
             () ->
                 SourceBackedPlanResolver.resolve(
-                    standardInputPlan, new ExecutionInputBindings(Path.of(""))));
+                    standardInputPlan,
+                    ExecutionInputBindingsFixtureSupport.bindings(workingDirectory)));
     assertEquals("cell text", unavailable.inputKind());
   }
 }

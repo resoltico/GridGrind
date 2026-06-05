@@ -34,7 +34,6 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
-import java.nio.file.Files;
 import java.util.Iterator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -65,7 +64,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     new CellMutationAction.SetCell(
                         new dev.erst.gridgrind.contract.dto.CellInput.Numeric(1.0)))));
     GridGrindResponse.Failure failure =
-        failure(new DefaultGridGrindRequestExecutor().execute(request));
+        failure(
+            ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
@@ -99,7 +99,6 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             new DefaultGridGrindRequestExecutorDependencies(
                 new WorkbookExecutionEngine(),
                 ExcelWorkbook::close,
-                Files::createTempFile,
                 ignored -> {},
                 writer -> {
                   throw new IllegalStateException("streaming calculation failed");
@@ -107,7 +106,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
     GridGrindResponse.Failure failure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -153,7 +153,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
           calculationSupport.executeCalculationPolicy(
               workbook,
               preflightRequest,
-              ExecutionJournalRecorder.start(preflightRequest, ExecutionJournalSink.NOOP));
+              ExecutionContextFixtureSupport.startJournal(
+                  preflightRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport preflightReport = preflightOutcome.report();
       GridGrindProblemDetail.Problem preflightFailure = preflightOutcome.failure().orElseThrow();
@@ -187,7 +188,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
           calculationSupport.executeCalculationPolicy(
               workbook,
               clearCachesRequest,
-              ExecutionJournalRecorder.start(clearCachesRequest, ExecutionJournalSink.NOOP));
+              ExecutionContextFixtureSupport.startJournal(
+                  clearCachesRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport executionReport = executionOutcome.report();
       GridGrindProblemDetail.Problem executionFailure = executionOutcome.failure().orElseThrow();
@@ -220,7 +222,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
           calculationSupport.executeCalculationPolicy(
               workbook,
               markOnlyRequest,
-              ExecutionJournalRecorder.start(markOnlyRequest, ExecutionJournalSink.NOOP));
+              ExecutionContextFixtureSupport.startJournal(
+                  markOnlyRequest, ExecutionJournalSink.NOOP));
 
       CalculationReport markOnlyReport = markOnlyOutcome.report();
       assertEquals(CalculationExecutionStatus.SUCCEEDED, markOnlyReport.execution().status());

@@ -216,7 +216,10 @@ class GridGrindPlanTest {
             GridGrindResponse.Success.class,
             GridGrindEngine.requestExecutor()
                 .execute(
-                    plan.toPlan(), new GridGrindRequestInputs(tempDir), GridGrindJournalSink.NOOP));
+                    plan.toPlan(),
+                    new GridGrindRequestInputs(
+                        tempDir, tempDir.resolve(".gridgrind").resolve("tmp")),
+                    GridGrindJournalSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
     assertEquals(1, response.assertions().size());

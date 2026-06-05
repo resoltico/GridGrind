@@ -103,11 +103,26 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     task.description =
                         "Fails when production Java sources outgrow their role-specific source-shape budgets."
                 }
+            val verifyJavaSourceDuplication =
+                tasks.register("verifyJavaSourceDuplication", VerifyJavaSourceDuplicationTask::class.java) { task ->
+                    task.sourceRoots.from(javaSourceShapeSourceRoots())
+                    task.policyFile.set(repositoryLayout.repositoryRoot.resolve("gradle/source-shape-policy.tsv"))
+                    task.reportFile.set(
+                        layout.buildDirectory.file("reports/source-shape/java-duplication.tsv"),
+                    )
+                    task.repositoryRootPath.set(repositoryLayout.repositoryRoot.absolutePath)
+                    task.group = "verification"
+                    task.description =
+                        "Fails when production Java sources duplicate large token sequences."
+                }
+            val verifyBuildLogicTests = gradle.includedBuild("build-logic").task(":test")
 
             tasks.named("check") { checkTask ->
                 checkTask.dependsOn("spotlessCheck")
                 checkTask.dependsOn(verifyExplicitImports)
                 checkTask.dependsOn(verifyJavaSourceShape)
+                checkTask.dependsOn(verifyJavaSourceDuplication)
+                checkTask.dependsOn(verifyBuildLogicTests)
             }
 
             val jacocoAggregatedReport =

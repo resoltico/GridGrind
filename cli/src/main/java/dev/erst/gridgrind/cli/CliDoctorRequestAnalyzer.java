@@ -37,9 +37,16 @@ final class CliDoctorRequestAnalyzer {
     this.requestDoctor = GridGrindRequestDoctor.requireNonNull(requestDoctor);
   }
 
-  RequestDoctorReport diagnose(Optional<Path> requestPath, byte[] requestBytes, InputStream stdin)
+  RequestDoctorReport diagnose(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
+      byte[] requestBytes,
+      InputStream stdin)
       throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
+    Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
+    Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
     Objects.requireNonNull(requestBytes, "requestBytes must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
 
@@ -71,20 +78,26 @@ final class CliDoctorRequestAnalyzer {
     }
 
     RequestDoctorReport baseReport =
-        runBaseDoctorReport(requestPath, stdin, preflight.usesSyntheticValues(), request);
+        runBaseDoctorReport(
+            requestPath,
+            executionRootPath,
+            tempRootPath,
+            stdin,
+            preflight.usesSyntheticValues(),
+            request);
     if (requestPath.isEmpty() && GridGrindRequestRequirements.requiresStandardInput(request)) {
+      GridGrindProblemDetail.Problem standardInputProblem =
+          GridGrindProblems.problem(
+              GridGrindProblemCode.INVALID_REQUEST,
+              GridGrindContractText.standardInputRequiresRequestMessage(),
+              new ProblemContext.ValidateRequest(requestShape(request)),
+              List.of());
       return RequestDoctorReport.invalid(
           baseReport.summary(),
           baseReport.warnings(),
           mergeProblems(
-              preflight.problems(),
-              appendProblem(
-                  mergeableProblems(baseReport),
-                  GridGrindProblems.problem(
-                      GridGrindProblemCode.INVALID_REQUEST,
-                      GridGrindContractText.standardInputRequiresRequestMessage(),
-                      new ProblemContext.ValidateRequest(requestShape(request)),
-                      List.of()))));
+              List.of(standardInputProblem),
+              mergeProblems(preflight.problems(), mergeableProblems(baseReport))));
     }
     List<GridGrindProblemDetail.Problem> mergedProblems =
         mergeProblems(preflight.problems(), mergeableProblems(baseReport));
@@ -97,6 +110,8 @@ final class CliDoctorRequestAnalyzer {
 
   private RequestDoctorReport runBaseDoctorReport(
       Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
       InputStream stdin,
       boolean usesSyntheticValues,
       WorkbookPlan request)
@@ -104,9 +119,11 @@ final class CliDoctorRequestAnalyzer {
     if (usesSyntheticValues) {
       return requestDoctor.diagnose(request);
     }
-    if (requestPath.isPresent()) {
+    if (requestPath.isPresent() || executionRootPath.isPresent()) {
       return requestDoctor.diagnose(
-          request, CliExecutionBindingsFactory.create(requestPath, request, stdin));
+          request,
+          CliExecutionBindingsFactory.create(
+              requestPath, executionRootPath, tempRootPath, request, stdin));
     }
     return requestDoctor.diagnose(request);
   }
@@ -115,13 +132,6 @@ final class CliDoctorRequestAnalyzer {
       RequestDoctorReport report) {
     Objects.requireNonNull(report, "report must not be null");
     return report.valid() ? List.of() : report.problems();
-  }
-
-  private static List<GridGrindProblemDetail.Problem> appendProblem(
-      List<GridGrindProblemDetail.Problem> problems, GridGrindProblemDetail.Problem appended) {
-    List<GridGrindProblemDetail.Problem> copy = new ArrayList<>(problems);
-    copy.add(appended);
-    return List.copyOf(copy);
   }
 
   private static List<GridGrindProblemDetail.Problem> mergeProblems(

@@ -114,6 +114,7 @@ JSON
             printf 'missing response path for --request\n' >&2
             exit 1
         }
+        sleep 2
         write_json_file "${response_path}" '{"status":"ok"}'
         ;;
     *)
@@ -126,6 +127,7 @@ chmod +x "${fake_java}"
 
 output="$(
     PATH="${fake_bin_dir}:${PATH}" \
+        GRIDGRIND_DISCOVERY_EXECUTION_HEARTBEAT_SECONDS=1 \
         "${verify_script}" jar "${fake_jar}"
 )"
 
@@ -137,6 +139,8 @@ printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET d
     "discovery verifier no longer reports example doctor progress"
 printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET executing request' || die \
     "discovery verifier no longer reports example execution progress"
+printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET executing request (still running after ' || die \
+    "discovery verifier no longer emits example execution heartbeats during slow runs"
 printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET succeeded' || die \
     "discovery verifier no longer reports example success progress"
 printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD printing request' || die \
@@ -147,6 +151,8 @@ printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD d
     "discovery verifier no longer reports task doctor progress"
 printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD executing request' || die \
     "discovery verifier no longer reports task execution progress"
+printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD executing request (still running after ' || die \
+    "discovery verifier no longer emits task execution heartbeats during slow runs"
 printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD succeeded' || die \
     "discovery verifier no longer reports task success progress"
 

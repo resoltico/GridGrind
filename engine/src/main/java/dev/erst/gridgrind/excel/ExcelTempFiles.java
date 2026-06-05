@@ -3,75 +3,40 @@ package dev.erst.gridgrind.excel;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /** Package-owned temporary-file factory that avoids crowded shared temp roots. */
 final class ExcelTempFiles {
   private static final String GRIDGRIND_TEMP_DIR_NAME = "gridgrind";
-  private static final String USER_HOME_PROPERTY = "user.home";
   private static final String TEMP_DIR_PROPERTY = "java.io.tmpdir";
 
   private ExcelTempFiles() {}
 
   static Path createManagedTempFile(String prefix, String suffix) throws IOException {
+    return createManagedTempFile(defaultManagedRoot(), prefix, suffix);
+  }
+
+  static Path createManagedTempFile(Path tempRoot, String prefix, String suffix)
+      throws IOException {
+    Objects.requireNonNull(tempRoot, "tempRoot must not be null");
     Objects.requireNonNull(prefix, "prefix must not be null");
     Objects.requireNonNull(suffix, "suffix must not be null");
-
-    IOException primaryFailure = null;
-    for (Path candidateRoot : candidateRoots()) {
-      try {
-        Files.createDirectories(candidateRoot);
-        return Files.createTempFile(candidateRoot, prefix, suffix);
-      } catch (IOException exception) {
-        if (primaryFailure == null) {
-          primaryFailure = exception;
-        } else {
-          primaryFailure.addSuppressed(exception);
-        }
-      }
-    }
-    if (primaryFailure != null) {
-      throw primaryFailure;
-    }
-    throw new IOException("Failed to initialize any temporary-file root");
+    Path normalizedRoot = tempRoot.toAbsolutePath().normalize();
+    Files.createDirectories(normalizedRoot);
+    return Files.createTempFile(normalizedRoot, prefix, suffix);
   }
 
   static Path createManagedTempDirectory(String prefix) throws IOException {
-    Objects.requireNonNull(prefix, "prefix must not be null");
-
-    IOException primaryFailure = null;
-    for (Path candidateRoot : candidateRoots()) {
-      try {
-        Files.createDirectories(candidateRoot);
-        return Files.createTempDirectory(candidateRoot, prefix);
-      } catch (IOException exception) {
-        if (primaryFailure == null) {
-          primaryFailure = exception;
-        } else {
-          primaryFailure.addSuppressed(exception);
-        }
-      }
-    }
-    if (primaryFailure != null) {
-      throw primaryFailure;
-    }
-    throw new IOException("Failed to initialize any temporary-directory root");
+    return createManagedTempDirectory(defaultManagedRoot(), prefix);
   }
 
-  private static Iterable<Path> candidateRoots() {
-    List<Path> candidateRoots = new ArrayList<>(2);
-    Path systemTempRoot = systemTempRoot();
-    if (systemTempRoot != null) {
-      candidateRoots.add(systemTempRoot);
-    }
-    Path userHomeFallbackRoot = userHomeFallbackRoot();
-    if (userHomeFallbackRoot != null) {
-      candidateRoots.add(userHomeFallbackRoot);
-    }
-    return candidateRoots;
+  static Path createManagedTempDirectory(Path tempRoot, String prefix) throws IOException {
+    Objects.requireNonNull(tempRoot, "tempRoot must not be null");
+    Objects.requireNonNull(prefix, "prefix must not be null");
+    Path normalizedRoot = tempRoot.toAbsolutePath().normalize();
+    Files.createDirectories(normalizedRoot);
+    return Files.createTempDirectory(normalizedRoot, prefix);
   }
 
   static @Nullable Path systemTempRoot() {
@@ -81,10 +46,11 @@ final class ExcelTempFiles {
         : Path.of(systemTempDir).resolve(GRIDGRIND_TEMP_DIR_NAME);
   }
 
-  static @Nullable Path userHomeFallbackRoot() {
-    String userHome = System.getProperty(USER_HOME_PROPERTY);
-    return userHome == null || userHome.isBlank()
-        ? null
-        : Path.of(userHome).resolve("." + GRIDGRIND_TEMP_DIR_NAME).resolve("tmp");
+  private static Path defaultManagedRoot() throws IOException {
+    Path systemTempRoot = systemTempRoot();
+    if (systemTempRoot == null) {
+      throw new IOException("System temporary-file root is unavailable");
+    }
+    return systemTempRoot;
   }
 }

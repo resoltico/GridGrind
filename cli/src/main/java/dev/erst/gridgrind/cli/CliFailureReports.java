@@ -5,6 +5,7 @@ import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,6 +50,28 @@ final class CliFailureReports {
         Objects.requireNonNull(argument, "argument must not be null"),
         List.copyOf(Objects.requireNonNull(suggestions, "suggestions must not be null")),
         Objects.requireNonNull(resolution, "resolution must not be null"));
+  }
+
+  static CliFailureReport responseWriteFailure(
+      String command,
+      String payloadName,
+      Path targetPath,
+      java.io.IOException exception,
+      Optional<String> stdoutSuggestion) {
+    Objects.requireNonNull(targetPath, "targetPath must not be null");
+    Objects.requireNonNull(exception, "exception must not be null");
+    Objects.requireNonNull(stdoutSuggestion, "stdoutSuggestion must not be null");
+    return report(
+        1,
+        command,
+        GridGrindProblemCode.IO_ERROR,
+        Optional.of("--response"),
+        CliResponseWriter.responseWriteMessage(exception, targetPath),
+        stdoutSuggestion.filter(text -> !text.isBlank()).map(List::of).orElse(List.of()),
+        Optional.of(
+            "Provide one writable file path after --response, or remove --response to print the "
+                + payloadName
+                + " on stdout."));
   }
 
   static CliFailureReport readRequestFailure(

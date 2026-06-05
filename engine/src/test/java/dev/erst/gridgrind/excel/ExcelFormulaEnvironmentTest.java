@@ -184,9 +184,10 @@ class ExcelFormulaEnvironmentTest {
                     new ExcelFormulaExternalWorkbookBinding(
                         "referenced.xlsx", scenario.referencedWorkbookPath())),
                 ExcelFormulaMissingWorkbookPolicy.ERROR,
-                List.of()))) {
+                List.of()),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath);
+      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -201,9 +202,10 @@ class ExcelFormulaEnvironmentTest {
         ExcelWorkbooks.open(
             scenario.workbookPath(),
             new ExcelFormulaEnvironment(
-                List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()))) {
+                List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath);
+      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -222,10 +224,10 @@ class ExcelFormulaEnvironmentTest {
                 ExcelFormulaMissingWorkbookPolicy.ERROR,
                 List.of(
                     new ExcelFormulaUdfToolpack(
-                        "math",
-                        List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))))) {
+                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))),
+            ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath);
+      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(42.0d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -243,7 +245,7 @@ class ExcelFormulaEnvironmentTest {
       workbook.formulas().evaluateAll();
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(4.0d));
       workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(8.0d, cachedFormulaValue(workbookPath, "Budget", "B1"));
@@ -261,7 +263,7 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.formulas().clearCaches();
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "B1"));
@@ -286,7 +288,9 @@ class ExcelFormulaEnvironmentTest {
           workbook.formulas().assessAllCapabilities());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(externalScenario.workbookPath())) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            externalScenario.workbookPath(), ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -295,7 +299,8 @@ class ExcelFormulaEnvironmentTest {
       assertTrue(assessment.message().contains("Missing external workbook"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(udfWorkbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(udfWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -305,7 +310,9 @@ class ExcelFormulaEnvironmentTest {
       assertTrue(assessment.message().contains("DOUBLE"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(unsupportedWorkbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            unsupportedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook.formulas().assessAllCapabilities().getFirst();
 
@@ -355,7 +362,9 @@ class ExcelFormulaEnvironmentTest {
     }
 
     Path invalidWorkbookPath = createInvalidFormulaWorkbook();
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(invalidWorkbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(
+            invalidWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook
               .formulas()

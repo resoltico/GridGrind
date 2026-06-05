@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 /** Execution and transport integration tests for GridGrindCli command-line invocation. */
@@ -48,6 +49,15 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     boolean closed() {
       return closed;
     }
+  }
+
+  private static String[] stdinExecutionArguments(String... trailingArguments) throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-");
+    String[] args = new String[2 + trailingArguments.length];
+    args[0] = "--execution-root";
+    args[1] = workspace.toString();
+    System.arraycopy(trailingArguments, 0, args, 2, trailingArguments.length);
+    return args;
   }
 
   @Test
@@ -148,7 +158,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
@@ -200,7 +210,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -265,6 +275,32 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void passesExplicitTempRootIntoExecutionBindings() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-temp-binding-");
+    Path requestPath = workspace.resolve("request.json");
+    Path customTempRoot = workspace.resolve("custom-scratch");
+    AtomicReference<Path> observedTempRoot = new AtomicReference<>();
+    Files.writeString(
+        requestPath, requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]"));
+
+    int exitCode =
+        GridGrindCli.forTesting(
+                (request, bindings, sink) -> {
+                  observedTempRoot.set(bindings.tempRoot());
+                  return GridGrindResponses.success(List.of(), List.of(), List.of());
+                })
+            .run(
+                new String[] {
+                  "--request", requestPath.toString(), "--temp-root", customTempRoot.toString()
+                },
+                InputStream.nullInputStream(),
+                new ByteArrayOutputStream());
+
+    assertEquals(0, exitCode);
+    assertEquals(customTempRoot.toAbsolutePath().normalize(), observedTempRoot.get());
+  }
+
+  @Test
   void verboseExecutionJournalStreamsLiveEventsToStderr() throws IOException {
     String request =
         requestJsonWithPlanId(
@@ -285,7 +321,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -317,7 +353,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -349,7 +385,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout,
                 stderr);
@@ -424,7 +460,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli()
             .run(
-                new String[0],
+                stdinExecutionArguments(),
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
                 stdout);
 

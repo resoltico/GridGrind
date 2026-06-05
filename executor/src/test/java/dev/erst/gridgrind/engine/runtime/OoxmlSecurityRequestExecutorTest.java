@@ -32,24 +32,24 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            encryptedWorkbook.workbookPath().toString(),
-                            new OoxmlOpenSecurityInput(
-                                java.util.Optional.of(encryptedWorkbook.password()))),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "security",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetPackageSecurity()),
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Encrypted", List.of("A1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        encryptedWorkbook.workbookPath().toString(),
+                        new OoxmlOpenSecurityInput(
+                            java.util.Optional.of(encryptedWorkbook.password()))),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "security",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetPackageSecurity()),
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Encrypted", List.of("A1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     WorkbookInspectionResult.PackageSecurityResult security =
         read(success, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -74,33 +74,33 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Failure missingPassword =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            encryptedWorkbook.workbookPath().toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        encryptedWorkbook.workbookPath().toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
     GridGrindResponse.Failure wrongPassword =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            encryptedWorkbook.workbookPath().toString(),
-                            new OoxmlOpenSecurityInput(java.util.Optional.of("wrong-password"))),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "workbook",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        encryptedWorkbook.workbookPath().toString(),
+                        new OoxmlOpenSecurityInput(java.util.Optional.of("wrong-password"))),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "workbook",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetWorkbookSummary())))));
 
     assertEquals(GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED, missingPassword.problem().code());
     assertEquals(GridGrindProblemCategory.SECURITY, missingPassword.problem().category());
@@ -117,14 +117,14 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            signedWorkbook.workbookPath().toString()),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(copiedWorkbook.toString()),
-                        List.of(),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        signedWorkbook.workbookPath().toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(copiedWorkbook.toString()),
+                    List.of(),
+                    List.of())));
 
     assertEquals(copiedWorkbook.toAbsolutePath().toString(), savedPath(success));
     assertTrue(OoxmlSecurityTestSupport.signatureValid(copiedWorkbook));
@@ -139,17 +139,17 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            signedWorkbook.workbookPath().toString()),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(outputPath.toString()),
-                        mutations(
-                            mutate(
-                                new CellSelector.ByAddress("Signed", "C1"),
-                                new CellMutationAction.SetCell(textCell("Touch")))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        signedWorkbook.workbookPath().toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(outputPath.toString()),
+                    mutations(
+                        mutate(
+                            new CellSelector.ByAddress("Signed", "C1"),
+                            new CellMutationAction.SetCell(textCell("Touch")))),
+                    inspections())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertTrue(failure.problem().message().contains("persistence.security.signature"));
@@ -165,56 +165,55 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Success persisted =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(
-                            securedWorkbook.toString(),
-                            new OoxmlPersistenceSecurityInput(
-                                new OoxmlEncryptionInput(
-                                    OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD,
-                                    ExcelOoxmlEncryptionMode.AGILE),
-                                new OoxmlSignatureInput(
-                                    signingMaterial.pkcs12Path().toString(),
-                                    signingMaterial.keystorePassword(),
-                                    signingMaterial.keyPassword(),
-                                    java.util.Optional.of(signingMaterial.alias()),
-                                    dev.erst.gridgrind.excel.foundation
-                                        .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                                    java.util.Optional.of("GridGrind protocol signing test")))),
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Secure"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Secure", "A1"),
-                                new CellMutationAction.SetCell(textCell("Secured")))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        securedWorkbook.toString(),
+                        new OoxmlPersistenceSecurityInput(
+                            new OoxmlEncryptionInput(
+                                OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD,
+                                ExcelOoxmlEncryptionMode.AGILE),
+                            new OoxmlSignatureInput(
+                                signingMaterial.pkcs12Path().toString(),
+                                signingMaterial.keystorePassword(),
+                                signingMaterial.keyPassword(),
+                                java.util.Optional.of(signingMaterial.alias()),
+                                dev.erst.gridgrind.excel.foundation
+                                    .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                                java.util.Optional.of("GridGrind protocol signing test")))),
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Secure"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Secure", "A1"),
+                            new CellMutationAction.SetCell(textCell("Secured")))),
+                    inspections())));
 
     assertEquals(securedWorkbook.toAbsolutePath().toString(), savedPath(persisted));
 
     GridGrindResponse.Success reopened =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            securedWorkbook.toString(),
-                            new OoxmlOpenSecurityInput(
-                                java.util.Optional.of(
-                                    OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD))),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "security",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetPackageSecurity()),
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Secure", List.of("A1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        securedWorkbook.toString(),
+                        new OoxmlOpenSecurityInput(
+                            java.util.Optional.of(OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD))),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "security",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetPackageSecurity()),
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Secure", List.of("A1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     WorkbookInspectionResult.PackageSecurityResult security =
         read(reopened, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -241,27 +240,27 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(
-                            outputPath.toString(),
-                            new OoxmlPersistenceSecurityInput(
-                                null,
-                                new OoxmlSignatureInput(
-                                    outputPath.resolveSibling("missing.p12").toString(),
-                                    "keystore-pass",
-                                    "key-pass",
-                                    java.util.Optional.empty(),
-                                    dev.erst.gridgrind.excel.foundation
-                                        .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
-                                    java.util.Optional.empty()))),
-                        List.of(
-                            mutate(
-                                new SheetSelector.ByName("Secure"),
-                                new WorkbookMutationAction.EnsureSheet())),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        outputPath.toString(),
+                        new OoxmlPersistenceSecurityInput(
+                            null,
+                            new OoxmlSignatureInput(
+                                outputPath.resolveSibling("missing.p12").toString(),
+                                "keystore-pass",
+                                "key-pass",
+                                java.util.Optional.empty(),
+                                dev.erst.gridgrind.excel.foundation
+                                    .ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                                java.util.Optional.empty()))),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Secure"),
+                            new WorkbookMutationAction.EnsureSheet())),
+                    List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION, failure.problem().code());
     assertEquals(GridGrindProblemCategory.SECURITY, failure.problem().category());
@@ -272,24 +271,24 @@ class OoxmlSecurityRequestExecutorTest {
     Path workbookPath = Files.createTempFile("gridgrind-protocol-event-security-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Ops");
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
 
     GridGrindResponse.Failure failure =
         failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionModeInput.eventRead(),
-                        null,
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "security",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetPackageSecurity())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionModeInput.eventRead(),
+                    null,
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "security",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetPackageSecurity())))));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertTrue(failure.problem().message().contains("GET_PACKAGE_SECURITY"));
@@ -314,17 +313,17 @@ class OoxmlSecurityRequestExecutorTest {
 
     GridGrindResponse.Success success =
         success(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(tamperedWorkbook.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "security",
-                                new WorkbookSelector.Current(),
-                                new WorkbookIntrospectionQuery.GetPackageSecurity())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(tamperedWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "security",
+                            new WorkbookSelector.Current(),
+                            new WorkbookIntrospectionQuery.GetPackageSecurity())))));
 
     WorkbookInspectionResult.PackageSecurityResult security =
         read(success, "security", WorkbookInspectionResult.PackageSecurityResult.class);

@@ -34,7 +34,8 @@ class ExampleExecutionFixturesTest {
     Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
+    ExecutionInputBindings workspaceBindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (ShippedExampleEntry example : selfContainedExamples()) {
       WorkbookPlan request = printedBuiltInExample(example.id());
       GridGrindResponse.Success success =
@@ -58,7 +59,8 @@ class ExampleExecutionFixturesTest {
     Files.createDirectories(workspace.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
+    ExecutionInputBindings workspaceBindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (ShippedExampleEntry example : exampleCatalog().examples()) {
       copyRequiredExampleAssets(example, repositoryExamples, workspace);
       WorkbookPlan request = printedBuiltInExample(example.id());
@@ -81,7 +83,8 @@ class ExampleExecutionFixturesTest {
     Path workspace = Files.createDirectories(tempDir.resolve("artifact-workspace-missing-assets"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace);
+    ExecutionInputBindings workspaceBindings =
+        ExecutionInputBindingsFixtureSupport.bindings(workspace);
     for (ShippedExampleEntry example : repositoryAssetBackedExamples()) {
       GridGrindResponse.Failure failure =
           assertInstanceOf(
@@ -105,7 +108,8 @@ class ExampleExecutionFixturesTest {
     Files.createDirectories(examplesDirectory.resolve("generated-workbooks"));
 
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-    ExecutionInputBindings exampleBindings = new ExecutionInputBindings(examplesDirectory);
+    ExecutionInputBindings exampleBindings =
+        ExecutionInputBindingsFixtureSupport.bindings(examplesDirectory);
     for (ShippedExampleEntry example : exampleCatalog().examples()) {
       Path requestPath = workspace.resolve(example.suggestedRequestPath());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));

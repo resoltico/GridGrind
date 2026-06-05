@@ -87,10 +87,16 @@ sealed interface CliCommand {
   }
 
   /** Requests that one authored request be linted and summarized without execution. */
-  record DoctorRequest(Optional<Path> requestPath, Optional<Path> responsePath)
+  record DoctorRequest(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
+      Optional<Path> responsePath)
       implements CliCommand {
     public DoctorRequest {
       Objects.requireNonNull(requestPath, "requestPath must not be null");
+      Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
+      Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }
@@ -132,9 +138,16 @@ sealed interface CliCommand {
   }
 
   /** Requests protocol execution using stdin/stdout or explicit request/response file paths. */
-  record Execute(Optional<Path> requestPath, Optional<Path> responsePath) implements CliCommand {
+  record Execute(
+      Optional<Path> requestPath,
+      Optional<Path> executionRootPath,
+      Optional<Path> tempRootPath,
+      Optional<Path> responsePath)
+      implements CliCommand {
     public Execute {
       Objects.requireNonNull(requestPath, "requestPath must not be null");
+      Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
+      Objects.requireNonNull(tempRootPath, "tempRootPath must not be null");
       Objects.requireNonNull(responsePath, "responsePath must not be null");
     }
   }

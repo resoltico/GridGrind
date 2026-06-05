@@ -2,7 +2,7 @@
 
 GridGrind is a `.xlsx` automation engine. Describe workbook work as a JSON request — create sheets,
 write cells, build tables, assert results, read facts back. GridGrind runs the whole plan and
-returns a structured JSON response. If anything fails, nothing is written.
+returns a structured JSON response. If workbook execution fails, no workbook is saved.
 
 The usual alternative is a mix of libraries, helper scripts, and post-write checks that run after
 the file is already saved — with no clean rollback when something fails mid-run. GridGrind replaces
@@ -40,6 +40,9 @@ java -jar cli/build/libs/gridgrind.jar --doctor-request --request budget-request
 java -jar cli/build/libs/gridgrind.jar --request budget-request.json --response response.json
 ```
 
+For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
+require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
+
 If you already have the release artifact, replace `cli/build/libs/gridgrind.jar` with your
 downloaded `gridgrind.jar`.
 
@@ -73,6 +76,10 @@ java -jar cli/build/libs/gridgrind.jar --print-protocol-catalog --search pivot -
 The example and task catalogs publish `workspaceMode` plus `requiredPaths`, so you can tell
 whether a printed request is self-contained before you try to run it.
 
+`--print-protocol-catalog --search <text>` is the fast discovery path when you know the concept
+but not the exact id. It returns compact summary hits first; follow up with
+`--print-protocol-catalog --lookup <group>:<id>` when you want one full authoritative entry.
+
 Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
 contract, and `--help-guidance` for workflow-oriented help.
 
@@ -80,7 +87,7 @@ contract, and `--help-guidance` for workflow-oriented help.
 
 A single JSON request describes every step: create a sheet, write cells, assert workbook state,
 read facts back, and save. GridGrind executes the steps in order and writes the file only when
-every step succeeds. If an assertion fails or any step errors, nothing is saved.
+every step succeeds. If an assertion fails or any step errors, no workbook is saved.
 
 The top-level envelope is always explicit: `protocolVersion`, `source`, `persistence`,
 `execution`, `formulaEnvironment`, and ordered `steps`. Steps can mix mutation, assertion, and
@@ -101,7 +108,7 @@ java -jar cli/build/libs/gridgrind.jar --print-task-plan --lookup DASHBOARD --re
 - [Snippets](docs/QUICK_REFERENCE.md) — copy-paste request patterns
 - [Java authoring](docs/JAVA_AUTHORING.md) — build requests from Java instead of JSON
 - [Operations reference](docs/OPERATIONS.md) — every field and operation
-- [Examples](examples/) — ready-to-run request files
+- [Examples](examples/) — shipped request files plus companion assets for the asset-backed cases
 
 ## Legal
 

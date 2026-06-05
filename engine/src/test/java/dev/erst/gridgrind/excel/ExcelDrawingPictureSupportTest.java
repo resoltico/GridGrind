@@ -41,7 +41,8 @@ class ExcelDrawingPictureSupportTest {
             xml -> xml.replaceFirst("r:embed=\"[^\"]+\"", "r:embed=\"rIdMissing\""));
     Path repairedWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-picture-delete-recovery-");
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(mutatedWorkbook)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(mutatedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Ops");
 
       IllegalStateException drawingObjectsFailure =
@@ -59,10 +60,13 @@ class ExcelDrawingPictureSupportTest {
       assertDoesNotThrow(() -> sheet.drawings().deleteDrawingObject("OpsPicture"));
       assertEquals(0, sheet.xssfSheet().getDrawingPatriarch().getShapes().size());
 
-      workbook.persistence().save(repairedWorkbook);
+      workbook
+          .persistence()
+          .save(repairedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(repairedWorkbook)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(repairedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(List.of(), reopened.sheet("Ops").drawings().drawingObjects());
     }
   }
@@ -298,7 +302,7 @@ class ExcelDrawingPictureSupportTest {
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     return workbookPath;
   }

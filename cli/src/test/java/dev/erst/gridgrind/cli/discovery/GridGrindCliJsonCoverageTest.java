@@ -22,6 +22,7 @@ class GridGrindCliJsonCoverageTest {
     TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
     TaskKeywordMatchReport taskKeywordMatchReport = sampleTaskKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
+    ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
     CliFailureReport cliFailureReport = sampleCliFailureReport();
 
     assertEquals(
@@ -36,6 +37,10 @@ class GridGrindCliJsonCoverageTest {
         GridGrindCliJson.readShippedExampleCatalog(
             GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog)));
     assertEquals(
+        protocolCatalogSearchReport,
+        GridGrindCliJson.readProtocolCatalogSearchReport(
+            GridGrindCliJson.writeProtocolCatalogSearchReportBytes(protocolCatalogSearchReport)));
+    assertEquals(
         cliFailureReport,
         GridGrindCliJson.readCliFailureReport(
             GridGrindCliJson.writeCliFailureReportBytes(cliFailureReport)));
@@ -48,19 +53,29 @@ class GridGrindCliJsonCoverageTest {
         TrackingInputStream exampleCatalogStream =
             new TrackingInputStream(
                 GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog));
+        TrackingInputStream protocolCatalogSearchReportStream =
+            new TrackingInputStream(
+                GridGrindCliJson.writeProtocolCatalogSearchReportBytes(
+                    protocolCatalogSearchReport));
         TrackingInputStream cliFailureReportStream =
             new TrackingInputStream(
                 GridGrindCliJson.writeCliFailureReportBytes(cliFailureReport))) {
-      assertEquals(taskCatalog, GridGrindCliJson.readTaskCatalog(taskCatalogStream));
+      assertEquals(taskCatalog, GridGrindCliJsonStreams.readTaskCatalog(taskCatalogStream));
       assertEquals(
           taskKeywordMatchReport,
-          GridGrindCliJson.readTaskKeywordMatchReport(taskKeywordMatchReportStream));
+          GridGrindCliJsonStreams.readTaskKeywordMatchReport(taskKeywordMatchReportStream));
       assertEquals(
-          exampleCatalog, GridGrindCliJson.readShippedExampleCatalog(exampleCatalogStream));
-      assertEquals(cliFailureReport, GridGrindCliJson.readCliFailureReport(cliFailureReportStream));
+          exampleCatalog, GridGrindCliJsonStreams.readShippedExampleCatalog(exampleCatalogStream));
+      assertEquals(
+          protocolCatalogSearchReport,
+          GridGrindCliJsonStreams.readProtocolCatalogSearchReport(
+              protocolCatalogSearchReportStream));
+      assertEquals(
+          cliFailureReport, GridGrindCliJsonStreams.readCliFailureReport(cliFailureReportStream));
       assertFalse(taskCatalogStream.closed);
       assertFalse(taskKeywordMatchReportStream.closed);
       assertFalse(exampleCatalogStream.closed);
+      assertFalse(protocolCatalogSearchReportStream.closed);
       assertFalse(cliFailureReportStream.closed);
     }
   }
@@ -70,6 +85,7 @@ class GridGrindCliJsonCoverageTest {
     TaskEntry task = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
     TaskKeywordMatchReport taskKeywordMatchReport = sampleTaskKeywordMatchReport();
     ShippedExampleCatalog exampleCatalog = GridGrindShippedExamples.catalog();
+    ProtocolCatalogSearchReport protocolCatalogSearchReport = sampleProtocolCatalogSearchReport();
     CliFailureReport cliFailureReport = sampleCliFailureReport();
 
     assertEquals(
@@ -80,8 +96,7 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "inputStream must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> GridGrindCliJson.readTaskCatalog((InputStream) null))
+                NullPointerException.class, () -> GridGrindCliJsonStreams.readTaskCatalog(null))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -93,7 +108,7 @@ class GridGrindCliJsonCoverageTest {
         "inputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readTaskKeywordMatchReport((InputStream) null))
+                () -> GridGrindCliJsonStreams.readTaskKeywordMatchReport(null))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -102,10 +117,22 @@ class GridGrindCliJsonCoverageTest {
                 () -> GridGrindCliJson.readShippedExampleCatalog((byte[]) null))
             .getMessage());
     assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindCliJson.readProtocolCatalogSearchReport((byte[]) null))
+            .getMessage());
+    assertEquals(
         "inputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readShippedExampleCatalog((InputStream) null))
+                () -> GridGrindCliJsonStreams.readShippedExampleCatalog(null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindCliJsonStreams.readProtocolCatalogSearchReport(null))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -117,7 +144,7 @@ class GridGrindCliJsonCoverageTest {
         "inputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readCliFailureReport((InputStream) null))
+                () -> GridGrindCliJsonStreams.readCliFailureReport(null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -154,6 +181,22 @@ class GridGrindCliJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     GridGrindCliJson.writeShippedExampleCatalog(new ByteArrayOutputStream(), null))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindCliJson.writeProtocolCatalogSearchReport(
+                        null, protocolCatalogSearchReport))
+            .getMessage());
+    assertEquals(
+        "value must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindCliJson.writeProtocolCatalogSearchReport(
+                        new ByteArrayOutputStream(), null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -202,12 +245,17 @@ class GridGrindCliJsonCoverageTest {
         exampleCatalogOutput, GridGrindShippedExamples.catalog());
     assertFalse(exampleCatalogOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
+    ByteArrayOutputStream protocolCatalogSearchOutput = new ByteArrayOutputStream();
+    GridGrindCliJson.writeProtocolCatalogSearchReport(
+        protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport());
+    assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
+
     ByteArrayOutputStream cliFailureReportOutput = new ByteArrayOutputStream();
     GridGrindCliJson.writeCliFailureReport(cliFailureReportOutput, sampleCliFailureReport());
     assertFalse(cliFailureReportOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     assertTrue(
-        GridGrindCliJson.readTree("{\"hello\":true}".getBytes(StandardCharsets.UTF_8))
+        GridGrindCliJsonStreams.readTree("{\"hello\":true}".getBytes(StandardCharsets.UTF_8))
             .path("hello")
             .asBoolean());
   }
@@ -240,6 +288,21 @@ class GridGrindCliJsonCoverageTest {
         java.util.Optional.of("--query"),
         List.of("gridgrind --print-task-catalog"),
         java.util.Optional.of("Use a fuller query."));
+  }
+
+  private static ProtocolCatalogSearchReport sampleProtocolCatalogSearchReport() {
+    return new ProtocolCatalogSearchReport(
+        GridGrindProtocolVersion.current(),
+        "chart title",
+        List.of(
+            new ProtocolCatalogSearchHit(
+                "mutationActionTypes",
+                "SET_CHART",
+                "mutationActionTypes:SET_CHART",
+                "ENTRY",
+                "Create or mutate one supported simple chart on one sheet.",
+                List.of("SET_CHART"),
+                List.of("chartInputType:ChartInput"))));
   }
 
   /** Tracks whether the codec attempts to close one caller-owned input stream. */

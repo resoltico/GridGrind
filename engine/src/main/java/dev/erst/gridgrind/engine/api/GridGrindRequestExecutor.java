@@ -17,17 +17,6 @@ public interface GridGrindRequestExecutor {
     return execute(request, inputs, GridGrindJournalSink.NOOP);
   }
 
-  /** Executes the request while optionally streaming verbose journal events to the sink. */
-  default GridGrindResponse execute(WorkbookPlan request, GridGrindJournalSink sink) {
-    Objects.requireNonNull(sink, "sink must not be null");
-    return execute(request, GridGrindRequestInputs.processDefault(), sink);
-  }
-
-  /** Executes the request with default process bindings and no live journal sink. */
-  default GridGrindResponse execute(WorkbookPlan request) {
-    return execute(request, GridGrindRequestInputs.processDefault(), GridGrindJournalSink.NOOP);
-  }
-
   /** Returns an executor that rejects null delegates up front. */
   static GridGrindRequestExecutor requireNonNull(GridGrindRequestExecutor executor) {
     return Objects.requireNonNull(executor, "executor must not be null");

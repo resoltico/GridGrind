@@ -36,6 +36,7 @@ verify_interactive_noarg_failure() {
 
     "${cli_contract_python}" - "${expected_failure_path}" "$@" <<'PY'
 import errno
+import json
 import os
 import pty
 import select
@@ -45,8 +46,17 @@ import time
 from pathlib import Path
 
 expected_failure = Path(sys.argv[1]).read_text().replace('\r', '').rstrip('\n')
+expected_failure_json = json.loads(expected_failure)
 command = sys.argv[2:]
 timeout_seconds = 10.0
+
+def first_json_document(text: str):
+    stripped = text.lstrip()
+    if not stripped:
+        raise ValueError('no JSON payload found')
+    decoder = json.JSONDecoder()
+    value, _ = decoder.raw_decode(stripped)
+    return value
 
 master_fd, slave_fd = pty.openpty()
 process = None
@@ -117,7 +127,22 @@ if process.returncode != 2:
         file=sys.stderr,
     )
     raise SystemExit(1)
-if output != expected_failure:
+lines = [line for line in output.split('\n') if line]
+if not lines:
+    print(
+        'error: interactive no-arg invocation emitted no product output',
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+try:
+    actual_failure_json = first_json_document(output)
+except (json.JSONDecodeError, ValueError):
+    print(
+        'error: interactive no-arg invocation did not start with the expected JSON failure report',
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+if actual_failure_json != expected_failure_json:
     print(
         'error: interactive no-arg invocation output differed from the expected failure report',
         file=sys.stderr,
@@ -189,6 +214,7 @@ noargs_stdout_path=''
 noargs_stderr_path=''
 temp_dir=''
 temp_parent=''
+doctor_execution_root=''
 
 cleanup() {
     [[ -n "${temp_dir}" ]] && rm -rf "${temp_dir}" || true
@@ -205,6 +231,7 @@ case "${mode}" in
         launcher=("${target}")
         interactive_launcher=("${target}")
         doctor_launcher=("${target}")
+        doctor_execution_root=''
         label="binary ${target}"
         ;;
     jar)
@@ -213,6 +240,7 @@ case "${mode}" in
         launcher=(java -jar "${target}")
         interactive_launcher=(java -jar "${target}")
         doctor_launcher=(java -jar "${target}")
+        doctor_execution_root=''
         label="jar ${target}"
         ;;
     docker-image)
@@ -220,6 +248,7 @@ case "${mode}" in
         launcher=(docker run --rm "${target}")
         interactive_launcher=(docker run --rm -i -t "${target}")
         doctor_launcher=(docker run --rm -i "${target}")
+        doctor_execution_root='/tmp'
         label="docker image ${target}"
         ;;
     *)
@@ -247,6 +276,9 @@ task_plan_path="${temp_dir}/task-plan.json"
 task_keyword_match_report_path="${temp_dir}/task-keyword-match.json"
 doctor_report_path="${temp_dir}/doctor-report.json"
 request_template_path="${temp_dir}/request-template.json"
+if [[ -z "${doctor_execution_root}" ]]; then
+    doctor_execution_root="${temp_dir}"
+fi
 help_output="$("${launcher[@]}" --help 2> "${help_overview_stderr_path}" | tr -d '\r')"
 help_stderr="$(tr -d '\r' < "${help_overview_stderr_path}")"
 [[ -z "${help_stderr}" ]] || die "${label} --help wrote unexpected stderr: ${help_stderr}"
@@ -331,11 +363,10 @@ verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher
 "${launcher[@]}" --print-task-plan --lookup DASHBOARD | tr -d '\r' > "${task_plan_path}"
 "${launcher[@]}" --print-task-keyword-match --query "monthly sales dashboard with charts" | tr -d '\r' > "${task_keyword_match_report_path}"
 cat "${request_template_path}" \
-    | "${doctor_launcher[@]}" --doctor-request | tr -d '\r' > "${doctor_report_path}"
+    | "${doctor_launcher[@]}" --doctor-request --execution-root "${doctor_execution_root}" | tr -d '\r' > "${doctor_report_path}"
 
 "${cli_contract_python}" - "${catalog_path}" "${example_catalog_path}" "${help_overview_path}" "${help_protocol_path}" "${help_guidance_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -354,11 +385,17 @@ def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
 
+def normalized_text(value: str) -> str:
+    return " ".join(value.split())
+
 plain_types = {entry["group"]: entry["type"] for entry in catalog["plainTypes"]}
 nested_types = {entry["group"]: entry for entry in catalog["nestedTypes"]}
 inspection_query_types = {entry["id"]: entry for entry in catalog["inspectionQueryTypes"]}
 assertion_types = {entry["id"]: entry for entry in catalog["assertionTypes"]}
 shipped_examples = example_catalog["examples"]
+normalized_overview_help_output = normalized_text(overview_help_output)
+normalized_protocol_help_output = normalized_text(protocol_help_output)
+normalized_guidance_help_output = normalized_text(guidance_help_output)
 
 required_protocol_help_snippets = (
     (
@@ -397,22 +434,25 @@ required_guidance_help_snippets = (
     ),
 )
 for snippet, message in required_protocol_help_snippets:
-    if snippet not in protocol_help_output:
+    if normalized_text(snippet) not in normalized_protocol_help_output:
         die(message)
 for snippet, message in required_guidance_help_snippets:
-    if snippet not in guidance_help_output:
+    if normalized_text(snippet) not in normalized_guidance_help_output:
         die(message)
-if "--print-task-catalog" not in overview_help_output:
+if normalized_text("--print-task-catalog") not in normalized_overview_help_output:
     die("overview help no longer advertises task-catalog discovery")
-if "--doctor-request" not in overview_help_output:
+if normalized_text("--doctor-request") not in normalized_overview_help_output:
     die("overview help no longer advertises request doctoring")
-if "--print-task-plan --lookup <id>" not in overview_help_output:
+if normalized_text("--print-task-plan --lookup <id>") not in normalized_overview_help_output:
     die("overview help no longer advertises task-plan discovery")
-if "--print-task-keyword-match --query <text>" not in overview_help_output:
+if normalized_text("--print-task-keyword-match --query <text>") not in normalized_overview_help_output:
     die("overview help no longer advertises task-keyword-match discovery")
-if "--print-example-catalog" not in overview_help_output:
+if normalized_text("--print-example-catalog") not in normalized_overview_help_output:
     die("overview help no longer advertises example-catalog discovery")
-if "--help-protocol" not in overview_help_output or "--help-guidance" not in overview_help_output:
+if (
+    normalized_text("--help-protocol") not in normalized_overview_help_output
+    or normalized_text("--help-guidance") not in normalized_overview_help_output
+):
     die("overview help no longer advertises the split help surfaces")
 
 if example_catalog.get("protocolVersion") != "V1":
@@ -423,11 +463,11 @@ for example in shipped_examples:
     example_id = example["id"]
     suggested_request_path = example["suggestedRequestPath"]
     summary = example["summary"]
-    pattern = re.compile(
-        rf"^\s*{re.escape(example_id)}\s+{re.escape(suggested_request_path)}\s+{re.escape(example['workspaceMode'])}\s+{re.escape(summary)}\s*$",
-        re.MULTILINE,
+    guidance_snippet = normalized_text(
+        f"- {example_id} request: {suggested_request_path} "
+        + f"workspace: {example['workspaceMode']} summary: {summary}"
     )
-    if not pattern.search(guidance_help_output):
+    if guidance_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists the built-in example line for {example_id}")
     if set(example.keys()) != {"id", "suggestedRequestPath", "summary", "workspaceMode", "requiredPaths"}:
         die(
@@ -460,6 +500,9 @@ for example_id, required_paths in expected_required_paths.items():
             f"example catalog requiredPaths drifted for {example_id}: "
             + f"{entry['requiredPaths']}"
         )
+    required_paths_snippet = normalized_text(f"requiredPaths: {', '.join(required_paths)}")
+    if required_paths_snippet not in normalized_guidance_help_output:
+        die(f"guidance help no longer lists requiredPaths for {example_id}")
 
 execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
 if "execution.journal" not in execution_policy_summary:

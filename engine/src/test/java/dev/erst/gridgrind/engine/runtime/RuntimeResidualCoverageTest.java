@@ -477,6 +477,7 @@ class RuntimeResidualCoverageTest {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-shape"),
+            Path.of("tmp", "runtime-residual-shape", ".gridgrind", "tmp"),
             "Queue ready".getBytes(StandardCharsets.UTF_8));
 
     ShapeInput resolved = SourceBackedStructuredInputResolver.resolveShape(shape, bindings);

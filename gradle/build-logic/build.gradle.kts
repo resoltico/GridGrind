@@ -1,5 +1,7 @@
+import org.gradle.api.file.Directory
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.compile.JavaCompile
-import java.io.File
+import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -20,6 +22,11 @@ dependencies {
     implementation(
         "net.ltgt.gradle:gradle-errorprone-plugin:${libs.versions.errorprone.plugin.get()}",
     )
+    implementation("net.sourceforge.pmd:pmd-java:${libs.versions.pmd.get()}")
+
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 gradlePlugin {
@@ -44,25 +51,57 @@ kotlin {
     jvmToolchain(26)
 }
 
-tasks.withType<KotlinCompile>().configureEach {
+fun cleanDestinationTaskName(taskName: String): String =
+    "clean${taskName.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }}Destination"
+
+fun registerCleanDestinationTask(
+    taskName: String,
+    destinationDirectory: Provider<Directory>,
+) = tasks.register(cleanDestinationTaskName(taskName), Delete::class) { delete(destinationDirectory) }
+
+val cleanCompileKotlinDestination =
+    registerCleanDestinationTask(
+        "compileKotlin",
+        tasks.named<KotlinCompile>("compileKotlin").flatMap { it.destinationDirectory },
+    )
+val cleanCompileTestKotlinDestination =
+    registerCleanDestinationTask(
+        "compileTestKotlin",
+        tasks.named<KotlinCompile>("compileTestKotlin").flatMap { it.destinationDirectory },
+    )
+val cleanCompileJavaDestination =
+    registerCleanDestinationTask(
+        "compileJava",
+        tasks.named<JavaCompile>("compileJava").flatMap { it.destinationDirectory },
+    )
+val cleanCompileTestJavaDestination =
+    registerCleanDestinationTask(
+        "compileTestJava",
+        tasks.named<JavaCompile>("compileTestJava").flatMap { it.destinationDirectory },
+    )
+
+tasks.named<KotlinCompile>("compileKotlin") {
     incremental = false
     compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
-    doFirst {
-        cleanDirectoryContents(destinationDirectory.get().asFile)
-    }
+    dependsOn(cleanCompileKotlinDestination)
 }
 
-tasks.withType<JavaCompile>().configureEach {
+tasks.named<KotlinCompile>("compileTestKotlin") {
+    incremental = false
+    compilerOptions.jvmTarget.set(JvmTarget.JVM_26)
+    dependsOn(cleanCompileTestKotlinDestination)
+}
+
+tasks.named<JavaCompile>("compileJava") {
     options.release = 26
-    doFirst {
-        cleanDirectoryContents(destinationDirectory.get().asFile)
-    }
+    dependsOn(cleanCompileJavaDestination)
 }
 
-fun cleanDirectoryContents(directory: File) {
-    if (!directory.exists()) {
-        directory.mkdirs()
-        return
-    }
-    directory.listFiles()?.forEach(File::deleteRecursively)
+tasks.named<JavaCompile>("compileTestJava") {
+    options.release = 26
+    dependsOn(cleanCompileTestJavaDestination)
+}
+
+tasks.test {
+    useJUnitPlatform()
 }

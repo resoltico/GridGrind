@@ -506,7 +506,7 @@ final class ExecutorTestPlanSupport {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.text("Header"));
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;
   }

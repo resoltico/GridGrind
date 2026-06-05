@@ -16,7 +16,6 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.engine.runtime.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.engine.runtime.ExecutionJournalSink;
 import dev.erst.gridgrind.excel.WorkbookSignatureSupport;
 import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
@@ -209,7 +208,9 @@ public final class XlsxParityScenarios {
           GridGrindResponse response =
               new DefaultGridGrindRequestExecutor()
                   .execute(
-                      request, ExecutionInputBindings.processDefault(), ExecutionJournalSink.NOOP);
+                      request,
+                      XlsxParitySupport.bindings(scenarioDirectory),
+                      ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
                 "Core parity workbook request must succeed: " + response);
@@ -519,7 +520,7 @@ public final class XlsxParityScenarios {
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       chartAuthoringRequest(workbookPath),
-                      ExecutionInputBindings.processDefault(),
+                      XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
@@ -634,7 +635,7 @@ public final class XlsxParityScenarios {
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       pivotAuthoringRequest(workbookPath),
-                      ExecutionInputBindings.processDefault(),
+                      XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
@@ -690,7 +691,7 @@ public final class XlsxParityScenarios {
               new DefaultGridGrindRequestExecutor()
                   .execute(
                       drawingAuthoringRequest(workbookPath),
-                      ExecutionInputBindings.processDefault(),
+                      XlsxParitySupport.bindings(scenarioDirectory),
                       ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(

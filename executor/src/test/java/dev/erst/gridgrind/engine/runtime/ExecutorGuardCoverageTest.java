@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,7 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
-/** Edge coverage for executor guards, transport defaults, and error mapping. */
+/** Edge coverage for executor guards, explicit bindings, and error mapping. */
 class ExecutorGuardCoverageTest {
   @Test
   void defaultExecutorMethodsForwardAndRejectNullInputs() {
@@ -60,7 +59,8 @@ class ExecutorGuardCoverageTest {
         };
 
     ExecutionInputBindings explicitBindings =
-        new ExecutionInputBindings(Path.of("/tmp"), "stdin".getBytes(StandardCharsets.UTF_8));
+        ExecutionInputBindingsFixtureSupport.bindings(
+            Path.of("/tmp"), "stdin".getBytes(StandardCharsets.UTF_8));
     assertTrue(explicitBindings.hasStandardInput());
     assertArrayEquals(
         "stdin".getBytes(StandardCharsets.UTF_8),
@@ -71,29 +71,32 @@ class ExecutorGuardCoverageTest {
     assertThrows(
         NullPointerException.class, () -> executor.execute(request, (ExecutionInputBindings) null));
 
-    AtomicReference<ExecutionInputBindings> processDefaultBindings = new AtomicReference<>();
+    AtomicReference<ExecutionInputBindings> forwardedBindings = new AtomicReference<>();
     ExecutionJournalSink sink = event -> {};
     GridGrindRequestExecutor journalExecutor =
         (ignoredRequest, bindings, actualSink) -> {
-          processDefaultBindings.set(bindings);
+          forwardedBindings.set(bindings);
           seenSink.set(actualSink);
           return expected;
         };
-    assertSame(expected, journalExecutor.execute(request, sink));
-    assertNotNull(processDefaultBindings.get());
+    assertSame(expected, journalExecutor.execute(request, explicitBindings, sink));
+    assertSame(explicitBindings, forwardedBindings.get());
     assertSame(sink, seenSink.get());
   }
 
   @Test
   void executionInputBindingsAndInputSourceExceptionsCoverNullAndValidationBranches() {
-    ExecutionInputBindings withoutStandardInput = new ExecutionInputBindings(Path.of("/tmp"));
+    ExecutionInputBindings withoutStandardInput =
+        ExecutionInputBindingsFixtureSupport.bindings(Path.of("/tmp"));
     assertFalse(withoutStandardInput.hasStandardInput());
     assertTrue(withoutStandardInput.standardInputBytes().isEmpty());
     assertThrows(
         NullPointerException.class,
         () ->
             new ExecutionInputBindings(
-                Path.of("/tmp"), (ExecutionInputBindings.StandardInputBinding) null));
+                Path.of("/tmp"),
+                Path.of("/tmp/.gridgrind/tmp"),
+                (ExecutionInputBindings.StandardInputBinding) null));
 
     InputSourceReadException exception =
         new InputSourceReadException("bad file", "cell text", "/tmp/cell.txt", null);
@@ -161,7 +164,9 @@ class ExecutorGuardCoverageTest {
                         new CellInput.Text(TextSourceInput.standardInput())))));
 
     GridGrindResponse.Failure unavailableFailure =
-        assertInstanceOf(GridGrindResponse.Failure.class, executor.execute(standardInputRequest));
+        assertInstanceOf(
+            GridGrindResponse.Failure.class,
+            ExecutionContextFixtureSupport.execute(executor, standardInputRequest));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs unavailableContext =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs.class,
@@ -187,7 +192,7 @@ class ExecutorGuardCoverageTest {
             GridGrindResponse.Failure.class,
             executor.execute(
                 blankFileRequest,
-                new ExecutionInputBindings(workingDirectory),
+                ExecutionInputBindingsFixtureSupport.bindings(workingDirectory),
                 ExecutionJournalSink.NOOP));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs blankContext =
         assertInstanceOf(

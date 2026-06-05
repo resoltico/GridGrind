@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -50,6 +51,7 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     int javaRelease = getJavaRelease().get();
     JavaSourceShapePolicy policy = JavaSourceShapePolicy.load(policyPath);
     JavaSourceShapeAnalyzer analyzer = new JavaSourceShapeAnalyzer();
+    LocalDate today = LocalDate.now();
 
     List<Path> sourceFiles = collectSourceFiles();
     List<String> relativePaths =
@@ -93,14 +95,9 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
                 .filter(rule -> rule.kind() != JavaSourceShapePolicy.MatchKind.EXACT)
                 .findFirst()
                 .orElse(null);
-        if (broaderRule != null && exceededMetrics(metrics, broaderRule).isEmpty()) {
-          policyIssues.add(
-              "EXACT rule for "
-                  + relativePath
-                  + " is stale; the file already fits broader rule "
-                  + broaderRule.role()
-                  + ".");
-        }
+        policyIssues.addAll(
+            JavaSourceShapeReviewPolicy.policyIssues(
+                relativePath, matchedRule, broaderRule, metrics, today));
       }
 
       reportRows.add(new ReportRow(relativePath, matchedRule, metrics));
@@ -178,9 +175,10 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
             .toList();
     try (BufferedWriter writer = Files.newBufferedWriter(reportPath, StandardCharsets.UTF_8)) {
       writer.write(
-          "path\trole\tlines\tmaxLines\tmethods\tmaxMethods\tpublicMethods\tmaxPublicMethods"
-              + "\timports\tmaxImports\tfields\tmaxFields\tswitches\tmaxSwitches"
-              + "\tmaxSwitchArms\tlimitMaxSwitchArms\ttopLevelTypes\tnestedTypes\trisk\towner");
+          "path\tkind\trole\tlines\tmaxLines\tmethods\tmaxMethods\tpublicMethods"
+              + "\tmaxPublicMethods\timports\tmaxImports\tfields\tmaxFields\tswitches"
+              + "\tmaxSwitches\tmaxSwitchArms\tlimitMaxSwitchArms\ttopLevelTypes"
+              + "\tnestedTypes\trisk\towner\treviewExpiresOn\tsplitTrigger");
       writer.newLine();
       for (ReportRow row : sortedRows) {
         writer.write(row.toTsv());
@@ -249,6 +247,8 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     private String toTsv() {
       return relativePath
           + '\t'
+          + rule.kind()
+          + '\t'
           + rule.role()
           + '\t'
           + metrics.lineCount()
@@ -285,7 +285,11 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
           + '\t'
           + String.format(Locale.ROOT, "%.2f", riskScore())
           + '\t'
-          + rule.owner();
+          + rule.owner()
+          + '\t'
+          + limit(rule.reviewExpiresOn())
+          + '\t'
+          + limit(rule.splitTrigger());
     }
 
     private double ratio(long value, Integer limit) {
@@ -294,6 +298,14 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
 
     private String limit(Integer limit) {
       return limit == null ? "-" : Integer.toString(limit);
+    }
+
+    private String limit(LocalDate limit) {
+      return limit == null ? "-" : limit.toString();
+    }
+
+    private String limit(String limit) {
+      return limit == null ? "-" : limit;
     }
   }
 }

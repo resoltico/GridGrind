@@ -55,7 +55,7 @@ class ExecutorCoverageGapsTest {
     TableCellSelector.ByColumnName tableCell =
         new TableCellSelector.ByColumnName(
             new TableRowSelector.ByIndex(new TableSelector.ByName("BudgetTable"), 0), "Owner");
-    ExecutionInputBindings bindings = new ExecutionInputBindings(tempDir);
+    ExecutionInputBindings bindings = ExecutionInputBindingsFixtureSupport.bindings(tempDir);
     List<Selector> passThroughSelectors =
         List.of(
             workbookSelector,
@@ -115,7 +115,10 @@ class ExecutorCoverageGapsTest {
 
     assertInstanceOf(GridGrindRequestDoctor.class, defaultDoctor);
     assertInstanceOf(GridGrindRequestDoctor.class, validationOnlyDoctor);
-    Path tempFile = GridGrindRequestDoctor.createTempWorkbookFile("gridgrind-doctor-", ".xlsx");
+    Path tempFile =
+        ExecutionContextFixtureSupport.tempFileFactory(
+                ExecutionContextFixtureSupport.defaultWorkingDirectory())
+            .createTempFile("gridgrind-doctor-", ".xlsx");
     Files.deleteIfExists(tempFile);
   }
 

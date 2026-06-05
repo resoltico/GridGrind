@@ -37,6 +37,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         new CliDoctorRequestAnalyzer(doctor)
             .diagnose(
                 Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
                 "[]".getBytes(StandardCharsets.UTF_8),
                 InputStream.nullInputStream());
 
@@ -65,7 +67,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.of(requestPath), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.of(requestPath),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertTrue(report.valid());
     assertEquals(0, doctor.directCalls());
@@ -73,9 +80,43 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertEquals(
         requestPath.getParent().toAbsolutePath().normalize(),
         doctor.lastInputs().workingDirectory());
+    assertEquals(
+        requestPath.getParent().toAbsolutePath().normalize().resolve(".gridgrind").resolve("tmp"),
+        doctor.lastInputs().tempRoot());
     assertFalse(doctor.lastInputs().hasStandardInput());
     assertEquals("EXISTING", sourceType(doctor.lastRequest()));
     assertEquals("SAVE_AS", persistenceType(doctor.lastRequest()));
+  }
+
+  @Test
+  void diagnoseUsesExplicitExecutionRootForStdinBackedRequests() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-stdin-root-");
+    byte[] requestBytes =
+        requestJson(
+                "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
+                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\" }",
+                "[]")
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.of(workspace),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertTrue(report.valid());
+    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.boundCalls());
+    assertEquals(workspace.toAbsolutePath().normalize(), doctor.lastInputs().workingDirectory());
+    assertEquals(
+        workspace.toAbsolutePath().normalize().resolve(".gridgrind").resolve("tmp"),
+        doctor.lastInputs().tempRoot());
+    assertFalse(doctor.lastInputs().hasStandardInput());
   }
 
   @Test
@@ -92,7 +133,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertTrue(report.valid());
     assertEquals(1, doctor.directCalls());
@@ -117,7 +163,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(1, doctor.directCalls());
@@ -150,7 +201,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals("__gridgrind_missing_source__.xlsx", inputPath(doctor.lastRequest()));
@@ -191,7 +247,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(0, doctor.directCalls());
@@ -231,7 +292,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(0, doctor.directCalls());
@@ -271,7 +337,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(1, doctor.directCalls());
@@ -315,7 +386,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(
@@ -335,7 +411,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(0, doctor.directCalls());
@@ -355,7 +436,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals(0, doctor.directCalls());
@@ -388,7 +474,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals("EXISTING", report.summary().orElseThrow().sourceType());
@@ -421,7 +512,12 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         new CliDoctorRequestAnalyzer(doctor)
-            .diagnose(Optional.empty(), requestBytes, InputStream.nullInputStream());
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
 
     assertFalse(report.valid());
     assertEquals("EXISTING", report.summary().orElseThrow().sourceType());

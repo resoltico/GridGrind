@@ -28,46 +28,42 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   private final CliResponseWriter responseWriter = new CliResponseWriter();
 
   @Test
-  void writePayloadFallsBackToStructuredFailureWhenTheResponsePathCannotBeWritten()
-      throws IOException {
+  void writePayloadFallsBackToCliFailureWhenTheResponsePathCannotBeWritten() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-payload-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         responseWriter.writePayload(
+            "print-request-template",
+            "request template",
+            Optional.of("gridgrind --print-request-template"),
             Optional.of(responseDirectory),
             stdout,
             stderr,
             "{\"status\":\"ok\"}".getBytes(StandardCharsets.UTF_8),
             0);
 
-    GridGrindResponse.Failure fallback =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport fallback = cliFailure(stdout.toByteArray());
 
     assertEquals(1, exitCode);
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + ": Is a directory. Wrote the request template to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
-    assertEquals("WRITE_RESPONSE", fallback.problem().context().stage());
+    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.code());
+    assertEquals("print-request-template", fallback.command());
+    assertEquals(Optional.of("--response"), fallback.argument());
     assertTrue(
         fallback
-            .problem()
             .message()
-            .startsWith("Could not write response file " + responseDirectory.toAbsolutePath()),
-        "fallback message must explain that response writing failed");
-    assertNotEquals(
-        responseDirectory.toAbsolutePath().toString(),
-        fallback.problem().message(),
-        "fallback message must preserve more than the raw path");
+            .startsWith("Could not write response file " + responseDirectory.toAbsolutePath()));
     assertEquals(
-        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
-        writeResponseContext(fallback).responsePath());
+        Optional.of(
+            "Provide one writable file path after --response, or remove --response to print the request template on stdout."),
+        fallback.resolution());
   }
 
   @Test
@@ -77,7 +73,13 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     int exitCode =
         responseWriter.writePayload(
-            Optional.empty(), stdout, "{\"status\":\"ok\"}\n".getBytes(StandardCharsets.UTF_8), 0);
+            "help",
+            "help text",
+            Optional.of("gridgrind --help"),
+            Optional.empty(),
+            stdout,
+            "{\"status\":\"ok\"}\n".getBytes(StandardCharsets.UTF_8),
+            0);
 
     assertEquals(0, exitCode);
     assertEquals("{\"status\":\"ok\"}\n", stdout.toString(StandardCharsets.UTF_8));
@@ -87,7 +89,15 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   void writePayloadAddsOneTrailingNewlineForEmptyPayload() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
-    int exitCode = responseWriter.writePayload(Optional.empty(), stdout, new byte[0], 0);
+    int exitCode =
+        responseWriter.writePayload(
+            "help",
+            "help text",
+            Optional.of("gridgrind --help"),
+            Optional.empty(),
+            stdout,
+            new byte[0],
+            0);
 
     assertEquals(0, exitCode);
     assertEquals("\n", stdout.toString(StandardCharsets.UTF_8));
@@ -101,6 +111,9 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
 
     int exitCode =
         responseWriter.writePayload(
+            "print-task-keyword-match",
+            "task keyword match report",
+            Optional.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""),
             Optional.empty(),
             stdout,
             stderr,
@@ -140,7 +153,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writeCliFailureReportFallsBackToStructuredFailureWhenTheResponsePathCannotBeWritten()
+  void writeCliFailureReportFallsBackToTheCliFailureReportWhenTheResponsePathCannotBeWritten()
       throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-cli-failure-dir-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -162,22 +175,18 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 List.of("gridgrind --help"),
                 Optional.of("Use one primary command.")));
 
-    GridGrindResponse.Failure fallback =
-        assertInstanceOf(
-            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    CliFailureReport fallback = cliFailure(stdout.toByteArray());
 
-    assertEquals(1, exitCode);
+    assertEquals(2, exitCode);
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + ": Is a directory. Wrote the CLI failure report to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
-    assertEquals(GridGrindProblemCode.IO_ERROR, fallback.problem().code());
-    assertEquals("WRITE_RESPONSE", fallback.problem().context().stage());
-    assertEquals(
-        java.util.Optional.of(responseDirectory.toAbsolutePath().toString()),
-        writeResponseContext(fallback).responsePath());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, fallback.code());
+    assertEquals("parse-arguments", fallback.command());
+    assertEquals(Optional.of("--flag"), fallback.argument());
   }
 
   @Test
@@ -235,7 +244,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote a structured failure response to stdout instead."
+            + ": Is a directory. Wrote the doctor report to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
     assertFalse(fallback.valid());

@@ -42,26 +42,25 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            scenario.workbookPath().toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        new FormulaEnvironmentInput(
-                            List.of(
-                                new FormulaExternalWorkbookInput(
-                                    "referenced.xlsx",
-                                    scenario.referencedWorkbookPath().toString())),
-                            FormulaMissingWorkbookPolicy.ERROR,
-                            List.of()),
-                        List.of(),
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        scenario.workbookPath().toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    new FormulaEnvironmentInput(
                         List.of(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+                            new FormulaExternalWorkbookInput(
+                                "referenced.xlsx", scenario.referencedWorkbookPath().toString())),
+                        FormulaMissingWorkbookPolicy.ERROR,
+                        List.of()),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Ops", List.of("B1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -83,21 +82,21 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(
-                            scenario.workbookPath().toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        new FormulaEnvironmentInput(
-                            List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
-                        List.of(),
-                        List.of(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(
+                        scenario.workbookPath().toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    new FormulaEnvironmentInput(
+                        List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Ops", List.of("B1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -119,26 +118,25 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        new FormulaEnvironmentInput(
-                            List.of(),
-                            FormulaMissingWorkbookPolicy.ERROR,
-                            List.of(
-                                new FormulaUdfToolpackInput(
-                                    "math",
-                                    List.of(
-                                        new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2"))))),
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    new FormulaEnvironmentInput(
                         List.of(),
+                        FormulaMissingWorkbookPolicy.ERROR,
                         List.of(
-                            inspect(
-                                "cells",
-                                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                                new SheetIntrospectionQuery.GetCells())))));
+                            new FormulaUdfToolpackInput(
+                                "math",
+                                List.of(new FormulaUdfFunctionInput("DOUBLE", 1, 1, "ARG1*2"))))),
+                    List.of(),
+                    List.of(
+                        inspect(
+                            "cells",
+                            new CellSelector.ByAddresses("Ops", List.of("B1")),
+                            new SheetIntrospectionQuery.GetCells())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -160,15 +158,15 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Failure failure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        executionPolicy(calculateAll()),
-                        null,
-                        List.of(),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    executionPolicy(calculateAll()),
+                    null,
+                    List.of(),
+                    List.of())));
 
     assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     assertEquals(
@@ -184,31 +182,31 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        executionPolicy(
-                            calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "B1"),
-                                new CellMutationAction.SetCell(formulaCell("A1*2"))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "C1"),
-                                new CellMutationAction.SetCell(formulaCell("A1*3"))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(new CellInput.Numeric(4.0d)))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    executionPolicy(
+                        calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "B1"),
+                            new CellMutationAction.SetCell(formulaCell("A1*2"))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "C1"),
+                            new CellMutationAction.SetCell(formulaCell("A1*3"))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(new CellInput.Numeric(4.0d)))),
+                    inspections())));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(8.0d, cachedFormulaValue(workbookPath, "Budget", "B1"));
@@ -223,41 +221,41 @@ class FormulaEnvironmentRequestExecutorTest {
     GridGrindResponse.Success seeded =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        executionPolicy(calculateAll()),
-                        null,
-                        mutations(
-                            mutate(
-                                new SheetSelector.ByName("Budget"),
-                                new WorkbookMutationAction.EnsureSheet()),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "A1"),
-                                new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "B1"),
-                                new CellMutationAction.SetCell(formulaCell("A1*2"))),
-                            mutate(
-                                new CellSelector.ByAddress("Budget", "C1"),
-                                new CellMutationAction.SetCell(formulaCell("A1*3")))),
-                        inspections())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    executionPolicy(calculateAll()),
+                    null,
+                    mutations(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet()),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "A1"),
+                            new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "B1"),
+                            new CellMutationAction.SetCell(formulaCell("A1*2"))),
+                        mutate(
+                            new CellSelector.ByAddress("Budget", "C1"),
+                            new CellMutationAction.SetCell(formulaCell("A1*3")))),
+                    inspections())));
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(seeded));
 
     GridGrindResponse.Success success =
         assertInstanceOf(
             GridGrindResponse.Success.class,
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                        new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
-                        executionPolicy(clearFormulaCaches()),
-                        null,
-                        List.of(),
-                        List.of())));
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    executionPolicy(clearFormulaCaches()),
+                    null,
+                    List.of(),
+                    List.of())));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "B1"));

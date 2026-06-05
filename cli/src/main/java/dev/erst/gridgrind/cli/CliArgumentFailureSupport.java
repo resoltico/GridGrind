@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.CliFailureReport;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -72,7 +71,7 @@ final class CliArgumentFailureSupport {
   }
 
   private static List<String> argumentSuggestions(String argument, String message) {
-    List<String> suggestions = new ArrayList<>();
+    Set<String> suggestions = new LinkedHashSet<>();
     switch (argument) {
       case "--request" -> {
         suggestions.add("gridgrind --request request.json --response response.json");
@@ -98,7 +97,8 @@ final class CliArgumentFailureSupport {
       default -> {
         if (message.startsWith("Unknown argument: ")) {
           nearestFlags(argument).stream()
-              .map(flag -> "gridgrind " + flag)
+              .map(CliArgumentFailureSupport::commandTemplatesForFlag)
+              .flatMap(List::stream)
               .forEach(suggestions::add);
         }
       }
@@ -152,9 +152,39 @@ final class CliArgumentFailureSupport {
                     (String flag) -> distance(normalized, normalize(flag)))
                 .thenComparing(String::length)
                 .thenComparing(String::compareTo))
-        .filter(flag -> distance(normalized, normalize(flag)) <= 4)
+        .filter(flag -> distance(normalized, normalize(flag)) <= 2)
         .limit(3)
         .toList();
+  }
+
+  static List<String> commandTemplatesForFlag(String flag) {
+    return switch (flag) {
+      case "--request" -> List.of("gridgrind --request request.json --response response.json");
+      case "--response" -> List.of("gridgrind --print-request-template --response request.json");
+      case "--doctor-request" ->
+          List.of("gridgrind --doctor-request --request request.json --response doctor.json");
+      case "--print-request-template" ->
+          List.of("gridgrind --print-request-template --response request.json");
+      case "--print-example-catalog" -> List.of("gridgrind --print-example-catalog");
+      case "--print-example" -> List.of("gridgrind --print-example --lookup WORKBOOK_HEALTH");
+      case "--print-task-catalog" -> List.of("gridgrind --print-task-catalog");
+      case "--print-task-plan" -> List.of("gridgrind --print-task-plan --lookup DASHBOARD");
+      case "--print-task-keyword-match" ->
+          List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"");
+      case "--print-protocol-catalog" ->
+          List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"");
+      case "--lookup" ->
+          List.of(
+              "gridgrind --print-example --lookup WORKBOOK_HEALTH",
+              "gridgrind --print-task-plan --lookup DASHBOARD",
+              "gridgrind --print-protocol-catalog --lookup GET_CELLS");
+      case "--query" ->
+          List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"");
+      case "--search" -> List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"");
+      case "--help", "--help-protocol", "--help-guidance", "--version", "--license" ->
+          List.of("gridgrind " + flag);
+      default -> List.of();
+    };
   }
 
   private static String normalize(String value) {

@@ -79,7 +79,8 @@ class AssertionExecutorCoverageTest {
     Files.deleteIfExists(workbookPath);
 
     success(
-        executor.execute(
+        ExecutionContextFixtureSupport.execute(
+            executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
@@ -137,7 +138,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success inspected =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -206,7 +208,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success asserted =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -405,7 +408,8 @@ class AssertionExecutorCoverageTest {
     Files.deleteIfExists(workbookPath);
 
     success(
-        executor.execute(
+        ExecutionContextFixtureSupport.execute(
+            executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
@@ -460,7 +464,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success inspected =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -702,7 +707,8 @@ class AssertionExecutorCoverageTest {
     Files.deleteIfExists(workbookPath);
 
     success(
-        executor.execute(
+        ExecutionContextFixtureSupport.execute(
+            executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
@@ -718,7 +724,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure formulaMismatch =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -733,7 +740,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure allOfFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -753,7 +761,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure anyOfFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -773,7 +782,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure notFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -797,7 +807,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure displayFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -825,7 +836,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure formulaFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -847,7 +859,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure styleFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -873,13 +886,18 @@ class AssertionExecutorCoverageTest {
     Files.deleteIfExists(chartPath);
     Files.deleteIfExists(pivotPath);
 
-    success(executor.execute(rewritePersistence(readExample("chart-request.json"), chartPath)));
-    success(executor.execute(rewritePersistence(readExample("pivot-request.json"), pivotPath)));
+    success(
+        ExecutionContextFixtureSupport.execute(
+            executor, rewritePersistence(readExample("chart-request.json"), chartPath)));
+    success(
+        ExecutionContextFixtureSupport.execute(
+            executor, rewritePersistence(readExample("pivot-request.json"), pivotPath)));
 
     WorkbookAssetInspectionResult.ChartsResult charts =
         inspection(
             success(
-                executor.execute(
+                ExecutionContextFixtureSupport.execute(
+                    executor,
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(chartPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
@@ -894,7 +912,8 @@ class AssertionExecutorCoverageTest {
     WorkbookAssetInspectionResult.PivotTablesResult pivots =
         inspection(
             success(
-                executor.execute(
+                ExecutionContextFixtureSupport.execute(
+                    executor,
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(pivotPath.toString()),
                         new WorkbookPlan.WorkbookPersistence.None(),
@@ -909,7 +928,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success asserted =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(chartPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -932,7 +952,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success pivotAssertions =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(pivotPath.toString()),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1260,7 +1281,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Success success =
         success(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1294,7 +1316,8 @@ class AssertionExecutorCoverageTest {
 
     GridGrindResponse.Failure streamingAssertionFailure =
         failure(
-            executor.execute(
+            ExecutionContextFixtureSupport.execute(
+                executor,
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1355,7 +1378,7 @@ class AssertionExecutorCoverageTest {
           .sheet("Ops")
           .cells()
           .setCell("A1", dev.erst.gridgrind.excel.ExcelCellValue.text("Owner"));
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     WorkbookInspectionResult.WorkbookSummaryResult eventSummary =
         assertInstanceOf(
@@ -1602,7 +1625,8 @@ class AssertionExecutorCoverageTest {
       Selector target,
       Assertion assertion) {
     return failure(
-        executor.execute(
+        ExecutionContextFixtureSupport.execute(
+            executor,
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new WorkbookPlan.WorkbookPersistence.None(),

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: JAVA_AUTHORING
 updated: "2026-05-01"
 route:
@@ -128,7 +128,8 @@ GridGrindResponse response =
     GridGrindEngine.requestExecutor()
         .execute(
             plan.toPlan(),
-            new GridGrindRequestInputs(workspace),
+            new GridGrindRequestInputs(
+                workspace, workspace.resolve(".gridgrind").resolve("tmp")),
             GridGrindJournalSink.NOOP);
 ```
 

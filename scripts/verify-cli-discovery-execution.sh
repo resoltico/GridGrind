@@ -26,6 +26,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly temp_parent="${repo_root}/tmp/verify-cli-discovery-execution"
 python3_path="$(command -v python3 || true)"
 [[ -n "${python3_path}" ]] || die "python3 is required for discovery execution verification"
+readonly heartbeat_seconds="${GRIDGRIND_DISCOVERY_EXECUTION_HEARTBEAT_SECONDS:-20}"
 
 # shellcheck source=/dev/null
 source "${repo_root}/scripts/lib/cli-shadow-jar-support.sh"
@@ -57,6 +58,7 @@ fi
 case "${mode}" in
     jar)
         command -v java >/dev/null 2>&1 || die "java is required for jar verification"
+        target="$(cd -P -- "$(dirname -- "${target}")" && pwd)/$(basename -- "${target}")"
         [[ -f "${target}" ]] || die "missing CLI jar: ${target}"
         ;;
     docker-image)
@@ -78,18 +80,28 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${python3_path}" - "${repo_root}" "${mode}" "${target}" "${temp_dir}" "${docker_run_user}" <<'PY'
+"${python3_path}" - \
+    "${repo_root}" \
+    "${mode}" \
+    "${target}" \
+    "${temp_dir}" \
+    "${docker_run_user}" \
+    "${heartbeat_seconds}" <<'PY'
 import json
 import shutil
 import subprocess
 import sys
+import time
+import uuid
 from pathlib import Path
+from typing import Optional
 
 repo_root = Path(sys.argv[1])
 mode = sys.argv[2]
 artifact_target = sys.argv[3]
 temp_root = Path(sys.argv[4])
 docker_run_user = sys.argv[5]
+heartbeat_seconds = max(1, int(sys.argv[6]))
 examples_root = repo_root / "examples"
 
 
@@ -129,18 +141,58 @@ def launcher(command: list[str], cwd: Path) -> list[str]:
     die(f"unsupported launcher mode {mode}")
 
 
-def run(command: list[str], cwd: Path) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        launcher(command, cwd),
-        cwd=cwd,
-        text=True,
-        capture_output=True,
-        check=False,
+def run(
+    command: list[str],
+    cwd: Path,
+    progress_label: Optional[str] = None,
+) -> subprocess.CompletedProcess[str]:
+    logs_dir = temp_root / "_subprocess_logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    stdout_path = logs_dir / f"{uuid.uuid4()}-stdout.log"
+    stderr_path = logs_dir / f"{uuid.uuid4()}-stderr.log"
+    launch = launcher(command, cwd)
+    started_at = time.monotonic()
+    next_heartbeat_at = heartbeat_seconds
+    with stdout_path.open("w", encoding="utf-8") as stdout_handle, stderr_path.open(
+        "w",
+        encoding="utf-8",
+    ) as stderr_handle:
+        process = subprocess.Popen(
+            launch,
+            cwd=cwd,
+            text=True,
+            stdout=stdout_handle,
+            stderr=stderr_handle,
+        )
+        while True:
+            returncode = process.poll()
+            if returncode is not None:
+                break
+            elapsed_seconds = time.monotonic() - started_at
+            if progress_label is not None and elapsed_seconds >= next_heartbeat_at:
+                progress(
+                    f"{progress_label} (still running after {int(elapsed_seconds)}s)"
+                )
+                next_heartbeat_at += heartbeat_seconds
+            time.sleep(1)
+    stdout = stdout_path.read_text(encoding="utf-8")
+    stderr = stderr_path.read_text(encoding="utf-8")
+    stdout_path.unlink(missing_ok=True)
+    stderr_path.unlink(missing_ok=True)
+    return subprocess.CompletedProcess(
+        args=launch,
+        returncode=returncode,
+        stdout=stdout,
+        stderr=stderr,
     )
 
 
-def run_json(command: list[str], cwd: Path) -> object:
-    completed = run(command, cwd)
+def run_json(
+    command: list[str],
+    cwd: Path,
+    progress_label: Optional[str] = None,
+) -> object:
+    completed = run(command, cwd, progress_label)
     if completed.returncode != 0:
         die(
             f"command failed ({completed.returncode}): {' '.join(launcher(command, cwd))}\n"
@@ -192,7 +244,9 @@ def execute_plan(
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request")
     printed = run(
-        [*request_command, "--response", artifact_path(request_path, workspace)], workspace
+        [*request_command, "--response", artifact_path(request_path, workspace)],
+        workspace,
+        f"Discovery execution {kind} {ordinal}/{total}: {stable_id} printing request",
     )
     if printed.returncode != 0:
         die(
@@ -216,6 +270,7 @@ def execute_plan(
             artifact_path(doctor_path, workspace),
         ],
         workspace,
+        f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request",
     )
     if doctor.returncode != 0:
         die(
@@ -237,6 +292,7 @@ def execute_plan(
             artifact_path(response_path, workspace),
         ],
         workspace,
+        f"Discovery execution {kind} {ordinal}/{total}: {stable_id} executing request",
     )
     if executed.returncode != 0:
         die(
@@ -253,8 +309,16 @@ def execute_plan(
 
 catalog_workspace = temp_root / "_catalog"
 catalog_workspace.mkdir(parents=True, exist_ok=True)
-example_catalog = run_json(["--print-example-catalog"], catalog_workspace)
-task_catalog = run_json(["--print-task-catalog"], catalog_workspace)
+example_catalog = run_json(
+    ["--print-example-catalog"],
+    catalog_workspace,
+    "Discovery execution catalog: loading published examples",
+)
+task_catalog = run_json(
+    ["--print-task-catalog"],
+    catalog_workspace,
+    "Discovery execution catalog: loading task starters",
+)
 
 example_entries = example_catalog["examples"]
 task_entries = task_catalog["tasks"]

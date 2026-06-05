@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-05-15"
+updated: "2026-06-05"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -132,8 +132,8 @@ avoids silent version skew between the main product modules and Jazzer support c
 
 JaCoCo note:
 - GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202606030734` via Maven coordinate
-  `0.8.15-20260603.073432-117`; the published snapshot artifact exposes that same trunk build in
+  official JaCoCo trunk build `0.8.15.202606040741` via Maven coordinate
+  `0.8.15-20260604.194125-118`; the published snapshot artifact exposes that same trunk build in
   its bundle metadata while keeping the snapshot timestamp/build-number form required by the Maven
   repository, and that line is where official Java 26 support remains ahead of the next JaCoCo
   release
@@ -157,21 +157,42 @@ configuration-plus-implementation blobs. GridGrind therefore keeps reusable type
 `gradle/build-logic` and keeps consumer scripts thin. `jazzer/build.gradle.kts` is intentionally a
 single plugin application for exactly that reason.
 
-### Source-shape gate
+### Structural-governance gates
 
-Root `check` now depends on `verifyJavaSourceShape`, which is implemented in
-`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`. That task parses every production Java
-source, writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned policy
-stored in `gradle/source-shape-policy.tsv`.
+Root `check` now depends on `verifyJavaSourceShape`, `verifyJavaSourceDuplication`, and the
+included-build `gradle/build-logic:test` task. The root build-logic plugin owns the generic
+structural-governance truth, and JUnit seam tests audit that wiring plus the surrounding docs.
+
+`verifyJavaSourceShape`, implemented in
+`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`, parses every production Java source,
+writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned policy stored in
+`gradle/source-shape-policy.tsv`.
+
+`verifyJavaSourceDuplication`, implemented in
+`gradle/build-logic/.../VerifyJavaSourceDuplicationTask.java`, scans production Java sources whose
+policy row keeps `duplicationGuard=CHECK`, writes
+`build/reports/source-shape/java-duplication.tsv`, and fails on large duplicated token spans while
+remaining quiet on success.
+
+`gradle/source-shape-policy.tsv` now owns three things together:
+- role budgets for ordinary source-shape metrics
+- per-role duplication ownership through `duplicationGuard`
+- reviewed exact-surface overrides with `reviewExpiresOn` and `splitTrigger`
 
 Rules:
 - treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for production
   Java file size and API breadth
+- treat `verifyJavaSourceDuplication` as the authoritative repo-wide duplication gate for
+  production Java, instead of hiding intentional mirrors behind global exclusions
 - keep policy ownership explicit in `gradle/source-shape-policy.tsv`; broad exceptions without a
   stated owner are invalid
+- reviewed exact-surface overrides must tighten at least one metric beyond their broader role and
+  must keep reviewed headroom close to the current file shape so stale budgets fail fast
+- reviewed exact-surface overrides must expire individually; synchronized bulk expiry dates are not
+  acceptable
 - document any new role family in the policy file instead of smuggling one-off ceilings into tests
-- keep seam/documentation audits in JUnit tests and keep generic source-shape enforcement in build
-  logic so the two do not drift into one mixed-purpose blob
+- keep seam/documentation audits in JUnit tests and keep generic structural-governance enforcement
+  in build logic so the two do not drift into one mixed-purpose blob
 
 ### Coverage gate protocol
 
@@ -231,7 +252,7 @@ Use this routing table before changing the build:
 |:-----------------------|:------------------|
 | root project membership, plugin resolution | `settings.gradle.kts` |
 | thin root build wiring | `build.gradle.kts` |
-| repository-wide project-file formatting, source-shape, and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
+| repository-wide project-file formatting, source-shape, duplication, build-logic test wiring, and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
 | shared Java subproject conventions | `gradle/build-logic/.../GridGrindJavaConventionsPlugin.kt` |
 | shared Jazzer build behavior, Jazzer task registration, Jazzer PMD and coverage profiles, cleanup tasks | `gradle/build-logic/.../GridGrindJazzerConventionsPlugin.kt` |
 | dependency versions shared across product and Jazzer | `gradle/libs.versions.toml` |

@@ -68,10 +68,11 @@ class ExcelPivotTableControllerTest {
               .pivotTableHealthFindings(workbook, new ExcelPivotTableSelection.All())
               .isEmpty());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelPivotTableSnapshot.Supported snapshot =
           assertInstanceOf(
               ExcelPivotTableSnapshot.Supported.class,

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: LIMITATIONS
 updated: "2026-05-15"
 route:
@@ -242,7 +242,8 @@ step ceiling is generous enough for legitimate bulk streaming-write workflows (f
 
 Relative paths that use `../` components to escape the working directory are rejected. Absolute
 paths remain allowed as explicit references. The working directory is the directory containing the
-`--request` file, or the process working directory when the request is read from stdin.
+`--request` file, or the explicit `--execution-root` directory when the request is read from
+stdin.
 
 ---
 

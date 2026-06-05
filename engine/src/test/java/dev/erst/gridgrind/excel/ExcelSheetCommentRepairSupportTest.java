@@ -270,12 +270,13 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Note BudgetTotal"), Map.of("1:0", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
           reopened, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
     }
@@ -304,13 +305,14 @@ class ExcelSheetCommentRepairSupportTest {
           Map.of(
               "A2", new ExcelComment("Stationary", "GridGrind", true),
               "D2", new ExcelComment("Shifted", "GridGrind", true)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(
         workbookPath, Map.of("A2", "Stationary", "D2", "Shifted"), Map.of("1:0", 1, "1:3", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
           reopened,
           "Ops",
@@ -339,12 +341,13 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Moving"), Map.of("1:0", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
           reopened, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
     }
@@ -369,12 +372,13 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("B2", "Moving"), Map.of("1:1", 1));
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertVisibleComments(
           reopened, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
     }

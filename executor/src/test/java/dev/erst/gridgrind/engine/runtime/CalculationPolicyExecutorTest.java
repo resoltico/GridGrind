@@ -168,7 +168,8 @@ class CalculationPolicyExecutorTest {
 
   @Test
   void preflightAndExecutionFailuresCarryClassificationAndValidation() throws Exception {
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createMixedFailureWorkbook())) {
+    try (ExcelWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createMixedFailureWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -178,7 +179,8 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unparseableByPoiCount());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createInvalidFormulaWorkbook())) {
+    try (ExcelWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createInvalidFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
       CalculationPolicyExecutor.ExecutionOutcome targetedExecution =
@@ -198,7 +200,8 @@ class CalculationPolicyExecutorTest {
           targetedExecution.failure().orElseThrow().phase());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createMissingExternalWorkbook())) {
+    try (ExcelWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createMissingExternalWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -207,7 +210,8 @@ class CalculationPolicyExecutorTest {
       assertEquals(1, preflight.report().orElseThrow().summary().unevaluableNowCount());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createUdfFormulaWorkbook())) {
+    try (ExcelWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUdfFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
 
@@ -217,7 +221,8 @@ class CalculationPolicyExecutorTest {
       assertTrue(preflight.failure().orElseThrow().message().contains("DOUBLE"));
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(createUnsupportedFormulaWorkbook())) {
+    try (ExcelWorkbook workbook =
+        ExecutionContextFixtureSupport.openWorkbook(createUnsupportedFormulaWorkbook())) {
       CalculationPolicyExecutor.PreflightOutcome preflight =
           CalculationPolicyExecutor.preflight(workbook, calculateAll());
       CalculationPolicyExecutor.ExecutionOutcome execution =

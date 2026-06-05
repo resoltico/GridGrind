@@ -96,10 +96,11 @@ class ExcelConditionalFormattingControllerTest {
                               List.of()))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook reopened = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook reopened =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of(
               new ExcelConditionalFormattingBlockSnapshot(

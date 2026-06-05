@@ -87,7 +87,7 @@ class XlsxPicturePackageInvariantSupportTest {
                       new ExcelDrawingMarker(4, 6, 0, 0),
                       null)));
       workbook.sheets().copySheet("Ops", "Ops Copy", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.persistence().save(workbookPath);
+      JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
 
     assertDoesNotThrow(
@@ -117,7 +117,7 @@ class XlsxPicturePackageInvariantSupportTest {
                       new ExcelDrawingMarker(1, 1, 0, 0),
                       new ExcelDrawingMarker(4, 6, 0, 0),
                       null)));
-      workbook.persistence().save(workbookPath);
+      JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
 
     Path mutatedWorkbook =
@@ -153,7 +153,7 @@ class XlsxPicturePackageInvariantSupportTest {
                   new ExcelDrawingAnchor.TwoCell(
                       new ExcelDrawingMarker(1, 1, 0, 0), new ExcelDrawingMarker(4, 6, 0, 0), null),
                   Optional.of("Queue preview")));
-      workbook.persistence().save(workbookPath);
+      JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;
   }

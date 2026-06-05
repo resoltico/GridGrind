@@ -159,18 +159,11 @@ class GridGrindRequestDoctorTest {
   }
 
   @Test
-  void productionConstructorsInstantiateConcreteWorkbookSupport() {
+  void productionConstructorsRejectNullRequestsAndBindings() {
     assertThrows(NullPointerException.class, () -> new GridGrindRequestDoctor().diagnose(null));
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindRequestDoctor(new ExecutionValidationSupport()).diagnose(null));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new GridGrindRequestDoctor(
-                    new ExecutionValidationSupport(),
-                    new ExecutionWorkbookSupport(Files::createTempFile))
-                .diagnose(null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -214,7 +207,7 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, new ExecutionInputBindings(workingDirectory));
+            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertTrue(report.valid());
     assertEquals(AnalysisSeverity.INFO, report.severity());
@@ -249,7 +242,7 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, new ExecutionInputBindings(workingDirectory));
+            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
     dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs context =
         (dev.erst.gridgrind.contract.dto.ProblemContext.ResolveInputs)
             report.primaryProblem().orElseThrow().context();
@@ -261,6 +254,7 @@ class GridGrindRequestDoctorTest {
 
   @Test
   void diagnoseWithBindingsRejectsBlankResolvedCellText() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-inline-");
     WorkbookPlan invalidRequest =
         readNewRequest(
             """
@@ -286,7 +280,8 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(invalidRequest, ExecutionInputBindings.processDefault());
+            .diagnose(
+                invalidRequest, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -324,7 +319,7 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, new ExecutionInputBindings(workingDirectory));
+            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -361,7 +356,7 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, new ExecutionInputBindings(workingDirectory));
+            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertFalse(report.valid());
     assertEquals(AnalysisSeverity.ERROR, report.severity());
@@ -382,7 +377,7 @@ class GridGrindRequestDoctorTest {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-existing-success-");
     Path workbookPath = workingDirectory.resolve("existing.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
-      workbook.persistence().save(workbookPath);
+      ExecutionContextFixtureSupport.saveWorkbook(workbook, workbookPath);
     }
     WorkbookPlan request =
         readRequestWithSource(
@@ -401,7 +396,7 @@ class GridGrindRequestDoctorTest {
 
     RequestDoctorReport report =
         new GridGrindRequestDoctor()
-            .diagnose(request, new ExecutionInputBindings(workingDirectory));
+            .diagnose(request, ExecutionInputBindingsFixtureSupport.bindings(workingDirectory));
 
     assertTrue(report.valid());
     assertEquals(AnalysisSeverity.INFO, report.severity());

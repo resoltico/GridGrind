@@ -56,7 +56,7 @@ class XlsxCommentPackageInvariantSupportTest {
           .sheet("Budget")
           .annotations()
           .setComment("A1", new ExcelComment("Review", "GridGrind", true));
-      workbook.persistence().save(workbookPath);
+      JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
     }
     return workbookPath;
   }

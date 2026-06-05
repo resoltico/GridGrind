@@ -325,7 +325,7 @@ class XlsxRoundTripVerifierTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       new WorkbookExecutionEngine().apply(workbook, commands);
-      workbook.persistence().save(workbookPath);
+      JazzerWorkbookIoSupport.saveWorkbook(workbook, workbookPath);
       XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
     }
   }

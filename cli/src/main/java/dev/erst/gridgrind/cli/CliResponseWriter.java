@@ -78,10 +78,9 @@ final class CliResponseWriter {
           Optional.of(report.code().name() + ": " + report.message()));
       return report.exitCode();
     } catch (IOException exception) {
-      writeStdoutFallbackNotice(stderr, exception, targetPath);
-      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
-      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
-      return 1;
+      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
+      writePayload(stdout, GridGrindCliJson.writeCliFailureReportBytes(report));
+      return report.exitCode();
     }
   }
 
@@ -92,10 +91,23 @@ final class CliResponseWriter {
    * so every command family keeps the same fallback contract.
    */
   int writePayload(
-      Optional<Path> responsePath, OutputStream stdout, byte[] payload, int successExitCode)
+      String command,
+      String payloadName,
+      Optional<String> stdoutSuggestion,
+      Optional<Path> responsePath,
+      OutputStream stdout,
+      byte[] payload,
+      int successExitCode)
       throws IOException {
     return writePayload(
-        responsePath, stdout, OutputStream.nullOutputStream(), payload, successExitCode);
+        command,
+        payloadName,
+        stdoutSuggestion,
+        responsePath,
+        stdout,
+        OutputStream.nullOutputStream(),
+        payload,
+        successExitCode);
   }
 
   /**
@@ -103,12 +115,18 @@ final class CliResponseWriter {
    * reporting response-file fallback details on stderr.
    */
   int writePayload(
+      String command,
+      String payloadName,
+      Optional<String> stdoutSuggestion,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
       byte[] payload,
       int successExitCode)
       throws IOException {
+    Objects.requireNonNull(command, "command must not be null");
+    Objects.requireNonNull(payloadName, "payloadName must not be null");
+    Objects.requireNonNull(stdoutSuggestion, "stdoutSuggestion must not be null");
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
@@ -123,9 +141,12 @@ final class CliResponseWriter {
       writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
-      writeStdoutFallbackNotice(stderr, exception, targetPath);
-      GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
-      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
+      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
+      writePayload(
+          stdout,
+          GridGrindCliJson.writeCliFailureReportBytes(
+              CliFailureReports.responseWriteFailure(
+                  command, payloadName, targetPath, exception, stdoutSuggestion)));
       return 1;
     }
   }
@@ -187,7 +208,7 @@ final class CliResponseWriter {
               : Optional.empty());
       return logicalExitCode;
     } catch (IOException exception) {
-      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, "response");
       GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
@@ -249,7 +270,7 @@ final class CliResponseWriter {
           report.primaryProblem().map(problem -> problem.code().name() + ": " + problem.message()));
       return doctorExitCodeFor(report);
     } catch (IOException exception) {
-      writeStdoutFallbackNotice(stderr, exception, targetPath);
+      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, "doctor report");
       GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (report.primaryProblem().isPresent()) {
         problem =
@@ -327,11 +348,14 @@ final class CliResponseWriter {
     return problemSummary.filter(text -> !text.isBlank()).map(text -> " [" + text + "]").orElse("");
   }
 
-  private static void writeStdoutFallbackNotice(
-      OutputStream stderr, IOException exception, Path targetPath) throws IOException {
+  private static void writeStdoutPayloadFallbackNotice(
+      OutputStream stderr, IOException exception, Path targetPath, String payloadName)
+      throws IOException {
     String line =
         responseWriteMessage(exception, targetPath)
-            + ". Wrote a structured failure response to stdout instead."
+            + ". Wrote the "
+            + payloadName
+            + " to stdout instead."
             + System.lineSeparator();
     stderr.write(line.getBytes(StandardCharsets.UTF_8));
     stderr.flush();

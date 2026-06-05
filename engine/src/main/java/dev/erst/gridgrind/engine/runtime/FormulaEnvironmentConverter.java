@@ -17,11 +17,6 @@ final class FormulaEnvironmentConverter {
   private FormulaEnvironmentConverter() {}
 
   static ExcelFormulaEnvironment toExcelFormulaEnvironment(
-      @Nullable FormulaEnvironmentInput input) {
-    return toExcelFormulaEnvironment(input, Path.of(""));
-  }
-
-  static ExcelFormulaEnvironment toExcelFormulaEnvironment(
       @Nullable FormulaEnvironmentInput input, Path workingDirectory) {
     if (input == null) {
       return ExcelFormulaEnvironment.defaults();

@@ -47,10 +47,6 @@ final class ExecutionJournalRecorder {
     emit("PLAN", "started", null, null);
   }
 
-  static ExecutionJournalRecorder start(WorkbookPlan request, ExecutionJournalSink sink) {
-    return start(request, sink, Path.of(""));
-  }
-
   static ExecutionJournalRecorder start(
       WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
     ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);

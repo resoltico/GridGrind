@@ -32,6 +32,8 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
 /** Creates temporary workbook paths and reopens saved `.xlsx` files for structural inspection. */
 public final class XlsxRoundTrip {
+  private static final WorkbookTempFileFactory TEMP_FILE_FACTORY = createTempFileFactory();
+
   private XlsxRoundTrip() {}
 
   /** Returns a fresh temporary path for a workbook that does not yet exist on disk. */
@@ -176,7 +178,7 @@ public final class XlsxRoundTrip {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath, TEMP_FILE_FACTORY)) {
       return workbook.sheet(sheetName).layout().snapshot();
     }
   }
@@ -287,8 +289,18 @@ public final class XlsxRoundTrip {
     requireWorkbookPath(workbookPath);
     requireNonBlank(sheetName, "sheetName");
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath, TEMP_FILE_FACTORY)) {
       return workbook.sheet(sheetName).metadata().dataValidations(new ExcelRangeSelection.All());
+    }
+  }
+
+  private static WorkbookTempFileFactory createTempFileFactory() {
+    try {
+      return WorkbookTempFileFactory.rooted(
+          ExcelTempFiles.createManagedTempDirectory("gridgrind-roundtrip-temp-root-"));
+    } catch (IOException exception) {
+      throw new java.io.UncheckedIOException(
+          "Failed to initialize XlsxRoundTrip temp ownership", exception);
     }
   }
 

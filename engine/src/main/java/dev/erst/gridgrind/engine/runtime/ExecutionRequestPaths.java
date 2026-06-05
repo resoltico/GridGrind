@@ -16,11 +16,6 @@ final class ExecutionRequestPaths {
   private ExecutionRequestPaths() {}
 
   static ExcelOoxmlPersistenceOptions persistenceOptions(
-      WorkbookPlan.WorkbookPersistence persistence) {
-    return persistenceOptions(persistence, Path.of(""));
-  }
-
-  static ExcelOoxmlPersistenceOptions persistenceOptions(
       WorkbookPlan.WorkbookPersistence persistence, Path workingDirectory) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> ExcelOoxmlPersistenceOptions.none();
@@ -52,20 +47,10 @@ final class ExecutionRequestPaths {
   }
 
   static @org.jspecify.annotations.Nullable String persistencePath(
-      WorkbookPlan.WorkbookSource source, WorkbookPlan.WorkbookPersistence persistence) {
-    return persistencePath(source, persistence, Path.of(""));
-  }
-
-  static @org.jspecify.annotations.Nullable String persistencePath(
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       Path workingDirectory) {
     return normalizedPersistencePath(source, persistence, workingDirectory);
-  }
-
-  static WorkbookLocation workbookLocationFor(
-      WorkbookPlan.WorkbookSource source, WorkbookPlan.WorkbookPersistence persistence) {
-    return workbookLocationFor(source, persistence, Path.of(""));
   }
 
   static WorkbookLocation workbookLocationFor(
@@ -96,10 +81,6 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
     };
-  }
-
-  static @org.jspecify.annotations.Nullable String reqSourcePath(WorkbookPlan request) {
-    return reqSourcePath(request, Path.of(""));
   }
 
   static @Nullable String reqSourcePath(WorkbookPlan request, Path workingDirectory) {
@@ -140,10 +121,6 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookPersistence.None _ ->
           throw new IllegalArgumentException("persistence reference requires a saving policy");
     };
-  }
-
-  static Path normalizePath(String path) {
-    return normalizePath(path, Path.of(""));
   }
 
   static Path normalizePath(String path, Path workingDirectory) {

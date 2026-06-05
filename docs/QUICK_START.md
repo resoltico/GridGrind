@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.66.0"
+version: "0.67.0"
 domain: QUICK_START
-updated: "2026-05-26"
+updated: "2026-06-05"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -28,8 +28,10 @@ GridGrind supports `.xlsx` workbooks only.
 If you are starting from the release artifact alone, generate the request into your working
 directory first so the later `--request` path already exists: `gridgrind --print-example --lookup BUDGET --response budget-request.json`.
 When you later run `--request budget-request.json`, relative paths inside that JSON request follow
-the request file's directory. The separate `--response` flag still follows the shell working
-directory.
+the request file's directory. If you prefer to pipe request JSON on stdin, pass
+`--execution-root <path>` and those same relative request-owned paths resolve from that explicit
+directory. The separate CLI path flags `--response`, `--execution-root`, and `--temp-root` follow
+the shell working directory.
 
 ## Pick One Run Path
 
@@ -135,7 +137,7 @@ java -jar gridgrind.jar \
 
 After a successful run:
 
-- `response.json` should report `status: "SUCCESS"`
+- `response.json` should report `status: "SUCCEEDED"`
 - the workbook is saved to the path set in `persistence.path` inside the request JSON; open the generated `budget-request.json` and edit that field to control the output location
 - if the run fails, GridGrind returns a structured error response instead of saving a partial workbook
 
@@ -159,7 +161,9 @@ After a successful run:
 ## Common First-Run Mistakes
 
 - Using `.xls`, `.xlsm`, or `.xlsb` instead of `.xlsx`
-- Mixing up path roots: `--response` follows the shell working directory, while relative paths inside a `--request` file follow that request file's directory
+- Mixing up path roots: `--response`, `--execution-root`, and `--temp-root` follow the shell
+  working directory, while relative paths inside a `--request` file follow that request file's
+  directory, and stdin-driven requests use the explicit `--execution-root`
 - Ignoring stderr after a failed `--response` run: GridGrind prints one line naming the written response or doctor-report file so the structured failure payload is easy to find
 - Expecting GridGrind to save a workbook after a failed run
 

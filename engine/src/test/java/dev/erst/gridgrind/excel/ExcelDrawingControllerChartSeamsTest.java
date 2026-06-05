@@ -115,7 +115,8 @@ class ExcelDrawingControllerChartSeamsTest {
                 "(?s)<xdr:graphicFrame><xdr:nvGraphicFramePr><xdr:cNvPr[^>]*name=\"FrameLess\".*?</xdr:graphicFrame>",
                 ""));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Charts");
       assertEquals(List.of(), sheet.drawings().charts());
       assertEquals(List.of(), sheet.drawings().drawingObjects());
@@ -169,7 +170,8 @@ class ExcelDrawingControllerChartSeamsTest {
                 "(?s)<xdr:graphicFrame><xdr:nvGraphicFramePr><xdr:cNvPr[^>]*name=\"FrameLess\".*?</xdr:graphicFrame>",
                 ""));
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelSheet sheet = workbook.sheet("Charts");
       assertEquals(
           List.of("LiveChart"),

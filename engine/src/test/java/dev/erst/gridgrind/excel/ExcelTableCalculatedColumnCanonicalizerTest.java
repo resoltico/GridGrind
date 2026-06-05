@@ -55,10 +55,11 @@ class ExcelTableCalculatedColumnCanonicalizerTest {
               .getCalculatedColumnFormula()
               .getStringValue());
 
-      workbook.persistence().save(workbookPath);
+      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       XSSFSheet renamedSheet = workbook.xssfWorkbook().getSheet("Ledger Final");
       assertNoFormulaCell(renamedSheet, "D2");
       assertNoFormulaCell(renamedSheet, "D3");

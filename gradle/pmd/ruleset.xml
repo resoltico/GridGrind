@@ -29,14 +29,16 @@
         <exclude name="DataClass"/>
         <!-- PMD's broad coupling heuristics remain too blunt for a few explicit workbook facades
              and sealed contract unions. Those exclusions are enforced instead through the root
-             verifyJavaSourceShape task and a stricter module-scoped semantic-shape PMD ruleset
-             applied where the thresholds are signal-rich rather than noisy. -->
+             verifyJavaSourceShape and verifyJavaSourceDuplication tasks plus a stricter
+             module-scoped semantic-shape PMD ruleset applied where the thresholds are
+             signal-rich rather than noisy. -->
         <exclude name="GodClass"/>
         <exclude name="TooManyMethods"/>
         <exclude name="CyclomaticComplexity"/>
         <exclude name="CognitiveComplexity"/>
         <!-- Closed-sum protocol catalogs and workbook command hubs legitimately reference many
-             shipped types at once; their import and size budgets live in verifyJavaSourceShape. -->
+             shipped types at once; their import, size, and reviewed duplication budgets live in
+             the structural-governance build tasks. -->
         <exclude name="CouplingBetweenObjects"/>
         <!-- Public wire DTOs deliberately mirror the shipped JSON shape, so wrapping a few
              distinct fields into extra helper records can make the surface less truthful. -->

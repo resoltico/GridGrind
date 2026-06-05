@@ -219,16 +219,24 @@ public final class GridGrindContractText {
         + " content instead of the request JSON";
   }
 
+  /** One stable help and runtime message for stdin-rooted request execution. */
+  public static String stdinExecutionRootRequiredMessage() {
+    return "Requests read from stdin require --execution-root so request-owned paths and"
+        + " execution temp files resolve from one explicit directory";
+  }
+
   /** Stable wording for how relative paths inside the request are resolved. */
   public static String requestOwnedPathResolutionSummary() {
     return "When the CLI reads a request via --request, relative request-owned paths resolve from"
-        + " the request file directory; otherwise they resolve in the current execution"
-        + " environment.";
+        + " the request file directory. When the request JSON arrives on stdin, pass"
+        + " --execution-root <path> and relative request-owned paths resolve from that"
+        + " directory.";
   }
 
   /** Stable wording for how CLI file-flag paths are resolved. */
   public static String cliFlagPathResolutionSummary() {
-    return "--request and --response themselves resolve from the current working directory.";
+    return "--request, --response, --execution-root, and --temp-root resolve from the current"
+        + " working directory.";
   }
 
   /** Maximum accepted JSON request document size in bytes. */

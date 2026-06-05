@@ -17,6 +17,7 @@ class GridGrindProtocolCatalogLookupSupportTest {
         GridGrindProtocolCatalogLookupSupport.search(
             lookupFixtureCatalog(), "  sourceTypes:SOURCE_ALPHA  ");
 
+    assertEquals(result.matches().size(), result.totalCount());
     assertEquals("sourceTypes:SOURCE_ALPHA", result.matches().getFirst().qualifiedId());
     assertEquals("ENTRY", result.matches().getFirst().kind());
   }

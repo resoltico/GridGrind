@@ -23,11 +23,6 @@ final class OoxmlPackageSecurityConverter {
   }
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
-      @Nullable OoxmlPersistenceSecurityInput input) {
-    return toExcelPersistenceOptions(input, Path.of(""));
-  }
-
-  static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
       @Nullable OoxmlPersistenceSecurityInput input, Path workingDirectory) {
     if (input == null) {
       return ExcelOoxmlPersistenceOptions.none();

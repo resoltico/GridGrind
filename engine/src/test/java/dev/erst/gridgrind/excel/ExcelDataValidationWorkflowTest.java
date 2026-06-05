@@ -107,7 +107,8 @@ class ExcelDataValidationWorkflowTest {
       }
     }
 
-    try (ExcelWorkbook workbook = ExcelWorkbooks.open(workbookPath)) {
+    try (ExcelWorkbook workbook =
+        ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
       WorkbookAnalysis.DataValidationHealth health =

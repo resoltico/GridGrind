@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -223,6 +224,101 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
             .numberValue());
+  }
+
+  @Test
+  void stdinExecutionRootOwnsRelativePersistencePaths() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-root-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\" }",
+                            """
+                            [
+                              {
+                                "stepId": "ensure-budget",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse.Success response =
+        assertInstanceOf(
+            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
+
+    assertEquals(0, exitCode);
+    assertEquals(workspace.resolve("result.xlsx").toString(), persistence.executionPath());
+    assertTrue(Files.exists(workspace.resolve("result.xlsx")));
+  }
+
+  @Test
+  void stdinExecutionRootOwnsRelativeSourceBackedInputs() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-source-backed-");
+    Files.writeString(workspace.resolve("title.txt"), "Quarterly Budget", StandardCharsets.UTF_8);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "ensure-budget",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "ENSURE_SHEET" }
+                              },
+                              {
+                                "stepId": "set-title",
+                                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                                "action": {
+                                  "type": "SET_CELL",
+                                  "value": {
+                                    "type": "TEXT",
+                                    "source": { "type": "UTF8_FILE", "path": "title.txt" }
+                                  }
+                                }
+                              },
+                              {
+                                "stepId": "read-title",
+                                "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                                "query": { "type": "GET_CELLS" }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse.Success response =
+        assertInstanceOf(
+            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    SheetInspectionResult.CellsResult cells =
+        assertInstanceOf(
+            SheetInspectionResult.CellsResult.class, response.inspections().getFirst());
+
+    assertEquals(0, exitCode);
+    assertEquals(
+        "Quarterly Budget",
+        assertInstanceOf(
+                dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
+                cells.cells().getFirst())
+            .stringValue());
   }
 
   private static void writeSingleTextWorkbook(
