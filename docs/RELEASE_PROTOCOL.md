@@ -248,6 +248,32 @@ Do not proceed until the `Gate` aggregate check in workflow `CI` has `"conclusio
 and `Contributor devcontainer` (when devcontainer files changed). If `Gate` fails, fix the failure,
 push to the release branch, and wait again — do not merge a red PR.
 
+If `Gate` fails during dependency resolution against an external repository or another hosted
+surface outside the repository's direct control — for example a transient `403`, `404`, or `5xx`
+while resolving a pinned upstream snapshot that the local release checkout has not changed — do
+not immediately mutate build logic or version pins just to make the red check disappear.
+
+Instead, prove the failure mode first:
+
+```bash
+rm -rf tmp/release-cold-gradle-home
+mkdir -p tmp/release-cold-gradle-home
+GRADLE_USER_HOME="$PWD/tmp/release-cold-gradle-home/gradle-user-home" \
+  ./gradlew <task-that-failed> --refresh-dependencies --no-daemon --console=plain
+```
+
+Rules:
+
+- if the cold local repro fails, treat the release branch as genuinely broken and fix the build or
+  the pinned dependency before retrying CI
+- if the cold local repro succeeds and the hosted failure is clearly upstream or transient, rerun
+  the failed GitHub jobs once with `gh run rerun <run-id> --failed`
+- only change repository configuration, version pins, or publication sources when either the cold
+  local repro proves the branch is broken or the hosted rerun reproduces the same failure
+
+This keeps the release branch truthful: hosted flake handling is allowed, but speculative build
+edits without proof are not
+
 ### Step 4 — Merge PR, wait for main CI, and verify the merge handoff
 
 ```bash

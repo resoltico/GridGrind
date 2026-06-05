@@ -28,6 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clarified the release protocol's Dependabot hygiene step so stale, post-release maintenance
   heads can be replaced by one deliberate current-`main` maintenance PR instead of being merged
   through repeated branch-refresh churn one by one.
+- Clarified the release protocol's red-`Gate` handling for hosted dependency-resolution flake:
+  before rewriting build logic or pinned versions around an external-repository `403`/`404`/`5xx`
+  failure, the release flow now requires a cold local `--refresh-dependencies` repro and one
+  explicit `gh run rerun --failed` pass so transient infrastructure noise is separated from real
+  release-branch breakage.
 - Tightened the execution contract around explicit invocation-owned state: the public Java API now
   requires both request-root and temp-root inputs, stdin-driven CLI execution/doctoring now
   requires `--execution-root <path>` instead of inheriting ambient process cwd semantics, the
@@ -45,6 +50,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   precisely: it now distinguishes workbook-save atomicity from response-file output, teaches the
   explicit `--execution-root <path>` rule for stdin-driven first-contact flows, and no longer
   describes asset-backed example directories as universally blank-workspace runnable.
+
+### Fixed
+
+- Made the packaged discovery-execution verifier emit per-step liveness heartbeats while waiting
+  on slow example or task-starter runs, so long-running release-surface checks no longer go quiet
+  long enough to trip `check.sh`'s watchdog even when the underlying CLI execution is healthy.
 
 ## [0.66.0] - 2026-05-27
 
