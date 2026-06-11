@@ -11,7 +11,7 @@ final class SourceBackedResolutionIdentitySupport {
    * Preserves authored step and selector object identity when source-backed resolution makes no
    * semantic change, which avoids rebuilding canonical records unnecessarily.
    */
-  @SuppressWarnings("PMD.CompareObjectsWithEquals")
+  @SuppressWarnings({"PMD.CompareObjectsWithEquals", "ReferenceEquality"})
   static boolean sameReference(Object left, Object right) {
     return left == right;
   }

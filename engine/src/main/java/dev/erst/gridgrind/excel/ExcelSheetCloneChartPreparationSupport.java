@@ -119,9 +119,20 @@ final class ExcelSheetCloneChartPreparationSupport {
         sheet.getSheetName(), reference.getRow(), reference.getCol(), true, true);
   }
 
-  record RewrittenChartFormulas(List<FormulaRewrite> rewrites) {
-    RewrittenChartFormulas {
-      rewrites = List.copyOf(rewrites);
+  /** Opaque batch of source-formula rewrites applied only for the duration of one sheet clone. */
+  static final class RewrittenChartFormulas {
+    private final List<FormulaRewrite> rewrites;
+
+    private RewrittenChartFormulas(List<FormulaRewrite> rewrites) {
+      this.rewrites = List.copyOf(rewrites);
+    }
+
+    boolean isEmpty() {
+      return rewrites.isEmpty();
+    }
+
+    int rewriteCount() {
+      return rewrites.size();
     }
 
     void restoreSourceFormulas() {
@@ -131,8 +142,8 @@ final class ExcelSheetCloneChartPreparationSupport {
     }
   }
 
-  private record FormulaRewrite(Node formulaNode, String originalFormula) {
-    private FormulaRewrite {
+  record FormulaRewrite(Node formulaNode, String originalFormula) {
+    FormulaRewrite {
       Objects.requireNonNull(formulaNode, "formulaNode must not be null");
       Objects.requireNonNull(originalFormula, "originalFormula must not be null");
     }

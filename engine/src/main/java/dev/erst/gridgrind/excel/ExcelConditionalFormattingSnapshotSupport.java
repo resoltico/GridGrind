@@ -90,19 +90,19 @@ final class ExcelConditionalFormattingSnapshotSupport {
     if (conditionType == null) {
       return unsupportedRule(ctRule, "UNKNOWN", "Rule family metadata is missing or unreadable.");
     }
-    if (conditionType == ConditionType.FORMULA) {
+    if (ConditionType.FORMULA.equals(conditionType)) {
       return formulaRuleSnapshot(rule, ctRule, style);
     }
-    if (conditionType == ConditionType.CELL_VALUE_IS) {
+    if (ConditionType.CELL_VALUE_IS.equals(conditionType)) {
       return cellValueRuleSnapshot(rule, ctRule, style);
     }
-    if (conditionType == ConditionType.COLOR_SCALE) {
+    if (ConditionType.COLOR_SCALE.equals(conditionType)) {
       return colorScaleRuleSnapshot(rule, ctRule);
     }
-    if (conditionType == ConditionType.DATA_BAR) {
+    if (ConditionType.DATA_BAR.equals(conditionType)) {
       return dataBarRuleSnapshot(rule, ctRule);
     }
-    if (conditionType == ConditionType.ICON_SET) {
+    if (ConditionType.ICON_SET.equals(conditionType)) {
       return iconSetRuleSnapshot(rule, ctRule);
     }
     return unsupportedRule(
@@ -114,19 +114,19 @@ final class ExcelConditionalFormattingSnapshotSupport {
     if (rawType != null) {
       return normalizedUnsupportedKind(rawType);
     }
-    if (conditionType == ConditionType.FORMULA) {
+    if (ConditionType.FORMULA.equals(conditionType)) {
       return "FORMULA";
     }
-    if (conditionType == ConditionType.CELL_VALUE_IS) {
+    if (ConditionType.CELL_VALUE_IS.equals(conditionType)) {
       return "CELL_VALUE_IS";
     }
-    if (conditionType == ConditionType.COLOR_SCALE) {
+    if (ConditionType.COLOR_SCALE.equals(conditionType)) {
       return "COLOR_SCALE";
     }
-    if (conditionType == ConditionType.DATA_BAR) {
+    if (ConditionType.DATA_BAR.equals(conditionType)) {
       return "DATA_BAR";
     }
-    if (conditionType == ConditionType.ICON_SET) {
+    if (ConditionType.ICON_SET.equals(conditionType)) {
       return "ICON_SET";
     }
     return normalizedUnsupportedKind(conditionType.toString());

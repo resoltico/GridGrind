@@ -34,7 +34,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
       ExcelSheetCloneChartPreparationSupport.RewrittenChartFormulas rewrites =
           support.rewriteDefinedNameFormulas(sourceSheet);
 
-      assertEquals(2, rewrites.rewrites().size());
+      assertEquals(2, rewrites.rewriteCount());
       assertEquals("=Source!$A$2:$A$4", formulaText(categoriesFormulaNode));
       assertEquals("=Source!$B$2:$B$4", formulaText(valuesFormulaNode));
 
@@ -57,7 +57,7 @@ class ExcelSheetCloneChartPreparationSupportTest {
       ExcelSheetCloneChartPreparationSupport.RewrittenChartFormulas rewrites =
           support.rewriteDefinedNameFormulas(sourceSheet);
 
-      assertTrue(rewrites.rewrites().isEmpty());
+      assertTrue(rewrites.isEmpty());
       assertEquals("   ", formulaText(categoriesFormulaNode));
       assertNull(formulaText(valuesFormulaNode));
     }

@@ -53,7 +53,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
   void repairCopiedEmbeddedObjects(ExcelSheet targetSheet, CopySnapshot snapshot) {
     Objects.requireNonNull(targetSheet, "targetSheet must not be null");
     Objects.requireNonNull(snapshot, "snapshot must not be null");
-    for (EmbeddedObjectCopyPlan embeddedObject : snapshot.embeddedObjects()) {
+    for (EmbeddedObjectCopyPlan embeddedObject : snapshot.embeddedObjects) {
       repairCopiedEmbeddedObject(targetSheet.xssfSheet(), embeddedObject);
     }
   }
@@ -537,18 +537,29 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
     }
   }
 
-  record CopySnapshot(List<EmbeddedObjectCopyPlan> embeddedObjects) {
-    CopySnapshot {
-      embeddedObjects = List.copyOf(embeddedObjects);
+  /** Opaque embedded-object copy plan carried between sheet snapshot and repair phases. */
+  static final class CopySnapshot {
+    private final List<EmbeddedObjectCopyPlan> embeddedObjects;
+
+    private CopySnapshot(List<EmbeddedObjectCopyPlan> embeddedObjects) {
+      this.embeddedObjects = List.copyOf(embeddedObjects);
+    }
+
+    boolean isEmpty() {
+      return embeddedObjects.isEmpty();
+    }
+
+    int embeddedObjectCount() {
+      return embeddedObjects.size();
     }
   }
 
-  private record EmbeddedObjectCopyPlan(
+  record EmbeddedObjectCopyPlan(
       String objectName,
       InternalRelationSnapshot packagePart,
       @Nullable InternalRelationSnapshot previewSheetPart,
       @Nullable InternalRelationSnapshot previewDrawingPart) {
-    private EmbeddedObjectCopyPlan {
+    EmbeddedObjectCopyPlan {
       Objects.requireNonNull(objectName, "objectName must not be null");
       Objects.requireNonNull(packagePart, "packagePart must not be null");
     }

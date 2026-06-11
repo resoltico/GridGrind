@@ -150,7 +150,7 @@ final class CliArgumentFailureSupport {
         .sorted(
             java.util.Comparator.comparingInt(
                     (String flag) -> distance(normalized, normalize(flag)))
-                .thenComparing(String::length)
+                .thenComparingInt(String::length)
                 .thenComparing(String::compareTo))
         .filter(flag -> distance(normalized, normalize(flag)) <= 2)
         .limit(3)

@@ -46,9 +46,9 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       ExcelSheet blankSheet = workbook.getOrCreateSheet("Blank");
-      assertEquals(List.of(), support.snapshot(blankSheet).embeddedObjects());
-      support.repairCopiedEmbeddedObjects(
-          blankSheet, new ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot(List.of()));
+      ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot blankSnapshot = support.snapshot(blankSheet);
+      assertTrue(blankSnapshot.isEmpty());
+      support.repairCopiedEmbeddedObjects(blankSheet, blankSnapshot);
 
       ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
       createPicture(workbook.xssfWorkbook(), sourceSheet.xssfSheet(), "OpsPicture");
@@ -61,7 +61,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       }
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
-      assertEquals(1, snapshot.embeddedObjects().size());
+      assertEquals(1, snapshot.embeddedObjectCount());
 
       workbook
           .xssfWorkbook()
@@ -156,7 +156,7 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       sourceObject.getCTShape().getSpPr().unsetBlipFill();
 
       ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
-      assertEquals(1, snapshot.embeddedObjects().size());
+      assertEquals(1, snapshot.embeddedObjectCount());
 
       workbook
           .xssfWorkbook()
