@@ -45,41 +45,39 @@ public final class JazzerCli {
     if (args.isEmpty()) {
       throw new IllegalArgumentException("A Jazzer subcommand is required.");
     }
-    switch (args.getFirst()) {
+    return switch (args.getFirst()) {
       case "summarize-run" -> {
         summarizeRun(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       case "status" -> {
         status(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       case "report" -> {
         report(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       case "list-findings" -> {
         listFindings(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       case "list-corpus" -> {
         listCorpus(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
-      case "replay" -> {
-        return replay(args.subList(1, args.size()), standardOutput);
-      }
+      case "replay" -> replay(args.subList(1, args.size()), standardOutput);
       case "promote" -> {
         promote(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       case "refresh-promoted-metadata" -> {
         refreshPromotedMetadata(args.subList(1, args.size()), standardOutput);
-        return 0;
+        yield 0;
       }
       default ->
           throw new IllegalArgumentException("Unknown Jazzer subcommand: " + args.getFirst());
-    }
+    };
   }
 
   private static void summarizeRun(List<String> args, PrintStream standardOutput)

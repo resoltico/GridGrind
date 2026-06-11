@@ -131,16 +131,12 @@ nested Jazzer build imports that catalog instead of repeating overlapping coordi
 avoids silent version skew between the main product modules and Jazzer support code.
 
 JaCoCo note:
-- GridGrind currently pins the exact published Maven snapshot artifact that corresponds to the
-  official JaCoCo trunk build `0.8.15.202606040741` via Maven coordinate
-  `0.8.15-20260604.194125-118`; the published snapshot artifact exposes that same trunk build in
-  its bundle metadata while keeping the snapshot timestamp/build-number form required by the Maven
-  repository, and that line is where official Java 26 support remains ahead of the next JaCoCo
-  release
-- the shared build conventions therefore add JaCoCo's documented snapshot repository narrowly for
-  `org.jacoco` artifacts instead of widening the whole build to general snapshot resolution
-- do not "simplify" that repo wiring away unless JaCoCo Java 26 support is available in a normal
-  release and the version catalog is bumped in the same change
+- GridGrind now pins the normal JaCoCo `0.8.15` release from Maven Central.
+- the shared build conventions no longer add a JaCoCo-only snapshot repository because Java 26
+  support is available on the stable release line.
+- if a future JaCoCo prerelease is ever required again, treat that as an explicit repository-wide
+  build-policy change: update the version catalog, restore the narrow repository wiring in the
+  same change, and document the reason here rather than silently widening dependency resolution.
 
 Jackson note:
 - `tools.jackson.core:jackson-databind` 3.x intentionally still depends on

@@ -5,6 +5,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Refreshed the shared dependency baseline to current stable releases where verified newer
+  versions are available: Jackson databind `3.2.0`, Error Prone `2.50.0`, NullAway `0.13.6`,
+  PMD `7.25.0`, and JaCoCo `0.8.15`.
+- Updated the GitHub Actions pins to `actions/checkout` `6.0.3` and `gradle/actions` `6.1.1`,
+  including the Gradle wrapper-validation workflow.
+
+### Fixed
+
+- Removed the JaCoCo prerelease-only repository wiring and timestamped snapshot coordinate now
+  that Java 26 support is available on JaCoCo `0.8.15` GA.
+- Removed the stale Dependabot major-version suppression for `gradle/actions`, so repository
+  automation no longer hides future workflow-runtime upgrades.
+
 ## [0.67.0] - 2026-06-05
 
 ### Changed
