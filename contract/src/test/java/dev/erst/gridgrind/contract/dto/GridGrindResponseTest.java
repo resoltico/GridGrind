@@ -395,7 +395,7 @@ class GridGrindResponseTest {
             "EXPECT_CELL_VALUE",
             new dev.erst.gridgrind.contract.selector.CellSelector.ByAddress("Budget", "B4"),
             new dev.erst.gridgrind.contract.assertion.CellAssertion.CellValue(
-                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.NumericValue(42.0d)),
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
             List.of());
     GridGrindProblemDetail.Problem problem =
         new GridGrindProblemDetail.Problem(

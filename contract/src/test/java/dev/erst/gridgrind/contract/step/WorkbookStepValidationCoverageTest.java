@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
@@ -28,7 +27,8 @@ class WorkbookStepValidationCoverageTest {
             List.of(new PresenceAssertion.TablePresent(), new PresenceAssertion.TableAbsent()));
     CompositeAssertion.Not not =
         new CompositeAssertion.Not(
-            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")));
+            new CellAssertion.CellValue(
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")));
 
     assertEquals(
         List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(allOf)));
@@ -81,7 +81,9 @@ class WorkbookStepValidationCoverageTest {
                     new CompositeAssertion.AnyOf(
                         List.of(
                             new PresenceAssertion.TablePresent(),
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))))));
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    "Owner"))))));
 
     assertEquals(
         "ANY_OF requires nested assertions with compatible target families", failure.getMessage());

@@ -7,7 +7,6 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -110,9 +109,11 @@ final class ExecutionActionDiagnosticFields {
   }
 
   private static Optional<String> inlineFormula(CellInput.Formula formula) {
-    if (formula.source() instanceof TextSourceInput.Inline inline) {
-      return Optional.of(inline.text());
-    }
-    return Optional.empty();
+    return switch (formula.source()) {
+      case dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline ->
+          Optional.of(inline.text());
+      case dev.erst.gridgrind.contract.source.TextSourceInput.Utf8File _ -> Optional.empty();
+      case dev.erst.gridgrind.contract.source.TextSourceInput.StandardInput _ -> Optional.empty();
+    };
   }
 }

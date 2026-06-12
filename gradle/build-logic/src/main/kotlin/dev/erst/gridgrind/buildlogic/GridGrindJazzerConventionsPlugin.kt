@@ -229,6 +229,12 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
             }
 
             tasks.withType(Pmd::class.java)
+                .matching { task -> task.name == "pmdSemanticMain" }
+                .configureEach { pmd ->
+                    pmd.enabled = false
+                }
+
+            tasks.withType(Pmd::class.java)
                 .matching { task -> task.name == "pmdMain" }
                 .configureEach { pmd ->
                     pmd.ruleSetFiles = files(jazzerMainPmdRuleset)

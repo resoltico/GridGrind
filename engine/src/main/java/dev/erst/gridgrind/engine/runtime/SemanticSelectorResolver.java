@@ -193,28 +193,28 @@ final class SemanticSelectorResolver {
     return new ResolvedTableRow(table.table(), matchedRowIndex, table.firstColumnIndex());
   }
 
-  private boolean matchesKeyCell(ExcelCellSnapshot snapshot, CellInput expectedValue) {
+  static boolean matchesKeyCell(ExcelCellSnapshot snapshot, CellInput expectedValue) {
     dev.erst.gridgrind.contract.dto.CellReport report =
         InspectionResultCellReportSupport.toCellReport(snapshot);
-    if (expectedValue instanceof CellInput.Blank) {
-      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
-    }
-    if (expectedValue instanceof CellInput.Text text) {
-      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
-          && textReport.stringValue().equals(inlineText(text.source(), "table row key TEXT"));
-    }
-    if (expectedValue instanceof CellInput.Numeric numeric) {
-      return report instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
-          && Double.compare(numberReport.numberValue(), numeric.number()) == 0;
-    }
-    if (expectedValue instanceof CellInput.BooleanValue booleanValue) {
-      return report
-              instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
-          && booleanReport.booleanValue().equals(booleanValue.bool());
-    }
-    CellInput.Formula formula = (CellInput.Formula) expectedValue;
-    return report instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport
-        && formulaReport.formula().equals(inlineText(formula.source(), "table row key FORMULA"));
+    return switch (expectedValue) {
+      case CellInput.Blank _ ->
+          report instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
+      case CellInput.Text text ->
+          report instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
+              && textReport.stringValue().equals(inlineText(text.source(), "table row key TEXT"));
+      case CellInput.NumberValue numberValue ->
+          report instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
+              && Double.compare(numberReport.numberValue(), numberValue.number()) == 0;
+      case CellInput.BooleanValue booleanValue ->
+          report instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
+              && booleanReport.booleanValue().equals(booleanValue.bool());
+      case CellInput.Formula formula ->
+          report instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport
+              && formulaReport
+                  .formula()
+                  .equals(inlineText(formula.source(), "table row key FORMULA"));
+      default -> false;
+    };
   }
 
   private static String inlineText(

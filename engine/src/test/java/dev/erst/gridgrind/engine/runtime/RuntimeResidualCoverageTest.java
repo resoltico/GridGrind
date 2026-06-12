@@ -193,7 +193,8 @@ class RuntimeResidualCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.SetRange(
-                List.of(List.of(new CellInput.Text(TextSourceInput.standardInput()))))));
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    List.of(List.of(new CellInput.Text(TextSourceInput.standardInput())))))));
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.SetComment(
@@ -201,7 +202,8 @@ class RuntimeResidualCoverageTest {
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(
             new CellMutationAction.AppendRow(
-                List.of(new CellInput.Formula(TextSourceInput.standardInput())))));
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    List.of(new CellInput.Formula(TextSourceInput.standardInput()))))));
 
     assertTrue(
         SourceBackedInputRequirements.requiresStandardInput(

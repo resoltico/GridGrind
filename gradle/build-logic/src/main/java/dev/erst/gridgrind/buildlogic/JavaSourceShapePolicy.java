@@ -27,9 +27,9 @@ public final class JavaSourceShapePolicy {
         continue;
       }
       String[] columns = rawLine.split("\t", -1);
-      if (columns.length != 15) {
+      if (columns.length != 16) {
         throw new GradleException(
-            "Source-shape policy lines must contain 15 tab-separated columns, but line "
+            "Source-shape policy lines must contain 16 tab-separated columns, but line "
                 + lineNumber
                 + " in "
                 + policyFile
@@ -48,13 +48,14 @@ public final class JavaSourceShapePolicy {
               parseLimit("maxPublicMethods", columns[5], lineNumber, policyFile),
               parseLimit("maxImports", columns[6], lineNumber, policyFile),
               parseLimit("maxFields", columns[7], lineNumber, policyFile),
-              parseLimit("maxSwitches", columns[8], lineNumber, policyFile),
-              parseLimit("maxSwitchArms", columns[9], lineNumber, policyFile),
-              requiredValue("owner", columns[10], lineNumber, policyFile),
-              DuplicationGuard.parse(columns[11], lineNumber, policyFile),
-              parseDate("reviewExpiresOn", columns[12], lineNumber, policyFile),
-              optionalValue(columns[13]),
-              requiredValue("rationale", columns[14], lineNumber, policyFile)));
+              parseLimit("maxNestedTypes", columns[8], lineNumber, policyFile),
+              parseLimit("maxSwitches", columns[9], lineNumber, policyFile),
+              parseLimit("maxSwitchArms", columns[10], lineNumber, policyFile),
+              requiredValue("owner", columns[11], lineNumber, policyFile),
+              DuplicationGuard.parse(columns[12], lineNumber, policyFile),
+              parseDate("reviewExpiresOn", columns[13], lineNumber, policyFile),
+              optionalValue(columns[14]),
+              requiredValue("rationale", columns[15], lineNumber, policyFile)));
     }
     validateRules(loadedRules, policyFile);
     return new JavaSourceShapePolicy(loadedRules);
@@ -257,6 +258,7 @@ public final class JavaSourceShapePolicy {
       Integer maxPublicMethods,
       Integer maxImports,
       Integer maxFields,
+      Integer maxNestedTypes,
       Integer maxSwitches,
       Integer maxSwitchArms,
       String owner,

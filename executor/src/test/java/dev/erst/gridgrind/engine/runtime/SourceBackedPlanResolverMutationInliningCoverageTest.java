@@ -10,7 +10,6 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.ChartPlotInput;
@@ -93,7 +92,8 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
         new AssertionStep(
             "assert-budget",
             new CellSelector.ByAddress("Budget", "A1"),
-            new CellAssertion.CellValue(new ExpectedCellValue.Text("Quarterly Budget")));
+            new CellAssertion.CellValue(
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Quarterly Budget")));
     InspectionStep inspection =
         new InspectionStep(
             "inspect-budget",
@@ -245,17 +245,18 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
                     "step-10-append-row",
                     new SheetSelector.ByName("Budget"),
                     new CellMutationAction.AppendRow(
-                        List.of(
-                            new CellInput.Text(TextSourceInput.utf8File("chart-title.txt")),
-                            new CellInput.RichText(
-                                List.of(
-                                    new RichTextRunInput(
-                                        TextSourceInput.utf8File("run1.txt"),
-                                        java.util.Optional.empty()),
-                                    new RichTextRunInput(
-                                        TextSourceInput.utf8File("run2.txt"),
-                                        java.util.Optional.empty()))),
-                            new CellInput.Formula(TextSourceInput.utf8File("formula.txt"))))),
+                        new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            List.of(
+                                new CellInput.Text(TextSourceInput.utf8File("chart-title.txt")),
+                                new CellInput.RichText(
+                                    List.of(
+                                        new RichTextRunInput(
+                                            TextSourceInput.utf8File("run1.txt"),
+                                            java.util.Optional.empty()),
+                                        new RichTextRunInput(
+                                            TextSourceInput.utf8File("run2.txt"),
+                                            java.util.Optional.empty()))),
+                                new CellInput.Formula(TextSourceInput.utf8File("formula.txt")))))),
                 new MutationStep(
                     "step-11-print-layout",
                     new SheetSelector.ByName("Budget"),
@@ -366,7 +367,8 @@ class SourceBackedPlanResolverMutationInliningCoverageTest
     assertEquals(
         "SUM(B2:B3)",
         ((TextSourceInput.Inline)
-                assertInstanceOf(CellInput.Formula.class, appendRow.values().get(2)).source())
+                assertInstanceOf(CellInput.Formula.class, appendRow.values().toCellInputs().get(2))
+                    .source())
             .text());
 
     WorkbookMutationAction.SetPrintLayout printLayout =

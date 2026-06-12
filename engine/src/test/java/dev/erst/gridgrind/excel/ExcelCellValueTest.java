@@ -20,6 +20,9 @@ class ExcelCellValueTest {
     assertTrue(
         assertInstanceOf(ExcelCellValue.BooleanValue.class, ExcelCellValue.bool(true)).value());
     assertEquals(
+        "#REF!",
+        assertInstanceOf(ExcelCellValue.ErrorValue.class, ExcelCellValue.error("#REF!")).value());
+    assertEquals(
         LocalDate.of(2026, 3, 23),
         assertInstanceOf(
                 ExcelCellValue.DateValue.class, ExcelCellValue.date(LocalDate.of(2026, 3, 23)))
@@ -39,6 +42,8 @@ class ExcelCellValueTest {
   @Test
   void validatesNonNullAndNonBlankValueRequirements() {
     assertThrows(NullPointerException.class, () -> ExcelCellValue.text(null));
+    assertThrows(NullPointerException.class, () -> ExcelCellValue.error(null));
+    assertThrows(IllegalArgumentException.class, () -> ExcelCellValue.error(" "));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.date(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.dateTime(null));
     assertThrows(NullPointerException.class, () -> ExcelCellValue.formula(null));

@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.authoring;
 
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -18,11 +17,14 @@ public final class Values {
 
   /** Authored cell values for the focused fluent Java surface. */
   public sealed interface CellValue
-      permits Blank, Text, NumericValue, BooleanValue, DateValue, DateTimeValue, Formula {}
-
-  /** Authored expected effective cell values for assertion helpers. */
-  public sealed interface ExpectedValue
-      permits ExpectedBlank, ExpectedText, ExpectedNumber, ExpectedBoolean, ExpectedError {}
+      permits Blank,
+          Text,
+          NumericValue,
+          BooleanValue,
+          ErrorValue,
+          DateValue,
+          DateTimeValue,
+          Formula {}
 
   /** Inline UTF-8 text source. */
   public record InlineText(String text) implements TextSource {
@@ -57,6 +59,13 @@ public final class Values {
   /** Boolean cell payload. */
   public record BooleanValue(boolean value) implements CellValue {}
 
+  /** Excel error cell payload. */
+  public record ErrorValue(String value) implements CellValue {
+    public ErrorValue {
+      Objects.requireNonNull(value, "value must not be null");
+    }
+  }
+
   /** Date cell payload. */
   public record DateValue(LocalDate value) implements CellValue {
     public DateValue {
@@ -83,29 +92,6 @@ public final class Values {
     public Comment {
       Objects.requireNonNull(source, "source must not be null");
       Objects.requireNonNull(author, "author must not be null");
-    }
-  }
-
-  /** Expected blank effective cell value. */
-  public record ExpectedBlank() implements ExpectedValue {}
-
-  /** Expected text effective cell value. */
-  public record ExpectedText(String text) implements ExpectedValue {
-    public ExpectedText {
-      Objects.requireNonNull(text, "text must not be null");
-    }
-  }
-
-  /** Expected numeric effective cell value. */
-  public record ExpectedNumber(double value) implements ExpectedValue {}
-
-  /** Expected boolean effective cell value. */
-  public record ExpectedBoolean(boolean value) implements ExpectedValue {}
-
-  /** Expected Excel error effective cell value. */
-  public record ExpectedError(String error) implements ExpectedValue {
-    public ExpectedError {
-      Objects.requireNonNull(error, "error must not be null");
     }
   }
 
@@ -144,6 +130,11 @@ public final class Values {
   /** Returns a boolean cell payload. */
   public static CellValue bool(boolean value) {
     return new BooleanValue(value);
+  }
+
+  /** Returns an Excel error cell payload. */
+  public static CellValue error(String value) {
+    return new ErrorValue(value);
   }
 
   /** Returns a date cell payload. */
@@ -196,31 +187,6 @@ public final class Values {
     return new StandardInputText();
   }
 
-  /** Returns one expected blank effective cell value. */
-  public static ExpectedValue expectedBlank() {
-    return new ExpectedBlank();
-  }
-
-  /** Returns one expected text effective cell value. */
-  public static ExpectedValue expectedText(String text) {
-    return new ExpectedText(text);
-  }
-
-  /** Returns one expected numeric effective cell value. */
-  public static ExpectedValue expectedNumber(double number) {
-    return new ExpectedNumber(number);
-  }
-
-  /** Returns one expected boolean effective cell value. */
-  public static ExpectedValue expectedBoolean(boolean value) {
-    return new ExpectedBoolean(value);
-  }
-
-  /** Returns one expected error effective cell value. */
-  public static ExpectedValue expectedError(String error) {
-    return new ExpectedError(error);
-  }
-
   /** Returns one authored row payload for range helpers. */
   public static List<CellValue> row(CellValue... cells) {
     return List.copyOf(Arrays.asList(cells));
@@ -230,8 +196,9 @@ public final class Values {
     return switch (Objects.requireNonNull(value, "value must not be null")) {
       case Blank _ -> new CellInput.Blank();
       case Text text -> new CellInput.Text(toTextSourceInput(text.source()));
-      case NumericValue number -> new CellInput.Numeric(number.value());
+      case NumericValue number -> new CellInput.NumberValue(number.value());
       case BooleanValue booleanValue -> new CellInput.BooleanValue(booleanValue.value());
+      case ErrorValue error -> new CellInput.ErrorValue(error.value());
       case DateValue date -> new CellInput.Date(date.value());
       case DateTimeValue dateTime -> new CellInput.DateTime(dateTime.value());
       case Formula formula -> new CellInput.Formula(toTextSourceInput(formula.source()));
@@ -244,16 +211,6 @@ public final class Values {
         toTextSourceInput(nonNullComment.source()),
         nonNullComment.author(),
         nonNullComment.visible());
-  }
-
-  static ExpectedCellValue toExpectedCellValue(ExpectedValue expectedValue) {
-    return switch (Objects.requireNonNull(expectedValue, "expectedValue must not be null")) {
-      case ExpectedBlank _ -> new ExpectedCellValue.Blank();
-      case ExpectedText text -> new ExpectedCellValue.Text(text.text());
-      case ExpectedNumber number -> new ExpectedCellValue.NumericValue(number.value());
-      case ExpectedBoolean booleanValue -> new ExpectedCellValue.BooleanValue(booleanValue.value());
-      case ExpectedError error -> new ExpectedCellValue.ErrorValue(error.error());
-    };
   }
 
   static TextSourceInput toTextSourceInput(TextSource source) {

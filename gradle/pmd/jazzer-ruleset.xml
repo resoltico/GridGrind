@@ -8,7 +8,8 @@
         High-signal PMD rules for GridGrind's local Jazzer support and operator code. This layer is
         intentionally more coupled to the protocol and engine surface than production modules, and
         it legitimately owns local CLI, replay, and telemetry concerns that do not map one-to-one
-        to the product-runtime ruleset.
+        to the product-runtime ruleset. Repo-wide source-shape budgets own file breadth and
+        reviewed exception management for these local-only support surfaces.
     </description>
 
     <rule ref="category/java/errorprone.xml">

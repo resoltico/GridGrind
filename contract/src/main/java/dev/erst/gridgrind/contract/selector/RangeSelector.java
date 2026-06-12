@@ -23,7 +23,7 @@ public sealed interface RangeSelector extends Selector
   /** Selects all matching ranged structures on one sheet. */
   record AllOnSheet(String sheetName) implements RangeSelector {
     public AllOnSheet {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override
@@ -35,8 +35,8 @@ public sealed interface RangeSelector extends Selector
   /** Selects one exact rectangular range on one sheet. */
   record ByRange(String sheetName, String range) implements RangeSelector {
     public ByRange {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      range = SelectorSupport.requireRange(range, "range");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      range = SelectorValueValidation.requireRange(range, "range");
     }
 
     @Override
@@ -48,8 +48,8 @@ public sealed interface RangeSelector extends Selector
   /** Selects one or more exact rectangular ranges on one sheet. */
   record ByRanges(String sheetName, List<String> ranges) implements RangeSelector {
     public ByRanges {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      ranges = SelectorSupport.copyDistinctRanges(ranges, "ranges");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      ranges = SelectorListValidation.copyDistinctRanges(ranges, "ranges");
     }
 
     @Override
@@ -62,20 +62,20 @@ public sealed interface RangeSelector extends Selector
   record RectangularWindow(String sheetName, String topLeftAddress, int rowCount, int columnCount)
       implements RangeSelector {
     public RectangularWindow {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      topLeftAddress = SelectorSupport.requireAddress(topLeftAddress, "topLeftAddress");
-      rowCount = SelectorSupport.requirePositive(rowCount, "rowCount");
-      columnCount = SelectorSupport.requirePositive(columnCount, "columnCount");
-      SelectorSupport.requireWindowSize(rowCount, columnCount);
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      topLeftAddress = SelectorValueValidation.requireAddress(topLeftAddress, "topLeftAddress");
+      rowCount = SelectorValueValidation.requirePositive(rowCount, "rowCount");
+      columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
+      SelectorValueValidation.requireWindowSize(rowCount, columnCount);
     }
 
     /** Returns the exact A1-style rectangular range implied by this window. */
     public String range() {
-      int firstRow = SelectorSupport.rowIndex(topLeftAddress);
-      int firstColumn = SelectorSupport.columnIndex(topLeftAddress);
+      int firstRow = SelectorAddressSupport.rowIndex(topLeftAddress);
+      int firstColumn = SelectorAddressSupport.columnIndex(topLeftAddress);
       int lastRow = firstRow + rowCount - 1;
       int lastColumn = firstColumn + columnCount - 1;
-      return topLeftAddress + ":" + SelectorSupport.absoluteA1Address(lastRow, lastColumn);
+      return topLeftAddress + ":" + SelectorAddressSupport.absoluteA1Address(lastRow, lastColumn);
     }
 
     @Override

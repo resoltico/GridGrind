@@ -11,7 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
@@ -80,7 +79,8 @@ class SemanticSelectorResolverTest {
               workbook,
               tableCell,
               new CompositeAssertion.Not(
-                  new CellAssertion.CellValue(new ExpectedCellValue.Text("Updated")))));
+                  new CellAssertion.CellValue(
+                      new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Updated")))));
 
       SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
           resolver.resolveInspectionTarget(
@@ -175,7 +175,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("NumberTable"),
                           "Item",
-                          new CellInput.Numeric(99.0d)),
+                          new CellInput.NumberValue(99.0d)),
                       "Amount"),
                   new SheetIntrospectionQuery.GetCells())
               .isShortCircuit());
@@ -223,7 +223,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("TextTable"),
                           "Item",
-                          new CellInput.Numeric(42.0d)),
+                          new CellInput.NumberValue(42.0d)),
                       "Amount"),
                   new SheetIntrospectionQuery.GetCells())
               .isShortCircuit());
@@ -440,7 +440,8 @@ class SemanticSelectorResolverTest {
                 resolver.resolveAssertionTarget(
                     workbook,
                     target,
-                    new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(100.0d))))
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(100.0d))))
             .address());
     assertEquals(
         expectedAddress,
@@ -516,7 +517,7 @@ class SemanticSelectorResolverTest {
   private static TableCellSelector.ByColumnName numberAmountCellTarget() {
     return new TableCellSelector.ByColumnName(
         new TableRowSelector.ByKeyCell(
-            new TableSelector.ByName("NumberTable"), "Item", new CellInput.Numeric(42.0d)),
+            new TableSelector.ByName("NumberTable"), "Item", new CellInput.NumberValue(42.0d)),
         "Amount");
   }
 

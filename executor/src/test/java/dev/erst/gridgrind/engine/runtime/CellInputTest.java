@@ -65,7 +65,7 @@ class CellInputTest {
     ExcelCellValue.NumberValue numberValue =
         assertInstanceOf(
             ExcelCellValue.NumberValue.class,
-            WorkbookCommandCellInputConverter.toExcelCellValue(new CellInput.Numeric(42.5)));
+            WorkbookCommandCellInputConverter.toExcelCellValue(new CellInput.NumberValue(42.5)));
     assertEquals(42.5, numberValue.value());
 
     ExcelCellValue.BooleanValue booleanValue =
@@ -110,8 +110,8 @@ class CellInputTest {
     assertThrows(
         IllegalArgumentException.class, () -> new CellInput.RichText(List.of(richTextRun(""))));
     assertThrows(
-        IllegalArgumentException.class, () -> new CellInput.Numeric(Double.POSITIVE_INFINITY));
-    assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(Double.NaN));
+        IllegalArgumentException.class, () -> new CellInput.NumberValue(Double.POSITIVE_INFINITY));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.NumberValue(Double.NaN));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));
     assertThrows(IllegalArgumentException.class, () -> formulaCell("="));
     assertThrows(IllegalArgumentException.class, () -> formulaCell("=   "));

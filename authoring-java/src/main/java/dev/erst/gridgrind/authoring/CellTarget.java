@@ -45,21 +45,21 @@ public final class CellTarget {
 
   /** Returns one exact-cell inspection step. */
   public PlannedInspection read() {
-    return new PlannedInspection(selector, Queries.cells());
+    return new PlannedInspection(selector, SheetQueries.cells());
   }
 
   /** Returns one hyperlink inspection step for this cell. */
   public PlannedInspection hyperlinks() {
-    return new PlannedInspection(selector, Queries.hyperlinks());
+    return new PlannedInspection(selector, SheetQueries.hyperlinks());
   }
 
   /** Returns one comment inspection step for this cell. */
   public PlannedInspection comments() {
-    return new PlannedInspection(selector, Queries.comments());
+    return new PlannedInspection(selector, SheetQueries.comments());
   }
 
   /** Returns one effective-value assertion step. */
-  public PlannedAssertion valueEquals(Values.ExpectedValue expectedValue) {
+  public PlannedAssertion valueEquals(ExpectedValues.Value expectedValue) {
     return new PlannedAssertion(selector, Checks.cellValue(expectedValue));
   }
 

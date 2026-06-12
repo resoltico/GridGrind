@@ -131,7 +131,7 @@ class AuthoringTargetCoverageTest {
         SheetIntrospectionQuery.GetComments.class, cell.comments().toStep("comments").query());
     assertInstanceOf(
         CellAssertion.CellValue.class,
-        cell.valueEquals(Values.expectedText("Owner")).toStep("assert").assertion());
+        cell.valueEquals(ExpectedValues.text("Owner")).toStep("assert").assertion());
     assertInstanceOf(
         CellAssertion.DisplayValue.class,
         cell.displayValueEquals("Owner").toStep("display").assertion());
@@ -221,7 +221,7 @@ class AuthoringTargetCoverageTest {
         SheetIntrospectionQuery.GetComments.class, tableCell.comments().toStep("comments").query());
     assertInstanceOf(
         CellAssertion.CellValue.class,
-        tableCell.valueEquals(Values.expectedNumber(125.0)).toStep("assert").assertion());
+        tableCell.valueEquals(ExpectedValues.number(125.0)).toStep("assert").assertion());
     assertInstanceOf(
         CellAssertion.DisplayValue.class,
         tableCell.displayValueEquals("125").toStep("display").assertion());

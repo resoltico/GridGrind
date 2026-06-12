@@ -30,7 +30,7 @@ print_cli_contract_minimal_request() {
   "persistence": { "type": "NONE" },
   "execution": {
     "mode": {"type": "FULL_XSSF"},
-    "journal": { "level": "NORMAL" },
+    "journal": { "level": "SUMMARY" },
     "calculation": {
       "strategy": { "type": "DO_NOT_CALCULATE" },
       "markRecalculateOnOpen": false
@@ -64,8 +64,11 @@ load_test_cli_contract_fixtures() {
     success_help_guidance="$(
         java -jar "${jar_path}" --help-guidance | tr -d '\r'
     )"
-    success_catalog="$(
+    success_catalog_index="$(
         java -jar "${jar_path}" --print-protocol-catalog | tr -d '\r'
+    )"
+    success_catalog="$(
+        java -jar "${jar_path}" --print-protocol-catalog --full | tr -d '\r'
     )"
     success_example_catalog="$(
         java -jar "${jar_path}" --print-example-catalog | tr -d '\r'
@@ -99,13 +102,13 @@ load_test_cli_contract_fixtures() {
             rm -rf "${doctor_execution_root}"
             return 1
         }
-        [[ ! -s "${tmp_stderr}" ]] || {
-            printf 'error: expected empty stderr for no-arg failure fixture\n' >&2
+        [[ ! -s "${tmp_stdout}" ]] || {
+            printf 'error: expected empty stdout for no-arg failure fixture\n' >&2
             rm -f "${tmp_stdout}" "${tmp_stderr}"
             rm -rf "${doctor_execution_root}"
             return 1
         }
-        tr -d '\r' < "${tmp_stdout}"
+        tr -d '\r' < "${tmp_stderr}"
         rm -f "${tmp_stdout}" "${tmp_stderr}"
     )"
     rm -rf "${doctor_execution_root}"

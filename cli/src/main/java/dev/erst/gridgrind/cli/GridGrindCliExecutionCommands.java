@@ -60,7 +60,8 @@ final class GridGrindCliExecutionCommands {
   int executeCommand(
       CliCommand.Execute command, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
-    if (command.requestPath().isEmpty() && command.executionRootPath().isEmpty()) {
+    if (requestArrivesOnStandardInput(command.requestPath())
+        && command.executionRootPath().isEmpty()) {
       return responseWriter.writeCliFailureReport(
           command.responsePath(), stdout, stderr, stdinExecutionRootFailure("execute"));
     }
@@ -79,7 +80,7 @@ final class GridGrindCliExecutionCommands {
     }
 
     GridGrindResponse response;
-    if (command.requestPath().isEmpty()
+    if (requestArrivesOnStandardInput(command.requestPath())
         && GridGrindRequestRequirements.requiresStandardInput(request)) {
       return responseWriter.writeCliFailureReport(
           command.responsePath(),
@@ -88,6 +89,7 @@ final class GridGrindCliExecutionCommands {
           CliFailureReports.invalidArguments(
               2,
               "execute",
+              "bind-inputs",
               Optional.of("--request"),
               GridGrindContractText.standardInputRequiresRequestMessage(),
               List.of("gridgrind --request request.json", "gridgrind --help-protocol"),
@@ -130,6 +132,7 @@ final class GridGrindCliExecutionCommands {
           CliFailureReports.invalidArguments(
               2,
               "doctor-request",
+              "resolve-request",
               Optional.of("--request"),
               "No request JSON was provided. Pass --request <path> or pipe one request document"
                   + " on standard input.",
@@ -141,7 +144,8 @@ final class GridGrindCliExecutionCommands {
                   "Use --doctor-request only after you have one real request document to"
                       + " inspect.")));
     }
-    if (command.requestPath().isEmpty() && command.executionRootPath().isEmpty()) {
+    if (requestArrivesOnStandardInput(command.requestPath())
+        && command.executionRootPath().isEmpty()) {
       return responseWriter.writeCliFailureReport(
           command.responsePath(), stdout, stderr, stdinExecutionRootFailure("doctor-request"));
     }
@@ -176,6 +180,7 @@ final class GridGrindCliExecutionCommands {
     return CliFailureReports.invalidArguments(
         2,
         command,
+        "resolve-request",
         Optional.of("--execution-root"),
         GridGrindContractText.stdinExecutionRootRequiredMessage(),
         List.of(
@@ -191,7 +196,7 @@ final class GridGrindCliExecutionCommands {
   private dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput requestInput(
       Optional<Path> path) {
     Objects.requireNonNull(path, "path must not be null");
-    return path.isEmpty()
+    return requestArrivesOnStandardInput(path)
         ? dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.standardInput()
         : dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput.requestFile(
             path.orElseThrow().toAbsolutePath().toString());
@@ -260,5 +265,9 @@ final class GridGrindCliExecutionCommands {
                     dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation
                         .unavailable())),
             exception));
+  }
+
+  private static boolean requestArrivesOnStandardInput(Optional<Path> requestPath) {
+    return requestPath.isEmpty() || CliPathArguments.isStandardInputPath(requestPath);
   }
 }

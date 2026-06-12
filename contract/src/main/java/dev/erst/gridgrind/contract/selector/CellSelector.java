@@ -23,7 +23,7 @@ public sealed interface CellSelector extends Selector
   /** Selects every physically present cell on one sheet. */
   record AllUsedInSheet(String sheetName) implements CellSelector {
     public AllUsedInSheet {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override
@@ -35,8 +35,8 @@ public sealed interface CellSelector extends Selector
   /** Selects one exact cell on one sheet. */
   record ByAddress(String sheetName, String address) implements CellSelector {
     public ByAddress {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      address = SelectorSupport.requireAddress(address, "address");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      address = SelectorValueValidation.requireAddress(address, "address");
     }
 
     @Override
@@ -48,8 +48,8 @@ public sealed interface CellSelector extends Selector
   /** Selects one or more exact cells on one sheet. */
   record ByAddresses(String sheetName, List<String> addresses) implements CellSelector {
     public ByAddresses {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      addresses = SelectorSupport.copyDistinctAddresses(addresses, "addresses");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      addresses = SelectorListValidation.copyDistinctAddresses(addresses, "addresses");
     }
 
     @Override
@@ -61,7 +61,7 @@ public sealed interface CellSelector extends Selector
   /** Selects exact cells across one or more sheets. */
   record ByQualifiedAddresses(List<QualifiedAddress> cells) implements CellSelector {
     public ByQualifiedAddresses {
-      cells = SelectorSupport.copyDistinctValues(cells, "cells");
+      cells = SelectorListValidation.copyDistinctValues(cells, "cells");
     }
 
     @Override
@@ -73,8 +73,8 @@ public sealed interface CellSelector extends Selector
   /** One workbook-qualified cell address. */
   record QualifiedAddress(String sheetName, String address) {
     public QualifiedAddress {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      address = SelectorSupport.requireAddress(address, "address");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      address = SelectorValueValidation.requireAddress(address, "address");
     }
 
     @Override

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.ProtocolCatalogCliJson;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -106,6 +107,7 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-example",
+              "resolve-lookup",
               Optional.of("--lookup"),
               message,
               List.of("gridgrind --print-example-catalog", "gridgrind --help-guidance"),
@@ -171,12 +173,15 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-task-catalog",
+              "resolve-lookup",
               Optional.of("--lookup"),
               message,
-              List.of("gridgrind --print-task-catalog", "gridgrind --print-task-keyword-match"),
+              List.of(
+                  "gridgrind --print-task-catalog",
+                  "gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""),
               Optional.of(
-                  "Use --print-task-keyword-match --query <text> when you know the work you want"
-                      + " but not the stable task id.")));
+                  "Use --print-task-keyword-match --query \"monthly sales dashboard\" when you"
+                      + " know the work you want but not the stable task id.")));
     }
     return writePayload(
         responseWriter,
@@ -208,11 +213,15 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-task-plan",
+              "resolve-lookup",
               Optional.of("--lookup"),
               message,
-              List.of("gridgrind --print-task-catalog", "gridgrind --print-task-keyword-match"),
+              List.of(
+                  "gridgrind --print-task-catalog",
+                  "gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""),
               Optional.of(
-                  "Resolve one valid task id first, then rerun --print-task-plan --lookup <id>.")));
+                  "Resolve one valid task id first, then rerun --print-task-plan --lookup"
+                      + " DASHBOARD or another catalog id.")));
     }
     CliCatalogCommandSupport.emitTaskStarterPortabilityWarning(task.get(), stderr);
     return writePayload(
@@ -252,6 +261,7 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-task-keyword-match",
+              "match-query",
               Optional.of("--query"),
               Objects.requireNonNullElse(exception.getMessage(), "Invalid keyword query"),
               List.of("gridgrind --print-task-catalog", "gridgrind --help-guidance"),
@@ -271,11 +281,30 @@ final class GridGrindCliCatalogCommands {
         responseWriter,
         "print-protocol-catalog",
         "protocol catalog",
-        Optional.of("gridgrind --print-protocol-catalog"),
+        Optional.of("gridgrind --print-protocol-catalog --full"),
         command.responsePath(),
         stdout,
         stderr,
         GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
+  }
+
+  static int protocolCatalogIndex(
+      CliCommand.PrintProtocolCatalogIndex command,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    return writePayload(
+        responseWriter,
+        "print-protocol-catalog",
+        "protocol catalog index",
+        Optional.of("gridgrind --print-protocol-catalog"),
+        command.responsePath(),
+        stdout,
+        stderr,
+        output ->
+            ProtocolCatalogCliJson.writeProtocolCatalogIndexReport(
+                output, CliCatalogCommandSupport.protocolCatalogIndexReport()));
   }
 
   static int protocolCatalogSearch(
@@ -294,7 +323,7 @@ final class GridGrindCliCatalogCommands {
         stdout,
         stderr,
         output ->
-            GridGrindCliJson.writeProtocolCatalogSearchReport(
+            ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
                 output, CliCatalogCommandSupport.summarizedSearchReport(command.searchQuery())));
   }
 
@@ -319,6 +348,7 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-protocol-catalog",
+              "resolve-lookup",
               Optional.of("--lookup"),
               message,
               matches,
@@ -336,9 +366,10 @@ final class GridGrindCliCatalogCommands {
           CliFailureReports.invalidArguments(
               2,
               "print-protocol-catalog",
+              "resolve-lookup",
               Optional.of("--lookup"),
               message,
-              List.of("gridgrind --print-protocol-catalog --search <text>"),
+              List.of("gridgrind --print-protocol-catalog --search \"sheet layout\""),
               Optional.of(
                   "Use --search when you know the concept but not the exact lookup id or group.")));
     }

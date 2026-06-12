@@ -2,14 +2,19 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.ProtocolCatalogGroupIndex;
+import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
+import dev.erst.gridgrind.cli.discovery.ProtocolCatalogLookupNamespace;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchHit;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchReport;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.CatalogSearchMatch;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
@@ -83,21 +88,51 @@ final class CliCatalogCommandSupport {
                     + ". Task ids use stable upper-case tokens; did you mean "
                     + suggestion
                     + "? Run gridgrind --print-task-catalog to list valid ids or"
-                    + " gridgrind --print-task-keyword-match --query <text> to discover a close"
-                    + " task id before printing its task plan.")
+                    + " gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""
+                    + " to discover a close task id before printing its task plan.")
         .orElse(
             "Unknown task: "
                 + taskId
                 + ". Run gridgrind --print-task-catalog to list valid ids or"
-                + " gridgrind --print-task-keyword-match --query <text> to discover a close"
-                + " task id before printing its task plan.");
+                + " gridgrind --print-task-keyword-match --query \"monthly sales dashboard\""
+                + " to discover a close task id before printing its task plan.");
   }
 
   static String unknownOperationMessage(String operationId) {
     return "Unknown lookup id: "
         + operationId
-        + ". Run gridgrind --print-protocol-catalog --search <text> or"
+        + ". Run gridgrind --print-protocol-catalog --search \"sheet layout\" or"
         + " gridgrind --print-protocol-catalog to discover valid lookup ids.";
+  }
+
+  static ProtocolCatalogIndexReport protocolCatalogIndexReport() {
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    return new ProtocolCatalogIndexReport(
+        catalog.protocolVersion(),
+        catalog.discriminatorField(),
+        catalog.requestType().id(),
+        catalog.topLevelGroups().stream()
+            .map(group -> new ProtocolCatalogGroupIndex(group.group(), typeIds(group.types())))
+            .toList(),
+        catalog.nestedTypes().stream()
+            .map(group -> new ProtocolCatalogGroupIndex(group.group(), typeIds(group.types())))
+            .toList(),
+        catalog.plainTypes().stream()
+            .map(group -> new ProtocolCatalogGroupIndex(group.group(), List.of(group.type().id())))
+            .toList(),
+        List.of(
+            new ProtocolCatalogLookupNamespace(
+                "<topLevelGroup>:<id>",
+                "Resolve one top-level protocol type such as mutationActionTypes:SET_CELL."),
+            new ProtocolCatalogLookupNamespace(
+                "nestedTypes:<group>",
+                "Resolve one nested tagged-union group such as nestedTypes:cellInputTypes."),
+            new ProtocolCatalogLookupNamespace(
+                "plainTypes:<group>",
+                "Resolve one plain record group such as plainTypes:sheetSummaryReport."),
+            new ProtocolCatalogLookupNamespace(
+                "<id>",
+                "Resolve one unqualified top-level type id only when it is globally unique.")));
   }
 
   static ProtocolCatalogSearchReport summarizedSearchReport(String query) {
@@ -117,6 +152,10 @@ final class CliCatalogCommandSupport {
         match.summary(),
         match.relatedEntryIds(),
         match.supportingMatches().stream().map(CatalogSearchMatch::qualifiedId).toList());
+  }
+
+  private static List<String> typeIds(List<dev.erst.gridgrind.contract.catalog.TypeEntry> types) {
+    return types.stream().map(dev.erst.gridgrind.contract.catalog.TypeEntry::id).toList();
   }
 
   private static Optional<String> suggestedTaskId(String taskId) {

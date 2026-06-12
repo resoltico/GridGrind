@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.67.0"
+version: "0.68.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-06-05"
 route:
@@ -155,37 +155,59 @@ single plugin application for exactly that reason.
 
 ### Structural-governance gates
 
-Root `check` now depends on `verifyJavaSourceShape`, `verifyJavaSourceDuplication`, and the
-included-build `gradle/build-logic:test` task. The root build-logic plugin owns the generic
+Root `check` now depends on `verifyJavaSourceShape`, `verifyJavaSourceDuplication`,
+`verifyJavaSemanticShape`, `verifyNoLegacyBuildSrc`, and the included-build `gradle/build-logic:test`
+task. The root build-logic plugin owns the generic
 structural-governance truth, and JUnit seam tests audit that wiring plus the surrounding docs.
 
 `verifyJavaSourceShape`, implemented in
-`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`, parses every production Java source,
-writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned policy stored in
-`gradle/source-shape-policy.tsv`.
+`gradle/build-logic/.../VerifyJavaSourceShapeTask.java`, parses every repo-owned handwritten Java
+source set, writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned
+policy stored in `gradle/source-shape-policy.tsv`.
 
 `verifyJavaSourceDuplication`, implemented in
-`gradle/build-logic/.../VerifyJavaSourceDuplicationTask.java`, scans production Java sources whose
+`gradle/build-logic/.../VerifyJavaSourceDuplicationTask.java`, scans repo-owned handwritten Java
+sources whose
 policy row keeps `duplicationGuard=CHECK`, writes
-`build/reports/source-shape/java-duplication.tsv`, and fails on large duplicated token spans while
-remaining quiet on success.
+`build/reports/source-shape/java-duplication.tsv`, and fails on duplicated token spans large
+enough to justify a shared seam while remaining quiet on success.
+
+`verifyJavaSemanticShape`, implemented in
+`gradle/build-logic/.../VerifyJavaSemanticShapeTask.java`, aggregates `pmdSemanticMain` XML
+reports from the production-main Java subprojects, writes
+`build/reports/source-shape/java-semantic-shape.tsv`, and fails on any semantic PMD finding not
+explicitly reviewed in `gradle/semantic-shape-policy.tsv`.
+
+`verifyNoLegacyBuildSrc` fails whenever a `buildSrc` directory reappears anywhere in the checkout.
+GridGrind uses the explicit included build under `gradle/build-logic`; implicit `buildSrc`
+reactivation is treated as architectural drift.
 
 `gradle/source-shape-policy.tsv` now owns three things together:
 - role budgets for ordinary source-shape metrics
 - per-role duplication ownership through `duplicationGuard`
 - reviewed exact-surface overrides with `reviewExpiresOn` and `splitTrigger`
 
+`gradle/semantic-shape-policy.tsv` separately owns semantic-shape reviewed exceptions.
+
 Rules:
-- treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for production
-  Java file size and API breadth
+- treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for handwritten
+  Java file size and API breadth across `main`, `test`, `testFixtures`, `parityTest`, and Jazzer
+  source sets
 - treat `verifyJavaSourceDuplication` as the authoritative repo-wide duplication gate for
-  production Java, instead of hiding intentional mirrors behind global exclusions
+  handwritten Java, instead of hiding intentional mirrors behind global exclusions
+- treat `verifyJavaSemanticShape` as the authoritative repo-wide semantic PMD gate for
+  production-main Java; the broad `pmdMain` task stays focused on always-on hygiene signal
 - keep policy ownership explicit in `gradle/source-shape-policy.tsv`; broad exceptions without a
   stated owner are invalid
 - reviewed exact-surface overrides must tighten at least one metric beyond their broader role and
   must keep reviewed headroom close to the current file shape so stale budgets fail fast
 - reviewed exact-surface overrides must expire individually; synchronized bulk expiry dates are not
   acceptable
+- reviewed source-shape and semantic-shape waivers must stay near-term; build-logic tests fail if
+  a review date expires or is parked too far into the future
+- semantic-shape exceptions must stay file-exact so new files cannot inherit reviewed debt by
+  package accident
+- `buildSrc` directories are forbidden; use the explicit included build under `gradle/build-logic`
 - document any new role family in the policy file instead of smuggling one-off ceilings into tests
 - keep seam/documentation audits in JUnit tests and keep generic structural-governance enforcement
   in build logic so the two do not drift into one mixed-purpose blob

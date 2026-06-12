@@ -3,6 +3,8 @@ package dev.erst.gridgrind.contract.assertion;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
@@ -47,20 +49,31 @@ class AssertionTypesTest {
   @Test
   void expectedCellValueVariantsValidateAndExposeWireShape() {
     assertEquals(
-        "text must not be null",
-        assertThrows(NullPointerException.class, () -> new ExpectedCellValue.Text(null))
+        "source must not be null",
+        assertThrows(IllegalArgumentException.class, () -> new CellInput.Text(null)).getMessage());
+    assertEquals(
+        "number must be finite",
+        assertThrows(IllegalArgumentException.class, () -> new CellInput.NumberValue(Double.NaN))
             .getMessage());
+    assertEquals(new CellInput.BooleanValue(true), new CellInput.BooleanValue(true));
+    assertEquals(
+        "error must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> new CellInput.ErrorValue(" "))
+            .getMessage());
+    assertEquals(
+        "expectedValue must not be null",
+        assertThrows(NullPointerException.class, () -> new CellAssertion.CellValue(null))
+            .getMessage());
+    assertEquals(new CellScalarValue.BooleanValue(true), new CellScalarValue.BooleanValue(true));
     assertEquals(
         "number must be finite",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new ExpectedCellValue.NumericValue(Double.NaN))
+                () -> new CellScalarValue.NumberValue(Double.POSITIVE_INFINITY))
             .getMessage());
     assertEquals(
-        new ExpectedCellValue.BooleanValue(true), new ExpectedCellValue.BooleanValue(true));
-    assertEquals(
         "error must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> new ExpectedCellValue.ErrorValue(" "))
+        assertThrows(IllegalArgumentException.class, () -> new CellScalarValue.ErrorValue(" "))
             .getMessage());
   }
 }

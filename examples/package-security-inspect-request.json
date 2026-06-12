@@ -16,7 +16,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {

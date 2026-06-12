@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CellStyleReport;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
@@ -46,7 +46,7 @@ final class AssertionValueEvaluator {
   AssertionEvaluation evaluateCellValue(
       String stepId,
       Selector target,
-      ExpectedCellValue expectedValue,
+      CellScalarValue expectedValue,
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     SheetInspectionResult.CellsResult cellsResult =
@@ -153,23 +153,23 @@ final class AssertionValueEvaluator {
   }
 
   static boolean matchesCellValue(
-      dev.erst.gridgrind.contract.dto.CellReport cell, ExpectedCellValue expectedValue) {
+      dev.erst.gridgrind.contract.dto.CellReport cell, CellScalarValue expectedValue) {
     if (cell instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport) {
       return matchesCellValue(formulaReport.evaluation(), expectedValue);
     }
     return switch (expectedValue) {
-      case ExpectedCellValue.Blank _ ->
+      case CellScalarValue.Blank _ ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
-      case ExpectedCellValue.Text expectedText ->
+      case CellScalarValue.Text expectedText ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
               && textReport.stringValue().equals(expectedText.text());
-      case ExpectedCellValue.NumericValue expectedNumber ->
+      case CellScalarValue.NumberValue expectedNumber ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
               && Double.compare(numberReport.numberValue(), expectedNumber.number()) == 0;
-      case ExpectedCellValue.BooleanValue expectedBoolean ->
+      case CellScalarValue.BooleanValue expectedBoolean ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
-              && booleanReport.booleanValue().equals(expectedBoolean.value());
-      case ExpectedCellValue.ErrorValue expectedError ->
+              && booleanReport.booleanValue().equals(expectedBoolean.bool());
+      case CellScalarValue.ErrorValue expectedError ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorReport
               && errorReport.errorValue().equals(expectedError.error());
     };

@@ -98,11 +98,11 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartBarDirection nextChartBarDirection(GridGrindFuzzData data) {
+  static ExcelChartBarDirection nextChartBarDirection(GridGrindFuzzData data) {
     return data.consumeBoolean() ? ExcelChartBarDirection.COLUMN : ExcelChartBarDirection.BAR;
   }
 
-  private static ExcelChartGrouping nextChartGrouping(GridGrindFuzzData data) {
+  static ExcelChartGrouping nextChartGrouping(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 -> ExcelChartGrouping.STANDARD;
       case 1 -> ExcelChartGrouping.PERCENT_STACKED;
@@ -110,7 +110,7 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartBarGrouping nextChartBarGrouping(GridGrindFuzzData data) {
+  static ExcelChartBarGrouping nextChartBarGrouping(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 -> ExcelChartBarGrouping.CLUSTERED;
       case 1 -> ExcelChartBarGrouping.PERCENT_STACKED;
@@ -118,7 +118,7 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartBarShape nextChartBarShape(GridGrindFuzzData data) {
+  static ExcelChartBarShape nextChartBarShape(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 4) {
       case 0 -> ExcelChartBarShape.BOX;
       case 1 -> ExcelChartBarShape.CONE;
@@ -127,7 +127,7 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartRadarStyle nextChartRadarStyle(GridGrindFuzzData data) {
+  static ExcelChartRadarStyle nextChartRadarStyle(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 3) {
       case 0 -> ExcelChartRadarStyle.STANDARD;
       case 1 -> ExcelChartRadarStyle.MARKER;
@@ -135,7 +135,7 @@ final class OperationSequenceChartFactory {
     };
   }
 
-  private static ExcelChartScatterStyle nextChartScatterStyle(GridGrindFuzzData data) {
+  static ExcelChartScatterStyle nextChartScatterStyle(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 6) {
       case 0 -> ExcelChartScatterStyle.LINE;
       case 1 -> ExcelChartScatterStyle.LINE_MARKER;
@@ -147,183 +147,20 @@ final class OperationSequenceChartFactory {
   }
 
   private static ChartPlotInput nextChartPlotInput(GridGrindFuzzData data) {
-    Boolean varyColors = data.consumeBoolean();
-    return switch (selectorSlot(nextSelectorByte(data)) % 13) {
-      case 0 ->
-          new ChartPlotInput.Area(
-              varyColors,
-              nextChartGrouping(data),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 1 ->
-          new ChartPlotInput.Area3D(
-              varyColors,
-              nextChartGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 2 ->
-          new ChartPlotInput.Bar(
-              varyColors,
-              nextChartBarDirection(data),
-              nextChartBarGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextOptionalInt(data, -100, 100),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 3 ->
-          new ChartPlotInput.Bar3D(
-              varyColors,
-              nextChartBarDirection(data),
-              nextChartBarGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextOptionalInt(data, 0, 500),
-              Optional.of(nextChartBarShape(data)),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 4 ->
-          new ChartPlotInput.Doughnut(
-              varyColors,
-              nextOptionalInt(data, 0, 360),
-              nextOptionalInt(data, 10, 90),
-              nextChartSeriesInputs(data, true));
-      case 5 ->
-          new ChartPlotInput.Line(
-              varyColors,
-              nextChartGrouping(data),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 6 ->
-          new ChartPlotInput.Line3D(
-              varyColors,
-              nextChartGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 7 ->
-          new ChartPlotInput.Pie(
-              varyColors, nextOptionalInt(data, 0, 360), nextChartSeriesInputs(data, true));
-      case 8 -> new ChartPlotInput.Pie3D(varyColors, nextChartSeriesInputs(data, true));
-      case 9 ->
-          new ChartPlotInput.Radar(
-              varyColors,
-              nextChartRadarStyle(data),
-              nextChartAxesInputCategory(),
-              nextChartSeriesInputs(data, false));
-      case 10 ->
-          new ChartPlotInput.Scatter(
-              varyColors,
-              nextChartScatterStyle(data),
-              nextChartAxesInputScatter(),
-              nextChartSeriesInputs(data, false));
-      case 11 ->
-          new ChartPlotInput.Surface(
-              varyColors,
-              Boolean.valueOf(data.consumeBoolean()),
-              nextChartAxesInputSurface(),
-              nextChartSeriesInputs(data, false));
-      default ->
-          new ChartPlotInput.Surface3D(
-              varyColors,
-              Boolean.valueOf(data.consumeBoolean()),
-              nextChartAxesInputSurface(),
-              nextChartSeriesInputs(data, false));
-    };
+    return OperationSequenceChartPlotSupport.nextChartPlotInput(data);
   }
 
   private static ExcelChartDefinition.Plot nextExcelChartPlotDefinition(GridGrindFuzzData data) {
-    boolean varyColors = data.consumeBoolean();
-    return switch (selectorSlot(nextSelectorByte(data)) % 13) {
-      case 0 ->
-          new ExcelChartDefinition.Area(
-              varyColors,
-              nextChartGrouping(data),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 1 ->
-          new ExcelChartDefinition.Area3D(
-              varyColors,
-              nextChartGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 2 ->
-          new ExcelChartDefinition.Bar(
-              varyColors,
-              nextChartBarDirection(data),
-              nextChartBarGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextOptionalInt(data, -100, 100),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 3 ->
-          new ExcelChartDefinition.Bar3D(
-              varyColors,
-              nextChartBarDirection(data),
-              nextChartBarGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextOptionalInt(data, 0, 500),
-              Optional.of(nextChartBarShape(data)),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 4 ->
-          new ExcelChartDefinition.Doughnut(
-              varyColors,
-              nextOptionalInt(data, 0, 360),
-              nextOptionalInt(data, 10, 90),
-              nextExcelChartSeries(data, true));
-      case 5 ->
-          new ExcelChartDefinition.Line(
-              varyColors,
-              nextChartGrouping(data),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 6 ->
-          new ExcelChartDefinition.Line3D(
-              varyColors,
-              nextChartGrouping(data),
-              nextOptionalInt(data, 0, 500),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 7 ->
-          new ExcelChartDefinition.Pie(
-              varyColors, nextOptionalInt(data, 0, 360), nextExcelChartSeries(data, true));
-      case 8 -> new ExcelChartDefinition.Pie3D(varyColors, nextExcelChartSeries(data, true));
-      case 9 ->
-          new ExcelChartDefinition.Radar(
-              varyColors,
-              nextChartRadarStyle(data),
-              nextExcelChartAxesCategory(),
-              nextExcelChartSeries(data, false));
-      case 10 ->
-          new ExcelChartDefinition.Scatter(
-              varyColors,
-              nextChartScatterStyle(data),
-              nextExcelChartAxesScatter(),
-              nextExcelChartSeries(data, false));
-      case 11 ->
-          new ExcelChartDefinition.Surface(
-              varyColors,
-              data.consumeBoolean(),
-              nextExcelChartAxesSurface(),
-              nextExcelChartSeries(data, false));
-      default ->
-          new ExcelChartDefinition.Surface3D(
-              varyColors,
-              data.consumeBoolean(),
-              nextExcelChartAxesSurface(),
-              nextExcelChartSeries(data, false));
-    };
+    return OperationSequenceChartPlotSupport.nextExcelChartPlotDefinition(data);
   }
 
-  private static Optional<Integer> nextOptionalInt(
-      GridGrindFuzzData data, int minimum, int maximum) {
+  static Optional<Integer> nextOptionalInt(GridGrindFuzzData data, int minimum, int maximum) {
     return data.consumeBoolean()
         ? Optional.of(data.consumeInt(minimum, maximum))
         : Optional.empty();
   }
 
-  private static List<ChartAxisInput> nextChartAxesInputCategory() {
+  static List<ChartAxisInput> nextChartAxesInputCategory() {
     return List.of(
         new ChartAxisInput(
             ExcelChartAxisKind.CATEGORY,
@@ -337,7 +174,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ChartAxisInput> nextChartAxesInputScatter() {
+  static List<ChartAxisInput> nextChartAxesInputScatter() {
     return List.of(
         new ChartAxisInput(
             ExcelChartAxisKind.VALUE,
@@ -351,7 +188,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ChartAxisInput> nextChartAxesInputSurface() {
+  static List<ChartAxisInput> nextChartAxesInputSurface() {
     return List.of(
         new ChartAxisInput(
             ExcelChartAxisKind.CATEGORY,
@@ -370,7 +207,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> nextExcelChartAxesCategory() {
+  static List<ExcelChartDefinition.Axis> nextExcelChartAxesCategory() {
     return List.of(
         new ExcelChartDefinition.Axis(
             ExcelChartAxisKind.CATEGORY,
@@ -384,7 +221,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> nextExcelChartAxesScatter() {
+  static List<ExcelChartDefinition.Axis> nextExcelChartAxesScatter() {
     return List.of(
         new ExcelChartDefinition.Axis(
             ExcelChartAxisKind.VALUE,
@@ -398,7 +235,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ExcelChartDefinition.Axis> nextExcelChartAxesSurface() {
+  static List<ExcelChartDefinition.Axis> nextExcelChartAxesSurface() {
     return List.of(
         new ExcelChartDefinition.Axis(
             ExcelChartAxisKind.CATEGORY,
@@ -417,8 +254,7 @@ final class OperationSequenceChartFactory {
             true));
   }
 
-  private static List<ChartSeriesInput> nextChartSeriesInputs(
-      GridGrindFuzzData data, boolean pieChart) {
+  static List<ChartSeriesInput> nextChartSeriesInputs(GridGrindFuzzData data, boolean pieChart) {
     List<ChartSeriesInput> series = new ArrayList<>();
     series.add(nextChartSeriesInput(data, "B1", "B2:B4"));
     if (!pieChart && data.consumeBoolean()) {
@@ -427,7 +263,7 @@ final class OperationSequenceChartFactory {
     return List.copyOf(series);
   }
 
-  private static List<ExcelChartDefinition.Series> nextExcelChartSeries(
+  static List<ExcelChartDefinition.Series> nextExcelChartSeries(
       GridGrindFuzzData data, boolean pieChart) {
     List<ExcelChartDefinition.Series> series = new ArrayList<>();
     series.add(nextExcelChartSeries(data, "B1", "B2:B4"));
@@ -505,11 +341,11 @@ final class OperationSequenceChartFactory {
         "Label " + data.consumeInt(20, 29));
   }
 
-  private static int nextSelectorByte(GridGrindFuzzData data) {
+  static int nextSelectorByte(GridGrindFuzzData data) {
     return Byte.toUnsignedInt(data.consumeByte());
   }
 
-  private static int selectorSlot(int selector) {
+  static int selectorSlot(int selector) {
     return selector & 0x0F;
   }
 }

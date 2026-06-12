@@ -5,7 +5,6 @@ import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.util.LinkedHashSet;
@@ -72,14 +71,14 @@ final class GridGrindRequestWarnings {
       case CellMutationAction.SetCell setCell ->
           collectFromCellInput(setCell.value(), spacedSheetNames, offendingSheetNames);
       case CellMutationAction.SetRange setRange -> {
-        for (List<CellInput> row : setRange.rows()) {
+        for (List<CellInput> row : setRange.rows().toCellInputRows()) {
           for (CellInput cellInput : row) {
             collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
           }
         }
       }
       case CellMutationAction.AppendRow appendRow -> {
-        for (CellInput cellInput : appendRow.values()) {
+        for (CellInput cellInput : appendRow.values().toCellInputs()) {
           collectFromCellInput(cellInput, spacedSheetNames, offendingSheetNames);
         }
       }
@@ -112,11 +111,11 @@ final class GridGrindRequestWarnings {
     if (!(input instanceof CellInput.Formula formula)) {
       return;
     }
-    String formulaText =
-        formula.source() instanceof TextSourceInput.Inline inline ? inline.text() : null;
-    if (formulaText == null) {
+    if (!(formula.source()
+        instanceof dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline)) {
       return;
     }
+    String formulaText = inline.text();
     String maskedFormula = maskDoubleQuotedStrings(formulaText);
     for (String sheetName : spacedSheetNames) {
       if (containsUnquotedSheetReference(maskedFormula, sheetName)) {

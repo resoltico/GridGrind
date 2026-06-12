@@ -13,7 +13,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -54,115 +54,118 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Region"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Stage"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Owner"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Amount"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "North"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Plan"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Ada"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 10.0
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "North"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Do"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Ada"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 15.0
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "South"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Plan"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Lin"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 7.0
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "South"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Do"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Lin"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 12.0
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Region"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Stage"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Owner"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Amount"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "North"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Plan"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Ada"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 10.0
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "North"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Do"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Ada"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 15.0
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "South"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Plan"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Lin"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 7.0
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "South"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Do"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Lin"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 12.0
+        } ] ]
+      }
     }
   }, {
     "stepId" : "step-04-set-pivot",

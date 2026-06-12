@@ -17,21 +17,21 @@ public final class WorkbookTarget {
 
   /** Returns one workbook-summary inspection step. */
   public PlannedInspection summary() {
-    return new PlannedInspection(selector, Queries.workbookSummary());
+    return new PlannedInspection(selector, WorkbookQueries.workbookSummary());
   }
 
   /** Returns one package-security inspection step. */
   public PlannedInspection packageSecurity() {
-    return new PlannedInspection(selector, Queries.packageSecurity());
+    return new PlannedInspection(selector, WorkbookQueries.packageSecurity());
   }
 
   /** Returns one workbook-protection inspection step. */
   public PlannedInspection protection() {
-    return new PlannedInspection(selector, Queries.workbookProtection());
+    return new PlannedInspection(selector, WorkbookQueries.workbookProtection());
   }
 
   /** Returns one aggregate workbook-findings analysis step. */
   public PlannedInspection findings() {
-    return new PlannedInspection(selector, Queries.workbookFindings());
+    return new PlannedInspection(selector, InspectionAnalysisQueries.workbookFindings());
   }
 }

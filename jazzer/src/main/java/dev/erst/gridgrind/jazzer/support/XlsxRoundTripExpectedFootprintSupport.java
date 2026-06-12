@@ -411,6 +411,7 @@ final class XlsxRoundTripExpectedFootprintSupport {
       case dev.erst.gridgrind.excel.ExcelCellValue.RichTextValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.NumberValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.BooleanValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.ErrorValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.DateValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.DateTimeValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.FormulaValue _ -> true;

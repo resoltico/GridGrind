@@ -13,7 +13,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -45,55 +45,58 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Label"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Destination"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Relative policy PDF"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "support/expense policy 2026.pdf"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Absolute checklist URI"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "file:///tmp/quarterly%20close/checklist.xlsx"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Workbook section"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Links!B2"
-        }
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Label"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Destination"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Relative policy PDF"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "support/expense policy 2026.pdf"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Absolute checklist URI"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "file:///tmp/quarterly%20close/checklist.xlsx"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Workbook section"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Links!B2"
+          }
+        } ] ]
+      }
     }
   }, {
     "stepId" : "step-03-relative-file-link",

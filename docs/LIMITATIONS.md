@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.67.0"
+version: "0.68.0"
 domain: LIMITATIONS
 updated: "2026-05-15"
 route:
@@ -54,7 +54,7 @@ catalog summary, or help line.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `rowCount * columnCount must not exceed 250000 but was {n}` |
 | **Applies to** | `GET_WINDOW`, `GET_SHEET_SCHEMA` |
-| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorSupport.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowSize // LIM-001` |
+| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorValueValidation.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowSize // LIM-001` |
 | **UX** | `--help` Limits section; `GET_WINDOW` and `GET_SHEET_SCHEMA` catalog summaries |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
@@ -184,7 +184,7 @@ and default row-height values can still be reported above `409.0` instead of bei
 | **Error** | `INVALID_REQUEST` |
 | **Messages** | `addresses must not be empty` / `addresses must not contain duplicates` |
 | **Applies to** | `GET_CELLS` |
-| **Code** | `SelectorSupport.copyDistinctAddresses // LIM-007`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-007` |
+| **Code** | `SelectorListValidation.copyDistinctAddresses // LIM-007`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-007` |
 | **UX** | Not surfaced in help or catalog (structural protocol rule) |
 
 ---
@@ -292,7 +292,7 @@ arbitrary command execution when the file is opened in Microsoft Excel. This gua
 | **Limit** | Only `http`, `https`, `ftp`, and `ftps` schemes accepted for URL hyperlinks |
 | **Error** | `IllegalArgumentException`: target uses unsupported scheme '…'; only http, https, ftp, and ftps are allowed |
 | **Applies to** | `HyperlinkTarget.Url` |
-| **Code** | `ProtocolHyperlinkSupport.ALLOWED_URL_SCHEMES // LIM-028`; `ProtocolHyperlinkSupport.isValidUrlTarget // LIM-028` |
+| **Code** | `ProtocolHyperlinkUrlSupport.normalizeUrlTarget // LIM-028`; `ProtocolHyperlinkUrlSupport.looksLikeAbsoluteUri // LIM-028` |
 | **UX** | Not surfaced in help |
 
 GridGrind enforces an explicit allowlist of URL schemes for `HyperlinkTarget.Url` targets.
@@ -496,7 +496,7 @@ fails early before POI sees an oversized workbook shape.
 | **Limit** | 1,048,576 rows (2^20) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxRows()` returns `0x100000` |
 | **Excel spec** | 1,048,576 |
-| **Code** | `ExcelRowSpan.MAX_ROW_INDEX`; `SelectorSupport.requireRowIndexWithinBounds // LIM-008`; `MutationAction.Validation.requireRowIndex // LIM-008`; `PrintTitleRowsInput.MAX_ROW_INDEX` |
+| **Code** | `ExcelRowSpan.MAX_ROW_INDEX`; `SelectorValueValidation.requireRowIndexWithinBounds // LIM-008`; `MutationAction.Validation.requireRowIndex // LIM-008`; `PrintTitleRowsInput.MAX_ROW_INDEX` |
 | **UX** | Structured `INVALID_REQUEST` bounds failures for row selectors, structural edits, and print-title row bands |
 
 Last valid zero-based row index: 1,048,575.
@@ -515,7 +515,7 @@ errors to Apache POI.
 | **Limit** | 16,384 columns (2^14, column XFD) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxColumns()` returns `0x4000` |
 | **Excel spec** | 16,384 |
-| **Code** | `ExcelColumnSpan.MAX_COLUMN_INDEX`; `SelectorSupport.requireColumnIndexWithinBounds // LIM-009`; `MutationAction.Validation.requireColumnIndex // LIM-009`; `PrintTitleColumnsInput.MAX_COLUMN_INDEX` |
+| **Code** | `ExcelColumnSpan.MAX_COLUMN_INDEX`; `SelectorValueValidation.requireColumnIndexWithinBounds // LIM-009`; `MutationAction.Validation.requireColumnIndex // LIM-009`; `PrintTitleColumnsInput.MAX_COLUMN_INDEX` |
 | **UX** | Structured `INVALID_REQUEST` bounds failures for column selectors, structural edits, and print-title column bands |
 
 Last valid zero-based column index: 16,383.

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,9 @@ import org.junit.jupiter.api.Test;
 class AssertionStepTest {
   @Test
   void constructsAssertionStepsAndRejectsIncompatibleTargets() {
-    Assertion assertion = new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"));
+    Assertion assertion =
+        new CellAssertion.CellValue(
+            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"));
     AssertionStep step =
         new AssertionStep("assert-owner", new CellSelector.ByAddress("Budget", "A1"), assertion);
 

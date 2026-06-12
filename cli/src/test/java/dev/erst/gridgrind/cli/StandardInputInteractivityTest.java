@@ -128,7 +128,7 @@ class StandardInputInteractivityTest extends GridGrindCliTestSupport {
                   () -> true)
               .run(new String[0], blockingStdin, stdout, stderr);
 
-      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
       assertEquals(2, exitCode);
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
       assertTrue(failure.message().contains("No request JSON was provided."));

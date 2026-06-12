@@ -36,6 +36,9 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
   @Input
   public abstract Property<String> getRepositoryRootPath();
 
+  @Input
+  public abstract Property<String> getReviewDate();
+
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
   public abstract RegularFileProperty getPolicyFile();
@@ -51,7 +54,7 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     int javaRelease = getJavaRelease().get();
     JavaSourceShapePolicy policy = JavaSourceShapePolicy.load(policyPath);
     JavaSourceShapeAnalyzer analyzer = new JavaSourceShapeAnalyzer();
-    LocalDate today = LocalDate.now();
+    LocalDate today = LocalDate.parse(getReviewDate().get());
 
     List<Path> sourceFiles = collectSourceFiles();
     List<String> relativePaths =
@@ -59,6 +62,8 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     List<String> policyIssues = new ArrayList<>();
     List<Violation> violations = new ArrayList<>();
     List<ReportRow> reportRows = new ArrayList<>();
+    java.util.Map<JavaSourceShapePolicy.Rule, FamilyMetrics> familyMetrics =
+        new java.util.LinkedHashMap<>();
 
     for (JavaSourceShapePolicy.Rule rule : policy.rules()) {
       if (rule.kind() == JavaSourceShapePolicy.MatchKind.EXACT) {
@@ -68,7 +73,7 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
       }
       if (rule.kind() == JavaSourceShapePolicy.MatchKind.PREFIX
           && relativePaths.stream().noneMatch(rule::matches)) {
-        policyIssues.add("PREFIX rule matches no production source files: " + rule.path());
+        policyIssues.add("PREFIX rule matches no repo-owned Java source files: " + rule.path());
       }
     }
 
@@ -83,6 +88,11 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
 
       JavaSourceShapePolicy.Rule matchedRule = matchingRules.getFirst();
       JavaSourceShapeAnalyzer.Metrics metrics = analyzer.analyze(sourceFile, javaRelease);
+      matchingRules.stream()
+          .filter(rule -> rule.kind() == JavaSourceShapePolicy.MatchKind.PREFIX)
+          .forEach(
+              rule ->
+                  familyMetrics.computeIfAbsent(rule, unused -> new FamilyMetrics()).include(metrics));
       List<String> exceededMetrics = exceededMetrics(metrics, matchedRule);
       if (!exceededMetrics.isEmpty()) {
         violations.add(new Violation(relativePath, matchedRule, metrics, exceededMetrics));
@@ -101,6 +111,17 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
       }
 
       reportRows.add(new ReportRow(relativePath, matchedRule, metrics));
+    }
+
+    for (JavaSourceShapePolicy.Rule rule : policy.rules()) {
+      if (rule.kind() != JavaSourceShapePolicy.MatchKind.PREFIX) {
+        continue;
+      }
+      FamilyMetrics metrics = familyMetrics.get(rule);
+      if (metrics == null) {
+        continue;
+      }
+      policyIssues.addAll(JavaSourceShapeReviewPolicy.familyIssues(rule, metrics.toMetrics()));
     }
 
     writeReport(reportPath, reportRows);
@@ -176,9 +197,10 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     try (BufferedWriter writer = Files.newBufferedWriter(reportPath, StandardCharsets.UTF_8)) {
       writer.write(
           "path\tkind\trole\tlines\tmaxLines\tmethods\tmaxMethods\tpublicMethods"
-              + "\tmaxPublicMethods\timports\tmaxImports\tfields\tmaxFields\tswitches"
-              + "\tmaxSwitches\tmaxSwitchArms\tlimitMaxSwitchArms\ttopLevelTypes"
-              + "\tnestedTypes\trisk\towner\treviewExpiresOn\tsplitTrigger");
+              + "\tmaxPublicMethods\timports\tmaxImports\tfields\tmaxFields\tnestedTypes"
+              + "\tmaxNestedTypes\tswitches\tmaxSwitches\tmaxSwitchArms"
+              + "\tlimitMaxSwitchArms\ttopLevelTypes\trisk\towner"
+              + "\treviewExpiresOn\tsplitTrigger");
       writer.newLine();
       for (ReportRow row : sortedRows) {
         writer.write(row.toTsv());
@@ -205,6 +227,10 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
     }
     if (exceeds(metrics.fieldCount(), rule.maxFields())) {
       exceededMetrics.add("fields=" + metrics.fieldCount() + ">" + rule.maxFields());
+    }
+    if (exceeds(metrics.nestedTypeCount(), rule.maxNestedTypes())) {
+      exceededMetrics.add(
+          "nestedTypes=" + metrics.nestedTypeCount() + ">" + rule.maxNestedTypes());
     }
     if (exceeds(metrics.switchCount(), rule.maxSwitches())) {
       exceededMetrics.add("switches=" + metrics.switchCount() + ">" + rule.maxSwitches());
@@ -240,6 +266,7 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
           + ratio(metrics.publicMethodCount(), rule.maxPublicMethods())
           + ratio(metrics.importCount(), rule.maxImports())
           + ratio(metrics.fieldCount(), rule.maxFields())
+          + ratio(metrics.nestedTypeCount(), rule.maxNestedTypes())
           + ratio(metrics.switchCount(), rule.maxSwitches())
           + ratio(metrics.maxSwitchArms(), rule.maxSwitchArms());
     }
@@ -271,6 +298,10 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
           + '\t'
           + limit(rule.maxFields())
           + '\t'
+          + metrics.nestedTypeCount()
+          + '\t'
+          + limit(rule.maxNestedTypes())
+          + '\t'
           + metrics.switchCount()
           + '\t'
           + limit(rule.maxSwitches())
@@ -280,8 +311,6 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
           + limit(rule.maxSwitchArms())
           + '\t'
           + metrics.topLevelTypeCount()
-          + '\t'
-          + metrics.nestedTypeCount()
           + '\t'
           + String.format(Locale.ROOT, "%.2f", riskScore())
           + '\t'
@@ -306,6 +335,43 @@ public abstract class VerifyJavaSourceShapeTask extends DefaultTask {
 
     private String limit(String limit) {
       return limit == null ? "-" : limit;
+    }
+  }
+
+  private static final class FamilyMetrics {
+    private long lineCount;
+    private int importCount;
+    private int topLevelTypeCount;
+    private int nestedTypeCount;
+    private int methodCount;
+    private int publicMethodCount;
+    private int fieldCount;
+    private int switchCount;
+    private int maxSwitchArms;
+
+    private void include(JavaSourceShapeAnalyzer.Metrics metrics) {
+      lineCount = Math.max(lineCount, metrics.lineCount());
+      importCount = Math.max(importCount, metrics.importCount());
+      topLevelTypeCount = Math.max(topLevelTypeCount, metrics.topLevelTypeCount());
+      nestedTypeCount = Math.max(nestedTypeCount, metrics.nestedTypeCount());
+      methodCount = Math.max(methodCount, metrics.methodCount());
+      publicMethodCount = Math.max(publicMethodCount, metrics.publicMethodCount());
+      fieldCount = Math.max(fieldCount, metrics.fieldCount());
+      switchCount = Math.max(switchCount, metrics.switchCount());
+      maxSwitchArms = Math.max(maxSwitchArms, metrics.maxSwitchArms());
+    }
+
+    private JavaSourceShapeAnalyzer.Metrics toMetrics() {
+      return new JavaSourceShapeAnalyzer.Metrics(
+          lineCount,
+          importCount,
+          topLevelTypeCount,
+          nestedTypeCount,
+          methodCount,
+          publicMethodCount,
+          fieldCount,
+          switchCount,
+          maxSwitchArms);
     }
   }
 }

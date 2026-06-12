@@ -52,9 +52,12 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B2"),
                             new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(textCell("Item"), textCell("Amount")),
-                                    List.of(textCell("Hosting"), new CellInput.Numeric(49.0))))),
+                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                    List.of(
+                                        List.of(textCell("Item"), textCell("Amount")),
+                                        List.of(
+                                            textCell("Hosting"),
+                                            new CellInput.NumberValue(49.0)))))),
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B1"),
                             new CellMutationAction.ApplyStyle(
@@ -232,9 +235,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:A2"),
                             new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(textCell("ThemeTintStyle")),
-                                    List.of(textCell("GradientFillStyle"))))),
+                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                    List.of(
+                                        List.of(textCell("ThemeTintStyle")),
+                                        List.of(textCell("GradientFillStyle")))))),
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1"),
                             new CellMutationAction.ApplyStyle(
@@ -578,7 +582,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
             () ->
                 mutate(
                     new RangeSelector.ByRange("Budget", "A1:"),
-                    new CellMutationAction.SetRange(List.of(List.of(textCell("x"))))));
+                    new CellMutationAction.SetRange(
+                        new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            List.of(List.of(textCell("x")))))));
 
     assertEquals("range address must not be blank", failure.getMessage());
   }
@@ -618,7 +624,9 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new SheetSelector.ByName("Budget"),
-                            new CellMutationAction.AppendRow(List.of(formulaCell("SUM("))))))));
+                            new CellMutationAction.AppendRow(
+                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                    List.of(formulaCell("SUM(")))))))));
 
     assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("APPEND_ROW", executeStepContext(failure).stepType());
@@ -639,7 +647,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     ExecutorTestPlanSupport.PendingMutation appendRow =
         mutate(
             new SheetSelector.ByName("Budget"),
-            new CellMutationAction.AppendRow(List.of(textCell("x"))));
+            new CellMutationAction.AppendRow(
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(List.of(textCell("x")))));
     ExecutorTestPlanSupport.PendingMutation ensureSheet =
         mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.EnsureSheet());
 
@@ -709,7 +718,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
         formulaFor(
             mutate(
                 new CellSelector.ByAddress("S", "A1"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(1.0))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
             exception));
     assertNull(
         formulaFor(

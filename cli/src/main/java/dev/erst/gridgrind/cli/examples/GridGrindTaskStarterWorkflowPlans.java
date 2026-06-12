@@ -37,36 +37,36 @@ final class GridGrindTaskStarterWorkflowPlans {
     String taskId = "DATA_ENTRY_WORKFLOW";
     return TaskStarterPlanSupport.selfContainedStarter(
         taskId,
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             TaskStarterPlanSupport.taskPlanId(taskId),
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
-            ExamplePlanSupport.step(
+            ExampleWorkbookPlans.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
+            ExampleSteps.step(
                 "ensure-intake",
-                ExamplePlanSupport.sheet("Intake"),
+                ExampleSelectors.sheet("Intake"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "seed-intake-headers",
-                ExamplePlanSupport.range("Intake", "A1:B3"),
+                ExampleSelectors.range("Intake", "A1:B3"),
                 new CellMutationAction.SetRange(
-                    ExamplePlanSupport.rows(
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Owner"), ExamplePlanSupport.text("Status")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Ada"), ExamplePlanSupport.text("Open")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Lin"), ExamplePlanSupport.text("Review"))))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.rows(
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Owner"), ExampleCellValues.text("Status")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Ada"), ExampleCellValues.text("Open")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Lin"), ExampleCellValues.text("Review"))))),
+            ExampleSteps.step(
                 "comment-status-header",
-                ExamplePlanSupport.cell("Intake", "B1"),
+                ExampleSelectors.cell("Intake", "B1"),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(
                         TextSourceInput.inline("Allowed values are Open, Review, or Closed."),
                         "GridGrind",
                         true))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "validate-status",
-                ExamplePlanSupport.range("Intake", "B2:B25"),
+                ExampleSelectors.range("Intake", "B2:B25"),
                 new StructuredMutationAction.SetDataValidation(
                     new DataValidationInput(
                         new DataValidationRuleInput.ExplicitList(
@@ -84,23 +84,23 @@ final class GridGrindTaskStarterWorkflowPlans {
                                 TextSourceInput.inline("Invalid status"),
                                 TextSourceInput.inline("Use Open, Review, or Closed."),
                                 true))))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "protect-workbook-structure",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookMutationAction.SetWorkbookProtection(
                     new WorkbookProtectionInput(
                         true, false, false, Optional.empty(), Optional.empty()))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-intake-validations",
-                ExamplePlanSupport.range("Intake", "B2:B25"),
+                ExampleSelectors.range("Intake", "B2:B25"),
                 new SheetIntrospectionQuery.GetDataValidations()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-intake-comments",
-                ExamplePlanSupport.cells("Intake", "B1"),
+                ExampleSelectors.cells("Intake", "B1"),
                 new SheetIntrospectionQuery.GetComments()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-intake-workbook",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary())));
   }
 
@@ -108,21 +108,21 @@ final class GridGrindTaskStarterWorkflowPlans {
     String taskId = "DRAWING_AND_SIGNATURE_WORKFLOW";
     return TaskStarterPlanSupport.selfContainedStarter(
         taskId,
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             TaskStarterPlanSupport.taskPlanId(taskId),
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
-            ExamplePlanSupport.step(
+            ExampleWorkbookPlans.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
+            ExampleSteps.step(
                 "ensure-approvals",
-                ExamplePlanSupport.sheet("Approvals"),
+                ExampleSelectors.sheet("Approvals"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "set-signature-line",
-                ExamplePlanSupport.sheet("Approvals"),
+                ExampleSelectors.sheet("Approvals"),
                 new DrawingMutationAction.SetSignatureLine(
                     new SignatureLineInput(
                         "WorkflowSignature",
-                        ExamplePlanSupport.anchor(1, 1, 4, 6),
+                        ExampleDrawingAnchors.anchor(1, 1, 4, 6),
                         false,
                         Optional.of("Review the workflow before signing."),
                         Optional.of("Ada Lovelace"),
@@ -135,16 +135,16 @@ final class GridGrindTaskStarterWorkflowPlans {
                                 ExcelPictureFormat.PNG,
                                 BinarySourceInput.inlineBase64(
                                     TaskStarterPlanSupport.onePixelPngBase64())))))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-drawing-objects",
                 new DrawingObjectSelector.AllOnSheet("Approvals"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "move-signature-line",
                 new DrawingObjectSelector.ByName("Approvals", "WorkflowSignature"),
                 new DrawingMutationAction.SetDrawingObjectAnchor(
-                    ExamplePlanSupport.anchor(5, 1, 8, 6))),
-            ExamplePlanSupport.read(
+                    ExampleDrawingAnchors.anchor(5, 1, 8, 6))),
+            ExampleSteps.read(
                 "read-drawing-objects-after-move",
                 new DrawingObjectSelector.AllOnSheet("Approvals"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects())));
@@ -155,30 +155,30 @@ final class GridGrindTaskStarterWorkflowPlans {
     String sourceAsset = TaskStarterPlanSupport.taskStarterAsset("workbook-ops-source.xlsx");
     return TaskStarterPlanSupport.assetBackedStarter(
         taskId,
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             TaskStarterPlanSupport.taskPlanId(taskId),
             new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
-            ExamplePlanSupport.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
-            ExamplePlanSupport.read(
+            ExampleWorkbookPlans.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
+            ExampleSteps.read(
                 "read-source-workbook",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "copy-template-sheet",
-                ExamplePlanSupport.sheet("Template"),
+                ExampleSelectors.sheet("Template"),
                 new WorkbookMutationAction.CopySheet("Template Copy")),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-copied-comments",
                 new dev.erst.gridgrind.contract.selector.CellSelector.AllUsedInSheet(
                     "Template Copy"),
                 new SheetIntrospectionQuery.GetComments()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-copied-drawing-objects",
                 new DrawingObjectSelector.AllOnSheet("Template Copy"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-maintenance-findings",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new InspectionAnalysisQuery.AnalyzeWorkbookFindings())),
         sourceAsset);
   }

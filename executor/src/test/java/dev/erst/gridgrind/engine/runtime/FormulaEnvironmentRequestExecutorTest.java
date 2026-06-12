@@ -196,7 +196,7 @@ class FormulaEnvironmentRequestExecutorTest {
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
                         mutate(
                             new CellSelector.ByAddress("Budget", "B1"),
                             new CellMutationAction.SetCell(formulaCell("A1*2"))),
@@ -205,7 +205,7 @@ class FormulaEnvironmentRequestExecutorTest {
                             new CellMutationAction.SetCell(formulaCell("A1*3"))),
                         mutate(
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(4.0d)))),
+                            new CellMutationAction.SetCell(new CellInput.NumberValue(4.0d)))),
                     inspections())));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
@@ -234,7 +234,7 @@ class FormulaEnvironmentRequestExecutorTest {
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(2.0d))),
+                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0d))),
                         mutate(
                             new CellSelector.ByAddress("Budget", "B1"),
                             new CellMutationAction.SetCell(formulaCell("A1*2"))),

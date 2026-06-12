@@ -25,7 +25,7 @@ public record ExecutionJournal(
     if (planId.isPresent()) {
       planId = Optional.of(WorkbookPlan.requireNonBlank(planId.orElseThrow(), "planId"));
     }
-    level = Objects.requireNonNullElse(level, ExecutionJournalLevel.NORMAL);
+    level = Objects.requireNonNullElse(level, ExecutionJournalLevel.SUMMARY);
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
     Objects.requireNonNull(validation, "validation must not be null");
@@ -81,14 +81,15 @@ public record ExecutionJournal(
               status + " phases must omit timestamps and use durationMillis=0");
         }
       } else {
-        if (startedAt.isEmpty()) {
-          throw new IllegalArgumentException("startedAt must be present when status is started");
-        }
-        if (finishedAt.isEmpty()) {
-          throw new IllegalArgumentException("finishedAt must be present when status is started");
-        }
         if (durationMillis < 0) {
           throw new IllegalArgumentException("durationMillis must be >= 0");
+        }
+        if (startedAt.isPresent() != finishedAt.isPresent()) {
+          throw new IllegalArgumentException(
+              "startedAt and finishedAt must either both be present or both be absent");
+        }
+        if (startedAt.isEmpty() && durationMillis != 0) {
+          throw new IllegalArgumentException("timestamp-free phases must use durationMillis=0");
         }
       }
     }

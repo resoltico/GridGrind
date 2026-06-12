@@ -2,6 +2,7 @@ package dev.erst.gridgrind.authoring;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import java.util.List;
 import java.util.Objects;
@@ -25,13 +26,14 @@ public final class RangeTarget {
     return new PlannedMutation(
         selector,
         new CellMutationAction.SetRange(
-            rows.stream()
-                .map(
-                    row ->
-                        row.stream()
-                            .map(Values::toCellInput)
-                            .collect(Collectors.toUnmodifiableList()))
-                .collect(Collectors.toUnmodifiableList())));
+            new CellGridInput.Typed(
+                rows.stream()
+                    .map(
+                        row ->
+                            row.stream()
+                                .map(Values::toCellInput)
+                                .collect(Collectors.toUnmodifiableList()))
+                    .collect(Collectors.toUnmodifiableList()))));
   }
 
   /** Returns one clear-range mutation step. */
@@ -51,11 +53,11 @@ public final class RangeTarget {
 
   /** Returns one data-validations inspection step. */
   public PlannedInspection dataValidations() {
-    return new PlannedInspection(selector, Queries.dataValidations());
+    return new PlannedInspection(selector, SheetQueries.dataValidations());
   }
 
   /** Returns one conditional-formatting inspection step. */
   public PlannedInspection conditionalFormatting() {
-    return new PlannedInspection(selector, Queries.conditionalFormatting());
+    return new PlannedInspection(selector, SheetQueries.conditionalFormatting());
   }
 }

@@ -6,7 +6,6 @@ import static dev.erst.gridgrind.jazzer.support.OperationSequenceValueFactory.ne
 import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
 
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -151,7 +150,7 @@ final class OperationSequenceObservationSupport {
           case 2 -> new CellAssertion.FormulaText(data.consumeBoolean() ? "B2*2" : "SUM(B2:B4)");
           default -> new CellAssertion.DisplayValue("Report");
         };
-    Assertion alternate = new CellAssertion.CellValue(new ExpectedCellValue.Text("Jan"));
+    Assertion alternate = new CellAssertion.CellValue(new CellScalarValue.Text("Jan"));
     return maybeComposeAssertion(data, primary, alternate);
   }
 
@@ -289,13 +288,13 @@ final class OperationSequenceObservationSupport {
     return data.consumeBoolean() ? Optional.of(nextMaximumSeverity(data)) : Optional.empty();
   }
 
-  private static ExpectedCellValue nextExpectedCellValue(GridGrindFuzzData data) {
+  private static CellScalarValue nextExpectedCellValue(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) % 5) {
-      case 0 -> new ExpectedCellValue.Blank();
-      case 1 -> new ExpectedCellValue.Text("seed-" + data.consumeInt(0, 9));
-      case 2 -> new ExpectedCellValue.NumericValue(data.consumeRegularDouble(0.0d, 10.0d));
-      case 3 -> new ExpectedCellValue.BooleanValue(data.consumeBoolean());
-      default -> new ExpectedCellValue.ErrorValue("#REF!");
+      case 0 -> new CellScalarValue.Blank();
+      case 1 -> new CellScalarValue.Text("seed-" + data.consumeInt(0, 9));
+      case 2 -> new CellScalarValue.NumberValue(data.consumeRegularDouble(0.0d, 10.0d));
+      case 3 -> new CellScalarValue.BooleanValue(data.consumeBoolean());
+      default -> new CellScalarValue.ErrorValue("#REF!");
     };
   }
 

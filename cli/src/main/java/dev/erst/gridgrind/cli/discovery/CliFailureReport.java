@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import java.util.List;
@@ -11,9 +12,10 @@ public record CliFailureReport(
     GridGrindProtocolVersion protocolVersion,
     int exitCode,
     String command,
+    String phase,
     GridGrindProblemCode code,
     String message,
-    CliFailureLocation location,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CliFailureLocation> location,
     Optional<String> argument,
     List<String> suggestions,
     Optional<String> resolution) {
@@ -23,10 +25,11 @@ public record CliFailureReport(
       throw new IllegalArgumentException("exitCode must be positive");
     }
     command = CliDiscoveryValidation.requireNonBlank(command, "command");
+    phase = CliDiscoveryValidation.requireNonBlank(phase, "phase");
     Objects.requireNonNull(code, "code must not be null");
     message = CliDiscoveryValidation.requireNonBlank(message, "message");
-    Objects.requireNonNull(location, "location must not be null");
-    argument = CliDiscoveryValidation.normalizeOptionalString(argument, "argument");
+    location = CliDiscoveryValidation.copyOptionalLocation(location, "location");
+    argument = CliDiscoveryValidation.copyOptionalArbitraryString(argument, "argument");
     suggestions = CliDiscoveryValidation.copyStringsAllowEmpty(suggestions, "suggestions");
     resolution = CliDiscoveryValidation.normalizeOptionalString(resolution, "resolution");
   }

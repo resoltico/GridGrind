@@ -22,12 +22,6 @@ public final class GridGrindCliJson {
     return GridGrindCliJsonCodecSupport.readBytes(bytes, ShippedExampleCatalog.class);
   }
 
-  /** Reads one protocol-catalog search report from UTF-8 JSON bytes. */
-  public static ProtocolCatalogSearchReport readProtocolCatalogSearchReport(byte[] bytes)
-      throws IOException {
-    return GridGrindCliJsonCodecSupport.readBytes(bytes, ProtocolCatalogSearchReport.class);
-  }
-
   /** Reads one CLI failure report from UTF-8 JSON bytes. */
   public static CliFailureReport readCliFailureReport(byte[] bytes) throws IOException {
     return GridGrindCliJsonCodecSupport.readBytes(bytes, CliFailureReport.class);
@@ -48,12 +42,6 @@ public final class GridGrindCliJson {
   public static byte[] writeShippedExampleCatalogBytes(ShippedExampleCatalog catalog)
       throws IOException {
     return GridGrindCliJsonCodecSupport.writeBytes(catalog);
-  }
-
-  /** Writes one protocol-catalog search report to UTF-8 JSON bytes. */
-  public static byte[] writeProtocolCatalogSearchReportBytes(ProtocolCatalogSearchReport report)
-      throws IOException {
-    return GridGrindCliJsonCodecSupport.writeBytes(report);
   }
 
   /** Writes one CLI failure report to UTF-8 JSON bytes. */
@@ -82,12 +70,6 @@ public final class GridGrindCliJson {
   public static void writeShippedExampleCatalog(
       OutputStream outputStream, ShippedExampleCatalog catalog) throws IOException {
     GridGrindCliJsonCodecSupport.writeValue(outputStream, catalog);
-  }
-
-  /** Writes one protocol-catalog search report as JSON without closing the caller stream. */
-  public static void writeProtocolCatalogSearchReport(
-      OutputStream outputStream, ProtocolCatalogSearchReport report) throws IOException {
-    GridGrindCliJsonCodecSupport.writeValue(outputStream, report);
   }
 
   /** Writes one CLI failure report as JSON without closing the caller-owned output stream. */

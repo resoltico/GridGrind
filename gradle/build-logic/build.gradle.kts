@@ -104,4 +104,5 @@ tasks.named<JavaCompile>("compileTestJava") {
 
 tasks.test {
     useJUnitPlatform()
+    systemProperty("gridgrind.repository.root", projectDir.parentFile.parentFile.absolutePath)
 }

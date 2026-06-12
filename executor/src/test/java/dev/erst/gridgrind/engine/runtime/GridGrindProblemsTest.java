@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
@@ -83,7 +82,8 @@ class GridGrindProblemsTest {
             "assert-total",
             "EXPECT_CELL_VALUE",
             new CellSelector.ByAddress("Budget", "B4"),
-            new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(42.0d)),
+            new CellAssertion.CellValue(
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
             List.of());
     assertEquals(
         GridGrindProblemCode.ASSERTION_FAILED,
@@ -166,7 +166,8 @@ class GridGrindProblemsTest {
                     "assert-total",
                     "EXPECT_CELL_VALUE",
                     new CellSelector.ByAddress("Budget", "B4"),
-                    new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(42.0d)),
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(42.0d)),
                     List.of())),
             new ProblemContext.ExecuteStep(
                 ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"),

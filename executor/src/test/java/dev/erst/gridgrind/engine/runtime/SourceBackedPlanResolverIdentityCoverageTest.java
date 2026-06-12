@@ -11,7 +11,6 @@ import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.ChartPlotInput;
@@ -130,14 +129,17 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(
             CellMutationAction.SetCell.class, ((MutationStep) resolved.steps().get(0)).action());
     CellInput.Text titleValue = assertInstanceOf(CellInput.Text.class, titleAction.value());
-    assertEquals("Quarterly Budget", ((TextSourceInput.Inline) titleValue.source()).text());
+    assertEquals(
+        "Quarterly Budget",
+        assertInstanceOf(TextSourceInput.Inline.class, titleValue.source()).text());
 
     CellMutationAction.SetCell formulaAction =
         assertInstanceOf(
             CellMutationAction.SetCell.class, ((MutationStep) resolved.steps().get(1)).action());
     CellInput.Formula formulaValue =
         assertInstanceOf(CellInput.Formula.class, formulaAction.value());
-    assertEquals("SUM(B2:B3)", ((TextSourceInput.Inline) formulaValue.source()).text());
+    assertEquals(
+        "SUM(B2:B3)", assertInstanceOf(TextSourceInput.Inline.class, formulaValue.source()).text());
 
     DrawingMutationAction.SetShape shapeAction =
         assertInstanceOf(
@@ -271,7 +273,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
                 new AssertionStep(
                     "assert-amount",
                     selector,
-                    new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(125.0)))));
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(125.0)))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -285,7 +288,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(TableRowSelector.ByKeyCell.class, resolvedSelector.row());
     CellInput.Text resolvedValue =
         assertInstanceOf(CellInput.Text.class, resolvedRow.expectedValue());
-    assertEquals("Hosting", ((TextSourceInput.Inline) resolvedValue.source()).text());
+    assertEquals(
+        "Hosting", assertInstanceOf(TextSourceInput.Inline.class, resolvedValue.source()).text());
 
     AssertionStep resolvedAssertion =
         assertInstanceOf(AssertionStep.class, resolved.steps().get(1));
@@ -295,7 +299,8 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
         assertInstanceOf(TableRowSelector.ByKeyCell.class, assertedSelector.row());
     CellInput.Text assertedValue =
         assertInstanceOf(CellInput.Text.class, assertedRow.expectedValue());
-    assertEquals("Hosting", ((TextSourceInput.Inline) assertedValue.source()).text());
+    assertEquals(
+        "Hosting", assertInstanceOf(TextSourceInput.Inline.class, assertedValue.source()).text());
   }
 
   @Test
@@ -313,10 +318,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
             "set-range-file-backed",
             new RangeSelector.ByRange("Budget", "A1:B1"),
             new CellMutationAction.SetRange(
-                List.of(
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                     List.of(
-                        new CellInput.Text(TextSourceInput.utf8File("range-cell.txt")),
-                        new CellInput.Numeric(42.0d)))));
+                        List.of(
+                            new CellInput.Text(TextSourceInput.utf8File("range-cell.txt")),
+                            new CellInput.NumberValue(42.0d))))));
     MutationStep lineChartStep =
         new MutationStep(
             "set-line-chart-file-backed",
@@ -362,8 +368,11 @@ class SourceBackedPlanResolverIdentityCoverageTest extends SourceBackedPlanResol
     CellMutationAction.SetRange resolvedRange =
         assertInstanceOf(CellMutationAction.SetRange.class, resolvedRangeStep.action());
     CellInput.Text resolvedRangeCell =
-        assertInstanceOf(CellInput.Text.class, resolvedRange.rows().getFirst().getFirst());
-    assertEquals("Quarterly Budget", ((TextSourceInput.Inline) resolvedRangeCell.source()).text());
+        assertInstanceOf(
+            CellInput.Text.class, resolvedRange.rows().toCellInputRows().getFirst().getFirst());
+    assertEquals(
+        "Quarterly Budget",
+        assertInstanceOf(TextSourceInput.Inline.class, resolvedRangeCell.source()).text());
 
     MutationStep resolvedLineStep = assertInstanceOf(MutationStep.class, resolved.steps().get(1));
     assertNotSame(lineChartStep, resolvedLineStep);

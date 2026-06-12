@@ -2,10 +2,10 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: Missing required field 'execution'
+Kind: InvalidRequestShapeException
+Message: Unexpected token (`JsonToken.END_OBJECT`), expected `JsonToken.VALUE_STRING`: need String, Number of Boolean value that contains type id (for subtype of dev.erst.gridgrind.contract.dto.CellGridInput)
 Input Bytes: 12706
-Decode Outcome: INVALID_REQUEST
+Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0

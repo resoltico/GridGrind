@@ -4,6 +4,7 @@ import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -30,15 +31,56 @@ final class CliArgumentFailureSupport {
           "--help-guidance",
           "--version",
           "--license");
+  private static final Map<String, List<String>> COMMAND_TEMPLATES_BY_FLAG =
+      Map.ofEntries(
+          Map.entry(
+              "--request", List.of("gridgrind --request request.json --response response.json")),
+          Map.entry(
+              "--response", List.of("gridgrind --print-request-template --response request.json")),
+          Map.entry(
+              "--doctor-request",
+              List.of("gridgrind --doctor-request --request request.json --response doctor.json")),
+          Map.entry(
+              "--print-request-template",
+              List.of("gridgrind --print-request-template --response request.json")),
+          Map.entry("--print-example-catalog", List.of("gridgrind --print-example-catalog")),
+          Map.entry(
+              "--print-example", List.of("gridgrind --print-example --lookup WORKBOOK_HEALTH")),
+          Map.entry("--print-task-catalog", List.of("gridgrind --print-task-catalog")),
+          Map.entry("--print-task-plan", List.of("gridgrind --print-task-plan --lookup DASHBOARD")),
+          Map.entry(
+              "--print-task-keyword-match",
+              List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"")),
+          Map.entry(
+              "--print-protocol-catalog",
+              List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"")),
+          Map.entry(
+              "--lookup",
+              List.of(
+                  "gridgrind --print-example --lookup WORKBOOK_HEALTH",
+                  "gridgrind --print-task-plan --lookup DASHBOARD",
+                  "gridgrind --print-protocol-catalog --lookup GET_CELLS")),
+          Map.entry(
+              "--query",
+              List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"")),
+          Map.entry(
+              "--search", List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"")),
+          Map.entry("--help", List.of("gridgrind --help")),
+          Map.entry("--help-protocol", List.of("gridgrind --help-protocol")),
+          Map.entry("--help-guidance", List.of("gridgrind --help-guidance")),
+          Map.entry("--version", List.of("gridgrind --version")),
+          Map.entry("--license", List.of("gridgrind --license")));
 
   private CliArgumentFailureSupport() {}
 
-  static CliFailureReport reportFor(CliArgumentsException exception) {
+  static CliFailureReport reportFor(String[] args, CliArgumentsException exception) {
+    Objects.requireNonNull(args, "args must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
     String message =
         Objects.requireNonNullElse(exception.getMessage(), "Invalid command-line arguments");
     return CliFailureReports.invalidArguments(
         2,
+        CliPrimaryCommandSupport.primaryCommandName(args),
         "parse-arguments",
         Optional.of(exception.argument()),
         message,
@@ -46,12 +88,14 @@ final class CliArgumentFailureSupport {
         resolutionFor(Optional.of(exception.argument()), message));
   }
 
-  static CliFailureReport reportFor(IllegalArgumentException exception) {
+  static CliFailureReport reportFor(String[] args, IllegalArgumentException exception) {
+    Objects.requireNonNull(args, "args must not be null");
     Objects.requireNonNull(exception, "exception must not be null");
     String message =
         Objects.requireNonNullElse(exception.getMessage(), "Invalid command-line arguments");
     return CliFailureReports.invalidArguments(
         2,
+        CliPrimaryCommandSupport.primaryCommandName(args),
         "parse-arguments",
         Optional.empty(),
         message,
@@ -84,14 +128,14 @@ final class CliArgumentFailureSupport {
       case "--lookup" -> {
         suggestions.add("gridgrind --print-example-catalog");
         suggestions.add("gridgrind --print-task-catalog");
-        suggestions.add("gridgrind --print-protocol-catalog --search <text>");
+        suggestions.add("gridgrind --print-protocol-catalog --search \"sheet layout\"");
       }
       case "--query" -> {
         suggestions.add("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"");
         suggestions.add("gridgrind --print-task-catalog");
       }
       case "--search" -> {
-        suggestions.add("gridgrind --print-protocol-catalog --search <text>");
+        suggestions.add("gridgrind --print-protocol-catalog --search \"sheet layout\"");
         suggestions.add("gridgrind --help-protocol");
       }
       default -> {
@@ -158,33 +202,7 @@ final class CliArgumentFailureSupport {
   }
 
   static List<String> commandTemplatesForFlag(String flag) {
-    return switch (flag) {
-      case "--request" -> List.of("gridgrind --request request.json --response response.json");
-      case "--response" -> List.of("gridgrind --print-request-template --response request.json");
-      case "--doctor-request" ->
-          List.of("gridgrind --doctor-request --request request.json --response doctor.json");
-      case "--print-request-template" ->
-          List.of("gridgrind --print-request-template --response request.json");
-      case "--print-example-catalog" -> List.of("gridgrind --print-example-catalog");
-      case "--print-example" -> List.of("gridgrind --print-example --lookup WORKBOOK_HEALTH");
-      case "--print-task-catalog" -> List.of("gridgrind --print-task-catalog");
-      case "--print-task-plan" -> List.of("gridgrind --print-task-plan --lookup DASHBOARD");
-      case "--print-task-keyword-match" ->
-          List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"");
-      case "--print-protocol-catalog" ->
-          List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"");
-      case "--lookup" ->
-          List.of(
-              "gridgrind --print-example --lookup WORKBOOK_HEALTH",
-              "gridgrind --print-task-plan --lookup DASHBOARD",
-              "gridgrind --print-protocol-catalog --lookup GET_CELLS");
-      case "--query" ->
-          List.of("gridgrind --print-task-keyword-match --query \"monthly sales dashboard\"");
-      case "--search" -> List.of("gridgrind --print-protocol-catalog --search \"sheet layout\"");
-      case "--help", "--help-protocol", "--help-guidance", "--version", "--license" ->
-          List.of("gridgrind " + flag);
-      default -> List.of();
-    };
+    return COMMAND_TEMPLATES_BY_FLAG.getOrDefault(flag, List.of());
   }
 
   private static String normalize(String value) {

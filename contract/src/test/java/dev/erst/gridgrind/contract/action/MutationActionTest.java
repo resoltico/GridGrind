@@ -30,16 +30,32 @@ class MutationActionTest {
   @Test
   void copiesRectangularRowsAndValidatesAppendRows() {
     List<List<CellInput>> rows = new ArrayList<>();
-    rows.add(new ArrayList<>(List.of(textCell("A"), new CellInput.Numeric(1.0d))));
-    CellMutationAction.SetRange setRange = new CellMutationAction.SetRange(rows);
+    rows.add(new ArrayList<>(List.of(textCell("A"), new CellInput.NumberValue(1.0d))));
+    CellMutationAction.SetRange setRange =
+        new CellMutationAction.SetRange(
+            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(rows));
 
     rows.clear();
 
-    assertEquals(1, setRange.rows().size());
-    assertEquals(text("A"), ((CellInput.Text) setRange.rows().getFirst().getFirst()).source());
+    assertEquals(1, setRange.rows().toCellInputRows().size());
     assertEquals(
-        2, new CellMutationAction.AppendRow(List.of(textCell("A"), textCell("B"))).values().size());
-    assertThrows(IllegalArgumentException.class, () -> new CellMutationAction.AppendRow(List.of()));
+        "A",
+        ((TextSourceInput.Inline)
+                ((CellInput.Text) setRange.rows().toCellInputRows().getFirst().getFirst()).source())
+            .text());
+    assertEquals(
+        2,
+        new CellMutationAction.AppendRow(
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    List.of(textCell("A"), textCell("B"))))
+            .values()
+            .toCellInputs()
+            .size());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellMutationAction.AppendRow(
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(List.of())));
   }
 
   @Test
@@ -269,15 +285,15 @@ class MutationActionTest {
             .getMessage());
     assertEquals(
         "values must not be null",
-        assertThrows(NullPointerException.class, () -> new CellMutationAction.AppendRow(null))
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new CellMutationAction.AppendRow(
+                        new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(null)))
             .getMessage());
   }
 
   private static CellInput.Text textCell(String value) {
-    return new CellInput.Text(text(value));
-  }
-
-  private static TextSourceInput text(String value) {
-    return TextSourceInput.inline(value);
+    return new CellInput.Text(TextSourceInput.inline(value));
   }
 }

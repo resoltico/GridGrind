@@ -1,4 +1,5 @@
 import dev.erst.gridgrind.authoring.GridGrindPlan;
+import dev.erst.gridgrind.authoring.ExpectedValues;
 import dev.erst.gridgrind.authoring.Tables;
 import dev.erst.gridgrind.authoring.Targets;
 import dev.erst.gridgrind.authoring.Values;
@@ -58,7 +59,7 @@ final class JavaAuthoringWorkflowExample {
                 .rowByKey(
                     "Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
-                .valueEquals(Values.expectedNumber(125.0)));
+                .valueEquals(ExpectedValues.number(125.0)));
   }
 
   /** Executes the authored workflow in-process against the canonical executor. */

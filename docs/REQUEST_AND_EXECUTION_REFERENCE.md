@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.67.0"
+version: "0.68.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-05-15"
+updated: "2026-06-12"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -98,7 +98,7 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 | `protocolVersion` | Yes | Wire-contract version. The current public value is `V1`. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
-| `execution` | Yes | Explicit execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Use the standard template or `ExecutionPolicyInput.defaults()` from Java authoring for the normal full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
+| `execution` | Yes | Explicit execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Use the standard template or `ExecutionPolicyInput.defaults()` from Java authoring for the normal full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`. |
 | `formulaEnvironment` | Yes | Explicit evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Use empty workbook and UDF lists with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended. |
 | `steps` | Yes | Ordered list of workbook mutations, assertions, and inspections. Send `[]` for a no-op plan. Every non-empty step needs a caller-defined `stepId`; `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. |
 
@@ -162,7 +162,7 @@ For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 
 `execution` is explicit on the wire. Use the standard request template or
 `ExecutionPolicyInput.defaults()` from Java authoring for the default `FULL_XSSF` request path
-with `NORMAL` journaling.
+with `SUMMARY` journaling.
 
 ```json
 {
@@ -200,14 +200,19 @@ with `NORMAL` journaling.
   OOXML packages.
 - `execution.mode.type: FULL_XSSF` is the default full workbook read/write path with no low-memory restrictions.
 - `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
+- `SUMMARY` is the default. It keeps the response stable by omitting phase timestamps, using
+  `durationMillis=0`, recording compact resolved-target summaries, and suppressing live event
+  output.
+- `NORMAL` keeps the structured response journal and adds expanded resolved-target summaries plus
+  observational timing telemetry.
 - `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
   `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
 - `execution.calculation.markRecalculateOnOpen` persists Excel's workbook-level recalc-on-open
   flag without requiring an extra mutation step.
 - `EVALUATE_TARGETS` addresses must point at existing formula cells. A missing physical cell can
   surface `CELL_NOT_FOUND`; an existing non-formula cell is rejected as `INVALID_REQUEST`.
-- `VERBOSE` keeps the structured response journal and also streams fine-grained execution events to
-  CLI stderr while the request is running.
+- `VERBOSE` keeps the `NORMAL` response journal detail and also streams fine-grained execution
+  events to CLI stderr while the request is running.
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
   workbook state and then performs the summary reads through the event model.
@@ -309,9 +314,9 @@ Every success and failure response includes a structured `journal` object:
 
 | Field | Description |
 |:------|:------------|
-| `planId` | Caller-supplied plan correlation ID when present, otherwise a synthesized internal ID after request parsing. Pre-parse CLI failures may omit it because no request plan was available yet. |
+| `planId` | Caller-supplied plan correlation ID when present. When omitted in the request, the response journal omits it too. |
 | `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
-| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. Finished phases carry `status`, `startedAt`, `finishedAt`, and `durationMillis`; `NOT_STARTED` and `NOT_REQUESTED` phases carry `status` plus `durationMillis=0` only. `inputResolution` records source-backed file/stdin loading before workbook open. |
+| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. `SUMMARY` keeps these phases timestamp-free with `durationMillis=0`; `NORMAL` and `VERBOSE` add observational `startedAt`, `finishedAt`, and non-zero timing where applicable. `NOT_STARTED` and `NOT_REQUESTED` always omit timestamps and use `durationMillis=0`. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
 | `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
 | `events[]` | Fine-grained live events. Present only when `level=VERBOSE`. |
@@ -355,7 +360,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
       "type": "FULL_XSSF"
     },
     "journal": {
-      "level": "NORMAL"
+      "level": "SUMMARY"
     },
     "calculation": {
       "strategy": {

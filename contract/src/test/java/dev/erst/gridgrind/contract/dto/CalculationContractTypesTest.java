@@ -89,7 +89,7 @@ class CalculationContractTypesTest {
     ExecutionModeInput defaultMode = ExecutionModeInput.defaults();
     ExecutionModeInput customMode = ExecutionModeInput.eventRead();
     ExecutionJournalInput defaultJournal = ExecutionJournalInput.defaults();
-    ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY);
+    ExecutionJournalInput customJournal = new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE);
     CalculationPolicyInput defaultCalculation = CalculationPolicyInput.defaults();
     CalculationPolicyInput customCalculation =
         new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true);
@@ -117,7 +117,7 @@ class CalculationContractTypesTest {
     assertTrue(defaultJournal.isDefault());
     assertFalse(customJournal.isDefault());
     assertEquals(
-        ExecutionJournalLevel.NORMAL, ExecutionJournalInput.effectiveLevel(defaultJournal));
+        ExecutionJournalLevel.SUMMARY, ExecutionJournalInput.effectiveLevel(defaultJournal));
     assertThrows(NullPointerException.class, () -> ExecutionJournalInput.effectiveLevel(null));
   }
 

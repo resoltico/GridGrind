@@ -27,42 +27,42 @@ final class WorkbookIntegrationExamples {
   private WorkbookIntegrationExamples() {}
 
   static GridGrindShippedExamples.ShippedExample sourceBackedInputExample(ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "SOURCE_BACKED_INPUT",
         "source-backed-input-request.json",
         "Repo-asset-backed file text, formula, and binary payload authoring without large inline literals.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "source-backed-input-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "ensure-inputs",
-                ExamplePlanSupport.sheet("Inputs"),
+                ExampleSelectors.sheet("Inputs"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "seed-values",
-                ExamplePlanSupport.range("Inputs", "B2:B3"),
+                ExampleSelectors.range("Inputs", "B2:B3"),
                 new CellMutationAction.SetRange(
-                    ExamplePlanSupport.rows(
-                        ExamplePlanSupport.row(ExamplePlanSupport.number(12.0d)),
-                        ExamplePlanSupport.row(ExamplePlanSupport.number(18.0d))))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.rows(
+                        ExampleCellValues.row(ExampleCellValues.number(12.0d)),
+                        ExampleCellValues.row(ExampleCellValues.number(18.0d))))),
+            ExampleSteps.step(
                 "set-title-from-file",
-                ExamplePlanSupport.cell("Inputs", "A1"),
+                ExampleSelectors.cell("Inputs", "A1"),
                 new CellMutationAction.SetCell(
                     new CellInput.Text(
                         TextSourceInput.utf8File(
                             paths.asset("source-backed-input-assets/title.txt"))))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "set-total-formula-from-file",
-                ExamplePlanSupport.cell("Inputs", "B4"),
+                ExampleSelectors.cell("Inputs", "B4"),
                 new CellMutationAction.SetCell(
                     new CellInput.Formula(
                         TextSourceInput.utf8File(
                             paths.asset("source-backed-input-assets/total-formula.txt"))))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "attach-payload-from-file",
-                ExamplePlanSupport.sheet("Inputs"),
+                ExampleSelectors.sheet("Inputs"),
                 new DrawingMutationAction.SetEmbeddedObject(
                     new EmbeddedObjectInput(
                         "InputsPayload",
@@ -74,74 +74,74 @@ final class WorkbookIntegrationExamples {
                         new PictureDataInput(
                             ExcelPictureFormat.PNG,
                             BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64)),
-                        ExamplePlanSupport.anchor(3, 0, 5, 4)))),
-            ExamplePlanSupport.read(
+                        ExampleDrawingAnchors.anchor(3, 0, 5, 4)))),
+            ExampleSteps.read(
                 "read-cells",
-                ExamplePlanSupport.cells("Inputs", "A1", "B4"),
+                ExampleSelectors.cells("Inputs", "A1", "B4"),
                 new SheetIntrospectionQuery.GetCells()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-payload",
                 new DrawingObjectSelector.ByName("Inputs", "InputsPayload"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjectPayload())));
   }
 
   static GridGrindShippedExamples.ShippedExample customXmlExample(ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "CUSTOM_XML",
         "custom-xml-request.json",
         "Repo-asset-backed existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "custom-xml-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 paths.asset("custom-xml-assets/custom-xml-mapping.xlsx")),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-custom-xml-mappings",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetCustomXmlMappings()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "export-custom-xml-before-import",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "import-custom-xml",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new StructuredMutationAction.ImportCustomXmlMapping(
                     new CustomXmlImportInput(
                         new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                         TextSourceInput.utf8File(
                             paths.asset("custom-xml-assets/custom-xml-update.xml"))))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-imported-cells",
-                ExamplePlanSupport.cells("Foglio1", "A1", "B1", "C1", "D1"),
+                ExampleSelectors.cells("Foglio1", "A1", "B1", "C1", "D1"),
                 new SheetIntrospectionQuery.GetCells()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "export-custom-xml-after-import",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"))));
   }
 
   static GridGrindShippedExamples.ShippedExample packageSecurityInspectionExample(
       ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "PACKAGE_SECURITY_INSPECTION",
         "package-security-inspect-request.json",
         "Repo-asset-backed encrypted package open plus factual package-security and cell inspection.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "package-security-inspection-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
                 new OoxmlOpenSecurityInput(java.util.Optional.of("GridGrind-2026"))),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "security",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetPackageSecurity()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "secure-cells",
-                ExamplePlanSupport.cells("Secure", "A1", "A2", "B2", "A3", "B3"),
+                ExampleSelectors.cells("Secure", "A1", "A2", "B2", "A3", "B3"),
                 new SheetIntrospectionQuery.GetCells())));
   }
 }

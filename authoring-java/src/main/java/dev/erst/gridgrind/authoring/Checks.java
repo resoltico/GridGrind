@@ -48,8 +48,8 @@ final class Checks {
     return new PresenceAssertion.ChartAbsent();
   }
 
-  static CellAssertion.CellValue cellValue(Values.ExpectedValue expectedValue) {
-    return new CellAssertion.CellValue(Values.toExpectedCellValue(expectedValue));
+  static CellAssertion.CellValue cellValue(ExpectedValues.Value expectedValue) {
+    return new CellAssertion.CellValue(ExpectedValues.toCellScalarValue(expectedValue));
   }
 
   static CellAssertion.DisplayValue displayValue(String displayValue) {

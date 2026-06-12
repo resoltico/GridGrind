@@ -143,6 +143,9 @@ check_no_pcre_matches '(?s)"type"\s*:\s*"ENSURE_SHEET"\s*,\s*"sheetName"' \
 check_no_pcre_matches '(?s)"type"\s*:\s*"APPEND_ROW"\s*,\s*"sheetName"' \
     'release-surface shell requests still author APPEND_ROW with the deleted sheetName field' \
     "${release_request_surface[@]}"
+check_no_pcre_matches '(?s)"type"\s*:\s*"APPEND_ROW"\s*,\s*"values"\s*:\s*\[' \
+    'release-surface shell requests still author APPEND_ROW with the deleted flat values array instead of CellRowInput wrappers' \
+    "${release_request_surface[@]}"
 check_no_pcre_matches '(?s)"type"\s*:\s*"TEXT"\s*,\s*"text"' \
     'release-surface shell requests still author text cell values with the deleted inline text field instead of source-backed payloads' \
     "${release_request_surface[@]}"

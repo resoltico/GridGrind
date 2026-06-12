@@ -140,14 +140,15 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 GridGrindProtocolVersion.current(),
                 2,
                 "parse-arguments",
+                "parse-arguments",
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "bad flag",
-                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.empty(),
                 Optional.of("--flag"),
                 List.of("gridgrind --help"),
                 Optional.of("Use one primary command.")));
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
     assertEquals(2, exitCode);
     assertEquals("bad flag", failure.message());
   }
@@ -168,9 +169,10 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 GridGrindProtocolVersion.current(),
                 2,
                 "parse-arguments",
+                "parse-arguments",
                 GridGrindProblemCode.INVALID_ARGUMENTS,
                 "bad flag",
-                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.empty(),
                 Optional.of("--flag"),
                 List.of("gridgrind --help"),
                 Optional.of("Use one primary command.")));
@@ -204,9 +206,10 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 GridGrindProtocolVersion.current(),
                 1,
                 "execute",
+                "read-request",
                 GridGrindProblemCode.INVALID_REQUEST_SHAPE,
                 "missing required field",
-                dev.erst.gridgrind.cli.discovery.CliFailureLocation.unavailable(),
+                Optional.empty(),
                 Optional.of("--request"),
                 List.of("gridgrind --help-protocol"),
                 Optional.empty()));

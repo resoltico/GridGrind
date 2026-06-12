@@ -26,29 +26,29 @@ final class GridGrindTaskStarterAssetPlans {
     String sourceAsset = TaskStarterPlanSupport.taskStarterAsset("workbook-ops-source.xlsx");
     return TaskStarterPlanSupport.assetBackedStarter(
         taskId,
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             TaskStarterPlanSupport.taskPlanId(taskId),
             new WorkbookPlan.WorkbookSource.ExistingFile(sourceAsset),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-workbook-summary",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-template-comments",
-                ExamplePlanSupport.cells("Template", "A1"),
+                ExampleSelectors.cells("Template", "A1"),
                 new SheetIntrospectionQuery.GetComments()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-drawing-objects",
                 new DrawingObjectSelector.AllOnSheet("Template"),
                 new WorkbookAssetIntrospectionQuery.GetDrawingObjects()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-formula-surface",
-                ExamplePlanSupport.sheets("Summary"),
+                ExampleSelectors.sheets("Summary"),
                 new InspectionSurfaceQuery.GetFormulaSurface()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "analyze-workbook-findings",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new InspectionAnalysisQuery.AnalyzeWorkbookFindings())),
         sourceAsset);
   }
@@ -59,33 +59,33 @@ final class GridGrindTaskStarterAssetPlans {
     String updateXml = "custom-xml-assets/custom-xml-update.xml";
     return TaskStarterPlanSupport.assetBackedStarter(
         taskId,
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             TaskStarterPlanSupport.taskPlanId(taskId),
             new WorkbookPlan.WorkbookSource.ExistingFile(mappingWorkbook),
-            ExamplePlanSupport.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
-            ExamplePlanSupport.read(
+            ExampleWorkbookPlans.saveAs(TaskStarterPlanSupport.taskWorkbookPath(taskId)),
+            ExampleSteps.read(
                 "read-custom-xml-mappings",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetCustomXmlMappings()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "export-custom-xml-before-import",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "import-custom-xml",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new StructuredMutationAction.ImportCustomXmlMapping(
                     new CustomXmlImportInput(
                         new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                         TextSourceInput.utf8File(updateXml)))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "read-imported-cells",
-                ExamplePlanSupport.cells("Foglio1", "A1", "B1", "C1", "D1"),
+                ExampleSelectors.cells("Foglio1", "A1", "B1", "C1", "D1"),
                 new SheetIntrospectionQuery.GetCells()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "export-custom-xml-after-import",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.ExportCustomXmlMapping(
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"))),
         mappingWorkbook,

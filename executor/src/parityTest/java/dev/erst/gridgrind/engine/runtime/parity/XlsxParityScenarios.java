@@ -1155,44 +1155,45 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
                     new CellMutationAction.SetRange(
-                        List.of(
+                        new CellGridInput.Typed(
                             List.of(
-                                text("Quarterly Ops"),
-                                new CellInput.Blank(),
-                                text("Launch"),
-                                text("Link")),
-                            List.of(text("Owner"), text("Hours"), text("Ready"), text("Score")),
-                            List.of(
-                                new CellInput.RichText(
-                                    List.of(
-                                        richTextRun(
-                                            "Ada",
-                                            new CellFontInput(
-                                                Optional.of(true),
-                                                Optional.empty(),
-                                                Optional.empty(),
-                                                Optional.empty(),
-                                                Optional.of(ColorInput.rgb("#204060")),
-                                                Optional.empty(),
-                                                Optional.empty())),
-                                        richTextRun(
-                                            " Lovelace",
-                                            new CellFontInput(
-                                                Optional.empty(),
-                                                Optional.of(true),
-                                                Optional.empty(),
-                                                Optional.empty(),
-                                                Optional.of(ColorInput.rgb("#4080A0")),
-                                                Optional.empty(),
-                                                Optional.empty())))),
-                                new CellInput.Numeric(12.5d),
-                                new CellInput.BooleanValue(true),
-                                formula("B3*2")),
-                            List.of(
-                                new CellInput.Date(LocalDate.of(2026, 4, 1)),
-                                new CellInput.DateTime(LocalDateTime.of(2026, 4, 1, 9, 30, 0)),
-                                text("Docs"),
-                                new CellInput.Numeric(99.0d))))),
+                                List.of(
+                                    text("Quarterly Ops"),
+                                    new CellInput.Blank(),
+                                    text("Launch"),
+                                    text("Link")),
+                                List.of(text("Owner"), text("Hours"), text("Ready"), text("Score")),
+                                List.of(
+                                    new CellInput.RichText(
+                                        List.of(
+                                            richTextRun(
+                                                "Ada",
+                                                new CellFontInput(
+                                                    Optional.of(true),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.of(ColorInput.rgb("#204060")),
+                                                    Optional.empty(),
+                                                    Optional.empty())),
+                                            richTextRun(
+                                                " Lovelace",
+                                                new CellFontInput(
+                                                    Optional.empty(),
+                                                    Optional.of(true),
+                                                    Optional.empty(),
+                                                    Optional.empty(),
+                                                    Optional.of(ColorInput.rgb("#4080A0")),
+                                                    Optional.empty(),
+                                                    Optional.empty())))),
+                                    new CellInput.NumberValue(12.5d),
+                                    new CellInput.BooleanValue(true),
+                                    formula("B3*2")),
+                                List.of(
+                                    new CellInput.Date(LocalDate.of(2026, 4, 1)),
+                                    new CellInput.DateTime(LocalDateTime.of(2026, 4, 1, 9, 30, 0)),
+                                    text("Docs"),
+                                    new CellInput.NumberValue(99.0d)))))),
                 mutate(
                     new RangeSelector.ByRange("Ops", "A1:D4"),
                     new CellMutationAction.ApplyStyle(
@@ -1330,10 +1331,11 @@ public final class XlsxParityScenarios {
                 mutate(
                     new RangeSelector.ByRange("Queue", "A1:B3"),
                     new CellMutationAction.SetRange(
-                        List.of(
-                            List.of(text("Owner"), text("Task")),
-                            List.of(text("Ada"), text("Docs")),
-                            List.of(text("Grace"), text("Review"))))),
+                        new CellGridInput.Typed(
+                            List.of(
+                                List.of(text("Owner"), text("Task")),
+                                List.of(text("Ada"), text("Docs")),
+                                List.of(text("Grace"), text("Review")))))),
                 mutate(
                     new StructuredMutationAction.SetTable(
                         TableInput.withDefaultMetadata(
@@ -1457,28 +1459,28 @@ public final class XlsxParityScenarios {
                 new CellMutationAction.SetCell(text("Jan"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B2"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(10d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C2"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(12d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "A3"),
                 new CellMutationAction.SetCell(text("Feb"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B3"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(18d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(18d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C3"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(16d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(16d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "A4"),
                 new CellMutationAction.SetCell(text("Mar"))),
             mutate(
                 new CellSelector.ByAddress("Chart", "B4"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(15d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
             mutate(
                 new CellSelector.ByAddress("Chart", "C4"),
-                new CellMutationAction.SetCell(new CellInput.Numeric(21d))),
+                new CellMutationAction.SetCell(new CellInput.NumberValue(21d))),
             mutate(
                 new StructuredMutationAction.SetNamedRange(
                     "ChartCategories",
@@ -1534,7 +1536,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D2"),
-                    new CellMutationAction.SetCell(new CellInput.Numeric(10d))),
+                    new CellMutationAction.SetCell(new CellInput.NumberValue(10d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A3"),
                     new CellMutationAction.SetCell(text("North"))),
@@ -1546,7 +1548,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Ada"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D3"),
-                    new CellMutationAction.SetCell(new CellInput.Numeric(15d))),
+                    new CellMutationAction.SetCell(new CellInput.NumberValue(15d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A4"),
                     new CellMutationAction.SetCell(text("South"))),
@@ -1558,7 +1560,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D4"),
-                    new CellMutationAction.SetCell(new CellInput.Numeric(7d))),
+                    new CellMutationAction.SetCell(new CellInput.NumberValue(7d))),
                 mutate(
                     new CellSelector.ByAddress("Data", "A5"),
                     new CellMutationAction.SetCell(text("South"))),
@@ -1570,7 +1572,7 @@ public final class XlsxParityScenarios {
                     new CellMutationAction.SetCell(text("Lin"))),
                 mutate(
                     new CellSelector.ByAddress("Data", "D5"),
-                    new CellMutationAction.SetCell(new CellInput.Numeric(12d))),
+                    new CellMutationAction.SetCell(new CellInput.NumberValue(12d))),
                 mutate(
                     new StructuredMutationAction.SetNamedRange(
                         "PivotSource",

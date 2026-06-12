@@ -7,6 +7,7 @@ internal data class GridGrindRepositoryLayout(
     val repositoryRoot: File,
     val productionPmdRuleset: File,
     val semanticShapePmdRuleset: File,
+    val semanticShapePolicy: File,
     val testPmdRuleset: File,
 ) {
     companion object {
@@ -20,11 +21,14 @@ internal data class GridGrindRepositoryLayout(
             val productionPmdRuleset = requiredFile(repositoryRoot, "gradle/pmd/ruleset.xml")
             val semanticShapePmdRuleset =
                 requiredFile(repositoryRoot, "gradle/pmd/semantic-shape-ruleset.xml")
+            val semanticShapePolicy =
+                requiredFile(repositoryRoot, "gradle/semantic-shape-policy.tsv")
             val testPmdRuleset = requiredFile(repositoryRoot, "gradle/pmd/test-ruleset.xml")
             return GridGrindRepositoryLayout(
                 repositoryRoot = repositoryRoot,
                 productionPmdRuleset = productionPmdRuleset,
                 semanticShapePmdRuleset = semanticShapePmdRuleset,
+                semanticShapePolicy = semanticShapePolicy,
                 testPmdRuleset = testPmdRuleset,
             )
         }

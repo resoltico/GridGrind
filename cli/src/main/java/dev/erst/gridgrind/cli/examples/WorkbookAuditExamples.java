@@ -24,247 +24,245 @@ final class WorkbookAuditExamples {
   private WorkbookAuditExamples() {}
 
   static GridGrindShippedExamples.ShippedExample workbookHealthExample(ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "WORKBOOK_HEALTH",
         "workbook-health-request.json",
         "Compact no-save workbook-health pass with targeted formula and aggregate findings.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "workbook-health-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.None(),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-01-ensure-budget-review",
-                ExamplePlanSupport.sheet("Budget Review"),
+                ExampleSelectors.sheet("Budget Review"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-02-ensure-summary",
-                ExamplePlanSupport.sheet("Summary"),
+                ExampleSelectors.sheet("Summary"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-03-set-budget-header",
-                ExamplePlanSupport.cell("Budget Review", "A1"),
-                new CellMutationAction.SetCell(ExamplePlanSupport.text("Amount"))),
-            ExamplePlanSupport.step(
+                ExampleSelectors.cell("Budget Review", "A1"),
+                new CellMutationAction.SetCell(ExampleCellValues.text("Amount"))),
+            ExampleSteps.step(
                 "step-04-set-budget-value",
-                ExamplePlanSupport.cell("Budget Review", "B1"),
-                new CellMutationAction.SetCell(ExamplePlanSupport.number(1200.0d))),
-            ExamplePlanSupport.step(
+                ExampleSelectors.cell("Budget Review", "B1"),
+                new CellMutationAction.SetCell(ExampleCellValues.number(1200.0d))),
+            ExampleSteps.step(
                 "step-05-set-summary-formula",
-                ExamplePlanSupport.cell("Summary", "A1"),
-                new CellMutationAction.SetCell(ExamplePlanSupport.formula("'Budget Review'!B1"))),
-            ExamplePlanSupport.read(
+                ExampleSelectors.cell("Summary", "A1"),
+                new CellMutationAction.SetCell(ExampleCellValues.formula("'Budget Review'!B1"))),
+            ExampleSteps.read(
                 "summary-sheet",
-                ExamplePlanSupport.sheet("Summary"),
+                ExampleSelectors.sheet("Summary"),
                 new SheetIntrospectionQuery.GetSheetSummary()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "formula-health",
-                ExamplePlanSupport.sheets("Summary"),
+                ExampleSelectors.sheets("Summary"),
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "lint",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new InspectionAnalysisQuery.AnalyzeWorkbookFindings()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "summary-cells",
-                ExamplePlanSupport.cells("Summary", "A1"),
+                ExampleSelectors.cells("Summary", "A1"),
                 new SheetIntrospectionQuery.GetCells())));
   }
 
   static GridGrindShippedExamples.ShippedExample largeFileModesExample(ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "LARGE_FILE_MODES",
         "large-file-modes-request.json",
         "Low-memory STREAMING_WRITE plan with append-only rows and recalc-on-open flagging.",
-        ExamplePlanSupport.plan(
+        ExampleWorkbookPlans.plan(
             "large-file-modes-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
+            ExampleWorkbookPlans.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
             new ExecutionPolicyInput(
                 ExecutionModeInput.streamingWrite(),
                 dev.erst.gridgrind.contract.dto.ExecutionJournalInput.defaults(),
                 new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-01-ensure-sheet",
-                ExamplePlanSupport.sheet("Ledger"),
+                ExampleSelectors.sheet("Ledger"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-02-append-header",
-                ExamplePlanSupport.sheet("Ledger"),
+                ExampleSelectors.sheet("Ledger"),
                 new CellMutationAction.AppendRow(
-                    java.util.List.of(
-                        ExamplePlanSupport.text("Team"),
-                        ExamplePlanSupport.text("Task"),
-                        ExamplePlanSupport.text("Hours")))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Team"),
+                        ExampleCellValues.text("Task"),
+                        ExampleCellValues.text("Hours")))),
+            ExampleSteps.step(
                 "step-03-append-ops",
-                ExamplePlanSupport.sheet("Ledger"),
+                ExampleSelectors.sheet("Ledger"),
                 new CellMutationAction.AppendRow(
-                    java.util.List.of(
-                        ExamplePlanSupport.text("Ops"),
-                        ExamplePlanSupport.text("Badge prep"),
-                        ExamplePlanSupport.number(6.5d)))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Ops"),
+                        ExampleCellValues.text("Badge prep"),
+                        ExampleCellValues.number(6.5d)))),
+            ExampleSteps.step(
                 "step-04-append-facilities",
-                ExamplePlanSupport.sheet("Ledger"),
+                ExampleSelectors.sheet("Ledger"),
                 new CellMutationAction.AppendRow(
-                    java.util.List.of(
-                        ExamplePlanSupport.text("Facilities"),
-                        ExamplePlanSupport.text("Desk setup"),
-                        ExamplePlanSupport.number(4.0d)))),
-            ExamplePlanSupport.read(
+                    ExampleCellValues.row(
+                        ExampleCellValues.text("Facilities"),
+                        ExampleCellValues.text("Desk setup"),
+                        ExampleCellValues.number(4.0d)))),
+            ExampleSteps.read(
                 "workbook",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "ledger-sheet",
-                ExamplePlanSupport.sheet("Ledger"),
+                ExampleSelectors.sheet("Ledger"),
                 new SheetIntrospectionQuery.GetSheetSummary())));
   }
 
   static GridGrindShippedExamples.ShippedExample fileHyperlinkHealthExample(
       ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "FILE_HYPERLINK_HEALTH",
         "file-hyperlink-health-request.json",
         "File and document hyperlink authoring with explicit hyperlink-health analysis.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "file-hyperlink-health-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(
+            ExampleWorkbookPlans.saveAs(
                 paths.generatedWorkbook("gridgrind-file-hyperlink-health.xlsx")),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-01-ensure-sheet",
-                ExamplePlanSupport.sheet("Links"),
+                ExampleSelectors.sheet("Links"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-02-set-range",
-                ExamplePlanSupport.range("Links", "A1:B4"),
+                ExampleSelectors.range("Links", "A1:B4"),
                 new CellMutationAction.SetRange(
-                    ExamplePlanSupport.rows(
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Label"),
-                            ExamplePlanSupport.text("Destination")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Relative policy PDF"),
-                            ExamplePlanSupport.text("support/expense policy 2026.pdf")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Absolute checklist URI"),
-                            ExamplePlanSupport.text(
-                                "file:///tmp/quarterly%20close/checklist.xlsx")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Workbook section"),
-                            ExamplePlanSupport.text("Links!B2"))))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.rows(
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Label"), ExampleCellValues.text("Destination")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Relative policy PDF"),
+                            ExampleCellValues.text("support/expense policy 2026.pdf")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Absolute checklist URI"),
+                            ExampleCellValues.text("file:///tmp/quarterly%20close/checklist.xlsx")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Workbook section"),
+                            ExampleCellValues.text("Links!B2"))))),
+            ExampleSteps.step(
                 "step-03-relative-file-link",
-                ExamplePlanSupport.cell("Links", "A2"),
+                ExampleSelectors.cell("Links", "A2"),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.File("support/expense policy 2026.pdf"))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-04-absolute-file-link",
-                ExamplePlanSupport.cell("Links", "A3"),
+                ExampleSelectors.cell("Links", "A3"),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.File("file:///tmp/quarterly%20close/checklist.xlsx"))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-05-document-link",
-                ExamplePlanSupport.cell("Links", "A4"),
+                ExampleSelectors.cell("Links", "A4"),
                 new CellMutationAction.SetHyperlink(new HyperlinkTarget.Document("Links!B2"))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "hyperlinks",
-                ExamplePlanSupport.cells("Links", "A2", "A3", "A4"),
+                ExampleSelectors.cells("Links", "A2", "A3", "A4"),
                 new SheetIntrospectionQuery.GetHyperlinks()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "hyperlink-health",
-                ExamplePlanSupport.sheets("Links"),
+                ExampleSelectors.sheets("Links"),
                 new InspectionAnalysisQuery.AnalyzeHyperlinkHealth())));
   }
 
   static GridGrindShippedExamples.ShippedExample introspectionAnalysisExample(
       ExamplePathLayout paths) {
-    return ExamplePlanSupport.example(
+    return ExampleDefinitions.example(
         "INTROSPECTION_ANALYSIS",
         "introspection-analysis-request.json",
         "Batch factual reads plus formula, hyperlink, named-range, and aggregate workbook analysis.",
-        ExamplePlanSupport.defaultExecutionPlan(
+        ExampleWorkbookPlans.defaultExecutionPlan(
             "introspection-analysis-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(
+            ExampleWorkbookPlans.saveAs(
                 paths.generatedWorkbook("gridgrind-introspection-analysis.xlsx")),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-01-ensure-sheet",
-                ExamplePlanSupport.sheet("Dashboard"),
+                ExampleSelectors.sheet("Dashboard"),
                 new WorkbookMutationAction.EnsureSheet()),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-02-set-range",
-                ExamplePlanSupport.range("Dashboard", "A1:C4"),
+                ExampleSelectors.range("Dashboard", "A1:C4"),
                 new CellMutationAction.SetRange(
-                    ExamplePlanSupport.rows(
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Metric"),
-                            ExamplePlanSupport.text("Value"),
-                            ExamplePlanSupport.text("Notes")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Revenue"),
-                            ExamplePlanSupport.number(125000.25d),
-                            ExamplePlanSupport.text("Closed month")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Margin"),
-                            ExamplePlanSupport.number(0.42d),
-                            ExamplePlanSupport.text("Target 0.40")),
-                        ExamplePlanSupport.row(
-                            ExamplePlanSupport.text("Forecast"),
-                            ExamplePlanSupport.formula("B2*(1+B3)"),
-                            ExamplePlanSupport.text("Projected next month"))))),
-            ExamplePlanSupport.step(
+                    ExampleCellValues.rows(
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Metric"),
+                            ExampleCellValues.text("Value"),
+                            ExampleCellValues.text("Notes")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Revenue"),
+                            ExampleCellValues.number(125000.25d),
+                            ExampleCellValues.text("Closed month")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Margin"),
+                            ExampleCellValues.number(0.42d),
+                            ExampleCellValues.text("Target 0.40")),
+                        ExampleCellValues.row(
+                            ExampleCellValues.text("Forecast"),
+                            ExampleCellValues.formula("B2*(1+B3)"),
+                            ExampleCellValues.text("Projected next month"))))),
+            ExampleSteps.step(
                 "step-03-set-hyperlink",
-                ExamplePlanSupport.cell("Dashboard", "A1"),
+                ExampleSelectors.cell("Dashboard", "A1"),
                 new CellMutationAction.SetHyperlink(
                     new HyperlinkTarget.Url("https://example.com/dashboard-handbook"))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-04-set-comment",
-                ExamplePlanSupport.cell("Dashboard", "B4"),
+                ExampleSelectors.cell("Dashboard", "B4"),
                 new CellMutationAction.SetComment(
                     CommentInput.plain(
                         TextSourceInput.inline("Forecast uses the revenue and margin rows above."),
                         "GridGrind",
                         true))),
-            ExamplePlanSupport.step(
+            ExampleSteps.step(
                 "step-05-set-named-range",
                 new NamedRangeSelector.WorkbookScope("ForecastValue"),
                 new StructuredMutationAction.SetNamedRange(
                     "ForecastValue",
                     new NamedRangeScope.Workbook(),
                     NamedRangeTarget.range("Dashboard", "B4"))),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "workbook",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new WorkbookIntrospectionQuery.GetWorkbookSummary()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "formula-surface",
-                ExamplePlanSupport.sheets("Dashboard"),
+                ExampleSelectors.sheets("Dashboard"),
                 new InspectionSurfaceQuery.GetFormulaSurface()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "schema",
-                ExamplePlanSupport.window("Dashboard", "A1", 4, 3),
+                ExampleSelectors.window("Dashboard", "A1", 4, 3),
                 new InspectionSurfaceQuery.GetSheetSchema()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "named-range-surface",
                 new NamedRangeSelector.ByName("ForecastValue"),
                 new InspectionSurfaceQuery.GetNamedRangeSurface()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "formula-health",
-                ExamplePlanSupport.sheets("Dashboard"),
+                ExampleSelectors.sheets("Dashboard"),
                 new InspectionAnalysisQuery.AnalyzeFormulaHealth()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "hyperlink-health",
-                ExamplePlanSupport.sheets("Dashboard"),
+                ExampleSelectors.sheets("Dashboard"),
                 new InspectionAnalysisQuery.AnalyzeHyperlinkHealth()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "named-range-health",
                 new NamedRangeSelector.ByName("ForecastValue"),
                 new InspectionAnalysisQuery.AnalyzeNamedRangeHealth()),
-            ExamplePlanSupport.read(
+            ExampleSteps.read(
                 "workbook-findings",
-                ExamplePlanSupport.workbook(),
+                ExampleSelectors.workbook(),
                 new InspectionAnalysisQuery.AnalyzeWorkbookFindings())));
   }
 }

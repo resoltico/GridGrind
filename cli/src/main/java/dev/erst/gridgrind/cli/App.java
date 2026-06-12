@@ -21,24 +21,34 @@ public final class App {
   }
 
   /** Entry point: creates an App with production defaults and runs the CLI. */
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     new App().run(args, System.in, System.out, System.err);
   }
 
-  void run(String[] args) throws IOException {
+  void run(String[] args) {
     run(args, System.in, System.out, System.err);
   }
 
-  void run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
-      throws IOException {
-    int exitCode =
-        cliFactory
-            .create()
-            .run(
-                args,
-                Objects.requireNonNull(stdin, "stdin must not be null"),
-                Objects.requireNonNull(stdout, "stdout must not be null"),
-                Objects.requireNonNull(stderr, "stderr must not be null"));
+  void run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr) {
+    int exitCode;
+    try {
+      exitCode =
+          cliFactory
+              .create()
+              .run(
+                  args,
+                  Objects.requireNonNull(stdin, "stdin must not be null"),
+                  Objects.requireNonNull(stdout, "stdout must not be null"),
+                  Objects.requireNonNull(stderr, "stderr must not be null"));
+    } catch (Throwable exception) {
+      exitCode =
+          CliUnexpectedFailureSupport.emit(
+              args,
+              CliPathArguments.responsePathHint(args),
+              Objects.requireNonNull(stdout, "stdout must not be null"),
+              Objects.requireNonNull(stderr, "stderr must not be null"),
+              exception);
+    }
     if (exitCode != 0) {
       exitHandler.exit(exitCode);
     }

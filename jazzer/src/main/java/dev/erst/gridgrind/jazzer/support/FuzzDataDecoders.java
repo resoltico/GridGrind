@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.util.List;
@@ -51,10 +53,15 @@ public final class FuzzDataDecoders {
     return FuzzStyleDecoders.nextStyle(data);
   }
 
-  /** Returns a non-empty rectangular matrix of protocol cell inputs. */
-  public static List<List<CellInput>> nextProtocolMatrix(
+  /** Returns a non-empty rectangular protocol grid. */
+  public static CellGridInput nextProtocolGrid(
       GridGrindFuzzData data, int rowCount, int columnCount) {
-    return FuzzValueDecoders.nextProtocolMatrix(data, rowCount, columnCount);
+    return FuzzValueDecoders.nextProtocolGrid(data, rowCount, columnCount);
+  }
+
+  /** Returns a non-empty protocol row for append operations. */
+  public static CellRowInput nextProtocolRow(GridGrindFuzzData data, int columnCount) {
+    return FuzzValueDecoders.nextProtocolRow(data, columnCount);
   }
 
   /** Returns a non-empty rectangular matrix of workbook-core cell values. */

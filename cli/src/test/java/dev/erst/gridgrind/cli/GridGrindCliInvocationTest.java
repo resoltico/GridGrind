@@ -30,7 +30,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         nonInteractiveCli()
             .run(new String[0], new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -38,7 +38,10 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals(java.util.Optional.of("--request"), failure.argument());
     assertTrue(failure.message().contains("No request JSON was provided."));
     assertTrue(
-        failure.resolution().orElseThrow().contains("bare gridgrind invocation now expects"));
+        failure
+            .resolution()
+            .orElseThrow()
+            .contains("Standard-input request mode always requires --execution-root"));
   }
 
   @Test
@@ -81,7 +84,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -131,7 +134,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
         }) {
       int exitCode = interactiveCli().run(new String[0], blockingStdin, stdout, stderr);
 
-      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
       assertEquals(2, exitCode);
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
       assertEquals(java.util.Optional.of("--request"), failure.argument());

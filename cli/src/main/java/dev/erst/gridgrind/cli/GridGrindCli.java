@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
@@ -80,71 +81,12 @@ public final class GridGrindCli {
     Objects.requireNonNull(stdin, "stdin must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
-
-    Optional<java.nio.file.Path> responsePathHint = responsePathHint(args);
-    CliCommand command;
+    Optional<java.nio.file.Path> responsePathHint = CliPathArguments.responsePathHint(args);
     try {
-      command = CliArguments.parse(args);
-    } catch (CliArgumentsException exception) {
-      return responseWriter.writeCliFailureReport(
-          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(exception));
-    } catch (IllegalArgumentException exception) {
-      return responseWriter.writeCliFailureReport(
-          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(exception));
+      return runInternal(args, stdin, stdout, stderr, responsePathHint);
+    } catch (Throwable exception) {
+      return CliUnexpectedFailureSupport.emit(args, responsePathHint, stdout, stderr, exception);
     }
-
-    return switch (command) {
-      case CliCommand.Help cmd ->
-          GridGrindCliCatalogCommands.help(cmd, stdout, stderr, responseWriter);
-      case CliCommand.Version cmd ->
-          GridGrindCliCatalogCommands.version(cmd, stdout, stderr, responseWriter);
-      case CliCommand.License cmd ->
-          GridGrindCliCatalogCommands.license(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintRequestTemplate cmd ->
-          GridGrindCliCatalogCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintExample cmd ->
-          GridGrindCliCatalogCommands.example(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintExampleCatalog cmd ->
-          GridGrindCliCatalogCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskCatalog cmd ->
-          GridGrindCliCatalogCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskPlan cmd ->
-          GridGrindCliCatalogCommands.taskPlan(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskKeywordMatch cmd ->
-          GridGrindCliCatalogCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
-      case CliCommand.DoctorRequest doctor ->
-          executionCommands.doctorRequest(doctor, stdin, stdout, stderr);
-      case CliCommand.PrintProtocolCatalogAll cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogAll(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintProtocolCatalogSearch cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogSearch(cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintProtocolCatalogLookup cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, stderr, responseWriter);
-      case CliCommand.Execute execute -> {
-        Optional<InputStream> requestInput =
-            executionCommands.standardInputIfPresent(execute, stdin);
-        if (requestInput.isEmpty()) {
-          yield responseWriter.writeCliFailureReport(
-              execute.responsePath(),
-              stdout,
-              stderr,
-              CliFailureReports.invalidArguments(
-                  2,
-                  "execute",
-                  Optional.of("--request"),
-                  "No request JSON was provided. Pass --request <path> or pipe one request"
-                      + " document on standard input.",
-                  List.of(
-                      "gridgrind --print-request-template --response request.json",
-                      "gridgrind --help",
-                      "gridgrind --help-protocol"),
-                  Optional.of(
-                      "Use explicit --help for documentation; a bare gridgrind invocation"
-                          + " now expects a real request document.")));
-        }
-        yield executionCommands.executeCommand(execute, requestInput.orElseThrow(), stdout, stderr);
-      }
-    };
   }
 
   /**
@@ -231,22 +173,82 @@ public final class GridGrindCli {
     return GridGrindCliProductInfo.requestTemplateText(supplier);
   }
 
-  private static Optional<java.nio.file.Path> responsePathHint(String[] args) {
+  private int runInternal(
+      String[] args,
+      InputStream stdin,
+      OutputStream stdout,
+      OutputStream stderr,
+      Optional<java.nio.file.Path> responsePathHint)
+      throws IOException {
+    CliCommand command;
     try {
-      Optional<java.nio.file.Path> responsePath = CliArguments.responsePath(args);
-      Optional<java.nio.file.Path> requestPath = CliArguments.requestPath(args);
-      if (responsePath.isPresent()
-          && requestPath.isPresent()
-          && responsePath
-              .orElseThrow()
-              .toAbsolutePath()
-              .equals(requestPath.orElseThrow().toAbsolutePath())) {
-        return Optional.empty();
-      }
-      return responsePath;
+      command = CliArguments.parse(args);
+    } catch (CliArgumentsException exception) {
+      return responseWriter.writeCliFailureReport(
+          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
     } catch (IllegalArgumentException exception) {
-      return Optional.empty();
+      return responseWriter.writeCliFailureReport(
+          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
     }
+
+    return switch (command) {
+      case CliCommand.Help cmd ->
+          GridGrindCliCatalogCommands.help(cmd, stdout, stderr, responseWriter);
+      case CliCommand.Version cmd ->
+          GridGrindCliCatalogCommands.version(cmd, stdout, stderr, responseWriter);
+      case CliCommand.License cmd ->
+          GridGrindCliCatalogCommands.license(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintRequestTemplate cmd ->
+          GridGrindCliCatalogCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintExample cmd ->
+          GridGrindCliCatalogCommands.example(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintExampleCatalog cmd ->
+          GridGrindCliCatalogCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintTaskCatalog cmd ->
+          GridGrindCliCatalogCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintTaskPlan cmd ->
+          GridGrindCliCatalogCommands.taskPlan(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintTaskKeywordMatch cmd ->
+          GridGrindCliCatalogCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
+      case CliCommand.DoctorRequest doctor ->
+          executionCommands.doctorRequest(doctor, stdin, stdout, stderr);
+      case CliCommand.PrintProtocolCatalogIndex cmd ->
+          GridGrindCliCatalogCommands.protocolCatalogIndex(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintProtocolCatalogAll cmd ->
+          GridGrindCliCatalogCommands.protocolCatalogAll(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintProtocolCatalogSearch cmd ->
+          GridGrindCliCatalogCommands.protocolCatalogSearch(cmd, stdout, stderr, responseWriter);
+      case CliCommand.PrintProtocolCatalogLookup cmd ->
+          GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, stderr, responseWriter);
+      case CliCommand.Execute execute -> execute(execute, stdin, stdout, stderr);
+    };
+  }
+
+  private int execute(
+      CliCommand.Execute execute, InputStream stdin, OutputStream stdout, OutputStream stderr)
+      throws IOException {
+    Optional<InputStream> requestInput = executionCommands.standardInputIfPresent(execute, stdin);
+    if (requestInput.isEmpty()) {
+      CliFailureReport report =
+          CliFailureReports.invalidArguments(
+              2,
+              "execute",
+              "resolve-request",
+              Optional.of("--request"),
+              "No request JSON was provided. Pass --request <path>, pass --request - together with"
+                  + " --execution-root <path>, or pipe one request document on standard input"
+                  + " alongside --execution-root <path>.",
+              List.of(
+                  "gridgrind --print-request-template --response request.json",
+                  "gridgrind --execution-root . < request.json",
+                  "gridgrind --request - --execution-root ."),
+              Optional.of(
+                  "Use one real request document. Standard-input request mode always requires"
+                      + " --execution-root so relative request-owned paths resolve from one"
+                      + " explicit directory."));
+      return responseWriter.writeCliFailureReport(execute.responsePath(), stdout, stderr, report);
+    }
+    return executionCommands.executeCommand(execute, requestInput.orElseThrow(), stdout, stderr);
   }
 
   /** Supplies request-template bytes for help rendering. */

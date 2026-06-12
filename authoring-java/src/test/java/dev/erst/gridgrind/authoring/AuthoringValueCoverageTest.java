@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.TableInput;
@@ -144,10 +144,11 @@ class AuthoringValueCoverageTest {
             .getMessage());
     assertEquals(
         "text must not be null",
-        assertThrows(NullPointerException.class, () -> new Values.ExpectedText(null)).getMessage());
+        assertThrows(NullPointerException.class, () -> new ExpectedValues.TextValue(null))
+            .getMessage());
     assertEquals(
         "error must not be null",
-        assertThrows(NullPointerException.class, () -> new Values.ExpectedError(null))
+        assertThrows(NullPointerException.class, () -> new ExpectedValues.ErrorValue(null))
             .getMessage());
   }
 
@@ -167,8 +168,8 @@ class AuthoringValueCoverageTest {
         assertInstanceOf(CellInput.Text.class, Values.toCellInput(Values.textFile(textPath)));
     CellInput.Text stdinText =
         assertInstanceOf(CellInput.Text.class, Values.toCellInput(Values.textFromStandardInput()));
-    CellInput.Numeric number =
-        assertInstanceOf(CellInput.Numeric.class, Values.toCellInput(Values.number(42.5)));
+    CellInput.NumberValue number =
+        assertInstanceOf(CellInput.NumberValue.class, Values.toCellInput(Values.number(42.5)));
     CellInput.BooleanValue bool =
         assertInstanceOf(CellInput.BooleanValue.class, Values.toCellInput(Values.bool(true)));
     CellInput.Date dateInput =
@@ -182,17 +183,23 @@ class AuthoringValueCoverageTest {
     CellInput.Formula stdinFormula =
         assertInstanceOf(
             CellInput.Formula.class, Values.toCellInput(Values.formulaFromStandardInput()));
-    assertInstanceOf(TextSourceInput.Inline.class, text.source());
-    assertInstanceOf(TextSourceInput.Inline.class, sourcedText.source());
+    CellInput.ErrorValue errorValue =
+        assertInstanceOf(CellInput.ErrorValue.class, Values.toCellInput(Values.error("#N/A")));
+    assertEquals("Owner", assertInstanceOf(TextSourceInput.Inline.class, text.source()).text());
+    assertEquals(
+        "Owner 2", assertInstanceOf(TextSourceInput.Inline.class, sourcedText.source()).text());
     assertInstanceOf(TextSourceInput.Utf8File.class, fileText.source());
     assertInstanceOf(TextSourceInput.StandardInput.class, stdinText.source());
     assertEquals(42.5, number.number());
     assertTrue(bool.bool());
     assertEquals(date, dateInput.date());
     assertEquals(dateTime, dateTimeInput.dateTime());
-    assertInstanceOf(TextSourceInput.Inline.class, inlineFormula.source());
+    assertEquals(
+        "SUM(A1:A2)",
+        assertInstanceOf(TextSourceInput.Inline.class, inlineFormula.source()).text());
     assertInstanceOf(TextSourceInput.Utf8File.class, fileFormula.source());
     assertInstanceOf(TextSourceInput.StandardInput.class, stdinFormula.source());
+    assertEquals("#N/A", errorValue.error());
     assertEquals(
         "value must not be null",
         assertThrows(NullPointerException.class, () -> Values.toCellInput(null)).getMessage());
@@ -212,32 +219,33 @@ class AuthoringValueCoverageTest {
         "comment must not be null",
         assertThrows(NullPointerException.class, () -> Values.toCommentInput(null)).getMessage());
 
-    ExpectedCellValue.Blank expectedBlank =
+    CellScalarValue.Blank expectedBlank =
         assertInstanceOf(
-            ExpectedCellValue.Blank.class, Values.toExpectedCellValue(Values.expectedBlank()));
-    ExpectedCellValue.Text expectedText =
+            CellScalarValue.Blank.class, ExpectedValues.toCellScalarValue(ExpectedValues.blank()));
+    CellScalarValue.Text expectedText =
         assertInstanceOf(
-            ExpectedCellValue.Text.class, Values.toExpectedCellValue(Values.expectedText("Owner")));
-    ExpectedCellValue.NumericValue expectedNumber =
+            CellScalarValue.Text.class,
+            ExpectedValues.toCellScalarValue(ExpectedValues.text("Owner")));
+    CellScalarValue.NumberValue expectedNumber =
         assertInstanceOf(
-            ExpectedCellValue.NumericValue.class,
-            Values.toExpectedCellValue(Values.expectedNumber(42.5)));
-    ExpectedCellValue.BooleanValue expectedBoolean =
+            CellScalarValue.NumberValue.class,
+            ExpectedValues.toCellScalarValue(ExpectedValues.number(42.5)));
+    CellScalarValue.BooleanValue expectedBoolean =
         assertInstanceOf(
-            ExpectedCellValue.BooleanValue.class,
-            Values.toExpectedCellValue(Values.expectedBoolean(true)));
-    ExpectedCellValue.ErrorValue expectedError =
+            CellScalarValue.BooleanValue.class,
+            ExpectedValues.toCellScalarValue(ExpectedValues.bool(true)));
+    CellScalarValue.ErrorValue expectedError =
         assertInstanceOf(
-            ExpectedCellValue.ErrorValue.class,
-            Values.toExpectedCellValue(Values.expectedError("#N/A")));
-    assertInstanceOf(ExpectedCellValue.Blank.class, expectedBlank);
+            CellScalarValue.ErrorValue.class,
+            ExpectedValues.toCellScalarValue(ExpectedValues.error("#N/A")));
+    assertInstanceOf(CellScalarValue.Blank.class, expectedBlank);
     assertEquals("Owner", expectedText.text());
     assertEquals(42.5, expectedNumber.number());
-    assertTrue(expectedBoolean.value());
+    assertTrue(expectedBoolean.bool());
     assertEquals("#N/A", expectedError.error());
     assertEquals(
         "expectedValue must not be null",
-        assertThrows(NullPointerException.class, () -> Values.toExpectedCellValue(null))
+        assertThrows(NullPointerException.class, () -> ExpectedValues.toCellScalarValue(null))
             .getMessage());
 
     TextSourceInput.Inline inlineSource =

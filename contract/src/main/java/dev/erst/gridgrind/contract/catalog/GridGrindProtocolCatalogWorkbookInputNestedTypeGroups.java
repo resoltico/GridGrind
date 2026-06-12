@@ -4,7 +4,9 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.nestedTypeGroup;
 
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.PaneInput;
@@ -26,7 +28,8 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       CellInput.Text.class,
                       "TEXT",
-                      "Write a string cell value. Blank text is rejected; use BLANK for empty"
+                      "Write one string cell value from an inline, file-backed, or standard-input"
+                          + " text source. Blank resolved text is rejected; use BLANK for empty"
                           + " cells."),
                   descriptor(
                       CellInput.RichText.class,
@@ -34,9 +37,14 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       "Write a structured string cell value with an ordered rich-text run list."
                           + " Run text concatenates to the stored plain string value and each run"
                           + " may override font attributes independently."),
-                  descriptor(CellInput.Numeric.class, "NUMBER", "Write a numeric cell value."),
                   descriptor(
-                      CellInput.BooleanValue.class, "BOOLEAN", "Write a boolean cell value."),
+                      CellInput.NumberValue.class, "NUMBER", "Write one numeric cell value."),
+                  descriptor(
+                      CellInput.BooleanValue.class, "BOOLEAN", "Write one boolean cell value."),
+                  descriptor(
+                      CellInput.ErrorValue.class,
+                      "ERROR",
+                      "Write one exact Excel error literal such as #REF! or #DIV/0!."),
                   descriptor(
                       CellInput.Date.class,
                       "DATE",
@@ -50,7 +58,81 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       CellInput.Formula.class,
                       "FORMULA",
-                      "Write an Excel formula. A leading = sign is accepted and stripped automatically; the engine stores the formula without it."))),
+                      "Write one Excel formula from an inline, file-backed, or standard-input"
+                          + " text source. A leading = sign is accepted and stripped automatically;"
+                          + " the engine stores the formula without it."))),
+          nestedTypeGroup(
+              "cellRowInputTypes",
+              CellRowInput.class,
+              List.of(
+                  descriptor(
+                      CellRowInput.Typed.class,
+                      "TYPED",
+                      "Append one row expressed as a per-cell typed value list."),
+                  descriptor(
+                      CellRowInput.TextValues.class,
+                      "TEXT",
+                      "Append one row using a compact homogeneous string list."),
+                  descriptor(
+                      CellRowInput.NumberValues.class,
+                      "NUMBER",
+                      "Append one row using a compact homogeneous numeric list."),
+                  descriptor(
+                      CellRowInput.BooleanValues.class,
+                      "BOOLEAN",
+                      "Append one row using a compact homogeneous boolean list."),
+                  descriptor(
+                      CellRowInput.ErrorValues.class,
+                      "ERROR",
+                      "Append one row using a compact homogeneous Excel error list."),
+                  descriptor(
+                      CellRowInput.DateValues.class,
+                      "DATE",
+                      "Append one row using a compact homogeneous date list."),
+                  descriptor(
+                      CellRowInput.DateTimeValues.class,
+                      "DATE_TIME",
+                      "Append one row using a compact homogeneous date-time list."),
+                  descriptor(
+                      CellRowInput.FormulaValues.class,
+                      "FORMULA",
+                      "Append one row using a compact homogeneous formula text list."))),
+          nestedTypeGroup(
+              "cellGridInputTypes",
+              CellGridInput.class,
+              List.of(
+                  descriptor(
+                      CellGridInput.Typed.class,
+                      "TYPED",
+                      "Write one rectangular grid expressed as per-cell typed rows."),
+                  descriptor(
+                      CellGridInput.TextRows.class,
+                      "TEXT",
+                      "Write one rectangular grid using homogeneous string rows."),
+                  descriptor(
+                      CellGridInput.NumberRows.class,
+                      "NUMBER",
+                      "Write one rectangular grid using homogeneous numeric rows."),
+                  descriptor(
+                      CellGridInput.BooleanRows.class,
+                      "BOOLEAN",
+                      "Write one rectangular grid using homogeneous boolean rows."),
+                  descriptor(
+                      CellGridInput.ErrorRows.class,
+                      "ERROR",
+                      "Write one rectangular grid using homogeneous Excel error rows."),
+                  descriptor(
+                      CellGridInput.DateRows.class,
+                      "DATE",
+                      "Write one rectangular grid using homogeneous date rows."),
+                  descriptor(
+                      CellGridInput.DateTimeRows.class,
+                      "DATE_TIME",
+                      "Write one rectangular grid using homogeneous date-time rows."),
+                  descriptor(
+                      CellGridInput.FormulaRows.class,
+                      "FORMULA",
+                      "Write one rectangular grid using homogeneous formula text rows."))),
           nestedTypeGroup(
               "hyperlinkTargetTypes",
               HyperlinkTarget.class,

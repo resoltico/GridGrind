@@ -9,7 +9,6 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
@@ -132,7 +131,9 @@ class WorkbookStepValidationTest {
 
   @Test
   void validatesCompatibleAssertionTargetsAcrossDirectAnalysisAndCompositeFamilies() {
-    Assertion cellValue = new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"));
+    Assertion cellValue =
+        new CellAssertion.CellValue(
+            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"));
     assertEquals(
         cellValue,
         WorkbookStepValidation.requireCompatible(
@@ -160,7 +161,8 @@ class WorkbookStepValidationTest {
             () ->
                 WorkbookStepValidation.requireCompatible(
                     new WorkbookSelector.Current(),
-                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))));
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))));
     assertEquals(
         "EXPECT_CELL_VALUE requires target type CELL_BY_ADDRESS, CELL_BY_ADDRESSES or"
             + " TABLE_CELL_BY_COLUMN_NAME but got WORKBOOK_CURRENT",
@@ -173,7 +175,8 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.allowedTargetTypes(
                     new CompositeAssertion.AllOf(
                         List.of(
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")),
                             new PresenceAssertion.TablePresent()))));
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families",
@@ -228,7 +231,8 @@ class WorkbookStepValidationTest {
             TableCellSelector.ByColumnName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))));
+                new CellAssertion.CellValue(
+                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")))));
     assertEquals(
         List.of(SheetSelector.class),
         List.of(
@@ -547,7 +551,9 @@ class WorkbookStepValidationTest {
         List.of(SheetSelector.ByName.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new CellMutationAction.AppendRow(List.of(new CellInput.Text(text("A")))))));
+                new CellMutationAction.AppendRow(
+                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                        List.of(new CellInput.Text(text("A"))))))));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
@@ -557,7 +563,9 @@ class WorkbookStepValidationTest {
         List.of(RangeSelector.ByRange.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
-                new CellMutationAction.SetRange(List.of(List.of(new CellInput.Text(text("A"))))))));
+                new CellMutationAction.SetRange(
+                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                        List.of(List.of(new CellInput.Text(text("A")))))))));
     assertEquals(
         List.of(RangeSelector.ByRange.class),
         List.of(
@@ -716,9 +724,9 @@ class WorkbookStepValidationTest {
             "Amount");
 
     assertEquals(
-        new CellMutationAction.SetCell(new CellInput.Numeric(125.0)),
+        new CellMutationAction.SetCell(new CellInput.NumberValue(125.0)),
         WorkbookStepValidation.requireCompatible(
-            tableCell, new CellMutationAction.SetCell(new CellInput.Numeric(125.0))));
+            tableCell, new CellMutationAction.SetCell(new CellInput.NumberValue(125.0))));
     assertEquals(
         new SheetIntrospectionQuery.GetCells(),
         WorkbookStepValidation.requireCompatible(

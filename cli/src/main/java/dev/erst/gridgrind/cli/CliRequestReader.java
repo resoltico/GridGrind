@@ -17,7 +17,7 @@ final class CliRequestReader {
   byte[] readBytes(Optional<Path> requestPath, InputStream stdin) throws IOException {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
-    if (requestPath.isEmpty()) {
+    if (requestPath.isEmpty() || CliPathArguments.isStandardInputPath(requestPath)) {
       byte[] requestBytes = stdin.readAllBytes();
       GridGrindJson.requireSupportedRequestLength(requestBytes.length);
       return requestBytes;

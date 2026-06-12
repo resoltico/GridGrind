@@ -99,7 +99,10 @@ public final class GridGrindCliHelp {
                         "Rank likely task ids for one natural-language query."),
                     new CliSurface.DefinitionEntry(
                         "--print-protocol-catalog",
-                        "Emit the authoritative machine-readable protocol catalog."),
+                        "Emit the compact authoritative protocol-catalog index."),
+                    new CliSurface.DefinitionEntry(
+                        "--print-protocol-catalog --full",
+                        "Emit the complete machine-readable protocol catalog."),
                     new CliSurface.DefinitionEntry(
                         "--print-protocol-catalog --lookup <id>|<group>:<id>",
                         "Emit one authoritative catalog entry or one type group by stable lookup"
@@ -141,7 +144,7 @@ public final class GridGrindCliHelp {
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
                     "With no --response path, CLI argument and lookup failures are emitted as"
-                        + " compact CLI failure reports on stdout.",
+                        + " compact CLI failure reports on stderr.",
                     "--help is the short synopsis. Use --help-protocol for the contract and"
                         + " --help-guidance for workflows."))),
         renderReferences(

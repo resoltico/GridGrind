@@ -103,7 +103,7 @@ case "${command}" in
         cli_flag=${args[$((run_index + 1))]:-}
         case "${cli_flag}" in
             '')
-                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}"
+                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}" >&2
                 exit 2
                 ;;
             --version)
@@ -144,7 +144,11 @@ case "${command}" in
                 emit_fixture_file "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE:?}"
                 ;;
             --print-protocol-catalog)
-                emit_fixture_file "${FAKE_DOCKER_CATALOG_OUTPUT_FILE:?}"
+                if [[ "${args[$((run_index + 2))]:-}" == "--full" ]]; then
+                    emit_fixture_file "${FAKE_DOCKER_CATALOG_FULL_OUTPUT_FILE:?}"
+                else
+                    emit_fixture_file "${FAKE_DOCKER_CATALOG_INDEX_OUTPUT_FILE:?}"
+                fi
                 ;;
             *)
                 printf 'unexpected docker run invocation: %s\n' "$*" >&2
@@ -198,20 +202,22 @@ run_verify_with_fixture_texts() {
     local help_overview_output=$3
     local help_protocol_output=$4
     local help_guidance_output=$5
-    local catalog_output=$6
-    local example_catalog_output=$7
-    local task_catalog_output=$8
-    local task_plan_output=$9
-    local task_keyword_match_output=${10}
-    local doctor_report_output=${11}
-    local noargs_failure_output=${12}
+    local catalog_index_output=$6
+    local catalog_full_output=$7
+    local example_catalog_output=$8
+    local task_catalog_output=$9
+    local task_plan_output=${10}
+    local task_keyword_match_output=${11}
+    local doctor_report_output=${12}
+    local noargs_failure_output=${13}
     local case_dir
     local version_output_file
     local latest_version_output_file
     local help_overview_output_file
     local help_protocol_output_file
     local help_guidance_output_file
-    local catalog_output_file
+    local catalog_index_output_file
+    local catalog_full_output_file
     local example_catalog_output_file
     local task_catalog_output_file
     local task_plan_output_file
@@ -226,7 +232,8 @@ run_verify_with_fixture_texts() {
     help_overview_output_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_output}")"
     help_protocol_output_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_output}")"
     help_guidance_output_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_output}")"
-    catalog_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_output}")"
+    catalog_index_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-index.json' "${catalog_index_output}")"
+    catalog_full_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-full.json' "${catalog_full_output}")"
     example_catalog_output_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_output}")"
     task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
     task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
@@ -243,7 +250,8 @@ run_verify_with_fixture_texts() {
         FAKE_DOCKER_HELP_OVERVIEW_OUTPUT_FILE="${help_overview_output_file}" \
         FAKE_DOCKER_HELP_PROTOCOL_OUTPUT_FILE="${help_protocol_output_file}" \
         FAKE_DOCKER_HELP_GUIDANCE_OUTPUT_FILE="${help_guidance_output_file}" \
-        FAKE_DOCKER_CATALOG_OUTPUT_FILE="${catalog_output_file}" \
+        FAKE_DOCKER_CATALOG_INDEX_OUTPUT_FILE="${catalog_index_output_file}" \
+        FAKE_DOCKER_CATALOG_FULL_OUTPUT_FILE="${catalog_full_output_file}" \
         FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE="${example_catalog_output_file}" \
         FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
         FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
@@ -277,6 +285,7 @@ run_verify_expect_success \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -290,6 +299,8 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:9.9.9 --help' "${fake_log}" || die 
     "verifier did not inspect the version tag help surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag catalog surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --full' "${fake_log}" || die \
+    "verifier did not inspect the latest tag full catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-example-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag example-catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-catalog' "${fake_log}" || die \
@@ -313,6 +324,7 @@ FAKE_DISCOVERY_SHOULD_FAIL=1 run_verify_expect_failure \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -328,6 +340,7 @@ run_verify_expect_failure \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -340,6 +353,7 @@ run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -353,6 +367,7 @@ run_verify_expect_failure \
     "${success_help_overview}" \
     "$(append_fixture_line "${success_help_protocol}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -366,6 +381,41 @@ run_verify_expect_failure \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "$(replace_fixture_token \
+        "${success_catalog_index}" \
+        '"lookupNamespaces"' \
+        '"lookupNamespacez"')" \
+    "${success_catalog}" \
+    "${success_example_catalog}" \
+    "${success_task_catalog}" \
+    "${success_task_plan}" \
+    "${success_task_keyword_match}" \
+    "${success_doctor_report}" \
+    "${success_noargs_failure}"
+run_verify_expect_failure \
+    "${expected_header}" \
+    "${expected_header}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
+    "${success_catalog_index}" \
+    "$(replace_fixture_token \
+        "${success_catalog}" \
+        '"plainTypes"' \
+        '"plainTypez"')" \
+    "${success_example_catalog}" \
+    "${success_task_catalog}" \
+    "${success_task_plan}" \
+    "${success_task_keyword_match}" \
+    "${success_doctor_report}" \
+    "${success_noargs_failure}"
+run_verify_expect_failure \
+    "${expected_header}" \
+    "${expected_header}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
@@ -382,6 +432,7 @@ run_verify_expect_failure \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
+    "${success_catalog_index}" \
     "${success_catalog}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \

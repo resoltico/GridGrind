@@ -8,15 +8,17 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalogsExtension
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.testing.Test
+import org.gradle.language.base.plugins.LifecycleBasePlugin
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.plugins.quality.PmdExtension
-import org.gradle.api.tasks.compile.JavaCompile
-import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.bundling.Jar
-import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
+import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
@@ -24,7 +26,6 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
 import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRule
 import org.gradle.testing.jacoco.tasks.rules.JacocoViolationRulesContainer
-import net.ltgt.gradle.errorprone.errorprone
 
 class GridGrindJavaConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -67,6 +68,14 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     javaExtension.sourceSets.named("test").map { sourceSet ->
                         sourceSet.allSource.files.any(File::isFile)
                     }
+                val semanticSourceFiles =
+                    mainSourceSet.map { sourceSet ->
+                        sourceSet.allJava.sourceDirectories.asFileTree
+                    }
+                val semanticCompileClasspathConfigurationName =
+                    mainSourceSet.map { sourceSet ->
+                        sourceSet.compileClasspathConfigurationName
+                    }
                 val coverageClasses =
                     mainSourceSet.map { sourceSet ->
                         sourceSet.output.classesDirs.asFileTree.matching { patternFilterable ->
@@ -98,6 +107,29 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                             }
                         },
                     )
+
+                tasks.register("pmdSemanticMain", Pmd::class.java) { pmd ->
+                    pmd.group = LifecycleBasePlugin.VERIFICATION_GROUP
+                    pmd.description =
+                        "Runs the structural semantic-shape PMD profile for reviewed production-code governance."
+                    pmd.onlyIf("project has first-party production Java sources") {
+                        semanticSourceFiles.get().files.any(File::isFile)
+                    }
+                    pmd.setSource(semanticSourceFiles)
+                    pmd.classpath =
+                        configurations.named(semanticCompileClasspathConfigurationName.get()).get()
+                    pmd.ruleSetFiles = files(repositoryLayout.semanticShapePmdRuleset)
+                    pmd.ruleSets = emptyList()
+                    pmd.ignoreFailures = true
+                    pmd.reports.xml.required.set(true)
+                    pmd.reports.xml.outputLocation.set(
+                        layout.buildDirectory.file("reports/pmd/semanticMain.xml"),
+                    )
+                    pmd.reports.html.required.set(true)
+                    pmd.reports.html.outputLocation.set(
+                        layout.buildDirectory.file("reports/pmd/semanticMain.html"),
+                    )
+                }
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())
@@ -175,10 +207,6 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                     override fun execute(pmd: Pmd) {
                         pmd.reports.xml.required.set(true)
                         pmd.reports.html.required.set(true)
-                        if (pmd.name == "pmdMain" && project.name in setOf("contract", "engine", "excel-foundation")) {
-                            pmd.ruleSetFiles = files(repositoryLayout.semanticShapePmdRuleset)
-                            pmd.ruleSets = emptyList()
-                        }
                     }
                 },
             )

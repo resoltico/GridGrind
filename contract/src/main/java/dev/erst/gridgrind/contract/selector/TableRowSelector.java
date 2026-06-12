@@ -32,7 +32,7 @@ public sealed interface TableRowSelector extends Selector
     public ByIndex {
       Objects.requireNonNull(table, "table must not be null");
       requireExactTableSelector(table, "table");
-      rowIndex = SelectorSupport.requireNonNegative(rowIndex, "rowIndex");
+      rowIndex = SelectorValueValidation.requireNonNegative(rowIndex, "rowIndex");
     }
 
     @Override
@@ -47,7 +47,7 @@ public sealed interface TableRowSelector extends Selector
     public ByKeyCell {
       Objects.requireNonNull(table, "table must not be null");
       requireExactTableSelector(table, "table");
-      columnName = SelectorSupport.requireNonBlank(columnName, "columnName");
+      columnName = SelectorValueValidation.requireNonBlank(columnName, "columnName");
       expectedValue = requireSupportedKeyValue(expectedValue);
     }
 
@@ -69,7 +69,7 @@ public sealed interface TableRowSelector extends Selector
     Objects.requireNonNull(expectedValue, "expectedValue must not be null");
     if (expectedValue instanceof CellInput.Blank
         || expectedValue instanceof CellInput.Text
-        || expectedValue instanceof CellInput.Numeric
+        || expectedValue instanceof CellInput.NumberValue
         || expectedValue instanceof CellInput.BooleanValue
         || expectedValue instanceof CellInput.Formula) {
       return expectedValue;

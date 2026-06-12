@@ -12,7 +12,6 @@ import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
 import dev.erst.gridgrind.contract.dto.AnalysisLocationReport;
@@ -99,7 +98,7 @@ class AssertionExecutorCoverageTest {
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B2"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(42.0d))),
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "C2"),
                         new CellMutationAction.SetCell(new CellInput.BooleanValue(true))),
@@ -247,32 +246,30 @@ class AssertionExecutorCoverageTest {
                             "cell-text",
                             new CellSelector.ByAddress("Budget", "A2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
                                     owner.stringValue()))),
                         assertThat(
                             "cell-number",
                             new CellSelector.ByAddress("Budget", "B2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                    .NumericValue(amount.numberValue()))),
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
+                                    amount.numberValue()))),
                         assertThat(
                             "cell-boolean",
                             new CellSelector.ByAddress("Budget", "C2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                    .BooleanValue(enabled.booleanValue()))),
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.BooleanValue(
+                                    enabled.booleanValue()))),
                         assertThat(
                             "cell-blank",
                             new CellSelector.ByAddress("Budget", "D2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                    .Blank())),
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Blank())),
                         assertThat(
                             "cell-error",
                             new CellSelector.ByAddress("Budget", "E2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                    .ErrorValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.ErrorValue(
                                     assertInstanceOf(
                                             dev.erst.gridgrind.contract.dto.CellReport.ErrorReport
                                                 .class,
@@ -282,8 +279,7 @@ class AssertionExecutorCoverageTest {
                             "cell-formula-evaluation",
                             new CellSelector.ByAddress("Budget", "F2"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                    .NumericValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
                                     assertInstanceOf(
                                             dev.erst.gridgrind.contract.dto.CellReport.NumberReport
                                                 .class,
@@ -346,8 +342,8 @@ class AssertionExecutorCoverageTest {
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                            .Text(owner.stringValue())),
+                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                            owner.stringValue())),
                                     new CellAssertion.DisplayValue(owner.displayValue())))),
                         assertThat(
                             "any-of",
@@ -356,15 +352,15 @@ class AssertionExecutorCoverageTest {
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                            .Text(owner.stringValue()))))),
+                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                            owner.stringValue()))))),
                         assertThat(
                             "not",
                             new CellSelector.ByAddress("Budget", "A2"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                        .Text("Wrong"))))),
+                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                        "Wrong"))))),
                     List.of())));
 
     assertFalse(asserted.assertions().isEmpty());
@@ -428,7 +424,7 @@ class AssertionExecutorCoverageTest {
                         new CellMutationAction.SetCell(textCell("Ada"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B2"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(42.0d))),
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(42.0d))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "E2"),
                         new CellMutationAction.SetCell(formulaCell("1/0"))),
@@ -753,8 +749,8 @@ class AssertionExecutorCoverageTest {
                             new CompositeAssertion.AllOf(
                                 List.of(
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                            .Text("Owner")),
+                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                            "Owner")),
                                     new CellAssertion.DisplayValue("Wrong"))))),
                     List.of())));
     assertTrue(allOfFailure.problem().message().contains("ALL_OF failed"));
@@ -775,8 +771,8 @@ class AssertionExecutorCoverageTest {
                                 List.of(
                                     new CellAssertion.DisplayValue("Wrong"),
                                     new CellAssertion.CellValue(
-                                        new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                            .Text("Also wrong")))))),
+                                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                            "Also wrong")))))),
                     List.of())));
     assertTrue(anyOfFailure.problem().message().contains("ANY_OF failed"));
 
@@ -794,8 +790,8 @@ class AssertionExecutorCoverageTest {
                             new CellSelector.ByAddress("Budget", "A1"),
                             new CompositeAssertion.Not(
                                 new CellAssertion.CellValue(
-                                    new dev.erst.gridgrind.contract.assertion.ExpectedCellValue
-                                        .Text("Owner"))))),
+                                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                        "Owner"))))),
                     List.of())));
     assertTrue(notFailure.problem().message().contains("NOT failed"));
     assertTrue(notFailure.problem().assertionFailure().isPresent());
@@ -1219,34 +1215,33 @@ class AssertionExecutorCoverageTest {
             "2+40",
             numberCell);
 
-    assertTrue(AssertionExecutor.matchesCellValue(blankCell, new ExpectedCellValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new ExpectedCellValue.Blank()));
-    assertFalse(AssertionExecutor.matchesCellValue(blankCell, new ExpectedCellValue.Text("Owner")));
-    assertTrue(AssertionExecutor.matchesCellValue(textCell, new ExpectedCellValue.Text("Owner")));
-    assertFalse(AssertionExecutor.matchesCellValue(textCell, new ExpectedCellValue.Text("Wrong")));
+    assertTrue(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Blank()));
+    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Blank()));
+    assertFalse(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Text("Owner")));
+    assertTrue(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Owner")));
+    assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Text("Wrong")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(textCell, new ExpectedCellValue.NumericValue(42.0d)));
+        AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.NumberValue(42.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(numberCell, new ExpectedCellValue.NumericValue(42.0d)));
+        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new ExpectedCellValue.NumericValue(41.0d)));
+        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.NumberValue(41.0d)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(booleanCell, new ExpectedCellValue.BooleanValue(true)));
+        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(true)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(booleanCell, new ExpectedCellValue.BooleanValue(false)));
+        AssertionExecutor.matchesCellValue(booleanCell, new CellScalarValue.BooleanValue(false)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(numberCell, new ExpectedCellValue.BooleanValue(true)));
+        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.BooleanValue(true)));
     assertTrue(
-        AssertionExecutor.matchesCellValue(errorCell, new ExpectedCellValue.ErrorValue("#DIV/0!")));
+        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#DIV/0!")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(errorCell, new ExpectedCellValue.ErrorValue("#REF!")));
+        AssertionExecutor.matchesCellValue(errorCell, new CellScalarValue.ErrorValue("#REF!")));
     assertFalse(
-        AssertionExecutor.matchesCellValue(
-            numberCell, new ExpectedCellValue.ErrorValue("#DIV/0!")));
+        AssertionExecutor.matchesCellValue(numberCell, new CellScalarValue.ErrorValue("#DIV/0!")));
     assertTrue(
-        AssertionExecutor.matchesCellValue(formulaCell, new ExpectedCellValue.NumericValue(42.0d)));
+        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(42.0d)));
     assertFalse(
-        AssertionExecutor.matchesCellValue(formulaCell, new ExpectedCellValue.NumericValue(41.0d)));
+        AssertionExecutor.matchesCellValue(formulaCell, new CellScalarValue.NumberValue(41.0d)));
 
     assertTrue(
         AssertionExecutor.matchesFinding(
@@ -1295,13 +1290,14 @@ class AssertionExecutorCoverageTest {
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                List.of(textCell("Owner"), textCell("Ada"))))),
+                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                    List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-assert",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
                                     "Owner")))),
                     List.of(
                         inspect(
@@ -1330,19 +1326,19 @@ class AssertionExecutorCoverageTest {
                         mutate(
                             new SheetSelector.ByName("Ops"),
                             new CellMutationAction.AppendRow(
-                                List.of(textCell("Owner"), textCell("Ada"))))),
+                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                    List.of(textCell("Owner"), textCell("Ada")))))),
                     List.of(
                         assertThat(
                             "stream-pass",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
-                                    "Owner"))),
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
                         assertThat(
                             "stream-fail",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
                                     "WrongValue")))),
                     List.of())));
     assertEquals(2, streamingAssertionFailure.assertions().size());
@@ -1364,8 +1360,7 @@ class AssertionExecutorCoverageTest {
                         "assert",
                         new CellSelector.ByAddress("Ops", "A1"),
                         new CellAssertion.CellValue(
-                            new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
-                                "Owner"))),
+                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
                     null,
                     new WorkbookLocation.UnsavedWorkbook(),
                     ExecutionModeInput.eventRead()));
@@ -1481,7 +1476,7 @@ class AssertionExecutorCoverageTest {
                             "assert-without-sheet",
                             new CellSelector.ByAddress("Ops", "A1"),
                             new CellAssertion.CellValue(
-                                new dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
                                     "Owner")))),
                     List.of()))
             .orElseThrow()
@@ -1558,10 +1553,11 @@ class AssertionExecutorCoverageTest {
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
             new CellMutationAction.SetRange(
-                List.of(
-                    List.of(textCell("Item"), textCell("Amount")),
-                    List.of(textCell("Hosting"), new CellInput.Numeric(100.0)),
-                    List.of(textCell("Travel"), new CellInput.Numeric(50.0))))),
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    List.of(
+                        List.of(textCell("Item"), textCell("Amount")),
+                        List.of(textCell("Hosting"), new CellInput.NumberValue(100.0)),
+                        List.of(textCell("Travel"), new CellInput.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(

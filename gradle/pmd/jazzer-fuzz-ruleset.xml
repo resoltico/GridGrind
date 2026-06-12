@@ -7,7 +7,8 @@
     <description>
         High-signal PMD rules for GridGrind's Jazzer harness entrypoints. Fuzz harnesses are test
         adapters, not ordinary JUnit suites, so the profile keeps general hygiene while excluding
-        rules that conflict with Jazzer's invocation model.
+        rules that conflict with Jazzer's invocation model. Repo-wide source-shape budgets own the
+        handwritten fuzz-harness size and reviewed exception posture.
     </description>
 
     <rule ref="category/java/errorprone.xml">

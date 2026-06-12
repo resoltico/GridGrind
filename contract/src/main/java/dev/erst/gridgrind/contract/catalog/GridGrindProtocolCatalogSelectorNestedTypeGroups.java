@@ -5,6 +5,8 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNested
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.selectorDescriptor;
 
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
+import dev.erst.gridgrind.contract.selector.Selector;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Owns one focused subset of nested-type group descriptors for the protocol catalog. */
@@ -124,16 +126,13 @@ final class GridGrindProtocolCatalogSelectorNestedTypeGroups {
           nestedTypeGroup(
               "namedRangeRefSelectorTypes",
               dev.erst.gridgrind.contract.selector.NamedRangeSelector.Ref.class,
-              List.of(
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
-                      "Match a named range reference across all scopes by exact name."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
-                      "Match one workbook-scoped named range reference by exact name."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
-                      "Match one sheet-scoped named range reference on one sheet."))),
+              namedRangeScopeDescriptors(
+                  dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
+                  "Match a named range reference across all scopes by exact name.",
+                  dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
+                  "Match one workbook-scoped named range reference by exact name.",
+                  dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
+                  "Match one sheet-scoped named range reference on one sheet.")),
           nestedTypeGroup(
               "namedRangeScopeTypes",
               NamedRangeScope.class,
@@ -144,25 +143,7 @@ final class GridGrindProtocolCatalogSelectorNestedTypeGroups {
           nestedTypeGroup(
               "namedRangeSelectorTypes",
               dev.erst.gridgrind.contract.selector.NamedRangeSelector.class,
-              List.of(
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.All.class,
-                      "Select every user-facing named range."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf.class,
-                      "Select the union of one or more explicit named-range references."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
-                      "Match a named range across all scopes by exact name."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByNames.class,
-                      "Match named ranges across all scopes by exact name set."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
-                      "Match the workbook-scoped named range with the exact name."),
-                  selectorDescriptor(
-                      dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
-                      "Match the sheet-scoped named range on one sheet."))),
+              namedRangeSelectionDescriptors()),
           nestedTypeGroup(
               "drawingObjectSelectorTypes",
               dev.erst.gridgrind.contract.selector.DrawingObjectSelector.class,
@@ -199,4 +180,44 @@ final class GridGrindProtocolCatalogSelectorNestedTypeGroups {
                   selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.PivotTableSelector.ByNameOnSheet.class,
                       "Select one workbook-global pivot table by exact name and expected owning sheet."))));
+
+  private static List<CatalogTypeDescriptor> namedRangeSelectionDescriptors() {
+    List<CatalogTypeDescriptor> descriptors = new ArrayList<>();
+    descriptors.add(
+        selectorDescriptor(
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.All.class,
+            "Select every user-facing named range."));
+    descriptors.add(
+        selectorDescriptor(
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf.class,
+            "Select the union of one or more explicit named-range references."));
+    descriptors.add(
+        selectorDescriptor(
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByNames.class,
+            "Match named ranges across all scopes by exact name set."));
+    descriptors.addAll(
+        namedRangeScopeDescriptors(
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
+            "Match a named range across all scopes by exact name.",
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
+            "Match the workbook-scoped named range with the exact name.",
+            dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
+            "Match the sheet-scoped named range on one sheet."));
+    return List.copyOf(descriptors);
+  }
+
+  private static <
+          B extends Record & Selector, W extends Record & Selector, S extends Record & Selector>
+      List<CatalogTypeDescriptor> namedRangeScopeDescriptors(
+          Class<B> byNameType,
+          String byNameSummary,
+          Class<W> workbookScopeType,
+          String workbookScopeSummary,
+          Class<S> sheetScopeType,
+          String sheetScopeSummary) {
+    return List.of(
+        selectorDescriptor(byNameType, byNameSummary),
+        selectorDescriptor(workbookScopeType, workbookScopeSummary),
+        selectorDescriptor(sheetScopeType, sheetScopeSummary));
+  }
 }

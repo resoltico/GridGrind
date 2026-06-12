@@ -3,6 +3,9 @@ package dev.erst.gridgrind.contract.action;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.dto.CellInput;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Edge-path coverage for mutation-action selector metadata lookup. */
@@ -33,6 +36,51 @@ class MutationActionCoverageTest {
         "No target-type mapping configured for action class "
             + MissingMetadataActionRecord.class.getName(),
         missingMetadataFailure.getMessage());
+  }
+
+  @Test
+  void rectangularRowValidationRejectsEmptyRowsNullRowsAndNullCells() {
+    MutationAction.Validation.requireRectangularRows(
+        List.of(List.of(new CellInput.Blank()), List.of(new CellInput.Blank())));
+
+    assertEquals(
+        "rows must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> MutationAction.Validation.requireRectangularRows(List.of()))
+            .getMessage());
+    assertEquals(
+        "rows must not contain null rows",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    MutationAction.Validation.requireRectangularRows(
+                        Arrays.asList((List<CellInput>) null)))
+            .getMessage());
+    assertEquals(
+        "rows must not contain null cell values",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    MutationAction.Validation.requireRectangularRows(
+                        List.of(Arrays.asList(new CellInput.Blank(), null))))
+            .getMessage());
+    assertEquals(
+        "rows must not contain empty rows",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> MutationAction.Validation.requireRectangularRows(List.of(List.of())))
+            .getMessage());
+    assertEquals(
+        "rows must describe a rectangular matrix",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    MutationAction.Validation.requireRectangularRows(
+                        List.of(
+                            List.of(new CellInput.Blank()),
+                            List.of(new CellInput.Blank(), new CellInput.Blank()))))
+            .getMessage());
   }
 
   private record MissingMetadataActionRecord() {}

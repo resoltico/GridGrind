@@ -52,6 +52,27 @@ final class CliDiscoveryValidation {
     return normalized;
   }
 
+  static java.util.Optional<String> copyOptionalArbitraryString(
+      java.util.Optional<String> value, String fieldName) {
+    java.util.Optional<String> normalized =
+        java.util.Objects.requireNonNull(value, fieldName + " must not be null");
+    if (normalized.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    return java.util.Optional.of(normalized.orElseThrow());
+  }
+
+  static java.util.Optional<CliFailureLocation> copyOptionalLocation(
+      java.util.Optional<CliFailureLocation> value, String fieldName) {
+    java.util.Optional<CliFailureLocation> normalized =
+        java.util.Objects.requireNonNull(value, fieldName + " must not be null");
+    if (normalized.isEmpty()) {
+      return java.util.Optional.empty();
+    }
+    CliFailureLocation location = normalized.orElseThrow();
+    return location.isAvailable() ? java.util.Optional.of(location) : java.util.Optional.empty();
+  }
+
   static List<TaskEntry> copyTaskEntries(List<TaskEntry> tasks, String fieldName) {
     return copyUnique(tasks, fieldName, TaskEntry::id);
   }

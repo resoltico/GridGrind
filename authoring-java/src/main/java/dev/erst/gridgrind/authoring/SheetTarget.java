@@ -45,47 +45,49 @@ public final class SheetTarget {
 
   /** Returns one sheet-summary inspection step. */
   public PlannedInspection summary() {
-    return new PlannedInspection(selector, Queries.sheetSummary());
+    return new PlannedInspection(selector, SheetQueries.sheetSummary());
   }
 
   /** Returns one sheet-layout inspection step. */
   public PlannedInspection layout() {
-    return new PlannedInspection(selector, Queries.sheetLayout());
+    return new PlannedInspection(selector, SheetQueries.sheetLayout());
   }
 
   /** Returns one print-layout inspection step. */
   public PlannedInspection printLayout() {
-    return new PlannedInspection(selector, Queries.printLayout());
+    return new PlannedInspection(selector, SheetQueries.printLayout());
   }
 
   /** Returns one merged-regions inspection step. */
   public PlannedInspection mergedRegions() {
-    return new PlannedInspection(selector, Queries.mergedRegions());
+    return new PlannedInspection(selector, SheetQueries.mergedRegions());
   }
 
   /** Returns one autofilter inspection step. */
   public PlannedInspection autofilters() {
-    return new PlannedInspection(selector, Queries.autofilters());
+    return new PlannedInspection(selector, SheetQueries.autofilters());
   }
 
   /** Returns one chart inventory inspection step for this sheet. */
   public PlannedInspection charts() {
-    return new PlannedInspection(new ChartSelector.AllOnSheet(selector.name()), Queries.charts());
+    return new PlannedInspection(
+        new ChartSelector.AllOnSheet(selector.name()), WorkbookAssetQueries.charts());
   }
 
   /** Returns one drawing-object inventory inspection step for this sheet. */
   public PlannedInspection drawingObjects() {
     return new PlannedInspection(
-        new DrawingObjectSelector.AllOnSheet(selector.name()), Queries.drawingObjects());
+        new DrawingObjectSelector.AllOnSheet(selector.name()),
+        WorkbookAssetQueries.drawingObjects());
   }
 
   /** Returns one formula-surface inspection step. */
   public PlannedInspection formulaSurface() {
-    return new PlannedInspection(selector, Queries.formulaSurface());
+    return new PlannedInspection(selector, InspectionSurfaceQueries.formulaSurface());
   }
 
   /** Returns one formula-health analysis step. */
   public PlannedInspection formulaHealth() {
-    return new PlannedInspection(selector, Queries.formulaHealth());
+    return new PlannedInspection(selector, InspectionAnalysisQueries.formulaHealth());
   }
 }

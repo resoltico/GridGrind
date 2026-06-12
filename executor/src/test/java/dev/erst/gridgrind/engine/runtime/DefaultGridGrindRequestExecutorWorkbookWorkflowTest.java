@@ -8,8 +8,8 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -77,7 +77,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         assertThat(
                             "assert-owner",
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
                         assertThat(
                             "assert-formula",
                             new CellSelector.ByAddress("Budget", "B2"),
@@ -118,7 +119,9 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         assertThat(
                             "assert-owner",
                             new CellSelector.ByAddress("Budget", "A1"),
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Wrong")))),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    "Wrong")))),
                     inspections())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
@@ -221,21 +224,25 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(textCell("Item"), textCell("Amount"), textCell("Billable")))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(
+                                    textCell("Item"), textCell("Amount"), textCell("Billable"))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(
-                                textCell("Hosting"),
-                                new CellInput.Numeric(49.0),
-                                new CellInput.BooleanValue(true)))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(
+                                    textCell("Hosting"),
+                                    new CellInput.NumberValue(49.0),
+                                    new CellInput.BooleanValue(true))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(
-                                textCell("Domain"),
-                                new CellInput.Numeric(12.0),
-                                new CellInput.BooleanValue(false)))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(
+                                    textCell("Domain"),
+                                    new CellInput.NumberValue(12.0),
+                                    new CellInput.BooleanValue(false))))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A4"),
                         new CellMutationAction.SetCell(textCell("Total"))),
@@ -461,7 +468,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new WorkbookMutationAction.EnsureSheet()),
                     mutate(
                         new CellSelector.ByAddress("Budget Review", "A1"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(1200.0))),
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(1200.0))),
                     mutate(
                         new CellSelector.ByAddress("Summary", "A1"),
                         new CellMutationAction.SetCell(formulaCell("Budget Review!A1"))))));
@@ -500,7 +507,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new CellMutationAction.SetCell(textCell("After"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B1"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(12.0)))),
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(12.0)))),
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1", "B1")),
@@ -689,49 +696,50 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Layout", "A1:F6"),
                         new CellMutationAction.SetRange(
-                            List.of(
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                                 List.of(
-                                    textCell("Item"),
-                                    textCell("Qty"),
-                                    textCell("Status"),
-                                    textCell("Note"),
-                                    textCell("Owner"),
-                                    textCell("Flag")),
-                                List.of(
-                                    textCell("Hosting"),
-                                    new CellInput.Numeric(42.0),
-                                    textCell("Open"),
-                                    textCell("Alpha"),
-                                    textCell("Ada"),
-                                    textCell("Y")),
-                                List.of(
-                                    textCell("Support"),
-                                    new CellInput.Numeric(84.0),
-                                    textCell("Closed"),
-                                    textCell("Beta"),
-                                    textCell("Lin"),
-                                    textCell("N")),
-                                List.of(
-                                    textCell("Ops"),
-                                    new CellInput.Numeric(168.0),
-                                    textCell("Open"),
-                                    textCell("Gamma"),
-                                    textCell("Bea"),
-                                    textCell("Y")),
-                                List.of(
-                                    textCell("QA"),
-                                    new CellInput.Numeric(21.0),
-                                    textCell("Queued"),
-                                    textCell("Delta"),
-                                    textCell("Kai"),
-                                    textCell("N")),
-                                List.of(
-                                    textCell("Infra"),
-                                    new CellInput.Numeric(7.0),
-                                    textCell("Done"),
-                                    textCell("Epsilon"),
-                                    textCell("Mia"),
-                                    textCell("Y"))))),
+                                    List.of(
+                                        textCell("Item"),
+                                        textCell("Qty"),
+                                        textCell("Status"),
+                                        textCell("Note"),
+                                        textCell("Owner"),
+                                        textCell("Flag")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellInput.NumberValue(42.0),
+                                        textCell("Open"),
+                                        textCell("Alpha"),
+                                        textCell("Ada"),
+                                        textCell("Y")),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellInput.NumberValue(84.0),
+                                        textCell("Closed"),
+                                        textCell("Beta"),
+                                        textCell("Lin"),
+                                        textCell("N")),
+                                    List.of(
+                                        textCell("Ops"),
+                                        new CellInput.NumberValue(168.0),
+                                        textCell("Open"),
+                                        textCell("Gamma"),
+                                        textCell("Bea"),
+                                        textCell("Y")),
+                                    List.of(
+                                        textCell("QA"),
+                                        new CellInput.NumberValue(21.0),
+                                        textCell("Queued"),
+                                        textCell("Delta"),
+                                        textCell("Kai"),
+                                        textCell("N")),
+                                    List.of(
+                                        textCell("Infra"),
+                                        new CellInput.NumberValue(7.0),
+                                        textCell("Done"),
+                                        textCell("Epsilon"),
+                                        textCell("Mia"),
+                                        textCell("Y")))))),
                     mutate(
                         new RowBandSelector.Span("Layout", 1, 3),
                         new WorkbookMutationAction.GroupRows(true)),
@@ -841,22 +849,23 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Moves", "A1:D3"),
                         new CellMutationAction.SetRange(
-                            List.of(
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                                 List.of(
-                                    textCell("Item"),
-                                    textCell("Qty"),
-                                    textCell("Status"),
-                                    textCell("Note")),
-                                List.of(
-                                    textCell("Hosting"),
-                                    new CellInput.Numeric(42.0),
-                                    textCell("Open"),
-                                    textCell("Alpha")),
-                                List.of(
-                                    textCell("Support"),
-                                    new CellInput.Numeric(84.0),
-                                    textCell("Closed"),
-                                    textCell("Beta"))))),
+                                    List.of(
+                                        textCell("Item"),
+                                        textCell("Qty"),
+                                        textCell("Status"),
+                                        textCell("Note")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellInput.NumberValue(42.0),
+                                        textCell("Open"),
+                                        textCell("Alpha")),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellInput.NumberValue(84.0),
+                                        textCell("Closed"),
+                                        textCell("Beta")))))),
                     mutate(
                         new RowBandSelector.Insertion("Moves", 1, 1),
                         new WorkbookMutationAction.InsertRows()),
@@ -937,10 +946,14 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         mutate(
                             new RangeSelector.ByRange("Budget", "A1:B3"),
                             new CellMutationAction.SetRange(
-                                List.of(
-                                    List.of(textCell("Item"), textCell("Qty")),
-                                    List.of(textCell("Hosting"), new CellInput.Numeric(42.0)),
-                                    List.of(textCell("Support"), new CellInput.Numeric(84.0))))),
+                                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                    List.of(
+                                        List.of(textCell("Item"), textCell("Qty")),
+                                        List.of(
+                                            textCell("Hosting"), new CellInput.NumberValue(42.0)),
+                                        List.of(
+                                            textCell("Support"),
+                                            new CellInput.NumberValue(84.0)))))),
                         mutate(
                             new StructuredMutationAction.SetTable(
                                 TableInput.withDefaultMetadata(
@@ -1005,7 +1018,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         new CellMutationAction.SetCell(textCell("Report"))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B4"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(61.0))),
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(61.0))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
                         new CellMutationAction.SetHyperlink(
@@ -1204,12 +1217,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:B5"),
                         new CellMutationAction.SetRange(
-                            List.of(
-                                List.of(textCell("Status"), textCell("Amount")),
-                                List.of(textCell("Queued"), new CellInput.Numeric(1.0)),
-                                List.of(textCell("Done"), new CellInput.Numeric(9.0)),
-                                List.of(textCell("Done"), new CellInput.Numeric(11.0)),
-                                List.of(textCell("Queued"), new CellInput.Numeric(4.0))))),
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                List.of(
+                                    List.of(textCell("Status"), textCell("Amount")),
+                                    List.of(textCell("Queued"), new CellInput.NumberValue(1.0)),
+                                    List.of(textCell("Done"), new CellInput.NumberValue(9.0)),
+                                    List.of(textCell("Done"), new CellInput.NumberValue(11.0)),
+                                    List.of(textCell("Queued"), new CellInput.NumberValue(4.0)))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new StructuredMutationAction.SetConditionalFormatting(
@@ -1298,27 +1312,30 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:C4"),
                         new CellMutationAction.SetRange(
-                            List.of(
-                                List.of(textCell("Item"), textCell("Amount"), textCell("Billable")),
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                                 List.of(
-                                    textCell("Hosting"),
-                                    new CellInput.Numeric(49.0),
-                                    new CellInput.BooleanValue(true)),
-                                List.of(
-                                    textCell("Domain"),
-                                    new CellInput.Numeric(12.0),
-                                    new CellInput.BooleanValue(false)),
-                                List.of(
-                                    textCell("Support"),
-                                    new CellInput.Numeric(18.0),
-                                    new CellInput.BooleanValue(true))))),
+                                    List.of(
+                                        textCell("Item"), textCell("Amount"), textCell("Billable")),
+                                    List.of(
+                                        textCell("Hosting"),
+                                        new CellInput.NumberValue(49.0),
+                                        new CellInput.BooleanValue(true)),
+                                    List.of(
+                                        textCell("Domain"),
+                                        new CellInput.NumberValue(12.0),
+                                        new CellInput.BooleanValue(false)),
+                                    List.of(
+                                        textCell("Support"),
+                                        new CellInput.NumberValue(18.0),
+                                        new CellInput.BooleanValue(true)))))),
                     mutate(
                         new RangeSelector.ByRange("Budget", "E1:F3"),
                         new CellMutationAction.SetRange(
-                            List.of(
-                                List.of(textCell("Queue"), textCell("Owner")),
-                                List.of(textCell("Late invoices"), textCell("Marta")),
-                                List.of(textCell("Badge orders"), textCell("Rihards"))))),
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                List.of(
+                                    List.of(textCell("Queue"), textCell("Owner")),
+                                    List.of(textCell("Late invoices"), textCell("Marta")),
+                                    List.of(textCell("Badge orders"), textCell("Rihards")))))),
                     mutate(
                         new RangeSelector.ByRange("Budget", "E1:F3"),
                         new StructuredMutationAction.SetAutofilter()),

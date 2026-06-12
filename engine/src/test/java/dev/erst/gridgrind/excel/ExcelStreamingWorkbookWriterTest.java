@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipFile;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -39,6 +40,7 @@ class ExcelStreamingWorkbookWriterTest {
                       new ExcelRichText(List.of(new ExcelRichTextRun("Rich", Optional.empty())))),
                   ExcelCellValue.number(42.5d),
                   ExcelCellValue.bool(true),
+                  ExcelCellValue.error("#REF!"),
                   ExcelCellValue.date(LocalDate.of(2026, 4, 13)),
                   ExcelCellValue.dateTime(LocalDateTime.of(2026, 4, 13, 9, 30, 15)),
                   ExcelCellValue.formula("2+3"))));
@@ -57,10 +59,12 @@ class ExcelStreamingWorkbookWriterTest {
       assertEquals("Rich", sheet.getRow(0).getCell(2).getRichStringCellValue().getString());
       assertEquals(42.5d, sheet.getRow(0).getCell(3).getNumericCellValue());
       assertTrue(sheet.getRow(0).getCell(4).getBooleanCellValue());
-      assertEquals("yyyy-mm-dd", sheet.getRow(0).getCell(5).getCellStyle().getDataFormatString());
+      assertEquals(CellType.ERROR, sheet.getRow(0).getCell(5).getCellType());
+      assertEquals(FormulaError.REF.getCode(), sheet.getRow(0).getCell(5).getErrorCellValue());
+      assertEquals("yyyy-mm-dd", sheet.getRow(0).getCell(6).getCellStyle().getDataFormatString());
       assertEquals(
-          "yyyy-mm-dd hh:mm:ss", sheet.getRow(0).getCell(6).getCellStyle().getDataFormatString());
-      assertEquals("2+3", sheet.getRow(0).getCell(7).getCellFormula());
+          "yyyy-mm-dd hh:mm:ss", sheet.getRow(0).getCell(7).getCellStyle().getDataFormatString());
+      assertEquals("2+3", sheet.getRow(0).getCell(8).getCellFormula());
       assertEquals("Hosting", sheet.getRow(1).getCell(0).getStringCellValue());
       assertEquals(9.0d, sheet.getRow(1).getCell(1).getNumericCellValue());
       assertTrue(workbook.getForceFormulaRecalculation());

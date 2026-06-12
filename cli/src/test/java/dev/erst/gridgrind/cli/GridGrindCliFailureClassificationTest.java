@@ -43,7 +43,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -63,7 +63,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -83,7 +83,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -105,7 +105,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -121,11 +121,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--unknown"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("parse-arguments", failure.command());
+    assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("--unknown"), failure.argument());
     assertEquals("Unknown argument: --unknown", failure.message());
     assertEquals(
@@ -147,11 +147,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
         new GridGrindCli()
             .run(new String[] {"--request"}, new ByteArrayInputStream(new byte[0]), stdout, stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("parse-arguments", failure.command());
+    assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("--request"), failure.argument());
     assertEquals("Missing value for --request", failure.message());
     assertEquals(
@@ -179,11 +179,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("parse-arguments", failure.command());
+    assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
     assertEquals("Missing value for --execution-root", failure.message());
   }
@@ -201,7 +201,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals("Duplicate argument: --request", failure.message());
@@ -220,7 +220,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals("Duplicate argument: --response", failure.message());
@@ -239,7 +239,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals("Duplicate argument: --execution-root", failure.message());
@@ -280,7 +280,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
@@ -302,11 +302,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("parse-arguments", failure.command());
+    assertEquals("execute", failure.command());
   }
 
   @Test
@@ -323,7 +323,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
@@ -347,7 +347,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
       assertEquals(1, exitCode);
       assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
@@ -387,7 +387,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
       assertEquals(1, exitCode);
       assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
@@ -546,15 +546,15 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_JSON, failure.code());
     assertEquals("execute", failure.command());
     assertEquals(java.util.Optional.empty(), failure.argument());
-    assertEquals(java.util.Optional.of(1), failure.location().jsonLine());
-    assertEquals(java.util.Optional.of(2), failure.location().jsonColumn());
-    assertEquals(java.util.Optional.empty(), failure.location().jsonPath());
+    assertEquals(java.util.Optional.of(1), failure.location().orElseThrow().jsonLine());
+    assertEquals(java.util.Optional.of(2), failure.location().orElseThrow().jsonColumn());
+    assertEquals(java.util.Optional.empty(), failure.location().orElseThrow().jsonPath());
   }
 
   @Test
@@ -579,12 +579,12 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.of("steps[0]"), failure.location().jsonPath());
+    assertEquals(java.util.Optional.of("steps[0]"), failure.location().orElseThrow().jsonPath());
     assertFalse(failure.message().contains("tools.jackson"));
     assertFalse(failure.message().contains("dev.erst.gridgrind"));
   }
@@ -621,14 +621,15 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.of("steps[0].target"), failure.location().jsonPath());
-    assertEquals(java.util.Optional.empty(), failure.location().jsonLine());
-    assertEquals(java.util.Optional.empty(), failure.location().jsonColumn());
+    assertEquals(
+        java.util.Optional.of("steps[0].target"), failure.location().orElseThrow().jsonPath());
+    assertEquals(java.util.Optional.empty(), failure.location().orElseThrow().jsonLine());
+    assertEquals(java.util.Optional.empty(), failure.location().orElseThrow().jsonColumn());
   }
 
   @Test
@@ -656,7 +657,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
@@ -750,7 +751,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
     assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("parse-arguments", failure.command());
+    assertEquals("execute", failure.command());
     assertEquals("Unknown argument: --bogus-flag", failure.message());
   }
 
@@ -852,11 +853,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                   stdout,
                   stderr);
 
-      CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+      CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
       assertEquals(2, exitCode);
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-      assertEquals("parse-arguments", failure.command());
+      assertEquals("execute", failure.command());
       assertEquals("--request and --response must not point to the same path", failure.message());
     } finally {
       Files.deleteIfExists(path);
@@ -896,7 +897,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());

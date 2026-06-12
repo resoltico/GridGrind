@@ -21,6 +21,7 @@ class AuthoringPublicSurfaceTest {
           "dev.erst.gridgrind.engine.api.",
           "dev.erst.gridgrind.engine.runtime.",
           "dev.erst.gridgrind.contract.dto.CellInput",
+          "dev.erst.gridgrind.contract.dto.CellScalarValue",
           "dev.erst.gridgrind.contract.dto.ChartInput",
           "dev.erst.gridgrind.contract.dto.CommentInput",
           "dev.erst.gridgrind.contract.dto.DataValidationInput",
@@ -33,7 +34,6 @@ class AuthoringPublicSurfaceTest {
           "dev.erst.gridgrind.contract.dto.SheetPresentationInput",
           "dev.erst.gridgrind.contract.dto.TableInput",
           "dev.erst.gridgrind.contract.dto.WorkbookProtectionInput",
-          "dev.erst.gridgrind.contract.assertion.ExpectedCellValue",
           "dev.erst.gridgrind.contract.source.BinarySourceInput",
           "dev.erst.gridgrind.contract.source.TextSourceInput");
 
@@ -64,11 +64,17 @@ class AuthoringPublicSurfaceTest {
   }
 
   @Test
-  void checksAndQueriesAreNoLongerPublicApiSurface() throws Exception {
-    assertFalse(
-        Modifier.isPublic(Class.forName("dev.erst.gridgrind.authoring.Checks").getModifiers()));
-    assertFalse(
-        Modifier.isPublic(Class.forName("dev.erst.gridgrind.authoring.Queries").getModifiers()));
+  void internalChecksAndQueryFamiliesStayOutOfThePublicApiSurface() throws Exception {
+    for (String typeName :
+        List.of(
+            "dev.erst.gridgrind.authoring.Checks",
+            "dev.erst.gridgrind.authoring.WorkbookQueries",
+            "dev.erst.gridgrind.authoring.SheetQueries",
+            "dev.erst.gridgrind.authoring.WorkbookAssetQueries",
+            "dev.erst.gridgrind.authoring.InspectionSurfaceQueries",
+            "dev.erst.gridgrind.authoring.InspectionAnalysisQueries")) {
+      assertFalse(Modifier.isPublic(Class.forName(typeName).getModifiers()));
+    }
   }
 
   @Test
@@ -128,11 +134,12 @@ class AuthoringPublicSurfaceTest {
         Values.DateTimeValue.class,
         Values.Formula.class,
         Values.Comment.class,
-        Values.ExpectedBlank.class,
-        Values.ExpectedText.class,
-        Values.ExpectedNumber.class,
-        Values.ExpectedBoolean.class,
-        Values.ExpectedError.class,
+        ExpectedValues.class,
+        ExpectedValues.BlankValue.class,
+        ExpectedValues.TextValue.class,
+        ExpectedValues.NumberValue.class,
+        ExpectedValues.BooleanValue.class,
+        ExpectedValues.ErrorValue.class,
         Values.InlineText.class,
         Values.Utf8FileText.class,
         Values.StandardInputText.class);

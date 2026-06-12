@@ -1401,9 +1401,10 @@ final class XlsxParityCoreProbeGroup {
                     mutate(
                         new RangeSelector.ByRange("Ops", "A5:A6"),
                         new CellMutationAction.SetRange(
-                            List.of(
-                                List.of(text("ThemeTintStyle")),
-                                List.of(text("GradientFillStyle"))))),
+                            new CellGridInput.Typed(
+                                List.of(
+                                    List.of(text("ThemeTintStyle")),
+                                    List.of(text("GradientFillStyle")))))),
                     mutate(
                         new RangeSelector.ByRange("Ops", "A5"),
                         new CellMutationAction.ApplyStyle(advancedThemedStyleInput())),

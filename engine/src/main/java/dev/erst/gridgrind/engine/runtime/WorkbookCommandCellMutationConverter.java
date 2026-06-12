@@ -29,7 +29,7 @@ final class WorkbookCommandCellMutationConverter {
         yield new WorkbookCellCommand.SetRange(
             selector.sheetName(),
             selector.range(),
-            setRange.rows().stream()
+            setRange.rows().toCellInputRows().stream()
                 .map(
                     row ->
                         row.stream()
@@ -101,7 +101,7 @@ final class WorkbookCommandCellMutationConverter {
       case CellMutationAction.AppendRow appendRow ->
           new WorkbookCellCommand.AppendRow(
               WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              appendRow.values().stream()
+              appendRow.values().toCellInputs().stream()
                   .map(WorkbookCommandCellInputConverter::toExcelCellValue)
                   .toList());
     };

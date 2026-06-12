@@ -13,7 +13,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -45,43 +45,46 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Owner"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Status"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Ada"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Ready"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Lin"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Review"
-        }
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Owner"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Status"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Ada"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Ready"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Lin"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Review"
+          }
+        } ] ]
+      }
     }
   }, {
     "stepId" : "step-03-set-comment",

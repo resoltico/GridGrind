@@ -25,7 +25,7 @@ public sealed interface SheetSelector extends Selector
   /** Selects one sheet by exact sheet name. */
   record ByName(String name) implements SheetSelector {
     public ByName {
-      name = SelectorSupport.requireSheetName(name, "name");
+      name = SelectorValueValidation.requireSheetName(name, "name");
     }
 
     @Override
@@ -37,7 +37,7 @@ public sealed interface SheetSelector extends Selector
   /** Selects one or more sheets by exact sheet names. */
   record ByNames(List<String> names) implements SheetSelector {
     public ByNames {
-      names = SelectorSupport.copyDistinctSheetNames(names, "names");
+      names = SelectorListValidation.copyDistinctSheetNames(names, "names");
     }
 
     @Override

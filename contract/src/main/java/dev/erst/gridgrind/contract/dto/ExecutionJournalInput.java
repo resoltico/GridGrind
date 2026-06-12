@@ -5,9 +5,9 @@ import java.util.Objects;
 
 /** Request-side configuration for execution-journal detail and rendering policy. */
 public record ExecutionJournalInput(ExecutionJournalLevel level) {
-  /** Returns the default journal input that keeps normal execution telemetry enabled. */
+  /** Returns the default journal input that keeps response telemetry compact and stable. */
   public static ExecutionJournalInput defaults() {
-    return new ExecutionJournalInput(ExecutionJournalLevel.NORMAL);
+    return new ExecutionJournalInput(ExecutionJournalLevel.SUMMARY);
   }
 
   public ExecutionJournalInput {
@@ -17,7 +17,7 @@ public record ExecutionJournalInput(ExecutionJournalLevel level) {
   /** Returns whether this input resolves to the product default journal behavior. */
   @JsonIgnore
   public boolean isDefault() {
-    return level == ExecutionJournalLevel.NORMAL;
+    return level == ExecutionJournalLevel.SUMMARY;
   }
 
   /** Returns the required journal level after null/default normalization. */

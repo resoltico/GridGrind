@@ -14,6 +14,7 @@ class CliArgumentFailureSupportTest {
   void queryFailuresSuggestTaskDiscoveryCommands() {
     CliFailureReport failure =
         CliArgumentFailureSupport.reportFor(
+            new String[] {"--print-task-keyword-match", "--query"},
             new CliArgumentsException("--query", "Missing value for --query"));
 
     assertEquals(
@@ -31,6 +32,7 @@ class CliArgumentFailureSupportTest {
   void mistypedFlagsOfferNearestKnownCommands() {
     CliFailureReport failure =
         CliArgumentFailureSupport.reportFor(
+            new String[] {"--versoin"},
             new CliArgumentsException("--versoin", "Unknown argument: --versoin"));
 
     assertTrue(
@@ -47,6 +49,7 @@ class CliArgumentFailureSupportTest {
   void distantUnknownFlagsFallBackToGeneralHelpInsteadOfGuessingWorkflowCommands() {
     CliFailureReport failure =
         CliArgumentFailureSupport.reportFor(
+            new String[] {"--bogus"},
             new CliArgumentsException("--bogus", "Unknown argument: --bogus"));
 
     assertEquals(
@@ -57,7 +60,8 @@ class CliArgumentFailureSupportTest {
   @Test
   void genericArgumentFailuresFallBackToHelpCommands() {
     CliFailureReport failure =
-        CliArgumentFailureSupport.reportFor(new IllegalArgumentException("bad argument shape"));
+        CliArgumentFailureSupport.reportFor(
+            new String[] {"--request", ""}, new IllegalArgumentException("bad argument shape"));
 
     assertEquals(
         List.of("gridgrind --help", "gridgrind --help-protocol", "gridgrind --help-guidance"),
@@ -73,6 +77,7 @@ class CliArgumentFailureSupportTest {
   void nonUnknownArgumentFailuresUseDefaultRecoveryWithoutNearestMatchLookups() {
     CliFailureReport failure =
         CliArgumentFailureSupport.reportFor(
+            new String[] {"--license", "--license"},
             new CliArgumentsException("--license", "Duplicate argument: --license"));
 
     assertEquals(

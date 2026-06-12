@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Missing required field 'kind'
+Message: Unexpected token (`JsonToken.END_OBJECT`), expected `JsonToken.VALUE_STRING`: need String, Number of Boolean value that contains type id (for subtype of dev.erst.gridgrind.contract.dto.CellGridInput)
 Input Bytes: 8438
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED

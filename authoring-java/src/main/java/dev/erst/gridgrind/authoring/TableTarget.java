@@ -42,12 +42,12 @@ public final class TableTarget {
 
   /** Returns one table inspection step. */
   public PlannedInspection inspect() {
-    return new PlannedInspection(selector, Queries.tables());
+    return new PlannedInspection(selector, WorkbookAssetQueries.tables());
   }
 
   /** Returns one table-health analysis step. */
   public PlannedInspection analyzeHealth() {
-    return new PlannedInspection(selector, Queries.tableHealth());
+    return new PlannedInspection(selector, InspectionAnalysisQueries.tableHealth());
   }
 
   /** Returns one table presence assertion step. */

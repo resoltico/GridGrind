@@ -40,6 +40,7 @@ final class ExcelWorkbookPersistenceSupport {
           (org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
     }
     ExcelTableHeaderSyncSupport.syncAllHeaders(workbook.context().workbook());
+    ExcelWorkbookDocumentMetadataSupport.normalizeForSave(workbook.context().workbook());
 
     try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
       workbook.context().workbook().write(outputStream);

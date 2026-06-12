@@ -39,7 +39,7 @@ final class CliExecutionBindingsFactory {
       Optional<Path> requestPath, Optional<Path> executionRootPath) {
     Objects.requireNonNull(requestPath, "requestPath must not be null");
     Objects.requireNonNull(executionRootPath, "executionRootPath must not be null");
-    if (requestPath.isEmpty()) {
+    if (requestPath.isEmpty() || CliPathArguments.isStandardInputPath(requestPath)) {
       return executionRootPath
           .orElseThrow(() -> new IllegalArgumentException("executionRootPath must be present"))
           .toAbsolutePath()

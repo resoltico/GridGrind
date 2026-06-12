@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -108,6 +109,8 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
                   workbook.getXSSFWorkbook(), richTextValue.value()));
       case ExcelCellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
       case ExcelCellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
+      case ExcelCellValue.ErrorValue errorValue ->
+          cell.setCellErrorValue(FormulaError.forString(errorValue.value()).getCode());
       case ExcelCellValue.DateValue dateValue -> {
         cell.setCellValue(dateValue.value());
         cell.setCellStyle(styleRegistry.localDateStyle(cell));

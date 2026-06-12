@@ -182,7 +182,7 @@ class ExecutionJournalTest {
   @Test
   void phaseRejectsMissingStartedAndFinishedTimestampsForStartedStatuses() {
     assertEquals(
-        "startedAt must be present when status is started",
+        "startedAt and finishedAt must either both be present or both be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -193,7 +193,7 @@ class ExecutionJournalTest {
                         1))
             .getMessage());
     assertEquals(
-        "finishedAt must be present when status is started",
+        "startedAt and finishedAt must either both be present or both be absent",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->

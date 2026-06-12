@@ -5,53 +5,17 @@ import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Locale;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Pattern;
 
-/** Protocol-owned hyperlink normalization and validation helpers. */
-final class ProtocolHyperlinkSupport {
-  private static final Pattern ABSOLUTE_URI_PATTERN =
-      Pattern.compile("^[A-Za-z][A-Za-z0-9+.-]*:\\S+$");
-  private static final Set<String> ALLOWED_URL_SCHEMES =
-      Set.of("http", "https", "ftp", "ftps"); // LIM-028
+/** Protocol-owned file-hyperlink normalization and POI-address rendering helpers. */
+final class ProtocolHyperlinkFileSupport {
   private static final char[] HEX_DIGITS = "0123456789ABCDEF".toCharArray();
   private static final String SAFE_URI_PATH_CHARACTERS =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~/:";
+  private static final Pattern WINDOWS_DRIVE_PATH = Pattern.compile("^[A-Za-z]:[/\\\\].*");
 
-  private ProtocolHyperlinkSupport() {}
-
-  static String normalizeUrlTarget(String target) {
-    String normalized = requireNonBlank(target, "target");
-    if (isValidUrlTarget(normalized)) {
-      return normalized;
-    }
-    String scheme = absoluteUriScheme(normalized).orElse(null);
-    if ("file".equalsIgnoreCase(scheme)) {
-      throw new IllegalArgumentException("target uses file: scheme; use FILE hyperlinks instead");
-    }
-    if ("mailto".equalsIgnoreCase(scheme)) {
-      throw new IllegalArgumentException(
-          "target uses mailto: scheme; use EMAIL hyperlinks instead");
-    }
-    if (scheme != null) {
-      throw new IllegalArgumentException( // LIM-028
-          "target uses unsupported scheme '"
-              + scheme
-              + "'; only http, https, ftp, and ftps are allowed");
-    }
-    throw new IllegalArgumentException("target must be an absolute URI with a scheme");
-  }
-
-  static String normalizeEmailTarget(String email) {
-    String normalized = stripMailtoPrefix(requireNonBlank(email, "target"));
-    if (!isValidEmailTarget(normalized)) {
-      throw new IllegalArgumentException("target must be an email address");
-    }
-    return normalized;
-  }
+  private ProtocolHyperlinkFileSupport() {}
 
   static String normalizeFileTarget(String path) {
     Objects.requireNonNull(path, "path must not be null");
@@ -61,14 +25,10 @@ final class ProtocolHyperlinkSupport {
     if (looksLikeFileUri(path)) {
       return normalizeFileUri(path);
     }
-    if (looksLikeAbsoluteUri(path)) {
+    if (ProtocolHyperlinkUrlSupport.looksLikeAbsoluteUri(path)) {
       throw new IllegalArgumentException("path must be a local file path or file: URI");
     }
     return decodeEscapedRelativePath(path);
-  }
-
-  static String normalizeDocumentTarget(String target) {
-    return requireNonBlank(target, "target");
   }
 
   static String toPoiFileAddress(String path) {
@@ -88,35 +48,6 @@ final class ProtocolHyperlinkSupport {
       return candidate.toUri().toASCIIString();
     }
     return encodeRelativePath(normalizedPath);
-  }
-
-  private static boolean isValidUrlTarget(String target) {
-    if (!ABSOLUTE_URI_PATTERN.matcher(target).matches()) {
-      return false;
-    }
-    try {
-      URI uri = URI.create(target);
-      return ALLOWED_URL_SCHEMES.contains(uri.getScheme().toLowerCase(Locale.ROOT)); // LIM-028
-    } catch (IllegalArgumentException exception) {
-      return false;
-    }
-  }
-
-  private static boolean isValidEmailTarget(String target) {
-    if (target.isBlank() || target.contains(" ")) {
-      return false;
-    }
-    int atIndex = target.indexOf('@');
-    return atIndex > 0 && atIndex == target.lastIndexOf('@') && atIndex < target.length() - 1;
-  }
-
-  private static Optional<String> absoluteUriScheme(String target) {
-    try {
-      URI uri = URI.create(target);
-      return uri.isAbsolute() ? Optional.ofNullable(uri.getScheme()) : Optional.empty();
-    } catch (IllegalArgumentException exception) {
-      return Optional.empty();
-    }
   }
 
   private static boolean looksLikeFileUri(String path) {
@@ -144,28 +75,8 @@ final class ProtocolHyperlinkSupport {
     }
   }
 
-  private static boolean looksLikeAbsoluteUri(String path) {
-    if (looksLikeWindowsDrivePath(path)) {
-      return false;
-    }
-    try {
-      return new URI(path).isAbsolute();
-    } catch (URISyntaxException exception) {
-      return false;
-    }
-  }
-
   private static boolean looksLikeWindowsDrivePath(String path) {
-    if (path.length() < 3) {
-      return false;
-    }
-    char drive = path.charAt(0);
-    char colon = path.charAt(1);
-    char separator = path.charAt(2);
-    if (!Character.isLetter(drive) || colon != ':') {
-      return false;
-    }
-    return separator == '/' || separator == '\\';
+    return WINDOWS_DRIVE_PATH.matcher(path).matches();
   }
 
   private static String decodeEscapedRelativePath(String path) {
@@ -216,20 +127,5 @@ final class ProtocolHyperlinkSupport {
 
   private static String invalidPathMessage(InvalidPathException exception) {
     return Objects.toString(exception.getReason(), "path is not valid on this runtime");
-  }
-
-  private static String stripMailtoPrefix(String email) {
-    if (email.regionMatches(true, 0, "mailto:", 0, 7)) {
-      return email.substring(7);
-    }
-    return email;
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
   }
 }
