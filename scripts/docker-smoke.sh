@@ -408,29 +408,32 @@ ${default_formula_environment_block}
       },
       "action": {
         "type": "APPEND_ROW",
-        "values": [
-          {
-            "type": "TEXT",
-            "source": {
-              "type": "INLINE",
-              "text": "Team"
+        "values": {
+          "type": "TYPED",
+          "values": [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Team"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Task"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hours"
+              }
             }
-          },
-          {
-            "type": "TEXT",
-            "source": {
-              "type": "INLINE",
-              "text": "Task"
-            }
-          },
-          {
-            "type": "TEXT",
-            "source": {
-              "type": "INLINE",
-              "text": "Hours"
-            }
-          }
-        ]
+          ]
+        }
       }
     },
     {
@@ -441,26 +444,29 @@ ${default_formula_environment_block}
       },
       "action": {
         "type": "APPEND_ROW",
-        "values": [
-          {
-            "type": "TEXT",
-            "source": {
-              "type": "INLINE",
-              "text": "Ops"
+        "values": {
+          "type": "TYPED",
+          "values": [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ops"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Badge prep"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 6.5
             }
-          },
-          {
-            "type": "TEXT",
-            "source": {
-              "type": "INLINE",
-              "text": "Badge prep"
-            }
-          },
-          {
-            "type": "NUMBER",
-            "number": 6.5
-          }
-        ]
+          ]
+        }
       }
     }
   ]

@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for selector helper validation and normalization seams. */
-class SelectorSupportTest {
+class SelectorValidationSupportTest {
   @Test
   void selectorCardinalityFlagsMatchTheDeclaredContract() {
     assertAll(
@@ -23,22 +23,26 @@ class SelectorSupportTest {
 
   @Test
   void selectorSupportValidatesScalarFieldsAndA1Geometry() {
-    assertEquals("Budget", SelectorSupport.requireNonBlank("Budget", "field"));
-    assertEquals("Budget", SelectorSupport.requireSheetName("Budget", "sheetName"));
-    assertEquals("Budget_Total", SelectorSupport.requireDefinedName("Budget_Total", "selector"));
+    assertEquals("Budget", SelectorValueValidation.requireNonBlank("Budget", "field"));
+    assertEquals("Budget", SelectorValueValidation.requireSheetName("Budget", "sheetName"));
     assertEquals(
-        "Sales Pivot 2026", SelectorSupport.requirePivotTableName("Sales Pivot 2026", "selector"));
-    assertEquals("$B$12", SelectorSupport.requireAddress("$B$12", "selector"));
-    assertEquals("A1:B3", SelectorSupport.requireRange("A1:B3", "selector"));
-    assertEquals(4, SelectorSupport.requirePositive(4, "count"));
-    assertEquals(0, SelectorSupport.requireNonNegative(0, "index"));
-    assertEquals(-2, SelectorSupport.requireNonZero(-2, "delta"));
-    assertEquals(1_048_576 - 1, SelectorSupport.requireRowIndexWithinBounds(1_048_576 - 1, "row"));
-    assertEquals(16_384 - 1, SelectorSupport.requireColumnIndexWithinBounds(16_384 - 1, "column"));
-    SelectorSupport.requireWindowSize(500, 500);
-    assertEquals("AA10", SelectorSupport.absoluteA1Address(9, 26));
-    assertEquals(26, SelectorSupport.columnIndex("$AA$10"));
-    assertEquals(9, SelectorSupport.rowIndex("$AA$10"));
+        "Budget_Total", SelectorValueValidation.requireDefinedName("Budget_Total", "selector"));
+    assertEquals(
+        "Sales Pivot 2026",
+        SelectorValueValidation.requirePivotTableName("Sales Pivot 2026", "selector"));
+    assertEquals("$B$12", SelectorValueValidation.requireAddress("$B$12", "selector"));
+    assertEquals("A1:B3", SelectorValueValidation.requireRange("A1:B3", "selector"));
+    assertEquals(4, SelectorValueValidation.requirePositive(4, "count"));
+    assertEquals(0, SelectorValueValidation.requireNonNegative(0, "index"));
+    assertEquals(-2, SelectorValueValidation.requireNonZero(-2, "delta"));
+    assertEquals(
+        1_048_576 - 1, SelectorValueValidation.requireRowIndexWithinBounds(1_048_576 - 1, "row"));
+    assertEquals(
+        16_384 - 1, SelectorValueValidation.requireColumnIndexWithinBounds(16_384 - 1, "column"));
+    SelectorValueValidation.requireWindowSize(500, 500);
+    assertEquals("AA10", SelectorAddressSupport.absoluteA1Address(9, 26));
+    assertEquals(26, SelectorAddressSupport.columnIndex("$AA$10"));
+    assertEquals(9, SelectorAddressSupport.rowIndex("$AA$10"));
   }
 
   @Test
@@ -46,80 +50,86 @@ class SelectorSupportTest {
     assertEquals(
         "field must not be blank",
         assertThrows(
-                IllegalArgumentException.class, () -> SelectorSupport.requireNonBlank(" ", "field"))
+                IllegalArgumentException.class,
+                () -> SelectorValueValidation.requireNonBlank(" ", "field"))
             .getMessage());
     assertEquals(
         "field must not be null",
         assertThrows(
-                NullPointerException.class, () -> SelectorSupport.requireNonBlank(null, "field"))
+                NullPointerException.class,
+                () -> SelectorValueValidation.requireNonBlank(null, "field"))
             .getMessage());
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireDefinedName("1bad", "selector"))
+                () -> SelectorValueValidation.requireDefinedName("1bad", "selector"))
             .getMessage()
             .startsWith("selector "));
     assertEquals(
         "name must start with a letter or underscore and contain only letters, digits, underscore, or period",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireDefinedName("1bad", "name"))
+                () -> SelectorValueValidation.requireDefinedName("1bad", "name"))
             .getMessage());
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requirePivotTableName(" ", "selector"))
+                () -> SelectorValueValidation.requirePivotTableName(" ", "selector"))
             .getMessage()
             .startsWith("selector "));
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireAddress("A0", "selector"))
+                () -> SelectorValueValidation.requireAddress("A0", "selector"))
             .getMessage()
             .startsWith("selector "));
     assertEquals(
         "selector must not be blank",
         assertThrows(
-                IllegalArgumentException.class, () -> SelectorSupport.requireRange(" ", "selector"))
+                IllegalArgumentException.class,
+                () -> SelectorValueValidation.requireRange(" ", "selector"))
             .getMessage());
     assertEquals(
         "selector must be a rectangular A1-style range with at most one ':'",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireRange("A1:B2:C3", "selector"))
+                () -> SelectorValueValidation.requireRange("A1:B2:C3", "selector"))
             .getMessage());
     assertEquals(
         "count must be greater than 0",
         assertThrows(
-                IllegalArgumentException.class, () -> SelectorSupport.requirePositive(0, "count"))
+                IllegalArgumentException.class,
+                () -> SelectorValueValidation.requirePositive(0, "count"))
             .getMessage());
     assertEquals(
         "index must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireNonNegative(-1, "index"))
+                () -> SelectorValueValidation.requireNonNegative(-1, "index"))
             .getMessage());
     assertEquals(
         "delta must not be 0",
         assertThrows(
-                IllegalArgumentException.class, () -> SelectorSupport.requireNonZero(0, "delta"))
+                IllegalArgumentException.class,
+                () -> SelectorValueValidation.requireNonZero(0, "delta"))
             .getMessage());
     assertEquals(
         "row must be within Excel .xlsx row bounds",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireRowIndexWithinBounds(1_048_576, "row"))
+                () -> SelectorValueValidation.requireRowIndexWithinBounds(1_048_576, "row"))
             .getMessage());
     assertEquals(
         "column must be within Excel .xlsx column bounds",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.requireColumnIndexWithinBounds(16_384, "column"))
+                () -> SelectorValueValidation.requireColumnIndexWithinBounds(16_384, "column"))
             .getMessage());
     assertEquals(
         "rowCount * columnCount must not exceed 250000 but was 250500",
         assertThrows(
-                IllegalArgumentException.class, () -> SelectorSupport.requireWindowSize(501, 500))
+                IllegalArgumentException.class,
+                () -> SelectorValueValidation.requireWindowSize(501, 500))
             .getMessage());
   }
 
@@ -127,26 +137,28 @@ class SelectorSupportTest {
   void selectorSupportCopiesDistinctCollectionsAndRejectsDuplicateOrNullEntries() {
     assertEquals(
         List.of("A1", "B2"),
-        SelectorSupport.copyDistinctAddresses(List.of("A1", "B2"), "addresses"));
+        SelectorListValidation.copyDistinctAddresses(List.of("A1", "B2"), "addresses"));
     assertEquals(
-        List.of("A1", "B2"), SelectorSupport.copyDistinctAddresses(List.of("A1", "B2"), "cells"));
-    assertEquals(List.of("A1:B2"), SelectorSupport.copyDistinctRanges(List.of("A1:B2"), "ranges"));
+        List.of("A1", "B2"),
+        SelectorListValidation.copyDistinctAddresses(List.of("A1", "B2"), "cells"));
+    assertEquals(
+        List.of("A1:B2"), SelectorListValidation.copyDistinctRanges(List.of("A1:B2"), "ranges"));
     assertEquals(
         List.of("Budget", "Ops"),
-        SelectorSupport.copyDistinctSheetNames(List.of("Budget", "Ops"), "sheetNames"));
+        SelectorListValidation.copyDistinctSheetNames(List.of("Budget", "Ops"), "sheetNames"));
     assertEquals(
         List.of("BudgetTotal"),
-        SelectorSupport.copyDistinctDefinedNames(List.of("BudgetTotal"), "names"));
+        SelectorListValidation.copyDistinctDefinedNames(List.of("BudgetTotal"), "names"));
     assertEquals(
         List.of("Sales Pivot 2026"),
-        SelectorSupport.copyDistinctPivotTableNames(List.of("Sales Pivot 2026"), "names"));
+        SelectorListValidation.copyDistinctPivotTableNames(List.of("Sales Pivot 2026"), "names"));
     assertEquals(
-        List.of("x", "y"), SelectorSupport.copyDistinctValues(List.of("x", "y"), "values"));
+        List.of("x", "y"), SelectorListValidation.copyDistinctValues(List.of("x", "y"), "values"));
     assertEquals(
         List.of(
             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
             new NamedRangeSelector.SheetScope("LocalItem", "Budget")),
-        SelectorSupport.copyDistinctNamedRangeRefs(
+        SelectorListValidation.copyDistinctNamedRangeRefs(
             List.of(
                 new NamedRangeSelector.WorkbookScope("BudgetTotal"),
                 new NamedRangeSelector.SheetScope("LocalItem", "Budget")),
@@ -156,26 +168,28 @@ class SelectorSupportTest {
         "addresses must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctAddresses(List.of("A1", "A1"), "addresses"))
+                () ->
+                    SelectorListValidation.copyDistinctAddresses(List.of("A1", "A1"), "addresses"))
             .getMessage());
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctAddresses(List.of("A0"), "cells"))
+                () -> SelectorListValidation.copyDistinctAddresses(List.of("A0"), "cells"))
             .getMessage()
             .startsWith("cells[0] address "));
     assertEquals(
         "ranges must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctRanges(List.of("A1:B2", "A1:B2"), "ranges"))
+                () ->
+                    SelectorListValidation.copyDistinctRanges(List.of("A1:B2", "A1:B2"), "ranges"))
             .getMessage());
     assertEquals(
         "sheetNames must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorSupport.copyDistinctSheetNames(
+                    SelectorListValidation.copyDistinctSheetNames(
                         List.of("Budget", "Budget"), "sheetNames"))
             .getMessage());
     assertEquals(
@@ -183,7 +197,7 @@ class SelectorSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorSupport.copyDistinctDefinedNames(
+                    SelectorListValidation.copyDistinctDefinedNames(
                         List.of("BudgetTotal", "BudgetTotal"), "names"))
             .getMessage());
     assertEquals(
@@ -191,45 +205,45 @@ class SelectorSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorSupport.copyDistinctPivotTableNames(
+                    SelectorListValidation.copyDistinctPivotTableNames(
                         List.of("Sales Pivot 2026", "sales pivot 2026"), "names"))
             .getMessage());
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctPivotTableNames(List.of(" "), "names"))
+                () -> SelectorListValidation.copyDistinctPivotTableNames(List.of(" "), "names"))
             .getMessage()
             .startsWith("names[0] "));
     assertEquals(
         "values[1] must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> SelectorSupport.copyDistinctValues(Arrays.asList("x", null), "values"))
+                () -> SelectorListValidation.copyDistinctValues(Arrays.asList("x", null), "values"))
             .getMessage());
     assertEquals(
         "values must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctValues(List.of(), "values"))
+                () -> SelectorListValidation.copyDistinctValues(List.of(), "values"))
             .getMessage());
     assertEquals(
         "values must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctValues(List.of("x", "x"), "values"))
+                () -> SelectorListValidation.copyDistinctValues(List.of("x", "x"), "values"))
             .getMessage());
     assertEquals(
         "selectors must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> SelectorSupport.copyDistinctNamedRangeRefs(List.of(), "selectors"))
+                () -> SelectorListValidation.copyDistinctNamedRangeRefs(List.of(), "selectors"))
             .getMessage());
     assertEquals(
         "selectors must not contain duplicates",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    SelectorSupport.copyDistinctNamedRangeRefs(
+                    SelectorListValidation.copyDistinctNamedRangeRefs(
                         List.of(
                             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
                             new NamedRangeSelector.WorkbookScope("budgettotal")),
@@ -239,19 +253,20 @@ class SelectorSupportTest {
 
   @Test
   void selectorSupportCoversZeroIterationAddressParsingAndCatalogLookupOrdering() {
-    assertEquals(-1, SelectorSupport.columnIndex(""));
-    assertEquals(-1, SelectorSupport.columnIndex("123"));
-    assertThrows(NumberFormatException.class, () -> SelectorSupport.rowIndex(""));
-    assertEquals(122, SelectorSupport.rowIndex("123"));
+    assertEquals(-1, SelectorAddressSupport.columnIndex(""));
+    assertEquals(-1, SelectorAddressSupport.columnIndex("123"));
+    assertThrows(NumberFormatException.class, () -> SelectorAddressSupport.rowIndex(""));
+    assertEquals(122, SelectorAddressSupport.rowIndex("123"));
   }
 
   @Test
   void prefixedValidationMessagePreservesNullBlankAndAlreadyPrefixedMessages() {
-    assertNull(SelectorSupport.prefixedValidationMessage("field", null));
-    assertEquals(" ", SelectorSupport.prefixedValidationMessage("field", " "));
+    assertNull(SelectorValueValidation.prefixedValidationMessage("field", null));
+    assertEquals(" ", SelectorValueValidation.prefixedValidationMessage("field", " "));
     assertEquals(
         "field must not be blank",
-        SelectorSupport.prefixedValidationMessage("field", "field must not be blank"));
-    assertEquals("field invalid", SelectorSupport.prefixedValidationMessage("field", "invalid"));
+        SelectorValueValidation.prefixedValidationMessage("field", "field must not be blank"));
+    assertEquals(
+        "field invalid", SelectorValueValidation.prefixedValidationMessage("field", "invalid"));
   }
 }

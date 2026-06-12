@@ -15,7 +15,7 @@ public sealed interface ChartSelector extends Selector
   /** Selects every chart on one sheet. */
   record AllOnSheet(String sheetName) implements ChartSelector {
     public AllOnSheet {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override
@@ -27,8 +27,8 @@ public sealed interface ChartSelector extends Selector
   /** Selects one chart by sheet-local chart name. */
   record ByName(String sheetName, String chartName) implements ChartSelector {
     public ByName {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      chartName = SelectorSupport.requireNonBlank(chartName, "chartName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      chartName = SelectorValueValidation.requireNonBlank(chartName, "chartName");
     }
 
     @Override

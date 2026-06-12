@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import java.nio.file.Path;
 import java.util.List;
@@ -29,12 +30,12 @@ class CliFailureReportsTest {
 
     assertEquals(
         List.of(
-            "gridgrind --print-protocol-catalog --search <term>",
+            "gridgrind --print-protocol-catalog --search \"sheet layout\"",
             "gridgrind --print-request-template --response request.json"),
         failure.suggestions());
-    assertEquals(Optional.of("steps[0]"), failure.location().jsonPath());
-    assertEquals(Optional.of(3), failure.location().jsonLine());
-    assertEquals(Optional.of(7), failure.location().jsonColumn());
+    assertEquals(Optional.of("steps[0]"), failure.location().orElseThrow().jsonPath());
+    assertEquals(Optional.of(3), failure.location().orElseThrow().jsonLine());
+    assertEquals(Optional.of(7), failure.location().orElseThrow().jsonColumn());
   }
 
   @Test
@@ -70,6 +71,53 @@ class CliFailureReportsTest {
   }
 
   @Test
+  void readRequestFailureUsesSpecificResolutionForMissingRequiredFields() {
+    CliFailureReport failure =
+        CliFailureReports.readRequestFailure(
+            1,
+            "execute",
+            Optional.of("--request"),
+            problem(
+                GridGrindProblemCode.INVALID_REQUEST,
+                "Missing required field 'protocolVersion'",
+                JsonLocation.pathOnly("protocolVersion")),
+            new InvalidRequestException(
+                "Missing required field 'protocolVersion'",
+                Optional.of("protocolVersion"),
+                Optional.empty(),
+                Optional.empty(),
+                null));
+
+    assertEquals(Optional.of("protocolVersion"), failure.location().orElseThrow().jsonPath());
+    assertEquals(
+        Optional.of(
+            "Add protocolVersion: \"V1\" at the request root. Run --doctor-request first, then"
+                + " execute the corrected request."),
+        failure.resolution());
+  }
+
+  @Test
+  void readRequestFailureFallsBackToContextLocationWhenExceptionCarriesNone() {
+    CliFailureReport failure =
+        CliFailureReports.readRequestFailure(
+            1,
+            "execute",
+            Optional.of("--request"),
+            problem(
+                GridGrindProblemCode.INVALID_REQUEST,
+                "steps must not contain duplicate stepId values: duplicate",
+                JsonLocation.pathOnly("steps[1].stepId")),
+            new RuntimeException("duplicate"));
+
+    assertEquals(Optional.of("steps[1].stepId"), failure.location().orElseThrow().jsonPath());
+    assertEquals(
+        Optional.of(
+            "Make every stepId unique. Rename or remove the duplicate value 'duplicate'. Run"
+                + " --doctor-request first, then execute the corrected request."),
+        failure.resolution());
+  }
+
+  @Test
   void responseWriteFailureOmitsBlankStdoutSuggestionHints() {
     CliFailureReport failure =
         CliFailureReports.responseWriteFailure(
@@ -85,9 +133,12 @@ class CliFailureReportsTest {
   }
 
   private static GridGrindProblemDetail.Problem problem(GridGrindProblemCode code, String message) {
+    return problem(code, message, JsonLocation.unavailable());
+  }
+
+  private static GridGrindProblemDetail.Problem problem(
+      GridGrindProblemCode code, String message, JsonLocation jsonLocation) {
     return GridGrindProblemDetail.Problem.of(
-        code,
-        message,
-        new ProblemContext.ReadRequest(RequestInput.standardInput(), JsonLocation.unavailable()));
+        code, message, new ProblemContext.ReadRequest(RequestInput.standardInput(), jsonLocation));
   }
 }

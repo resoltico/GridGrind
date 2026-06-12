@@ -7,7 +7,9 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
 import java.io.IOException;
 import java.util.List;
 
@@ -81,11 +83,14 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveSetRange(
       CellMutationAction.SetRange setRange, ExecutionInputBindings bindings) throws IOException {
+    if (!(setRange.rows() instanceof CellGridInput.Typed typedRows)) {
+      return setRange;
+    }
     List<List<CellInput>> resolvedRows =
-        SourceBackedPlanResolver.resolveRows(setRange.rows(), bindings);
-    return sameReference(resolvedRows, setRange.rows())
+        SourceBackedPlanResolver.resolveRows(typedRows.rows(), bindings);
+    return sameReference(resolvedRows, typedRows.rows())
         ? setRange
-        : new CellMutationAction.SetRange(resolvedRows);
+        : new CellMutationAction.SetRange(new CellGridInput.Typed(resolvedRows));
   }
 
   private static CellMutationAction resolveSetComment(
@@ -100,11 +105,14 @@ final class SourceBackedMutationActionResolver {
 
   private static CellMutationAction resolveAppendRow(
       CellMutationAction.AppendRow appendRow, ExecutionInputBindings bindings) throws IOException {
+    if (!(appendRow.values() instanceof CellRowInput.Typed typedValues)) {
+      return appendRow;
+    }
     List<CellInput> resolvedValues =
-        SourceBackedPlanResolver.resolveCells(appendRow.values(), bindings);
-    return sameReference(resolvedValues, appendRow.values())
+        SourceBackedPlanResolver.resolveCells(typedValues.values(), bindings);
+    return sameReference(resolvedValues, typedValues.values())
         ? appendRow
-        : new CellMutationAction.AppendRow(resolvedValues);
+        : new CellMutationAction.AppendRow(new CellRowInput.Typed(resolvedValues));
   }
 
   private static DrawingMutationAction resolveSetPicture(

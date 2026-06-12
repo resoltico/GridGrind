@@ -12,6 +12,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PMD `7.25.0`, and JaCoCo `0.8.15`.
 - Updated the GitHub Actions pins to `actions/checkout` `6.0.3` and `gradle/actions` `6.1.1`,
   including the Gradle wrapper-validation workflow.
+- Completed the compact cell-payload model migration across the contract, examples, and tooling:
+  structured row and range writes now revolve around the typed `CellRowInput`, `CellGridInput`,
+  and `CellScalarValue` families end to end, while selector validation and JSON-problem
+  translation now live on narrower role-owned seams instead of monolithic helper buckets.
+- Re-segmented the developer-facing authoring and discovery internals around role-owned helpers:
+  Java authoring now teaches `ExpectedValues` plus grouped workbook/sheet/inspection query
+  families, and the CLI/runtime discovery stack now derives its public catalog, keyword-match,
+  task-plan, and failure-report surfaces from dedicated parser/index/rendering seams rather than
+  broad utility hubs.
+- Tightened the structural-governance stack again: repo-owned source-shape budgets now scan every
+  handwritten Java source set instead of only `src/main/java`, the dedicated semantic-shape PMD
+  gate now owns `GodClass` and `CouplingBetweenObjects` with explicit reviewed exceptions, the
+  source-shape family ratchet now covers field and nested-type budgets plus stale prefix headroom,
+  and the duplication gate now trips earlier on materially duplicated Java blocks.
+- Expanded the packaged discovery-execution verifier so it can execute the installed `gridgrind`
+  launcher script directly in addition to the fat JAR and Docker image, keeping the real
+  end-user binary surface under the same example and task-starter field-test discipline.
+- Refreshed the operator and developer docs around the live runtime contract: the root README and
+  quick references now distinguish the compact protocol index from full catalog dumps, teach the
+  packaged launcher alongside the JAR and Docker entry points, document `SUMMARY` as the default
+  journal level, and describe the current semantic-shape/build-logic ownership model without
+  carrying forward the older release assumptions.
 
 ### Fixed
 
@@ -19,6 +41,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that Java 26 support is available on JaCoCo `0.8.15` GA.
 - Removed the stale Dependabot major-version suppression for `gradle/actions`, so repository
   automation no longer hides future workflow-runtime upgrades.
+- Closed the remaining structural-governance blind spots around the new god-file stack:
+  interface methods now count toward public-surface budgets, reviewed source-shape and
+  semantic-shape waivers are re-evaluated against live UTC dates and build-logic freshness tests,
+  repo-wide verification now rejects any reintroduced legacy `buildSrc` tree, and the split
+  hyperlink file-normalization seam is covered end to end so the contract coverage gate stays
+  truthful.
+- Realigned the packaged CLI verification and smoke stack with the live artifact contract:
+  bare no-request failures are now verified on stderr, compact and full protocol-catalog surfaces
+  are checked separately, request-template verification expects the shipped `journal.level=SUMMARY`
+  default, and Docker publication fakes mirror the same stderr/catalog behavior instead of
+  preserving the older release-surface shape.
+- Repaired the Docker `STREAMING_WRITE` smoke scenario and selector-contract guard to use the
+  current `CellRowInput` wrapper for `APPEND_ROW`, preventing stale flat row payloads from hiding
+  in release-surface shell requests until runtime.
+- Brought Jazzer support generation and promoted protocol-request seeds back into line with the
+  compact cell-payload contract by treating authored error cells as value-bearing during XLSX
+  round-trip expectations and refreshing the promoted request metadata after `PrintSetupInput`
+  became a fully required shape.
 
 ## [0.67.0] - 2026-06-05
 
@@ -259,7 +299,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   across `ExcelRowColumnStructureController` and `ExcelRowColumnStructureGuardSupport`.
 
 
-- Narrowed the `NullPointerException` arm of `GridGrindJsonMessageSupport.validationCause()` so
+- Narrowed the `NullPointerException` arm of `GridGrindJsonProblemMessageSupport.validationCause()` so
   that only explicit null-check NPEs (those whose message ends with `"must not be null"`) are
   classified as user-input validation errors; JVM-generated NPEs and NPEs with blank or null
   messages now fall through to `InvalidJsonException` instead of leaking an internal pointer into
@@ -273,7 +313,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `(but could if coercion was enabled using \`CoercionConfig\`)` hint, confirming the replacement
   regex strips correctly.
 - Replaced the stale `(set [^)]*to allow)` Jackson 2.x coercion-hint removal regex in
-  `GridGrindJsonMessageSupport.cleanJacksonMessage()` with the Jackson 3.x equivalent
+  `GridGrindJsonProblemMessageSupport.cleanJacksonMessage()` with the Jackson 3.x equivalent
   `(but could if coercion[^)]*\)` so coercion hints are stripped from user-facing messages on
   the current Jackson version.
 - Removed the `"Cannot map \`null\` into type"` branch from `mismatchedInputMessage()` and its
@@ -291,7 +331,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   updated the two byte-array and stream overload assertions in
   `rejectsTopLevelAndArrayNullRequestPayloads` in `GridGrindJsonCoverageTest` to match.
 - Removed the `(?:problem: )?` optional prefix from `NULL_FIELD_PROBLEM_PATTERN` in
-  `GridGrindJsonMessageSupport`: the only code that ever emitted the `"problem: "` prefix was
+  `GridGrindJsonProblemMessageSupport`: the only code that ever emitted the `"problem: "` prefix was
   `rejectExplicitNullMembers`, which now throws `InvalidRequestException` directly; the pattern's
   live production path is `Objects.requireNonNull` NPEs from `@JsonCreator` constructors, whose
   messages have no prefix; updated the two synthetic test cases in
@@ -377,7 +417,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   resolution text for `INVALID_REQUEST_SHAPE` failures so agents and operators see the right
   discovery command when a type discriminator value is wrong; the previous guidance pointed only
   to `--doctor-request` and `--help-protocol`, neither of which lists valid type values.
-- Added `// LIM-001` traceability comments to `SelectorSupport.requireWindowSize` and
+- Added `// LIM-001` traceability comments to `SelectorValueValidation.requireWindowSize` and
   `WorkbookReadCommand.requireWindowSize`, closing the audit gap identified in the limitations
   registry for the 250,000-cell read-window cap; also corrected the `LIMITATIONS.md` Code field
   which incorrectly named `requireWindowWithinLimit` instead of `requireWindowSize`.

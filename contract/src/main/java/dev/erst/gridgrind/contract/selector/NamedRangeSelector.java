@@ -34,7 +34,7 @@ public sealed interface NamedRangeSelector extends Selector
   /** Selects the union of one or more explicit named-range references. */
   record AnyOf(List<Ref> selectors) implements NamedRangeSelector {
     public AnyOf {
-      selectors = SelectorSupport.copyDistinctNamedRangeRefs(selectors, "selectors");
+      selectors = SelectorListValidation.copyDistinctNamedRangeRefs(selectors, "selectors");
     }
 
     @Override
@@ -46,7 +46,7 @@ public sealed interface NamedRangeSelector extends Selector
   /** Selects every named range whose name matches across all scopes. */
   record ByName(String name) implements NamedRangeSelector, Ref {
     public ByName {
-      name = SelectorSupport.requireDefinedName(name, "name");
+      name = SelectorValueValidation.requireDefinedName(name, "name");
     }
 
     @Override
@@ -58,7 +58,7 @@ public sealed interface NamedRangeSelector extends Selector
   /** Selects every named range whose name appears in the provided name set across all scopes. */
   record ByNames(List<String> names) implements NamedRangeSelector {
     public ByNames {
-      names = SelectorSupport.copyDistinctDefinedNames(names, "names");
+      names = SelectorListValidation.copyDistinctDefinedNames(names, "names");
     }
 
     @Override
@@ -70,7 +70,7 @@ public sealed interface NamedRangeSelector extends Selector
   /** Selects one workbook-scoped named range by exact name. */
   record WorkbookScope(String name) implements ScopedExact, Ref {
     public WorkbookScope {
-      name = SelectorSupport.requireDefinedName(name, "name");
+      name = SelectorValueValidation.requireDefinedName(name, "name");
     }
 
     @Override
@@ -82,8 +82,8 @@ public sealed interface NamedRangeSelector extends Selector
   /** Selects one sheet-scoped named range by exact name and exact sheet. */
   record SheetScope(String name, String sheetName) implements ScopedExact, Ref {
     public SheetScope {
-      name = SelectorSupport.requireDefinedName(name, "name");
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      name = SelectorValueValidation.requireDefinedName(name, "name");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override

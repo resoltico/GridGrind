@@ -64,7 +64,9 @@ fill, border, font, alignment, or wrap state already present on the cell.
 Write a rectangular grid of typed values. The `rows` matrix must exactly match the dimensions of
 `range`. Row count must equal `range` row span; column count of each row must equal `range`
 column span. Existing style, hyperlink, and comment state on the targeted cells is preserved.
-Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside `rows`.
+Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
+`rows.rows` when you use the canonical `CellGridInput` wrapper with `type: "TYPED"`. Homogeneous
+grids may use the compact scalar-family encodings instead.
 
 ```json
 {
@@ -76,7 +78,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
   },
   "action": {
     "type": "SET_RANGE",
-    "rows": [
+    "rows": { "type": "TYPED", "rows": [
       [
         {
           "type": "TEXT",
@@ -134,7 +136,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
           "number": 7.8
         }
       ]
-    ]
+    ] }
   }
 }
 ```

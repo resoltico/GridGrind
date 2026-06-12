@@ -13,7 +13,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -45,49 +45,52 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Item"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Amount"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Billable"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Hosting"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 49.0
-      }, {
-        "type" : "BOOLEAN",
-        "bool" : true
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Domain"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 12.0
-      }, {
-        "type" : "BOOLEAN",
-        "bool" : false
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Item"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Amount"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Billable"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Hosting"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 49.0
+        }, {
+          "type" : "BOOLEAN",
+          "bool" : true
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Domain"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 12.0
+        }, {
+          "type" : "BOOLEAN",
+          "bool" : false
+        } ] ]
+      }
     }
   }, {
     "stepId" : "step-03-apply-header-style",

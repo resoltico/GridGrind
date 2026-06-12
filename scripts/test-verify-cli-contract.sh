@@ -54,7 +54,7 @@ case "${1:-}" in
         if [[ -t 0 || -t 1 || -t 2 ]]; then
             emit_fixture_file "${FAKE_GRIDGRIND_INTERACTIVE_NOARGS_FAILURE_FILE:-${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}}"
         else
-            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}"
+            emit_fixture_file "${FAKE_GRIDGRIND_NOARGS_FAILURE_FILE:?}" >&2
         fi
         exit 2
         ;;
@@ -86,7 +86,11 @@ case "${1:-}" in
         emit_fixture_file "${FAKE_GRIDGRIND_TASK_PLAN_FILE:?}"
         ;;
     --print-protocol-catalog)
-        emit_fixture_file "${FAKE_GRIDGRIND_CATALOG_FILE:?}"
+        if [[ "${2:-}" == '--full' ]]; then
+            emit_fixture_file "${FAKE_GRIDGRIND_CATALOG_FILE:?}"
+        else
+            emit_fixture_file "${FAKE_GRIDGRIND_CATALOG_INDEX_FILE:?}"
+        fi
         ;;
     *)
         printf 'unexpected invocation: %s\n' "$*" >&2
@@ -135,6 +139,7 @@ run_verify_with_fixture_texts() {
     local help_overview_file
     local help_protocol_file
     local help_guidance_file
+    local catalog_index_file
     local catalog_file
     local example_catalog_file
     local task_catalog_file
@@ -149,6 +154,7 @@ run_verify_with_fixture_texts() {
     help_overview_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_text}")"
     help_protocol_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_text}")"
     help_guidance_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_text}")"
+    catalog_index_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-index.json' "${success_catalog_index}")"
     catalog_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_text}")"
     example_catalog_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_text}")"
     task_catalog_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_text}")"
@@ -166,6 +172,7 @@ run_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
             FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
             FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
+            FAKE_GRIDGRIND_CATALOG_INDEX_FILE="${catalog_index_file}" \
             FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
             FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
             FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
@@ -182,6 +189,7 @@ run_verify_with_fixture_texts() {
     FAKE_GRIDGRIND_HELP_OVERVIEW_FILE="${help_overview_file}" \
         FAKE_GRIDGRIND_HELP_PROTOCOL_FILE="${help_protocol_file}" \
         FAKE_GRIDGRIND_HELP_GUIDANCE_FILE="${help_guidance_file}" \
+        FAKE_GRIDGRIND_CATALOG_INDEX_FILE="${catalog_index_file}" \
         FAKE_GRIDGRIND_CATALOG_FILE="${catalog_file}" \
         FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
         FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \

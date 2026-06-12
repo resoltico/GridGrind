@@ -3,27 +3,9 @@ package dev.erst.gridgrind.engine.runtime;
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.json.InvalidJsonException;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
-import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.json.PayloadException;
 import dev.erst.gridgrind.contract.json.PayloadLocation;
-import dev.erst.gridgrind.excel.CellNotFoundException;
-import dev.erst.gridgrind.excel.InvalidCellAddressException;
-import dev.erst.gridgrind.excel.InvalidFormulaException;
-import dev.erst.gridgrind.excel.InvalidRangeAddressException;
-import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
-import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
-import dev.erst.gridgrind.excel.MissingExternalWorkbookException;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
-import dev.erst.gridgrind.excel.SheetNotFoundException;
-import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
-import dev.erst.gridgrind.excel.UnsupportedFormulaException;
-import dev.erst.gridgrind.excel.WorkbookNotFoundException;
-import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
-import dev.erst.gridgrind.excel.WorkbookSecurityException;
-import java.io.IOException;
-import java.time.DateTimeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -90,7 +72,8 @@ public final class GridGrindProblems {
         code.recovery(),
         code.title(),
         Objects.requireNonNull(message, "message must not be null"),
-        code.resolution(),
+        GridGrindRequestProblemSupport.specificResolution(code, message, context)
+            .orElse(code.resolution()),
         context,
         Objects.requireNonNull(assertionFailure, "assertionFailure must not be null"),
         List.copyOf(Objects.requireNonNull(causes, "causes must not be null")));
@@ -136,36 +119,7 @@ public final class GridGrindProblems {
   }
 
   static GridGrindProblemCode codeFor(Throwable exception) {
-    Objects.requireNonNull(exception, "exception must not be null");
-    return switch (exception) {
-      case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
-      case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
-      case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
-      case AssertionFailedException _ -> GridGrindProblemCode.ASSERTION_FAILED;
-      case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
-      case InputSourceNotFoundException _ -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
-      case InputSourceUnavailableException _ -> GridGrindProblemCode.INPUT_SOURCE_UNAVAILABLE;
-      case InputSourceReadException _ -> GridGrindProblemCode.INPUT_SOURCE_IO_ERROR;
-      case SheetNotFoundException _ -> GridGrindProblemCode.SHEET_NOT_FOUND;
-      case NamedRangeNotFoundException _ -> GridGrindProblemCode.NAMED_RANGE_NOT_FOUND;
-      case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
-      case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
-      case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
-      case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
-      case MissingExternalWorkbookException _ -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
-      case UnregisteredUserDefinedFunctionException _ ->
-          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
-      case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
-      case WorkbookPasswordRequiredException _ -> GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED;
-      case InvalidWorkbookPasswordException _ -> GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD;
-      case InvalidSigningConfigurationException _ ->
-          GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
-      case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;
-      case IOException _ -> GridGrindProblemCode.IO_ERROR;
-      case IllegalArgumentException _ -> GridGrindProblemCode.INVALID_REQUEST;
-      case DateTimeException _ -> GridGrindProblemCode.INVALID_REQUEST;
-      default -> GridGrindProblemCode.INTERNAL_ERROR;
-    };
+    return GridGrindProblemCodeClassifier.codeFor(exception);
   }
 
   static String messageFor(Throwable exception) {

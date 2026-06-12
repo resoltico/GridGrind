@@ -16,11 +16,13 @@ public sealed interface ColumnBandSelector extends Selector
   record Span(String sheetName, int firstColumnIndex, int lastColumnIndex)
       implements ColumnBandSelector {
     public Span {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
       firstColumnIndex =
-          SelectorSupport.requireColumnIndexWithinBounds(firstColumnIndex, "firstColumnIndex");
+          SelectorValueValidation.requireColumnIndexWithinBounds(
+              firstColumnIndex, "firstColumnIndex");
       lastColumnIndex =
-          SelectorSupport.requireColumnIndexWithinBounds(lastColumnIndex, "lastColumnIndex");
+          SelectorValueValidation.requireColumnIndexWithinBounds(
+              lastColumnIndex, "lastColumnIndex");
       if (lastColumnIndex < firstColumnIndex) {
         throw new IllegalArgumentException(
             "lastColumnIndex must not be less than firstColumnIndex");
@@ -37,10 +39,11 @@ public sealed interface ColumnBandSelector extends Selector
   record Insertion(String sheetName, int beforeColumnIndex, int columnCount)
       implements ColumnBandSelector {
     public Insertion {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
       beforeColumnIndex =
-          SelectorSupport.requireColumnIndexWithinBounds(beforeColumnIndex, "beforeColumnIndex");
-      columnCount = SelectorSupport.requirePositive(columnCount, "columnCount");
+          SelectorValueValidation.requireColumnIndexWithinBounds(
+              beforeColumnIndex, "beforeColumnIndex");
+      columnCount = SelectorValueValidation.requirePositive(columnCount, "columnCount");
     }
 
     @Override

@@ -52,8 +52,9 @@ final class WorkbookCommandCellInputConverter {
       case CellInput.Text text ->
           ExcelCellValue.text(WorkbookCommandSourceSupport.inlineText(text.source(), "cell text"));
       case CellInput.RichText richText -> ExcelCellValue.richText(toExcelRichText(richText));
-      case CellInput.Numeric numeric -> ExcelCellValue.number(numeric.number());
+      case CellInput.NumberValue numberValue -> ExcelCellValue.number(numberValue.number());
       case CellInput.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.bool());
+      case CellInput.ErrorValue errorValue -> ExcelCellValue.error(errorValue.error());
       case CellInput.Date date -> ExcelCellValue.date(date.date());
       case CellInput.DateTime dateTime -> ExcelCellValue.dateTime(dateTime.dateTime());
       case CellInput.Formula formula ->

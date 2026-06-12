@@ -297,9 +297,9 @@ schemes were accepted as valid. Schemes like javascript:, vbscript:, ms-excel:, 
 pass validation and be written into xlsx hyperlink records. In browser-based spreadsheet viewers,
 a javascript: hyperlink could trigger XSS; ms-excel: enables protocol-handler abuse; vbscript: can
 execute macros in legacy IE contexts.
-FIX: Added ALLOWED_URL_SCHEMES = {http, https, ftp, ftps} allowlist enforced in isValidUrlTarget()
-and normalizeUrlTarget(); blocked-scheme error message names the rejected scheme. Added LIM-028 to
-LIMITATIONS.md and tests in ProtocolHyperlinkSupportTest.
+FIX: Added ALLOWED_URL_SCHEMES = {http, https, ftp, ftps} allowlist enforced in
+ProtocolHyperlinkUrlSupport.normalizeUrlTarget(); blocked-scheme error message names the rejected
+scheme. Added LIM-028 to LIMITATIONS.md and tests in ProtocolHyperlinkNormalizationTest.
 EFFORT: TRIVIAL
 ------------------------------------------------------------------------
 ------------------------------------------------------------------------

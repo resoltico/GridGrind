@@ -16,8 +16,8 @@ class JavaSourceShapePolicyTest {
     Path policyFile =
         writePolicy(
             """
-            EXACT\tengine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCells.java\tsheet-cell-surface\t124\t18\t17\t6\t-\t2\t4\tworkbook-core-api\tCHECK\t2026-08-15\tSplit read preview from write authoring before adding another unrelated cell interaction family.\tExcelSheetCells remains the singular sheet-level cell surface.
-            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t-\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
+            EXACT\tengine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCells.java\tsheet-cell-surface\t124\t18\t17\t6\t4\t2\t2\t4\tworkbook-core-api\tCHECK\t2026-08-15\tSplit read preview from write authoring before adding another unrelated cell interaction family.\tExcelSheetCells remains the singular sheet-level cell surface.
+            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t8\t2\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
             """);
 
     JavaSourceShapePolicy policy = JavaSourceShapePolicy.load(policyFile);
@@ -25,6 +25,7 @@ class JavaSourceShapePolicyTest {
     JavaSourceShapePolicy.Rule reviewedRule = policy.rules().getFirst();
     assertEquals(JavaSourceShapePolicy.MatchKind.EXACT, reviewedRule.kind());
     assertEquals("2026-08-15", reviewedRule.reviewExpiresOn().toString());
+    assertEquals(2, reviewedRule.maxNestedTypes());
     assertEquals(
         "Split read preview from write authoring before adding another unrelated cell interaction family.",
         reviewedRule.splitTrigger());
@@ -39,8 +40,8 @@ class JavaSourceShapePolicyTest {
     Path policyFile =
         writePolicy(
             """
-            EXACT\tengine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCells.java\tsheet-cell-surface\t124\t18\t17\t6\t-\t2\t4\tworkbook-core-api\tCHECK\t-\t-\tExcelSheetCells remains the singular sheet-level cell surface.
-            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t-\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
+            EXACT\tengine/src/main/java/dev/erst/gridgrind/excel/ExcelSheetCells.java\tsheet-cell-surface\t124\t18\t17\t6\t4\t2\t2\t4\tworkbook-core-api\tCHECK\t-\t-\tExcelSheetCells remains the singular sheet-level cell surface.
+            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t8\t2\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
             """);
 
     assertThrows(GradleException.class, () -> JavaSourceShapePolicy.load(policyFile));
@@ -51,8 +52,8 @@ class JavaSourceShapePolicyTest {
     Path policyFile =
         writePolicy(
             """
-            PREFIX\tcli/src/main/java/dev/erst/gridgrind/cli/\tcli-support\t500\t28\t18\t30\t-\t10\t16\tcli\tCHECK\t2026-08-31\tSplit command parsing from discovery commands.\tCLI orchestration aggregates command wiring and help surfaces.
-            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t-\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
+            PREFIX\tcli/src/main/java/dev/erst/gridgrind/cli/\tcli-support\t500\t28\t18\t30\t8\t3\t10\t16\tcli\tCHECK\t2026-08-31\tSplit command parsing from discovery commands.\tCLI orchestration aggregates command wiring and help surfaces.
+            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t8\t2\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
             """);
 
     assertThrows(GradleException.class, () -> JavaSourceShapePolicy.load(policyFile));

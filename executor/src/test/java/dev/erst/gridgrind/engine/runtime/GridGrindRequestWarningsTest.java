@@ -106,7 +106,8 @@ class GridGrindRequestWarningsTest {
                     new CellSelector.ByAddress("Summary", "A1"),
                     new CellMutationAction.SetCell(
                         new CellInput.Formula(
-                            text("SUM(Budget Review!A1,Annual Budget Review!$A$1)"))))));
+                            dev.erst.gridgrind.contract.source.TextSourceInput.inline(
+                                "SUM(Budget Review!A1,Annual Budget Review!$A$1)"))))));
 
     assertEquals(
         List.of(
@@ -162,11 +163,13 @@ class GridGrindRequestWarningsTest {
                 mutate(
                     new RangeSelector.ByRange("Summary", "A1:B1"),
                     new CellMutationAction.SetRange(
-                        List.of(List.of(formulaCell("Budget Review!A1"), textCell("ok"))))),
+                        new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                            List.of(List.of(formulaCell("Budget Review!A1"), textCell("ok")))))),
                 mutate(
                     new SheetSelector.ByName("Summary"),
                     new CellMutationAction.AppendRow(
-                        List.of(textCell("Total"), formulaCell("SUM(Budget Review!A1)"))))));
+                        new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                            List.of(textCell("Total"), formulaCell("SUM(Budget Review!A1)")))))));
 
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
 

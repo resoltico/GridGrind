@@ -29,7 +29,7 @@ public sealed interface TableSelector extends Selector
   /** Selects one table by workbook-global name. */
   record ByName(String name) implements TableSelector {
     public ByName {
-      name = SelectorSupport.requireDefinedName(name, "name");
+      name = SelectorValueValidation.requireDefinedName(name, "name");
     }
 
     @Override
@@ -41,7 +41,7 @@ public sealed interface TableSelector extends Selector
   /** Selects one or more tables by workbook-global names. */
   record ByNames(List<String> names) implements TableSelector {
     public ByNames {
-      names = SelectorSupport.copyDistinctDefinedNames(names, "names");
+      names = SelectorListValidation.copyDistinctDefinedNames(names, "names");
     }
 
     @Override
@@ -53,8 +53,8 @@ public sealed interface TableSelector extends Selector
   /** Selects one workbook-global table and asserts its expected owning sheet. */
   record ByNameOnSheet(String name, String sheetName) implements TableSelector {
     public ByNameOnSheet {
-      name = SelectorSupport.requireDefinedName(name, "name");
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      name = SelectorValueValidation.requireDefinedName(name, "name");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override

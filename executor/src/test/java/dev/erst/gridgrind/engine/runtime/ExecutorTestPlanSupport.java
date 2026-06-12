@@ -195,11 +195,11 @@ final class ExecutorTestPlanSupport {
   }
 
   static CellInput.Text textCell(String value) {
-    return new CellInput.Text(text(value));
+    return new CellInput.Text(TextSourceInput.inline(value));
   }
 
   static CellInput.Formula formulaCell(String value) {
-    return new CellInput.Formula(text(value));
+    return new CellInput.Formula(TextSourceInput.inline(value));
   }
 
   static RichTextRunInput richTextRun(String value) {

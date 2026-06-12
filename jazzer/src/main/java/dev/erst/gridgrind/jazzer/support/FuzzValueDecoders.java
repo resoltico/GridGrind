@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -24,7 +26,7 @@ final class FuzzValueDecoders {
       case 0 -> new CellInput.Blank();
       case 1 -> new CellInput.Text(TextSourceInput.inline(FuzzAddressDecoders.nextText(data)));
       case 2 -> nextRichTextInput(data);
-      case 3 -> new CellInput.Numeric(data.consumeRegularDouble(-1000.0d, 1000.0d));
+      case 3 -> new CellInput.NumberValue(data.consumeRegularDouble(-1000.0d, 1000.0d));
       case 4 -> new CellInput.BooleanValue(data.consumeBoolean());
       case 5 ->
           new CellInput.Date(LocalDate.of(2026, data.consumeInt(1, 12), data.consumeInt(1, 28)));
@@ -66,8 +68,7 @@ final class FuzzValueDecoders {
     };
   }
 
-  static List<List<CellInput>> nextProtocolMatrix(
-      GridGrindFuzzData data, int rowCount, int columnCount) {
+  static CellGridInput nextProtocolGrid(GridGrindFuzzData data, int rowCount, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
     List<List<CellInput>> rows = new ArrayList<>(rowCount);
@@ -78,7 +79,17 @@ final class FuzzValueDecoders {
       }
       rows.add(List.copyOf(row));
     }
-    return List.copyOf(rows);
+    return new CellGridInput.Typed(List.copyOf(rows));
+  }
+
+  static CellRowInput nextProtocolRow(GridGrindFuzzData data, int columnCount) {
+    Objects.requireNonNull(data, "data must not be null");
+
+    List<CellInput> values = new ArrayList<>(columnCount);
+    for (int columnIndex = 0; columnIndex < columnCount; columnIndex++) {
+      values.add(nextCellInput(data));
+    }
+    return new CellRowInput.Typed(List.copyOf(values));
   }
 
   static List<List<ExcelCellValue>> nextExcelMatrix(

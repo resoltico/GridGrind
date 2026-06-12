@@ -10,6 +10,7 @@ final class JavaSourceShapeReviewPolicy {
   private static final int MAX_PUBLIC_METHOD_HEADROOM = 3;
   private static final int MAX_IMPORT_HEADROOM = 4;
   private static final int MAX_FIELD_HEADROOM = 2;
+  private static final int MAX_NESTED_TYPE_HEADROOM = 1;
   private static final int MAX_SWITCH_HEADROOM = 2;
   private static final int MAX_SWITCH_ARM_HEADROOM = 8;
 
@@ -75,6 +76,13 @@ final class JavaSourceShapeReviewPolicy {
         MAX_FIELD_HEADROOM);
     addHeadroomIssue(
         issues,
+        "nestedTypes",
+        relativePath,
+        metrics.nestedTypeCount(),
+        reviewedRule.maxNestedTypes(),
+        MAX_NESTED_TYPE_HEADROOM);
+    addHeadroomIssue(
+        issues,
         "switches",
         relativePath,
         metrics.switchCount(),
@@ -97,8 +105,71 @@ final class JavaSourceShapeReviewPolicy {
         || tighter(reviewedRule.maxPublicMethods(), broaderRule.maxPublicMethods())
         || tighter(reviewedRule.maxImports(), broaderRule.maxImports())
         || tighter(reviewedRule.maxFields(), broaderRule.maxFields())
+        || tighter(reviewedRule.maxNestedTypes(), broaderRule.maxNestedTypes())
         || tighter(reviewedRule.maxSwitches(), broaderRule.maxSwitches())
         || tighter(reviewedRule.maxSwitchArms(), broaderRule.maxSwitchArms());
+  }
+
+  static List<String> familyIssues(
+      JavaSourceShapePolicy.Rule familyRule, JavaSourceShapeAnalyzer.Metrics maxMetrics) {
+    List<String> issues = new ArrayList<>();
+    addFamilyHeadroomIssue(
+        issues,
+        "lines",
+        familyRule,
+        maxMetrics.lineCount(),
+        familyRule.maxLines(),
+        MAX_LINE_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "methods",
+        familyRule,
+        maxMetrics.methodCount(),
+        familyRule.maxMethods(),
+        MAX_METHOD_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "publicMethods",
+        familyRule,
+        maxMetrics.publicMethodCount(),
+        familyRule.maxPublicMethods(),
+        MAX_PUBLIC_METHOD_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "imports",
+        familyRule,
+        maxMetrics.importCount(),
+        familyRule.maxImports(),
+        MAX_IMPORT_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "fields",
+        familyRule,
+        maxMetrics.fieldCount(),
+        familyRule.maxFields(),
+        MAX_FIELD_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "nestedTypes",
+        familyRule,
+        maxMetrics.nestedTypeCount(),
+        familyRule.maxNestedTypes(),
+        MAX_NESTED_TYPE_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "switches",
+        familyRule,
+        maxMetrics.switchCount(),
+        familyRule.maxSwitches(),
+        MAX_SWITCH_HEADROOM);
+    addFamilyHeadroomIssue(
+        issues,
+        "maxSwitchArms",
+        familyRule,
+        maxMetrics.maxSwitchArms(),
+        familyRule.maxSwitchArms(),
+        MAX_SWITCH_ARM_HEADROOM);
+    return List.copyOf(issues);
   }
 
   private static boolean tighter(Integer reviewedLimit, Integer broaderLimit) {
@@ -129,6 +200,35 @@ final class JavaSourceShapeReviewPolicy {
               + " (allowed "
               + allowedHeadroom
               + "). Tighten the reviewed budget.");
+    }
+  }
+
+  private static void addFamilyHeadroomIssue(
+      List<String> issues,
+      String metricName,
+      JavaSourceShapePolicy.Rule familyRule,
+      long currentValue,
+      Integer familyLimit,
+      int allowedHeadroom) {
+    if (familyLimit == null) {
+      return;
+    }
+    long headroom = (long) familyLimit - currentValue;
+    if (headroom > allowedHeadroom) {
+      issues.add(
+          "PREFIX source-shape family "
+              + familyRule.path()
+              + " ["
+              + familyRule.role()
+              + "] carries stale "
+              + metricName
+              + " headroom "
+              + currentValue
+              + " -> "
+              + familyLimit
+              + " (allowed "
+              + allowedHeadroom
+              + "). Tighten the family budget.");
     }
   }
 }

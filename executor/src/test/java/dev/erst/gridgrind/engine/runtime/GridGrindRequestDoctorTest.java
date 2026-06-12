@@ -255,6 +255,7 @@ class GridGrindRequestDoctorTest {
   @Test
   void diagnoseWithBindingsRejectsBlankResolvedCellText() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-inline-");
+    Files.writeString(workingDirectory.resolve("blank-title.txt"), "");
     WorkbookPlan invalidRequest =
         readNewRequest(
             """
@@ -271,7 +272,7 @@ class GridGrindRequestDoctorTest {
                   "type": "SET_CELL",
                   "value": {
                     "type": "TEXT",
-                    "source": { "type": "INLINE", "text": "" }
+                    "source": { "type": "UTF8_FILE", "path": "blank-title.txt" }
                   }
                 }
               }

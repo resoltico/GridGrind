@@ -7,6 +7,7 @@ import java.util.Objects;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -204,6 +205,10 @@ final class ExcelSheetCellMutationSupport {
       case ExcelCellValue.BooleanValue booleanValue -> {
         clearExistingFormula(cell);
         cell.setCellValue(booleanValue.value());
+      }
+      case ExcelCellValue.ErrorValue errorValue -> {
+        clearExistingFormula(cell);
+        cell.setCellErrorValue(FormulaError.forString(errorValue.value()).getCode());
       }
       case ExcelCellValue.DateValue dateValue -> {
         clearExistingFormula(cell);

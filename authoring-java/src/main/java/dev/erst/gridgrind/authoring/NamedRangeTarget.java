@@ -23,17 +23,17 @@ public final class NamedRangeTarget {
 
   /** Returns one named-range inspection step. */
   public PlannedInspection inspect() {
-    return new PlannedInspection(selector, Queries.namedRanges());
+    return new PlannedInspection(selector, WorkbookQueries.namedRanges());
   }
 
   /** Returns one named-range-surface inspection step. */
   public PlannedInspection surface() {
-    return new PlannedInspection(selector, Queries.namedRangeSurface());
+    return new PlannedInspection(selector, InspectionSurfaceQueries.namedRangeSurface());
   }
 
   /** Returns one named-range-health analysis step. */
   public PlannedInspection analyzeHealth() {
-    return new PlannedInspection(selector, Queries.namedRangeHealth());
+    return new PlannedInspection(selector, InspectionAnalysisQueries.namedRangeHealth());
   }
 
   /** Returns one named-range presence assertion step. */

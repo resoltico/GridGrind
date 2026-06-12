@@ -11,6 +11,8 @@ import com.sun.source.tree.VariableTree;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.TreeScanner;
 import java.io.IOException;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,6 +85,7 @@ public final class JavaSourceShapeAnalyzer {
       int maxSwitchArms) {}
 
   private static final class ShapeScanner extends TreeScanner<Void, Void> {
+    private final Deque<Tree.Kind> enclosingTypeKinds = new ArrayDeque<>();
     private int nestingDepth;
     private int topLevelTypeCount;
     private int nestedTypeCount;
@@ -99,6 +102,7 @@ public final class JavaSourceShapeAnalyzer {
       } else {
         nestedTypeCount++;
       }
+      enclosingTypeKinds.addLast(classTree.getKind());
       nestingDepth++;
       try {
         for (Tree member : classTree.getMembers()) {
@@ -109,17 +113,29 @@ public final class JavaSourceShapeAnalyzer {
         return super.visitClass(classTree, unused);
       } finally {
         nestingDepth--;
+        enclosingTypeKinds.removeLast();
       }
     }
 
     @Override
     public Void visitMethod(MethodTree methodTree, Void unused) {
       methodCount++;
-      if (!methodTree.getName().contentEquals("<init>")
-          && methodTree.getModifiers().getFlags().contains(Modifier.PUBLIC)) {
+      if (!methodTree.getName().contentEquals("<init>") && isEffectivelyPublic(methodTree)) {
         publicMethodCount++;
       }
       return super.visitMethod(methodTree, unused);
+    }
+
+    private boolean isEffectivelyPublic(MethodTree methodTree) {
+      if (methodTree.getModifiers().getFlags().contains(Modifier.PUBLIC)) {
+        return true;
+      }
+      if (methodTree.getModifiers().getFlags().contains(Modifier.PRIVATE)) {
+        return false;
+      }
+      Tree.Kind enclosingTypeKind = enclosingTypeKinds.peekLast();
+      return enclosingTypeKind == Tree.Kind.INTERFACE
+          || enclosingTypeKind == Tree.Kind.ANNOTATION_TYPE;
     }
 
     @Override

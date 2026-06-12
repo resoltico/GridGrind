@@ -176,16 +176,16 @@ public final class GridGrindContractText {
   public static String executionPolicyInputSummary() {
     return "Explicit request execution policy covering execution.mode, execution.journal,"
         + " and execution.calculation."
-        + " Use ExecutionPolicyInput.defaults() when the standard FULL_XSSF / NORMAL /"
+        + " Use ExecutionPolicyInput.defaults() when the standard FULL_XSSF / SUMMARY /"
         + " DO_NOT_CALCULATE policy is intended.";
   }
 
   /** One stable catalog summary for `ExecutionJournalInput`. */
   public static String executionJournalInputSummary() {
     return "Explicit execution-journal settings."
-        + " Use ExecutionJournalInput.defaults() for NORMAL detail."
-        + " SUMMARY returns compact target summaries,"
-        + " NORMAL returns expanded target summaries,"
+        + " Use ExecutionJournalInput.defaults() for SUMMARY detail."
+        + " SUMMARY returns compact, stable target summaries without timing telemetry,"
+        + " NORMAL returns expanded target summaries with timing telemetry,"
         + " and VERBOSE also enables fine-grained event emission for CLI stderr rendering.";
   }
 

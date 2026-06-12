@@ -12,7 +12,8 @@ succeeds.
 - Write `.xlsx` workbooks from JSON: sheets, cells, styles, tables, formulas, charts, drawings
 - Read facts back in the same plan: cell values, sheet layout, health analysis, pivot data
 - Assert workbook state mid-run — a failed assertion stops the plan before saving
-- Run from Docker or a self-contained JAR, against new workbooks or existing `.xlsx` files
+- Run from Docker, the packaged `gridgrind` launcher, or a self-contained JAR, against new
+  workbooks or existing `.xlsx` files
 
 ## Where it fits
 
@@ -33,18 +34,25 @@ Skip it when:
 From a repository checkout, the shortest reliable path is:
 
 ```bash
-./gradlew :cli:shadowJar
-java -jar cli/build/libs/gridgrind.jar --help
-java -jar cli/build/libs/gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
-java -jar cli/build/libs/gridgrind.jar --doctor-request --request budget-request.json --response doctor-report.json
-java -jar cli/build/libs/gridgrind.jar --request budget-request.json --response response.json
+./gradlew :cli:installShadowDist
+./cli/build/install/gridgrind/bin/gridgrind --help
+./cli/build/install/gridgrind/bin/gridgrind --print-example --lookup BUDGET --response budget-request.json
+./cli/build/install/gridgrind/bin/gridgrind --doctor-request --request budget-request.json --response doctor-report.json
+./cli/build/install/gridgrind/bin/gridgrind --request budget-request.json --response response.json
 ```
+
+In the snippets below, read `gridgrind` as the entry point you actually have: the packaged repo
+launcher (`./cli/build/install/gridgrind/bin/gridgrind`), the `bin/gridgrind` launcher from a
+release archive, or `java -jar gridgrind.jar` if you downloaded the standalone JAR.
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
 
-If you already have the release artifact, replace `cli/build/libs/gridgrind.jar` with your
-downloaded `gridgrind.jar`.
+If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and replace
+`gridgrind` below with `java -jar cli/build/libs/gridgrind.jar`.
+
+If you already have a release artifact, use the unpacked `bin/gridgrind` launcher from the zip/tar
+distribution, or invoke the standalone `gridgrind.jar` with `java -jar gridgrind.jar`.
 
 If you want the container surface from a repository checkout, the root Dockerfile now builds the
 packaged runtime image on its own:
@@ -65,20 +73,25 @@ docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
 GridGrind can print valid starting material instead of making you invent request shape by hand:
 
 ```bash
-java -jar cli/build/libs/gridgrind.jar --print-request-template --response request.json
-java -jar cli/build/libs/gridgrind.jar --print-example-catalog --response examples.json
-java -jar cli/build/libs/gridgrind.jar --print-task-catalog --response tasks.json
-java -jar cli/build/libs/gridgrind.jar --print-task-plan --lookup DASHBOARD --response dashboard-request.json
-java -jar cli/build/libs/gridgrind.jar --print-task-keyword-match --query "monthly sales dashboard" --response task-match.json
-java -jar cli/build/libs/gridgrind.jar --print-protocol-catalog --search pivot --response pivot-search.json
+gridgrind --print-request-template --response request.json
+gridgrind --print-example-catalog --response examples.json
+gridgrind --print-task-catalog --response tasks.json
+gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
+gridgrind --print-task-keyword-match --query "monthly sales dashboard" --response task-match.json
+gridgrind --print-protocol-catalog --response protocol-index.json
+gridgrind --print-protocol-catalog --search pivot --response pivot-search.json
+gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --response set-cell.json
+gridgrind --print-protocol-catalog --full --response protocol-catalog.json
 ```
 
 The example and task catalogs publish `workspaceMode` plus `requiredPaths`, so you can tell
 whether a printed request is self-contained before you try to run it.
 
-`--print-protocol-catalog --search <text>` is the fast discovery path when you know the concept
-but not the exact id. It returns compact summary hits first; follow up with
-`--print-protocol-catalog --lookup <group>:<id>` when you want one full authoritative entry.
+The bare `--print-protocol-catalog` output is the compact first-contact index. Use
+`--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
+up with `--print-protocol-catalog --lookup <group>:<id>` when you want one full authoritative
+entry, and use `--print-protocol-catalog --full` only when you need the entire machine-readable
+catalog in one payload.
 
 Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
 contract, and `--help-guidance` for workflow-oriented help.
@@ -96,9 +109,9 @@ inspection in the same plan.
 The safest way to start is to ask GridGrind to emit a valid request for you:
 
 ```bash
-java -jar cli/build/libs/gridgrind.jar --print-request-template --response request.json
-java -jar cli/build/libs/gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
-java -jar cli/build/libs/gridgrind.jar --print-task-plan --lookup DASHBOARD --response dashboard-request.json
+gridgrind --print-request-template --response request.json
+gridgrind --print-example --lookup BUDGET --response budget-request.json
+gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 ```
 
 ## Documentation

@@ -12,7 +12,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -44,13 +44,16 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "NUMBER",
-        "number" : 12.0
-      } ], [ {
-        "type" : "NUMBER",
-        "number" : 18.0
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "NUMBER",
+          "number" : 12.0
+        } ], [ {
+          "type" : "NUMBER",
+          "number" : 18.0
+        } ] ]
+      }
     }
   }, {
     "stepId" : "set-title-from-file",

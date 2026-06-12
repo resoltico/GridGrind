@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellFillReport;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
@@ -71,7 +72,9 @@ class AssertionCoverageTest {
     assertEquals("EXPECT_CHART_ABSENT", new PresenceAssertion.ChartAbsent().assertionType());
     assertEquals(
         "EXPECT_CELL_VALUE",
-        new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")).assertionType());
+        new CellAssertion.CellValue(
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))
+            .assertionType());
     assertEquals("EXPECT_DISPLAY_VALUE", new CellAssertion.DisplayValue("Owner").assertionType());
     assertEquals("EXPECT_FORMULA_TEXT", new CellAssertion.FormulaText("2+3").assertionType());
     assertEquals("EXPECT_CELL_STYLE", new CellAssertion.CellStyle(style).assertionType());
@@ -128,28 +131,32 @@ class AssertionCoverageTest {
         "ALL_OF",
         new CompositeAssertion.AllOf(
                 List.of(
-                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")),
                     new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "ANY_OF",
         new CompositeAssertion.AnyOf(
                 List.of(
-                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")),
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")),
                     new CellAssertion.DisplayValue("Owner")))
             .assertionType());
     assertEquals(
         "NOT",
-        new CompositeAssertion.Not(new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))
+        new CompositeAssertion.Not(
+                new CellAssertion.CellValue(
+                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")))
             .assertionType());
   }
 
   @Test
   void expectedCellValueVariantsCoverSuccessConstructors() {
-    assertInstanceOf(ExpectedCellValue.Blank.class, new ExpectedCellValue.Blank());
-    assertTrue(new ExpectedCellValue.BooleanValue(true).value());
-    assertEquals("#REF!", new ExpectedCellValue.ErrorValue("#REF!").error());
-    assertEquals(42.0d, new ExpectedCellValue.NumericValue(42.0d).number());
+    assertInstanceOf(CellScalarValue.Blank.class, new CellScalarValue.Blank());
+    assertTrue(new CellScalarValue.BooleanValue(true).bool());
+    assertEquals("#REF!", new CellScalarValue.ErrorValue("#REF!").error());
+    assertEquals(42.0d, new CellScalarValue.NumberValue(42.0d).number());
   }
 
   @Test

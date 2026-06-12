@@ -17,11 +17,11 @@ public final class WindowTarget {
 
   /** Returns one rectangular-window inspection step. */
   public PlannedInspection read() {
-    return new PlannedInspection(selector, Queries.window());
+    return new PlannedInspection(selector, SheetQueries.window());
   }
 
   /** Returns one sheet-schema inspection step for this window. */
   public PlannedInspection schema() {
-    return new PlannedInspection(selector, Queries.sheetSchema());
+    return new PlannedInspection(selector, InspectionSurfaceQueries.sheetSchema());
   }
 }

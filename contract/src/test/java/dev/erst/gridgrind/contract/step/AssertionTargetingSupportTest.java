@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
@@ -73,7 +72,8 @@ class AssertionTargetingSupportTest {
             TableCellSelector.ByColumnName.class),
         List.of(
             Assertion.allowedTargetTypes(
-                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))));
+                new CellAssertion.CellValue(
+                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")))));
   }
 
   @Test
@@ -113,7 +113,9 @@ class AssertionTargetingSupportTest {
                     new CompositeAssertion.AllOf(
                         List.of(
                             new PresenceAssertion.TablePresent(),
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))))));
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    "Owner"))))));
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families",
         disjointFailure.getMessage());

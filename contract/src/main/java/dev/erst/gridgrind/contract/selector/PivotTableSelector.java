@@ -31,7 +31,7 @@ public sealed interface PivotTableSelector extends Selector
   /** Selects one pivot table by workbook-global pivot name. */
   record ByName(String name) implements PivotTableSelector {
     public ByName {
-      name = SelectorSupport.requirePivotTableName(name, "name");
+      name = SelectorValueValidation.requirePivotTableName(name, "name");
     }
 
     @Override
@@ -43,7 +43,7 @@ public sealed interface PivotTableSelector extends Selector
   /** Selects one or more pivot tables by workbook-global pivot names. */
   record ByNames(List<String> names) implements PivotTableSelector {
     public ByNames {
-      names = SelectorSupport.copyDistinctPivotTableNames(names, "names");
+      names = SelectorListValidation.copyDistinctPivotTableNames(names, "names");
     }
 
     @Override
@@ -55,8 +55,8 @@ public sealed interface PivotTableSelector extends Selector
   /** Selects one pivot table by workbook-global name and asserts its owning sheet. */
   record ByNameOnSheet(String name, String sheetName) implements PivotTableSelector {
     public ByNameOnSheet {
-      name = SelectorSupport.requirePivotTableName(name, "name");
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      name = SelectorValueValidation.requirePivotTableName(name, "name");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override

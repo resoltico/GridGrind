@@ -23,12 +23,12 @@ public final class PivotTableTarget {
 
   /** Returns one pivot-table inspection step. */
   public PlannedInspection inspect() {
-    return new PlannedInspection(selector, Queries.pivotTables());
+    return new PlannedInspection(selector, WorkbookAssetQueries.pivotTables());
   }
 
   /** Returns one pivot-table-health analysis step. */
   public PlannedInspection analyzeHealth() {
-    return new PlannedInspection(selector, Queries.pivotTableHealth());
+    return new PlannedInspection(selector, InspectionAnalysisQueries.pivotTableHealth());
   }
 
   /** Returns one pivot-table presence assertion step. */

@@ -17,7 +17,7 @@ public final class ChartTarget {
 
   /** Returns one chart inspection step for the exact chart selector. */
   public PlannedInspection inspect() {
-    return new PlannedInspection(selector, Queries.charts());
+    return new PlannedInspection(selector, WorkbookAssetQueries.charts());
   }
 
   /** Returns one chart presence assertion step. */

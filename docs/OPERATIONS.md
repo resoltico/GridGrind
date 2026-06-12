@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.67.0"
 domain: OPERATIONS
-updated: "2026-06-05"
+updated: "2026-06-12"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -13,6 +13,7 @@ route:
 **Purpose**: Stable public map of the shipped GridGrind `.xlsx` contract.
 **Machine-readable discovery**: `gridgrind --print-protocol-catalog`
 **Summary-first search**: `gridgrind --print-protocol-catalog --search <text>`
+**Full machine-readable dump**: `gridgrind --print-protocol-catalog --full`
 **Copy-paste cheat sheet**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 **Hard ceilings and unsupported boundaries**: [LIMITATIONS.md](./LIMITATIONS.md)
 
@@ -23,20 +24,20 @@ focused documents so the public surface stays easier to audit and harder to let 
 
 ```bash
 gridgrind --print-request-template --response request.json
-gridgrind --print-protocol-catalog --response protocol-catalog.json
+gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search chart --response chart-search.json
 gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL
+gridgrind --print-protocol-catalog --full --response protocol-catalog.json
 gridgrind --print-example --lookup BUDGET --response budget-request.json
 gridgrind --print-example --lookup ASSERTION --response assertion-request.json
 gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--print-protocol-catalog` is the authoritative machine-readable shape inventory. It publishes the
-current request model, every mutation action, every assertion type, every inspection query,
-required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
-fields. Use `--search` when you only know part of the name or summary, then switch to
-`--lookup <group>:<id>` for the exact entry once you have the stable qualified id. Search now
+`--print-protocol-catalog` is the authoritative machine-readable shape inventory. The bare command
+returns the compact first-contact index. Use `--search` when you only know part of the name or
+summary, then switch to `--lookup <group>:<id>` for one exact entry once you have the stable
+qualified id. Use `--full` only when you need the entire catalog payload in one response. Search
 returns summary-first matches with `catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one
 short `summary`; supporting-type context stays lightweight through optional
 `supportingQualifiedIds` or `relatedEntryIds`, and full authoring payloads remain behind the

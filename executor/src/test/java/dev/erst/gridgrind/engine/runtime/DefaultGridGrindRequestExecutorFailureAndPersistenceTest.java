@@ -53,9 +53,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new RangeSelector.ByRange("Budget", "A1:B2"),
                         new CellMutationAction.SetRange(
-                            List.of(
-                                List.of(textCell("Item"), textCell("Amount")),
-                                List.of(textCell("Hosting"), new CellInput.Numeric(49.0))))),
+                            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                                List.of(
+                                    List.of(textCell("Item"), textCell("Amount")),
+                                    List.of(
+                                        textCell("Hosting"), new CellInput.NumberValue(49.0)))))),
                     mutate(
                         new StructuredMutationAction.SetTable(
                             TableInput.withDefaultMetadata(
@@ -193,15 +195,18 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(textCell("Item"), textCell("Amount")))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(textCell("Item"), textCell("Amount"))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(textCell("Hosting"), new CellInput.Numeric(49.0)))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(textCell("Hosting"), new CellInput.NumberValue(49.0))))),
                     mutate(
                         new SheetSelector.ByName("Budget"),
                         new CellMutationAction.AppendRow(
-                            List.of(textCell("Domain"), new CellInput.Numeric(12.0)))),
+                            new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                List.of(textCell("Domain"), new CellInput.NumberValue(12.0))))),
                     mutate(
                         new CellSelector.ByAddress("Budget", "B4"),
                         new CellMutationAction.SetCell(formulaCell("SUM(B2:B3)"))),
@@ -832,10 +837,10 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new WorkbookMutationAction.EnsureSheet()),
                         mutate(
                             new CellSelector.ByAddress("Data", "A1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(1.0))),
+                            new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))),
                         mutate(
                             new CellSelector.ByAddress("Data", "B1"),
-                            new CellMutationAction.SetCell(new CellInput.Numeric(2.0))),
+                            new CellMutationAction.SetCell(new CellInput.NumberValue(2.0))),
                         mutate(
                             new CellSelector.ByAddress("Data", "C1"),
                             new CellMutationAction.SetCell(
@@ -877,7 +882,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new MutationStep(
                         "step-2",
                         new CellSelector.ByAddress("Data", "A1"),
-                        new CellMutationAction.SetCell(new CellInput.Numeric(1.0))))));
+                        new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))))));
 
     assertTrue(failure.orElseThrow().contains("mutation-to-observation boundary"));
   }

@@ -11,7 +11,6 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
@@ -109,7 +108,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
                     "Item",
                     new CellInput.Text(TextSourceInput.inline("Hosting"))),
                 "Amount"),
-            new CellAssertion.CellValue(new ExpectedCellValue.NumericValue(125.0)));
+            new CellAssertion.CellValue(
+                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(125.0)));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -134,10 +134,11 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             "range-inline",
             new RangeSelector.ByRange("Budget", "A1:B1"),
             new CellMutationAction.SetRange(
-                List.of(
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                     List.of(
-                        new CellInput.Text(TextSourceInput.inline("Owner")),
-                        new CellInput.Numeric(42.0d)))));
+                        List.of(
+                            new CellInput.Text(TextSourceInput.inline("Owner")),
+                            new CellInput.NumberValue(42.0d))))));
     MutationStep commentStep =
         new MutationStep(
             "comment-inline",
@@ -371,7 +372,9 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(0)).action());
     CellInput.Formula resolvedFormula =
         assertInstanceOf(CellInput.Formula.class, resolvedFormulaAction.value());
-    assertEquals("SUM(B2:B3)", ((TextSourceInput.Inline) resolvedFormula.source()).text());
+    assertEquals(
+        "SUM(B2:B3)",
+        assertInstanceOf(TextSourceInput.Inline.class, resolvedFormula.source()).text());
 
     CellMutationAction.SetComment resolvedCommentAction =
         assertInstanceOf(
@@ -568,7 +571,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(1)).action());
     assertEquals(
         "SUM(B1:B2)",
-        ((TextSourceInput.Inline)
+        assertInstanceOf(
+                TextSourceInput.Inline.class,
                 assertInstanceOf(CellInput.Formula.class, prefixedAction.value()).source())
             .text());
 
@@ -578,7 +582,8 @@ class SourceBackedPlanResolverCanonicalStructureCoverageTest
             assertInstanceOf(MutationStep.class, resolved.steps().get(2)).action());
     assertEquals(
         "SUM(C1:C2)",
-        ((TextSourceInput.Inline)
+        assertInstanceOf(
+                TextSourceInput.Inline.class,
                 assertInstanceOf(CellInput.Formula.class, fileBackedAction.value()).source())
             .text());
   }

@@ -62,7 +62,7 @@ final class GridGrindResponseSupport {
     }
     return new ExecutionJournal(
         Optional.empty(),
-        ExecutionJournalLevel.NORMAL,
+        ExecutionJournalLevel.SUMMARY,
         new ExecutionJournal.SourceSummary(Optional.empty(), Optional.empty()),
         new ExecutionJournal.PersistenceSummary(Optional.empty(), Optional.empty()),
         ExecutionJournal.Phase.notStarted(),

@@ -62,7 +62,7 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
                     "step-03-set-cell",
                     new CellSelector.ByAddress("Ops", "A1"),
                     new CellMutationAction.SetCell(
-                        new dev.erst.gridgrind.contract.dto.CellInput.Numeric(1.0)))));
+                        new dev.erst.gridgrind.contract.dto.CellInput.NumberValue(1.0)))));
     GridGrindResponse.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(new DefaultGridGrindRequestExecutor(), request));

@@ -20,14 +20,14 @@ public sealed interface HyperlinkTarget
   /** Absolute URL hyperlink target such as {@code https://example.com/report}. */
   record Url(String target) implements HyperlinkTarget {
     public Url {
-      target = ProtocolHyperlinkSupport.normalizeUrlTarget(target);
+      target = ProtocolHyperlinkUrlSupport.normalizeUrlTarget(target);
     }
   }
 
   /** Email hyperlink target stored without the {@code mailto:} prefix. */
   record Email(String email) implements HyperlinkTarget {
     public Email {
-      email = ProtocolHyperlinkSupport.normalizeEmailTarget(email);
+      email = ProtocolHyperlinkUrlSupport.normalizeEmailTarget(email);
     }
   }
 
@@ -39,14 +39,14 @@ public sealed interface HyperlinkTarget
    */
   record File(String path) implements HyperlinkTarget {
     public File {
-      path = ProtocolHyperlinkSupport.normalizeFileTarget(path);
+      path = ProtocolHyperlinkFileSupport.normalizeFileTarget(path);
     }
   }
 
   /** Internal workbook hyperlink target such as a sheet-and-cell location or defined name. */
   record Document(String target) implements HyperlinkTarget {
     public Document {
-      target = ProtocolHyperlinkSupport.normalizeDocumentTarget(target);
+      target = ProtocolHyperlinkTargetSupport.normalizeDocumentTarget(target);
     }
   }
 }

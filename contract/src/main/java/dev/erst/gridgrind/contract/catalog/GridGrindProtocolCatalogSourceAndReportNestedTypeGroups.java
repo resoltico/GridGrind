@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.catalog;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptor;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.nestedTypeGroup;
 
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.NamedRangeReport;
@@ -20,27 +21,27 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
   static final List<CatalogNestedTypeDescriptor> SOURCE_AND_REPORT_GROUPS =
       List.of(
           nestedTypeGroup(
-              "expectedCellValueTypes",
-              dev.erst.gridgrind.contract.assertion.ExpectedCellValue.class,
+              "cellScalarValueTypes",
+              CellScalarValue.class,
               List.of(
                   descriptor(
-                      dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Blank.class,
+                      CellScalarValue.Blank.class,
                       "BLANK",
                       "Require the effective cell value to be blank."),
                   descriptor(
-                      dev.erst.gridgrind.contract.assertion.ExpectedCellValue.Text.class,
+                      CellScalarValue.Text.class,
                       "TEXT",
                       "Require the effective cell value to be one exact string."),
                   descriptor(
-                      dev.erst.gridgrind.contract.assertion.ExpectedCellValue.NumericValue.class,
+                      CellScalarValue.NumberValue.class,
                       "NUMBER",
                       "Require the effective cell value to be one exact finite number."),
                   descriptor(
-                      dev.erst.gridgrind.contract.assertion.ExpectedCellValue.BooleanValue.class,
+                      CellScalarValue.BooleanValue.class,
                       "BOOLEAN",
                       "Require the effective cell value to be true or false."),
                   descriptor(
-                      dev.erst.gridgrind.contract.assertion.ExpectedCellValue.ErrorValue.class,
+                      CellScalarValue.ErrorValue.class,
                       "ERROR",
                       "Require the effective cell value to be one exact Excel error string."))),
           nestedTypeGroup(

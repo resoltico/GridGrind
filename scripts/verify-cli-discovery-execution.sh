@@ -38,6 +38,9 @@ if [[ $# -eq 0 ]]; then
     target="$(ensure_cli_shadow_jar "${repo_root}")"
 elif [[ $# -eq 1 ]]; then
     case "${1}" in
+        binary)
+            die "binary mode requires an executable target"
+            ;;
         jar)
             target="$(ensure_cli_shadow_jar "${repo_root}")"
             ;;
@@ -45,6 +48,7 @@ elif [[ $# -eq 1 ]]; then
             die "docker-image mode requires an image reference"
             ;;
         *)
+            mode='binary'
             target="$(cd -P -- "$(dirname -- "${1}")" && pwd)/$(basename -- "${1}")"
             ;;
     esac
@@ -56,6 +60,10 @@ else
 fi
 
 case "${mode}" in
+    binary)
+        target="$(cd -P -- "$(dirname -- "${target}")" && pwd)/$(basename -- "${target}")"
+        [[ -x "${target}" ]] || die "missing executable CLI launcher: ${target}"
+        ;;
     jar)
         command -v java >/dev/null 2>&1 || die "java is required for jar verification"
         target="$(cd -P -- "$(dirname -- "${target}")" && pwd)/$(basename -- "${target}")"
@@ -69,7 +77,7 @@ case "${mode}" in
         fi
         ;;
     *)
-        die "unsupported mode ${mode}; expected jar or docker-image"
+        die "unsupported mode ${mode}; expected binary, jar, or docker-image"
         ;;
 esac
 
@@ -115,6 +123,8 @@ def progress(message: str) -> None:
 
 
 def launcher(command: list[str], cwd: Path) -> list[str]:
+    if mode == "binary":
+        return [artifact_target, *command]
     if mode == "jar":
         return ["java", "-jar", artifact_target, *command]
     if mode == "docker-image":
@@ -209,7 +219,7 @@ def run_json(
 
 
 def artifact_path(path: Path, workspace: Path) -> str:
-    if mode == "jar":
+    if mode in {"binary", "jar"}:
         return str(path)
     if mode == "docker-image":
         return str(path.relative_to(workspace))

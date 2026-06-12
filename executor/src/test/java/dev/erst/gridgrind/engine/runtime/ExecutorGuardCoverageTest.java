@@ -300,8 +300,9 @@ class ExecutorGuardCoverageTest {
             new WorkbookMutationAction.SetPrintLayout(
                 dev.erst.gridgrind.contract.dto.PrintLayoutInput.defaults()),
             new CellMutationAction.SetRange(
-                java.util.List.of(
-                    java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    java.util.List.of(
+                        java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))))),
             new CellMutationAction.ClearRange(),
             new CellMutationAction.SetHyperlink(
                 new dev.erst.gridgrind.contract.dto.HyperlinkTarget.Url("https://example.com")),
@@ -350,7 +351,8 @@ class ExecutorGuardCoverageTest {
             new StructuredMutationAction.DeletePivotTable(),
             new StructuredMutationAction.DeleteNamedRange(),
             new CellMutationAction.AppendRow(
-                java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))),
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),
             new WorkbookMutationAction.AutoSizeColumns())) {
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.sheetNameFor(action));
       assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.rangeFor(action));
@@ -453,7 +455,7 @@ class ExecutorGuardCoverageTest {
                 new dev.erst.gridgrind.contract.selector.TableRowSelector.ByKeyCell(
                     new dev.erst.gridgrind.contract.selector.TableSelector.ByName("BudgetTable"),
                     "Item",
-                    new CellInput.Numeric(42.0d)))
+                    new CellInput.NumberValue(42.0d)))
             .label()
             .contains("Number[number=42.0]"));
     assertTrue(

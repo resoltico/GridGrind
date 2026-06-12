@@ -22,7 +22,6 @@ import dev.erst.gridgrind.contract.selector.RowBandSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import java.util.List;
 import java.util.Optional;
 
 /** Builds bounded mutation steps for protocol-workflow Jazzer generation. */
@@ -144,7 +143,7 @@ final class OperationSequenceMutationFactory {
               String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
               yield mutate(
                   new RangeSelector.ByRange(targetSheet, range),
-                  new CellMutationAction.SetRange(FuzzDataDecoders.nextProtocolMatrix(data, 2, 2)));
+                  new CellMutationAction.SetRange(FuzzDataDecoders.nextProtocolGrid(data, 2, 2)));
             }
             case 0x2 ->
                 mutate(
@@ -154,10 +153,7 @@ final class OperationSequenceMutationFactory {
             default ->
                 mutate(
                     new SheetSelector.ByName(targetSheet),
-                    new CellMutationAction.AppendRow(
-                        List.of(
-                            FuzzDataDecoders.nextCellInput(data),
-                            FuzzDataDecoders.nextCellInput(data))));
+                    new CellMutationAction.AppendRow(FuzzDataDecoders.nextProtocolRow(data, 2)));
           };
       case 0x3 ->
           switch (selectorSlot(selector)) {

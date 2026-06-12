@@ -140,14 +140,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """
             [
               { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-              { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+              { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "values": [
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
-              ] } },
-              { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+              ] } } },
+              { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "values": [
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
                 { "type": "NUMBER", "number": 49.0 }
-              ] } },
+              ] } } },
               { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
               { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
               { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
@@ -215,7 +215,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
     assertEquals("execute", failure.command());
@@ -390,12 +390,13 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStdout(stdout, stderr);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.of("steps[0].target"), failure.location().jsonPath());
+    assertEquals(
+        java.util.Optional.of("steps[0].target"), failure.location().orElseThrow().jsonPath());
     assertTrue(failure.message().contains("invalid Excel character ':'"));
   }
 
@@ -413,20 +414,23 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                   "target": { "type": "RANGE_BY_RANGE", "sheetName": "Dispatch", "range": "A1:B3" },
                   "action": {
                     "type": "SET_RANGE",
-                    "rows": [
-                    [
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Owner" } },
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Task" } }
-                    ],
-                    [
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Ada" } },
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Onboarding" } }
-                    ],
-                    [
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Lin" } },
-                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Badge run" } }
-                    ]
-                    ]
+                    "rows": {
+                      "type": "TYPED",
+                      "rows": [
+                        [
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Owner" } },
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Task" } }
+                        ],
+                        [
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Ada" } },
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Onboarding" } }
+                        ],
+                        [
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Lin" } },
+                          { "type": "TEXT", "source": { "type": "INLINE", "text": "Badge run" } }
+                        ]
+                      ]
+                    }
                   }
                 },
                 {

@@ -6,7 +6,6 @@ import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.assertion.CellAssertion;
 import dev.erst.gridgrind.contract.assertion.CompositeAssertion;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
 import dev.erst.gridgrind.contract.assertion.WorkbookFactAssertion;
 import dev.erst.gridgrind.contract.dto.AnalysisFindingReport;
@@ -255,7 +254,8 @@ final class AssertionExecutor {
   }
 
   static boolean matchesCellValue(
-      dev.erst.gridgrind.contract.dto.CellReport cell, ExpectedCellValue expectedValue) {
+      dev.erst.gridgrind.contract.dto.CellReport cell,
+      dev.erst.gridgrind.contract.dto.CellScalarValue expectedValue) {
     return AssertionValueEvaluator.matchesCellValue(cell, expectedValue);
   }
 

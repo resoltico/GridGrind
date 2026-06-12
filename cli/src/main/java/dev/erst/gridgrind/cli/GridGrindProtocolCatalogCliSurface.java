@@ -26,6 +26,7 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-task-plan --lookup <id> [--response <path>]",
                   "gridgrind --print-task-keyword-match --query <text> [--response <path>]",
                   "gridgrind --print-protocol-catalog [--response <path>]",
+                  "gridgrind --print-protocol-catalog --full [--response <path>]",
                   "gridgrind --print-protocol-catalog --lookup <id>|<group>:<id> [--response"
                       + " <path>]",
                   "gridgrind --print-protocol-catalog --search <text> [--response <path>]",
@@ -45,6 +46,8 @@ final class GridGrindProtocolCatalogCliSurface {
                               + " --response tasks.json",
                           "Get one executable starter scenario: gridgrind --print-task-plan"
                               + " --lookup DASHBOARD --response dashboard-request.json",
+                          "Get the compact protocol-catalog index: gridgrind"
+                              + " --print-protocol-catalog --response protocol-index.json",
                           "Search exact protocol shapes: gridgrind --print-protocol-catalog"
                               + " --search \"chart title\" --response catalog-search.json",
                           "Resolve one exact catalog group: gridgrind --print-protocol-catalog"
@@ -178,13 +181,13 @@ final class GridGrindProtocolCatalogCliSurface {
                   "source.type is required. NEW creates a blank workbook."
                       + " EXISTING requires source.path.",
                   "persistence is required. NONE keeps the workbook in memory only.",
-                  "planId is optional. When omitted, the response journal generates a"
-                      + " plan-<uuid> correlation id.",
+                  "planId is optional. When omitted, the response journal omits it.",
                   "execution is required. execution.mode is a typed discriminator;"
                       + " choose type=FULL_XSSF, EVENT_READ, or STREAMING_WRITE under the"
                       + " limits above.",
-                  "execution.journal.level controls journal detail; VERBOSE also streams live"
-                      + " phase events to stderr as timestamped CATEGORY detail lines with"
+                  "execution.journal.level controls journal detail; SUMMARY is the default and"
+                      + " keeps the response stable by omitting timing telemetry."
+                      + " VERBOSE also streams live phase events to stderr as timestamped CATEGORY detail lines with"
                       + " optional stepIndex/stepId pairs.",
                   "execution.calculation controls server-side evaluation, cache clearing, and"
                       + " open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE,"
@@ -194,9 +197,8 @@ final class GridGrindProtocolCatalogCliSurface {
                   "Response telemetry is split intentionally: journal.* captures execution-phase"
                       + " timing and event chronology, while root calculation/warnings/assertions/"
                       + "inspections carry the authoritative outcome payloads.",
-                  "journal.events[*].timestamp plus every durationMillis field are observational"
-                      + " runtime telemetry and vary between runs; assert status/category/detail,"
-                      + " not literal timings.",
+                  "NORMAL and VERBOSE journal timings are observational runtime telemetry and vary"
+                      + " between runs; assert status/category/detail, not literal timings.",
                   "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and"
                       + " STANDARD_INPUT sources.",
                   GridGrindContractText.standardInputRequiresRequestMessage()
@@ -212,8 +214,11 @@ final class GridGrindProtocolCatalogCliSurface {
                   GridGrindContractText.stepKindSummary()
                       + " target is a sibling field on each step; it is not nested inside"
                       + " action, assertion, or query.",
-                  "Step order is authoritative: mutations, assertions, and inspections may be"
-                      + " interleaved when the workflow demands it.")),
+                  "Step order is authoritative. Mutations, assertions, and inspections may be"
+                      + " interleaved unless the chosen execution mode or calculation strategy"
+                      + " tightens the ordering contract (for example,"
+                      + " EVALUATE_ALL/EVALUATE_TARGETS require every MUTATION step to finish"
+                      + " before observation begins).")),
           new CliSurface.CliDefinitionSection(
               "File Workflow",
               List.of(
@@ -315,7 +320,7 @@ final class GridGrindProtocolCatalogCliSurface {
                   "gridgrind --print-task-plan --lookup <id> --response task-plan.json",
                   "gridgrind --print-task-keyword-match --query \"monthly sales dashboard with charts\""
                       + " --response task-keyword-match.json",
-                  "gridgrind --print-protocol-catalog --response protocol-catalog.json"),
+                  "gridgrind --print-protocol-catalog --response protocol-index.json"),
               "Built-in generated examples",
               "Print one built-in example",
               List.of(
@@ -343,16 +348,17 @@ final class GridGrindProtocolCatalogCliSurface {
                               + " lists each field, whether it is required, and the nested/plain"
                               + " type group accepted by polymorphic fields such as target,"
                               + " action, query, value, style, and scope.",
+                          "The bare --print-protocol-catalog output is intentionally compact:"
+                              + " it lists requestTypeId, group ids, and lookup namespace forms."
+                              + " Add --full when you need every field descriptor in one dump.",
                           "Search output is summary-first: it lists ids, summaries, related entry"
                               + " ids, and supporting ids. Rerun --lookup when you need one full"
                               + " entry or type-group definition.",
-                          "Unqualified --lookup resolves individual type ids (SET_CELL,"
-                              + " ENSURE_SHEET, GET_CELLS, EXPECT_CELL_VALUE, …), nested/plain"
-                              + " type-group names (cellInputTypes, calculationStrategyTypes, …),"
-                              + " and top-level operation category names (mutationActionTypes,"
-                              + " assertionTypes, inspectionQueryTypes, sourceTypes,"
-                              + " persistenceTypes, stepTypes). Qualify with nestedTypes: or"
-                              + " plainTypes: only when ids repeat across groups."))),
+                          "Lookup namespaces are explicit:"
+                              + " <topLevelGroup>:<id> resolves one top-level type,"
+                              + " nestedTypes:<group> resolves one nested tagged-union group,"
+                              + " plainTypes:<group> resolves one plain record group,"
+                              + " and bare <id> works only for globally unique top-level ids."))),
               "gridgrind --print-example --lookup "
                   + GridGrindShippedExamples.catalog().examples().getFirst().id()
                   + " --response example.json"),
@@ -426,7 +432,13 @@ final class GridGrindProtocolCatalogCliSurface {
                           + " scenario after you choose a task id. After normalization, at least"
                           + " one searchable non-stop-word term must remain."),
                   new CliSurface.DefinitionEntry(
-                      "--print-protocol-catalog", "Print the machine-readable protocol catalog."),
+                      "--print-protocol-catalog",
+                      "Print the compact protocol-catalog index with group ids and lookup"
+                          + " namespace forms."),
+                  new CliSurface.DefinitionEntry(
+                      "--full",
+                      "With --print-protocol-catalog, print the complete machine-readable"
+                          + " protocol catalog."),
                   new CliSurface.DefinitionEntry(
                       "--search <text>",
                       "With --print-protocol-catalog, perform case-insensitive search across"

@@ -9,7 +9,6 @@ import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartPlotInput;
 import dev.erst.gridgrind.contract.dto.ChartTitleInput;
@@ -50,18 +49,19 @@ class SourceBackedPlanResolverStandardInputCoverageTest
   void requiresStandardInputCoversAllMutationFamiliesAndNonMutationSteps() {
     CellMutationAction.SetRange fullyInlineRange =
         new CellMutationAction.SetRange(
-            List.of(
+            new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                 List.of(
-                    new CellInput.Blank(),
-                    new CellInput.RichText(
-                        List.of(
-                            new RichTextRunInput(
-                                TextSourceInput.inline("Ada"), java.util.Optional.empty()))),
-                    new CellInput.Numeric(1.0d),
-                    new CellInput.BooleanValue(true),
-                    new CellInput.Date(LocalDate.of(2026, 4, 18)),
-                    new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30)),
-                    new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")))));
+                    List.of(
+                        new CellInput.Blank(),
+                        new CellInput.RichText(
+                            List.of(
+                                new RichTextRunInput(
+                                    TextSourceInput.inline("Ada"), java.util.Optional.empty()))),
+                        new CellInput.NumberValue(1.0d),
+                        new CellInput.BooleanValue(true),
+                        new CellInput.Date(LocalDate.of(2026, 4, 18)),
+                        new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30)),
+                        new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))))));
 
     assertFalse(
         SourceBackedPlanResolver.requiresStandardInput(
@@ -74,7 +74,8 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                     new AssertionStep(
                         "assert-owner",
                         new CellSelector.ByAddress("Budget", "A1"),
-                        new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))))));
+                        new CellAssertion.CellValue(
+                            new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")))))));
     assertFalse(
         SourceBackedPlanResolver.requiresStandardInput(
             WorkbookPlan.standard(
@@ -97,7 +98,7 @@ class SourceBackedPlanResolverStandardInputCoverageTest
                     mutate(new RangeSelector.ByRange("Budget", "A1:G1"), fullyInlineRange)))));
     assertFalse(requiresStandardInputFor(new WorkbookMutationAction.EnsureSheet()));
     assertFalse(
-        requiresStandardInputFor(new CellMutationAction.SetCell(new CellInput.Numeric(1.0d))));
+        requiresStandardInputFor(new CellMutationAction.SetCell(new CellInput.NumberValue(1.0d))));
     assertFalse(
         requiresStandardInputFor(new CellMutationAction.SetCell(new CellInput.BooleanValue(true))));
     assertFalse(
@@ -114,13 +115,14 @@ class SourceBackedPlanResolverStandardInputCoverageTest
     assertTrue(
         requiresStandardInputFor(
             new CellMutationAction.SetRange(
-                List.of(
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                     List.of(
-                        new CellInput.RichText(
-                            List.of(
-                                new RichTextRunInput(
-                                    TextSourceInput.standardInput(),
-                                    java.util.Optional.empty()))))))));
+                        List.of(
+                            new CellInput.RichText(
+                                List.of(
+                                    new RichTextRunInput(
+                                        TextSourceInput.standardInput(),
+                                        java.util.Optional.empty())))))))));
     assertTrue(
         requiresStandardInputFor(
             new CellMutationAction.SetComment(
@@ -302,7 +304,8 @@ class SourceBackedPlanResolverStandardInputCoverageTest
     assertTrue(
         requiresStandardInputFor(
             new CellMutationAction.AppendRow(
-                List.of(new CellInput.Formula(TextSourceInput.standardInput())))));
+                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                    List.of(new CellInput.Formula(TextSourceInput.standardInput()))))));
     assertTrue(
         requiresStandardInputFor(
             new WorkbookMutationAction.SetPrintLayout(

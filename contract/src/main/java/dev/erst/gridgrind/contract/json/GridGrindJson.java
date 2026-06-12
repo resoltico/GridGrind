@@ -26,7 +26,7 @@ public final class GridGrindJson {
         readRequestTree(inputStream),
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
         WorkbookPlan.class,
-        GridGrindJsonMessageSupport::invalidRequestPayload);
+        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
   }
 
   /** Reads a request from a byte array. */
@@ -36,7 +36,7 @@ public final class GridGrindJson {
         readRequestTree(bytes),
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
         WorkbookPlan.class,
-        GridGrindJsonMessageSupport::invalidRequestPayload);
+        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
   }
 
   /** Reads one request JSON tree from an input stream without closing the caller-owned stream. */
@@ -45,7 +45,7 @@ public final class GridGrindJson {
     return GridGrindJsonCodecSupport.readTree(
         inputStream,
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        GridGrindJsonMessageSupport::invalidRequestPayload);
+        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
   }
 
   /** Reads one request JSON tree from a byte array. */
@@ -55,7 +55,7 @@ public final class GridGrindJson {
     return GridGrindJsonCodecSupport.readTree(
         bytes,
         GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
-        GridGrindJsonMessageSupport::invalidRequestPayload);
+        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
   }
 
   /** Reads a response from an input stream without closing the caller-owned stream. */
@@ -65,7 +65,7 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         GridGrindResponse.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a response from a byte array. */
@@ -75,7 +75,7 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         GridGrindResponse.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a protocol catalog from an input stream without closing the caller-owned stream. */
@@ -85,7 +85,7 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         Catalog.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a protocol catalog from a byte array. */
@@ -95,7 +95,7 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         Catalog.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a request doctor report from an input stream without closing the caller-owned stream. */
@@ -106,7 +106,7 @@ public final class GridGrindJson {
         inputStream,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         RequestDoctorReport.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Reads a request doctor report from a byte array. */
@@ -116,7 +116,7 @@ public final class GridGrindJson {
         bytes,
         GridGrindJsonMapperSupport.JSON_MAPPER,
         RequestDoctorReport.class,
-        GridGrindJsonMessageSupport::invalidPayload);
+        GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
   /** Serializes a request to bytes. */
@@ -219,28 +219,28 @@ public final class GridGrindJson {
   }
 
   static IllegalArgumentException invalidPayload(JacksonException exception) {
-    return GridGrindJsonMessageSupport.invalidPayload(exception);
+    return GridGrindJsonProblemMessageSupport.invalidPayload(exception);
   }
 
   static String message(Throwable throwable) {
-    return GridGrindJsonMessageSupport.message(throwable);
+    return GridGrindJsonProblemMessageSupport.message(throwable);
   }
 
   static String mismatchedInputMessage(
       tools.jackson.databind.exc.MismatchedInputException exception) {
-    return GridGrindJsonMessageSupport.mismatchedInputMessage(exception);
+    return GridGrindJsonValueProblemSupport.mismatchedInputMessage(exception);
   }
 
   static String cleanJacksonMessage(String message) {
-    return GridGrindJsonMessageSupport.cleanJacksonMessage(message);
+    return GridGrindJsonProblemMessageSupport.cleanJacksonMessage(message);
   }
 
   static java.util.Optional<Integer> jsonLine(TokenStreamLocation location) {
-    return GridGrindJsonMessageSupport.jsonLine(location);
+    return GridGrindJsonPayloadMetadataSupport.jsonLine(location);
   }
 
   static java.util.Optional<Integer> jsonColumn(TokenStreamLocation location) {
-    return GridGrindJsonMessageSupport.jsonColumn(location);
+    return GridGrindJsonPayloadMetadataSupport.jsonColumn(location);
   }
 
   private static void writeValue(OutputStream outputStream, Object value) throws IOException {

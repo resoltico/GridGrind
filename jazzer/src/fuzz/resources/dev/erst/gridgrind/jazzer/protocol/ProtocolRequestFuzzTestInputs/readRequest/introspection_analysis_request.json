@@ -277,7 +277,27 @@
               "text": "Page 1"
             }
           },
-          "setup": {}
+          "setup": {
+            "margins": {
+              "left": 0.7,
+              "right": 0.7,
+              "top": 0.75,
+              "bottom": 0.75,
+              "header": 0.3,
+              "footer": 0.3
+            },
+            "printGridlines": false,
+            "horizontallyCentered": false,
+            "verticallyCentered": false,
+            "paperSize": 1,
+            "draft": false,
+            "blackAndWhite": false,
+            "copies": 1,
+            "useFirstPageNumber": false,
+            "firstPageNumber": 1,
+            "rowBreaks": [],
+            "columnBreaks": []
+          }
         }
       },
       "target": {

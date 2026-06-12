@@ -212,21 +212,18 @@ final class ExecutionJournalTargetResolver {
     };
   }
 
-  private static String summarizeCellInput(CellInput input) {
-    if (input instanceof CellInput.Blank) {
-      return "Blank[]";
-    }
-    if (input instanceof CellInput.Text text) {
-      return "Text[" + summarizeTextSource(text.source()) + "]";
-    }
-    if (input instanceof CellInput.Numeric numeric) {
-      return "Number[number=" + numeric.number() + "]";
-    }
-    if (input instanceof CellInput.BooleanValue booleanValue) {
-      return "Boolean[value=" + booleanValue.bool() + "]";
-    }
-    CellInput.Formula formula = (CellInput.Formula) input;
-    return "Formula[" + summarizeTextSource(formula.source()) + "]";
+  static String summarizeCellInput(CellInput input) {
+    return switch (input) {
+      case CellInput.Blank _ -> "Blank[]";
+      case CellInput.Text text -> "Text[" + summarizeTextSource(text.source()) + "]";
+      case CellInput.RichText richText -> "RichText[runs=" + richText.runs().size() + "]";
+      case CellInput.NumberValue numberValue -> "Number[number=" + numberValue.number() + "]";
+      case CellInput.BooleanValue booleanValue -> "Boolean[value=" + booleanValue.bool() + "]";
+      case CellInput.ErrorValue errorValue -> "Error[error=" + errorValue.error() + "]";
+      case CellInput.Date date -> "Date[value=" + date.date() + "]";
+      case CellInput.DateTime dateTime -> "DateTime[value=" + dateTime.dateTime() + "]";
+      case CellInput.Formula formula -> "Formula[" + summarizeTextSource(formula.source()) + "]";
+    };
   }
 
   private static String summarizeTextSource(TextSourceInput source) {

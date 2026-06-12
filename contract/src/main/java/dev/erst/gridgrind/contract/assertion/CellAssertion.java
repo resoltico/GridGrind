@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.assertion;
 
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
+import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CellStyleReport;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
@@ -21,7 +22,7 @@ public sealed interface CellAssertion extends Assertion
         CellSelector.ByAddresses.class,
         TableCellSelector.ByColumnName.class
       })
-  record CellValue(ExpectedCellValue expectedValue) implements CellAssertion {
+  record CellValue(CellScalarValue expectedValue) implements CellAssertion {
     public CellValue {
       Objects.requireNonNull(expectedValue, "expectedValue must not be null");
     }

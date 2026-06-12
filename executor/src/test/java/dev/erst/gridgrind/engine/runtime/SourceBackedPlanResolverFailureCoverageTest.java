@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.DrawingMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
@@ -289,7 +288,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
             new AssertionStep(
                 "assert-owner",
                 new CellSelector.ByAddress("Budget", "A1"),
-                new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))));
+                new CellAssertion.CellValue(
+                    new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner")))));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new InspectionStep(
@@ -297,7 +297,8 @@ class SourceBackedPlanResolverFailureCoverageTest extends SourceBackedPlanResolv
                 new CellSelector.ByAddress("Budget", "A1"),
                 new SheetIntrospectionQuery.GetCells())));
 
-    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new CellInput.Numeric(1.0d)));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(new CellInput.NumberValue(1.0d)));
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(new CellInput.BooleanValue(true)));
     assertFalse(

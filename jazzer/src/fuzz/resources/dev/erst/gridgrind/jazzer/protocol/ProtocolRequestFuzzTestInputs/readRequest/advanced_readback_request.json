@@ -540,6 +540,7 @@
               "header": 0.3,
               "footer": 0.3
             },
+            "printGridlines": false,
             "horizontallyCentered": true,
             "verticallyCentered": true,
             "paperSize": 8,

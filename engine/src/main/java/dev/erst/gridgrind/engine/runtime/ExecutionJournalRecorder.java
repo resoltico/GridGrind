@@ -10,7 +10,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import org.jspecify.annotations.Nullable;
 
 /** Captures one structured execution journal while optionally streaming verbose events. */
@@ -50,16 +49,9 @@ final class ExecutionJournalRecorder {
   static ExecutionJournalRecorder start(
       WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
     ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);
-    String planId =
-        request == null
-            ? null
-            : request
-                .planId()
-                .orElseGet(
-                    () ->
-                        "plan-" + UUID.randomUUID().toString().toLowerCase(java.util.Locale.ROOT));
+    String planId = request == null ? null : request.planId().orElse(null);
     ExecutionJournalLevel level =
-        request == null ? ExecutionJournalLevel.NORMAL : request.journalLevel();
+        request == null ? ExecutionJournalLevel.SUMMARY : request.journalLevel();
     ExecutionJournal.SourceSummary source =
         request == null
             ? new ExecutionJournal.SourceSummary(Optional.empty(), Optional.empty())
@@ -154,7 +146,7 @@ final class ExecutionJournalRecorder {
             ExecutionJournal.Status.SUCCEEDED,
             plannedStepCount,
             completedStepCount(),
-            elapsedMillis(planStartNanos),
+            outcomeDurationMillis(),
             Optional.empty(),
             Optional.empty(),
             Optional.empty()),
@@ -194,7 +186,7 @@ final class ExecutionJournalRecorder {
             ExecutionJournal.Status.FAILED,
             plannedStepCount,
             completedStepCount(),
-            elapsedMillis(planStartNanos),
+            outcomeDurationMillis(),
             Optional.ofNullable(failedStepIndex),
             Optional.ofNullable(failedStepId),
             Optional.ofNullable(failureCode)),
@@ -228,13 +220,21 @@ final class ExecutionJournalRecorder {
     return (System.nanoTime() - startedAtNanos) / 1_000_000L;
   }
 
+  private boolean recordsTiming() {
+    return level != ExecutionJournalLevel.SUMMARY;
+  }
+
+  private long outcomeDurationMillis() {
+    return recordsTiming() ? elapsedMillis(planStartNanos) : 0L;
+  }
+
   /** Mutable handle that completes one top-level or nested execution phase exactly once. */
   final class PhaseHandle {
     private final String category;
     private final @Nullable Integer stepIndex;
     private final @Nullable String stepId;
     private final java.util.function.Consumer<ExecutionJournal.Phase> consumer;
-    private final String startedAt;
+    private final @Nullable String startedAt;
     private final long startedAtNanos;
     private boolean finished;
 
@@ -247,8 +247,8 @@ final class ExecutionJournalRecorder {
       this.stepIndex = stepIndex;
       this.stepId = stepId;
       this.consumer = consumer;
-      this.startedAt = Instant.now().toString();
-      this.startedAtNanos = System.nanoTime();
+      this.startedAt = recordsTiming() ? Instant.now().toString() : null;
+      this.startedAtNanos = recordsTiming() ? System.nanoTime() : 0L;
       emit(category, "started", stepIndex, stepId);
     }
 
@@ -268,9 +268,9 @@ final class ExecutionJournalRecorder {
       ExecutionJournal.Phase phase =
           new ExecutionJournal.Phase(
               status,
-              Optional.of(startedAt),
-              Optional.of(Instant.now().toString()),
-              elapsedMillis(startedAtNanos));
+              Optional.ofNullable(startedAt),
+              Optional.ofNullable(recordsTiming() ? Instant.now().toString() : null),
+              recordsTiming() ? elapsedMillis(startedAtNanos) : 0L);
       consumer.accept(phase);
       emit(category, detail, stepIndex, stepId);
       return phase;

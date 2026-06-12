@@ -226,7 +226,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         rangeFor(
             mutate(
                 new RangeSelector.ByRange("Budget", "C1:D2"),
-                new CellMutationAction.SetRange(List.of(List.of(textCell("x"))))),
+                new CellMutationAction.SetRange(
+                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                        List.of(List.of(textCell("x")))))),
             invalidFormula));
     assertEquals(
         "E1:E2",
@@ -356,7 +358,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new CellMutationAction.SetCell(textCell("x"))),
             mutate(
                 new RangeSelector.ByRange("Budget", "A1:B1"),
-                new CellMutationAction.SetRange(List.of(List.of(textCell("x"))))),
+                new CellMutationAction.SetRange(
+                    new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                        List.of(List.of(textCell("x")))))),
             mutate(
                 new RangeSelector.ByRange("Budget", "A1:B1"), new CellMutationAction.ClearRange()),
             mutate(
@@ -418,7 +422,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new StructuredMutationAction.DeleteTable()),
             mutate(
                 new SheetSelector.ByName("Budget"),
-                new CellMutationAction.AppendRow(List.of(textCell("x")))),
+                new CellMutationAction.AppendRow(
+                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                        List.of(textCell("x"))))),
             mutate(
                 new SheetSelector.ByName("Budget"), new WorkbookMutationAction.AutoSizeColumns()));
 

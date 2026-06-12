@@ -25,11 +25,10 @@ final class CliResponseWriter {
   /**
    * Writes a CLI failure report to the configured destination.
    *
-   * <p>When {@code responsePath} is empty, the JSON payload always goes to {@code stdout}
-   * regardless of exit code — callers can use the process exit code to detect failure without
-   * parsing stderr. The {@code stderr} stream is only used in the response-file path: to write a
-   * human-readable file pointer after a successful write, or to emit a fallback notice when the
-   * file write itself fails.
+   * <p>When {@code responsePath} is empty, failure JSON goes to {@code stderr} so success payloads
+   * remain the only stdout traffic. The {@code stderr} stream is also used in the response-file
+   * path: to write a human-readable file pointer after a successful write, or to emit a fallback
+   * notice when the file write itself fails.
    */
   int writeCliFailureReport(
       Optional<Path> responsePath,
@@ -62,7 +61,7 @@ final class CliResponseWriter {
       throws IOException {
     Objects.requireNonNull(report, "report must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stdout, GridGrindCliJson.writeCliFailureReportBytes(report));
+      writePayload(stderr, GridGrindCliJson.writeCliFailureReportBytes(report));
       return report.exitCode();
     }
 
@@ -310,11 +309,7 @@ final class CliResponseWriter {
   }
 
   private static void writePayload(OutputStream outputStream, byte[] payload) throws IOException {
-    outputStream.write(payload);
-    if (payload.length == 0 || payload[payload.length - 1] != '\n') {
-      outputStream.write('\n');
-    }
-    outputStream.flush();
+    CliPayloadOutput.write(outputStream, payload);
   }
 
   private static void writeNonSuccessPointerIfNeeded(

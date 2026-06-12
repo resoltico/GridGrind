@@ -5,9 +5,9 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/pmd-7.0.0/ruleset_xml_schema.xsd">
     <description>
-        High-signal PMD rules for GridGrind test code. Structural, design, performance, security,
-        and concurrency checks are enforced to the same standard as production code. Test-specific
-        relaxations are limited to assertion volume and method count only.
+        High-signal PMD rules for GridGrind test code. Repo-wide source-shape budgets own
+        handwritten test-file breadth, while this profile keeps semantic, concurrency, security,
+        and general Java hygiene signal where test fixtures legitimately differ from production.
     </description>
 
     <rule ref="category/java/errorprone.xml">
@@ -37,8 +37,8 @@
         <!-- Integration tests couple to both the production API and test framework
              types, legitimately exceeding the default threshold -->
         <exclude name="CouplingBetweenObjects"/>
-        <!-- Same POI adapter exclusions as the main ruleset: integration tests
-             exercise ExcelSheet, ExcelWorkbook, and WorkbookStyleRegistry directly -->
+        <!-- Test helper breadth is owned by repo-wide source-shape budgets rather than PMD's
+             class-level structural heuristics. -->
         <exclude name="GodClass"/>
         <exclude name="CyclomaticComplexity"/>
         <exclude name="CognitiveComplexity"/>

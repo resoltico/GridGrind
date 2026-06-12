@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.*;
@@ -33,18 +32,12 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import tools.jackson.core.TokenStreamLocation;
-import tools.jackson.core.json.JsonFactory;
-import tools.jackson.databind.exc.InvalidTypeIdException;
-import tools.jackson.databind.exc.MismatchedInputException;
-import tools.jackson.databind.exc.UnrecognizedPropertyException;
 import tools.jackson.databind.node.ObjectNode;
 
 /** Tests for JSON serialization, parser wording, and the step-based wire shape. */
@@ -98,6 +91,41 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void reportsUnsupportedEnumValuesWithAllowedCandidates() {
+    InvalidRequestShapeException exception =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V2",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "SUMMARY" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        "Unsupported value 'V2' for field 'protocolVersion'; expected one of: V1",
+        exception.getMessage());
+  }
+
+  @Test
   void rejectsNonObjectTopLevelPayloadsForWorkbookPlans() {
     InvalidRequestShapeException exception =
         assertThrows(
@@ -107,7 +135,7 @@ class GridGrindJsonTest {
                     "[]".getBytes(StandardCharsets.UTF_8),
                     GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
                     WorkbookPlan.class,
-                    GridGrindJsonMessageSupport::invalidRequestPayload));
+                    GridGrindJsonProblemMessageSupport::invalidRequestPayload));
     assertEquals("JSON value has the wrong shape for this field", exception.getMessage());
   }
 
@@ -147,6 +175,43 @@ class GridGrindJsonTest {
 
     assertEquals("Missing required field 'execution'", topLevelNull.getMessage());
     assertEquals("Missing required field 'steps[0].target'", nestedNull.getMessage());
+    assertEquals(Optional.of("execution"), topLevelNull.jsonPath());
+    assertEquals(Optional.of("steps[0].target"), nestedNull.jsonPath());
+  }
+
+  @Test
+  void derivesJsonPathForMissingCreatorProperties() {
+    IllegalArgumentException missingProtocolVersion =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "SUMMARY" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertInstanceOf(PayloadException.class, missingProtocolVersion);
+    PayloadException payloadException = (PayloadException) missingProtocolVersion;
+    assertEquals("Missing required field 'protocolVersion'", missingProtocolVersion.getMessage());
+    assertEquals(Optional.of("protocolVersion"), payloadException.jsonPath());
   }
 
   @Test
@@ -166,7 +231,8 @@ class GridGrindJsonTest {
                 new AssertionStep(
                     "assert-owner",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
@@ -701,204 +767,6 @@ class GridGrindJsonTest {
             .booleanValue());
   }
 
-  @Test
-  void validatesNullArgumentsAndDoesNotCloseOutputStreams() throws IOException {
-    assertEquals(
-        "inputStream must not be null",
-        assertThrows(
-                NullPointerException.class, () -> GridGrindJson.readRequest((InputStream) null))
-            .getMessage());
-    assertEquals(
-        "bytes must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindJson.readResponse((byte[]) null))
-            .getMessage());
-    assertEquals(
-        "catalog must not be null",
-        assertThrows(
-                NullPointerException.class, () -> GridGrindJson.writeProtocolCatalogBytes(null))
-            .getMessage());
-    assertEquals(
-        "value must not be null",
-        assertThrows(
-                NullPointerException.class,
-                () -> GridGrindJson.writeTypeEntry(new ByteArrayOutputStream(), null))
-            .getMessage());
-
-    try (TrackingOutputStream outputStream = new TrackingOutputStream()) {
-      GridGrindJson.writeRequest(
-          outputStream,
-          WorkbookPlan.standard(
-              new WorkbookPlan.WorkbookSource.New(),
-              new WorkbookPlan.WorkbookPersistence.None(),
-              dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
-              dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-              List.of()));
-      assertFalse(outputStream.closed);
-    }
-  }
-
-  @Test
-  void rejectsOversizedRequestPayloads() {
-    byte[] oversized =
-        ("{\"source\":{\"type\":\"NEW\"},\"steps\":[],\"pad\":\""
-                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
-                + "\"}")
-            .getBytes(StandardCharsets.UTF_8);
-
-    InvalidRequestException failure =
-        assertThrows(InvalidRequestException.class, () -> GridGrindJson.readRequest(oversized));
-
-    assertEquals(
-        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
-        failure.getMessage());
-  }
-
-  @Test
-  void rejectsOversizedRequestStreamsWithTheSameProductOwnedMessage() {
-    byte[] oversized =
-        ("{\"planId\":\""
-                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
-                + "\",\"source\":{\"type\":\"NEW\"},\"steps\":[]}")
-            .getBytes(StandardCharsets.UTF_8);
-
-    InvalidRequestException failure =
-        assertThrows(
-            InvalidRequestException.class,
-            () -> GridGrindJson.readRequest(new ByteArrayInputStream(oversized)));
-
-    assertEquals(
-        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
-        failure.getMessage());
-  }
-
-  @Test
-  void readsInvalidResponsesAndCatalogsUsingPublicProblemTypes() {
-    InvalidJsonException invalidResponse =
-        assertThrows(
-            InvalidJsonException.class,
-            () -> GridGrindJson.readResponse("{".getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestException invalidCatalog =
-        assertThrows(
-            InvalidRequestException.class,
-            () ->
-                GridGrindJson.readProtocolCatalog(
-                    """
-                    {
-                      "protocolVersion": "V1",
-                      "requestTemplate": { "source": { "type": "NEW" }, "steps": [] }
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
-
-    assertEquals(Optional.of(1), invalidResponse.jsonLine());
-    assertEquals(Optional.of(2), invalidResponse.jsonColumn());
-    org.junit.jupiter.api.Assertions.assertTrue(
-        invalidCatalog.getMessage().startsWith("Missing required field '"));
-  }
-
-  @Test
-  void exposesProductOwnedHelperMessagesAndJsonLocations() throws IOException {
-    JsonFactory jsonFactory = new JsonFactory();
-    MismatchedInputException floatingInteger =
-        (MismatchedInputException)
-            MismatchedInputException.from(
-                    utf8Parser(jsonFactory, "2.5"),
-                    Integer.class,
-                    "Cannot coerce Floating-point value (2.5) to `int` value"
-                        + " (but could if coercion was enabled using `CoercionConfig`)")
-                .prependPath(WorkbookPlan.class, "rowCount");
-    InvalidTypeIdException invalidType =
-        InvalidTypeIdException.from(utf8Parser(jsonFactory, "\"x\""), "bad type", null, "NOPE");
-
-    assertEquals(
-        "Field 'rowCount' must be an integer value",
-        GridGrindJson.mismatchedInputMessage(floatingInteger));
-    assertEquals("Unknown type value 'NOPE'", GridGrindJson.message(invalidType));
-    assertEquals(
-        "Unknown field 'reads'",
-        GridGrindJson.message(
-            UnrecognizedPropertyException.from(
-                utf8Parser(jsonFactory, "{}"), WorkbookPlan.class, "reads", List.of())));
-    assertEquals(
-        "JSON object is missing required fields or has the wrong shape",
-        GridGrindJson.message(new IllegalArgumentException("Cannot construct instance of `x`")));
-    assertEquals(
-        "Cannot deserialize value",
-        GridGrindJson.cleanJacksonMessage(
-            "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
-                + " (but could if coercion was enabled using `CoercionConfig`)"));
-    assertEquals("Invalid JSON payload", GridGrindJson.cleanJacksonMessage(" "));
-    assertEquals(Optional.empty(), GridGrindJson.jsonLine(null));
-    assertEquals(Optional.empty(), GridGrindJson.jsonColumn(null));
-    assertEquals(
-        Optional.of(4), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
-    assertEquals(
-        Optional.of(9), GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
-  }
-
-  @Test
-  void surfacesSimilarValidTypeIdsForTyposInKnownActionTypes() {
-    InvalidRequestShapeException typo =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        {
-                          "stepId": "typo",
-                          "target": { "type": "WORKBOOK_CURRENT" },
-                          "action": { "type": "COVE_SHEET" }
-                        }
-                      ]
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
-
-    assertTrue(
-        typo.getMessage().contains("MOVE_SHEET") && typo.getMessage().contains("COPY_SHEET"),
-        "typo matching multiple action types should list all similar candidates");
-  }
-
-  @Test
-  void surfacesUnknownTypeMessageForAtJsonSubTypesAnnotatedFields() {
-    InvalidRequestShapeException badAnchor =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "source": { "type": "NEW" },
-                      "steps": [
-                        {
-                          "stepId": "bad-anchor",
-                          "target": { "type": "WORKBOOK_CURRENT" },
-                          "action": {
-                            "type": "SET_CHART",
-                            "chart": {
-                              "name": "C",
-                              "anchor": { "type": "ONE_CELL" },
-                              "title": { "type": "NONE" },
-                              "legend": { "type": "VISIBLE", "position": "RIGHT" },
-                              "displayBlanksAs": "GAP",
-                              "plotOnlyVisibleCells": true,
-                              "plots": [{"type": "BAR", "series": []}]
-                            }
-                          }
-                        }
-                      ]
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
-
-    assertTrue(
-        badAnchor.getMessage().startsWith("Unknown type value 'ONE_CELL'"),
-        "unknown anchor type from @JsonSubTypes-annotated field should be reported");
-  }
-
   /** Tracks whether the request reader closes the source stream after consuming it. */
   @SuppressWarnings("NotJavadoc")
   private static final class TrackingInputStream extends InputStream {
@@ -923,23 +791,5 @@ class GridGrindJsonTest {
     public void close() {
       closed = true;
     }
-  }
-
-  /** Tracks whether the request writer closes the destination stream after producing JSON. */
-  @SuppressWarnings("NotJavadoc")
-  private static final class TrackingOutputStream extends ByteArrayOutputStream {
-    private boolean closed;
-
-    @Override
-    public void close() {
-      closed = true;
-    }
-  }
-
-  private static tools.jackson.core.JsonParser utf8Parser(JsonFactory jsonFactory, String json)
-      throws IOException {
-    return jsonFactory.createParser(
-        tools.jackson.core.ObjectReadContext.empty(),
-        new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8)));
   }
 }

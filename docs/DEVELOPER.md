@@ -323,23 +323,37 @@ Structural analysis plus a root-owned source-shape ratchet.
 - `gradle/pmd/ruleset.xml` — baseline production rules. It enforces `errorprone`,
   `bestpractices`, `multithreading`, `performance`, `security`, documentation, and the
   production-safe subset of `design`.
-- `gradle/pmd/semantic-shape-ruleset.xml` — stricter production design thresholds applied only
-  where broad complexity heuristics are signal-rich enough to ratchet in CI.
-- `gradle/pmd/test-ruleset.xml` — test code: same categories with relaxed assertion volume and
-  method-count limits; `CommentRequired` enforces class-level Javadoc only.
-- `verifyJavaSourceShape` — root build-logic task that parses every production Java source,
+- `gradle/pmd/semantic-shape-ruleset.xml` — stricter production-main design thresholds consumed
+  by the dedicated semantic-shape gate instead of the broad PMD task.
+- `gradle/pmd/test-ruleset.xml` — test code: the broad hygiene categories remain active, but the
+  class-level structural PMD rules (`GodClass`, `TooManyMethods`, `CouplingBetweenObjects`,
+  `CyclomaticComplexity`, `CognitiveComplexity`, and `ExcessiveImports`) are intentionally left to
+  the repository-owned source-shape gate instead of duplicated here; `CommentRequired` enforces
+  class-level Javadoc only.
+- `verifyJavaSourceShape` — root build-logic task that parses every repo-owned handwritten Java
+  source set, including `main`, `test`, `testFixtures`, `parityTest`, and Jazzer surfaces,
   writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
   `gradle/source-shape-policy.tsv`.
-- `verifyJavaSourceDuplication` — root build-logic task that scans production Java sources whose
+- `verifyJavaSourceDuplication` — root build-logic task that scans repo-owned handwritten Java
+  sources whose
   policy row keeps `duplicationGuard=CHECK`, writes
-  `build/reports/source-shape/java-duplication.tsv`, and fails on large duplicated token spans
-  instead of letting mirror allowances hide behind global exclusions.
+  `build/reports/source-shape/java-duplication.tsv`, and fails on duplicated token spans large
+  enough to indicate a new shared seam instead of letting mirror allowances hide behind global
+  exclusions.
+- `verifyJavaSemanticShape` — root build-logic task that aggregates `pmdSemanticMain` reports,
+  writes `build/reports/source-shape/java-semantic-shape.tsv`, and fails on any production-main
+  PMD semantic-shape finding not explicitly reviewed in `gradle/semantic-shape-policy.tsv`.
 
 `gradle/source-shape-policy.tsv` is the structural-governance authority. It owns broad role
 budgets, per-role duplication ownership, and any reviewed exact-surface override. Exact reviewed
 surfaces must name an owner, declare `reviewExpiresOn` plus `splitTrigger`, tighten at least one
 metric beyond their broader role, and keep their reviewed headroom close to the current file shape
-so historical god-file budgets cannot survive after a split.
+so historical god-file budgets cannot survive after a split. Repository build-logic tests also
+enforce that reviewed waivers stay live and near-term instead of being parked indefinitely.
+
+`gradle/semantic-shape-policy.tsv` is the semantic-shape exception registry. Every entry is
+file-exact, owner-tagged, expiring, and tied to a concrete split trigger so semantic PMD debt
+cannot hide behind package-wide or indefinite allowances.
 
 ### Spotless
 

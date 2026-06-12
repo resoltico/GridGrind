@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
@@ -40,7 +40,7 @@ class WorkbookPlanTest {
     assertEquals(java.util.Optional.empty(), plan.planId());
     assertTrue(plan.execution().isDefault());
     assertTrue(plan.executionMode().isDefault());
-    assertEquals(ExecutionJournalLevel.NORMAL, plan.journalLevel());
+    assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
     assertTrue(plan.formulaEnvironment().isEmpty());
     assertEquals(List.of(), plan.steps());
     assertThrows(
@@ -101,6 +101,10 @@ class WorkbookPlanTest {
     assertEquals(
         "steps must not contain duplicate stepId values: duplicate",
         duplicateStepFailure.getMessage());
+    assertInstanceOf(InvalidRequestException.class, duplicateStepFailure);
+    assertEquals(
+        Optional.of("steps[1].stepId"),
+        ((InvalidRequestException) duplicateStepFailure).jsonPath());
   }
 
   @Test
@@ -213,7 +217,7 @@ class WorkbookPlanTest {
     assertEquals(ExecutionJournalLevel.SUMMARY, explicitPlan.journalLevel());
     assertInstanceOf(ExecutionModeInput.EventRead.class, explicitPlan.executionMode());
     assertEquals(
-        ExecutionJournalLevel.NORMAL, defaultPlan.effectiveExecution().effectiveJournalLevel());
+        ExecutionJournalLevel.SUMMARY, defaultPlan.effectiveExecution().effectiveJournalLevel());
     assertInstanceOf(ExecutionModeInput.FullXssf.class, defaultPlan.effectiveExecutionMode());
     assertThrows(
         NullPointerException.class,
@@ -255,7 +259,8 @@ class WorkbookPlanTest {
                 new AssertionStep(
                     "assert-cell",
                     new CellSelector.ByAddress("Budget", "A1"),
-                    new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner"))),
+                    new CellAssertion.CellValue(
+                        new dev.erst.gridgrind.contract.dto.CellScalarValue.Text("Owner"))),
                 new InspectionStep(
                     "summary",
                     new WorkbookSelector.Current(),
@@ -267,23 +272,23 @@ class WorkbookPlanTest {
     assertEquals("set-cell", plan.stepPartition().mutations().getFirst().stepId());
     assertEquals("assert-cell", plan.stepPartition().assertions().getFirst().stepId());
     assertEquals("summary", plan.stepPartition().inspections().getFirst().stepId());
-    assertEquals(
-        "steps must not contain nulls",
+    InvalidRequestException nullStepFailure =
         assertThrows(
-                NullPointerException.class,
-                () ->
-                    WorkbookPlan.standard(
-                        new WorkbookPlan.WorkbookSource.New(),
-                        new WorkbookPlan.WorkbookPersistence.None(),
-                        ExecutionPolicyInput.defaults(),
-                        FormulaEnvironmentInput.empty(),
-                        java.util.Arrays.asList(
-                            new MutationStep(
-                                "ok",
-                                new WorkbookSelector.Current(),
-                                new WorkbookMutationAction.ClearWorkbookProtection()),
-                            null)))
-            .getMessage());
+            InvalidRequestException.class,
+            () ->
+                WorkbookPlan.standard(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.None(),
+                    ExecutionPolicyInput.defaults(),
+                    FormulaEnvironmentInput.empty(),
+                    java.util.Arrays.asList(
+                        new MutationStep(
+                            "ok",
+                            new WorkbookSelector.Current(),
+                            new WorkbookMutationAction.ClearWorkbookProtection()),
+                        null)));
+    assertEquals("steps must not contain nulls", nullStepFailure.getMessage());
+    assertEquals(Optional.of("steps[1]"), nullStepFailure.jsonPath());
     assertTrue(
         assertThrows(
                 IllegalArgumentException.class,

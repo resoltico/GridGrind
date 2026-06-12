@@ -13,7 +13,7 @@
       "type" : "FULL_XSSF"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -45,61 +45,64 @@
     },
     "action" : {
       "type" : "SET_RANGE",
-      "rows" : [ [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Month"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Plan"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Actual"
-        }
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Jan"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 10.0
-      }, {
-        "type" : "NUMBER",
-        "number" : 12.0
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Feb"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 18.0
-      }, {
-        "type" : "NUMBER",
-        "number" : 17.0
-      } ], [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Mar"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 15.0
-      }, {
-        "type" : "NUMBER",
-        "number" : 16.0
-      } ] ]
+      "rows" : {
+        "type" : "TYPED",
+        "rows" : [ [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Month"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Plan"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Actual"
+          }
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Jan"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 10.0
+        }, {
+          "type" : "NUMBER",
+          "number" : 12.0
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Feb"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 18.0
+        }, {
+          "type" : "NUMBER",
+          "number" : 17.0
+        } ], [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Mar"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 15.0
+        }, {
+          "type" : "NUMBER",
+          "number" : 16.0
+        } ] ]
+      }
     }
   }, {
     "stepId" : "step-03-set-categories",

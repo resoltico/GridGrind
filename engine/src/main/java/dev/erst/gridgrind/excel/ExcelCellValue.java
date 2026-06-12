@@ -11,6 +11,7 @@ public sealed interface ExcelCellValue
         ExcelCellValue.RichTextValue,
         ExcelCellValue.NumberValue,
         ExcelCellValue.BooleanValue,
+        ExcelCellValue.ErrorValue,
         ExcelCellValue.DateValue,
         ExcelCellValue.DateTimeValue,
         ExcelCellValue.FormulaValue {
@@ -38,6 +39,11 @@ public sealed interface ExcelCellValue
   /** Creates a boolean cell value. */
   static ExcelCellValue bool(boolean value) {
     return new BooleanValue(value);
+  }
+
+  /** Creates an Excel error cell value such as {@code #REF!}. */
+  static ExcelCellValue error(String value) {
+    return new ErrorValue(value);
   }
 
   /** Creates a date cell value using the workbook date style. */
@@ -72,6 +78,15 @@ public sealed interface ExcelCellValue
   record NumberValue(double value) implements ExcelCellValue {}
 
   record BooleanValue(boolean value) implements ExcelCellValue {}
+
+  record ErrorValue(String value) implements ExcelCellValue {
+    public ErrorValue {
+      Objects.requireNonNull(value, "value must not be null");
+      if (value.isBlank()) {
+        throw new IllegalArgumentException("value must not be blank");
+      }
+    }
+  }
 
   record DateValue(LocalDate value) implements ExcelCellValue {
     public DateValue {

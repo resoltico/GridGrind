@@ -91,11 +91,13 @@ public final class SourceBackedPlanResolver {
       throws IOException {
     return switch (value) {
       case CellInput.Blank blank -> blank;
-      case CellInput.Text text ->
-          sameReference(
-                  resolveTextSource(text.source(), bindings, true, "cell text"), text.source())
-              ? text
-              : new CellInput.Text(resolveTextSource(text.source(), bindings, true, "cell text"));
+      case CellInput.Text text -> {
+        TextSourceInput resolvedSource =
+            resolveTextSource(text.source(), bindings, true, "cell text");
+        yield sameReference(resolvedSource, text.source())
+            ? text
+            : new CellInput.Text(resolvedSource);
+      }
       case CellInput.RichText richText ->
           sameReference(
                   SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings),
@@ -103,21 +105,18 @@ public final class SourceBackedPlanResolver {
               ? richText
               : new CellInput.RichText(
                   SourceBackedStructuredInputResolver.resolveRuns(richText.runs(), bindings));
-      case CellInput.Numeric numeric -> numeric;
+      case CellInput.NumberValue numberValue -> numberValue;
       case CellInput.BooleanValue booleanValue -> booleanValue;
+      case CellInput.ErrorValue errorValue -> errorValue;
       case CellInput.Date date -> date;
       case CellInput.DateTime dateTime -> dateTime;
-      case CellInput.Formula formula ->
-          sameReference(resolveFormulaSource(formula.source(), bindings), formula.source())
-              ? formula
-              : new CellInput.Formula(resolveFormulaSource(formula.source(), bindings));
+      case CellInput.Formula formula -> {
+        TextSourceInput resolvedSource = resolveFormulaSource(formula.source(), bindings);
+        yield sameReference(resolvedSource, formula.source())
+            ? formula
+            : new CellInput.Formula(resolvedSource);
+      }
     };
-  }
-
-  private static String resolveFormulaText(TextSourceInput source, ExecutionInputBindings bindings)
-      throws IOException {
-    String formula = resolveText(source, bindings, true, "formula");
-    return formula.startsWith("=") ? formula.substring(1) : formula;
   }
 
   static TextSourceInput resolveTextSource(
@@ -134,7 +133,10 @@ public final class SourceBackedPlanResolver {
 
   static TextSourceInput resolveFormulaSource(
       TextSourceInput source, ExecutionInputBindings bindings) throws IOException {
-    String resolvedText = resolveFormulaText(source, bindings);
+    String resolvedText = resolveText(source, bindings, true, "formula");
+    if (resolvedText.startsWith("=")) {
+      resolvedText = resolvedText.substring(1);
+    }
     if (source instanceof TextSourceInput.Inline inline) {
       if (inline.text().equals(resolvedText)) {
         return source;

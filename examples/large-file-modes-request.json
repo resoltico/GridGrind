@@ -13,7 +13,7 @@
       "type" : "STREAMING_WRITE"
     },
     "journal" : {
-      "level" : "NORMAL"
+      "level" : "SUMMARY"
     },
     "calculation" : {
       "strategy" : {
@@ -44,25 +44,28 @@
     },
     "action" : {
       "type" : "APPEND_ROW",
-      "values" : [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Team"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Task"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Hours"
-        }
-      } ]
+      "values" : {
+        "type" : "TYPED",
+        "values" : [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Team"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Task"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Hours"
+          }
+        } ]
+      }
     }
   }, {
     "stepId" : "step-03-append-ops",
@@ -72,22 +75,25 @@
     },
     "action" : {
       "type" : "APPEND_ROW",
-      "values" : [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Ops"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Badge prep"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 6.5
-      } ]
+      "values" : {
+        "type" : "TYPED",
+        "values" : [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Ops"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Badge prep"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 6.5
+        } ]
+      }
     }
   }, {
     "stepId" : "step-04-append-facilities",
@@ -97,22 +103,25 @@
     },
     "action" : {
       "type" : "APPEND_ROW",
-      "values" : [ {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Facilities"
-        }
-      }, {
-        "type" : "TEXT",
-        "source" : {
-          "type" : "INLINE",
-          "text" : "Desk setup"
-        }
-      }, {
-        "type" : "NUMBER",
-        "number" : 4.0
-      } ]
+      "values" : {
+        "type" : "TYPED",
+        "values" : [ {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Facilities"
+          }
+        }, {
+          "type" : "TEXT",
+          "source" : {
+            "type" : "INLINE",
+            "text" : "Desk setup"
+          }
+        }, {
+          "type" : "NUMBER",
+          "number" : 4.0
+        } ]
+      }
     }
   }, {
     "stepId" : "workbook",

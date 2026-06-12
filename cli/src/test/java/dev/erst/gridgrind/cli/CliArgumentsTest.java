@@ -642,7 +642,10 @@ class CliArgumentsTest {
             () -> CliArguments.parse(new String[] {"--print-example-catalog", "--doctor-request"}));
 
     assertEquals("--doctor-request", exception.argument());
-    assertEquals("--print-example-catalog does not allow --doctor-request", exception.getMessage());
+    assertEquals(
+        "Only one primary command may be used per invocation; --print-example-catalog"
+            + " cannot be combined with --doctor-request",
+        exception.getMessage());
   }
 
   @Test

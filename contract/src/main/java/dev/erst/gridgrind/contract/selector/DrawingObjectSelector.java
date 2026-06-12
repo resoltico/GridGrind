@@ -17,7 +17,7 @@ public sealed interface DrawingObjectSelector extends Selector
   /** Selects every drawing object on one sheet. */
   record AllOnSheet(String sheetName) implements DrawingObjectSelector {
     public AllOnSheet {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
     }
 
     @Override
@@ -29,8 +29,8 @@ public sealed interface DrawingObjectSelector extends Selector
   /** Selects one drawing object by sheet-local object name. */
   record ByName(String sheetName, String objectName) implements DrawingObjectSelector {
     public ByName {
-      sheetName = SelectorSupport.requireSheetName(sheetName, "sheetName");
-      objectName = SelectorSupport.requireNonBlank(objectName, "objectName");
+      sheetName = SelectorValueValidation.requireSheetName(sheetName, "sheetName");
+      objectName = SelectorValueValidation.requireNonBlank(objectName, "objectName");
     }
 
     @Override

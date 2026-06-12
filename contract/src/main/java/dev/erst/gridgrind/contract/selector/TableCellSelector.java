@@ -17,7 +17,7 @@ public sealed interface TableCellSelector extends Selector permits TableCellSele
     public ByColumnName {
       Objects.requireNonNull(row, "row must not be null");
       requireSingleRowSelector(row, "row");
-      columnName = SelectorSupport.requireNonBlank(columnName, "columnName");
+      columnName = SelectorValueValidation.requireNonBlank(columnName, "columnName");
     }
 
     @Override

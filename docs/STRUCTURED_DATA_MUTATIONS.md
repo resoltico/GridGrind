@@ -430,7 +430,9 @@ The request fails if the pivot table does not exist on the expected sheet.
 Append a single row of typed values after the last value-bearing row in a sheet.
 If the next append position lands on cells that already exist because they carry only style,
 hyperlink, or comment state, that existing state is preserved when values are written there.
-Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside `values`.
+Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
+`values.values` when you use the canonical `CellRowInput` wrapper with `type: "TYPED"`.
+Homogeneous rows may use the compact scalar-family encodings instead.
 
 ```json
 {
@@ -441,7 +443,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
   },
   "action": {
     "type": "APPEND_ROW",
-    "values": [
+    "values": { "type": "TYPED", "values": [
       {
         "type": "TEXT",
         "source": {
@@ -457,7 +459,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
         "type": "NUMBER",
         "number": 9.2
       }
-    ]
+    ] }
   }
 }
 ```
@@ -465,7 +467,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `target` | Yes | `BY_NAME` selector for the target sheet. |
-| `values` | Yes | Row of typed cell values. |
+| `values` | Yes | `CellRowInput` wrapper for the appended row; use `type: "TYPED"` for mixed rows or one scalar-family variant for homogeneous rows. |
 
 Rows that contain only style, comment, or hyperlink metadata are ignored when locating the append
 position.

@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -252,13 +253,25 @@ public record WorkbookPlan(
     }
     List<WorkbookStep> copy = new java.util.ArrayList<>(steps.size());
     Set<String> seen = new HashSet<>();
-    for (WorkbookStep step : steps) {
-      Objects.requireNonNull(step, "steps must not contain nulls");
+    for (int index = 0; index < steps.size(); index++) {
+      WorkbookStep step = steps.get(index);
+      if (step == null) {
+        throw new InvalidRequestException(
+            "steps must not contain nulls",
+            Optional.of("steps[" + index + "]"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+      }
       copy.add(step);
       // LIM-006
       if (!seen.add(step.stepId())) {
-        throw new IllegalArgumentException(
-            "steps must not contain duplicate stepId values: " + step.stepId());
+        throw new InvalidRequestException(
+            "steps must not contain duplicate stepId values: " + step.stepId(),
+            Optional.of("steps[" + index + "].stepId"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
       }
     }
     return List.copyOf(copy);

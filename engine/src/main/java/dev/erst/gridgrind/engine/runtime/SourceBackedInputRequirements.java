@@ -73,7 +73,7 @@ final class SourceBackedInputRequirements {
           switch (cellAction) {
             case CellMutationAction.SetCell setCell -> requiresStandardInput(setCell.value());
             case CellMutationAction.SetRange setRange ->
-                setRange.rows().stream()
+                setRange.rows().toCellInputRows().stream()
                     .flatMap(List::stream)
                     .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
             case CellMutationAction.ClearRange _ -> false;
@@ -86,7 +86,7 @@ final class SourceBackedInputRequirements {
             case CellMutationAction.ClearComment _ -> false;
             case CellMutationAction.ApplyStyle _ -> false;
             case CellMutationAction.AppendRow appendRow ->
-                appendRow.values().stream()
+                appendRow.values().toCellInputs().stream()
                     .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
           };
       case DrawingMutationAction drawingAction ->
@@ -163,14 +163,13 @@ final class SourceBackedInputRequirements {
   }
 
   static boolean requiresStandardInput(CellInput value) {
-    if (value instanceof CellInput.Text text) {
-      return requiresStandardInput(text.source());
-    }
-    if (value instanceof CellInput.RichText richText) {
-      return richText.runs().stream()
-          .anyMatch(SourceBackedInputRequirements::requiresStandardInput);
-    }
-    return value instanceof CellInput.Formula formula && requiresStandardInput(formula.source());
+    return switch (value) {
+      case CellInput.Text text -> requiresStandardInput(text.source());
+      case CellInput.RichText richText ->
+          richText.runs().stream().anyMatch(SourceBackedInputRequirements::requiresStandardInput);
+      case CellInput.Formula formula -> requiresStandardInput(formula.source());
+      default -> false;
+    };
   }
 
   static boolean requiresStandardInput(RichTextRunInput run) {

@@ -197,6 +197,7 @@ readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly cli_contract_python="$(resolve_cli_contract_python)"
+catalog_index_path=''
 catalog_path=''
 example_catalog_path=''
 task_catalog_path=''
@@ -269,6 +270,7 @@ help_guidance_path="${temp_dir}/help-guidance.txt"
 help_guidance_stderr_path="${temp_dir}/help-guidance.stderr"
 noargs_stdout_path="${temp_dir}/noargs.stdout"
 noargs_stderr_path="${temp_dir}/noargs.stderr"
+catalog_index_path="${temp_dir}/protocol-catalog-index.json"
 catalog_path="${temp_dir}/protocol-catalog.json"
 example_catalog_path="${temp_dir}/example-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"
@@ -353,11 +355,13 @@ set +e
 noargs_exit_code=$?
 set -e
 [[ ${noargs_exit_code} -eq 2 ]] || die "${label} bare invocation exited ${noargs_exit_code} instead of 2"
-[[ ! -s "${noargs_stderr_path}" ]] || die "${label} bare invocation wrote unexpected stderr"
-verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher[@]}"
+[[ ! -s "${noargs_stdout_path}" ]] || die "${label} bare invocation wrote unexpected stdout"
+[[ -s "${noargs_stderr_path}" ]] || die "${label} bare invocation emitted no structured stderr"
+verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher[@]}"
 
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
-"${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
+"${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_index_path}"
+"${launcher[@]}" --print-protocol-catalog --full | tr -d '\r' > "${catalog_path}"
 "${launcher[@]}" --print-example-catalog | tr -d '\r' > "${example_catalog_path}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"
 "${launcher[@]}" --print-task-plan --lookup DASHBOARD | tr -d '\r' > "${task_plan_path}"
@@ -365,21 +369,22 @@ verify_interactive_noarg_failure "${noargs_stdout_path}" "${interactive_launcher
 cat "${request_template_path}" \
     | "${doctor_launcher[@]}" --doctor-request --execution-root "${doctor_execution_root}" | tr -d '\r' > "${doctor_report_path}"
 
-"${cli_contract_python}" - "${catalog_path}" "${example_catalog_path}" "${help_overview_path}" "${help_protocol_path}" "${help_guidance_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
+"${cli_contract_python}" - "${catalog_index_path}" "${catalog_path}" "${example_catalog_path}" "${help_overview_path}" "${help_protocol_path}" "${help_guidance_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-catalog = json.loads(Path(sys.argv[1]).read_text())
-example_catalog = json.loads(Path(sys.argv[2]).read_text())
-overview_help_output = Path(sys.argv[3]).read_text()
-protocol_help_output = Path(sys.argv[4]).read_text()
-guidance_help_output = Path(sys.argv[5]).read_text()
-task_catalog = json.loads(Path(sys.argv[6]).read_text())
-task_plan = json.loads(Path(sys.argv[7]).read_text())
-task_keyword_match_report = json.loads(Path(sys.argv[8]).read_text())
-doctor_report = json.loads(Path(sys.argv[9]).read_text())
-request_template = json.loads(Path(sys.argv[10]).read_text())
+catalog_index = json.loads(Path(sys.argv[1]).read_text())
+catalog = json.loads(Path(sys.argv[2]).read_text())
+example_catalog = json.loads(Path(sys.argv[3]).read_text())
+overview_help_output = Path(sys.argv[4]).read_text()
+protocol_help_output = Path(sys.argv[5]).read_text()
+guidance_help_output = Path(sys.argv[6]).read_text()
+task_catalog = json.loads(Path(sys.argv[7]).read_text())
+task_plan = json.loads(Path(sys.argv[8]).read_text())
+task_keyword_match_report = json.loads(Path(sys.argv[9]).read_text())
+doctor_report = json.loads(Path(sys.argv[10]).read_text())
+request_template = json.loads(Path(sys.argv[11]).read_text())
 
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
@@ -388,6 +393,10 @@ def die(message: str) -> None:
 def normalized_text(value: str) -> str:
     return " ".join(value.split())
 
+top_level_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index["topLevelGroups"]}
+nested_type_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index["nestedTypeGroups"]}
+plain_type_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index["plainTypeGroups"]}
+lookup_namespaces = {entry["shape"]: entry["usage"] for entry in catalog_index["lookupNamespaces"]}
 plain_types = {entry["group"]: entry["type"] for entry in catalog["plainTypes"]}
 nested_types = {entry["group"]: entry for entry in catalog["nestedTypes"]}
 inspection_query_types = {entry["id"]: entry for entry in catalog["inspectionQueryTypes"]}
@@ -454,6 +463,26 @@ if (
     or normalized_text("--help-guidance") not in normalized_overview_help_output
 ):
     die("overview help no longer advertises the split help surfaces")
+
+if catalog_index.get("protocolVersion") != "V1":
+    die("protocol catalog index no longer emits protocolVersion=V1")
+if catalog_index.get("discriminatorField") != "type":
+    die("protocol catalog index no longer emits discriminatorField=type")
+if catalog_index.get("requestTypeId") != "WorkbookPlan":
+    die("protocol catalog index no longer emits requestTypeId=WorkbookPlan")
+for required_group in ("mutationActionTypes", "assertionTypes", "inspectionQueryTypes"):
+    if required_group not in top_level_groups:
+        die(f"protocol catalog index no longer advertises top-level group {required_group}")
+if "executionModeTypes" not in nested_type_groups:
+    die("protocol catalog index no longer advertises nestedTypes:executionModeTypes")
+if "executionPolicyInputType" not in plain_type_groups:
+    die("protocol catalog index no longer advertises plainTypes:executionPolicyInputType")
+if "<topLevelGroup>:<id>" not in lookup_namespaces:
+    die("protocol catalog index no longer publishes the top-level lookup namespace")
+if "nestedTypes:<group>" not in lookup_namespaces:
+    die("protocol catalog index no longer publishes the nestedTypes lookup namespace")
+if "plainTypes:<group>" not in lookup_namespaces:
+    die("protocol catalog index no longer publishes the plainTypes lookup namespace")
 
 if example_catalog.get("protocolVersion") != "V1":
     die("example catalog no longer emits protocolVersion=V1")
@@ -538,8 +567,8 @@ mode = request_template.get("execution", {}).get("mode", {})
 if mode.get("type") != "FULL_XSSF":
     die("request template no longer emits type=FULL_XSSF execution defaults")
 journal = request_template.get("execution", {}).get("journal", {})
-if journal.get("level") != "NORMAL":
-    die("request template no longer emits execution.journal.level=NORMAL")
+if journal.get("level") != "SUMMARY":
+    die("request template no longer emits execution.journal.level=SUMMARY")
 calculation = request_template.get("execution", {}).get("calculation", {})
 strategy = calculation.get("strategy", {})
 if strategy.get("type") != "DO_NOT_CALCULATE" or calculation.get("markRecalculateOnOpen") is not False:

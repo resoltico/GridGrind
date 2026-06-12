@@ -524,7 +524,7 @@ class ExecutorPolicyCoverageTest {
     CellMutationAction.SetCell setRichText =
         new CellMutationAction.SetCell(new CellInput.RichText(List.of(richTextRun("rich"))));
     CellMutationAction.SetCell setNumeric =
-        new CellMutationAction.SetCell(new CellInput.Numeric(12.5));
+        new CellMutationAction.SetCell(new CellInput.NumberValue(12.5));
     CellMutationAction.SetCell setBoolean =
         new CellMutationAction.SetCell(new CellInput.BooleanValue(true));
     CellMutationAction.SetCell setDate =

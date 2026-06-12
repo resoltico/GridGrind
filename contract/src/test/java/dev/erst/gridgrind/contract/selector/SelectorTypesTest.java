@@ -229,7 +229,7 @@ class SelectorTypesTest {
         new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Blank()));
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
-        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.Numeric(42.0d)));
+        new TableRowSelector.ByKeyCell(table, "Item", new CellInput.NumberValue(42.0d)));
     assertInstanceOf(
         TableRowSelector.ByKeyCell.class,
         new TableRowSelector.ByKeyCell(table, "Item", new CellInput.BooleanValue(true)));

@@ -15,7 +15,6 @@ import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
@@ -69,7 +68,8 @@ class SemanticSelectorExecutionCoverageTest {
                             "assert-missing-table-cell",
                             missingAmountCellTarget(),
                             new CellAssertion.CellValue(
-                                new ExpectedCellValue.NumericValue(999.0)))),
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
+                                    999.0)))),
                     List.of())));
 
     assertEquals(GridGrindProblemCode.ASSERTION_FAILED, failure.problem().code());
@@ -124,10 +124,15 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B3"),
             new CellMutationAction.SetRange(
-                List.of(
-                    List.of(new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
-                    List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(100.0)),
-                    List.of(new CellInput.Text(text("Travel")), new CellInput.Numeric(50.0))))),
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    List.of(
+                        List.of(
+                            new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
+                        List.of(
+                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(100.0)),
+                        List.of(
+                            new CellInput.Text(text("Travel")),
+                            new CellInput.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(
@@ -142,11 +147,17 @@ class SemanticSelectorExecutionCoverageTest {
         mutate(
             new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B4"),
             new CellMutationAction.SetRange(
-                List.of(
-                    List.of(new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
-                    List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(100.0)),
-                    List.of(new CellInput.Text(text("Hosting")), new CellInput.Numeric(125.0)),
-                    List.of(new CellInput.Text(text("Travel")), new CellInput.Numeric(50.0))))),
+                new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
+                    List.of(
+                        List.of(
+                            new CellInput.Text(text("Item")), new CellInput.Text(text("Amount"))),
+                        List.of(
+                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(100.0)),
+                        List.of(
+                            new CellInput.Text(text("Hosting")), new CellInput.NumberValue(125.0)),
+                        List.of(
+                            new CellInput.Text(text("Travel")),
+                            new CellInput.NumberValue(50.0)))))),
         mutate(
             new StructuredMutationAction.SetTable(
                 TableInput.withDefaultMetadata(

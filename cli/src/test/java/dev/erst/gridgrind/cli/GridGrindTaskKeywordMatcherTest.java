@@ -6,10 +6,16 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.TaskArtifactKind;
+import dev.erst.gridgrind.cli.discovery.TaskAssetMode;
+import dev.erst.gridgrind.cli.discovery.TaskGoalKind;
 import dev.erst.gridgrind.cli.discovery.TaskInputKind;
 import dev.erst.gridgrind.cli.discovery.TaskKeywordMatchReport;
+import dev.erst.gridgrind.cli.discovery.TaskMutationMode;
 import dev.erst.gridgrind.cli.discovery.TaskPersistenceMode;
 import dev.erst.gridgrind.cli.discovery.TaskPhasePurpose;
+import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
+import dev.erst.gridgrind.cli.discovery.TaskVerificationKind;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -161,15 +167,34 @@ class GridGrindTaskKeywordMatcherTest {
   void keywordMatcherProfileAndPhaseSurfaceTextCoversHiddenEnumBranches() {
     assertEquals(
         "overwrite in place",
-        GridGrindTaskKeywordMatcher.persistenceModeSurface(TaskPersistenceMode.OVERWRITE_SOURCE));
+        GridGrindTaskKeywordSurfaces.persistenceModeSurface(TaskPersistenceMode.OVERWRITE_SOURCE));
     assertEquals(
-        "export extract", GridGrindTaskKeywordMatcher.phasePurposeSurface(TaskPhasePurpose.EXPORT));
+        "export extract",
+        GridGrindTaskKeywordSurfaces.phasePurposeSurface(TaskPhasePurpose.EXPORT));
     assertEquals(
         "binary payload image object file",
-        GridGrindTaskKeywordMatcher.inputKindSurface(TaskInputKind.BINARY_PAYLOAD));
+        GridGrindTaskKeywordSurfaces.inputKindSurface(TaskInputKind.BINARY_PAYLOAD));
     assertEquals(
         "drawing anchor position placement",
-        GridGrindTaskKeywordMatcher.inputKindSurface(TaskInputKind.DRAWING_ANCHORS));
+        GridGrindTaskKeywordSurfaces.inputKindSurface(TaskInputKind.DRAWING_ANCHORS));
+    assertEquals(
+        "new blank create workbook",
+        GridGrindTaskKeywordSurfaces.sourceModeSurface(TaskSourceMode.NEW_WORKBOOK));
+    assertEquals(
+        "author mutate build update",
+        GridGrindTaskKeywordSurfaces.mutationModeSurface(TaskMutationMode.MUTATING));
+    assertEquals(
+        "self contained portable",
+        GridGrindTaskKeywordSurfaces.assetModeSurface(TaskAssetMode.SELF_CONTAINED));
+    assertEquals(
+        "verify validate confirm", GridGrindTaskKeywordSurfaces.goalSurface(TaskGoalKind.VERIFY));
+    assertEquals(
+        "formula surface formulas",
+        GridGrindTaskKeywordSurfaces.artifactSurface(TaskArtifactKind.FORMULA_SURFACE));
+    assertEquals(
+        "assert assertion invariant checks",
+        GridGrindTaskKeywordSurfaces.verificationKindSurface(
+            TaskVerificationKind.ASSERTION_CHECKS));
   }
 
   private static TaskKeywordMatchReport.Candidate candidate(

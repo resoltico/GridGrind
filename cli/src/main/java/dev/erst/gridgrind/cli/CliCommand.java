@@ -103,9 +103,19 @@ sealed interface CliCommand {
 
   /** Requests that the machine-readable protocol catalog be emitted as the primary output. */
   sealed interface PrintProtocolCatalog extends CliCommand
-      permits PrintProtocolCatalogAll, PrintProtocolCatalogLookup, PrintProtocolCatalogSearch {
+      permits PrintProtocolCatalogAll,
+          PrintProtocolCatalogIndex,
+          PrintProtocolCatalogLookup,
+          PrintProtocolCatalogSearch {
     /** Optional output path for the primary command payload. */
     Optional<Path> responsePath();
+  }
+
+  /** Requests that the compact protocol-catalog index be emitted. */
+  record PrintProtocolCatalogIndex(Optional<Path> responsePath) implements PrintProtocolCatalog {
+    public PrintProtocolCatalogIndex {
+      Objects.requireNonNull(responsePath, "responsePath must not be null");
+    }
   }
 
   /** Requests that the full protocol catalog be emitted. */

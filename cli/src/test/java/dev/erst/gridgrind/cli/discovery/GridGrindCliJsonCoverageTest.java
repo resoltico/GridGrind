@@ -38,8 +38,9 @@ class GridGrindCliJsonCoverageTest {
             GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog)));
     assertEquals(
         protocolCatalogSearchReport,
-        GridGrindCliJson.readProtocolCatalogSearchReport(
-            GridGrindCliJson.writeProtocolCatalogSearchReportBytes(protocolCatalogSearchReport)));
+        ProtocolCatalogCliJson.readProtocolCatalogSearchReport(
+            ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
+                protocolCatalogSearchReport)));
     assertEquals(
         cliFailureReport,
         GridGrindCliJson.readCliFailureReport(
@@ -55,7 +56,7 @@ class GridGrindCliJsonCoverageTest {
                 GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog));
         TrackingInputStream protocolCatalogSearchReportStream =
             new TrackingInputStream(
-                GridGrindCliJson.writeProtocolCatalogSearchReportBytes(
+                ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                     protocolCatalogSearchReport));
         TrackingInputStream cliFailureReportStream =
             new TrackingInputStream(
@@ -120,7 +121,7 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readProtocolCatalogSearchReport((byte[]) null))
+                () -> ProtocolCatalogCliJson.readProtocolCatalogSearchReport((byte[]) null))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -187,7 +188,7 @@ class GridGrindCliJsonCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    GridGrindCliJson.writeProtocolCatalogSearchReport(
+                    ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
                         null, protocolCatalogSearchReport))
             .getMessage());
     assertEquals(
@@ -195,7 +196,7 @@ class GridGrindCliJsonCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    GridGrindCliJson.writeProtocolCatalogSearchReport(
+                    ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
                         new ByteArrayOutputStream(), null))
             .getMessage());
     assertEquals(
@@ -246,7 +247,7 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(exampleCatalogOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream protocolCatalogSearchOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeProtocolCatalogSearchReport(
+    ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
         protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport());
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
@@ -282,9 +283,10 @@ class GridGrindCliJsonCoverageTest {
         GridGrindProtocolVersion.current(),
         2,
         "print-task-keyword-match",
+        "match-query",
         dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_ARGUMENTS,
         "message",
-        CliFailureLocation.unavailable(),
+        java.util.Optional.empty(),
         java.util.Optional.of("--query"),
         List.of("gridgrind --print-task-catalog"),
         java.util.Optional.of("Use a fuller query."));

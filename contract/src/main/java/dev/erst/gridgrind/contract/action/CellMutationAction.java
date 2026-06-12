@@ -2,7 +2,9 @@ package dev.erst.gridgrind.contract.action;
 
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
+import dev.erst.gridgrind.contract.dto.CellGridInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.CellRowInput;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
@@ -10,8 +12,6 @@ import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 /** Mutation family for cells, ranges, hyperlinks, comments, and cell styles. */
@@ -30,13 +30,11 @@ public sealed interface CellMutationAction extends MutationAction {
   /** Sets a rectangular region of cells from a row-major grid of values. */
   @ProtocolTypeMetadata(
       id = "SET_RANGE",
-      summary = "Write a rectangular grid of typed values.",
+      summary = "Write a rectangular grid of typed or compact homogeneous values.",
       targetSelectors = {RangeSelector.ByRange.class})
-  record SetRange(List<List<CellInput>> rows) implements CellMutationAction {
+  record SetRange(CellGridInput rows) implements CellMutationAction {
     public SetRange {
-      rows = MutationAction.Validation.copyRows(rows);
-      MutationAction.Validation.requireRectangularRows(rows);
-      rows = MutationAction.Validation.freezeRows(rows);
+      Objects.requireNonNull(rows, "rows must not be null");
     }
   }
 
@@ -123,19 +121,12 @@ public sealed interface CellMutationAction extends MutationAction {
   /** Appends a new row of values after the last occupied row on the sheet. */
   @ProtocolTypeMetadata(
       id = "APPEND_ROW",
-      summary = "Append a new row of values after the last occupied row on the sheet.",
+      summary =
+          "Append a new row of typed or compact homogeneous values after the last occupied row.",
       targetSelectors = {SheetSelector.ByName.class})
-  record AppendRow(List<CellInput> values) implements CellMutationAction {
+  record AppendRow(CellRowInput values) implements CellMutationAction {
     public AppendRow {
       Objects.requireNonNull(values, "values must not be null");
-      values = new ArrayList<>(values);
-      if (values.isEmpty()) {
-        throw new IllegalArgumentException("values must not be empty");
-      }
-      for (CellInput item : values) {
-        Objects.requireNonNull(item, "values must not contain nulls");
-      }
-      values = List.copyOf(values);
     }
   }
 }

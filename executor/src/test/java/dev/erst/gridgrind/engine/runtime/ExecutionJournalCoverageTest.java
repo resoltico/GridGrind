@@ -221,7 +221,9 @@ class ExecutionJournalCoverageTest {
             "TABLE_ROW", "Row where Item=Number[number=42.0] in Table BudgetTable"),
         summaryTarget(
             new TableRowSelector.ByKeyCell(
-                new TableSelector.ByName("BudgetTable"), "Item", new CellInput.Numeric(42.0d))));
+                new TableSelector.ByName("BudgetTable"),
+                "Item",
+                new CellInput.NumberValue(42.0d))));
     assertEquals(
         new ExecutionJournal.Target(
             "TABLE_ROW", "Row where Item=Boolean[value=true] in Table BudgetTable"),

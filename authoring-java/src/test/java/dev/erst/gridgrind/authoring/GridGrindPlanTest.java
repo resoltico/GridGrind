@@ -59,7 +59,7 @@ class GridGrindPlanTest {
             .mutate(Targets.sheet("Budget").ensureExists())
             .mutate(Targets.cell("Budget", "A1").set(Values.text("Owner")))
             .inspect(Targets.cell("Budget", "A1").read())
-            .assertThat(Targets.cell("Budget", "A1").valueEquals(Values.expectedText("Owner")));
+            .assertThat(Targets.cell("Budget", "A1").valueEquals(ExpectedValues.text("Owner")));
 
     WorkbookPlan canonical = plan.toPlan();
     assertEquals("budget-plan", canonical.planId().orElseThrow());
@@ -142,14 +142,14 @@ class GridGrindPlanTest {
                     "assertion-001",
                     Targets.cell("Budget", "A1").selector(),
                     new dev.erst.gridgrind.contract.assertion.CellAssertion.CellValue(
-                        Values.toExpectedCellValue(Values.expectedBlank())))));
+                        ExpectedValues.toCellScalarValue(ExpectedValues.blank())))));
 
     WorkbookPlan plan =
         GridGrindPlan.from(imported)
             .clearPlanId()
             .mutate(Targets.sheet("Budget").renameTo("Budget 2026"))
             .inspect(Targets.cell("Budget 2026", "A1").read())
-            .assertThat(Targets.cell("Budget 2026", "A1").valueEquals(Values.expectedBlank()))
+            .assertThat(Targets.cell("Budget 2026", "A1").valueEquals(ExpectedValues.blank()))
             .mutate(Targets.sheet("Budget 2026").ensureExists().named("keep-sheet"))
             .toPlan();
 
@@ -209,7 +209,7 @@ class GridGrindPlanTest {
                 Targets.table("BudgetTable")
                     .rowByKey("Item", Values.textFile(Path.of("item.txt")))
                     .cell("Amount")
-                    .valueEquals(Values.expectedNumber(125.0)));
+                    .valueEquals(ExpectedValues.number(125.0)));
 
     GridGrindResponse.Success response =
         assertInstanceOf(

@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.assertion.*;
-import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
@@ -119,11 +118,14 @@ class ExecutionModeRequestExecutorTest {
             mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
             mutate(
                 new SheetSelector.ByName("Ops"),
-                new CellMutationAction.AppendRow(List.of(textCell("Item"), textCell("Total")))),
+                new CellMutationAction.AppendRow(
+                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                        List.of(textCell("Item"), textCell("Total"))))),
             mutate(
                 new SheetSelector.ByName("Ops"),
                 new CellMutationAction.AppendRow(
-                    List.of(textCell("Hosting"), formulaCell("2+3")))));
+                    new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                        List.of(textCell("Hosting"), formulaCell("2+3"))))));
     List<InspectionStep> reads =
         List.of(
             inspect(
@@ -340,7 +342,9 @@ class ExecutionModeRequestExecutorTest {
                         assertThat(
                             "assert-owner",
                             new CellSelector.ByAddress("Ops", "A1"),
-                            new CellAssertion.CellValue(new ExpectedCellValue.Text("Owner")))),
+                            new CellAssertion.CellValue(
+                                new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
+                                    "Owner")))),
                     List.of(
                         inspect(
                             "workbook",
@@ -367,7 +371,9 @@ class ExecutionModeRequestExecutorTest {
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Ops"),
-                            new CellMutationAction.AppendRow(List.of(textCell("x"))))),
+                            new CellMutationAction.AppendRow(
+                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                    List.of(textCell("x")))))),
                     List.of())));
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
@@ -495,7 +501,9 @@ class ExecutionModeRequestExecutorTest {
                     mutations(
                         mutate(
                             new SheetSelector.ByName("Ops"),
-                            new CellMutationAction.AppendRow(List.of(textCell("x"))))),
+                            new CellMutationAction.AppendRow(
+                                new dev.erst.gridgrind.contract.dto.CellRowInput.Typed(
+                                    List.of(textCell("x")))))),
                     inspections())));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, existingStreamingSource.problem().code());
     assertTrue(existingStreamingSource.problem().message().contains("requires source.type=NEW"));

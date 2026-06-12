@@ -3,8 +3,8 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestException
-Message: Missing required field 'margins'
-Input Bytes: 2711
+Message: Missing required field 'header'
+Input Bytes: 3304
 Decode Outcome: INVALID_REQUEST
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

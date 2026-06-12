@@ -30,7 +30,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 public abstract class VerifyJavaSourceDuplicationTask extends DefaultTask {
-  private static final int MINIMUM_TOKEN_SPAN = 450;
+  private static final int MINIMUM_TOKEN_SPAN = 320;
   private static final int MAX_SUMMARY_MATCHES = 10;
 
   @InputFiles

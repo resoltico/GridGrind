@@ -86,7 +86,9 @@ final class XlsxParitySecurityProbeGroup {
           mutate(
               new SheetSelector.ByName("Streamed"),
               new CellMutationAction.AppendRow(
-                  List.of(text("R" + rowIndex), new CellInput.Numeric((double) rowIndex)))));
+                  new CellRowInput.Typed(
+                      List.of(
+                          text("R" + rowIndex), new CellInput.NumberValue((double) rowIndex))))));
     }
     GridGrindResponse.Success streamed =
         XlsxParityGridGrind.writeNewWorkbook(

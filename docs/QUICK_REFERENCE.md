@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.67.0"
 domain: QUICK_REFERENCE
-updated: "2026-06-05"
+updated: "2026-06-12"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -10,8 +10,7 @@ route:
 
 # Quick Reference
 
-Fast-start snippets and reminders for the shipped GridGrind `.xlsx` contract. Use this file as a
-cheat sheet, then jump to the detailed references when you need the full field list.
+Fast-start snippets and reminders for the shipped GridGrind `.xlsx` contract. Use this file as a cheat sheet, then jump to the detailed references when you need the full field list.
 
 ## Artifact Discovery
 
@@ -20,9 +19,10 @@ gridgrind --help
 gridgrind --help-protocol
 gridgrind --help-guidance
 gridgrind --print-request-template --response request.json
-gridgrind --print-protocol-catalog --response protocol-catalog.json
+gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
+gridgrind --print-protocol-catalog --full --response protocol-catalog.json
 gridgrind --print-example --lookup BUDGET --response budget-request.json
 gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
@@ -32,18 +32,9 @@ gridgrind --print-request-template | gridgrind --doctor-request --execution-root
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape,
-resolves source-backed inputs, preflights existing workbook-source access, and returns every
-independently provable blocking problem without mutating a workbook. `--response <path>` works
-across execution, doctoring, and discovery commands, so the primary output can be captured to a
-file instead of stdout. Built-in example and task catalogs also publish `workspaceMode` plus
-`requiredPaths` so you can see whether a printed request is self-contained before executing it.
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem without mutating a workbook. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `workspaceMode` plus `requiredPaths` so you can see whether a printed request is self-contained before executing it.
 
-`--search` is the fast discovery path when you only know part of an id or summary. Use
-`--lookup <group>:<id>` once you want one exact machine-readable entry. Search now ranks published
-top-level operations ahead of support-type groups, returns compact summaries by default, and adds
-`relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents
-climb from a type family to the executable operation that uses it.
+The bare `--print-protocol-catalog` output is the compact first-contact index. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup <group>:<id>` once you want one exact machine-readable entry, and use `--full` only when you need the entire catalog payload in one response. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it.
 
 ## Smallest Valid Request
 
@@ -61,7 +52,7 @@ climb from a type family to the executable operation that uses it.
       "type": "FULL_XSSF"
     },
     "journal": {
-      "level": "NORMAL"
+      "level": "SUMMARY"
     },
     "calculation": {
       "strategy": {
@@ -79,11 +70,7 @@ climb from a type family to the executable operation that uses it.
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`,
-`assertion`, or `query`; do not send `step.type`.
-`gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below
-are request fragments, not standalone full requests, unless the section explicitly shows the full
-top-level envelope.
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live event output.
 
 ## Common Source And Persistence Shapes
 
@@ -250,7 +237,7 @@ Write a row range:
   },
   "action": {
     "type": "SET_RANGE",
-    "rows": [
+    "rows": { "type": "TYPED", "rows": [
       [
         {
           "type": "TEXT",
@@ -274,7 +261,7 @@ Write a row range:
           }
         }
       ]
-    ]
+    ] }
   }
 }
 ```

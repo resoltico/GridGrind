@@ -40,10 +40,12 @@ only want to emit plan JSON do not inherit the in-process runtime graph.
 | `Tables` | Focused table definitions and style wrappers |
 | `Links` | URL, email, file, and document hyperlink targets |
 
-`Checks` and `Queries` still exist internally, but they are not part of the public authoring API.
-The public Java surface stays selector-first and hides raw request/response DTO plumbing such as
-`TableInput`, `HyperlinkTarget`, and report DTOs such as `WorkbookSummary`,
-`SheetLayoutReport`, `SheetSchemaReport`, and `WorkbookFindingsReport`.
+`Checks` plus the internal query-family helpers (`WorkbookQueries`, `SheetQueries`,
+`WorkbookAssetQueries`, `InspectionSurfaceQueries`, and `InspectionAnalysisQueries`) exist
+internally, but they are not part of the public authoring API. The public Java surface stays
+selector-first and hides raw request/response DTO plumbing such as `TableInput`,
+`HyperlinkTarget`, and report DTOs such as `WorkbookSummary`, `SheetLayoutReport`,
+`SheetSchemaReport`, and `WorkbookFindingsReport`.
 
 ## Optional Explicit Execution Types
 
@@ -101,7 +103,7 @@ GridGrindPlan plan =
             Targets.table("BudgetTable")
                 .rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
                 .cell("Amount")
-                .valueEquals(Values.expectedNumber(125.0)));
+                .valueEquals(ExpectedValues.number(125.0)));
 ```
 
 This is still the same GridGrind contract: the Java layer is simply constructing selectors,

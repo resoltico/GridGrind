@@ -100,6 +100,11 @@ class ArchitectureSeamAuditTest {
     assertTrue(
         ruleset.contains("verifyJavaSourceDuplication"),
         "gradle/pmd/ruleset.xml must point at the build-owned duplication gate");
+    assertTrue(
+        ruleset.contains("build-owned `verifyJavaSemanticShape` gate")
+            && ruleset.contains(
+                "stricter semantic-shape PMD profile with explicit reviewed exceptions"),
+        "gradle/pmd/ruleset.xml must describe how the production semantic-shape profile owns structural PMD rules");
   }
 
   @Test
@@ -185,8 +190,11 @@ class ArchitectureSeamAuditTest {
         developerGradle.contains("Root `check` now depends on `verifyJavaSourceShape`"),
         "docs/DEVELOPER_GRADLE.md must teach that source-shape is a build gate");
     assertTrue(
-        developerGradle.contains("included-build `gradle/build-logic:test` task"),
+        developerGradle.contains("gradle/build-logic:test"),
         "docs/DEVELOPER_GRADLE.md must teach that build-logic tests are part of the root gate");
+    assertTrue(
+        developerGradle.contains("verifyNoLegacyBuildSrc"),
+        "docs/DEVELOPER_GRADLE.md must teach that legacy buildSrc directories are forbidden");
     assertTrue(
         developerGradle.contains("duplicationGuard")
             && developerGradle.contains("reviewExpiresOn")
@@ -215,8 +223,14 @@ class ArchitectureSeamAuditTest {
         rootConventions.contains("gradle.includedBuild(\"build-logic\").task(\":test\")"),
         "GridGrindRootConventionsPlugin must wire build-logic tests into root check");
     assertTrue(
-        javaConventions.contains("setOf(\"contract\", \"engine\", \"excel-foundation\")"),
-        "GridGrindJavaConventionsPlugin must apply the semantic-shape PMD ruleset to engine");
+        javaConventions.contains("tasks.register(\"pmdSemanticMain\", Pmd::class.java)")
+            && javaConventions.contains("repositoryLayout.semanticShapePmdRuleset"),
+        "GridGrindJavaConventionsPlugin must register the dedicated semantic-shape PMD task");
+    assertTrue(
+        rootConventions.contains("tasks.register(\"verifyJavaSemanticShape\"")
+            && rootConventions.contains(
+                "subprojects.map { subproject -> \"${subproject.path}:pmdSemanticMain\" }"),
+        "GridGrindRootConventionsPlugin must aggregate pmdSemanticMain into verifyJavaSemanticShape");
   }
 
   @Test
