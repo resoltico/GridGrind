@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.67.0"
+version: "0.68.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-05-27"
+updated: "2026-06-12"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -141,9 +141,15 @@ is true:
 - `./gradlew --version --console=plain` reports a different or unexpected JVM than the intended
   Java 26 runtime.
 
-Then run `./check.sh`. It must exit 0. If it fails, fix all failures before proceeding.
+Then run `./check.sh` from the clean release checkout. It must exit 0. If it fails, fix all
+failures before proceeding.
 
-Then verify every item in this checklist. All must be true before any commit or tag:
+If the release payload has not yet been cut to the target version after that first clean-checkout
+pass, make the version and release-document updates next in the same release checkout, then rerun
+`./check.sh` before Step 2. The first pass proves the bootstrapped payload. The second pass proves
+the actual tagged release state.
+
+Then verify every item in this checklist. All must be true before any Step 2 commit or any tag:
 
 - `gradle.properties` `version=` equals the target release version exactly (e.g. `0.3.0`).
 - `CHANGELOG.md` preserves the project's normal top-level structure. If the file carries

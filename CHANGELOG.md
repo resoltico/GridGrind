@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-06-12
+
 ### Changed
 
 - Refreshed the shared dependency baseline to current stable releases where verified newer
@@ -3157,7 +3159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.67.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.68.0...HEAD
+[0.68.0]: https://github.com/resoltico/GridGrind/compare/v0.67.0...v0.68.0
 [0.67.0]: https://github.com/resoltico/GridGrind/compare/v0.66.0...v0.67.0
 [0.66.0]: https://github.com/resoltico/GridGrind/compare/v0.65.0...v0.66.0
 [0.65.0]: https://github.com/resoltico/GridGrind/compare/v0.64.0...v0.65.0

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.67.0"
+version: "0.68.0"
 domain: WORKBOOK_CELL_INSPECTIONS
 updated: "2026-05-15"
 route:
