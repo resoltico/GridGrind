@@ -62,18 +62,28 @@ final class InspectionResultDrawingReportSupport {
           new DrawingObjectReport.SignatureLine(
               signatureLine.name(),
               toDrawingAnchorReport(signatureLine.anchor()),
-              signatureLine.setupId(),
-              signatureLine.allowComments(),
-              signatureLine.signingInstructions(),
-              signatureLine.suggestedSigner(),
-              signatureLine.suggestedSigner2(),
-              signatureLine.suggestedSignerEmail(),
-              signatureLine.previewFormat(),
-              signatureLine.previewContentType(),
-              signatureLine.previewByteSize(),
-              signatureLine.previewSha256(),
-              signatureLine.previewWidthPixels(),
-              signatureLine.previewHeightPixels());
+              signatureLine
+                  .setup()
+                  .map(
+                      setup ->
+                          new DrawingObjectReport.SignatureSetup(
+                              setup.setupId(),
+                              setup.allowComments(),
+                              setup.signingInstructions(),
+                              setup.suggestedSigner(),
+                              setup.suggestedSigner2(),
+                              setup.suggestedSignerEmail())),
+              signatureLine
+                  .preview()
+                  .map(
+                      preview ->
+                          new DrawingObjectReport.SignaturePreview(
+                              preview.format(),
+                              preview.contentType(),
+                              preview.byteSize(),
+                              preview.sha256(),
+                              preview.widthPixels(),
+                              preview.heightPixels())));
     };
   }
 

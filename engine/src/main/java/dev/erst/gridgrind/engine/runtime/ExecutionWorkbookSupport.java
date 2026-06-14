@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
 import dev.erst.gridgrind.excel.WorkbookArtifactIo;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,6 +59,7 @@ final class ExecutionWorkbookSupport {
             .persistence()
             .save(
                 executionPath,
+                WorkbookArtifactWriteDisposition.CREATE_NEW,
                 ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
                 tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
@@ -73,6 +75,7 @@ final class ExecutionWorkbookSupport {
             .persistence()
             .save(
                 executionPath,
+                WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
                 ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
                 tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
@@ -99,6 +102,7 @@ final class ExecutionWorkbookSupport {
             ExecutionRequestPaths.sourcePackageSecurity(source),
             ExecutionRequestPaths.sourceEncryptionPassword(source),
             true,
+            WorkbookArtifactWriteDisposition.CREATE_NEW,
             ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory));
         yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
             saveAs.path(), executionPath.toString());
@@ -115,6 +119,7 @@ final class ExecutionWorkbookSupport {
             ExecutionRequestPaths.sourcePackageSecurity(source),
             ExecutionRequestPaths.sourceEncryptionPassword(source),
             true,
+            WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
             ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory));
         yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
             existingFile.path(), executionPath.toString());

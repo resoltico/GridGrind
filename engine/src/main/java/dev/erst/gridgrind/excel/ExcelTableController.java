@@ -170,7 +170,7 @@ final class ExcelTableController {
     XSSFSheet sheet = requiredSheet(workbook, sheetName);
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     for (ExcelTableSnapshot table : tables(workbook, new ExcelTableSelection.All())) {
-      if (!table.sheetName().equals(sheetName) || !table.hasAutofilter()) {
+      if (!table.sheetName().equals(sheetName) || !table.behavior().hasAutofilter()) {
         continue;
       }
       findings.addAll(ExcelTableAnalysisSupport.tableAutofilterFindings(sheet, table));

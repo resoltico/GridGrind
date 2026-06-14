@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
@@ -16,10 +17,11 @@ class GridGrindResponseSupportTest {
         GridGrindResponse.syntheticSuccessJournal().outcome().status());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
-        GridGrindResponse.syntheticFailureJournal(GridGrindProblemCode.INVALID_REQUEST)
-            .outcome()
-            .failureCode()
-            .orElseThrow());
+        assertInstanceOf(
+                ExecutionJournal.Outcome.Failed.class,
+                GridGrindResponse.syntheticFailureJournal(GridGrindProblemCode.INVALID_REQUEST)
+                    .outcome())
+            .problemCode());
     assertEquals(
         ExecutionJournal.Status.FAILED,
         GridGrindResponse.syntheticJournal(

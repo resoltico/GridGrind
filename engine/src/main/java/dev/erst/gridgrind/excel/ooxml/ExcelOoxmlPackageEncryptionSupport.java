@@ -1,11 +1,11 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
-import java.util.Optional;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.apache.poi.poifs.crypt.Encryptor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
@@ -18,18 +18,14 @@ public final class ExcelOoxmlPackageEncryptionSupport {
   public static ExcelOoxmlEncryptionSnapshot encryptionSnapshot(EncryptionInfo encryptionInfo)
       throws IOException {
     try {
-      return new ExcelOoxmlEncryptionSnapshot(
-          true,
-          Optional.of(ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode())),
-          Optional.of(
-              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getCipherAlgorithm())),
-          Optional.of(
-              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getVerifier().getHashAlgorithm())),
-          Optional.of(
-              ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getChainingMode())),
-          Optional.of(encryptionInfo.getHeader().getKeySize()),
-          Optional.of(encryptionInfo.getHeader().getBlockSize()),
-          Optional.of(encryptionInfo.getVerifier().getSpinCount()));
+      return new ExcelOoxmlEncryptionSnapshot.Encrypted(
+          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode()),
+          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getCipherAlgorithm()),
+          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getVerifier().getHashAlgorithm()),
+          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getHeader().getChainingMode()),
+          encryptionInfo.getHeader().getKeySize(),
+          encryptionInfo.getHeader().getBlockSize(),
+          encryptionInfo.getVerifier().getSpinCount());
     } catch (RuntimeException exception) {
       throw new WorkbookSecurityException("Failed to inspect OOXML encryption metadata", exception);
     }
@@ -77,7 +73,10 @@ public final class ExcelOoxmlPackageEncryptionSupport {
 
   /** Encrypts one plain materialized workbook into the requested OOXML encryption mode. */
   public static void encryptWorkbook(
-      Path plainWorkbookPath, Path targetPath, ExcelOoxmlEncryptionOptions encryptionOptions)
+      Path plainWorkbookPath,
+      Path targetPath,
+      WorkbookArtifactWriteDisposition writeDisposition,
+      ExcelOoxmlEncryptionOptions encryptionOptions)
       throws IOException {
     EncryptionInfo encryptionInfo =
         new EncryptionInfo(ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.mode()));
@@ -85,21 +84,26 @@ public final class ExcelOoxmlPackageEncryptionSupport {
     encryptor.confirmPassword(encryptionOptions.password());
 
     writeEncryptedWorkbook(
-        fileSystem -> encryptor.getDataStream(fileSystem), plainWorkbookPath, targetPath);
+        fileSystem -> encryptor.getDataStream(fileSystem),
+        plainWorkbookPath,
+        targetPath,
+        writeDisposition);
   }
 
   /** Writes one encrypted POIFS-backed OOXML package to the target workbook path. */
   public static void writeEncryptedWorkbook(
       EncryptedWorkbookStreamSupplier encryptedWorkbookStreamSupplier,
       Path plainWorkbookPath,
-      Path targetPath)
+      Path targetPath,
+      WorkbookArtifactWriteDisposition writeDisposition)
       throws IOException {
     try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
       try (java.io.OutputStream encryptedStream =
           encryptedWorkbookStreamSupplier.open(fileSystem)) {
         Files.copy(plainWorkbookPath, encryptedStream);
       }
-      try (java.io.OutputStream outputStream = Files.newOutputStream(targetPath)) {
+      try (java.io.OutputStream outputStream =
+          ExcelOoxmlPackageFileSupport.newWorkbookOutputStream(targetPath, writeDisposition)) {
         fileSystem.writeFilesystem(outputStream);
       }
     } catch (GeneralSecurityException exception) {

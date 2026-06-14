@@ -1,12 +1,9 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import dev.erst.gridgrind.contract.selector.Selector;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -85,60 +82,6 @@ public final class CatalogFieldMetadataSupport {
                     "Unsupported catalog field type: " + classType.getName()));
   }
 
-  static Optional<String> lookupAssignableGroup(Map<Class<?>, String> groups, Class<?> classType) {
-    return groups.entrySet().stream()
-        .filter(
-            entry ->
-                entry.getKey().isAssignableFrom(classType) && !entry.getKey().equals(classType))
-        .reduce(
-            (resolved, candidate) ->
-                selectMoreSpecificGroup(
-                    classType, resolved, candidate, "Ambiguous catalog field group mapping for "))
-        .map(Map.Entry::getValue)
-        .map(Optional::of)
-        .orElseGet(Optional::empty);
-  }
-
-  static Optional<List<String>> lookupAssignableGroupList(
-      Map<Class<?>, List<String>> groups, Class<?> classType) {
-    return groups.entrySet().stream()
-        .filter(
-            entry ->
-                entry.getKey().isAssignableFrom(classType) && !entry.getKey().equals(classType))
-        .reduce(
-            (resolved, candidate) ->
-                selectMoreSpecificGroup(
-                    classType,
-                    resolved,
-                    candidate,
-                    "Ambiguous catalog field group-list mapping for "))
-        .map(Map.Entry::getValue)
-        .map(Optional::of)
-        .orElseGet(Optional::empty);
-  }
-
-  private static <T> Map.Entry<Class<?>, T> selectMoreSpecificGroup(
-      Class<?> classType,
-      Map.Entry<Class<?>, T> resolved,
-      Map.Entry<Class<?>, T> candidate,
-      String errorPrefix) {
-    Class<?> resolvedBase = resolved.getKey();
-    Class<?> candidateBase = candidate.getKey();
-    if (resolvedBase.isAssignableFrom(candidateBase)) {
-      return candidate;
-    }
-    if (candidateBase.isAssignableFrom(resolvedBase)) {
-      return resolved;
-    }
-    throw new IllegalStateException(
-        errorPrefix
-            + classType.getName()
-            + ": "
-            + resolvedBase.getName()
-            + " and "
-            + candidateBase.getName());
-  }
-
   /** Returns whether one non-parameterized record component type is represented as JSON NUMBER. */
   public static boolean isNumericType(Class<?> classType) {
     Objects.requireNonNull(classType, "classType must not be null");
@@ -159,71 +102,7 @@ public final class CatalogFieldMetadataSupport {
   }
 
   private static Optional<FieldShape> groupedFieldShape(Class<?> classType) {
-    return resolvedGroupList(nestedFieldShapeUnions(), classType)
-        .<FieldShape>map(FieldShape.NestedTypeGroupUnionRef::new)
-        .or(
-            () ->
-                resolvedGroup(topLevelFieldShapeTypeSets(), classType)
-                    .map(FieldShape.TopLevelTypeSetRef::new))
-        .or(
-            () ->
-                resolvedGroup(nestedFieldShapeGroups(), classType)
-                    .map(FieldShape.NestedTypeGroupRef::new))
-        .or(
-            () ->
-                resolvedGroup(plainFieldShapeGroups(), classType)
-                    .map(FieldShape.PlainTypeGroupRef::new));
-  }
-
-  private static Optional<String> resolvedGroup(Map<Class<?>, String> groups, Class<?> classType) {
-    String exact = groups.get(classType);
-    return exact != null ? Optional.of(exact) : lookupAssignableGroup(groups, classType);
-  }
-
-  private static Optional<List<String>> resolvedGroupList(
-      Map<Class<?>, List<String>> groups, Class<?> classType) {
-    List<String> exact = groups.get(classType);
-    return exact != null ? Optional.of(exact) : lookupAssignableGroupList(groups, classType);
-  }
-
-  /** Returns the set of all sealed types registered in the nested field-shape group map. */
-  public static Set<Class<?>> registeredNestedTypes() {
-    return nestedFieldShapeGroups().keySet();
-  }
-
-  /** Returns the set of all record types registered in the plain field-shape group map. */
-  public static Set<Class<?>> registeredPlainTypes() {
-    return plainFieldShapeGroups().keySet();
-  }
-
-  /** Validates that one nested sealed input type maps to the published field-shape group. */
-  public static void validateNestedTypeGroupMapping(Class<?> sealedType, String expectedGroup) {
-    Objects.requireNonNull(sealedType, "sealedType must not be null");
-    String mappedGroup = nestedFieldShapeGroups().get(sealedType);
-    if (!expectedGroup.equals(mappedGroup)) {
-      throw new IllegalStateException(
-          "Field-shape nested group mapping mismatch for "
-              + sealedType.getName()
-              + ": expected="
-              + expectedGroup
-              + ", mapped="
-              + mappedGroup);
-    }
-  }
-
-  /** Validates that one plain record input type maps to the published field-shape group. */
-  public static void validatePlainTypeGroupMapping(Class<?> recordType, String expectedGroup) {
-    Objects.requireNonNull(recordType, "recordType must not be null");
-    String mappedGroup = plainFieldShapeGroups().get(recordType);
-    if (!expectedGroup.equals(mappedGroup)) {
-      throw new IllegalStateException(
-          "Field-shape plain group mapping mismatch for "
-              + recordType.getName()
-              + ": expected="
-              + expectedGroup
-              + ", mapped="
-              + mappedGroup);
-    }
+    return CatalogFieldShapeRegistry.groupedFieldShape(classType);
   }
 
   static java.util.List<String> enumValues(Type type) {
@@ -250,38 +129,5 @@ public final class CatalogFieldMetadataSupport {
           typeName + " field must declare exactly one type argument: " + parameterizedType);
     }
     return typeArguments[0];
-  }
-
-  private static Map<Class<?>, String> nestedFieldShapeGroups() {
-    return CatalogDescriptorMaps.uniqueMap(
-        GridGrindProtocolCatalogNestedTypeGroups.NESTED_TYPE_GROUPS,
-        CatalogNestedTypeDescriptor::sealedType,
-        CatalogNestedTypeDescriptor::group,
-        "Duplicate nested catalog field-shape group for ");
-  }
-
-  private static Map<Class<?>, List<String>> nestedFieldShapeUnions() {
-    return Map.of(
-        Selector.class,
-        GridGrindProtocolCatalogNestedTypeGroups.NESTED_TYPE_GROUPS.stream()
-            .filter(descriptor -> Selector.class.isAssignableFrom(descriptor.sealedType()))
-            .map(CatalogNestedTypeDescriptor::group)
-            .toList());
-  }
-
-  private static Map<Class<?>, String> topLevelFieldShapeTypeSets() {
-    return CatalogDescriptorMaps.uniqueMap(
-        GridGrindProtocolCatalogTypeDescriptors.TOP_LEVEL_GROUPS,
-        CatalogTopLevelTypeDescriptorGroup::sealedType,
-        CatalogTopLevelTypeDescriptorGroup::group,
-        "Duplicate top-level catalog field-shape group for ");
-  }
-
-  private static Map<Class<?>, String> plainFieldShapeGroups() {
-    return CatalogDescriptorMaps.uniqueMap(
-        GridGrindProtocolCatalogPlainTypeDescriptors.PLAIN_TYPE_DESCRIPTORS,
-        CatalogPlainTypeDescriptor::recordType,
-        CatalogPlainTypeDescriptor::group,
-        "Duplicate plain catalog field-shape group for ");
   }
 }

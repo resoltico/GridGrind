@@ -112,8 +112,8 @@ class CatalogEdgeCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindProtocolCatalog.validateReverseGroupMappings(
-                        CatalogFieldMetadataSupport.registeredNestedTypes(), Set.of()))
+                    GridGrindProtocolCatalogCoverageValidator.validateReverseGroupMappings(
+                        CatalogFieldShapeRegistry.registeredNestedTypes(), Set.of()))
             .getMessage()
             .startsWith("Field-shape plain group map contains type with no catalog descriptor: "));
 
@@ -121,20 +121,20 @@ class CatalogEdgeCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindProtocolCatalog.validateCoverage(
+                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                         JsonTypeOnlySealedType.class, Map.of(JsonTypeOnlyRecord.class, "ONLY")))
             .getMessage()
             .contains("must declare a non-blank @JsonTypeName or @ProtocolTypeMetadata id"));
     assertDoesNotThrow(
         () ->
-            GridGrindProtocolCatalog.validateCoverage(
+            GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                 WrongDiscriminatorAnnotatedSealedType.class,
                 Map.of(WrongDiscriminatorRecord.class, "WRONG_FIELD")));
     assertTrue(
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindProtocolCatalog.validateCoverage(
+                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                         AnnotatedSealedType.class, Map.of(AnnotatedRecord.class, "WRONG")))
             .getMessage()
             .contains("Catalog id mismatch"));
@@ -142,7 +142,8 @@ class CatalogEdgeCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindProtocolCatalog.validateCoverage(AnnotatedSealedType.class, Map.of()))
+                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
+                        AnnotatedSealedType.class, Map.of()))
             .getMessage()
             .contains("Catalog coverage mismatch"));
     assertEquals(
@@ -150,7 +151,7 @@ class CatalogEdgeCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindProtocolCatalog.validateCoverage(
+                    GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                         NonRecordAnnotatedSealedType.class,
                         Map.of(NonRecordSubtype.class, "NON_RECORD")))
             .getMessage());
@@ -159,7 +160,7 @@ class CatalogEdgeCoverageTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.toOrderedMap(
+                GridGrindProtocolCatalogCoverageValidator.toOrderedMap(
                     List.of(new DuplicateFixture("A", "one"), new DuplicateFixture("A", "two")),
                     (Function<DuplicateFixture, String>) DuplicateFixture::id,
                     (Function<DuplicateFixture, String>) DuplicateFixture::value,

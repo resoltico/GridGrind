@@ -3,7 +3,6 @@ package dev.erst.gridgrind.contract.dto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -208,32 +207,19 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     ChartReport.Surface3D surface3D =
         new ChartReport.Surface3D(true, false, surfaceAxes(), List.of(series));
     DrawingObjectReport.SignatureLine signatureLine =
-        new DrawingObjectReport.SignatureLine(
+        signatureLine(
             "Signature",
             anchor,
-            "{ABC}",
-            true,
-            "Review before signing.",
-            "Ada Lovelace",
-            "Finance",
-            "ada@example.com",
-            ExcelPictureFormat.PNG,
-            "image/png",
-            42L,
-            "sig123",
-            400,
-            150);
+            signatureSetup(
+                "{ABC}",
+                true,
+                "Review before signing.",
+                "Ada Lovelace",
+                "Finance",
+                "ada@example.com"),
+            signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 400, 150));
     CustomXmlMappingReport mapping =
-        new CustomXmlMappingReport(
-            1L,
-            "CORSO_mapping",
-            "CORSO",
-            "Schema1",
-            false,
-            true,
-            false,
-            true,
-            true,
+        mappingReport(
             "urn:gridgrind:test",
             "XSD",
             "schema.xsd",
@@ -254,228 +240,108 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertEquals(ExcelChartScatterStyle.SMOOTH_MARKER, scatter.style());
     assertTrue(surface.wireframe());
     assertFalse(surface3D.wireframe());
-    assertEquals("{ABC}", signatureLine.setupId());
-    assertEquals("image/png", signatureLine.previewContentType());
-    assertEquals("urn:gridgrind:test", mapping.schemaNamespace());
+    assertEquals("{ABC}", signatureLine.setup().orElseThrow().setupId().orElseThrow());
+    assertEquals("image/png", signatureLine.preview().orElseThrow().contentType());
+    assertEquals("urn:gridgrind:test", mapping.schema().namespace());
     assertEquals("binding.xml", mapping.dataBinding().fileBindingName());
     assertEquals("CourseTable", mapping.linkedTables().getFirst().tableDisplayName());
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                " ",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup(" ", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                " ",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, " ", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                " ",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", " ", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                " ",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", " ", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                " ",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", " "),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(null, "image/png", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                " ",
-                42L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, " ", 42L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                null,
-                null,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(null, null, null, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                -1L,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", -1L, "sig123", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                null,
-                null,
-                " ",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(null, null, null, " ", 10, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                -1,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", -1, 10)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 anchor,
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "sig123",
-                10,
-                -1));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 10, -1)));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CustomXmlDataBindingReport("binding", true, -1L, "binding.xml", 2L));
@@ -487,40 +353,14 @@ class SpreadsheetSurfaceEdgeCoverageTest {
         () -> new CustomXmlDataBindingReport("binding", true, 1L, "binding.xml", -1L));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new CustomXmlMappingReport(
-                1L,
-                "CORSO_mapping",
-                "CORSO",
-                "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
-                " ",
-                null,
-                null,
-                null,
-                null,
-                List.of(),
-                List.of()));
+        () -> mappingReport(" ", null, null, null, null, List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CustomXmlLinkedTableReport("Foglio1", "Table1", " ", "A1:B4", "/rows/row"));
     assertThrows(
         NullPointerException.class,
         () ->
-            new CustomXmlMappingReport(
-                1L,
-                "CORSO_mapping",
-                "CORSO",
-                "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
+            mappingReport(
                 null,
                 null,
                 null,
@@ -531,16 +371,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new CustomXmlMappingReport(
-                1L,
-                "CORSO_mapping",
-                "CORSO",
-                "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
+            mappingReport(
                 null,
                 null,
                 null,
@@ -885,118 +716,66 @@ class SpreadsheetSurfaceEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
                     new DrawingMarkerReport(1, 2, 0, 0),
                     new DrawingMarkerReport(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                null,
-                null,
-                "sig123",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(null, null, null, "sig123", 10, 10)));
     assertEquals(
         "preview",
-        new DrawingObjectReport.SignatureLine(
+        signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
                     new DrawingMarkerReport(1, 2, 0, 0),
                     new DrawingMarkerReport(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                "preview",
-                null,
-                null)
-            .previewSha256());
-    assertNull(
-        new DrawingObjectReport.SignatureLine(
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, "preview", null, null))
+            .preview()
+            .orElseThrow()
+            .sha256()
+            .orElseThrow());
+    assertTrue(
+        signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
                     new DrawingMarkerReport(1, 2, 0, 0),
                     new DrawingMarkerReport(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                null,
-                null,
-                null)
-            .previewSha256());
-    assertNull(
-        new DrawingObjectReport.SignatureLine(
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, null, null, null))
+            .preview()
+            .orElseThrow()
+            .sha256()
+            .isEmpty());
+    assertTrue(
+        signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
                     new DrawingMarkerReport(1, 2, 0, 0),
                     new DrawingMarkerReport(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                null,
-                null,
-                null,
-                null,
-                null)
-            .previewSha256());
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(null, null, null, null, null, null))
+            .preview()
+            .isEmpty());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new DrawingObjectReport.SignatureLine(
+            signatureLine(
                 "Signature",
                 new DrawingAnchorReport.TwoCell(
                     new DrawingMarkerReport(1, 2, 0, 0),
                     new DrawingMarkerReport(6, 12, 0, 0),
                     ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                "{ABC}",
-                true,
-                "Review",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                42L,
-                " ",
-                10,
-                10));
+                signatureSetup("{ABC}", true, "Review", "Ada", "Finance", "ada@example.com"),
+                signaturePreview(ExcelPictureFormat.PNG, "image/png", 42L, " ", 10, 10)));
     assertEquals(
         null,
-        new CustomXmlMappingReport(
-                1L,
-                "CORSO_mapping",
-                "CORSO",
-                "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
+        mappingReport(
                 null,
                 null,
                 null,
@@ -1004,20 +783,12 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 null,
                 List.of(new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string")),
                 List.of())
-            .schemaXml());
+            .schema()
+            .xml());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new CustomXmlMappingReport(
-                1L,
-                "CORSO_mapping",
-                "CORSO",
-                "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
+            mappingReport(
                 null,
                 null,
                 null,
@@ -1084,5 +855,61 @@ class SpreadsheetSurfaceEdgeCoverageTest {
 
   private static List<ExcelChartAxisKind> kinds(List<? extends ChartAxisInput> axes) {
     return axes.stream().map(ChartAxisInput::kind).toList();
+  }
+
+  private static DrawingObjectReport.SignatureLine signatureLine(
+      String name,
+      DrawingAnchorReport anchor,
+      Optional<DrawingObjectReport.SignatureSetup> setup,
+      Optional<DrawingObjectReport.SignaturePreview> preview) {
+    return DrawingObjectReportTestSupport.signatureLine(name, anchor, setup, preview);
+  }
+
+  private static Optional<DrawingObjectReport.SignatureSetup> signatureSetup(
+      String setupId,
+      Boolean allowComments,
+      String signingInstructions,
+      String suggestedSigner,
+      String suggestedSigner2,
+      String suggestedSignerEmail) {
+    return DrawingObjectReportTestSupport.signatureSetup(
+        setupId,
+        allowComments,
+        signingInstructions,
+        suggestedSigner,
+        suggestedSigner2,
+        suggestedSignerEmail);
+  }
+
+  private static Optional<DrawingObjectReport.SignaturePreview> signaturePreview(
+      ExcelPictureFormat format,
+      String contentType,
+      Long byteSize,
+      String sha256,
+      Integer widthPixels,
+      Integer heightPixels) {
+    return DrawingObjectReportTestSupport.signaturePreview(
+        format, contentType, byteSize, sha256, widthPixels, heightPixels);
+  }
+
+  private static CustomXmlMappingReport mappingReport(
+      String schemaNamespace,
+      String schemaLanguage,
+      String schemaReference,
+      String schemaXml,
+      CustomXmlDataBindingReport dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
+        1L,
+        "CORSO_mapping",
+        "CORSO",
+        "Schema1",
+        new CustomXmlMappingReport.Settings(false, true, false, true, true),
+        new CustomXmlMappingReport.Schema(
+            schemaNamespace, schemaLanguage, schemaReference, schemaXml),
+        dataBinding,
+        linkedCells,
+        linkedTables);
   }
 }

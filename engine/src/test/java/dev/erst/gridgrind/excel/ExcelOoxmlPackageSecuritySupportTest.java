@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureOptions;
@@ -54,10 +55,10 @@ class ExcelOoxmlPackageSecuritySupportTest {
               new WorkbookReadExecutor()
                   .apply(workbook, new WorkbookReadCommand.GetPackageSecurity("security"))
                   .getFirst());
-      assertTrue(securityResult.security().encryption().encrypted());
-      assertEquals(
-          Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-          securityResult.security().encryption().mode());
+      ExcelOoxmlEncryptionSnapshot.Encrypted encryption =
+          assertInstanceOf(
+              ExcelOoxmlEncryptionSnapshot.Encrypted.class, securityResult.security().encryption());
+      assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
       assertEquals(List.of(), securityResult.security().signatures());
     }
   }
@@ -77,7 +78,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
             encryptedWorkbook.workbookPath(),
             new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
-      workbook.persistence().save(unchangedCopy, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              unchangedCopy,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     assertEquals(
         "Encrypted workbook",
@@ -93,7 +99,12 @@ class ExcelOoxmlPackageSecuritySupportTest {
           .apply(
               workbook,
               new WorkbookCellCommand.SetCell("Encrypted", "B2", ExcelCellValue.text("Mutated")));
-      workbook.persistence().save(mutatedCopy, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              mutatedCopy,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(
@@ -145,13 +156,18 @@ class ExcelOoxmlPackageSecuritySupportTest {
               () ->
                   workbook
                       .persistence()
-                      .save(resignedOutput, ExcelTempFileFactoryTestSupport.tempFileFactory()));
+                      .save(
+                          resignedOutput,
+                          dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition
+                              .REPLACE_EXISTING,
+                          ExcelTempFileFactoryTestSupport.tempFileFactory()));
       assertTrue(unsignedSaveFailure.getMessage().contains("persistence.security.signature"));
 
       workbook
           .persistence()
           .save(
               resignedOutput,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
               new ExcelOoxmlPersistenceOptions(
                   Optional.empty(),
                   Optional.of(

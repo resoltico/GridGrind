@@ -288,8 +288,7 @@ class ExcelResidualHelperCoverageTest {
       signatureShape.removeImagedata(0);
       ExcelSignatureLineSnapshot snapshot =
           signatureLineController.signatureLines(sheet).getFirst();
-      assertNull(snapshot.previewFormat());
-      assertNull(snapshot.previewContentType());
+      assertTrue(snapshot.preview().isEmpty());
       assertTrue(signatureLineController.deleteIfPresent(sheet, "OpsSignature"));
       assertFalse(signatureLineController.deleteIfPresent(sheet, "OpsSignature"));
       assertFalse(signatureLineController.hasNamedSignatureLine(sheet, "OpsSignature"));
@@ -627,10 +626,10 @@ class ExcelResidualHelperCoverageTest {
       var fakeMap =
           ExcelCustomXmlControllerTestSupport.fakeMap(ctMap, ctSchema, null, List.of(), List.of());
       ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(fakeMap);
-      assertEquals(Optional.empty(), snapshot.schemaNamespace());
-      assertEquals(Optional.empty(), snapshot.schemaLanguage());
-      assertEquals(Optional.empty(), snapshot.schemaReference());
-      assertEquals(Optional.empty(), snapshot.schemaXml());
+      assertEquals(Optional.empty(), snapshot.schema().namespace());
+      assertEquals(Optional.empty(), snapshot.schema().language());
+      assertEquals(Optional.empty(), snapshot.schema().reference());
+      assertEquals(Optional.empty(), snapshot.schema().xml());
     }
   }
 

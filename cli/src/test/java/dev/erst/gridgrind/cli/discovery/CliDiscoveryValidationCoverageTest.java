@@ -98,7 +98,7 @@ class CliDiscoveryValidationCoverageTest {
             TaskTestFixtures.narrative("Broken task for direct validation coverage"),
             profile(),
             TaskTestFixtures.interactionProfile(),
-            TaskStarterContract.selfContained("tasks/broken-request.json"),
+            TaskStarterContract.selfContained("broken-request.json"),
             new TaskWorkflow(
                 List.of(
                     new TaskPhase(
@@ -142,7 +142,7 @@ class CliDiscoveryValidationCoverageTest {
                         TaskTestFixtures.narrative("summary"),
                         profile(),
                         TaskTestFixtures.interactionProfile(),
-                        TaskStarterContract.selfContained("tasks/no-terms-request.json"),
+                        TaskStarterContract.selfContained("no-terms-request.json"),
                         TaskTestFixtures.workflow(
                             List.of(
                                 new TaskPhase(
@@ -263,13 +263,13 @@ class CliDiscoveryValidationCoverageTest {
                     new CliFailureLocation(Optional.of("steps[0]"), Optional.of(1), Optional.of(0)))
             .getMessage());
     assertEquals(
-        "suggestedRequestPath must start with examples/",
+        "requestFileName must be one portable file name, not a repository path",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new ShippedExampleEntry(
                         "BROKEN",
-                        Path.of("budget-request.json").toString(),
+                        Path.of("examples", "budget-request.json").toString(),
                         "summary",
                         ExampleWorkspaceMode.SELF_CONTAINED,
                         List.of()))

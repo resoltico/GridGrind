@@ -85,7 +85,11 @@ class GridGrindPublicSurfaceLintTest {
         unknownBySurface, repositoryRoot.resolve("README.md"), registeredIds, candidatePattern);
     try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"));
         Stream<Path> examples = Files.walk(repositoryRoot.resolve("examples"))) {
-      docs.filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".md"))
+      docs.filter(
+              path ->
+                  Files.isRegularFile(path)
+                      && path.toString().endsWith(".md")
+                      && !isArchivedReleaseHistory(path))
           .forEach(path -> collectUnknown(unknownBySurface, path, registeredIds, candidatePattern));
       examples
           .filter(path -> Files.isRegularFile(path) && path.toString().endsWith(".json"))
@@ -218,6 +222,10 @@ class GridGrindPublicSurfaceLintTest {
       }
     }
     return unknown;
+  }
+
+  private static boolean isArchivedReleaseHistory(Path path) {
+    return path.getFileName().toString().startsWith("CHANGELOG_ARCHIVE");
   }
 
   private static boolean isSuspiciousUnknownCandidate(

@@ -36,7 +36,7 @@ class JavaSourceShapeAnalyzerTest {
         }
         """);
 
-    JavaSourceShapeAnalyzer.Metrics metrics = new JavaSourceShapeAnalyzer().analyze(sourceFile, 26);
+    SourceShapeMetrics metrics = new JavaSourceShapeAnalyzer().analyze(sourceFile, 26);
 
     assertEquals(20L, metrics.lineCount());
     assertEquals(0, metrics.importCount());

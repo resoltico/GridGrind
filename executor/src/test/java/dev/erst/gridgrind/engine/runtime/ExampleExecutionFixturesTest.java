@@ -111,7 +111,7 @@ class ExampleExecutionFixturesTest {
     ExecutionInputBindings exampleBindings =
         ExecutionInputBindingsFixtureSupport.bindings(examplesDirectory);
     for (ShippedExampleEntry example : exampleCatalog().examples()) {
-      Path requestPath = workspace.resolve(example.suggestedRequestPath());
+      Path requestPath = examplesDirectory.resolve(example.requestFileName());
       WorkbookPlan request = GridGrindJson.readRequest(Files.readAllBytes(requestPath));
       GridGrindResponse.Success success =
           assertInstanceOf(
@@ -119,7 +119,7 @@ class ExampleExecutionFixturesTest {
               executor.execute(request, exampleBindings),
               () ->
                   "repository example must execute successfully in-place: "
-                      + example.suggestedRequestPath());
+                      + example.requestFileName());
       assertEquals(
           request.planId(),
           success.journal().planId(),
@@ -139,7 +139,7 @@ class ExampleExecutionFixturesTest {
             stdout,
             OutputStream.nullOutputStream());
     assertEquals(0, exitCode, "example catalog command must succeed");
-    return GridGrindCliJson.readShippedExampleCatalog(stdout.toByteArray());
+    return GridGrindCliJson.readBytes(stdout.toByteArray(), ShippedExampleCatalog.class);
   }
 
   private static List<ShippedExampleEntry> selfContainedExamples() throws IOException {
@@ -213,7 +213,7 @@ class ExampleExecutionFixturesTest {
 
   private static void copyRequiredExampleAssets(
       ShippedExampleEntry example, Path repositoryExamples, Path workspace) throws IOException {
-    for (String requiredPath : example.requiredPaths()) {
+    for (String requiredPath : example.requiredWorkspacePaths()) {
       Path sourcePath = repositoryExamples.resolve(requiredPath);
       Path targetPath = workspace.resolve(requiredPath);
       Files.createDirectories(targetPath.getParent());

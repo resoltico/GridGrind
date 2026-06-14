@@ -22,7 +22,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /** Catalog and discovery command integration tests for GridGrindCli. */
@@ -58,7 +57,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     ShippedExampleCatalog catalog =
-        GridGrindCliJson.readShippedExampleCatalog(stdout.toByteArray());
+        GridGrindCliJson.readBytes(stdout.toByteArray(), ShippedExampleCatalog.class);
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindShippedExamples.catalog(), catalog);
@@ -82,7 +81,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
             .filter(example -> "PACKAGE_SECURITY_INSPECTION".equals(example.id()))
             .findFirst()
             .orElseThrow()
-            .requiredPaths());
+            .requiredWorkspacePaths());
   }
 
   @Test
@@ -191,7 +190,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    TaskCatalog catalog = GridGrindCliJson.readTaskCatalog(stdout.toByteArray());
+    TaskCatalog catalog = GridGrindCliJson.readBytes(stdout.toByteArray(), TaskCatalog.class);
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindTaskCatalog.catalog(), catalog);
@@ -466,7 +465,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     TaskKeywordMatchReport report =
-        GridGrindCliJson.readTaskKeywordMatchReport(stdout.toByteArray());
+        GridGrindCliJson.readBytes(stdout.toByteArray(), TaskKeywordMatchReport.class);
 
     assertEquals(0, exitCode);
     assertEquals("monthly sales dashboard with charts", report.query());
@@ -487,7 +486,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     TaskKeywordMatchReport report =
-        GridGrindCliJson.readTaskKeywordMatchReport(stdout.toByteArray());
+        GridGrindCliJson.readBytes(stdout.toByteArray(), TaskKeywordMatchReport.class);
 
     assertEquals(0, exitCode);
     assertEquals(List.of("zzzz"), report.normalizedTerms());
@@ -846,163 +845,5 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
     assertEquals("RESOLVE_INPUTS", report.primaryProblem().orElseThrow().context().stage());
     assertEquals("cell text must not be blank", report.primaryProblem().orElseThrow().message());
-  }
-
-  @Test
-  void doctorRequestReturnsStructuredInvalidReportForSemanticallyInvalidRequests()
-      throws IOException {
-    Path workspace = Files.createTempDirectory("gridgrind-doctor-invalid-");
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--doctor-request", "--execution-root", workspace.toString()},
-                new ByteArrayInputStream(
-                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"OVERWRITE\" }", "[]")
-                        .getBytes(StandardCharsets.UTF_8)),
-                stdout,
-                stderr);
-
-    RequestDoctorReport report = doctorReport(stdout, stderr);
-
-    assertEquals(1, exitCode);
-    assertFalse(report.valid());
-    assertEquals(
-        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-    assertEquals("NEW", report.summary().orElseThrow().sourceType());
-  }
-
-  @Test
-  void doctorRequestWritesProblemPointerToStderrWhenResponsePathCapturesInvalidReport()
-      throws IOException {
-    Path workspace = Files.createTempDirectory("gridgrind-doctor-invalid-response-");
-    Path responsePath = Files.createTempFile("gridgrind-invalid-doctor-", ".json");
-    Files.deleteIfExists(responsePath);
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {
-                  "--doctor-request",
-                  "--execution-root",
-                  workspace.toString(),
-                  "--response",
-                  responsePath.toString()
-                },
-                new ByteArrayInputStream(
-                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"OVERWRITE\" }", "[]")
-                        .getBytes(StandardCharsets.UTF_8)),
-                stdout,
-                stderr);
-
-    RequestDoctorReport report =
-        GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
-
-    assertEquals(1, exitCode);
-    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the doctor report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for problems [INVALID_REQUEST: OVERWRITE persistence requires an"
-            + " EXISTING source; a NEW workbook has no source file to overwrite]."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
-    assertFalse(report.valid());
-    assertEquals(
-        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
-  }
-
-  @Test
-  void doctorRequestPreflightsExistingWorkbookSourcesFromTheRequestFileDirectory()
-      throws IOException {
-    Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-source-");
-    Path requestPath = requestDirectory.resolve("doctor-existing.json");
-    Files.writeString(
-        requestPath,
-        requestJson(
-            "{ \"type\": \"EXISTING\", \"path\": \"missing-workbook.xlsx\" }",
-            "{ \"type\": \"NONE\" }",
-            """
-            [
-              {
-                "stepId": "summary",
-                "target": { "type": "WORKBOOK_CURRENT" },
-                "query": { "type": "GET_WORKBOOK_SUMMARY" }
-              }
-            ]
-            """));
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--doctor-request", "--request", requestPath.toString()},
-                InputStream.nullInputStream(),
-                stdout,
-                stderr);
-
-    RequestDoctorReport report = doctorReport(stdout, stderr);
-
-    assertEquals(1, exitCode);
-    assertFalse(report.valid());
-    assertEquals(
-        GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.primaryProblem().orElseThrow().code());
-    assertEquals("OPEN_WORKBOOK", report.primaryProblem().orElseThrow().context().stage());
-    assertEquals(
-        java.util.Optional.of(requestDirectory.resolve("missing-workbook.xlsx").toString()),
-        openWorkbookContext(report).sourceWorkbookPath());
-  }
-
-  @Test
-  void doctorRequestReturnsCompactReadFailureWhenTheRequestFileCannotBeOpened() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    Path missingRequestPath =
-        Path.of("tmp", "doctor-missing-" + UUID.randomUUID() + ".json").toAbsolutePath();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--doctor-request", "--request", missingRequestPath.toString()},
-                InputStream.nullInputStream(),
-                stdout,
-                stderr);
-
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-
-    assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
-    assertEquals("doctor-request", failure.command());
-    assertEquals(java.util.Optional.of("--request"), failure.argument());
-    assertEquals("Request file not found: " + missingRequestPath, failure.message());
-  }
-
-  @Test
-  void doctorRequestRequiresExecutionRootWhenRequestArrivesOnStdin() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                new String[] {"--doctor-request"},
-                new ByteArrayInputStream(
-                    requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
-                        .getBytes(StandardCharsets.UTF_8)),
-                stdout,
-                stderr);
-
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
-
-    assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("doctor-request", failure.command());
-    assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
-    assertTrue(failure.message().contains("--execution-root"));
   }
 }

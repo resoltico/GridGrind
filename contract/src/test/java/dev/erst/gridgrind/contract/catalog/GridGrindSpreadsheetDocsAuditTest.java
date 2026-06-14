@@ -229,7 +229,7 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "Repo-asset-backed built-ins require the matching asset paths named in `requiredPaths`"),
+                    "Repo-asset-backed built-ins require the matching asset paths named in `requiredWorkspacePaths`"),
                 "examples guide must describe repo-asset-backed built-ins honestly"),
         () ->
             assertTrue(
@@ -240,12 +240,13 @@ class GridGrindSpreadsheetDocsAuditTest {
         () ->
             assertTrue(
                 normalizedExamples.contains(
-                    "machine-readable CLI example catalog exposes stable example ids, file names, summaries, a portable `workspaceMode` contract, and exact `requiredPaths`"),
+                    "machine-readable CLI example catalog exposes stable example ids, file names, summaries, a portable `requestFileName` plus `workspaceMode` contract, and exact `requiredWorkspacePaths`"),
                 "examples guide must describe the public example-catalog portability surface"),
         () ->
             assertTrue(
-                normalizedExamples.contains("exact `requiredPaths` for asset-backed examples"),
-                "examples guide must document exact requiredPaths for asset-backed examples"),
+                normalizedExamples.contains(
+                    "exact `requiredWorkspacePaths` for asset-backed examples"),
+                "examples guide must document exact requiredWorkspacePaths for asset-backed examples"),
         () ->
             assertTrue(
                 examples.contains(

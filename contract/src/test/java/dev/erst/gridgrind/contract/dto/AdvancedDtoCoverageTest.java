@@ -135,42 +135,30 @@ class AdvancedDtoCoverageTest {
             .getMessage());
 
     DrawingObjectReport.SignatureLine signatureLine =
-        new DrawingObjectReport.SignatureLine(
+        DrawingObjectReportTestSupport.signatureLine(
             "Signature 1",
             twoCell,
-            "{ABC}",
-            false,
-            "Review before signing.",
-            "Ada Lovelace",
-            "Finance",
-            "ada@example.com",
-            ExcelPictureFormat.PNG,
-            "image/png",
-            42L,
-            "sig123",
-            400,
-            150);
-    assertFalse(signatureLine.allowComments());
+            DrawingObjectReportTestSupport.signatureSetup(
+                "{ABC}",
+                false,
+                "Review before signing.",
+                "Ada Lovelace",
+                "Finance",
+                "ada@example.com"),
+            DrawingObjectReportTestSupport.signaturePreview(
+                ExcelPictureFormat.PNG, "image/png", 42L, "sig123", 400, 150));
+    assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
     assertEquals(
         "previewByteSize requires previewFormat",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DrawingObjectReport.SignatureLine(
+                    DrawingObjectReportTestSupport.signatureLine(
                         "Signature 1",
                         twoCell,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        1L,
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        DrawingObjectReportTestSupport.signaturePreview(
+                            null, null, 1L, null, null, null)))
             .getMessage());
 
     String base64 = Base64.getEncoder().encodeToString(new byte[] {1, 2, 3});
@@ -245,226 +233,48 @@ class AdvancedDtoCoverageTest {
 
   @Test
   void encryptionPaneAndColorReportsValidateBoundaries() {
-    assertFalse(
-        new OoxmlEncryptionReport(
-                false,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty())
-            .encrypted());
+    assertInstanceOf(OoxmlEncryptionReport.None.class, new OoxmlEncryptionReport.None());
     assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
+        "keyBits must be positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        0,
+                        16,
+                        100))
             .getMessage());
     assertEquals(
-        "cipherAlgorithm must not be absent",
+        "blockSize must be positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.of(1000)))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        0,
+                        100))
             .getMessage());
     assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
+        "spinCount must be zero or positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(128),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(16),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "Unencrypted package reports must not include encryption detail fields",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(1000)))
-            .getMessage());
-    assertEquals(
-        "mode must not be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.of(100)))
-            .getMessage());
-    assertEquals(
-        "keyBits must be positive when encrypted",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.empty(),
-                        Optional.of(16),
-                        Optional.of(100)))
-            .getMessage());
-    assertEquals(
-        "blockSize must be positive when encrypted",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.empty(),
-                        Optional.of(100)))
-            .getMessage());
-    assertEquals(
-        "spinCount must be zero or positive when encrypted",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "hashAlgorithm must not be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.of(1000)))
-            .getMessage());
-    assertEquals(
-        "chainingMode must not be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.empty(),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.of(1000)))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        16,
+                        -1))
             .getMessage());
 
     PaneInput.Frozen frozen = new PaneInput.Frozen(1, 0, 1, 0);
@@ -590,23 +400,8 @@ class AdvancedDtoCoverageTest {
     CustomXmlLinkedCellReport linkedCell =
         new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string");
     CustomXmlMappingReport mapping =
-        new CustomXmlMappingReport(
-            1L,
-            "CORSO_mapping",
-            "CORSO",
-            "Schema1",
-            false,
-            true,
-            false,
-            true,
-            true,
-            null,
-            null,
-            null,
-            "<xsd:schema/>",
-            dataBinding,
-            List.of(linkedCell),
-            List.of());
+        mappingReport(
+            null, null, null, "<xsd:schema/>", dataBinding, List.of(linkedCell), List.of());
     CustomXmlExportReport exported =
         new CustomXmlExportReport(mapping, "UTF-8", true, "<CORSO><NOME>Grid</NOME></CORSO>");
 
@@ -618,23 +413,7 @@ class AdvancedDtoCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CustomXmlMappingReport(
-                        0L,
-                        "CORSO_mapping",
-                        "CORSO",
-                        "Schema1",
-                        false,
-                        true,
-                        false,
-                        true,
-                        true,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        List.of(linkedCell),
-                        List.of()))
+                    mappingReport(0L, null, null, null, null, null, List.of(linkedCell), List.of()))
             .getMessage());
     assertEquals(
         "loadMode must not be negative",
@@ -889,5 +668,38 @@ class AdvancedDtoCoverageTest {
         Optional.empty(),
         Optional.empty(),
         Optional.empty());
+  }
+
+  private static CustomXmlMappingReport mappingReport(
+      String namespace,
+      String language,
+      String reference,
+      String xml,
+      CustomXmlDataBindingReport dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return mappingReport(
+        1L, namespace, language, reference, xml, dataBinding, linkedCells, linkedTables);
+  }
+
+  private static CustomXmlMappingReport mappingReport(
+      long mapId,
+      String namespace,
+      String language,
+      String reference,
+      String xml,
+      CustomXmlDataBindingReport dataBinding,
+      List<CustomXmlLinkedCellReport> linkedCells,
+      List<CustomXmlLinkedTableReport> linkedTables) {
+    return new CustomXmlMappingReport(
+        mapId,
+        "CORSO_mapping",
+        "CORSO",
+        "Schema1",
+        new CustomXmlMappingReport.Settings(false, true, false, true, true),
+        new CustomXmlMappingReport.Schema(namespace, language, reference, xml),
+        dataBinding,
+        linkedCells,
+        linkedTables);
   }
 }

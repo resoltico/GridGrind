@@ -85,7 +85,12 @@ class ExcelChartReadbackTest {
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("C2:C4")))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     rewriteWorkbookEntry(
@@ -139,7 +144,12 @@ class ExcelChartReadbackTest {
                           null,
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

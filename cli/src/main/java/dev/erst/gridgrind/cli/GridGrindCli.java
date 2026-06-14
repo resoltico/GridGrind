@@ -180,9 +180,9 @@ public final class GridGrindCli {
       OutputStream stderr,
       Optional<java.nio.file.Path> responsePathHint)
       throws IOException {
-    CliCommand command;
+    CliInvocation invocation;
     try {
-      command = CliArguments.parse(args);
+      invocation = CliArguments.parseInvocation(args);
     } catch (CliArgumentsException exception) {
       return responseWriter.writeCliFailureReport(
           responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
@@ -190,36 +190,42 @@ public final class GridGrindCli {
       return responseWriter.writeCliFailureReport(
           responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
     }
+    CliCommand command = invocation.command();
+    Optional<CliOutputFormat> outputFormat = invocation.outputFormat();
 
     return switch (command) {
       case CliCommand.Help cmd ->
-          GridGrindCliCatalogCommands.help(cmd, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.help(cmd, outputFormat, stdout, stderr, responseWriter);
       case CliCommand.Version cmd ->
-          GridGrindCliCatalogCommands.version(cmd, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.version(cmd, outputFormat, stdout, stderr, responseWriter);
       case CliCommand.License cmd ->
-          GridGrindCliCatalogCommands.license(cmd, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.license(cmd, outputFormat, stdout, stderr, responseWriter);
       case CliCommand.PrintRequestTemplate cmd ->
-          GridGrindCliCatalogCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintExample cmd ->
-          GridGrindCliCatalogCommands.example(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.example(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintExampleCatalog cmd ->
-          GridGrindCliCatalogCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskCatalog cmd ->
-          GridGrindCliCatalogCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskPlan cmd ->
-          GridGrindCliCatalogCommands.taskPlan(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskPlan(cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskKeywordMatch cmd ->
-          GridGrindCliCatalogCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
       case CliCommand.DoctorRequest doctor ->
           executionCommands.doctorRequest(doctor, stdin, stdout, stderr);
       case CliCommand.PrintProtocolCatalogIndex cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogIndex(cmd, stdout, stderr, responseWriter);
+          GridGrindCliProtocolCatalogCommands.protocolCatalogIndex(
+              cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogAll cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogAll(cmd, stdout, stderr, responseWriter);
+          GridGrindCliProtocolCatalogCommands.protocolCatalogAll(
+              cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogSearch cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogSearch(cmd, stdout, stderr, responseWriter);
+          GridGrindCliProtocolCatalogCommands.protocolCatalogSearch(
+              cmd, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogLookup cmd ->
-          GridGrindCliCatalogCommands.protocolCatalogLookup(cmd, stdout, stderr, responseWriter);
+          GridGrindCliProtocolCatalogCommands.protocolCatalogLookup(
+              cmd, stdout, stderr, responseWriter);
       case CliCommand.Execute execute -> execute(execute, stdin, stdout, stderr);
     };
   }

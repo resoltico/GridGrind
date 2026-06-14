@@ -147,60 +147,17 @@ public sealed interface ExcelDrawingObjectSnapshot
   record SignatureLine(
       String name,
       ExcelDrawingAnchor anchor,
-      @Nullable String setupId,
-      @Nullable Boolean allowComments,
-      @Nullable String signingInstructions,
-      @Nullable String suggestedSigner,
-      @Nullable String suggestedSigner2,
-      @Nullable String suggestedSignerEmail,
-      @Nullable ExcelPictureFormat previewFormat,
-      @Nullable String previewContentType,
-      @Nullable Long previewByteSize,
-      @Nullable String previewSha256,
-      @Nullable Integer previewWidthPixels,
-      @Nullable Integer previewHeightPixels)
+      java.util.Optional<ExcelSignatureLineSnapshot.Setup> setup,
+      java.util.Optional<ExcelSignatureLineSnapshot.Preview> preview)
       implements ExcelDrawingObjectSnapshot {
     public SignatureLine {
       validateCommon(name, anchor);
-      if (setupId != null && setupId.isBlank()) {
-        throw new IllegalArgumentException("setupId must not be blank");
-      }
-      if (signingInstructions != null && signingInstructions.isBlank()) {
-        throw new IllegalArgumentException("signingInstructions must not be blank");
-      }
-      if (suggestedSigner != null && suggestedSigner.isBlank()) {
-        throw new IllegalArgumentException("suggestedSigner must not be blank");
-      }
-      if (suggestedSigner2 != null && suggestedSigner2.isBlank()) {
-        throw new IllegalArgumentException("suggestedSigner2 must not be blank");
-      }
-      if (suggestedSignerEmail != null && suggestedSignerEmail.isBlank()) {
-        throw new IllegalArgumentException("suggestedSignerEmail must not be blank");
-      }
-      if (previewFormat == null && previewContentType != null) {
-        throw new IllegalArgumentException("previewContentType requires previewFormat");
-      }
-      if (previewContentType != null && previewContentType.isBlank()) {
-        throw new IllegalArgumentException("previewContentType must not be blank");
-      }
-      if (previewFormat == null && previewByteSize != null) {
-        throw new IllegalArgumentException("previewByteSize requires previewFormat");
-      }
-      if (previewByteSize != null && previewByteSize < 0L) {
-        throw new IllegalArgumentException("previewByteSize must not be negative");
-      }
-      if (previewFormat == null && previewSha256 != null) {
-        throw new IllegalArgumentException("previewSha256 requires previewFormat");
-      }
-      if (previewSha256 != null && previewSha256.isBlank()) {
-        throw new IllegalArgumentException("previewSha256 must not be blank");
-      }
-      if (previewWidthPixels != null && previewWidthPixels < 0) {
-        throw new IllegalArgumentException("previewWidthPixels must not be negative");
-      }
-      if (previewHeightPixels != null && previewHeightPixels < 0) {
-        throw new IllegalArgumentException("previewHeightPixels must not be negative");
-      }
+      setup = java.util.Objects.requireNonNullElseGet(setup, java.util.Optional::empty);
+      preview = java.util.Objects.requireNonNullElseGet(preview, java.util.Optional::empty);
+      setup.ifPresent(
+          value -> java.util.Objects.requireNonNull(value, "setup must not contain null"));
+      preview.ifPresent(
+          value -> java.util.Objects.requireNonNull(value, "preview must not contain null"));
     }
   }
 

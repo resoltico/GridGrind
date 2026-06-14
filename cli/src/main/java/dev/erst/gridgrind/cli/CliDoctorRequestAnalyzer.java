@@ -292,7 +292,7 @@ final class CliDoctorRequestAnalyzer {
     private static GridGrindProblemDetail.Problem missingFieldProblem(
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
-          new InvalidRequestException(
+          new InvalidRequestShapeException(
               "Missing required field '" + jsonPath + "'",
               Optional.of(jsonPath),
               Optional.empty(),

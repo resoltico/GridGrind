@@ -259,9 +259,9 @@ class WorkbookStepJsonDeserializerTest {
 
   @Test
   void reportsWrongShapeWithinOneSelectorFamilyAgainstTheTargetField() {
-    InvalidRequestException wrongShapeByName =
+    InvalidRequestShapeException wrongShapeByName =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     requestWithStepBody(

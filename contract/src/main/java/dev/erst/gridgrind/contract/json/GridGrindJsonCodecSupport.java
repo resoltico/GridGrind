@@ -88,7 +88,7 @@ final class GridGrindJsonCodecSupport {
       for (var entry : node.properties()) {
         String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
         if (entry.getValue().isNull()) {
-          throw new InvalidRequestException(
+          throw new InvalidRequestShapeException(
               "Missing required field '" + childPath + "'",
               Optional.of(childPath),
               Optional.empty(),
@@ -104,7 +104,7 @@ final class GridGrindJsonCodecSupport {
         JsonNode child = node.get(index);
         String childPath = path + "[" + index + "]";
         if (child.isNull()) {
-          throw new InvalidRequestException(
+          throw new InvalidRequestShapeException(
               "Missing required field '" + childPath + "'",
               Optional.of(childPath),
               Optional.empty(),
@@ -118,7 +118,7 @@ final class GridGrindJsonCodecSupport {
 
   private static void requireNonNullRoot(JsonNode node) {
     if (node.isNull()) {
-      throw new InvalidRequestException(
+      throw new InvalidRequestShapeException(
           "JSON payload must not be null",
           Optional.empty(),
           Optional.empty(),

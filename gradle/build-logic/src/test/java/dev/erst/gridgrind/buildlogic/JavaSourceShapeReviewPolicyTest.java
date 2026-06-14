@@ -48,8 +48,7 @@ class JavaSourceShapeReviewPolicyTest {
             null,
             null,
             "CLI orchestration aggregates command wiring and help surfaces.");
-    JavaSourceShapeAnalyzer.Metrics metrics =
-        new JavaSourceShapeAnalyzer.Metrics(492, 27, 1, 3, 26, 0, 8, 9, 16);
+    SourceShapeMetrics metrics = new SourceShapeMetrics(492, 27, 1, 3, 26, 0, 8, 9, 16);
 
     List<String> issues =
         JavaSourceShapeReviewPolicy.policyIssues(
@@ -101,8 +100,7 @@ class JavaSourceShapeReviewPolicyTest {
             null,
             null,
             "JSON translation surfaces own the published wire contract.");
-    JavaSourceShapeAnalyzer.Metrics metrics =
-        new JavaSourceShapeAnalyzer.Metrics(251, 14, 1, 1, 32, 24, 4, 0, 0);
+    SourceShapeMetrics metrics = new SourceShapeMetrics(251, 14, 1, 1, 32, 24, 4, 0, 0);
 
     List<String> issues =
         JavaSourceShapeReviewPolicy.policyIssues(
@@ -111,38 +109,4 @@ class JavaSourceShapeReviewPolicyTest {
     assertTrue(issues.isEmpty(), () -> "Expected no review issues, but got: " + issues);
   }
 
-  @Test
-  void flagsStalePrefixFamilyHeadroom() {
-    JavaSourceShapePolicy.Rule familyRule =
-        new JavaSourceShapePolicy.Rule(
-            0,
-            JavaSourceShapePolicy.MatchKind.PREFIX,
-            "executor/src/parityTest/java/dev/erst/gridgrind/engine/runtime/parity/",
-            "parity-probe",
-            980,
-            48,
-            null,
-            26,
-            8,
-            8,
-            8,
-            14,
-            "executor",
-            JavaSourceShapePolicy.DuplicationGuard.SKIP,
-            null,
-            null,
-            "Parity probe groups should stay split by scenario family.");
-    JavaSourceShapeAnalyzer.Metrics metrics =
-        new JavaSourceShapeAnalyzer.Metrics(812, 21, 1, 5, 33, 0, 5, 2, 8);
-
-    List<String> issues = JavaSourceShapeReviewPolicy.familyIssues(familyRule, metrics);
-
-    assertTrue(issues.size() >= 3, () -> "Expected multiple family review issues, but got: " + issues);
-    assertTrue(issues.stream().anyMatch(issue -> issue.contains("stale lines headroom 812 -> 980")));
-    assertTrue(
-        issues.stream().anyMatch(issue -> issue.contains("stale methods headroom 33 -> 48")));
-    assertTrue(
-        issues.stream()
-            .anyMatch(issue -> issue.contains("stale nestedTypes headroom 5 -> 8")));
-  }
 }

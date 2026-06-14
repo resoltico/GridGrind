@@ -31,11 +31,13 @@ public final class GridGrindShippedExamples {
 
   /** Indicates whether one built-in example is portable or requires repository assets. */
   public record ExampleRequirements(
-      ExampleWorkspaceMode workspaceMode, List<String> requiredPaths) {
+      ExampleWorkspaceMode workspaceMode, List<String> requiredWorkspacePaths) {
     public ExampleRequirements {
       Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
-      requiredPaths =
-          List.copyOf(Objects.requireNonNull(requiredPaths, "requiredPaths must not be null"));
+      requiredWorkspacePaths =
+          List.copyOf(
+              Objects.requireNonNull(
+                  requiredWorkspacePaths, "requiredWorkspacePaths must not be null"));
     }
   }
 
@@ -120,10 +122,10 @@ public final class GridGrindShippedExamples {
     ExampleRequirements requirements = requirementsFor(example);
     return new ShippedExampleEntry(
         example.id(),
-        "examples/" + example.requestFileName(),
+        example.requestFileName(),
         example.summary(),
         requirements.workspaceMode(),
-        requirements.requiredPaths());
+        requirements.requiredWorkspacePaths());
   }
 
   private static Map<String, ExampleRequirements> buildExampleRequirements() {
@@ -157,8 +159,8 @@ public final class GridGrindShippedExamples {
   }
 
   private static Map.Entry<String, ExampleRequirements> entry(
-      String id, ExampleWorkspaceMode workspaceMode, String... requiredPaths) {
-    return Map.entry(id, new ExampleRequirements(workspaceMode, List.of(requiredPaths)));
+      String id, ExampleWorkspaceMode workspaceMode, String... requiredWorkspacePaths) {
+    return Map.entry(id, new ExampleRequirements(workspaceMode, List.of(requiredWorkspacePaths)));
   }
 
   private static String requireNonBlank(String value, String fieldName) {

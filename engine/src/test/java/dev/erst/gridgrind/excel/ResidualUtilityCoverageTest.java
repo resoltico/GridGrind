@@ -24,6 +24,7 @@ import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshotSupport;
 import dev.erst.gridgrind.excel.pivot.PivotHandle;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagingURIHelper;
 import org.apache.poi.poifs.crypt.ChainingMode;
@@ -71,99 +72,72 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
                         0, false, false, false, Optional.empty()))
             .getMessage());
     assertEquals(
-        "mode must not be absent when encrypted",
+        "mode must not be null",
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
-                    new ExcelOoxmlEncryptionSnapshot(
-                        true,
-                        Optional.empty(),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(256),
-                        Optional.of(16),
-                        Optional.of(1)))
+                    new ExcelOoxmlEncryptionSnapshot.Encrypted(
+                        null,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        256,
+                        16,
+                        1))
             .getMessage());
   }
 
   @Test
   void poiBridgeAndSnapshotHelpersCoverResidualEnumAndErrorPaths() throws Exception {
-    assertEquals(
-        ExcelOoxmlEncryptionMode.AGILE, ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.agile));
-    assertEquals(
-        ExcelOoxmlEncryptionMode.STANDARD,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.standard));
-    assertEquals(
-        EncryptionMode.agile, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlEncryptionMode.AGILE));
-    assertEquals(
-        HashAlgorithm.sha256,
-        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA256));
-    assertEquals(
-        HashAlgorithm.sha384,
-        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA384));
-    assertEquals(
-        HashAlgorithm.sha512,
-        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA512));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            EncryptionMode.agile, ExcelOoxmlEncryptionMode.AGILE,
+            EncryptionMode.standard, ExcelOoxmlEncryptionMode.STANDARD),
+        ExcelOoxmlSecurityPoiBridge::fromPoi,
+        ExcelOoxmlSecurityPoiBridge::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlSignatureDigestAlgorithm.SHA256, HashAlgorithm.sha256,
+            ExcelOoxmlSignatureDigestAlgorithm.SHA384, HashAlgorithm.sha384,
+            ExcelOoxmlSignatureDigestAlgorithm.SHA512, HashAlgorithm.sha512),
+        ExcelOoxmlSecurityPoiBridge::toPoi);
 
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.RC4, ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.rc4));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.AES_128,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.aes128));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.AES_192,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.aes192));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.AES_256,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.aes256));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.RC2, ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.rc2));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.DES, ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.des));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.TRIPLE_DES,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.des3));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.TRIPLE_DES_112,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.des3_112));
-    assertEquals(
-        ExcelOoxmlCipherAlgorithm.RSA, ExcelOoxmlSecurityPoiBridge.fromPoi(CipherAlgorithm.rsa));
+    EnumMappingAssertions.assertMappings(
+        Map.ofEntries(
+            Map.entry(CipherAlgorithm.rc4, ExcelOoxmlCipherAlgorithm.RC4),
+            Map.entry(CipherAlgorithm.aes128, ExcelOoxmlCipherAlgorithm.AES_128),
+            Map.entry(CipherAlgorithm.aes192, ExcelOoxmlCipherAlgorithm.AES_192),
+            Map.entry(CipherAlgorithm.aes256, ExcelOoxmlCipherAlgorithm.AES_256),
+            Map.entry(CipherAlgorithm.rc2, ExcelOoxmlCipherAlgorithm.RC2),
+            Map.entry(CipherAlgorithm.des, ExcelOoxmlCipherAlgorithm.DES),
+            Map.entry(CipherAlgorithm.des3, ExcelOoxmlCipherAlgorithm.TRIPLE_DES),
+            Map.entry(CipherAlgorithm.des3_112, ExcelOoxmlCipherAlgorithm.TRIPLE_DES_112),
+            Map.entry(CipherAlgorithm.rsa, ExcelOoxmlCipherAlgorithm.RSA)),
+        ExcelOoxmlSecurityPoiBridge::fromPoi);
 
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.NONE, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.none));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.SHA_1, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.sha1));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.SHA_224, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.sha224));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.SHA_256, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.sha256));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.SHA_384, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.sha384));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.SHA_512, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.sha512));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.MD2, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.md2));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.MD4, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.md4));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.MD5, ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.md5));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.RIPEMD_128,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.ripemd128));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.RIPEMD_160,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.ripemd160));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.RIPEMD_256,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.ripemd256));
-    assertEquals(
-        ExcelOoxmlHashAlgorithm.WHIRLPOOL,
-        ExcelOoxmlSecurityPoiBridge.fromPoi(HashAlgorithm.whirlpool));
+    EnumMappingAssertions.assertMappings(
+        Map.ofEntries(
+            Map.entry(HashAlgorithm.none, ExcelOoxmlHashAlgorithm.NONE),
+            Map.entry(HashAlgorithm.sha1, ExcelOoxmlHashAlgorithm.SHA_1),
+            Map.entry(HashAlgorithm.sha224, ExcelOoxmlHashAlgorithm.SHA_224),
+            Map.entry(HashAlgorithm.sha256, ExcelOoxmlHashAlgorithm.SHA_256),
+            Map.entry(HashAlgorithm.sha384, ExcelOoxmlHashAlgorithm.SHA_384),
+            Map.entry(HashAlgorithm.sha512, ExcelOoxmlHashAlgorithm.SHA_512),
+            Map.entry(HashAlgorithm.md2, ExcelOoxmlHashAlgorithm.MD2),
+            Map.entry(HashAlgorithm.md4, ExcelOoxmlHashAlgorithm.MD4),
+            Map.entry(HashAlgorithm.md5, ExcelOoxmlHashAlgorithm.MD5),
+            Map.entry(HashAlgorithm.ripemd128, ExcelOoxmlHashAlgorithm.RIPEMD_128),
+            Map.entry(HashAlgorithm.ripemd160, ExcelOoxmlHashAlgorithm.RIPEMD_160),
+            Map.entry(HashAlgorithm.ripemd256, ExcelOoxmlHashAlgorithm.RIPEMD_256),
+            Map.entry(HashAlgorithm.whirlpool, ExcelOoxmlHashAlgorithm.WHIRLPOOL)),
+        ExcelOoxmlSecurityPoiBridge::fromPoi);
 
-    assertEquals(ExcelOoxmlChainingMode.ECB, ExcelOoxmlSecurityPoiBridge.fromPoi(ChainingMode.ecb));
-    assertEquals(ExcelOoxmlChainingMode.CBC, ExcelOoxmlSecurityPoiBridge.fromPoi(ChainingMode.cbc));
-    assertEquals(ExcelOoxmlChainingMode.CFB, ExcelOoxmlSecurityPoiBridge.fromPoi(ChainingMode.cfb));
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ChainingMode.ecb, ExcelOoxmlChainingMode.ECB,
+            ChainingMode.cbc, ExcelOoxmlChainingMode.CBC,
+            ChainingMode.cfb, ExcelOoxmlChainingMode.CFB),
+        ExcelOoxmlSecurityPoiBridge::fromPoi);
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       CTColor automatic = CTColor.Factory.newInstance();

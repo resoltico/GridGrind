@@ -15,7 +15,7 @@ class GridGrindTaskCatalogTest {
   void exposesDeterministicTaskCatalogEntries() throws IOException {
     TaskCatalog catalog = GridGrindTaskCatalog.catalog();
     TaskCatalog decoded =
-        GridGrindCliJson.readTaskCatalog(GridGrindCliJson.writeTaskCatalogBytes(catalog));
+        GridGrindCliJson.readBytes(GridGrindCliJson.writeBytes(catalog), TaskCatalog.class);
 
     assertFalse(catalog.tasks().isEmpty());
     assertEquals(catalog, decoded);
@@ -51,7 +51,7 @@ class GridGrindTaskCatalogTest {
             TaskTestFixtures.narrative("one"),
             profile(),
             TaskTestFixtures.interactionProfile(),
-            TaskStarterContract.selfContained("tasks/duplicate-request.json"),
+            TaskStarterContract.selfContained("duplicate-request.json"),
             TaskTestFixtures.workflow(java.util.List.of(newSourcePhase)));
     TaskEntry right =
         new TaskEntry(
@@ -60,7 +60,7 @@ class GridGrindTaskCatalogTest {
             TaskTestFixtures.narrative("two"),
             profile(),
             TaskTestFixtures.interactionProfile(),
-            TaskStarterContract.selfContained("tasks/duplicate-request.json"),
+            TaskStarterContract.selfContained("duplicate-request.json"),
             TaskTestFixtures.workflow(
                 java.util.List.of(
                     new TaskPhase(

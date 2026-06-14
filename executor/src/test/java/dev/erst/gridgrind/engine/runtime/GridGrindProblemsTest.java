@@ -20,6 +20,7 @@ import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
 import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.time.DateTimeException;
 import java.util.List;
 import java.util.Optional;
@@ -349,5 +350,40 @@ class GridGrindProblemsTest {
             ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
             ProblemContextRequestSurfaces.JsonLocation.unavailable());
     assertSame(readContext, GridGrindProblems.enrichContext(readContext, anonymous));
+  }
+
+  @Test
+  void persistenceCollisionMessagesExplainSaveAsWriteOwnership() {
+    ProblemContext.PersistWorkbook context =
+        new ProblemContext.PersistWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+            ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/output.xlsx"));
+
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblems.fromException(
+            new FileAlreadyExistsException("/tmp/output.xlsx"), context);
+
+    assertEquals(GridGrindProblemCode.IO_ERROR, problem.code());
+    assertEquals(
+        "Could not write workbook to /tmp/output.xlsx: already exists; SAVE_AS requires a new"
+            + " destination path and never replaces an existing workbook implicitly",
+        problem.message());
+    assertEquals(problem.message(), problem.causes().getFirst().message());
+  }
+
+  @Test
+  void persistenceCollisionFallsBackToRawFilesystemMessageWhenNoSaveAsPathExists() {
+    ProblemContext.PersistWorkbook context =
+        new ProblemContext.PersistWorkbook(
+            ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE"),
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource(
+                "/tmp/source.xlsx"));
+
+    GridGrindProblemDetail.Problem problem =
+        GridGrindProblems.fromException(
+            new FileAlreadyExistsException("/tmp/source.xlsx"), context);
+
+    assertEquals("/tmp/source.xlsx", problem.message());
+    assertEquals(problem.message(), problem.causes().getFirst().message());
   }
 }

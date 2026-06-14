@@ -10,7 +10,6 @@ import dev.erst.gridgrind.contract.dto.FormulaExternalWorkbookInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
 import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
-import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
@@ -59,12 +58,6 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "Journal summary of the authored persistence policy.",
               List.of("path")),
           plainTypeDescriptor(
-              "executionJournalPhaseType",
-              ExecutionJournal.Phase.class,
-              "ExecutionJournalPhase",
-              "One timed execution phase with status, timestamps, and duration.",
-              List.of("startedAt", "finishedAt")),
-          plainTypeDescriptor(
               "executionJournalStepType",
               ExecutionJournal.Step.class,
               "ExecutionJournalStep",
@@ -90,11 +83,18 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "Top-level calculation preflight and execution timings for one request.",
               List.of()),
           plainTypeDescriptor(
-              "executionJournalOutcomeType",
-              ExecutionJournal.Outcome.class,
-              "ExecutionJournalOutcome",
-              "Final outcome summary for one execution journal.",
-              List.of("failedStepIndex", "failedStepId", "failureCode")),
+              "executionJournalTimingType",
+              ExecutionJournal.Timing.class,
+              "ExecutionJournalTiming",
+              "Measured timestamps and duration for one execution phase that actually ran.",
+              List.of()),
+          plainTypeDescriptor(
+              "executionJournalFailureStepType",
+              ExecutionJournal.FailureStep.class,
+              "ExecutionJournalFailureStep",
+              "Canonical failing-step reference recorded when an execution failure is attributable"
+                  + " to one authored step.",
+              List.of()),
           plainTypeDescriptor(
               "executionJournalEventType",
               ExecutionJournal.Event.class,
@@ -205,19 +205,18 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "Factual OOXML package-security report covering encryption and package signatures.",
               List.of()),
           plainTypeDescriptor(
-              "ooxmlEncryptionReportType",
-              OoxmlEncryptionReport.class,
-              "OoxmlEncryptionReport",
-              "Factual OOXML package-encryption report for one workbook package."
-                  + " Detail fields are present only when encrypted=true.",
-              List.of()),
-          plainTypeDescriptor(
               "ooxmlSignatureReportType",
               OoxmlSignatureReport.class,
               "OoxmlSignatureReport",
               "Factual OOXML package-signature report for one signature part."
                   + " state reflects the currently loaded workbook package, including"
                   + " INVALIDATED_BY_MUTATION for source signatures after in-memory edits.",
+              List.of("signer")),
+          plainTypeDescriptor(
+              "ooxmlSignatureSignerIdentityType",
+              OoxmlSignatureReport.SignerIdentity.class,
+              "OoxmlSignatureSignerIdentity",
+              "Signer identity material attached to one OOXML package signature report.",
               List.of()),
           plainTypeDescriptor(
               "formulaExternalWorkbookInputType",

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageFileSupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
@@ -17,21 +18,26 @@ final class ExcelWorkbookPersistenceSupport {
   static void save(
       ExcelWorkbook workbook,
       Path workbookPath,
+      WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
     Objects.requireNonNull(persistenceOptions, "persistenceOptions must not be null");
+    Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
     if (persistenceOptions.isEmpty() && !workbook.context().loadedPackageSecurity().isSecure()) {
-      savePlainWorkbook(workbook, workbookPath);
+      savePlainWorkbook(workbook, workbookPath, writeDisposition);
       return;
     }
     ExcelOoxmlPackageSecuritySupport.saveWorkbook(
-        workbook, workbookPath, persistenceOptions, tempFileFactory);
+        workbook, workbookPath, writeDisposition, persistenceOptions, tempFileFactory);
   }
 
-  static void savePlainWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
+  static void savePlainWorkbook(
+      ExcelWorkbook workbook, Path workbookPath, WorkbookArtifactWriteDisposition writeDisposition)
+      throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+    Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
 
     Path absolutePath = workbookPath.toAbsolutePath();
     Files.createDirectories(absolutePath.getParent());
@@ -42,9 +48,11 @@ final class ExcelWorkbookPersistenceSupport {
     ExcelTableHeaderSyncSupport.syncAllHeaders(workbook.context().workbook());
     ExcelWorkbookDocumentMetadataSupport.normalizeForSave(workbook.context().workbook());
 
-    try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
+    try (OutputStream outputStream =
+        ExcelOoxmlPackageFileSupport.newWorkbookOutputStream(absolutePath, writeDisposition)) {
       workbook.context().workbook().write(outputStream);
     }
+    ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(absolutePath);
   }
 
   static ExcelOoxmlPackageSecuritySnapshot packageSecurity(ExcelWorkbook workbook) {

@@ -178,54 +178,70 @@ final class WorkbookInvariantWorkbookSurfaceChecks {
 
   static void requireSignatureLineDrawingObjectShape(
       DrawingObjectReport.SignatureLine signatureLine) {
-    if (signatureLine.setupId() != null) {
-      WorkbookInvariantChecks.requireNonBlank(signatureLine.setupId(), "signature line setupId");
-    }
-    if (signatureLine.signingInstructions() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.signingInstructions(), "signature line signingInstructions");
-    }
-    if (signatureLine.suggestedSigner() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.suggestedSigner(), "signature line suggestedSigner");
-    }
-    if (signatureLine.suggestedSigner2() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.suggestedSigner2(), "signature line suggestedSigner2");
-    }
-    if (signatureLine.suggestedSignerEmail() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.suggestedSignerEmail(), "signature line suggestedSignerEmail");
-    }
-    if (signatureLine.previewContentType() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.previewContentType(), "signature line previewContentType");
-      WorkbookInvariantChecks.require(
-          signatureLine.previewFormat() != null, "signature line previewFormat must exist");
-    }
-    if (signatureLine.previewByteSize() != null) {
-      WorkbookInvariantChecks.require(
-          signatureLine.previewByteSize() >= 0L,
-          "signature line previewByteSize must not be negative");
-      WorkbookInvariantChecks.require(
-          signatureLine.previewFormat() != null, "signature line previewFormat must exist");
-    }
-    if (signatureLine.previewSha256() != null) {
-      WorkbookInvariantChecks.requireNonBlank(
-          signatureLine.previewSha256(), "signature line previewSha256");
-      WorkbookInvariantChecks.require(
-          signatureLine.previewFormat() != null, "signature line previewFormat must exist");
-    }
-    if (signatureLine.previewWidthPixels() != null) {
-      WorkbookInvariantChecks.require(
-          signatureLine.previewWidthPixels() >= 0,
-          "signature line previewWidthPixels must not be negative");
-    }
-    if (signatureLine.previewHeightPixels() != null) {
-      WorkbookInvariantChecks.require(
-          signatureLine.previewHeightPixels() >= 0,
-          "signature line previewHeightPixels must not be negative");
-    }
+    signatureLine
+        .setup()
+        .ifPresent(
+            setup -> {
+              setup
+                  .setupId()
+                  .ifPresent(
+                      setupId ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              setupId, "signature line setupId"));
+              setup
+                  .signingInstructions()
+                  .ifPresent(
+                      signingInstructions ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              signingInstructions, "signature line signingInstructions"));
+              setup
+                  .suggestedSigner()
+                  .ifPresent(
+                      suggestedSigner ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              suggestedSigner, "signature line suggestedSigner"));
+              setup
+                  .suggestedSigner2()
+                  .ifPresent(
+                      suggestedSigner2 ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              suggestedSigner2, "signature line suggestedSigner2"));
+              setup
+                  .suggestedSignerEmail()
+                  .ifPresent(
+                      suggestedSignerEmail ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              suggestedSignerEmail, "signature line suggestedSignerEmail"));
+            });
+    signatureLine
+        .preview()
+        .ifPresent(
+            preview -> {
+              WorkbookInvariantChecks.requireNonBlank(
+                  preview.contentType(), "signature line previewContentType");
+              WorkbookInvariantChecks.require(
+                  preview.byteSize() >= 0L, "signature line previewByteSize must not be negative");
+              preview
+                  .sha256()
+                  .ifPresent(
+                      previewSha256 ->
+                          WorkbookInvariantChecks.requireNonBlank(
+                              previewSha256, "signature line previewSha256"));
+              preview
+                  .widthPixels()
+                  .ifPresent(
+                      previewWidthPixels ->
+                          WorkbookInvariantChecks.require(
+                              previewWidthPixels >= 0,
+                              "signature line previewWidthPixels must not be negative"));
+              preview
+                  .heightPixels()
+                  .ifPresent(
+                      previewHeightPixels ->
+                          WorkbookInvariantChecks.require(
+                              previewHeightPixels >= 0,
+                              "signature line previewHeightPixels must not be negative"));
+            });
   }
 
   static void requireDrawingObjectPayloadShape(DrawingObjectPayloadReport payload) {

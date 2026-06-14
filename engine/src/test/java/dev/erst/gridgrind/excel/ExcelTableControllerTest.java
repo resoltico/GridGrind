@@ -35,7 +35,7 @@ class ExcelTableControllerTest {
 
       assertEquals(1, tables.size());
       assertEquals("Queue", tables.getFirst().name());
-      assertTrue(tables.getFirst().hasAutofilter());
+      assertTrue(tables.getFirst().behavior().hasAutofilter());
       assertFalse(workbook.sheet("Ops").xssfSheet().getCTWorksheet().isSetAutoFilter());
       assertEquals(List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")), autofilters);
     }
@@ -65,7 +65,7 @@ class ExcelTableControllerTest {
 
       assertEquals(1, tables.size());
       assertEquals("A1:B3", tables.getFirst().range());
-      assertEquals(0, tables.getFirst().totalsRowCount());
+      assertEquals(0, tables.getFirst().structure().totalsRowCount());
       assertInstanceOf(ExcelTableStyleSnapshot.None.class, tables.getFirst().style());
       assertEquals(
           List.of(new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
@@ -102,7 +102,7 @@ class ExcelTableControllerTest {
       ExcelTableSnapshot table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
 
-      assertEquals("sum", table.columns().get(1).totalsRowFunction());
+      assertEquals("sum", table.structure().columns().get(1).totalsRowFunction());
     }
   }
 
@@ -136,18 +136,19 @@ class ExcelTableControllerTest {
 
       ExcelTableSnapshot authored =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      assertEquals("Office queue", authored.comment());
-      assertTrue(authored.published());
-      assertTrue(authored.insertRow());
-      assertTrue(authored.insertRowShift());
-      assertEquals("Hdr", authored.headerRowCellStyle());
-      assertEquals("Data", authored.dataCellStyle());
-      assertEquals("Totals", authored.totalsRowCellStyle());
-      assertEquals("OwnerKey", authored.columns().get(0).uniqueName());
-      assertEquals("Total", authored.columns().get(0).totalsRowLabel());
-      assertEquals("sum", authored.columns().get(1).totalsRowFunction());
-      assertEquals("UPPER([@Task])", authored.columns().get(1).calculatedColumnFormula());
-      assertFalse(authored.hasAutofilter());
+      assertEquals("Office queue", authored.presentation().comment().orElseThrow());
+      assertTrue(authored.behavior().published());
+      assertTrue(authored.behavior().insertRow());
+      assertTrue(authored.behavior().insertRowShift());
+      assertEquals("Hdr", authored.presentation().headerRowCellStyle().orElseThrow());
+      assertEquals("Data", authored.presentation().dataCellStyle().orElseThrow());
+      assertEquals("Totals", authored.presentation().totalsRowCellStyle().orElseThrow());
+      assertEquals("OwnerKey", authored.structure().columns().get(0).uniqueName());
+      assertEquals("Total", authored.structure().columns().get(0).totalsRowLabel());
+      assertEquals("sum", authored.structure().columns().get(1).totalsRowFunction());
+      assertEquals(
+          "UPPER([@Task])", authored.structure().columns().get(1).calculatedColumnFormula());
+      assertFalse(authored.behavior().hasAutofilter());
 
       controller.setTable(
           workbook,
@@ -171,15 +172,16 @@ class ExcelTableControllerTest {
 
       ExcelTableSnapshot updated =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      assertEquals("Updated queue", updated.comment());
-      assertEquals("Hdr2", updated.headerRowCellStyle());
-      assertEquals("Data2", updated.dataCellStyle());
-      assertEquals("Totals2", updated.totalsRowCellStyle());
-      assertEquals("OwnerKey2", updated.columns().get(0).uniqueName());
-      assertEquals("Overall", updated.columns().get(0).totalsRowLabel());
-      assertEquals("average", updated.columns().get(1).totalsRowFunction());
-      assertEquals("LOWER([@Task])", updated.columns().get(1).calculatedColumnFormula());
-      assertTrue(updated.hasAutofilter());
+      assertEquals("Updated queue", updated.presentation().comment().orElseThrow());
+      assertEquals("Hdr2", updated.presentation().headerRowCellStyle().orElseThrow());
+      assertEquals("Data2", updated.presentation().dataCellStyle().orElseThrow());
+      assertEquals("Totals2", updated.presentation().totalsRowCellStyle().orElseThrow());
+      assertEquals("OwnerKey2", updated.structure().columns().get(0).uniqueName());
+      assertEquals("Overall", updated.structure().columns().get(0).totalsRowLabel());
+      assertEquals("average", updated.structure().columns().get(1).totalsRowFunction());
+      assertEquals(
+          "LOWER([@Task])", updated.structure().columns().get(1).calculatedColumnFormula());
+      assertTrue(updated.behavior().hasAutofilter());
 
       controller.setTable(
           workbook,
@@ -203,17 +205,17 @@ class ExcelTableControllerTest {
 
       ExcelTableSnapshot cleared =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      assertEquals("", cleared.comment());
-      assertFalse(cleared.published());
-      assertFalse(cleared.insertRow());
-      assertFalse(cleared.insertRowShift());
-      assertEquals("", cleared.headerRowCellStyle());
-      assertEquals("", cleared.dataCellStyle());
-      assertEquals("", cleared.totalsRowCellStyle());
-      assertEquals("", cleared.columns().get(0).uniqueName());
-      assertEquals("", cleared.columns().get(0).totalsRowLabel());
-      assertEquals("", cleared.columns().get(1).totalsRowFunction());
-      assertEquals("", cleared.columns().get(1).calculatedColumnFormula());
+      assertTrue(cleared.presentation().comment().isEmpty());
+      assertFalse(cleared.behavior().published());
+      assertFalse(cleared.behavior().insertRow());
+      assertFalse(cleared.behavior().insertRowShift());
+      assertTrue(cleared.presentation().headerRowCellStyle().isEmpty());
+      assertTrue(cleared.presentation().dataCellStyle().isEmpty());
+      assertTrue(cleared.presentation().totalsRowCellStyle().isEmpty());
+      assertEquals("", cleared.structure().columns().get(0).uniqueName());
+      assertEquals("", cleared.structure().columns().get(0).totalsRowLabel());
+      assertEquals("", cleared.structure().columns().get(1).totalsRowFunction());
+      assertEquals("", cleared.structure().columns().get(1).calculatedColumnFormula());
     }
   }
 
@@ -243,7 +245,11 @@ class ExcelTableControllerTest {
               "",
               List.of()));
       assertTrue(
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().hasAutofilter());
+          controller
+              .tables(workbook, new ExcelTableSelection.All())
+              .getFirst()
+              .behavior()
+              .hasAutofilter());
 
       controller.setTable(
           workbook,
@@ -266,7 +272,11 @@ class ExcelTableControllerTest {
       assertFalse(
           workbook.sheet("Ops").xssfSheet().getTables().getFirst().getCTTable().isSetAutoFilter());
       assertFalse(
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().hasAutofilter());
+          controller
+              .tables(workbook, new ExcelTableSelection.All())
+              .getFirst()
+              .behavior()
+              .hasAutofilter());
     }
   }
 
@@ -343,8 +353,8 @@ class ExcelTableControllerTest {
 
       ExcelTableSnapshot table =
           controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
-      assertEquals(2, table.columnNames().size());
-      assertTrue(table.columnNames().stream().allMatch(name -> !name.isBlank()));
+      assertEquals(2, table.structure().columnNames().size());
+      assertTrue(table.structure().columnNames().stream().allMatch(name -> !name.isBlank()));
       assertEquals(
           List.of(), controller.tableHealthFindings(workbook, new ExcelTableSelection.All()));
     }
@@ -987,16 +997,29 @@ class ExcelTableControllerTest {
       assertEquals("QQQQq", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals(
           List.of("QQQQq", "Task"),
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
+          controller
+              .tables(workbook, new ExcelTableSelection.All())
+              .getFirst()
+              .structure()
+              .columnNames());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("QQQQq", "Task"),
-          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
+          controller
+              .tables(reopened, new ExcelTableSelection.All())
+              .getFirst()
+              .structure()
+              .columnNames());
     }
   }
 
@@ -1033,14 +1056,19 @@ class ExcelTableControllerTest {
               .toList()
               .contains(AnalysisFindingCode.TABLE_BLANK_HEADER));
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelTableSnapshot table =
           controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
-      assertEquals(List.of("", "Lane"), table.columnNames());
+      assertEquals(List.of("", "Lane"), table.structure().columnNames());
       assertTrue(
           controller.tableHealthFindings(reopened, new ExcelTableSelection.All()).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
@@ -1085,16 +1113,29 @@ class ExcelTableControllerTest {
           "2026-02-06", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
-          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
+          controller
+              .tables(workbook, new ExcelTableSelection.All())
+              .getFirst()
+              .structure()
+              .columnNames());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
-          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
+          controller
+              .tables(reopened, new ExcelTableSelection.All())
+              .getFirst()
+              .structure()
+              .columnNames());
     }
   }
 
@@ -1134,14 +1175,23 @@ class ExcelTableControllerTest {
           "2026-02-06 00:19:17",
           table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals(
           List.of("2026-02-06", "2026-06-26"),
-          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
+          controller
+              .tables(reopened, new ExcelTableSelection.All())
+              .getFirst()
+              .structure()
+              .columnNames());
     }
   }
 

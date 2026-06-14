@@ -151,6 +151,22 @@ class CliArgumentsTest {
   }
 
   @Test
+  void immediateWordAliasesParseIntoTheirCanonicalImmediateCommands() {
+    CliCommand.Help overview =
+        assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
+    CliCommand.Help protocol =
+        assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help-protocol"}));
+    CliCommand.Help guidance =
+        assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help-guidance"}));
+    assertInstanceOf(CliCommand.Version.class, CliArguments.parse(new String[] {"version"}));
+    assertInstanceOf(CliCommand.License.class, CliArguments.parse(new String[] {"license"}));
+
+    assertEquals(CliCommand.HelpTopic.OVERVIEW, overview.topic());
+    assertEquals(CliCommand.HelpTopic.PROTOCOL, protocol.topic());
+    assertEquals(CliCommand.HelpTopic.GUIDANCE, guidance.topic());
+  }
+
+  @Test
   void printExampleRejectsMissingAndDuplicateLookupFlags() {
     CliArgumentsException missing =
         assertThrows(
@@ -325,12 +341,11 @@ class CliArgumentsTest {
   }
 
   @Test
-  void bareHelpAliasIsRejected() {
-    CliArgumentsException exception =
-        assertThrows(CliArgumentsException.class, () -> CliArguments.parse(new String[] {"help"}));
+  void bareHelpAliasResolvesToTheHelpCommand() {
+    CliCommand.Help command =
+        assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
 
-    assertEquals("help", exception.argument());
-    assertEquals("Unknown argument: help", exception.getMessage());
+    assertEquals(CliCommand.HelpTopic.OVERVIEW, command.topic());
   }
 
   @Test

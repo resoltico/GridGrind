@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
@@ -141,15 +142,9 @@ final class ExecutionJournalRecorder {
         calculation,
         persistencePhase,
         close,
-        List.copyOf(steps),
-        new ExecutionJournal.Outcome(
-            ExecutionJournal.Status.SUCCEEDED,
-            plannedStepCount,
-            completedStepCount(),
-            outcomeDurationMillis(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty()),
+        journalSteps(),
+        ExecutionJournal.Outcome.succeeded(
+            plannedStepCount, completedStepCount(), outcomeDurationMillis()),
         level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
   }
 
@@ -181,16 +176,20 @@ final class ExecutionJournalRecorder {
         calculation,
         persistencePhase,
         close,
-        List.copyOf(steps),
-        new ExecutionJournal.Outcome(
-            ExecutionJournal.Status.FAILED,
+        journalSteps(),
+        ExecutionJournal.Outcome.failed(
             plannedStepCount,
             completedStepCount(),
             outcomeDurationMillis(),
-            Optional.ofNullable(failedStepIndex),
-            Optional.ofNullable(failedStepId),
-            Optional.ofNullable(failureCode)),
+            Objects.requireNonNull(failureCode, "failureCode must not be null"),
+            failedStepIndex == null || failedStepId == null
+                ? Optional.empty()
+                : Optional.of(new ExecutionJournal.FailureStep(failedStepIndex, failedStepId))),
         level == ExecutionJournalLevel.VERBOSE ? List.copyOf(events) : List.of());
+  }
+
+  private List<ExecutionJournal.Step> journalSteps() {
+    return level == ExecutionJournalLevel.SUMMARY ? List.of() : List.copyOf(steps);
   }
 
   private int completedStepCount() {
@@ -253,27 +252,36 @@ final class ExecutionJournalRecorder {
     }
 
     ExecutionJournal.Phase succeed() {
-      return finish(ExecutionJournal.Status.SUCCEEDED, "succeeded");
+      return finish("succeeded", true);
     }
 
     ExecutionJournal.Phase fail(String detail) {
-      return finish(ExecutionJournal.Status.FAILED, detail);
+      return finish(detail, false);
     }
 
-    private ExecutionJournal.Phase finish(ExecutionJournal.Status status, String detail) {
+    private ExecutionJournal.Phase finish(String detail, boolean succeeded) {
       if (finished) {
         throw new IllegalStateException("phase already finished: " + category);
       }
       finished = true;
-      ExecutionJournal.Phase phase =
-          new ExecutionJournal.Phase(
-              status,
-              Optional.ofNullable(startedAt),
-              Optional.ofNullable(recordsTiming() ? Instant.now().toString() : null),
-              recordsTiming() ? elapsedMillis(startedAtNanos) : 0L);
+      ExecutionJournal.Phase phase = finishedPhase(succeeded);
       consumer.accept(phase);
       emit(category, detail, stepIndex, stepId);
       return phase;
+    }
+
+    private ExecutionJournal.Phase finishedPhase(boolean succeeded) {
+      if (!recordsTiming()) {
+        return succeeded
+            ? ExecutionJournal.Phase.succeededWithoutTiming()
+            : ExecutionJournal.Phase.failedWithoutTiming();
+      }
+      String phaseStartedAt = Objects.requireNonNull(startedAt, "startedAt must not be null");
+      String finishedAt = Instant.now().toString();
+      long durationMillis = elapsedMillis(startedAtNanos);
+      return succeeded
+          ? ExecutionJournal.Phase.succeeded(phaseStartedAt, finishedAt, durationMillis)
+          : ExecutionJournal.Phase.failed(phaseStartedAt, finishedAt, durationMillis);
     }
   }
 

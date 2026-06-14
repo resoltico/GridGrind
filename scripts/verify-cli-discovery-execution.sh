@@ -242,12 +242,12 @@ def execute_plan(
     ordinal: int,
     total: int,
     request_command: list[str],
-    suggested_request_path: str,
-    required_paths: list[str],
+    request_file_name: str,
+    required_workspace_paths: list[str],
 ) -> None:
     workspace = temp_root / kind / stable_id.lower()
     workspace.mkdir(parents=True, exist_ok=True)
-    request_path = workspace / suggested_request_path
+    request_path = workspace / request_file_name
     request_path.parent.mkdir(parents=True, exist_ok=True)
     doctor_path = workspace / "doctor.json"
     response_path = workspace / "response.json"
@@ -268,7 +268,7 @@ def execute_plan(
         die(f"{kind} {stable_id} did not create request file {request_path}")
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} copying required assets")
-    copy_required_assets(request_path.parent, required_paths)
+    copy_required_assets(request_path.parent, required_workspace_paths)
 
     progress(f"Discovery execution {kind} {ordinal}/{total}: {stable_id} doctoring request")
     doctor = run(
@@ -340,8 +340,8 @@ for index, example in enumerate(example_entries, start=1):
         index,
         len(example_entries),
         ["--print-example", "--lookup", example["id"]],
-        example["suggestedRequestPath"],
-        example["requiredPaths"],
+        example["requestFileName"],
+        example["requiredWorkspacePaths"],
     )
 
 for index, task in enumerate(task_entries, start=1):
@@ -352,8 +352,8 @@ for index, task in enumerate(task_entries, start=1):
         index,
         len(task_entries),
         ["--print-task-plan", "--lookup", task["id"]],
-        starter["suggestedRequestPath"],
-        starter["requiredPaths"],
+        starter["requestFileName"],
+        starter["requiredWorkspacePaths"],
     )
 PY
 

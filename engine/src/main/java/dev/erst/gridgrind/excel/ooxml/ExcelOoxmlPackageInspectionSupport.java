@@ -42,35 +42,24 @@ public final class ExcelOoxmlPackageInspectionSupport {
 
   /** Converts one POI signature part into the public GridGrind signature snapshot. */
   public static ExcelOoxmlSignatureSnapshot signatureSnapshot(SignaturePart signaturePart) {
-    X509Certificate signer = signaturePart.getSigner();
+    X509Certificate signerCertificate = signaturePart.getSigner();
     return new ExcelOoxmlSignatureSnapshot(
         signaturePart.getPackagePart().getPartName().getName(),
-        signerSubject(signer),
-        signerIssuer(signer),
-        signerSerialNumber(signer),
+        signerIdentity(signerCertificate),
         signaturePart.validate()
             ? ExcelOoxmlSignatureState.VALID
             : ExcelOoxmlSignatureState.INVALID);
   }
 
-  /** Returns the signer subject distinguished name when one certificate is present. */
-  public static Optional<String> signerSubject(@Nullable X509Certificate signer) {
+  /** Returns the factual signer identity when one certificate is present. */
+  public static Optional<ExcelOoxmlSignatureSnapshot.SignerIdentity> signerIdentity(
+      @Nullable X509Certificate signer) {
     return signer == null
         ? Optional.empty()
-        : Optional.of(signer.getSubjectX500Principal().getName());
-  }
-
-  /** Returns the signer issuer distinguished name when one certificate is present. */
-  public static Optional<String> signerIssuer(@Nullable X509Certificate signer) {
-    return signer == null
-        ? Optional.empty()
-        : Optional.of(signer.getIssuerX500Principal().getName());
-  }
-
-  /** Returns the signer serial number formatted for public reporting when available. */
-  public static Optional<String> signerSerialNumber(@Nullable X509Certificate signer) {
-    return signer == null
-        ? Optional.empty()
-        : Optional.of(signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT));
+        : Optional.of(
+            new ExcelOoxmlSignatureSnapshot.SignerIdentity(
+                signer.getSubjectX500Principal().getName(),
+                signer.getIssuerX500Principal().getName(),
+                signer.getSerialNumber().toString(16).toUpperCase(Locale.ROOT)));
   }
 }

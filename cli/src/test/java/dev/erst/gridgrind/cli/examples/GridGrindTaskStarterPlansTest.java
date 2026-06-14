@@ -19,11 +19,11 @@ class GridGrindTaskStarterPlansTest {
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "tasks/example.json",
+                    "example.json",
                     ExampleWorkspaceMode.SELF_CONTAINED,
                     List.of("task-starter-assets/source.xlsx")));
     assertEquals(
-        "SELF_CONTAINED task starters must not publish requiredPaths",
+        "SELF_CONTAINED task starters must not publish requiredWorkspacePaths",
         selfContainedFailure.getMessage());
 
     IllegalArgumentException assetBackedFailure =
@@ -31,41 +31,53 @@ class GridGrindTaskStarterPlansTest {
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "tasks/example.json", ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, List.of()));
+                    "example.json", ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, List.of()));
     assertEquals(
-        "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredPaths",
+        "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredWorkspacePaths",
         assetBackedFailure.getMessage());
   }
 
   @Test
-  void taskStarterContractRequiresTaskScopedJsonPathsAndSupportsFactoryHelpers() {
-    IllegalArgumentException wrongPrefix =
+  void taskStarterContractRequiresPortableJsonFileNamesAndSupportsFactoryHelpers() {
+    IllegalArgumentException repositoryPath =
         assertThrows(
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
                     "examples/example.json", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
-    assertEquals("suggestedRequestPath must start with tasks/", wrongPrefix.getMessage());
+    assertEquals(
+        "requestFileName must be one portable file name, not a repository path",
+        repositoryPath.getMessage());
+
+    IllegalArgumentException windowsPath =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new TaskStarterContract(
+                    "examples\\example.json", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
+    assertEquals(
+        "requestFileName must be one portable file name, not a repository path",
+        windowsPath.getMessage());
 
     IllegalArgumentException wrongSuffix =
         assertThrows(
             IllegalArgumentException.class,
             () ->
                 new TaskStarterContract(
-                    "tasks/example.txt", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
-    assertEquals("suggestedRequestPath must end with .json", wrongSuffix.getMessage());
+                    "example.txt", ExampleWorkspaceMode.SELF_CONTAINED, List.of()));
+    assertEquals("requestFileName must end with .json", wrongSuffix.getMessage());
 
-    TaskStarterContract selfContained = TaskStarterContract.selfContained("tasks/example.json");
+    TaskStarterContract selfContained = TaskStarterContract.selfContained("example.json");
     assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, selfContained.workspaceMode());
-    assertEquals(List.of(), selfContained.requiredPaths());
+    assertEquals(List.of(), selfContained.requiredWorkspacePaths());
 
     TaskStarterContract assetBacked =
         TaskStarterContract.assetBacked(
-            "tasks/example.json", "task-starter-assets/source.xlsx", "payloads/data.xml");
+            "example.json", "task-starter-assets/source.xlsx", "payloads/data.xml");
     assertEquals(ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, assetBacked.workspaceMode());
     assertEquals(
         List.of("task-starter-assets/source.xlsx", "payloads/data.xml"),
-        assetBacked.requiredPaths());
+        assetBacked.requiredWorkspacePaths());
   }
 
   @Test
@@ -82,8 +94,7 @@ class GridGrindTaskStarterPlansTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                new TaskStarterPlan(
-                    " ", TaskStarterContract.selfContained("tasks/example.json"), plan));
+                new TaskStarterPlan(" ", TaskStarterContract.selfContained("example.json"), plan));
 
     assertEquals("taskId must not be blank", failure.getMessage());
   }
@@ -116,11 +127,9 @@ class GridGrindTaskStarterPlansTest {
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     TaskStarterPlan left =
-        new TaskStarterPlan(
-            "DUPLICATE", TaskStarterContract.selfContained("tasks/left.json"), plan);
+        new TaskStarterPlan("DUPLICATE", TaskStarterContract.selfContained("left.json"), plan);
     TaskStarterPlan right =
-        new TaskStarterPlan(
-            "DUPLICATE", TaskStarterContract.selfContained("tasks/right.json"), plan);
+        new TaskStarterPlan("DUPLICATE", TaskStarterContract.selfContained("right.json"), plan);
 
     IllegalStateException duplicate =
         assertThrows(

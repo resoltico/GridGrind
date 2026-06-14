@@ -194,9 +194,11 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                             new SheetIntrospectionQuery.GetSheetSummary())))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
-    assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
-    assertEquals(0, failure.journal().outcome().failedStepIndex().orElseThrow());
-    assertEquals("missing-sheet", failure.journal().outcome().failedStepId().orElseThrow());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
+    assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
+    assertEquals(0, outcome.failedStep().orElseThrow().failedStepIndex());
+    assertEquals("missing-sheet", outcome.failedStep().orElseThrow().failedStepId());
     assertEquals(
         GridGrindProblemCode.SHEET_NOT_FOUND,
         failure.journal().steps().getFirst().failure().orElseThrow().code());
@@ -1392,10 +1394,10 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(1, tables.tables().size());
     TableEntryReport table = tables.tables().getFirst();
     assertEquals("BudgetTable", table.name());
-    assertEquals(List.of("Item", "Amount", "Billable"), table.columnNames());
+    assertEquals(List.of("Item", "Amount", "Billable"), table.structure().columnNames());
     assertEquals(
         new TableStyleReport.Named("TableStyleMedium2", false, false, true, false), table.style());
-    assertTrue(table.hasAutofilter());
+    assertTrue(table.behavior().hasAutofilter());
     assertEquals(2, autofilterHealth.analysis().checkedAutofilterCount());
     assertEquals(List.of(), autofilterHealth.analysis().findings());
     assertEquals(1, tableHealth.analysis().checkedTableCount());
@@ -1427,26 +1429,22 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                   "BudgetTable",
                   "Budget",
                   "A1:C4",
-                  1,
-                  0,
-                  List.of("Item", "Amount", "Billable"),
-                  List.of(
-                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                          1L, "Item", "", "", "", ""),
-                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                          2L, "Amount", "", "", "", ""),
-                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
-                          3L, "Billable", "", "", "", "")),
+                  new ExcelTableSnapshot.Structure(
+                      1,
+                      0,
+                      List.of("Item", "Amount", "Billable"),
+                      List.of(
+                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                              1L, "Item", "", "", "", ""),
+                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                              2L, "Amount", "", "", "", ""),
+                          new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                              3L, "Billable", "", "", "", ""))),
                   new dev.erst.gridgrind.excel.ExcelTableStyleSnapshot.Named(
                       "TableStyleMedium2", false, false, true, false),
-                  true,
-                  "",
-                  false,
-                  false,
-                  false,
-                  "",
-                  "",
-                  "")),
+                  new ExcelTableSnapshot.Behavior(true, false, false, false),
+                  new ExcelTableSnapshot.Presentation(
+                      Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()))),
           reopenedTables.tables());
     }
   }

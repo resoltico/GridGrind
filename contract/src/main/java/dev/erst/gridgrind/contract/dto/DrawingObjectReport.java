@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
@@ -8,6 +9,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /** Factual drawing-object report returned by drawing reads. */
@@ -154,60 +156,63 @@ public sealed interface DrawingObjectReport
   record SignatureLine(
       String name,
       DrawingAnchorReport anchor,
-      @Nullable String setupId,
-      @Nullable Boolean allowComments,
-      @Nullable String signingInstructions,
-      @Nullable String suggestedSigner,
-      @Nullable String suggestedSigner2,
-      @Nullable String suggestedSignerEmail,
-      @Nullable ExcelPictureFormat previewFormat,
-      @Nullable String previewContentType,
-      @Nullable Long previewByteSize,
-      @Nullable String previewSha256,
-      @Nullable Integer previewWidthPixels,
-      @Nullable Integer previewHeightPixels)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignatureSetup> setup,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignaturePreview> preview)
       implements DrawingObjectReport {
     public SignatureLine {
       validateCommon(name, anchor);
-      if (setupId != null && setupId.isBlank()) {
-        throw new IllegalArgumentException("setupId must not be blank");
+      setup = normalizeOptional(setup, "setup");
+      preview = normalizeOptional(preview, "preview");
+    }
+  }
+
+  /** Optional authored signature-line setup metadata. */
+  record SignatureSetup(
+      Optional<String> setupId,
+      Optional<Boolean> allowComments,
+      Optional<String> signingInstructions,
+      Optional<String> suggestedSigner,
+      Optional<String> suggestedSigner2,
+      Optional<String> suggestedSignerEmail) {
+    public SignatureSetup {
+      setupId = normalizeOptionalText(setupId, "setupId");
+      allowComments = normalizeOptional(allowComments, "allowComments");
+      signingInstructions = normalizeOptionalText(signingInstructions, "signingInstructions");
+      suggestedSigner = normalizeOptionalText(suggestedSigner, "suggestedSigner");
+      suggestedSigner2 = normalizeOptionalText(suggestedSigner2, "suggestedSigner2");
+      suggestedSignerEmail = normalizeOptionalText(suggestedSignerEmail, "suggestedSignerEmail");
+    }
+  }
+
+  /** Optional preview-image metadata surfaced for a signature line. */
+  record SignaturePreview(
+      ExcelPictureFormat format,
+      String contentType,
+      long byteSize,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sha256,
+      Optional<Integer> widthPixels,
+      Optional<Integer> heightPixels) {
+    public SignaturePreview {
+      Objects.requireNonNull(format, "format must not be null");
+      contentType = requireNonBlank(contentType, "contentType");
+      sha256 = normalizeOptionalText(sha256, "previewSha256");
+      if (byteSize < 0L) {
+        throw new IllegalArgumentException("byteSize must not be negative");
       }
-      if (signingInstructions != null && signingInstructions.isBlank()) {
-        throw new IllegalArgumentException("signingInstructions must not be blank");
-      }
-      if (suggestedSigner != null && suggestedSigner.isBlank()) {
-        throw new IllegalArgumentException("suggestedSigner must not be blank");
-      }
-      if (suggestedSigner2 != null && suggestedSigner2.isBlank()) {
-        throw new IllegalArgumentException("suggestedSigner2 must not be blank");
-      }
-      if (suggestedSignerEmail != null && suggestedSignerEmail.isBlank()) {
-        throw new IllegalArgumentException("suggestedSignerEmail must not be blank");
-      }
-      if (previewFormat == null && previewContentType != null) {
-        throw new IllegalArgumentException("previewContentType requires previewFormat");
-      }
-      if (previewContentType != null && previewContentType.isBlank()) {
-        throw new IllegalArgumentException("previewContentType must not be blank");
-      }
-      if (previewFormat == null && previewByteSize != null) {
-        throw new IllegalArgumentException("previewByteSize requires previewFormat");
-      }
-      if (previewByteSize != null && previewByteSize < 0L) {
-        throw new IllegalArgumentException("previewByteSize must not be negative");
-      }
-      if (previewFormat == null && previewSha256 != null) {
-        throw new IllegalArgumentException("previewSha256 requires previewFormat");
-      }
-      if (previewSha256 != null && previewSha256.isBlank()) {
-        throw new IllegalArgumentException("previewSha256 must not be blank");
-      }
-      if (previewWidthPixels != null && previewWidthPixels < 0) {
-        throw new IllegalArgumentException("previewWidthPixels must not be negative");
-      }
-      if (previewHeightPixels != null && previewHeightPixels < 0) {
-        throw new IllegalArgumentException("previewHeightPixels must not be negative");
-      }
+      widthPixels = normalizeOptional(widthPixels, "widthPixels");
+      heightPixels = normalizeOptional(heightPixels, "heightPixels");
+      widthPixels.ifPresent(
+          width -> {
+            if (width < 0) {
+              throw new IllegalArgumentException("previewWidthPixels must not be negative");
+            }
+          });
+      heightPixels.ifPresent(
+          height -> {
+            if (height < 0) {
+              throw new IllegalArgumentException("previewHeightPixels must not be negative");
+            }
+          });
     }
   }
 
@@ -224,6 +229,11 @@ public sealed interface DrawingObjectReport
     return value;
   }
 
+  private static Optional<String> normalizeOptionalText(Optional<String> value, String fieldName) {
+    Optional<String> normalized = normalizeOptional(value, fieldName);
+    return normalized.map(text -> requireNonBlank(text, fieldName));
+  }
+
   private static List<String> copyNonBlankStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<String> copy = new ArrayList<>(values.size());
@@ -231,5 +241,12 @@ public sealed interface DrawingObjectReport
       copy.add(requireNonBlank(value, fieldName + " value"));
     }
     return List.copyOf(copy);
+  }
+
+  private static <T> Optional<T> normalizeOptional(Optional<T> value, String fieldName) {
+    Optional<T> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    normalized.ifPresent(
+        entry -> Objects.requireNonNull(entry, fieldName + " must not contain null"));
+    return normalized;
   }
 }

@@ -1,8 +1,11 @@
 package dev.erst.gridgrind.excel.ooxml;
 
+import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
 import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
+import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
@@ -88,11 +91,13 @@ public final class ExcelOoxmlPackageSecuritySupport {
   public static void saveWorkbook(
       ExcelWorkbook workbook,
       Path targetPath,
+      WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(targetPath, "targetPath must not be null");
+    Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
 
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
@@ -103,7 +108,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
     if (ExcelOoxmlPackageSecurityInternals.passThroughEligible(workbook, explicitOptions)) {
       ExcelOoxmlPackageFileSupport.copySourceWorkbook(
-          workbook.persistence().sourcePath().orElseThrow(), normalizedTarget);
+          workbook.persistence().sourcePath().orElseThrow(), normalizedTarget, writeDisposition);
       return;
     }
 
@@ -120,19 +125,24 @@ public final class ExcelOoxmlPackageSecuritySupport {
             workbook.persistence().sourceEncryptionPassword(),
             explicitOptions);
     if (effectiveOptions.isEmpty()) {
-      workbook.persistence().savePlainWorkbook(normalizedTarget);
+      workbook.persistence().savePlainWorkbook(normalizedTarget, writeDisposition);
       return;
     }
 
-    Path plainWorkbookPath = tempFileFactory.createTempFile("gridgrind-ooxml-security-", ".xlsx");
+    Path plainWorkbookPath =
+        ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+            tempFileFactory.createTempFile("gridgrind-ooxml-security-", ".xlsx"));
     try {
-      workbook.persistence().savePlainWorkbook(plainWorkbookPath);
+      workbook
+          .persistence()
+          .savePlainWorkbook(plainWorkbookPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
       persistMaterializedWorkbook(
           plainWorkbookPath,
           normalizedTarget,
           workbook.persistence().loadedPackageSecurity(),
           workbook.persistence().sourceEncryptionPassword(),
           workbook.persistence().wasMutatedSinceOpen(),
+          writeDisposition,
           effectiveOptions);
     } finally {
       ExcelOoxmlPackageFileSupport.deleteIfExists(plainWorkbookPath);
@@ -148,11 +158,13 @@ public final class ExcelOoxmlPackageSecuritySupport {
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       boolean sourceMutated,
+      WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
     Objects.requireNonNull(plainWorkbookPath, "plainWorkbookPath must not be null");
     Objects.requireNonNull(targetPath, "targetPath must not be null");
     Objects.requireNonNull(sourceSecurity, "sourceSecurity must not be null");
+    Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
     Objects.requireNonNull(persistenceOptions, "persistenceOptions must not be null");
 
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
@@ -170,16 +182,20 @@ public final class ExcelOoxmlPackageSecuritySupport {
     ExcelOoxmlPersistenceOptions effectiveOptions =
         ExcelOoxmlPackagePersistenceSupport.effectiveOptions(
             sourceSecurity, sourceEncryptionPassword, persistenceOptions);
+    ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(plainWorkbookPath);
     if (effectiveOptions.signature().isPresent()) {
       ExcelOoxmlPackageSigningSupport.signWorkbook(
           plainWorkbookPath, effectiveOptions.signature().orElseThrow());
     }
     if (effectiveOptions.encryption().isPresent()) {
       ExcelOoxmlPackageEncryptionSupport.encryptWorkbook(
-          plainWorkbookPath, normalizedTarget, effectiveOptions.encryption().orElseThrow());
+          plainWorkbookPath,
+          normalizedTarget,
+          writeDisposition,
+          effectiveOptions.encryption().orElseThrow());
     } else {
-      Files.move(
-          plainWorkbookPath, normalizedTarget, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      ExcelOoxmlPackageFileSupport.moveWorkbook(
+          plainWorkbookPath, normalizedTarget, writeDisposition);
     }
   }
 

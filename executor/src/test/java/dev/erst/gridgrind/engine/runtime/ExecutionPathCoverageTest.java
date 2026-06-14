@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.CalculationReport;
+import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
@@ -238,7 +240,9 @@ class ExecutionPathCoverageTest {
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals(1, failure.journal().outcome().failedStepIndex().orElseThrow());
-    assertEquals("step-1", failure.journal().outcome().failedStepId().orElseThrow());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
+    assertEquals(1, outcome.failedStep().orElseThrow().failedStepIndex());
+    assertEquals("step-1", outcome.failedStep().orElseThrow().failedStepId());
   }
 }

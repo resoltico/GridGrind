@@ -26,7 +26,7 @@ import javax.tools.ToolProvider;
 import org.gradle.api.GradleException;
 
 public final class JavaSourceShapeAnalyzer {
-  Metrics analyze(Path sourceFile, int javaRelease) throws IOException {
+  SourceShapeMetrics analyze(Path sourceFile, int javaRelease) throws IOException {
     long lineCount;
     try (var lines = Files.lines(sourceFile)) {
       lineCount = lines.count();
@@ -56,7 +56,7 @@ public final class JavaSourceShapeAnalyzer {
       CompilationUnitTree compilationUnit = javacTask.parse().iterator().next();
       ShapeScanner scanner = new ShapeScanner();
       scanner.scan(compilationUnit, null);
-      return new Metrics(
+      return new SourceShapeMetrics(
           lineCount,
           compilationUnit.getImports().size(),
           scanner.topLevelTypeCount,
@@ -72,17 +72,6 @@ public final class JavaSourceShapeAnalyzer {
           exception);
     }
   }
-
-  record Metrics(
-      long lineCount,
-      int importCount,
-      int topLevelTypeCount,
-      int nestedTypeCount,
-      int methodCount,
-      int publicMethodCount,
-      int fieldCount,
-      int switchCount,
-      int maxSwitchArms) {}
 
   private static final class ShapeScanner extends TreeScanner<Void, Void> {
     private final Deque<Tree.Kind> enclosingTypeKinds = new ArrayDeque<>();

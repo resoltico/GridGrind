@@ -16,7 +16,7 @@ public final class TaskTestFixtures {
         executionProfile,
         interactionProfile(),
         TaskStarterContract.selfContained(
-            "tasks/" + id.toLowerCase(Locale.ROOT).replace('_', '-') + "-request.json"),
+            id.toLowerCase(Locale.ROOT).replace('_', '-') + "-request.json"),
         workflow(phases));
   }
 

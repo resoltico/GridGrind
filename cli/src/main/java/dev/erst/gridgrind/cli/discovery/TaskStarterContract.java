@@ -5,38 +5,44 @@ import java.util.Objects;
 
 /** Portability contract for one printed task starter request emitted by the CLI. */
 public record TaskStarterContract(
-    String suggestedRequestPath, ExampleWorkspaceMode workspaceMode, List<String> requiredPaths) {
+    String requestFileName,
+    ExampleWorkspaceMode workspaceMode,
+    List<String> requiredWorkspacePaths) {
   public TaskStarterContract {
-    suggestedRequestPath =
-        CliDiscoveryValidation.requireNonBlank(suggestedRequestPath, "suggestedRequestPath");
+    requestFileName = CliDiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
     Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
-    requiredPaths = CliDiscoveryValidation.copyStringsAllowEmpty(requiredPaths, "requiredPaths");
-    if (!suggestedRequestPath.startsWith("tasks/")) {
-      throw new IllegalArgumentException("suggestedRequestPath must start with tasks/");
-    }
-    if (!suggestedRequestPath.endsWith(".json")) {
-      throw new IllegalArgumentException("suggestedRequestPath must end with .json");
-    }
-    if (workspaceMode == ExampleWorkspaceMode.SELF_CONTAINED && !requiredPaths.isEmpty()) {
+    requiredWorkspacePaths =
+        CliDiscoveryValidation.copyStringsAllowEmpty(
+            requiredWorkspacePaths, "requiredWorkspacePaths");
+    if (requestFileName.contains("/") || requestFileName.contains("\\")) {
       throw new IllegalArgumentException(
-          "SELF_CONTAINED task starters must not publish requiredPaths");
+          "requestFileName must be one portable file name, not a repository path");
     }
-    if (workspaceMode == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS && requiredPaths.isEmpty()) {
+    if (!requestFileName.endsWith(".json")) {
+      throw new IllegalArgumentException("requestFileName must end with .json");
+    }
+    if (workspaceMode == ExampleWorkspaceMode.SELF_CONTAINED && !requiredWorkspacePaths.isEmpty()) {
       throw new IllegalArgumentException(
-          "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredPaths");
+          "SELF_CONTAINED task starters must not publish requiredWorkspacePaths");
+    }
+    if (workspaceMode == ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS
+        && requiredWorkspacePaths.isEmpty()) {
+      throw new IllegalArgumentException(
+          "REQUIRES_EXAMPLE_ASSETS task starters must publish requiredWorkspacePaths");
     }
   }
 
-  /** Creates one self-contained task starter contract rooted at the task starters directory. */
-  public static TaskStarterContract selfContained(String suggestedRequestPath) {
-    return new TaskStarterContract(
-        suggestedRequestPath, ExampleWorkspaceMode.SELF_CONTAINED, List.of());
+  /** Creates one self-contained task starter contract with one portable request file name. */
+  public static TaskStarterContract selfContained(String requestFileName) {
+    return new TaskStarterContract(requestFileName, ExampleWorkspaceMode.SELF_CONTAINED, List.of());
   }
 
-  /** Creates one asset-backed task starter contract rooted at the task starters directory. */
+  /** Creates one asset-backed task starter contract with workspace-relative asset requirements. */
   public static TaskStarterContract assetBacked(
-      String suggestedRequestPath, String... requiredPaths) {
+      String requestFileName, String... requiredWorkspacePaths) {
     return new TaskStarterContract(
-        suggestedRequestPath, ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS, List.of(requiredPaths));
+        requestFileName,
+        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+        List.of(requiredWorkspacePaths));
   }
 }

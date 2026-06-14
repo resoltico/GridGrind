@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.cli.discovery.CliHelpReport;
+import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
+import dev.erst.gridgrind.cli.discovery.CliVersionReport;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -20,6 +24,34 @@ final class GridGrindCliProductInfo {
     String version = versionFrom(implementationVersion, GridGrindCli.class);
     return GridGrindCliHelp.helpText(
         topic, version, description(), documentRef(version), containerImageRef(version));
+  }
+
+  static CliHelpReport helpReport(CliCommand.HelpTopic topic) {
+    Objects.requireNonNull(topic, "topic must not be null");
+    String version = version();
+    return new CliHelpReport(
+        GridGrindProtocolVersion.current(),
+        topic.name(),
+        version,
+        description(),
+        documentRef(version),
+        containerImageRef(version),
+        GridGrindProtocolCatalogCliSurface.CLI_SURFACE);
+  }
+
+  static CliVersionReport versionReport() {
+    String version = version();
+    return new CliVersionReport(
+        GridGrindProtocolVersion.current(),
+        version,
+        description(),
+        documentRef(version),
+        containerImageRef(version));
+  }
+
+  static CliLicenseReport licenseReport() {
+    return new CliLicenseReport(
+        GridGrindProtocolVersion.current(), version(), licenseText(GridGrindCli.class));
   }
 
   static String productHeader(String version, String description) {
@@ -104,12 +136,12 @@ final class GridGrindCliProductInfo {
     }
   }
 
-  private static String containerImageRef(String version) {
+  static String containerImageRef(String version) {
     String tag = "unknown".equals(version) ? "latest" : version;
     return "ghcr.io/resoltico/gridgrind:" + tag;
   }
 
-  private static String documentRef(String version) {
+  static String documentRef(String version) {
     String gitRef = "unknown".equals(version) ? "main" : "v" + version;
     return "https://github.com/resoltico/GridGrind/blob/" + gitRef;
   }

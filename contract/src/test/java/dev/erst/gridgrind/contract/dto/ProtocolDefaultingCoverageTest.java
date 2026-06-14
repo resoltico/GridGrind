@@ -335,19 +335,11 @@ class ProtocolDefaultingCoverageTest {
             "BudgetTable",
             "Budget",
             "A1:B3",
-            1,
-            0,
-            List.of("Owner"),
-            List.of(new TableColumnReport(0L, "Owner")),
+            new TableEntryReport.Structure(
+                1, 0, List.of("Owner"), List.of(new TableColumnReport(0L, "Owner"))),
             new TableStyleReport.None(),
-            true,
-            Optional.empty(),
-            false,
-            false,
-            false,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
+            new TableEntryReport.Behavior(true, false, false, false),
+            TableEntryReport.Presentation.empty());
 
     assertEquals(text(""), defaultedTable.comment());
     assertFalse(defaultedTable.published());
@@ -367,10 +359,10 @@ class ProtocolDefaultingCoverageTest {
     assertTrue(explicitAutofilterTable.hasAutofilter());
     assertTrue(explicitTotalsAndNoAutofilterTable.showTotalsRow());
     assertFalse(explicitTotalsAndNoAutofilterTable.hasAutofilter());
-    assertEquals(Optional.empty(), defaultedTableReport.comment());
-    assertEquals(Optional.empty(), defaultedTableReport.headerRowCellStyle());
-    assertEquals(Optional.empty(), defaultedTableReport.dataCellStyle());
-    assertEquals(Optional.empty(), defaultedTableReport.totalsRowCellStyle());
+    assertEquals(Optional.empty(), defaultedTableReport.presentation().comment());
+    assertEquals(Optional.empty(), defaultedTableReport.presentation().headerRowCellStyle());
+    assertEquals(Optional.empty(), defaultedTableReport.presentation().dataCellStyle());
+    assertEquals(Optional.empty(), defaultedTableReport.presentation().totalsRowCellStyle());
     TableInput defaultedWireTable =
         new TableInput(
             "Budget",
@@ -959,19 +951,42 @@ class ProtocolDefaultingCoverageTest {
               "name": "BudgetTable",
               "sheetName": "Budget",
               "range": "A1:B4",
-              "headerRowCount": 1,
-              "totalsRowCount": 0,
-              "columnNames": ["Owner"],
-              "columns": [{ "id": 0, "name": "Owner" }],
+              "structure": {
+                "headerRowCount": 1,
+                "totalsRowCount": 0,
+                "columnNames": ["Owner"],
+                "columns": [{ "id": 0, "name": "Owner" }]
+              },
               "style": { "type": "NONE" },
-              "hasAutofilter": true,
-              "comment": "",
-              "published": false,
-              "insertRow": false,
-              "insertRowShift": false,
-              "headerRowCellStyle": "",
-              "dataCellStyle": "",
-              "totalsRowCellStyle": ""
+              "behavior": {
+                "hasAutofilter": true,
+                "published": false,
+                "insertRow": false,
+                "insertRowShift": false
+              },
+              "presentation": {
+                "comment": "",
+                "headerRowCellStyle": "",
+                "dataCellStyle": "",
+                "totalsRowCellStyle": ""
+              }
+            }
+            """,
+            TableEntryReport.class);
+    TableEntryReport defaultedBehaviorTableReport =
+        mapper.readValue(
+            """
+            {
+              "name": "BudgetTable",
+              "sheetName": "Budget",
+              "range": "A1:B4",
+              "structure": {
+                "headerRowCount": 1,
+                "totalsRowCount": 0,
+                "columnNames": ["Owner"],
+                "columns": [{ "id": 0, "name": "Owner" }]
+              },
+              "style": { "type": "NONE" }
             }
             """,
             TableEntryReport.class);
@@ -1011,10 +1026,13 @@ class ProtocolDefaultingCoverageTest {
     assertEquals(PrintSetupInput.defaults(), conveniencePrintLayout.setup());
     assertEquals(PrintSetupInput.defaults(), createdPrintLayout.setup());
     assertTrue(signatureLine.allowComments());
-    assertEquals(Optional.empty(), tableReport.comment());
-    assertEquals(Optional.empty(), tableReport.headerRowCellStyle());
-    assertEquals(Optional.empty(), tableReport.dataCellStyle());
-    assertEquals(Optional.empty(), tableReport.totalsRowCellStyle());
+    assertEquals(Optional.empty(), tableReport.presentation().comment());
+    assertEquals(Optional.empty(), tableReport.presentation().headerRowCellStyle());
+    assertEquals(Optional.empty(), tableReport.presentation().dataCellStyle());
+    assertEquals(Optional.empty(), tableReport.presentation().totalsRowCellStyle());
+    assertEquals(
+        new TableEntryReport.Behavior(false, false, false, false),
+        defaultedBehaviorTableReport.behavior());
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
     assertEquals(List.of(), journal.events());
   }

@@ -387,12 +387,13 @@ final class XlsxParityCoreProbeGroup {
           .tables()
           .tables()
           .getFirst()
+          .structure()
           .columnNames()
           .equals(observation.direct().tableColumns())) {
         mismatches.add(
             "tableColumns=%s direct=%s"
                 .formatted(
-                    observation.tables().tables().getFirst().columnNames(),
+                    observation.tables().tables().getFirst().structure().columnNames(),
                     observation.direct().tableColumns()));
       }
     }
@@ -753,21 +754,25 @@ final class XlsxParityCoreProbeGroup {
     TableEntryReport observed = findTable(tables.tables(), "AdvancedTable");
     boolean parityAchieved =
         observed != null
-            && optionalString(direct.comment()).equals(observed.comment())
-            && direct.published() == observed.published()
-            && direct.insertRow() == observed.insertRow()
-            && direct.insertRowShift() == observed.insertRowShift()
-            && optionalString(direct.headerRowCellStyle()).equals(observed.headerRowCellStyle())
-            && optionalString(direct.dataCellStyle()).equals(observed.dataCellStyle())
-            && optionalString(direct.totalsRowCellStyle()).equals(observed.totalsRowCellStyle())
-            && observed.columns().size() >= 3
+            && optionalString(direct.comment()).equals(observed.presentation().comment())
+            && direct.published() == observed.behavior().published()
+            && direct.insertRow() == observed.behavior().insertRow()
+            && direct.insertRowShift() == observed.behavior().insertRowShift()
+            && optionalString(direct.headerRowCellStyle())
+                .equals(observed.presentation().headerRowCellStyle())
+            && optionalString(direct.dataCellStyle())
+                .equals(observed.presentation().dataCellStyle())
+            && optionalString(direct.totalsRowCellStyle())
+                .equals(observed.presentation().totalsRowCellStyle())
+            && observed.structure().columns().size() >= 3
             && optionalString(direct.totalsRowLabel())
-                .equals(observed.columns().get(0).totalsRowLabel())
+                .equals(observed.structure().columns().get(0).totalsRowLabel())
             && optionalString(direct.totalsRowFunction())
-                .equals(observed.columns().get(1).totalsRowFunction())
+                .equals(observed.structure().columns().get(1).totalsRowFunction())
             && optionalString(direct.calculatedColumnFormula())
-                .equals(observed.columns().get(1).calculatedColumnFormula())
-            && optionalString(direct.uniqueName()).equals(observed.columns().get(2).uniqueName());
+                .equals(observed.structure().columns().get(1).calculatedColumnFormula())
+            && optionalString(direct.uniqueName())
+                .equals(observed.structure().columns().get(2).uniqueName());
     return parityAchieved
         ? pass("Advanced table read parity is present.")
         : fail("Advanced table read mismatch." + " direct=" + direct + " observed=" + observed);

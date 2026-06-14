@@ -17,7 +17,7 @@ final class TaskStarterPlanSupport {
 
   static TaskStarterPlan selfContainedStarter(String taskId, WorkbookPlan plan) {
     return new TaskStarterPlan(
-        taskId, TaskStarterContract.selfContained(taskRequestPath(taskId)), plan);
+        taskId, TaskStarterContract.selfContained(taskRequestFileName(taskId)), plan);
   }
 
   static TaskStarterPlan assetBackedStarter(
@@ -29,7 +29,7 @@ final class TaskStarterPlanSupport {
     return new TaskStarterPlan(
         taskId,
         new TaskStarterContract(
-            taskRequestPath(taskId),
+            taskRequestFileName(taskId),
             ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
             List.copyOf(requiredPaths)),
         plan);
@@ -51,8 +51,8 @@ final class TaskStarterPlanSupport {
     return ONE_PIXEL_PNG_BASE64;
   }
 
-  private static String taskRequestPath(String taskId) {
-    return "tasks/" + slug(taskId) + "-request.json";
+  private static String taskRequestFileName(String taskId) {
+    return slug(taskId) + "-request.json";
   }
 
   private static String slug(String taskId) {

@@ -438,7 +438,7 @@ required_guidance_help_snippets = (
         "guidance help no longer includes the CLI-owned featured example command",
     ),
     (
-        "requiredPaths names those paths directly.",
+        "requiredWorkspacePaths names those paths directly.",
         "guidance help no longer explains asset-backed built-in example portability",
     ),
 )
@@ -490,23 +490,23 @@ if not shipped_examples:
     die("example catalog examples is empty")
 for example in shipped_examples:
     example_id = example["id"]
-    suggested_request_path = example["suggestedRequestPath"]
+    request_file_name = example["requestFileName"]
     summary = example["summary"]
     guidance_snippet = normalized_text(
-        f"- {example_id} request: {suggested_request_path} "
+        f"- {example_id} requestFileName: {request_file_name} "
         + f"workspace: {example['workspaceMode']} summary: {summary}"
     )
     if guidance_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists the built-in example line for {example_id}")
-    if set(example.keys()) != {"id", "suggestedRequestPath", "summary", "workspaceMode", "requiredPaths"}:
+    if set(example.keys()) != {"id", "requestFileName", "summary", "workspaceMode", "requiredWorkspacePaths"}:
         die(
             f"example catalog entry {example_id} exposes unexpected public fields: "
             + f"{sorted(example.keys())}"
         )
-    if example["workspaceMode"] == "SELF_CONTAINED" and example["requiredPaths"]:
-        die(f"self-contained example {example_id} must not publish requiredPaths")
-    if example["workspaceMode"] == "REQUIRES_EXAMPLE_ASSETS" and not example["requiredPaths"]:
-        die(f"asset-backed example {example_id} must publish requiredPaths")
+    if example["workspaceMode"] == "SELF_CONTAINED" and example["requiredWorkspacePaths"]:
+        die(f"self-contained example {example_id} must not publish requiredWorkspacePaths")
+    if example["workspaceMode"] == "REQUIRES_EXAMPLE_ASSETS" and not example["requiredWorkspacePaths"]:
+        die(f"asset-backed example {example_id} must publish requiredWorkspacePaths")
 
 expected_required_paths = {
         "CUSTOM_XML": [
@@ -524,14 +524,16 @@ expected_required_paths = {
 }
 for example_id, required_paths in expected_required_paths.items():
     entry = next(example for example in shipped_examples if example["id"] == example_id)
-    if entry["requiredPaths"] != required_paths:
+    if entry["requiredWorkspacePaths"] != required_paths:
         die(
-            f"example catalog requiredPaths drifted for {example_id}: "
-            + f"{entry['requiredPaths']}"
+            f"example catalog requiredWorkspacePaths drifted for {example_id}: "
+            + f"{entry['requiredWorkspacePaths']}"
         )
-    required_paths_snippet = normalized_text(f"requiredPaths: {', '.join(required_paths)}")
+    required_paths_snippet = normalized_text(
+        f"requiredWorkspacePaths: {', '.join(required_paths)}"
+    )
     if required_paths_snippet not in normalized_guidance_help_output:
-        die(f"guidance help no longer lists requiredPaths for {example_id}")
+        die(f"guidance help no longer lists requiredWorkspacePaths for {example_id}")
 
 execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
 if "execution.journal" not in execution_policy_summary:

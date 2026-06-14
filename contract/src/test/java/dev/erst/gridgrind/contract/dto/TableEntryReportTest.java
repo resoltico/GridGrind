@@ -17,7 +17,7 @@ class TableEntryReportTest {
             "BudgetTable", "Budget", "A1:B4", 1, 1, columnNames, new TableStyleReport.None(), true);
     columnNames.clear();
 
-    assertEquals(List.of("Item", "Amount"), report.columnNames());
+    assertEquals(List.of("Item", "Amount"), report.structure().columnNames());
     assertThrows(
         IllegalArgumentException.class,
         () ->

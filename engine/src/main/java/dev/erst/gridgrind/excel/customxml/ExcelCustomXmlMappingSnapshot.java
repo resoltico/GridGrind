@@ -11,15 +11,8 @@ public record ExcelCustomXmlMappingSnapshot(
     String name,
     String rootElement,
     String schemaId,
-    boolean showImportExportValidationErrors,
-    boolean autoFit,
-    boolean append,
-    boolean preserveSortAfLayout,
-    boolean preserveFormat,
-    Optional<String> schemaNamespace,
-    Optional<String> schemaLanguage,
-    Optional<String> schemaReference,
-    Optional<String> schemaXml,
+    ExcelCustomXmlMappingSettings settings,
+    ExcelCustomXmlSchemaSnapshot schema,
     Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
     List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
     List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
@@ -30,11 +23,9 @@ public record ExcelCustomXmlMappingSnapshot(
     name = requireNonBlank(name, "name");
     rootElement = requireNonBlank(rootElement, "rootElement");
     schemaId = requireNonBlank(schemaId, "schemaId");
-    schemaNamespace = requireNonBlankOptional(schemaNamespace, "schemaNamespace");
-    schemaLanguage = requireNonBlankOptional(schemaLanguage, "schemaLanguage");
-    schemaReference = requireNonBlankOptional(schemaReference, "schemaReference");
-    schemaXml = requireNonBlankOptional(schemaXml, "schemaXml");
-    Objects.requireNonNull(dataBinding, "dataBinding must not be null");
+    Objects.requireNonNull(settings, "settings must not be null");
+    Objects.requireNonNull(schema, "schema must not be null");
+    dataBinding = Objects.requireNonNullElseGet(dataBinding, Optional::empty);
     linkedCells = copyValues(linkedCells, "linkedCells");
     linkedTables = copyValues(linkedTables, "linkedTables");
   }
@@ -45,13 +36,6 @@ public record ExcelCustomXmlMappingSnapshot(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
-  }
-
-  private static Optional<String> requireNonBlankOptional(
-      Optional<String> value, String fieldName) {
-    Optional<String> required = Objects.requireNonNull(value, fieldName + " must not be null");
-    required.ifPresent(nonBlank -> requireNonBlank(nonBlank, fieldName));
-    return required;
   }
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {

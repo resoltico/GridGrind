@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -225,7 +224,7 @@ class ExcelSignatureLineControllerTest {
       shape.getSignaturelineArray(0).unsetAllowcomments();
 
       ExcelSignatureLineSnapshot snapshot = controller.signatureLines(sheet).getFirst();
-      assertNull(snapshot.allowComments());
+      assertTrue(snapshot.setup().orElseThrow().allowComments().isEmpty());
       assertEquals("LeanSignature", snapshot.name());
       assertTrue(controller.hasNamedSignatureLine(sheet, "LeanSignature"));
       assertFalse(

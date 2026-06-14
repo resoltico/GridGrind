@@ -20,7 +20,7 @@ class ExcelTableValueTypesTest {
     columnNames.clear();
 
     assertEquals("Queue", definition.name());
-    assertEquals(List.of("Owner", "Task"), snapshot.columnNames());
+    assertEquals(List.of("Owner", "Task"), snapshot.structure().columnNames());
 
     assertThrows(
         IllegalArgumentException.class,

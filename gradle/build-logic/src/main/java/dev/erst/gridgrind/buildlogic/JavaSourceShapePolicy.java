@@ -105,6 +105,7 @@ public final class JavaSourceShapePolicy {
           "Source-shape policy " + policyFile + " must place the DEFAULT rule last.");
     }
 
+    Rule defaultRule = rules.getLast();
     Set<String> exactPaths = new LinkedHashSet<>();
     for (Rule rule : rules) {
       if (rule.kind() == MatchKind.EXACT && !exactPaths.add(rule.path())) {
@@ -115,7 +116,40 @@ public final class JavaSourceShapePolicy {
                 + rule.path()
                 + ".");
       }
+      if (rule.kind() == MatchKind.PREFIX
+          && requiresReviewedPrefix(rule, defaultRule)
+          && !rule.isReviewed()) {
+        throw new GradleException(
+            "PREFIX source-shape rule "
+                + rule.path()
+                + " relaxes the default budget or disables duplication checks, so it must declare"
+                + " reviewExpiresOn and splitTrigger.");
+      }
     }
+  }
+
+  private static boolean requiresReviewedPrefix(Rule rule, Rule defaultRule) {
+    if (rule.kind() != MatchKind.PREFIX) {
+      return false;
+    }
+    if (rule.duplicationGuard() == DuplicationGuard.SKIP) {
+      return true;
+    }
+    return looser(rule.maxLines(), defaultRule.maxLines())
+        || looser(rule.maxMethods(), defaultRule.maxMethods())
+        || looser(rule.maxPublicMethods(), defaultRule.maxPublicMethods())
+        || looser(rule.maxImports(), defaultRule.maxImports())
+        || looser(rule.maxFields(), defaultRule.maxFields())
+        || looser(rule.maxNestedTypes(), defaultRule.maxNestedTypes())
+        || looser(rule.maxSwitches(), defaultRule.maxSwitches())
+        || looser(rule.maxSwitchArms(), defaultRule.maxSwitchArms());
+  }
+
+  private static boolean looser(Integer candidate, Integer baseline) {
+    if (candidate == null) {
+      return false;
+    }
+    return baseline == null || candidate > baseline;
   }
 
   private static String requiredValue(
@@ -276,21 +310,18 @@ public final class JavaSourceShapePolicy {
       if (duplicationGuard == null) {
         throw new GradleException("Source-shape rules must declare duplicationGuard.");
       }
-      if (kind == MatchKind.EXACT) {
-        if (reviewExpiresOn == null) {
-          throw new GradleException("EXACT source-shape rules must declare reviewExpiresOn.");
-        }
-        if (splitTrigger == null || splitTrigger.isBlank()) {
-          throw new GradleException("EXACT source-shape rules must declare splitTrigger.");
-        }
-      } else {
-        if (reviewExpiresOn != null) {
-          throw new GradleException(
-              "Only EXACT source-shape rules may declare reviewExpiresOn.");
-        }
-        if (splitTrigger != null) {
-          throw new GradleException("Only EXACT source-shape rules may declare splitTrigger.");
-        }
+      boolean hasReviewMetadata =
+          reviewExpiresOn != null && splitTrigger != null && !splitTrigger.isBlank();
+      if (kind == MatchKind.EXACT && !hasReviewMetadata) {
+        throw new GradleException(
+            "EXACT source-shape rules must declare reviewExpiresOn and splitTrigger.");
+      }
+      if ((reviewExpiresOn == null) != (splitTrigger == null || splitTrigger.isBlank())) {
+        throw new GradleException(
+            "Source-shape rules must declare reviewExpiresOn and splitTrigger together.");
+      }
+      if (kind == MatchKind.DEFAULT && hasReviewMetadata) {
+        throw new GradleException("DEFAULT source-shape rules must not declare review metadata.");
       }
     }
 
@@ -300,6 +331,10 @@ public final class JavaSourceShapePolicy {
         case PREFIX -> relativePath.startsWith(path);
         case DEFAULT -> true;
       };
+    }
+
+    boolean isReviewed() {
+      return reviewExpiresOn != null && splitTrigger != null && !splitTrigger.isBlank();
     }
   }
 }

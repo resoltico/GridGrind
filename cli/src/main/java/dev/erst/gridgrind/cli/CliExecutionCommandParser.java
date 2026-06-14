@@ -134,14 +134,9 @@ final class CliExecutionCommandParser {
     private CliArgumentsException primaryCommandOrderingException(String argument) {
       Objects.requireNonNull(argument, "argument must not be null");
       if (doctorRequest) {
-        return new CliArgumentsException(
-            argument,
-            "Only one primary command may be used per invocation; --doctor-request cannot be combined with "
-                + argument);
+        return CliPrimaryCommandSupport.multiplePrimaryCommands("--doctor-request", argument);
       }
-      return new CliArgumentsException(
-          argument,
-          argument + " must be the primary command and cannot follow execution arguments");
+      return CliPrimaryCommandSupport.commandMustBePrimary(argument);
     }
   }
 }

@@ -123,33 +123,26 @@ public final class GridGrindCliHelp {
                         "--license", "Print the packaged license and third-party notices.")))),
         renderSection(
             new CliSurface.CliSection(
-                "Quick Start",
-                List.of(
-                    "1. Print a minimal request: gridgrind --print-request-template --response"
-                        + " request.json",
-                    "2. Print a task starter: gridgrind --print-task-plan --lookup DASHBOARD"
-                        + " --response task-request.json",
-                    "3. Preflight the starter: gridgrind --doctor-request --request"
-                        + " task-request.json --response doctor.json",
-                    "4. Execute the request: gridgrind --request task-request.json --response"
-                        + " response.json",
-                    "5. For stdin-driven runs, pass one explicit request root:"
-                        + " gridgrind --execution-root . < request.json"))),
-        renderSection(
-            new CliSurface.CliSection(
                 "Command Rules",
                 List.of(
                     "Every invocation accepts exactly one primary command.",
                     "A bare gridgrind invocation expects one request JSON document on standard"
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
-                    "With no --response path, CLI argument and lookup failures are emitted as"
-                        + " compact CLI failure reports on stderr.",
-                    "--help is the short synopsis. Use --help-protocol for the contract and"
-                        + " --help-guidance for workflows."))),
-        renderReferences(
-            new CliSurface.CliReferenceSection("Docs At A Glance", cliSurface.docs().entries()),
-            documentRef));
+                    "With no --response path, CLI failures are emitted as structured primary"
+                        + " output on stdout.",
+                    "Use --format structured when you want JSON help, version, or license"
+                        + " discovery instead of prose."))),
+        renderSection(
+            new CliSurface.CliSection(
+                "Next Commands",
+                List.of(
+                    "--help is the short synopsis.",
+                    "--help-protocol is the authoritative CLI and request grammar.",
+                    "--help-guidance is the workflow, discovery, and example playbook.",
+                    "The docs index lives under --help-guidance and repository docs such as "
+                        + documentRef
+                        + "/docs/QUICK_REFERENCE.md"))));
   }
 
   private static String renderProtocolHelp(CliSurface cliSurface) {
@@ -199,6 +192,20 @@ public final class GridGrindCliHelp {
                     "This help surface contains workflows, examples, and operational playbooks.",
                     "It does not extend the request grammar; use --help-protocol for the"
                         + " authoritative contract."))),
+        renderSection(
+            new CliSurface.CliSection(
+                "Quick Start",
+                List.of(
+                    "1. Print a minimal request: gridgrind --print-request-template --response"
+                        + " request.json",
+                    "2. Print a task starter: gridgrind --print-task-plan --lookup DASHBOARD"
+                        + " --response task-request.json",
+                    "3. Preflight the starter: gridgrind --doctor-request --request"
+                        + " task-request.json --response doctor.json",
+                    "4. Execute the request: gridgrind --request task-request.json --response"
+                        + " response.json",
+                    "5. For stdin-driven runs, pass one explicit request root:"
+                        + " gridgrind --execution-root . < request.json"))),
         renderWorkflows(
             new CliSurface.CliWorkflowSection(
                 "Workflow Playbooks", cliSurface.workflows().entries())),

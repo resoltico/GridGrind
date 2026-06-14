@@ -22,7 +22,7 @@ public record ExcelOoxmlPackageSecuritySnapshot(
    * Returns whether the workbook package is encrypted or carries at least one package signature.
    */
   public boolean isSecure() {
-    return encryption.encrypted() || !signatures.isEmpty();
+    return encryption instanceof ExcelOoxmlEncryptionSnapshot.Encrypted || !signatures.isEmpty();
   }
 
   public ExcelOoxmlPackageSecuritySnapshot afterMutation() {

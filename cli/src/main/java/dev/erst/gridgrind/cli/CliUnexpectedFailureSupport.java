@@ -39,21 +39,26 @@ final class CliUnexpectedFailureSupport {
   private static void directFallback(
       CliFailureReport report, OutputStream stdout, OutputStream stderr, boolean responsePathUsed) {
     try {
-      byte[] payload = GridGrindCliJson.writeCliFailureReportBytes(report);
-      if (responsePathUsed) {
-        writePayload(stdout, payload);
-      } else {
-        writePayload(stderr, payload);
-      }
-    } catch (IOException ignored) {
+      byte[] payload = GridGrindCliJson.writeBytes(report);
+      writePayload(stdout, payload);
+      return;
+    } catch (IOException exception) {
       try {
-        stderr.write(
-            ("GridGrind failed before it could emit a structured error payload."
-                    + System.lineSeparator())
-                .getBytes(java.nio.charset.StandardCharsets.UTF_8));
-        stderr.flush();
-      } catch (IOException ignoredAgain) {
+        writePayload(stderr, GridGrindCliJson.writeBytes(report));
         return;
+      } catch (IOException exceptionOnStderr) {
+        exception.addSuppressed(exceptionOnStderr);
+      }
+      try {
+        String message =
+            responsePathUsed
+                ? "GridGrind failed before it could emit a structured error payload to the response fallback channels."
+                : "GridGrind failed before it could emit a structured error payload.";
+        stderr.write(
+            (message + System.lineSeparator()).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        stderr.flush();
+      } catch (IOException humanReadableFailure) {
+        exception.addSuppressed(humanReadableFailure);
       }
     }
   }

@@ -15,67 +15,83 @@ class RepositoryPolicyFreshnessTest {
   private static final int MAX_REVIEW_HORIZON_DAYS = 180;
 
   @Test
+  void controlPlaneShapeReviewedSurfacesRemainActiveAndNearTerm() throws IOException {
+    JavaSourceShapePolicy policy =
+        JavaSourceShapePolicy.load(repositoryPolicy("control-plane-shape-policy.tsv"));
+    assertReviewedSurfacesRemainActiveAndNearTerm(
+        policy.rules().stream()
+            .filter(JavaSourceShapePolicy.Rule::isReviewed)
+            .map(JavaSourceShapePolicy.Rule::path)
+            .toList(),
+        policy.rules().stream()
+            .filter(JavaSourceShapePolicy.Rule::isReviewed)
+            .map(JavaSourceShapePolicy.Rule::reviewExpiresOn)
+            .toList(),
+        "control-plane",
+        "Control-plane shape");
+  }
+
+  @Test
   void sourceShapeReviewedSurfacesRemainActiveAndNearTerm() throws IOException {
     JavaSourceShapePolicy policy = JavaSourceShapePolicy.load(repositoryPolicy("source-shape-policy.tsv"));
-    LocalDate today = LocalDate.now(ZoneOffset.UTC);
-    LocalDate maxAllowed = today.plusDays(MAX_REVIEW_HORIZON_DAYS);
-
-    List<String> issues = new ArrayList<>();
-    int reviewedCount = 0;
-    for (JavaSourceShapePolicy.Rule rule : policy.rules()) {
-      if (rule.kind() != JavaSourceShapePolicy.MatchKind.EXACT) {
-        continue;
-      }
-      reviewedCount++;
-      if (rule.reviewExpiresOn().isBefore(today)) {
-        issues.add(rule.path() + " expired on " + rule.reviewExpiresOn());
-      }
-      if (rule.reviewExpiresOn().isAfter(maxAllowed)) {
-        issues.add(
-            rule.path()
-                + " parks review debt too far out at "
-                + rule.reviewExpiresOn()
-                + " (max "
-                + maxAllowed
-                + ").");
-      }
-    }
-
-    assertTrue(
-        reviewedCount > 0,
-        "Repository source-shape policy defines no reviewed exact surfaces; add at least one live reviewed surface or remove this guard.");
-    assertTrue(issues.isEmpty(), () -> "Source-shape policy freshness issues: " + issues);
+    assertReviewedSurfacesRemainActiveAndNearTerm(
+        policy.rules().stream()
+            .filter(JavaSourceShapePolicy.Rule::isReviewed)
+            .map(JavaSourceShapePolicy.Rule::path)
+            .toList(),
+        policy.rules().stream()
+            .filter(JavaSourceShapePolicy.Rule::isReviewed)
+            .map(JavaSourceShapePolicy.Rule::reviewExpiresOn)
+            .toList(),
+        "repository",
+        "Source-shape");
   }
 
   @Test
   void semanticShapeReviewedSurfacesRemainActiveAndNearTerm() throws IOException {
     JavaSemanticShapePolicy policy =
         JavaSemanticShapePolicy.load(repositoryPolicy("semantic-shape-policy.tsv"));
+    assertReviewedSurfacesRemainActiveAndNearTerm(
+        policy.rules().stream()
+            .map(JavaSemanticShapePolicy.Rule::path)
+            .toList(),
+        policy.rules().stream()
+            .map(JavaSemanticShapePolicy.Rule::reviewExpiresOn)
+            .toList(),
+        "semantic",
+        "Semantic-shape");
+  }
+
+  private static void assertReviewedSurfacesRemainActiveAndNearTerm(
+      List<String> reviewedPaths,
+      List<LocalDate> reviewDates,
+      String debtLabel,
+      String policyName) {
     LocalDate today = LocalDate.now(ZoneOffset.UTC);
     LocalDate maxAllowed = today.plusDays(MAX_REVIEW_HORIZON_DAYS);
-
     List<String> issues = new ArrayList<>();
-    int reviewedCount = 0;
-    for (JavaSemanticShapePolicy.Rule rule : policy.rules()) {
-      reviewedCount++;
-      if (rule.reviewExpiresOn().isBefore(today)) {
-        issues.add(rule.path() + " expired on " + rule.reviewExpiresOn());
+    for (int index = 0; index < reviewDates.size(); index++) {
+      LocalDate reviewDate = reviewDates.get(index);
+      String reviewedPath = reviewedPaths.get(index);
+      if (reviewDate.isBefore(today)) {
+        issues.add(reviewedPath + " expired on " + reviewDate);
       }
-      if (rule.reviewExpiresOn().isAfter(maxAllowed)) {
+      if (reviewDate.isAfter(maxAllowed)) {
         issues.add(
-            rule.path()
-                + " parks semantic review debt too far out at "
-                + rule.reviewExpiresOn()
+            reviewedPath
+                + " parks "
+                + debtLabel
+                + " review debt too far out at "
+                + reviewDate
                 + " (max "
                 + maxAllowed
                 + ").");
       }
     }
-
-    assertTrue(
-        reviewedCount > 0,
-        "Repository semantic-shape policy defines no reviewed surfaces; add at least one live reviewed surface or remove this guard.");
-    assertTrue(issues.isEmpty(), () -> "Semantic-shape policy freshness issues: " + issues);
+    assertFalse(
+        reviewedPaths.isEmpty(),
+        policyName + " policy defines no reviewed surfaces; add at least one live reviewed surface or remove this guard.");
+    assertTrue(issues.isEmpty(), () -> policyName + " policy freshness issues: " + issues);
   }
 
   private static Path repositoryPolicy(String fileName) {

@@ -82,42 +82,62 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void emitFallsBackToStructuredStderrWhenTheInitialFailureWriteFailsOnce() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    try (FailOnceThenCaptureOutputStream stderr = new FailOnceThenCaptureOutputStream()) {
+  void emitFallsBackToStructuredStderrWhenStdoutCannotCarryTheFailurePayload() throws IOException {
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    try (AlwaysFailingOutputStream stdout = new AlwaysFailingOutputStream("stdout exploded")) {
       int exitCode =
           CliUnexpectedFailureSupport.emit(
               new String[] {"--help"},
               Optional.empty(),
               stdout,
               stderr,
-              new IllegalStateException("stderr boom"));
+              new IllegalStateException("boom"));
 
       CliFailureReport failure = cliFailure(stderr.toByteArray());
       assertEquals(1, exitCode);
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.code());
-      assertEquals("stderr boom", failure.message());
+      assertEquals("boom", failure.message());
+    }
+  }
+
+  @Test
+  void emitRetriesStructuredFailureOnStderrAfterThePrimaryStderrWriteAndStdoutFallbackBothFail()
+      throws IOException {
+    try (FailOnceThenCaptureOutputStream stderr = new FailOnceThenCaptureOutputStream()) {
+      int exitCode =
+          CliUnexpectedFailureSupport.emit(
+              new String[] {"--help"},
+              Optional.empty(),
+              new AlwaysFailingOutputStream("stdout exploded"),
+              stderr,
+              new IllegalStateException("boom"));
+
+      CliFailureReport failure = cliFailure(stderr.toByteArray());
+      assertEquals(1, exitCode);
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.code());
+      assertEquals("boom", failure.message());
     }
   }
 
   @Test
   void emitFallsBackToHumanReadableMessageWhenNoStructuredChannelCanRecover() throws IOException {
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     Path responseDirectory = Files.createTempDirectory("gridgrind-cli-bad-dir-");
+    try (FailTwiceThenCaptureOutputStream stderr = new FailTwiceThenCaptureOutputStream()) {
+      int exitCode =
+          CliUnexpectedFailureSupport.emit(
+              new String[] {"--help", "--response", responseDirectory.toString()},
+              Optional.of(responseDirectory),
+              new AlwaysFailingOutputStream("stdout exploded"),
+              stderr,
+              new IllegalStateException("boom"));
 
-    int exitCode =
-        CliUnexpectedFailureSupport.emit(
-            new String[] {"--help", "--response", responseDirectory.toString()},
-            Optional.of(responseDirectory),
-            new AlwaysFailingOutputStream("stdout exploded"),
-            stderr,
-            new IllegalStateException("boom"));
-
-    assertEquals(1, exitCode);
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains("GridGrind failed before it could emit a structured error payload."));
+      assertEquals(1, exitCode);
+      assertTrue(
+          stderr
+              .toString(StandardCharsets.UTF_8)
+              .contains(
+                  "GridGrind failed before it could emit a structured error payload to the response fallback channels."));
+    }
   }
 
   @Test
@@ -126,7 +146,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         CliUnexpectedFailureSupport.emit(
             new String[] {"--help"},
             Optional.empty(),
-            new ByteArrayOutputStream(),
+            new AlwaysFailingOutputStream("stdout exploded"),
             new AlwaysFailingOutputStream("stderr exploded"),
             new IllegalStateException("boom"));
 
@@ -149,6 +169,11 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
     @Override
     public void write(byte[] buffer, int offset, int length) throws IOException {
       throw new IOException(message);
+    }
+
+    @Override
+    public void close() throws IOException {
+      // Preserve no-op close so try-with-resources can use the probe cleanly.
     }
   }
 
@@ -177,6 +202,39 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
 
     byte[] toByteArray() {
       return delegate.toByteArray();
+    }
+  }
+
+  /** Output stream probe that fails twice, then captures the human-readable final fallback. */
+  private static final class FailTwiceThenCaptureOutputStream extends OutputStream {
+    private final ByteArrayOutputStream delegate = new ByteArrayOutputStream();
+    private int failures;
+
+    @Override
+    public void write(int value) throws IOException {
+      if (failures < 2) {
+        failures++;
+        throw new IOException("write exploded");
+      }
+      delegate.write(value);
+    }
+
+    @Override
+    public void write(byte[] buffer, int offset, int length) throws IOException {
+      if (failures < 2) {
+        failures++;
+        throw new IOException("write exploded");
+      }
+      delegate.write(buffer, offset, length);
+    }
+
+    @Override
+    public void close() throws IOException {
+      delegate.close();
+    }
+
+    String toString(java.nio.charset.Charset charset) {
+      return delegate.toString(charset);
     }
   }
 }

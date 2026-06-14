@@ -29,9 +29,8 @@
         <exclude name="DataClass"/>
         <!-- PMD's broad structural heuristics remain too blunt for the always-on general
              ruleset because a few workbook facades and sealed contract unions are intentionally
-             data-heavy. Repo-wide `verifyJavaSourceShape` and `verifyJavaSourceDuplication`
-             gates own breadth budgets, while the build-owned `verifyJavaSemanticShape` gate
-             runs the stricter semantic-shape PMD profile with explicit reviewed exceptions. -->
+             data-heavy. Repo-wide `verifyJavaSourceShape`, `verifyControlPlaneShape`, and
+             `verifyJavaSourceDuplication` gates own breadth budgets, while the build-owned `verifyJavaSemanticShape` gate runs the stricter semantic-shape PMD profile with explicit reviewed exceptions. -->
         <exclude name="GodClass"/>
         <exclude name="TooManyMethods"/>
         <exclude name="CyclomaticComplexity"/>

@@ -75,9 +75,9 @@ class GridGrindJsonTest {
 
   @Test
   void rejectsRequestsThatOmitRequiredTopLevelSections() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -141,9 +141,9 @@ class GridGrindJsonTest {
 
   @Test
   void rejectsExplicitNullPlaceholdersDuringRequestRead() {
-    InvalidRequestException topLevelNull =
+    InvalidRequestShapeException topLevelNull =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -154,9 +154,9 @@ class GridGrindJsonTest {
                     }
                     """
                         .getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestException nestedNull =
+    InvalidRequestShapeException nestedNull =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -208,6 +208,7 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
+    assertInstanceOf(InvalidRequestShapeException.class, missingProtocolVersion);
     assertInstanceOf(PayloadException.class, missingProtocolVersion);
     PayloadException payloadException = (PayloadException) missingProtocolVersion;
     assertEquals("Missing required field 'protocolVersion'", missingProtocolVersion.getMessage());

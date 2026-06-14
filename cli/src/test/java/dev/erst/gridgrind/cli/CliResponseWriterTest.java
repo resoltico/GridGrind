@@ -16,6 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,7 +127,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writeCliFailureReportWithoutResponsePathWritesTheCompactFailureToStdout()
+  void writeCliFailureReportWithoutResponsePathWritesTheCompactFailureToStderr()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -194,6 +195,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeRequestFailureReportEmitsRequestFailurePointerOnStderr() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-request-failure-report-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -271,6 +273,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeToResponseFileEmitsStderrPointerForNonSuccessResponses() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-failure-response-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     GridGrindResponse.Failure failure =
@@ -301,6 +304,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeWithExplicitLogicalExitCodeDelegatesToTheSharedResponsePathFlow() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-explicit-exit-response-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -321,6 +325,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeWithExplicitLogicalExitCodeEmitsCompactPointerForSuccessPayloads() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-explicit-stderr-response-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
@@ -355,6 +360,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeWithoutExplicitStderrDelegatesToTheSharedResponsePathFlow() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-default-stderr-response-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -374,6 +380,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   @Test
   void writeDoctorReportToResponseFileEmitsStderrPointerForInvalidReports() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-invalid-doctor-report-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     RequestDoctorReport report =
@@ -476,6 +483,23 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         "Could not write response file /tmp/response.json: conflict with /tmp/other.json",
         problem.message());
     assertEquals(problem.message(), problem.causes().getFirst().message());
+  }
+
+  @Test
+  void responseWriteMessageFormatsExistingFileAndDirectoryConflicts() throws IOException {
+    Path existingDirectory = Files.createTempDirectory("gridgrind-response-writer-existing-dir-");
+    Path existingFile = Files.createTempFile("gridgrind-response-writer-existing-file-", ".json");
+
+    assertEquals(
+        "Could not write response file " + existingDirectory + ": Is a directory",
+        CliResponseWriter.responseWriteMessage(
+            new FileAlreadyExistsException(existingDirectory.toString()), existingDirectory));
+    assertEquals(
+        "Could not write response file "
+            + existingFile
+            + ": already exists; GridGrind never replaces an existing response file implicitly",
+        CliResponseWriter.responseWriteMessage(
+            new FileAlreadyExistsException(existingFile.toString()), existingFile));
   }
 
   @Test

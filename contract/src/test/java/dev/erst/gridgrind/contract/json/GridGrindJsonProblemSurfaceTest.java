@@ -99,9 +99,9 @@ class GridGrindJsonProblemSurfaceTest {
         assertThrows(
             InvalidJsonException.class,
             () -> GridGrindJson.readResponse("{".getBytes(StandardCharsets.UTF_8)));
-    InvalidRequestException invalidCatalog =
+    InvalidRequestShapeException invalidCatalog =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readProtocolCatalog(
                     """

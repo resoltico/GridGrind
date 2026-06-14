@@ -89,7 +89,12 @@ class ExcelWorkbookImageCatalogSupportTest {
           List.of("/xl/media/image1.png", "/xl/media/image2.png", "/xl/media/image3.png"),
           ExcelWorkbookImageCatalogSupport.packageImagePartNames(workbook.xssfWorkbook()));
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

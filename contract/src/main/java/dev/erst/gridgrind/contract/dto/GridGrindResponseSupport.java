@@ -54,12 +54,8 @@ final class GridGrindResponseSupport {
     Objects.requireNonNull(status, "status must not be null");
     Optional<GridGrindProblemCode> normalizedFailureCode =
         Objects.requireNonNullElseGet(failureCode, Optional::empty);
-    if (status == ExecutionJournal.Status.FAILED && normalizedFailureCode.isEmpty()) {
-      throw new IllegalArgumentException("failureCode must be present when status is FAILED");
-    }
-    if (status != ExecutionJournal.Status.FAILED && normalizedFailureCode.isPresent()) {
-      throw new IllegalArgumentException("failureCode is only permitted when status is FAILED");
-    }
+    validateSyntheticOutcomeRequest(status, normalizedFailureCode);
+    ExecutionJournal.Outcome outcome = syntheticOutcome(status, normalizedFailureCode);
     return new ExecutionJournal(
         Optional.empty(),
         ExecutionJournalLevel.SUMMARY,
@@ -73,9 +69,30 @@ final class GridGrindResponseSupport {
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
         List.of(),
-        new ExecutionJournal.Outcome(
-            status, 0, 0, 0, Optional.empty(), Optional.empty(), normalizedFailureCode),
+        outcome,
         List.of());
+  }
+
+  private static void validateSyntheticOutcomeRequest(
+      ExecutionJournal.Status status, Optional<GridGrindProblemCode> failureCode) {
+    if (status == ExecutionJournal.Status.FAILED && failureCode.isEmpty()) {
+      throw new IllegalArgumentException("FAILED outcomes must include failureCode");
+    }
+    if (status != ExecutionJournal.Status.FAILED && failureCode.isPresent()) {
+      throw new IllegalArgumentException("failureCode is only permitted when status is FAILED");
+    }
+  }
+
+  private static ExecutionJournal.Outcome syntheticOutcome(
+      ExecutionJournal.Status status, Optional<GridGrindProblemCode> failureCode) {
+    return switch (status) {
+      case SUCCEEDED -> ExecutionJournal.Outcome.succeeded(0, 0, 0);
+      case FAILED ->
+          ExecutionJournal.Outcome.failed(0, 0, 0, failureCode.orElseThrow(), Optional.empty());
+      case NOT_STARTED, NOT_REQUESTED ->
+          throw new IllegalArgumentException(
+              "synthetic journal outcome does not support " + status);
+    };
   }
 
   static List<String> copyDistinctStrings(List<String> values, String fieldName) {

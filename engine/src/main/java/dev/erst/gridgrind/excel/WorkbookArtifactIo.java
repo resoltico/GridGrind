@@ -40,6 +40,7 @@ public final class WorkbookArtifactIo {
       ExcelOoxmlPackageSecuritySnapshot sourceSecurity,
       Optional<String> sourceEncryptionPassword,
       boolean sourceMutated,
+      WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
     WorkbookPackageIo.persistMaterializedWorkbook(
@@ -48,6 +49,7 @@ public final class WorkbookArtifactIo {
         sourceSecurity,
         sourceEncryptionPassword,
         sourceMutated,
+        writeDisposition,
         persistenceOptions);
   }
 

@@ -302,42 +302,24 @@ class DtoEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DrawingObjectReport.SignatureLine(
+                    DrawingObjectReportTestSupport.signatureLine(
                         "Signature",
                         twoCell,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        "image/png",
-                        null,
-                        null,
-                        null,
-                        null))
+                        Optional.empty(),
+                        DrawingObjectReportTestSupport.signaturePreview(
+                            null, "image/png", null, null, null, null)))
             .getMessage());
     assertEquals(
         "previewHeightPixels must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new DrawingObjectReport.SignatureLine(
+                    DrawingObjectReportTestSupport.signatureLine(
                         "Signature",
                         twoCell,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        ExcelPictureFormat.PNG,
-                        "image/png",
-                        1L,
-                        "sha",
-                        10,
-                        -1))
+                        Optional.empty(),
+                        DrawingObjectReportTestSupport.signaturePreview(
+                            ExcelPictureFormat.PNG, "image/png", 1L, "sha", 10, -1)))
             .getMessage());
     assertEquals(
         "description must not be blank",
@@ -501,49 +483,46 @@ class DtoEdgeCoverageTest {
             .getMessage());
 
     assertEquals(
-        "keyBits must be positive when encrypted",
+        "keyBits must be positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(0),
-                        Optional.of(16),
-                        Optional.of(100)))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        0,
+                        16,
+                        100))
             .getMessage());
     assertEquals(
-        "blockSize must be positive when encrypted",
+        "blockSize must be positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(0),
-                        Optional.of(100)))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        0,
+                        100))
             .getMessage());
     assertEquals(
-        "spinCount must be zero or positive when encrypted",
+        "spinCount must be zero or positive",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new OoxmlEncryptionReport(
-                        true,
-                        Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                        Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                        Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                        Optional.of(ExcelOoxmlChainingMode.CBC),
-                        Optional.of(128),
-                        Optional.of(16),
-                        Optional.of(-1)))
+                    new OoxmlEncryptionReport.Encrypted(
+                        ExcelOoxmlEncryptionMode.AGILE,
+                        ExcelOoxmlCipherAlgorithm.AES_256,
+                        ExcelOoxmlHashAlgorithm.SHA_512,
+                        ExcelOoxmlChainingMode.CBC,
+                        128,
+                        16,
+                        -1))
             .getMessage());
     assertEquals(
         "theme must not be negative",
@@ -721,30 +700,25 @@ class DtoEdgeCoverageTest {
             "BudgetTable",
             "Budget",
             "A1:B2",
-            1,
-            0,
-            List.of("Owner"),
-            List.of(
-                TableColumnReport.create(
-                    1L,
-                    "Owner",
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty())),
+            new TableEntryReport.Structure(
+                1,
+                0,
+                List.of("Owner"),
+                List.of(
+                    TableColumnReport.create(
+                        1L,
+                        "Owner",
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()))),
             new TableStyleReport.Named("TableStyleMedium2", true, false, false, false),
-            true,
-            Optional.empty(),
-            false,
-            false,
-            false,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty());
-    assertEquals(Optional.empty(), table.comment());
-    assertEquals(Optional.empty(), table.headerRowCellStyle());
-    assertEquals(Optional.empty(), table.dataCellStyle());
-    assertEquals(Optional.empty(), table.totalsRowCellStyle());
+            new TableEntryReport.Behavior(true, false, false, false),
+            TableEntryReport.Presentation.empty());
+    assertEquals(Optional.empty(), table.presentation().comment());
+    assertEquals(Optional.empty(), table.presentation().headerRowCellStyle());
+    assertEquals(Optional.empty(), table.presentation().dataCellStyle());
+    assertEquals(Optional.empty(), table.presentation().totalsRowCellStyle());
     assertEquals(
         "columnNames must not contain nulls",
         assertThrows(
@@ -754,19 +728,11 @@ class DtoEdgeCoverageTest {
                         "BudgetTable",
                         "Budget",
                         "A1:B2",
-                        1,
-                        0,
-                        Arrays.asList((String) null),
-                        List.of(),
+                        new TableEntryReport.Structure(
+                            1, 0, Arrays.asList((String) null), List.of()),
                         new TableStyleReport.None(),
-                        false,
-                        Optional.empty(),
-                        false,
-                        false,
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
+                        TableEntryReport.Behavior.defaults(),
+                        TableEntryReport.Presentation.empty()))
             .getMessage());
     assertEquals(
         "columns must not contain nulls",
@@ -777,19 +743,11 @@ class DtoEdgeCoverageTest {
                         "BudgetTable",
                         "Budget",
                         "A1:B2",
-                        1,
-                        0,
-                        List.of("Owner"),
-                        Arrays.asList((TableColumnReport) null),
+                        new TableEntryReport.Structure(
+                            1, 0, List.of("Owner"), Arrays.asList((TableColumnReport) null)),
                         new TableStyleReport.None(),
-                        false,
-                        Optional.empty(),
-                        false,
-                        false,
-                        false,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
+                        TableEntryReport.Behavior.defaults(),
+                        TableEntryReport.Presentation.empty()))
             .getMessage());
 
     assertEquals(
@@ -816,11 +774,36 @@ class DtoEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
+                    new OoxmlSignatureReport(" ", Optional.empty(), ExcelOoxmlSignatureState.VALID))
+            .getMessage());
+    assertEquals(
+        Optional.empty(),
+        new OoxmlSignatureReport(
+                "/_xmlsignatures/sig1.xml",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                ExcelOoxmlSignatureState.VALID)
+            .signer());
+    assertEquals(
+        Optional.of(new OoxmlSignatureReport.SignerIdentity("CN=GridGrind", "CN=Issuer", "01AB")),
+        new OoxmlSignatureReport(
+                "/_xmlsignatures/sig1.xml",
+                Optional.of("CN=GridGrind"),
+                Optional.of("CN=Issuer"),
+                Optional.of("01AB"),
+                ExcelOoxmlSignatureState.VALID)
+            .signer());
+    assertEquals(
+        "signer identity must be either wholly absent or wholly present",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
                     new OoxmlSignatureReport(
-                        " ",
+                        "/_xmlsignatures/sig1.xml",
+                        Optional.of("CN=GridGrind"),
                         Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty(),
+                        Optional.of("01AB"),
                         ExcelOoxmlSignatureState.VALID))
             .getMessage());
     assertEquals(

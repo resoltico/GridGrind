@@ -11,15 +11,8 @@ public record CustomXmlMappingReport(
     String name,
     String rootElement,
     String schemaId,
-    boolean showImportExportValidationErrors,
-    boolean autoFit,
-    boolean append,
-    boolean preserveSortAfLayout,
-    boolean preserveFormat,
-    @Nullable String schemaNamespace,
-    @Nullable String schemaLanguage,
-    @Nullable String schemaReference,
-    @Nullable String schemaXml,
+    Settings settings,
+    Schema schema,
     @Nullable CustomXmlDataBindingReport dataBinding,
     List<CustomXmlLinkedCellReport> linkedCells,
     List<CustomXmlLinkedTableReport> linkedTables) {
@@ -30,20 +23,40 @@ public record CustomXmlMappingReport(
     name = requireNonBlank(name, "name");
     rootElement = requireNonBlank(rootElement, "rootElement");
     schemaId = requireNonBlank(schemaId, "schemaId");
-    if (schemaNamespace != null) {
-      schemaNamespace = requireNonBlank(schemaNamespace, "schemaNamespace");
-    }
-    if (schemaLanguage != null) {
-      schemaLanguage = requireNonBlank(schemaLanguage, "schemaLanguage");
-    }
-    if (schemaReference != null) {
-      schemaReference = requireNonBlank(schemaReference, "schemaReference");
-    }
-    if (schemaXml != null) {
-      schemaXml = requireNonBlank(schemaXml, "schemaXml");
-    }
+    Objects.requireNonNull(settings, "settings must not be null");
+    Objects.requireNonNull(schema, "schema must not be null");
     linkedCells = copyValues(linkedCells, "linkedCells");
     linkedTables = copyValues(linkedTables, "linkedTables");
+  }
+
+  /** Persisted custom-XML map behavior flags. */
+  public record Settings(
+      boolean showImportExportValidationErrors,
+      boolean autoFit,
+      boolean append,
+      boolean preserveSortAfLayout,
+      boolean preserveFormat) {}
+
+  /** Optional schema metadata attached to one custom-XML mapping. */
+  public record Schema(
+      @Nullable String namespace,
+      @Nullable String language,
+      @Nullable String reference,
+      @Nullable String xml) {
+    public Schema {
+      if (namespace != null) {
+        namespace = requireNonBlank(namespace, "namespace");
+      }
+      if (language != null) {
+        language = requireNonBlank(language, "language");
+      }
+      if (reference != null) {
+        reference = requireNonBlank(reference, "reference");
+      }
+      if (xml != null) {
+        xml = requireNonBlank(xml, "xml");
+      }
+    }
   }
 
   private static String requireNonBlank(@Nullable String value, String fieldName) {

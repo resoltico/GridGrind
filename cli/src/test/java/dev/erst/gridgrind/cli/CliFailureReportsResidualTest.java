@@ -9,7 +9,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -40,8 +40,9 @@ class CliFailureReportsResidualTest {
             "doctor-request",
             Optional.of("--request"),
             problem(
-                GridGrindProblemCode.INVALID_REQUEST, "Missing required field 'protocolVersion'"),
-            new InvalidRequestException(
+                GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+                "Missing required field 'protocolVersion'"),
+            new InvalidRequestShapeException(
                 "Missing required field 'protocolVersion'",
                 Optional.of("protocolVersion"),
                 Optional.empty(),
@@ -50,8 +51,28 @@ class CliFailureReportsResidualTest {
 
     assertEquals(
         Optional.of(
-            "Add protocolVersion: \"V1\" at the request root. Rerun --doctor-request after"
-                + " correcting the request."),
+            "Add protocolVersion: \"V1\" at the request root. Use"
+                + " --print-protocol-catalog --search \"sheet layout\" or --help-protocol when"
+                + " you need the authoritative field and discriminator contract."),
+        failure.resolution());
+  }
+
+  @Test
+  void readRequestFailureUsesDoctorRepairTextForSpecificInvalidRequestInvariants() {
+    CliFailureReport failure =
+        CliFailureReports.readRequestFailure(
+            1,
+            "doctor-request",
+            Optional.of("--request"),
+            problem(
+                GridGrindProblemCode.INVALID_REQUEST,
+                "steps must not contain duplicate stepId values: duplicate"),
+            new RuntimeException("duplicate"));
+
+    assertEquals(
+        Optional.of(
+            "Make every stepId unique. Rename or remove the duplicate value 'duplicate'."
+                + " Rerun --doctor-request after correcting the request."),
         failure.resolution());
   }
 

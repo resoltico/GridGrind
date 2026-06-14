@@ -8,7 +8,6 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import java.nio.file.Path;
 import java.util.List;
@@ -78,10 +77,10 @@ class CliFailureReportsTest {
             "execute",
             Optional.of("--request"),
             problem(
-                GridGrindProblemCode.INVALID_REQUEST,
+                GridGrindProblemCode.INVALID_REQUEST_SHAPE,
                 "Missing required field 'protocolVersion'",
                 JsonLocation.pathOnly("protocolVersion")),
-            new InvalidRequestException(
+            new InvalidRequestShapeException(
                 "Missing required field 'protocolVersion'",
                 Optional.of("protocolVersion"),
                 Optional.empty(),
@@ -91,8 +90,9 @@ class CliFailureReportsTest {
     assertEquals(Optional.of("protocolVersion"), failure.location().orElseThrow().jsonPath());
     assertEquals(
         Optional.of(
-            "Add protocolVersion: \"V1\" at the request root. Run --doctor-request first, then"
-                + " execute the corrected request."),
+            "Add protocolVersion: \"V1\" at the request root. Use"
+                + " --print-protocol-catalog --search \"sheet layout\" or --help-protocol when"
+                + " you need the authoritative field and discriminator contract."),
         failure.resolution());
   }
 

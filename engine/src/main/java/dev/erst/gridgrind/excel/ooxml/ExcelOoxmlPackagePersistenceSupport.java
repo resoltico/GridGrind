@@ -12,7 +12,9 @@ public final class ExcelOoxmlPackagePersistenceSupport {
       Optional<String> sourceEncryptionPassword,
       ExcelOoxmlPersistenceOptions persistenceOptions) {
     Optional<ExcelOoxmlEncryptionOptions> encryption = persistenceOptions.encryption();
-    if (encryption.isEmpty() && sourceSecurity.encryption().encrypted()) {
+    if (encryption.isEmpty()
+        && sourceSecurity.encryption()
+            instanceof ExcelOoxmlEncryptionSnapshot.Encrypted sourceEncryption) {
       if (sourceEncryptionPassword.isEmpty()) {
         throw new IllegalStateException(
             "Encrypted source workbooks must retain their verified source password while open");
@@ -20,8 +22,7 @@ public final class ExcelOoxmlPackagePersistenceSupport {
       encryption =
           Optional.of(
               new ExcelOoxmlEncryptionOptions(
-                  sourceEncryptionPassword.orElseThrow(),
-                  sourceSecurity.encryption().mode().orElseThrow()));
+                  sourceEncryptionPassword.orElseThrow(), sourceEncryption.mode()));
     }
     return new ExcelOoxmlPersistenceOptions(encryption, persistenceOptions.signature());
   }

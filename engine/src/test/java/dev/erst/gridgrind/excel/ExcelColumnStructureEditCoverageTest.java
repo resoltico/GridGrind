@@ -194,69 +194,73 @@ class ExcelColumnStructureEditCoverageTest extends ExcelRowColumnStructureTestSu
 
   @Test
   void columnDeleteRejectsOverlappingRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "C1", "Low");
-      setString(sheet, "D2", "High");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$C$1:$D$2");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> columnController.deleteColumns(sheet, new ExcelColumnSpan(2, 2)));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertColumnNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$C$1:$D$2",
+        new ExcelColumnSpan(2, 2),
+        (workbook, sheet, columns) ->
+            runUnchecked(() -> columnController.deleteColumns(sheet, columns)),
+        "C1",
+        "Low",
+        "D2",
+        "High");
   }
 
   @Test
   void columnShiftRejectsDestructiveRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A1", "Named");
-      setString(sheet, "B2", "Range");
-      setString(sheet, "C1", "Shifted");
-      setString(sheet, "D1", "Columns");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$A$1:$B$2");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertColumnNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$A$1:$B$2",
+        new ExcelColumnSpan(2, 3),
+        (workbook, sheet, columns) ->
+            runUnchecked(() -> columnController.shiftColumns(sheet, columns, -2)),
+        "A1",
+        "Named",
+        "B2",
+        "Range",
+        "C1",
+        "Shifted",
+        "D1",
+        "Columns");
   }
 
   @Test
   void columnShiftAllowsUntouchedRangeBackedNamedRangesBetweenSourceAndDestination()
       throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A1", "Move");
-      setString(sheet, "F1", "Named");
-      setString(sheet, "G1", "Range");
-      setString(sheet, "K1", "Tail");
-      seedNamedRange(workbook, "UntouchedColumns", "Budget!$F$1:$G$1");
-
-      assertDoesNotThrow(() -> columnController.shiftColumns(sheet, new ExcelColumnSpan(0, 0), 10));
-      assertEquals("Budget!$F$1:$G$1", workbook.getName("UntouchedColumns").getRefersToFormula());
-    }
+    assertColumnNamedRangeUntouched(
+        "Budget",
+        "UntouchedColumns",
+        "Budget!$F$1:$G$1",
+        new ExcelColumnSpan(0, 0),
+        (workbook, sheet, columns) ->
+            runUnchecked(() -> columnController.shiftColumns(sheet, columns, 10)),
+        "A1",
+        "Move",
+        "F1",
+        "Named",
+        "G1",
+        "Range",
+        "K1",
+        "Tail");
   }
 
   @Test
   void columnShiftRejectsPartiallyMovedRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "B1", "Named");
-      setString(sheet, "C2", "Range");
-      setString(sheet, "D1", "Columns");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$B$1:$C$2");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> columnController.shiftColumns(sheet, new ExcelColumnSpan(2, 3), -2));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertColumnNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$B$1:$C$2",
+        new ExcelColumnSpan(2, 3),
+        (workbook, sheet, columns) ->
+            runUnchecked(() -> columnController.shiftColumns(sheet, columns, -2)),
+        "B1",
+        "Named",
+        "C2",
+        "Range",
+        "D1",
+        "Columns");
   }
 
   @Test

@@ -828,41 +828,40 @@ class WorkbookInvariantChecksTest {
                             "BudgetTable",
                             "Budget",
                             "A1:C5",
-                            1,
-                            1,
-                            List.of("Item", "Status", "Owner"),
-                            List.of(
-                                new TableColumnReport(
-                                    1L,
-                                    "Item",
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.empty()),
-                                new TableColumnReport(
-                                    2L,
-                                    "Status",
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.of("sum"),
-                                    Optional.empty()),
-                                new TableColumnReport(
-                                    3L,
-                                    "Owner",
-                                    Optional.of("owner_unique"),
-                                    Optional.empty(),
-                                    Optional.empty(),
-                                    Optional.of("CONCAT([@Owner],\"-\",[@Status])"))),
+                            new TableEntryReport.Structure(
+                                1,
+                                1,
+                                List.of("Item", "Status", "Owner"),
+                                List.of(
+                                    new TableColumnReport(
+                                        1L,
+                                        "Item",
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.empty()),
+                                    new TableColumnReport(
+                                        2L,
+                                        "Status",
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.of("sum"),
+                                        Optional.empty()),
+                                    new TableColumnReport(
+                                        3L,
+                                        "Owner",
+                                        Optional.of("owner_unique"),
+                                        Optional.empty(),
+                                        Optional.empty(),
+                                        Optional.of("CONCAT([@Owner],\"-\",[@Status])")))),
                             new TableStyleReport.Named(
                                 "TableStyleMedium2", false, false, true, false),
-                            true,
-                            Optional.of("Team queue"),
-                            true,
-                            false,
-                            true,
-                            Optional.of("HeaderStyle"),
-                            Optional.of("DataStyle"),
-                            Optional.of("TotalsStyle"))))));
+                            new TableEntryReport.Behavior(true, true, false, true),
+                            new TableEntryReport.Presentation(
+                                Optional.of("Team queue"),
+                                Optional.of("HeaderStyle"),
+                                Optional.of("DataStyle"),
+                                Optional.of("TotalsStyle")))))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -1170,15 +1169,14 @@ class WorkbookInvariantChecksTest {
                 new WorkbookInspectionResult.PackageSecurityResult(
                     "security",
                     new dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport(
-                        new dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport(
-                            true,
-                            Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                            Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                            Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                            Optional.of(ExcelOoxmlChainingMode.CBC),
-                            Optional.of(256),
-                            Optional.of(16),
-                            Optional.of(100000)),
+                        new dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport.Encrypted(
+                            ExcelOoxmlEncryptionMode.AGILE,
+                            ExcelOoxmlCipherAlgorithm.AES_256,
+                            ExcelOoxmlHashAlgorithm.SHA_512,
+                            ExcelOoxmlChainingMode.CBC,
+                            256,
+                            16,
+                            100000),
                         List.of(
                             new dev.erst.gridgrind.contract.dto.OoxmlSignatureReport(
                                 "/_xmlsignatures/sig1.xml",
@@ -1279,15 +1277,9 @@ class WorkbookInvariantChecksTest {
         "BudgetMap",
         "BudgetMap",
         "schema-1",
-        true,
-        true,
-        false,
-        true,
-        true,
-        "urn:gridgrind:budget",
-        "en-US",
-        "budget-map.xsd",
-        "<xs:schema/>",
+        new CustomXmlMappingReport.Settings(true, true, false, true, true),
+        new CustomXmlMappingReport.Schema(
+            "urn:gridgrind:budget", "en-US", "budget-map.xsd", "<xs:schema/>"),
         new CustomXmlDataBindingReport("BudgetBinding", false, 42L, "budget.xml", 1L),
         List.of(new CustomXmlLinkedCellReport("Ops", "A2", "/BudgetMap/Owner[1]", "string")),
         List.of(
@@ -1299,18 +1291,22 @@ class WorkbookInvariantChecksTest {
     return new DrawingObjectReport.SignatureLine(
         "BudgetSignature",
         twoCellAnchor(),
-        "sig-setup-01",
-        false,
-        "Review the budget before signing.",
-        "Ada Lovelace",
-        "Finance",
-        "ada@example.com",
-        ExcelPictureFormat.PNG,
-        "image/png",
-        128L,
-        "0123456789abcdef",
-        320,
-        120);
+        Optional.of(
+            new DrawingObjectReport.SignatureSetup(
+                Optional.of("sig-setup-01"),
+                Optional.of(false),
+                Optional.of("Review the budget before signing."),
+                Optional.of("Ada Lovelace"),
+                Optional.of("Finance"),
+                Optional.of("ada@example.com"))),
+        Optional.of(
+            new DrawingObjectReport.SignaturePreview(
+                ExcelPictureFormat.PNG,
+                "image/png",
+                128L,
+                Optional.of("0123456789abcdef"),
+                Optional.of(320),
+                Optional.of(120))));
   }
 
   private static List<ChartReport.Axis> chartCategoryAxes() {
