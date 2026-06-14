@@ -20,7 +20,7 @@ final class JavaSourceShapeReviewPolicy {
       String relativePath,
       JavaSourceShapePolicy.Rule reviewedRule,
       JavaSourceShapePolicy.Rule broaderRule,
-      JavaSourceShapeAnalyzer.Metrics metrics,
+      SourceShapeMetrics metrics,
       LocalDate today) {
     List<String> issues = new ArrayList<>();
     if (reviewedRule.reviewExpiresOn().isBefore(today)) {
@@ -111,8 +111,31 @@ final class JavaSourceShapeReviewPolicy {
   }
 
   static List<String> familyIssues(
-      JavaSourceShapePolicy.Rule familyRule, JavaSourceShapeAnalyzer.Metrics maxMetrics) {
+      JavaSourceShapePolicy.Rule familyRule,
+      SourceShapeMetrics maxMetrics,
+      JavaSourceShapePolicy.Rule defaultRule,
+      LocalDate today) {
     List<String> issues = new ArrayList<>();
+    if (familyRule.isReviewed() && familyRule.reviewExpiresOn().isBefore(today)) {
+      issues.add(
+          "PREFIX source-shape family "
+              + familyRule.path()
+              + " ["
+              + familyRule.role()
+              + "] expired on "
+              + familyRule.reviewExpiresOn()
+              + ". Re-review the family budget or remove the broader exception.");
+    }
+    if (familyRule.isReviewed()
+        && familyRule.duplicationGuard() == JavaSourceShapePolicy.DuplicationGuard.CHECK
+        && !meaningfullyLooserThan(familyRule, defaultRule)) {
+      issues.add(
+          "PREFIX source-shape family "
+              + familyRule.path()
+              + " ["
+              + familyRule.role()
+              + "] no longer widens any default budget. Remove the reviewed family exception.");
+    }
     addFamilyHeadroomIssue(
         issues,
         "lines",
@@ -174,6 +197,22 @@ final class JavaSourceShapeReviewPolicy {
 
   private static boolean tighter(Integer reviewedLimit, Integer broaderLimit) {
     return reviewedLimit != null && (broaderLimit == null || reviewedLimit < broaderLimit);
+  }
+
+  private static boolean meaningfullyLooserThan(
+      JavaSourceShapePolicy.Rule reviewedRule, JavaSourceShapePolicy.Rule broaderRule) {
+    return looser(reviewedRule.maxLines(), broaderRule.maxLines())
+        || looser(reviewedRule.maxMethods(), broaderRule.maxMethods())
+        || looser(reviewedRule.maxPublicMethods(), broaderRule.maxPublicMethods())
+        || looser(reviewedRule.maxImports(), broaderRule.maxImports())
+        || looser(reviewedRule.maxFields(), broaderRule.maxFields())
+        || looser(reviewedRule.maxNestedTypes(), broaderRule.maxNestedTypes())
+        || looser(reviewedRule.maxSwitches(), broaderRule.maxSwitches())
+        || looser(reviewedRule.maxSwitchArms(), broaderRule.maxSwitchArms());
+  }
+
+  private static boolean looser(Integer reviewedLimit, Integer broaderLimit) {
+    return reviewedLimit != null && (broaderLimit == null || reviewedLimit > broaderLimit);
   }
 
   private static void addHeadroomIssue(

@@ -175,15 +175,18 @@ final class GridGrindCliHelpRenderSupport {
     lines.add("    - " + example.id());
     lines.add(
         wrappedText(
-            "request: " + example.suggestedRequestPath(), "      ", "        ", helpTextWidth()));
+            "requestFileName: " + example.requestFileName(),
+            "      ",
+            "        ",
+            helpTextWidth()));
     lines.add(
         wrappedText(
             "workspace: " + example.workspaceMode().name(), "      ", "        ", helpTextWidth()));
     lines.add(wrappedText("summary: " + example.summary(), "      ", "        ", helpTextWidth()));
-    if (!example.requiredPaths().isEmpty()) {
+    if (!example.requiredWorkspacePaths().isEmpty()) {
       lines.add(
           wrappedText(
-              "requiredPaths: " + String.join(", ", example.requiredPaths()),
+              "requiredWorkspacePaths: " + String.join(", ", example.requiredWorkspacePaths()),
               "      ",
               "        ",
               helpTextWidth()));
@@ -196,7 +199,7 @@ final class GridGrindCliHelpRenderSupport {
     lines.add("    - " + task.id());
     lines.add(
         wrappedText(
-            "request: " + task.starter().suggestedRequestPath(),
+            "requestFileName: " + task.starter().requestFileName(),
             "      ",
             "        ",
             helpTextWidth()));
@@ -209,10 +212,11 @@ final class GridGrindCliHelpRenderSupport {
     lines.add(
         wrappedText(
             "summary: " + task.narrative().summary(), "      ", "        ", helpTextWidth()));
-    if (!task.starter().requiredPaths().isEmpty()) {
+    if (!task.starter().requiredWorkspacePaths().isEmpty()) {
       lines.add(
           wrappedText(
-              "requiredPaths: " + String.join(", ", task.starter().requiredPaths()),
+              "requiredWorkspacePaths: "
+                  + String.join(", ", task.starter().requiredWorkspacePaths()),
               "      ",
               "        ",
               helpTextWidth()));

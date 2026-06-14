@@ -197,6 +197,14 @@ class GridGrindTaskKeywordMatcherTest {
             TaskVerificationKind.ASSERTION_CHECKS));
   }
 
+  @Test
+  void keywordSurfaceTablesRejectNullKeysWithOwnedMessages() {
+    NullPointerException nullGoal =
+        assertThrows(
+            NullPointerException.class, () -> GridGrindTaskKeywordSurfaces.goalSurface(null));
+    assertEquals("goal must not be null", nullGoal.getMessage());
+  }
+
   private static TaskKeywordMatchReport.Candidate candidate(
       String taskId, int score, List<String> matchedTerms) {
     var task = GridGrindTaskCatalog.entryFor(taskId).orElseThrow();

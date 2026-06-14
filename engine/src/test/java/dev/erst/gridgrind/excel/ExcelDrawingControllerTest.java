@@ -135,7 +135,12 @@ class ExcelDrawingControllerTest {
       sheet.drawings().deleteDrawingObject("OpsConnector");
       assertEquals(3, sheet.drawings().drawingObjects().size());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -189,12 +194,15 @@ class ExcelDrawingControllerTest {
           snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
       ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
           assertInstanceOf(ExcelDrawingObjectSnapshot.SignatureLine.class, snapshots.getFirst());
-      assertFalse(signatureLine.allowComments());
-      assertEquals("Review the numbers before signing.", signatureLine.signingInstructions());
-      assertEquals("Ada Lovelace", signatureLine.suggestedSigner());
-      assertEquals(ExcelPictureFormat.PNG, signatureLine.previewFormat());
-      assertEquals(400, signatureLine.previewWidthPixels());
-      assertEquals(150, signatureLine.previewHeightPixels());
+      assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
+      assertEquals(
+          "Review the numbers before signing.",
+          signatureLine.setup().orElseThrow().signingInstructions().orElseThrow());
+      assertEquals(
+          "Ada Lovelace", signatureLine.setup().orElseThrow().suggestedSigner().orElseThrow());
+      assertEquals(ExcelPictureFormat.PNG, signatureLine.preview().orElseThrow().format());
+      assertEquals(400, signatureLine.preview().orElseThrow().widthPixels().orElseThrow());
+      assertEquals(150, signatureLine.preview().orElseThrow().heightPixels().orElseThrow());
 
       IllegalArgumentException noPayload =
           assertThrows(
@@ -212,7 +220,12 @@ class ExcelDrawingControllerTest {
                   .orElseThrow());
       assertEquals(movedAnchor, movedSignature.anchor());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -234,11 +247,18 @@ class ExcelDrawingControllerTest {
                   .findFirst()
                   .orElseThrow());
       assertEquals(movedAnchor, signatureLine.anchor());
-      assertEquals("Finance", signatureLine.suggestedSigner2());
-      assertEquals("ada@example.com", signatureLine.suggestedSignerEmail());
+      assertEquals("Finance", signatureLine.setup().orElseThrow().suggestedSigner2().orElseThrow());
+      assertEquals(
+          "ada@example.com",
+          signatureLine.setup().orElseThrow().suggestedSignerEmail().orElseThrow());
 
       sheet.drawings().deleteDrawingObject("OpsSignature");
-      reopened.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      reopened
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -278,7 +298,12 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -334,7 +359,12 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook workbook =
@@ -374,7 +404,12 @@ class ExcelDrawingControllerTest {
                           new ExcelChartDefinition.Title.None(),
                           ExcelChartTestSupport.ref("A2:A4"),
                           ExcelChartTestSupport.ref("B2:B4")))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -461,7 +496,12 @@ class ExcelDrawingControllerTest {
                                   new ExcelChartDefinition.Title.Text("Actual"),
                                   ExcelChartTestSupport.ref("A2:A4"),
                                   ExcelChartTestSupport.ref("C2:C4")))))));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -549,7 +589,12 @@ class ExcelDrawingControllerTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.sheet("Ops").annotations().clearComment("A1");
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -576,7 +621,12 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -631,7 +681,12 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -688,7 +743,12 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -782,7 +842,12 @@ class ExcelDrawingControllerTest {
                   ExcelPictureFormat.PNG,
                   new ExcelBinaryData(PNG_PIXEL_BYTES),
                   anchor(1, 1, 4, 6)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -851,7 +916,12 @@ class ExcelDrawingControllerTest {
 
       assertUpdatedChartSnapshot(sheet, movedAnchor);
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertPersistedChartWorkbook(workbookPath);
@@ -859,7 +929,12 @@ class ExcelDrawingControllerTest {
     try (ExcelWorkbook reopened =
         ExcelWorkbooks.open(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       reopened.sheet("Chart").drawings().deleteDrawingObject("OpsChart");
-      reopened.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      reopened
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
@@ -953,7 +1028,12 @@ class ExcelDrawingControllerTest {
           ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
 
       sheet.cells().setCell("F1", ExcelCellValue.text("Touch"));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {

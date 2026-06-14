@@ -20,8 +20,16 @@ final class DashboardTaskDefinition {
     return task(
         "DASHBOARD",
         discovery(
-            List.of("dashboard", "charts", "chart", "kpi", "scorecard", "executive summary"),
-            List.of("office", "dashboard", "charts", "summary", "kpi"),
+            List.of(
+                "dashboard",
+                "charts",
+                "chart",
+                "kpi",
+                "scorecard",
+                "executive summary",
+                "sales",
+                "revenue"),
+            List.of("office", "dashboard", "charts", "summary", "kpi", "sales", "revenue"),
             intent(
                 List.of(TaskGoalKind.AUTHOR, TaskGoalKind.VERIFY, TaskGoalKind.ANALYZE),
                 List.of(

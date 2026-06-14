@@ -5,6 +5,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Extended the structural-governance stack beyond handwritten Java: root `check` now runs
+  `verifyControlPlaneShape`, which scans repository-owned shell gates, Kotlin build-logic, the release
+  protocol, and the public changelog ledger against expiring reviewed budgets from
+  `gradle/control-plane-shape-policy.tsv` so the repo-governing control plane cannot drift outside the same
+  no-god-file ratchet model as product code.
+- Tightened the forbidden tagged-union and god-record enforcement so the build now inspects named nested
+  record/class variants as well as direct top-level declarations, closing the blind spot around the
+  sealed-interface-with-nested-record style GridGrind uses for most domain surfaces.
+- Split the packaged CLI discovery and help surface across narrower role-owned seams: identity commands,
+  example/task discovery, protocol-catalog output, trailing-argument validation, and help-section
+  rendering now live on dedicated helpers instead of one broad catalog-command implementation.
+
+### Fixed
+
+- Finished the OOXML encryption, custom-XML, and grouped table-report hard-break migration across the
+  remaining Jazzer and parity verification surfaces, including invariant checks, promoted test fixtures, and
+  Stage 3 support tests, so the regression and replay stack now validates the live sealed DTO model instead
+  of stale flat constructors.
+- Aligned invalid-request-shape reporting across the CLI doctor, runtime problem surface, and JSON codec
+  layer: missing required root fields and explicit `null` placeholders now classify as `INVALID_REQUEST_SHAPE`,
+  and persist-workbook collision reporting no longer dereferences absent save-as paths while building public diagnostics.
+- Hardened deterministic OOXML artifact persistence: the package-copy helper now validates its target path
+  explicitly, and deterministic ZIP-package rewrites now clean their temporary output artifact before rethrowing
+  any rewrite failure.
+  
 ## [0.68.0] - 2026-06-12
 
 ### Changed

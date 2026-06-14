@@ -26,17 +26,7 @@ class AdvancedInspectionProtocolTypesTest {
     WorkbookInspectionResult.PackageSecurityResult result =
         new WorkbookInspectionResult.PackageSecurityResult(
             "security",
-            new OoxmlPackageSecurityReport(
-                new OoxmlEncryptionReport(
-                    false,
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.empty()),
-                List.of()));
+            new OoxmlPackageSecurityReport(new OoxmlEncryptionReport.None(), List.of()));
 
     assertEquals("GET_PACKAGE_SECURITY", query.queryType());
     assertEquals("security", result.stepId());

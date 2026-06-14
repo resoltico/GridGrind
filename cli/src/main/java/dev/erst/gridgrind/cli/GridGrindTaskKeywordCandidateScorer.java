@@ -52,7 +52,7 @@ final class GridGrindTaskKeywordCandidateScorer {
             task.narrative().summary(),
             accumulator.score,
             List.copyOf(accumulator.matchedTerms),
-            List.copyOf(accumulator.matchSources)));
+            accumulator.compactMatchSources()));
   }
 
   private static void scoreDiscoveryProfile(
@@ -208,6 +208,10 @@ final class GridGrindTaskKeywordCandidateScorer {
 
     private TaskMatchAccumulator(TaskEntry task) {
       Objects.requireNonNull(task, "task must not be null");
+    }
+
+    private List<String> compactMatchSources() {
+      return matchSources.stream().limit(4).toList();
     }
   }
 }

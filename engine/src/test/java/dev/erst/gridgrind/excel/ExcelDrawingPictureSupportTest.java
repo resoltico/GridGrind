@@ -62,7 +62,10 @@ class ExcelDrawingPictureSupportTest {
 
       workbook
           .persistence()
-          .save(repairedWorkbook, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              repairedWorkbook,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -302,7 +305,12 @@ class ExcelDrawingPictureSupportTest {
                   ExcelPictureFormat.PNG,
                   anchor(1, 1, 4, 6),
                   Optional.of("Queue preview")));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     return workbookPath;
   }

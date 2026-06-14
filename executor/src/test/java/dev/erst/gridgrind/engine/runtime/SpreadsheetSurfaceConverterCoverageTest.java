@@ -35,7 +35,9 @@ import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
@@ -59,6 +61,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 /** Covers the remaining XLSX conversion and source-resolution branches end to end. */
@@ -130,15 +133,12 @@ class SpreadsheetSurfaceConverterCoverageTest {
             "CORSO_mapping",
             "CORSO",
             "Schema1",
-            false,
-            true,
-            false,
-            true,
-            true,
-            Optional.of("urn:gridgrind:test"),
-            Optional.of("XSD"),
-            Optional.of("schema.xsd"),
-            Optional.of("<xsd:schema/>"),
+            new ExcelCustomXmlMappingSettings(false, true, false, true, true),
+            new ExcelCustomXmlSchemaSnapshot(
+                Optional.of("urn:gridgrind:test"),
+                Optional.of("XSD"),
+                Optional.of("schema.xsd"),
+                Optional.of("<xsd:schema/>")),
             Optional.of(
                 new ExcelCustomXmlDataBindingSnapshot(
                     Optional.of("binding"),
@@ -406,84 +406,143 @@ class SpreadsheetSurfaceConverterCoverageTest {
   }
 
   private static List<ChartPlotInput> inputPlots(ChartSeriesInput series) {
-    return List.of(
-        new ChartPlotInput.Area(false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
-        new ChartPlotInput.Area3D(
-            false,
-            ExcelChartGrouping.PERCENT_STACKED,
-            Optional.of(24),
-            inputAxes(),
-            List.of(series)),
-        new ChartPlotInput.Bar(
-            false,
-            ExcelChartBarDirection.COLUMN,
-            ExcelChartBarGrouping.CLUSTERED,
-            Optional.of(60),
-            Optional.of(0),
-            inputAxes(),
-            List.of(series)),
-        new ChartPlotInput.Bar3D(
-            true,
-            ExcelChartBarDirection.BAR,
-            ExcelChartBarGrouping.STACKED,
-            Optional.of(32),
-            Optional.of(88),
-            Optional.of(ExcelChartBarShape.CONE),
-            inputAxes(),
-            List.of(series)),
-        new ChartPlotInput.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series)),
-        new ChartPlotInput.Line(false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
-        new ChartPlotInput.Line3D(
-            false, ExcelChartGrouping.STANDARD, Optional.of(18), inputAxes(), List.of(series)),
-        new ChartPlotInput.Pie(true, Optional.of(90), List.of(series)),
-        new ChartPlotInput.Pie3D(true, List.of(series)),
-        new ChartPlotInput.Radar(false, ExcelChartRadarStyle.FILLED, inputAxes(), List.of(series)),
-        new ChartPlotInput.Scatter(
-            false, ExcelChartScatterStyle.SMOOTH_MARKER, scatterInputAxes(), List.of(series)),
-        new ChartPlotInput.Surface(false, true, surfaceInputAxes(), List.of(series)),
-        new ChartPlotInput.Surface3D(true, false, surfaceInputAxes(), List.of(series)));
+    return plotVariants().stream().map(variant -> variant.inputFactory().apply(series)).toList();
   }
 
   private static List<ExcelChartSnapshot.Plot> snapshotPlots(ExcelChartSnapshot.Series series) {
+    return plotVariants().stream().map(variant -> variant.snapshotFactory().apply(series)).toList();
+  }
+
+  private static List<PlotVariant> plotVariants() {
     return List.of(
-        new ExcelChartSnapshot.Area(
-            false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Area3D(
-            false,
-            ExcelChartGrouping.PERCENT_STACKED,
-            Optional.of(24),
-            snapshotAxes(),
-            List.of(series)),
-        new ExcelChartSnapshot.Bar(
-            false,
-            ExcelChartBarDirection.COLUMN,
-            ExcelChartBarGrouping.CLUSTERED,
-            Optional.of(60),
-            Optional.of(0),
-            snapshotAxes(),
-            List.of(series)),
-        new ExcelChartSnapshot.Bar3D(
-            true,
-            ExcelChartBarDirection.BAR,
-            ExcelChartBarGrouping.STACKED,
-            Optional.of(32),
-            Optional.of(88),
-            Optional.of(ExcelChartBarShape.CONE),
-            snapshotAxes(),
-            List.of(series)),
-        new ExcelChartSnapshot.Doughnut(true, Optional.of(30), Optional.of(55), List.of(series)),
-        new ExcelChartSnapshot.Line(
-            false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Line3D(
-            false, ExcelChartGrouping.STANDARD, Optional.of(18), snapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(series)),
-        new ExcelChartSnapshot.Pie3D(true, List.of(series)),
-        new ExcelChartSnapshot.Radar(
-            false, ExcelChartRadarStyle.FILLED, snapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Scatter(
-            false, ExcelChartScatterStyle.SMOOTH_MARKER, scatterSnapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Surface(false, true, surfaceSnapshotAxes(), List.of(series)),
-        new ExcelChartSnapshot.Surface3D(true, false, surfaceSnapshotAxes(), List.of(series)));
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Area(
+                    false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Area(
+                    false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Area3D(
+                    false,
+                    ExcelChartGrouping.PERCENT_STACKED,
+                    Optional.of(24),
+                    inputAxes(),
+                    List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Area3D(
+                    false,
+                    ExcelChartGrouping.PERCENT_STACKED,
+                    Optional.of(24),
+                    snapshotAxes(),
+                    List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Bar(
+                    false,
+                    ExcelChartBarDirection.COLUMN,
+                    ExcelChartBarGrouping.CLUSTERED,
+                    Optional.of(60),
+                    Optional.of(0),
+                    inputAxes(),
+                    List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Bar(
+                    false,
+                    ExcelChartBarDirection.COLUMN,
+                    ExcelChartBarGrouping.CLUSTERED,
+                    Optional.of(60),
+                    Optional.of(0),
+                    snapshotAxes(),
+                    List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Bar3D(
+                    true,
+                    ExcelChartBarDirection.BAR,
+                    ExcelChartBarGrouping.STACKED,
+                    Optional.of(32),
+                    Optional.of(88),
+                    Optional.of(ExcelChartBarShape.CONE),
+                    inputAxes(),
+                    List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Bar3D(
+                    true,
+                    ExcelChartBarDirection.BAR,
+                    ExcelChartBarGrouping.STACKED,
+                    Optional.of(32),
+                    Optional.of(88),
+                    Optional.of(ExcelChartBarShape.CONE),
+                    snapshotAxes(),
+                    List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Doughnut(
+                    true, Optional.of(30), Optional.of(55), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Doughnut(
+                    true, Optional.of(30), Optional.of(55), List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Line(
+                    false, ExcelChartGrouping.STANDARD, inputAxes(), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Line(
+                    false, ExcelChartGrouping.STANDARD, snapshotAxes(), List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Line3D(
+                    false,
+                    ExcelChartGrouping.STANDARD,
+                    Optional.of(18),
+                    inputAxes(),
+                    List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Line3D(
+                    false,
+                    ExcelChartGrouping.STANDARD,
+                    Optional.of(18),
+                    snapshotAxes(),
+                    List.of(series))),
+        new PlotVariant(
+            series -> new ChartPlotInput.Pie(true, Optional.of(90), List.of(series)),
+            series -> new ExcelChartSnapshot.Pie(true, Optional.of(90), List.of(series))),
+        new PlotVariant(
+            series -> new ChartPlotInput.Pie3D(true, List.of(series)),
+            series -> new ExcelChartSnapshot.Pie3D(true, List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Radar(
+                    false, ExcelChartRadarStyle.FILLED, inputAxes(), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Radar(
+                    false, ExcelChartRadarStyle.FILLED, snapshotAxes(), List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Scatter(
+                    false,
+                    ExcelChartScatterStyle.SMOOTH_MARKER,
+                    scatterInputAxes(),
+                    List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Scatter(
+                    false,
+                    ExcelChartScatterStyle.SMOOTH_MARKER,
+                    scatterSnapshotAxes(),
+                    List.of(series))),
+        new PlotVariant(
+            series -> new ChartPlotInput.Surface(false, true, surfaceInputAxes(), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Surface(
+                    false, true, surfaceSnapshotAxes(), List.of(series))),
+        new PlotVariant(
+            series ->
+                new ChartPlotInput.Surface3D(true, false, surfaceInputAxes(), List.of(series)),
+            series ->
+                new ExcelChartSnapshot.Surface3D(
+                    true, false, surfaceSnapshotAxes(), List.of(series))));
   }
 
   private static List<ChartAxisInput> inputAxes() {
@@ -630,6 +689,10 @@ class SpreadsheetSurfaceConverterCoverageTest {
         ChartPlotInput.Surface.class,
         ChartPlotInput.Surface3D.class);
   }
+
+  private record PlotVariant(
+      Function<ChartSeriesInput, ChartPlotInput> inputFactory,
+      Function<ExcelChartSnapshot.Series, ExcelChartSnapshot.Plot> snapshotFactory) {}
 
   private static List<Class<?>> plotTypes(List<?> plots) {
     return plots.stream().<Class<?>>map(Object::getClass).toList();

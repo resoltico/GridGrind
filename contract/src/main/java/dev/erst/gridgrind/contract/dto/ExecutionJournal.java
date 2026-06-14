@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -66,42 +68,98 @@ public record ExecutionJournal(
   }
 
   /** One timed execution phase. */
-  public record Phase(
-      Status status,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> startedAt,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> finishedAt,
-      long durationMillis) {
-    public Phase {
-      Objects.requireNonNull(status, "status must not be null");
-      startedAt = normalizeOptional(startedAt, "startedAt");
-      finishedAt = normalizeOptional(finishedAt, "finishedAt");
-      if (status == Status.NOT_STARTED || status == Status.NOT_REQUESTED) {
-        if (startedAt.isPresent() || finishedAt.isPresent() || durationMillis != 0) {
-          throw new IllegalArgumentException(
-              status + " phases must omit timestamps and use durationMillis=0");
-        }
-      } else {
-        if (durationMillis < 0) {
-          throw new IllegalArgumentException("durationMillis must be >= 0");
-        }
-        if (startedAt.isPresent() != finishedAt.isPresent()) {
-          throw new IllegalArgumentException(
-              "startedAt and finishedAt must either both be present or both be absent");
-        }
-        if (startedAt.isEmpty() && durationMillis != 0) {
-          throw new IllegalArgumentException("timestamp-free phases must use durationMillis=0");
-        }
-      }
-    }
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = Phase.NotStarted.class, name = "NOT_STARTED"),
+    @JsonSubTypes.Type(value = Phase.NotRequested.class, name = "NOT_REQUESTED"),
+    @JsonSubTypes.Type(value = Phase.Succeeded.class, name = "SUCCEEDED"),
+    @JsonSubTypes.Type(value = Phase.Failed.class, name = "FAILED")
+  })
+  public sealed interface Phase
+      permits Phase.NotStarted, Phase.NotRequested, Phase.Succeeded, Phase.Failed {
+
+    /** Canonical phase status token. */
+    Status status();
 
     /** Creates a not-started phase. */
-    public static Phase notStarted() {
-      return new Phase(Status.NOT_STARTED, Optional.empty(), Optional.empty(), 0);
+    static Phase notStarted() {
+      return new NotStarted();
     }
 
     /** Creates a not-requested phase. */
-    public static Phase notRequested() {
-      return new Phase(Status.NOT_REQUESTED, Optional.empty(), Optional.empty(), 0);
+    static Phase notRequested() {
+      return new NotRequested();
+    }
+
+    /** Creates a succeeded phase with fully specified timing. */
+    static Phase succeeded(String startedAt, String finishedAt, long durationMillis) {
+      return new Phase.Succeeded(Optional.of(new Timing(startedAt, finishedAt, durationMillis)));
+    }
+
+    /** Creates a failed phase with fully specified timing. */
+    static Phase failed(String startedAt, String finishedAt, long durationMillis) {
+      return new Phase.Failed(Optional.of(new Timing(startedAt, finishedAt, durationMillis)));
+    }
+
+    /** Creates a succeeded phase when summary-mode output omits timing. */
+    static Phase succeededWithoutTiming() {
+      return new Phase.Succeeded(Optional.empty());
+    }
+
+    /** Creates a failed phase when summary-mode output omits timing. */
+    static Phase failedWithoutTiming() {
+      return new Phase.Failed(Optional.empty());
+    }
+
+    /** Phase never began. */
+    record NotStarted() implements Phase {
+      @Override
+      public Status status() {
+        return Status.NOT_STARTED;
+      }
+    }
+
+    /** Phase was intentionally skipped. */
+    record NotRequested() implements Phase {
+      @Override
+      public Status status() {
+        return Status.NOT_REQUESTED;
+      }
+    }
+
+    /** Phase finished successfully with measured timing. */
+    record Succeeded(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
+        implements Phase {
+      public Succeeded {
+        timing = normalizeOptionalValue(timing, "timing");
+      }
+
+      @Override
+      public Status status() {
+        return Status.SUCCEEDED;
+      }
+    }
+
+    /** Phase ended in failure with measured timing. */
+    record Failed(@JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Timing> timing)
+        implements Phase {
+      public Failed {
+        timing = normalizeOptionalValue(timing, "timing");
+      }
+
+      @Override
+      public Status status() {
+        return Status.FAILED;
+      }
+    }
+  }
+
+  /** Coherent timing payload for one phase that actually ran. */
+  public record Timing(String startedAt, String finishedAt, long durationMillis) {
+    public Timing {
+      startedAt = requireExecutionTimestamp(startedAt, "startedAt");
+      finishedAt = requireExecutionTimestamp(finishedAt, "finishedAt");
+      requireNonNegativeDuration(durationMillis);
     }
   }
 
@@ -167,42 +225,73 @@ public record ExecutionJournal(
   }
 
   /** Final execution outcome summary. */
-  public record Outcome(
-      Status status,
-      int plannedStepCount,
-      int completedStepCount,
-      long durationMillis,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Integer> failedStepIndex,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> failedStepId,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<GridGrindProblemCode> failureCode) {
-    public Outcome {
-      Objects.requireNonNull(status, "status must not be null");
-      if (plannedStepCount < 0) {
-        throw new IllegalArgumentException("plannedStepCount must be >= 0");
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "status")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = Outcome.Succeeded.class, name = "SUCCEEDED"),
+    @JsonSubTypes.Type(value = Outcome.Failed.class, name = "FAILED")
+  })
+  public sealed interface Outcome permits Outcome.Succeeded, Outcome.Failed {
+
+    /** Canonical execution outcome status token. */
+    Status status();
+
+    /** Creates a succeeded execution outcome. */
+    static Outcome succeeded(int plannedStepCount, int completedStepCount, long durationMillis) {
+      return new Outcome.Succeeded(plannedStepCount, completedStepCount, durationMillis);
+    }
+
+    /** Creates a failed execution outcome. */
+    static Outcome failed(
+        int plannedStepCount,
+        int completedStepCount,
+        long durationMillis,
+        GridGrindProblemCode failureCode,
+        Optional<FailureStep> failedStep) {
+      return new Outcome.Failed(
+          plannedStepCount, completedStepCount, durationMillis, failureCode, failedStep);
+    }
+
+    /** Execution finished successfully. */
+    record Succeeded(int plannedStepCount, int completedStepCount, long durationMillis)
+        implements Outcome {
+      public Succeeded {
+        validateExecutionOutcomeCounts(plannedStepCount, completedStepCount, durationMillis);
       }
-      if (completedStepCount < 0 || completedStepCount > plannedStepCount) {
-        throw new IllegalArgumentException(
-            "completedStepCount must be >= 0 and <= plannedStepCount");
+
+      @Override
+      public Status status() {
+        return Status.SUCCEEDED;
       }
-      if (durationMillis < 0) {
-        throw new IllegalArgumentException("durationMillis must be >= 0");
+    }
+
+    /** Execution failed with one canonical failing-step summary. */
+    record Failed(
+        int plannedStepCount,
+        int completedStepCount,
+        long durationMillis,
+        GridGrindProblemCode problemCode,
+        @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<FailureStep> failedStep)
+        implements Outcome {
+      public Failed {
+        validateExecutionOutcomeCounts(plannedStepCount, completedStepCount, durationMillis);
+        Objects.requireNonNull(problemCode, "failureCode must not be null");
+        failedStep = normalizeOptionalValue(failedStep, "failedStep");
       }
-      failedStepIndex = Objects.requireNonNullElseGet(failedStepIndex, Optional::empty);
-      failedStepId = normalizeOptional(failedStepId, "failedStepId");
-      failureCode = Objects.requireNonNullElseGet(failureCode, Optional::empty);
-      if (status == Status.FAILED && failureCode.isEmpty()) {
-        throw new IllegalArgumentException("failureCode must be present when status is FAILED");
+
+      @Override
+      public Status status() {
+        return Status.FAILED;
       }
-      if (status != Status.FAILED && (failedStepIndex.isPresent() || failedStepId.isPresent())) {
-        throw new IllegalArgumentException(
-            "failedStepIndex and failedStepId are only permitted when status is FAILED");
+    }
+  }
+
+  /** Canonical failing-step reference when a failure is attributable to one authored step. */
+  public record FailureStep(int failedStepIndex, String failedStepId) {
+    public FailureStep {
+      if (failedStepIndex < 0) {
+        throw new IllegalArgumentException("failedStepIndex must be >= 0");
       }
-      if (status != Status.FAILED && failureCode.isPresent()) {
-        throw new IllegalArgumentException("failureCode is only permitted when status is FAILED");
-      }
-      if (failedStepIndex.isPresent() && failedStepIndex.orElseThrow() < 0) {
-        throw new IllegalArgumentException("failedStepIndex must be >= 0 when present");
-      }
+      WorkbookPlan.requireNonBlank(failedStepId, "failedStepId");
     }
   }
 
@@ -255,5 +344,33 @@ public record ExecutionJournal(
       return Optional.empty();
     }
     return Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+  }
+
+  private static <T> Optional<T> normalizeOptionalValue(Optional<T> value, String fieldName) {
+    Optional<T> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    normalized.ifPresent(
+        entry -> Objects.requireNonNull(entry, fieldName + " must not contain null"));
+    return normalized;
+  }
+
+  private static String requireExecutionTimestamp(String value, String fieldName) {
+    return WorkbookPlan.requireNonBlank(value, fieldName);
+  }
+
+  private static void requireNonNegativeDuration(long durationMillis) {
+    if (durationMillis < 0) {
+      throw new IllegalArgumentException("durationMillis must be >= 0");
+    }
+  }
+
+  private static void validateExecutionOutcomeCounts(
+      int plannedStepCount, int completedStepCount, long durationMillis) {
+    if (plannedStepCount < 0) {
+      throw new IllegalArgumentException("plannedStepCount must be >= 0");
+    }
+    if (completedStepCount < 0 || completedStepCount > plannedStepCount) {
+      throw new IllegalArgumentException("completedStepCount must be >= 0 and <= plannedStepCount");
+    }
+    requireNonNegativeDuration(durationMillis);
   }
 }

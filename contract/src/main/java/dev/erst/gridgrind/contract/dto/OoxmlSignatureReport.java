@@ -8,16 +8,31 @@ import java.util.Optional;
 /** Factual OOXML package-signature report for one signature part. */
 public record OoxmlSignatureReport(
     String packagePartName,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> signerSubject,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> signerIssuer,
-    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> serialNumberHex,
+    @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<SignerIdentity> signer,
     ExcelOoxmlSignatureState state) {
+  /** Creates a signature report from flat signer facts while preserving grouped signer identity. */
+  public OoxmlSignatureReport(
+      String packagePartName,
+      Optional<String> signerSubject,
+      Optional<String> signerIssuer,
+      Optional<String> serialNumberHex,
+      ExcelOoxmlSignatureState state) {
+    this(packagePartName, collapseSigner(signerSubject, signerIssuer, serialNumberHex), state);
+  }
+
   public OoxmlSignatureReport {
     packagePartName = requireNonBlank(packagePartName, "packagePartName");
-    Objects.requireNonNull(signerSubject, "signerSubject must not be null");
-    Objects.requireNonNull(signerIssuer, "signerIssuer must not be null");
-    Objects.requireNonNull(serialNumberHex, "serialNumberHex must not be null");
+    signer = Objects.requireNonNullElseGet(signer, Optional::empty);
     Objects.requireNonNull(state, "state must not be null");
+  }
+
+  /** Signer identity material attached to one OOXML package signature. */
+  public record SignerIdentity(String subject, String issuer, String serialNumberHex) {
+    public SignerIdentity {
+      subject = requireNonBlank(subject, "subject");
+      issuer = requireNonBlank(issuer, "issuer");
+      serialNumberHex = requireNonBlank(serialNumberHex, "serialNumberHex");
+    }
   }
 
   private static String requireNonBlank(String value, String fieldName) {
@@ -26,5 +41,25 @@ public record OoxmlSignatureReport(
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
+  }
+
+  private static Optional<SignerIdentity> collapseSigner(
+      Optional<String> signerSubject,
+      Optional<String> signerIssuer,
+      Optional<String> serialNumberHex) {
+    Optional<String> subject = Objects.requireNonNullElseGet(signerSubject, Optional::empty);
+    Optional<String> issuer = Objects.requireNonNullElseGet(signerIssuer, Optional::empty);
+    Optional<String> serial = Objects.requireNonNullElseGet(serialNumberHex, Optional::empty);
+    int presentCount =
+        (subject.isPresent() ? 1 : 0) + (issuer.isPresent() ? 1 : 0) + (serial.isPresent() ? 1 : 0);
+    if (presentCount == 0) {
+      return Optional.empty();
+    }
+    if (presentCount != 3) {
+      throw new IllegalArgumentException(
+          "signer identity must be either wholly absent or wholly present");
+    }
+    return Optional.of(
+        new SignerIdentity(subject.orElseThrow(), issuer.orElseThrow(), serial.orElseThrow()));
   }
 }

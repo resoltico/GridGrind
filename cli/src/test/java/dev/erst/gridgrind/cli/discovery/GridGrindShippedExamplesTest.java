@@ -77,12 +77,30 @@ class GridGrindShippedExamplesTest {
             () ->
                 new ShippedExampleEntry(
                     "WORKBOOK_HEALTH",
-                    "examples/workbook-health-request.txt",
+                    "workbook-health-request.txt",
                     "summary",
                     ExampleWorkspaceMode.SELF_CONTAINED,
                     java.util.List.of()));
 
-    assertEquals("suggestedRequestPath must end with .json", failure.getMessage());
+    assertEquals("requestFileName must end with .json", failure.getMessage());
+  }
+
+  @Test
+  void shippedExampleEntryRejectsRepositoryPathsUsingWindowsSeparators() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ShippedExampleEntry(
+                    "WORKBOOK_HEALTH",
+                    "examples\\workbook-health-request.json",
+                    "summary",
+                    ExampleWorkspaceMode.SELF_CONTAINED,
+                    java.util.List.of()));
+
+    assertEquals(
+        "requestFileName must be one portable file name, not a repository path",
+        failure.getMessage());
   }
 
   @Test
@@ -90,15 +108,15 @@ class GridGrindShippedExamplesTest {
     ShippedExampleEntry entry =
         new ShippedExampleEntry(
             "WORKBOOK_HEALTH",
-            "examples/workbook-health-request.json",
+            "workbook-health-request.json",
             "summary",
             ExampleWorkspaceMode.SELF_CONTAINED,
             java.util.List.of());
     assertEquals("WORKBOOK_HEALTH", entry.id());
-    assertEquals("examples/workbook-health-request.json", entry.suggestedRequestPath());
+    assertEquals("workbook-health-request.json", entry.requestFileName());
     assertEquals("summary", entry.summary());
     assertEquals(ExampleWorkspaceMode.SELF_CONTAINED, entry.workspaceMode());
-    assertEquals(java.util.List.of(), entry.requiredPaths());
+    assertEquals(java.util.List.of(), entry.requiredWorkspacePaths());
   }
 
   @Test
@@ -109,12 +127,12 @@ class GridGrindShippedExamplesTest {
             () ->
                 new ShippedExampleEntry(
                     "WORKBOOK_HEALTH",
-                    "examples/workbook-health-request.json",
+                    "workbook-health-request.json",
                     "summary",
                     ExampleWorkspaceMode.SELF_CONTAINED,
                     null));
 
-    assertEquals("requiredPaths must not be null", failure.getMessage());
+    assertEquals("requiredWorkspacePaths must not be null", failure.getMessage());
   }
 
   @Test
@@ -139,7 +157,7 @@ class GridGrindShippedExamplesTest {
     assertTrue(
         GridGrindShippedExamples.repositoryAssetBackedExamples().stream()
             .map(GridGrindShippedExamples::requirementsFor)
-            .allMatch(entry -> !entry.requiredPaths().isEmpty()));
+            .allMatch(entry -> !entry.requiredWorkspacePaths().isEmpty()));
   }
 
   @Test
@@ -164,6 +182,7 @@ class GridGrindShippedExamplesTest {
             () ->
                 new GridGrindShippedExamples.ExampleRequirements(
                     ExampleWorkspaceMode.SELF_CONTAINED, null));
-    assertEquals("requiredPaths must not be null", missingRequiredPathsFailure.getMessage());
+    assertEquals(
+        "requiredWorkspacePaths must not be null", missingRequiredPathsFailure.getMessage());
   }
 }

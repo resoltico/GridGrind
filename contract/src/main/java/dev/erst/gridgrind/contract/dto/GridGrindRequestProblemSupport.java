@@ -109,6 +109,18 @@ public final class GridGrindRequestProblemSupport {
     return Optional.empty();
   }
 
+  /** Returns whether one public request message describes a structural shape mismatch. */
+  public static boolean looksLikeRequestShapeViolation(String message) {
+    String normalizedMessage = Objects.requireNonNullElse(message, "").trim();
+    if (normalizedMessage.isEmpty()) {
+      return false;
+    }
+    return MISSING_REQUIRED_FIELD_PATTERN.matcher(normalizedMessage).matches()
+        || UNKNOWN_FIELD_PATTERN.matcher(normalizedMessage).matches()
+        || UNKNOWN_TYPE_VALUE_PATTERN.matcher(normalizedMessage).find()
+        || UNSUPPORTED_VALUE_PATTERN.matcher(normalizedMessage).find();
+  }
+
   private static Optional<String> requestJsonPath(ProblemContext context) {
     if (context instanceof ProblemContext.ReadRequest readRequest) {
       return readRequest.jsonPath();

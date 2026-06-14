@@ -15,24 +15,30 @@ public final class ExcelWorkbookPersistence {
     this.workbook = Objects.requireNonNull(workbook, "workbook must not be null");
   }
 
-  /** Saves the workbook to disk with explicit temp-file ownership. */
-  public void save(Path workbookPath, WorkbookTempFileFactory tempFileFactory) throws IOException {
-    save(workbookPath, ExcelOoxmlPersistenceOptions.none(), tempFileFactory);
-  }
-
-  /** Saves the workbook to disk with explicit package-security temp-file ownership. */
+  /** Saves the workbook to disk with explicit write ownership and temp-file ownership. */
   public void save(
       Path workbookPath,
+      WorkbookArtifactWriteDisposition writeDisposition,
+      WorkbookTempFileFactory tempFileFactory)
+      throws IOException {
+    save(workbookPath, writeDisposition, ExcelOoxmlPersistenceOptions.none(), tempFileFactory);
+  }
+
+  /** Saves the workbook to disk with explicit package-security and write ownership. */
+  public void save(
+      Path workbookPath,
+      WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlPersistenceOptions persistenceOptions,
       WorkbookTempFileFactory tempFileFactory)
       throws IOException {
     ExcelWorkbookPersistenceSupport.save(
-        workbook, workbookPath, persistenceOptions, tempFileFactory);
+        workbook, workbookPath, writeDisposition, persistenceOptions, tempFileFactory);
   }
 
-  /** Saves the plain OOXML workbook package with no encryption or signing wrapper. */
-  public void savePlainWorkbook(Path workbookPath) throws IOException {
-    ExcelWorkbookPersistenceSupport.savePlainWorkbook(workbook, workbookPath);
+  /** Saves the plain OOXML workbook package with explicit write ownership. */
+  public void savePlainWorkbook(
+      Path workbookPath, WorkbookArtifactWriteDisposition writeDisposition) throws IOException {
+    ExcelWorkbookPersistenceSupport.savePlainWorkbook(workbook, workbookPath, writeDisposition);
   }
 
   /** Returns the loaded workbook path when the workbook was opened from disk. */

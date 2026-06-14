@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
@@ -25,14 +26,7 @@ class ExecutionJournalTest {
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
             List.of(),
-            new ExecutionJournal.Outcome(
-                ExecutionJournal.Status.SUCCEEDED,
-                0,
-                0,
-                0,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()),
+            ExecutionJournal.Outcome.succeeded(0, 0, 0),
             List.of());
 
     assertEquals(ExecutionJournalLevel.NORMAL, journal.level());
@@ -40,61 +34,29 @@ class ExecutionJournalTest {
   }
 
   @Test
-  void phaseRejectsNegativeDurationForStartedStatuses() {
+  void phaseFactoriesReturnTypedVariantsAndValidateTiming() {
     assertEquals(ExecutionJournal.Status.NOT_STARTED, ExecutionJournal.Phase.notStarted().status());
     assertEquals(
         ExecutionJournal.Status.NOT_REQUESTED, ExecutionJournal.Phase.notRequested().status());
-    assertEquals(
-        "NOT_STARTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED,
-                        Optional.empty(),
-                        Optional.of("2026-04-18T10:00:01Z"),
-                        0))
-            .getMessage());
-    assertEquals(
-        "NOT_STARTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED, Optional.empty(), Optional.empty(), 1))
-            .getMessage());
-    assertEquals(
-        "NOT_REQUESTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_REQUESTED,
-                        Optional.empty(),
-                        Optional.of("2026-04-18T10:00:01Z"),
-                        0))
-            .getMessage());
+    ExecutionJournal.Phase.Succeeded succeeded =
+        assertInstanceOf(
+            ExecutionJournal.Phase.Succeeded.class,
+            ExecutionJournal.Phase.succeeded("2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", 1));
+    assertEquals("2026-04-18T10:00:00Z", succeeded.timing().orElseThrow().startedAt());
+    assertEquals(1L, succeeded.timing().orElseThrow().durationMillis());
     assertEquals(
         "durationMillis must be >= 0",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.of("2026-04-18T10:00:00Z"),
-                        Optional.of("2026-04-18T10:00:01Z"),
-                        -1))
+                    new ExecutionJournal.Timing("2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", -1))
             .getMessage());
   }
 
   @Test
   void stepRejectsNegativeIndexAndInvalidFailureCombinations() {
     ExecutionJournal.Phase phase =
-        new ExecutionJournal.Phase(
-            ExecutionJournal.Status.SUCCEEDED,
-            Optional.of("2026-04-18T10:00:00Z"),
-            Optional.of("2026-04-18T10:00:01Z"),
-            1);
+        ExecutionJournal.Phase.succeeded("2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", 1);
     ExecutionJournal.FailureClassification failure =
         new ExecutionJournal.FailureClassification(
             GridGrindProblemCode.ASSERTION_FAILED,
@@ -150,6 +112,47 @@ class ExecutionJournalTest {
   }
 
   @Test
+  void outcomeVariantsValidateCountsAndFailureShape() {
+    ExecutionJournal.Outcome.Succeeded succeeded =
+        assertInstanceOf(
+            ExecutionJournal.Outcome.Succeeded.class, ExecutionJournal.Outcome.succeeded(2, 2, 10));
+    assertEquals(2, succeeded.plannedStepCount());
+    assertEquals(10L, succeeded.durationMillis());
+    ExecutionJournal.Outcome.Failed failed =
+        assertInstanceOf(
+            ExecutionJournal.Outcome.Failed.class,
+            ExecutionJournal.Outcome.failed(
+                2,
+                1,
+                10,
+                GridGrindProblemCode.INVALID_REQUEST,
+                Optional.of(new ExecutionJournal.FailureStep(1, "step-2"))));
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failed.problemCode());
+    assertEquals("step-2", failed.failedStep().orElseThrow().failedStepId());
+    assertEquals(
+        "plannedStepCount must be >= 0",
+        assertThrows(
+                IllegalArgumentException.class, () -> ExecutionJournal.Outcome.succeeded(-1, 0, 0))
+            .getMessage());
+    assertEquals(
+        "completedStepCount must be >= 0 and <= plannedStepCount",
+        assertThrows(
+                IllegalArgumentException.class, () -> ExecutionJournal.Outcome.succeeded(1, 2, 0))
+            .getMessage());
+    assertEquals(
+        "completedStepCount must be >= 0 and <= plannedStepCount",
+        assertThrows(
+                IllegalArgumentException.class, () -> ExecutionJournal.Outcome.succeeded(1, -1, 0))
+            .getMessage());
+    assertEquals(
+        "failedStepIndex must be >= 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ExecutionJournal.FailureStep(-1, "step-1"))
+            .getMessage());
+  }
+
+  @Test
   void calculationRequiresPhases() {
     assertEquals(
         "preflight must not be null",
@@ -176,162 +179,6 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.PersistenceSummary(
                         Optional.empty(), Optional.of("/tmp/output.xlsx")))
-            .getMessage());
-  }
-
-  @Test
-  void phaseRejectsMissingStartedAndFinishedTimestampsForStartedStatuses() {
-    assertEquals(
-        "startedAt and finishedAt must either both be present or both be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.empty(),
-                        Optional.of("2026-04-18T10:00:01Z"),
-                        1))
-            .getMessage());
-    assertEquals(
-        "startedAt and finishedAt must either both be present or both be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.of("2026-04-18T10:00:00Z"),
-                        Optional.empty(),
-                        1))
-            .getMessage());
-  }
-
-  @Test
-  void outcomeRejectsInvalidCountsDurationsAndFailureOnlyFields() {
-    assertEquals(
-        "plannedStepCount must be >= 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        -1,
-                        0,
-                        0,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "completedStepCount must be >= 0 and <= plannedStepCount",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        -1,
-                        0,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "completedStepCount must be >= 0 and <= plannedStepCount",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        2,
-                        0,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "durationMillis must be >= 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        1,
-                        -1,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "failureCode must be present when status is FAILED",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.FAILED,
-                        1,
-                        0,
-                        10,
-                        Optional.of(0),
-                        Optional.of("step-1"),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "failedStepIndex and failedStepId are only permitted when status is FAILED",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        1,
-                        10,
-                        Optional.of(0),
-                        Optional.empty(),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "failedStepIndex and failedStepId are only permitted when status is FAILED",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        1,
-                        10,
-                        Optional.empty(),
-                        Optional.of("step-1"),
-                        Optional.empty()))
-            .getMessage());
-    assertEquals(
-        "failureCode is only permitted when status is FAILED",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        1,
-                        1,
-                        10,
-                        Optional.empty(),
-                        Optional.empty(),
-                        Optional.of(GridGrindProblemCode.INTERNAL_ERROR)))
-            .getMessage());
-    assertEquals(
-        "failedStepIndex must be >= 0 when present",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Outcome(
-                        ExecutionJournal.Status.FAILED,
-                        1,
-                        0,
-                        10,
-                        Optional.of(-1),
-                        Optional.of("step-1"),
-                        Optional.of(GridGrindProblemCode.INVALID_REQUEST)))
             .getMessage());
   }
 

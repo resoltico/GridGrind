@@ -48,24 +48,31 @@ final class InspectionResultWorkbookCoreReportSupport {
 
   static OoxmlEncryptionReport toOoxmlEncryptionReport(
       dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot snapshot) {
-    return new OoxmlEncryptionReport(
-        snapshot.encrypted(),
-        snapshot.mode(),
-        snapshot.cipherAlgorithm(),
-        snapshot.hashAlgorithm(),
-        snapshot.chainingMode(),
-        snapshot.keyBits(),
-        snapshot.blockSize(),
-        snapshot.spinCount());
+    return switch (snapshot) {
+      case dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.None _ ->
+          new OoxmlEncryptionReport.None();
+      case dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot.Encrypted encrypted ->
+          new OoxmlEncryptionReport.Encrypted(
+              encrypted.mode(),
+              encrypted.cipherAlgorithm(),
+              encrypted.hashAlgorithm(),
+              encrypted.chainingMode(),
+              encrypted.keyBits(),
+              encrypted.blockSize(),
+              encrypted.spinCount());
+    };
   }
 
   static OoxmlSignatureReport toOoxmlSignatureReport(
       dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSignatureSnapshot snapshot) {
     return new OoxmlSignatureReport(
         snapshot.packagePartName(),
-        snapshot.signerSubject(),
-        snapshot.signerIssuer(),
-        snapshot.serialNumberHex(),
+        snapshot
+            .signer()
+            .map(
+                signer ->
+                    new OoxmlSignatureReport.SignerIdentity(
+                        signer.subject(), signer.issuer(), signer.serialNumberHex())),
         snapshot.state());
   }
 

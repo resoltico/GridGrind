@@ -2,6 +2,7 @@ package dev.erst.gridgrind.engine.runtime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -334,8 +335,10 @@ class ExecutionJournalCoverageTest {
     assertFalse(emitted.isEmpty());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, journal.calculation().preflight().status());
     assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
-    assertEquals(ExecutionJournal.Status.FAILED, journal.outcome().status());
-    assertEquals(GridGrindProblemCode.IO_ERROR, journal.outcome().failureCode().orElseThrow());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, journal.outcome());
+    assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
+    assertEquals(GridGrindProblemCode.IO_ERROR, outcome.problemCode());
   }
 
   @Test
@@ -368,6 +371,25 @@ class ExecutionJournalCoverageTest {
     ExecutionJournal journal =
         verboseRecorder.buildFailure(1, GridGrindProblemCode.IO_ERROR, 0, "step-1");
     assertEquals(ExecutionJournal.Status.FAILED, journal.calculation().execution().status());
+  }
+
+  @Test
+  void recorderOmitsFailureStepWhenPlanFailureHasNoStepIdentity() {
+    ExecutionJournalRecorder recorder =
+        ExecutionContextFixtureSupport.startJournal(verbosePlan(), ExecutionJournalSink.NOOP);
+
+    ExecutionJournal journal =
+        recorder.buildFailure(1, GridGrindProblemCode.INVALID_REQUEST, null, null);
+
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, journal.outcome());
+    assertTrue(outcome.failedStep().isEmpty());
+
+    ExecutionJournal mixedIdentityJournal =
+        recorder.buildFailure(1, GridGrindProblemCode.INVALID_REQUEST, 0, null, false);
+    ExecutionJournal.Outcome.Failed mixedIdentityOutcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, mixedIdentityJournal.outcome());
+    assertTrue(mixedIdentityOutcome.failedStep().isEmpty());
   }
 
   private static WorkbookPlan verbosePlan() {

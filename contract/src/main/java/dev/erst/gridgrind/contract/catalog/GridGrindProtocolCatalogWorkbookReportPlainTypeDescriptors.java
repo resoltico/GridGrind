@@ -95,6 +95,24 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
               TableEntryReport.class,
               "TableEntryReport",
               "Exact workbook table report used by table-facts assertions.",
+              List.of()),
+          plainTypeDescriptor(
+              "tableEntryStructureReportType",
+              TableEntryReport.Structure.class,
+              "TableEntryStructureReport",
+              "Structural table facts including header/totals counts and per-column metadata.",
+              List.of()),
+          plainTypeDescriptor(
+              "tableEntryBehaviorReportType",
+              TableEntryReport.Behavior.class,
+              "TableEntryBehaviorReport",
+              "Persisted workbook-table behavior toggles.",
+              List.of()),
+          plainTypeDescriptor(
+              "tableEntryPresentationReportType",
+              TableEntryReport.Presentation.class,
+              "TableEntryPresentationReport",
+              "Optional table comment and style labels attached to one persisted workbook table.",
               List.of("comment", "headerRowCellStyle", "dataCellStyle", "totalsRowCellStyle")),
           plainTypeDescriptor(
               "tableColumnReportType",
@@ -138,12 +156,19 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
               CustomXmlMappingReport.class,
               "CustomXmlMappingReport",
               "One factual workbook custom-XML mapping report.",
-              List.of(
-                  "schemaNamespace",
-                  "schemaLanguage",
-                  "schemaReference",
-                  "schemaXml",
-                  "dataBinding")),
+              List.of("dataBinding")),
+          plainTypeDescriptor(
+              "customXmlMappingSettingsReportType",
+              CustomXmlMappingReport.Settings.class,
+              "CustomXmlMappingSettingsReport",
+              "Persisted custom-XML map behavior flags.",
+              List.of()),
+          plainTypeDescriptor(
+              "customXmlMappingSchemaReportType",
+              CustomXmlMappingReport.Schema.class,
+              "CustomXmlMappingSchemaReport",
+              "Optional schema metadata attached to one custom-XML mapping.",
+              List.of("namespace", "language", "reference", "xml")),
           plainTypeDescriptor(
               "customXmlDataBindingReportType",
               CustomXmlDataBindingReport.class,

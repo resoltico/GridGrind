@@ -15,6 +15,11 @@ final class CliImmediateCommandParser {
                   parseHelpCommand(
                       index, CliCommand.HelpTopic.OVERVIEW, responsePath, commandToken)),
           Map.entry(
+              "help",
+              (index, responsePath, commandToken) ->
+                  parseHelpCommand(
+                      index, CliCommand.HelpTopic.OVERVIEW, responsePath, commandToken)),
+          Map.entry(
               "-h",
               (index, responsePath, commandToken) ->
                   parseHelpCommand(
@@ -25,7 +30,17 @@ final class CliImmediateCommandParser {
                   parseHelpCommand(
                       index, CliCommand.HelpTopic.PROTOCOL, responsePath, commandToken)),
           Map.entry(
+              "help-protocol",
+              (index, responsePath, commandToken) ->
+                  parseHelpCommand(
+                      index, CliCommand.HelpTopic.PROTOCOL, responsePath, commandToken)),
+          Map.entry(
               "--help-guidance",
+              (index, responsePath, commandToken) ->
+                  parseHelpCommand(
+                      index, CliCommand.HelpTopic.GUIDANCE, responsePath, commandToken)),
+          Map.entry(
+              "help-guidance",
               (index, responsePath, commandToken) ->
                   parseHelpCommand(
                       index, CliCommand.HelpTopic.GUIDANCE, responsePath, commandToken)),
@@ -33,7 +48,13 @@ final class CliImmediateCommandParser {
               "--version",
               (index, responsePath, commandToken) -> parseVersionCommand(index, responsePath)),
           Map.entry(
+              "version",
+              (index, responsePath, commandToken) -> parseVersionCommand(index, responsePath)),
+          Map.entry(
               "--license",
+              (index, responsePath, commandToken) -> parseLicenseCommand(index, responsePath)),
+          Map.entry(
+              "license",
               (index, responsePath, commandToken) -> parseLicenseCommand(index, responsePath)),
           Map.entry(
               "--print-request-template",

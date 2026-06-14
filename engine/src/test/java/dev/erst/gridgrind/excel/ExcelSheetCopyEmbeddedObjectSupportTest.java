@@ -80,7 +80,12 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
               .filter(snapshot -> "OpsEmbed".equals(snapshot.name()))
               .count());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -122,7 +127,12 @@ class ExcelSheetCopyEmbeddedObjectSupportTest {
               ExcelDrawingObjectPayload.EmbeddedObject.class,
               workbook.sheet("LL_B1").drawings().drawingObjectPayload("OpsEmbed"));
       assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), copiedPayload.data().bytes());
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =

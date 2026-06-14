@@ -158,23 +158,23 @@ class GridGrindCliTestSupport {
   }
 
   protected static CliFailureReport cliFailure(byte[] bytes) throws IOException {
-    return GridGrindCliJson.readCliFailureReport(bytes);
+    return GridGrindCliJson.readBytes(bytes, CliFailureReport.class);
   }
 
   /**
-   * Reads a {@link CliFailureReport} from stderr and asserts that stdout received nothing.
+   * Reads a {@link CliFailureReport} from stdout and asserts that stderr received nothing.
    *
    * <p>Use this helper in every test that expects a CLI failure with no {@code --response} path
-   * configured. It encodes the current routing contract — structured JSON on stderr, nothing on
-   * stdout — in a single call so individual tests cannot forget either half.
+   * configured. It encodes the current routing contract — structured JSON on stdout, nothing on
+   * stderr — in a single call so individual tests cannot forget either half.
    */
   protected static CliFailureReport cliFailureOnStderr(
       ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
     assertEquals(
         "",
-        stdout.toString(StandardCharsets.UTF_8),
-        "stdout must be empty when CLI failure is routed to stderr");
-    return GridGrindCliJson.readCliFailureReport(stderr.toByteArray());
+        stderr.toString(StandardCharsets.UTF_8),
+        "stderr must be empty when CLI failure is routed to stdout");
+    return GridGrindCliJson.readBytes(stdout.toByteArray(), CliFailureReport.class);
   }
 
   protected static GridGrindResponse response(

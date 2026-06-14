@@ -30,10 +30,19 @@ final class GridGrindJsonProblemMessageSupport {
     }
     if (validationCause.isPresent()) {
       Throwable cause = validationCause.orElseThrow();
+      String publicMessage = message(cause);
       GridGrindJsonPayloadMetadataSupport.PayloadMetadata validationMetadata =
-          effectivePayloadMetadata(metadata, Optional.of(cause), message(cause));
+          effectivePayloadMetadata(metadata, Optional.of(cause), publicMessage);
+      if (GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(publicMessage)) {
+        return new InvalidRequestShapeException(
+            publicMessage,
+            validationMetadata.jsonPath(),
+            validationMetadata.jsonLine(),
+            validationMetadata.jsonColumn(),
+            exception);
+      }
       return new InvalidRequestException(
-          message(cause),
+          publicMessage,
           validationMetadata.jsonPath(),
           validationMetadata.jsonLine(),
           validationMetadata.jsonColumn(),

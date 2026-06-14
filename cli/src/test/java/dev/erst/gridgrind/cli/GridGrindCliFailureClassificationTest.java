@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -125,7 +126,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("execute", failure.command());
+    assertEquals("cli", failure.command());
     assertEquals(java.util.Optional.of("--unknown"), failure.argument());
     assertEquals("Unknown argument: --unknown", failure.message());
     assertEquals(
@@ -151,7 +152,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("execute", failure.command());
+    assertEquals("cli", failure.command());
     assertEquals(java.util.Optional.of("--request"), failure.argument());
     assertEquals("Missing value for --request", failure.message());
     assertEquals(
@@ -183,7 +184,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("execute", failure.command());
+    assertEquals("cli", failure.command());
     assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
     assertEquals("Missing value for --execution-root", failure.message());
   }
@@ -306,7 +307,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
     assertEquals(2, exitCode);
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("execute", failure.command());
+    assertEquals("cli", failure.command());
   }
 
   @Test
@@ -590,6 +591,48 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void classifiesMissingRequiredRootFieldsAsReadRequestShapeFailures() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "SUMMARY" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(Optional.of("protocolVersion"), failure.location().orElseThrow().jsonPath());
+  }
+
+  @Test
   void classifiesSemanticRequestValidationAsReadRequest() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -751,7 +794,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 "GridGrind wrote the CLI failure report to " + responsePath.toAbsolutePath()));
     assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_ARGUMENTS:"));
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-    assertEquals("execute", failure.command());
+    assertEquals("cli", failure.command());
     assertEquals("Unknown argument: --bogus-flag", failure.message());
   }
 
@@ -857,7 +900,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
 
       assertEquals(2, exitCode);
       assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
-      assertEquals("execute", failure.command());
+      assertEquals("cli", failure.command());
       assertEquals("--request and --response must not point to the same path", failure.message());
     } finally {
       Files.deleteIfExists(path);

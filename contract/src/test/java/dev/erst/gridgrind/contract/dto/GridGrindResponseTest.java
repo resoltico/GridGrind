@@ -66,10 +66,10 @@ class GridGrindResponseTest {
     assertEquals(java.util.Optional.empty(), failure.journal().planId());
     assertEquals(java.util.Optional.empty(), failure.journal().source().type());
     assertEquals(java.util.Optional.empty(), failure.journal().persistence().type());
-    assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
-    assertEquals(
-        GridGrindProblemCode.INVALID_ARGUMENTS,
-        failure.journal().outcome().failureCode().orElseThrow());
+    ExecutionJournal.Outcome.Failed outcome =
+        assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
+    assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, outcome.problemCode());
   }
 
   @Test
@@ -80,8 +80,7 @@ class GridGrindResponseTest {
             () ->
                 GridGrindResponse.syntheticJournal(
                     ExecutionJournal.Status.FAILED, java.util.Optional.empty()));
-    assertEquals(
-        "failureCode must be present when status is FAILED", missingFailureCode.getMessage());
+    assertEquals("FAILED outcomes must include failureCode", missingFailureCode.getMessage());
 
     IllegalArgumentException unexpectedFailureCode =
         assertThrows(
@@ -92,6 +91,26 @@ class GridGrindResponseTest {
                     java.util.Optional.of(GridGrindProblemCode.INVALID_ARGUMENTS)));
     assertEquals(
         "failureCode is only permitted when status is FAILED", unexpectedFailureCode.getMessage());
+
+    IllegalArgumentException unsupportedNotStarted =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindResponse.syntheticJournal(
+                    ExecutionJournal.Status.NOT_STARTED, Optional.empty()));
+    assertEquals(
+        "synthetic journal outcome does not support NOT_STARTED",
+        unsupportedNotStarted.getMessage());
+
+    IllegalArgumentException unsupportedNotRequested =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindResponse.syntheticJournal(
+                    ExecutionJournal.Status.NOT_REQUESTED, Optional.empty()));
+    assertEquals(
+        "synthetic journal outcome does not support NOT_REQUESTED",
+        unsupportedNotRequested.getMessage());
   }
 
   @Test
@@ -420,11 +439,7 @@ class GridGrindResponseTest {
   @Test
   void executionJournalValidatesPhasesAndFailureClassification() {
     ExecutionJournal.Phase successPhase =
-        new ExecutionJournal.Phase(
-            ExecutionJournal.Status.SUCCEEDED,
-            java.util.Optional.of("2026-04-18T10:00:00Z"),
-            java.util.Optional.of("2026-04-18T10:00:01Z"),
-            1);
+        ExecutionJournal.Phase.succeeded("2026-04-18T10:00:00Z", "2026-04-18T10:00:01Z", 1);
     ExecutionJournal journal =
         new ExecutionJournal(
             java.util.Optional.of("budget-audit"),
@@ -454,14 +469,12 @@ class GridGrindResponseTest {
                             GridGrindProblemCategory.REQUEST,
                             "EXECUTE_STEP",
                             "observed value mismatch")))),
-            new ExecutionJournal.Outcome(
-                ExecutionJournal.Status.FAILED,
+            ExecutionJournal.Outcome.failed(
                 1,
                 0,
                 22,
-                java.util.Optional.of(0),
-                java.util.Optional.of("assert-total"),
-                java.util.Optional.of(GridGrindProblemCode.ASSERTION_FAILED)),
+                GridGrindProblemCode.ASSERTION_FAILED,
+                java.util.Optional.of(new ExecutionJournal.FailureStep(0, "assert-total"))),
             List.of(
                 new ExecutionJournal.Event(
                     "2026-04-18T10:00:00Z",
@@ -474,16 +487,11 @@ class GridGrindResponseTest {
     assertEquals(ExecutionJournalLevel.VERBOSE, journal.level());
     assertEquals("Cell Budget!B4", journal.steps().getFirst().resolvedTargets().getFirst().label());
     assertEquals(
-        "NOT_STARTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED,
-                        java.util.Optional.of("2026-04-18T10:00:00Z"),
-                        java.util.Optional.empty(),
-                        0))
-            .getMessage());
+        "2026-04-18T10:00:00Z",
+        assertInstanceOf(ExecutionJournal.Phase.Succeeded.class, successPhase)
+            .timing()
+            .orElseThrow()
+            .startedAt());
   }
 
   private static CellStyleReport minimalStyle() {

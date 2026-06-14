@@ -3,8 +3,10 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BiConsumer;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -186,6 +188,148 @@ class ExcelRowColumnStructureTestSupport {
 
   static void setNumeric(XSSFSheet sheet, String address, double value) {
     getOrCreateCell(sheet, address).setCellValue(value);
+  }
+
+  static void seedStrings(XSSFSheet sheet, String... addressValuePairs) {
+    if (addressValuePairs.length % 2 != 0) {
+      throw new IllegalArgumentException("addressValuePairs must contain an even number of items");
+    }
+    for (int i = 0; i < addressValuePairs.length; i += 2) {
+      setString(sheet, addressValuePairs[i], addressValuePairs[i + 1]);
+    }
+  }
+
+  /** Applies one row-band mutation inside a shared named-range test scenario. */
+  @FunctionalInterface
+  interface RowSpanMutation {
+    void apply(XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows);
+  }
+
+  /** Applies one column-band mutation inside a shared named-range test scenario. */
+  @FunctionalInterface
+  interface ColumnSpanMutation {
+    void apply(XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns);
+  }
+
+  /** Applies one structure-guard operation against a seeded sheet. */
+  @FunctionalInterface
+  interface CheckedSheetOperation {
+    void apply(XSSFSheet sheet);
+  }
+
+  void assertRowNamedRangeRejected(
+      String sheetName,
+      String rangeName,
+      String formula,
+      ExcelRowSpan rows,
+      RowSpanMutation mutation,
+      String... addressValuePairs) {
+    withWorkbook(
+        workbook -> {
+          XSSFSheet sheet = workbook.createSheet(sheetName);
+          seedStrings(sheet, addressValuePairs);
+          seedNamedRange(workbook, rangeName, formula);
+
+          IllegalArgumentException failure =
+              assertThrows(
+                  IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, rows));
+          assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
+        });
+  }
+
+  void assertColumnNamedRangeRejected(
+      String sheetName,
+      String rangeName,
+      String formula,
+      ExcelColumnSpan columns,
+      ColumnSpanMutation mutation,
+      String... addressValuePairs) {
+    withWorkbook(
+        workbook -> {
+          XSSFSheet sheet = workbook.createSheet(sheetName);
+          seedStrings(sheet, addressValuePairs);
+          seedNamedRange(workbook, rangeName, formula);
+
+          IllegalArgumentException failure =
+              assertThrows(
+                  IllegalArgumentException.class, () -> mutation.apply(workbook, sheet, columns));
+          assertTrue(failure.getMessage().contains("named range '" + rangeName + "'"));
+        });
+  }
+
+  void assertRowNamedRangeUntouched(
+      String sheetName,
+      String rangeName,
+      String formula,
+      ExcelRowSpan rows,
+      RowSpanMutation mutation,
+      String... addressValuePairs) {
+    withWorkbook(
+        workbook -> {
+          XSSFSheet sheet = workbook.createSheet(sheetName);
+          seedStrings(sheet, addressValuePairs);
+          seedNamedRange(workbook, rangeName, formula);
+
+          assertDoesNotThrow(() -> mutation.apply(workbook, sheet, rows));
+          assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
+        });
+  }
+
+  void assertColumnNamedRangeUntouched(
+      String sheetName,
+      String rangeName,
+      String formula,
+      ExcelColumnSpan columns,
+      ColumnSpanMutation mutation,
+      String... addressValuePairs) {
+    withWorkbook(
+        workbook -> {
+          XSSFSheet sheet = workbook.createSheet(sheetName);
+          seedStrings(sheet, addressValuePairs);
+          seedNamedRange(workbook, rangeName, formula);
+
+          assertDoesNotThrow(() -> mutation.apply(workbook, sheet, columns));
+          assertEquals(formula, workbook.getName(rangeName).getRefersToFormula());
+        });
+  }
+
+  void assertStructureGuardCase(
+      String sheetName,
+      BiConsumer<XSSFWorkbook, XSSFSheet> seeder,
+      CheckedSheetOperation operation,
+      boolean allowed,
+      String expectedMessageFragment) {
+    withWorkbook(
+        workbook -> {
+          XSSFSheet sheet = workbook.createSheet(sheetName);
+          seeder.accept(workbook, sheet);
+          if (allowed) {
+            assertDoesNotThrow(() -> operation.apply(sheet));
+            return;
+          }
+          assertTrue(
+              unsupportedStructure(() -> operation.apply(sheet))
+                  .getMessage()
+                  .contains(expectedMessageFragment));
+        });
+  }
+
+  static void runUnchecked(Executable executable) {
+    try {
+      executable.execute();
+    } catch (RuntimeException | Error runtimeFailure) {
+      throw runtimeFailure;
+    } catch (Throwable unexpectedFailure) {
+      throw new AssertionError(unexpectedFailure);
+    }
+  }
+
+  private static void withWorkbook(java.util.function.Consumer<XSSFWorkbook> consumer) {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      consumer.accept(workbook);
+    } catch (IOException closeFailure) {
+      throw new AssertionError(closeFailure);
+    }
   }
 
   static Cell getOrCreateCell(XSSFSheet sheet, String address) {

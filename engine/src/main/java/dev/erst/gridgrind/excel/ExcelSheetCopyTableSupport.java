@@ -47,8 +47,8 @@ final class ExcelSheetCopyTableSupport {
         uniqueCopiedTableName(workbook, table.name()),
         targetSheetName,
         table.range(),
-        table.totalsRowCount() > 0,
-        table.hasAutofilter(),
+        table.structure().totalsRowCount() > 0,
+        table.behavior().hasAutofilter(),
         switch (table.style()) {
           case ExcelTableStyleSnapshot.None _ -> new ExcelTableStyle.None();
           case ExcelTableStyleSnapshot.Named named ->
@@ -59,14 +59,14 @@ final class ExcelSheetCopyTableSupport {
                   named.showRowStripes(),
                   named.showColumnStripes());
         },
-        table.comment(),
-        table.published(),
-        table.insertRow(),
-        table.insertRowShift(),
-        table.headerRowCellStyle(),
-        table.dataCellStyle(),
-        table.totalsRowCellStyle(),
-        table.columns().stream()
+        table.presentation().comment().orElse(""),
+        table.behavior().published(),
+        table.behavior().insertRow(),
+        table.behavior().insertRowShift(),
+        table.presentation().headerRowCellStyle().orElse(""),
+        table.presentation().dataCellStyle().orElse(""),
+        table.presentation().totalsRowCellStyle().orElse(""),
+        table.structure().columns().stream()
             .map(
                 column ->
                     new ExcelTableColumnDefinition(

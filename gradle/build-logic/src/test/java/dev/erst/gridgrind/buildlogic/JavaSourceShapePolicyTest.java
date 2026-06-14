@@ -56,6 +56,21 @@ class JavaSourceShapePolicyTest {
             DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t8\t2\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
             """);
 
+    JavaSourceShapePolicy policy = JavaSourceShapePolicy.load(policyFile);
+    assertEquals(JavaSourceShapePolicy.MatchKind.PREFIX, policy.rules().getFirst().kind());
+    assertEquals(
+        "2026-08-31", policy.rules().getFirst().reviewExpiresOn().toString());
+  }
+
+  @Test
+  void rejectsBroadRuleThatLoosensDefaultWithoutReviewMetadata() throws IOException {
+    Path policyFile =
+        writePolicy(
+            """
+            PREFIX\tcli/src/main/java/dev/erst/gridgrind/cli/\tcli-support\t500\t28\t18\t30\t8\t3\t10\t16\tcli\tCHECK\t-\t-\tCLI orchestration aggregates command wiring and help surfaces.
+            DEFAULT\t*\tproduction-source\t260\t22\t12\t28\t8\t2\t4\t8\trepo-shape\tCHECK\t-\t-\tOrdinary production Java sources should stay small.
+            """);
+
     assertThrows(GradleException.class, () -> JavaSourceShapePolicy.load(policyFile));
   }
 

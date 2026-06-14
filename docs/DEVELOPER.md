@@ -151,10 +151,11 @@ Jackson design, not a GridGrind version-skew bug.
 ## Commands
 
 `./gradlew check` remains the root-project code-quality gate: Spotless formatting,
-explicit-import verification, the root `verifyJavaSourceShape` policy gate, Error Prone with
-NullAway on `@NullMarked` production packages, PMD, tests, and JaCoCo coverage verification for
-`engine`, `contract`, `executor`, `authoring-java`, and `cli`. `./check.sh` is the supported
-whole-repo deterministic gate: root `check` plus `coverage`, nested Jazzer `check`,
+explicit-import verification, the root `verifyJavaSourceShape` and `verifyControlPlaneShape`
+policy gates, Error Prone with NullAway on `@NullMarked` production packages, PMD, tests, and
+JaCoCo coverage verification for `engine`, `contract`, `executor`, `authoring-java`, and `cli`.
+`./check.sh` is the supported whole-repo deterministic gate: root `check` plus `coverage`,
+nested Jazzer `check`,
 `:cli:shadowJar`, architecture-split shell regressions, packaged-JAR CLI contract verification,
 release-surface shell checks, and a Docker smoke test that runs the image from a non-default
 working directory with weird request/response/save paths while also asserting the published
@@ -334,6 +335,10 @@ Structural analysis plus a root-owned source-shape ratchet.
   source set, including `main`, `test`, `testFixtures`, `parityTest`, and Jazzer surfaces,
   writes `build/reports/source-shape/source-shape.tsv`, and enforces role-specific budgets from
   `gradle/source-shape-policy.tsv`.
+- `verifyControlPlaneShape` — root build-logic task that scans repo-owned shell, Kotlin
+  build-logic, and long-lived operator-control files, writes
+  `build/reports/source-shape/control-plane-shape.tsv`, and enforces reviewed budgets from
+  `gradle/control-plane-shape-policy.tsv`.
 - `verifyJavaSourceDuplication` — root build-logic task that scans repo-owned handwritten Java
   sources whose
   policy row keeps `duplicationGuard=CHECK`, writes
@@ -350,6 +355,11 @@ surfaces must name an owner, declare `reviewExpiresOn` plus `splitTrigger`, tigh
 metric beyond their broader role, and keep their reviewed headroom close to the current file shape
 so historical god-file budgets cannot survive after a split. Repository build-logic tests also
 enforce that reviewed waivers stay live and near-term instead of being parked indefinitely.
+
+`gradle/control-plane-shape-policy.tsv` applies the same owner/expiry/split-trigger lifecycle to
+repository control-plane surfaces that sit outside handwritten Java source sets, including shell
+gates, Kotlin build-logic, and the long-lived operator ledger/protocol files in the task
+inventory.
 
 `gradle/semantic-shape-policy.tsv` is the semantic-shape exception registry. Every entry is
 file-exact, owner-tagged, expiring, and tied to a concrete split trigger so semantic PMD debt

@@ -187,7 +187,12 @@ class ExcelFormulaEnvironmentTest {
                 List.of()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              outputPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -205,7 +210,12 @@ class ExcelFormulaEnvironmentTest {
                 List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              outputPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(7.5d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -227,7 +237,12 @@ class ExcelFormulaEnvironmentTest {
                         "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))),
             ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       workbook.formulas().evaluateAll();
-      workbook.persistence().save(outputPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              outputPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(42.0d, cachedFormulaValue(outputPath, "Ops", "B1"));
@@ -245,7 +260,12 @@ class ExcelFormulaEnvironmentTest {
       workbook.formulas().evaluateAll();
       workbook.sheet("Budget").cells().setCell("A1", ExcelCellValue.number(4.0d));
       workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(8.0d, cachedFormulaValue(workbookPath, "Budget", "B1"));
@@ -263,7 +283,12 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").cells().setCell("C1", ExcelCellValue.formula("A1*3"));
       workbook.formulas().evaluateAll();
       workbook.formulas().clearCaches();
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "B1"));

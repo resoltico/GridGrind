@@ -184,7 +184,12 @@ class WorkbookCommandExecutorTest {
           autofilters.autofilters());
       assertEquals(
           List.of("Queue"), tables.tables().stream().map(ExcelTableSnapshot::name).toList());
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -228,7 +233,7 @@ class WorkbookCommandExecutorTest {
           autofilters.autofilters());
       assertEquals(1, tables.tables().size());
       assertEquals("Queue", tables.tables().getFirst().name());
-      assertTrue(tables.tables().getFirst().hasAutofilter());
+      assertTrue(tables.tables().getFirst().behavior().hasAutofilter());
     }
   }
 
@@ -733,7 +738,12 @@ class WorkbookCommandExecutorTest {
       assertEquals("Hosting", workbook.sheet("Moves").cells().text("A3"));
       assertEquals(42.0, workbook.sheet("Moves").cells().number("C3"));
       assertEquals("Beta", workbook.sheet("Moves").cells().text("E4"));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
@@ -831,7 +841,12 @@ class WorkbookCommandExecutorTest {
           new WorkbookStructureCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
           new WorkbookStructureCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     WorkbookSheetResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");

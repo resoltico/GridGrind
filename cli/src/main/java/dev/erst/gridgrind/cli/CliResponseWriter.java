@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,10 +26,9 @@ final class CliResponseWriter {
   /**
    * Writes a CLI failure report to the configured destination.
    *
-   * <p>When {@code responsePath} is empty, failure JSON goes to {@code stderr} so success payloads
-   * remain the only stdout traffic. The {@code stderr} stream is also used in the response-file
-   * path: to write a human-readable file pointer after a successful write, or to emit a fallback
-   * notice when the file write itself fails.
+   * <p>When {@code responsePath} is empty, failure JSON goes to {@code stdout} so every
+   * machine-readable primary payload shares one default channel. The {@code stderr} stream is used
+   * only for response-file pointer lines and response-file fallback notices.
    */
   int writeCliFailureReport(
       Optional<Path> responsePath,
@@ -61,13 +61,13 @@ final class CliResponseWriter {
       throws IOException {
     Objects.requireNonNull(report, "report must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stderr, GridGrindCliJson.writeCliFailureReportBytes(report));
+      writePayload(stdout, GridGrindCliJson.writeBytes(report));
       return report.exitCode();
     }
 
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, GridGrindCliJson.writeCliFailureReportBytes(report));
+      writePayload(targetPath, GridGrindCliJson.writeBytes(report));
       writeNonSuccessPointerIfNeeded(
           stderr,
           report.exitCode(),
@@ -78,7 +78,7 @@ final class CliResponseWriter {
       return report.exitCode();
     } catch (IOException exception) {
       writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
-      writePayload(stdout, GridGrindCliJson.writeCliFailureReportBytes(report));
+      writePayload(stdout, GridGrindCliJson.writeBytes(report));
       return report.exitCode();
     }
   }
@@ -143,7 +143,7 @@ final class CliResponseWriter {
       writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
       writePayload(
           stdout,
-          GridGrindCliJson.writeCliFailureReportBytes(
+          GridGrindCliJson.writeBytes(
               CliFailureReports.responseWriteFailure(
                   command, payloadName, targetPath, exception, stdoutSuggestion)));
       return 1;
@@ -303,7 +303,11 @@ final class CliResponseWriter {
     Files.createDirectories(
         Objects.requireNonNull(
             targetPath.getParent(), "responsePath must not be a filesystem root"));
-    try (OutputStream responseOutput = Files.newOutputStream(targetPath)) {
+    try (OutputStream responseOutput =
+        Files.newOutputStream(
+            targetPath,
+            java.nio.file.StandardOpenOption.CREATE_NEW,
+            java.nio.file.StandardOpenOption.WRITE)) {
       writePayload(responseOutput, payload);
     }
   }
@@ -378,6 +382,12 @@ final class CliResponseWriter {
     return switch (exception) {
       case AccessDeniedException _ ->
           "Could not write response file " + targetPath + ": permission denied";
+      case FileAlreadyExistsException _ when Files.isDirectory(targetPath) ->
+          "Could not write response file " + targetPath + ": Is a directory";
+      case FileAlreadyExistsException _ ->
+          "Could not write response file "
+              + targetPath
+              + ": already exists; GridGrind never replaces an existing response file implicitly";
       case FileSystemException fileSystemException ->
           fileSystemReason(fileSystemException)
               .map(reason -> "Could not write response file " + targetPath + ": " + reason)

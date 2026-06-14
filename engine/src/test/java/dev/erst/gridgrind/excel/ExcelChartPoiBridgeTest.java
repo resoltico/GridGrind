@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.io.IOException;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.poi.xddf.usermodel.XDDFShapeProperties;
 import org.apache.poi.xddf.usermodel.chart.*;
@@ -37,278 +38,154 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 /** Unit tests for the package-owned POI chart translation seam. */
 class ExcelChartPoiBridgeTest {
   @Test
-  @SuppressWarnings("PMD.NcssCount")
   void convertsAllModeledPoiChartEnumsAndTokens() {
-    assertEquals(
-        ExcelChartBarDirection.COLUMN, ExcelChartPoiBridge.fromPoiBarDirection(BarDirection.COL));
-    assertEquals(
-        ExcelChartBarDirection.BAR, ExcelChartPoiBridge.fromPoiBarDirection(BarDirection.BAR));
-    assertEquals(
-        BarDirection.COL, ExcelChartPoiBridge.toPoiBarDirection(ExcelChartBarDirection.COLUMN));
-    assertEquals(
-        BarDirection.BAR, ExcelChartPoiBridge.toPoiBarDirection(ExcelChartBarDirection.BAR));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            BarDirection.COL, ExcelChartBarDirection.COLUMN,
+            BarDirection.BAR, ExcelChartBarDirection.BAR),
+        ExcelChartPoiBridge::fromPoiBarDirection,
+        ExcelChartPoiBridge::toPoiBarDirection);
 
-    assertEquals(
-        ExcelChartBarGrouping.STANDARD,
-        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.STANDARD));
-    assertEquals(
-        ExcelChartBarGrouping.CLUSTERED,
-        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.CLUSTERED));
-    assertEquals(
-        ExcelChartBarGrouping.STACKED,
-        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.STACKED));
-    assertEquals(
-        ExcelChartBarGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.PERCENT_STACKED));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            BarGrouping.STANDARD, ExcelChartBarGrouping.STANDARD,
+            BarGrouping.CLUSTERED, ExcelChartBarGrouping.CLUSTERED,
+            BarGrouping.STACKED, ExcelChartBarGrouping.STACKED,
+            BarGrouping.PERCENT_STACKED, ExcelChartBarGrouping.PERCENT_STACKED),
+        ExcelChartPoiBridge::fromPoiBarGroupingOrDefault,
+        ExcelChartPoiBridge::toPoiBarGrouping);
     assertEquals(
         ExcelChartBarGrouping.CLUSTERED, ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(null));
-    assertEquals(
-        ExcelChartBarGrouping.STANDARD,
-        ExcelChartPoiBridge.fromPoiBarGroupingOrDefault(BarGrouping.STANDARD));
-    assertEquals(
-        ExcelChartBarGrouping.STANDARD,
-        ExcelChartPoiBridge.fromBarGroupingTokenOrDefault("standard"));
-    assertEquals(
-        ExcelChartBarGrouping.CLUSTERED,
-        ExcelChartPoiBridge.fromBarGroupingTokenOrDefault("clustered"));
-    assertEquals(
-        ExcelChartBarGrouping.STACKED,
-        ExcelChartPoiBridge.fromBarGroupingTokenOrDefault("stacked"));
-    assertEquals(
-        ExcelChartBarGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.fromBarGroupingTokenOrDefault("percentstacked"));
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            "standard", ExcelChartBarGrouping.STANDARD,
+            "clustered", ExcelChartBarGrouping.CLUSTERED,
+            "stacked", ExcelChartBarGrouping.STACKED,
+            "percentstacked", ExcelChartBarGrouping.PERCENT_STACKED),
+        ExcelChartPoiBridge::fromBarGroupingTokenOrDefault);
     assertEquals(
         ExcelChartBarGrouping.CLUSTERED, ExcelChartPoiBridge.fromBarGroupingTokenOrDefault(null));
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelChartPoiBridge.fromBarGroupingTokenOrDefault("unsupported"));
-    assertEquals(
-        BarGrouping.STANDARD, ExcelChartPoiBridge.toPoiBarGrouping(ExcelChartBarGrouping.STANDARD));
-    assertEquals(
-        BarGrouping.CLUSTERED,
-        ExcelChartPoiBridge.toPoiBarGrouping(ExcelChartBarGrouping.CLUSTERED));
-    assertEquals(
-        BarGrouping.STACKED, ExcelChartPoiBridge.toPoiBarGrouping(ExcelChartBarGrouping.STACKED));
-    assertEquals(
-        BarGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.toPoiBarGrouping(ExcelChartBarGrouping.PERCENT_STACKED));
 
-    assertEquals(
-        ExcelChartGrouping.STANDARD, ExcelChartPoiBridge.fromPoiGrouping(Grouping.STANDARD));
-    assertEquals(ExcelChartGrouping.STACKED, ExcelChartPoiBridge.fromPoiGrouping(Grouping.STACKED));
-    assertEquals(
-        ExcelChartGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.fromPoiGrouping(Grouping.PERCENT_STACKED));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            Grouping.STANDARD, ExcelChartGrouping.STANDARD,
+            Grouping.STACKED, ExcelChartGrouping.STACKED,
+            Grouping.PERCENT_STACKED, ExcelChartGrouping.PERCENT_STACKED),
+        ExcelChartPoiBridge::fromPoiGrouping,
+        ExcelChartPoiBridge::toPoiGrouping);
     assertEquals(ExcelChartGrouping.STANDARD, ExcelChartPoiBridge.fromPoiGroupingOrDefault(null));
-    assertEquals(
-        ExcelChartGrouping.STANDARD,
-        ExcelChartPoiBridge.fromPoiGroupingOrDefault(Grouping.STANDARD));
-    assertEquals(
-        ExcelChartGrouping.STANDARD, ExcelChartPoiBridge.fromGroupingTokenOrDefault("standard"));
-    assertEquals(
-        ExcelChartGrouping.STACKED, ExcelChartPoiBridge.fromGroupingTokenOrDefault("stacked"));
-    assertEquals(
-        ExcelChartGrouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.fromGroupingTokenOrDefault("percentstacked"));
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            Grouping.STANDARD, ExcelChartGrouping.STANDARD,
+            Grouping.STACKED, ExcelChartGrouping.STACKED,
+            Grouping.PERCENT_STACKED, ExcelChartGrouping.PERCENT_STACKED),
+        ExcelChartPoiBridge::fromPoiGroupingOrDefault);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            "standard", ExcelChartGrouping.STANDARD,
+            "stacked", ExcelChartGrouping.STACKED,
+            "percentstacked", ExcelChartGrouping.PERCENT_STACKED),
+        ExcelChartPoiBridge::fromGroupingTokenOrDefault);
     assertEquals(ExcelChartGrouping.STANDARD, ExcelChartPoiBridge.fromGroupingTokenOrDefault(null));
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelChartPoiBridge.fromGroupingTokenOrDefault("unsupported"));
-    assertEquals(Grouping.STANDARD, ExcelChartPoiBridge.toPoiGrouping(ExcelChartGrouping.STANDARD));
-    assertEquals(Grouping.STACKED, ExcelChartPoiBridge.toPoiGrouping(ExcelChartGrouping.STACKED));
-    assertEquals(
-        Grouping.PERCENT_STACKED,
-        ExcelChartPoiBridge.toPoiGrouping(ExcelChartGrouping.PERCENT_STACKED));
 
-    assertEquals(
-        Optional.of(ExcelChartBarShape.BOX), ExcelChartPoiBridge.fromPoiBarShape(Shape.BOX));
-    assertEquals(
-        Optional.of(ExcelChartBarShape.CONE), ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE));
-    assertEquals(
-        Optional.of(ExcelChartBarShape.CONE_TO_MAX),
-        ExcelChartPoiBridge.fromPoiBarShape(Shape.CONE_TO_MAX));
-    assertEquals(
-        Optional.of(ExcelChartBarShape.CYLINDER),
-        ExcelChartPoiBridge.fromPoiBarShape(Shape.CYLINDER));
-    assertEquals(
-        Optional.of(ExcelChartBarShape.PYRAMID),
-        ExcelChartPoiBridge.fromPoiBarShape(Shape.PYRAMID));
-    assertEquals(
-        Optional.of(ExcelChartBarShape.PYRAMID_TO_MAX),
-        ExcelChartPoiBridge.fromPoiBarShape(Shape.PYRAMID_TO_MAX));
+    EnumMappingAssertions.assertOptionalBidirectionalMappings(
+        Map.of(
+            Shape.BOX, ExcelChartBarShape.BOX,
+            Shape.CONE, ExcelChartBarShape.CONE,
+            Shape.CONE_TO_MAX, ExcelChartBarShape.CONE_TO_MAX,
+            Shape.CYLINDER, ExcelChartBarShape.CYLINDER,
+            Shape.PYRAMID, ExcelChartBarShape.PYRAMID,
+            Shape.PYRAMID_TO_MAX, ExcelChartBarShape.PYRAMID_TO_MAX),
+        ExcelChartPoiBridge::fromPoiBarShape,
+        ExcelChartPoiBridge::toPoiBarShape);
     assertEquals(Optional.empty(), ExcelChartPoiBridge.fromPoiBarShape(null));
-    assertEquals(Shape.BOX, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.BOX));
-    assertEquals(Shape.CONE, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.CONE));
-    assertEquals(
-        Shape.CONE_TO_MAX, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.CONE_TO_MAX));
-    assertEquals(Shape.CYLINDER, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.CYLINDER));
-    assertEquals(Shape.PYRAMID, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.PYRAMID));
-    assertEquals(
-        Shape.PYRAMID_TO_MAX, ExcelChartPoiBridge.toPoiBarShape(ExcelChartBarShape.PYRAMID_TO_MAX));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            RadarStyle.FILLED, ExcelChartRadarStyle.FILLED,
+            RadarStyle.MARKER, ExcelChartRadarStyle.MARKER,
+            RadarStyle.STANDARD, ExcelChartRadarStyle.STANDARD),
+        ExcelChartPoiBridge::fromPoiRadarStyle,
+        ExcelChartPoiBridge::toPoiRadarStyle);
 
-    assertEquals(
-        ExcelChartRadarStyle.FILLED, ExcelChartPoiBridge.fromPoiRadarStyle(RadarStyle.FILLED));
-    assertEquals(
-        ExcelChartRadarStyle.MARKER, ExcelChartPoiBridge.fromPoiRadarStyle(RadarStyle.MARKER));
-    assertEquals(
-        ExcelChartRadarStyle.STANDARD, ExcelChartPoiBridge.fromPoiRadarStyle(RadarStyle.STANDARD));
-    assertEquals(
-        RadarStyle.FILLED, ExcelChartPoiBridge.toPoiRadarStyle(ExcelChartRadarStyle.FILLED));
-    assertEquals(
-        RadarStyle.MARKER, ExcelChartPoiBridge.toPoiRadarStyle(ExcelChartRadarStyle.MARKER));
-    assertEquals(
-        RadarStyle.STANDARD, ExcelChartPoiBridge.toPoiRadarStyle(ExcelChartRadarStyle.STANDARD));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            ScatterStyle.LINE, ExcelChartScatterStyle.LINE,
+            ScatterStyle.LINE_MARKER, ExcelChartScatterStyle.LINE_MARKER,
+            ScatterStyle.MARKER, ExcelChartScatterStyle.MARKER,
+            ScatterStyle.NONE, ExcelChartScatterStyle.NONE,
+            ScatterStyle.SMOOTH, ExcelChartScatterStyle.SMOOTH,
+            ScatterStyle.SMOOTH_MARKER, ExcelChartScatterStyle.SMOOTH_MARKER),
+        ExcelChartPoiBridge::fromPoiScatterStyle,
+        ExcelChartPoiBridge::toPoiScatterStyle);
 
-    assertEquals(
-        ExcelChartScatterStyle.LINE, ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.LINE));
-    assertEquals(
-        ExcelChartScatterStyle.LINE_MARKER,
-        ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.LINE_MARKER));
-    assertEquals(
-        ExcelChartScatterStyle.MARKER,
-        ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.MARKER));
-    assertEquals(
-        ExcelChartScatterStyle.NONE, ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.NONE));
-    assertEquals(
-        ExcelChartScatterStyle.SMOOTH,
-        ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.SMOOTH));
-    assertEquals(
-        ExcelChartScatterStyle.SMOOTH_MARKER,
-        ExcelChartPoiBridge.fromPoiScatterStyle(ScatterStyle.SMOOTH_MARKER));
-    assertEquals(
-        ScatterStyle.LINE, ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.LINE));
-    assertEquals(
-        ScatterStyle.LINE_MARKER,
-        ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.LINE_MARKER));
-    assertEquals(
-        ScatterStyle.MARKER, ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.MARKER));
-    assertEquals(
-        ScatterStyle.NONE, ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.NONE));
-    assertEquals(
-        ScatterStyle.SMOOTH, ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.SMOOTH));
-    assertEquals(
-        ScatterStyle.SMOOTH_MARKER,
-        ExcelChartPoiBridge.toPoiScatterStyle(ExcelChartScatterStyle.SMOOTH_MARKER));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.ofEntries(
+            Map.entry(MarkerStyle.CIRCLE, ExcelChartMarkerStyle.CIRCLE),
+            Map.entry(MarkerStyle.DASH, ExcelChartMarkerStyle.DASH),
+            Map.entry(MarkerStyle.DIAMOND, ExcelChartMarkerStyle.DIAMOND),
+            Map.entry(MarkerStyle.DOT, ExcelChartMarkerStyle.DOT),
+            Map.entry(MarkerStyle.NONE, ExcelChartMarkerStyle.NONE),
+            Map.entry(MarkerStyle.PICTURE, ExcelChartMarkerStyle.PICTURE),
+            Map.entry(MarkerStyle.PLUS, ExcelChartMarkerStyle.PLUS),
+            Map.entry(MarkerStyle.SQUARE, ExcelChartMarkerStyle.SQUARE),
+            Map.entry(MarkerStyle.STAR, ExcelChartMarkerStyle.STAR),
+            Map.entry(MarkerStyle.TRIANGLE, ExcelChartMarkerStyle.TRIANGLE),
+            Map.entry(MarkerStyle.X, ExcelChartMarkerStyle.X)),
+        ExcelChartMarkerStylePoiBridge::fromPoi,
+        ExcelChartMarkerStylePoiBridge::toPoi);
 
-    assertEquals(
-        ExcelChartMarkerStyle.CIRCLE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.CIRCLE));
-    assertEquals(
-        ExcelChartMarkerStyle.DASH, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DASH));
-    assertEquals(
-        ExcelChartMarkerStyle.DIAMOND, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DIAMOND));
-    assertEquals(
-        ExcelChartMarkerStyle.DOT, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.DOT));
-    assertEquals(
-        ExcelChartMarkerStyle.NONE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.NONE));
-    assertEquals(
-        ExcelChartMarkerStyle.PICTURE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.PICTURE));
-    assertEquals(
-        ExcelChartMarkerStyle.PLUS, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.PLUS));
-    assertEquals(
-        ExcelChartMarkerStyle.SQUARE, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.SQUARE));
-    assertEquals(
-        ExcelChartMarkerStyle.STAR, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.STAR));
-    assertEquals(
-        ExcelChartMarkerStyle.TRIANGLE,
-        ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.TRIANGLE));
-    assertEquals(ExcelChartMarkerStyle.X, ExcelChartMarkerStylePoiBridge.fromPoi(MarkerStyle.X));
-    for (ExcelChartMarkerStyle style : ExcelChartMarkerStyle.values()) {
-      assertEquals(
-          style,
-          ExcelChartMarkerStylePoiBridge.fromPoi(ExcelChartMarkerStylePoiBridge.toPoi(style)));
-    }
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            LegendPosition.BOTTOM, ExcelChartLegendPosition.BOTTOM,
+            LegendPosition.LEFT, ExcelChartLegendPosition.LEFT,
+            LegendPosition.RIGHT, ExcelChartLegendPosition.RIGHT,
+            LegendPosition.TOP, ExcelChartLegendPosition.TOP,
+            LegendPosition.TOP_RIGHT, ExcelChartLegendPosition.TOP_RIGHT),
+        ExcelChartPoiBridge::fromPoiLegendPosition,
+        ExcelChartPoiBridge::toPoiLegendPosition);
 
-    assertEquals(
-        ExcelChartLegendPosition.BOTTOM,
-        ExcelChartPoiBridge.fromPoiLegendPosition(LegendPosition.BOTTOM));
-    assertEquals(
-        ExcelChartLegendPosition.LEFT,
-        ExcelChartPoiBridge.fromPoiLegendPosition(LegendPosition.LEFT));
-    assertEquals(
-        ExcelChartLegendPosition.RIGHT,
-        ExcelChartPoiBridge.fromPoiLegendPosition(LegendPosition.RIGHT));
-    assertEquals(
-        ExcelChartLegendPosition.TOP,
-        ExcelChartPoiBridge.fromPoiLegendPosition(LegendPosition.TOP));
-    assertEquals(
-        ExcelChartLegendPosition.TOP_RIGHT,
-        ExcelChartPoiBridge.fromPoiLegendPosition(LegendPosition.TOP_RIGHT));
-    assertEquals(
-        LegendPosition.BOTTOM,
-        ExcelChartPoiBridge.toPoiLegendPosition(ExcelChartLegendPosition.BOTTOM));
-    assertEquals(
-        LegendPosition.LEFT,
-        ExcelChartPoiBridge.toPoiLegendPosition(ExcelChartLegendPosition.LEFT));
-    assertEquals(
-        LegendPosition.RIGHT,
-        ExcelChartPoiBridge.toPoiLegendPosition(ExcelChartLegendPosition.RIGHT));
-    assertEquals(
-        LegendPosition.TOP, ExcelChartPoiBridge.toPoiLegendPosition(ExcelChartLegendPosition.TOP));
-    assertEquals(
-        LegendPosition.TOP_RIGHT,
-        ExcelChartPoiBridge.toPoiLegendPosition(ExcelChartLegendPosition.TOP_RIGHT));
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            STDispBlanksAs.GAP, ExcelChartDisplayBlanksAs.GAP,
+            STDispBlanksAs.SPAN, ExcelChartDisplayBlanksAs.SPAN,
+            STDispBlanksAs.ZERO, ExcelChartDisplayBlanksAs.ZERO),
+        ExcelChartPoiBridge::fromPoiDisplayBlanks);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelChartDisplayBlanksAs.GAP, DisplayBlanks.GAP,
+            ExcelChartDisplayBlanksAs.SPAN, DisplayBlanks.SPAN,
+            ExcelChartDisplayBlanksAs.ZERO, DisplayBlanks.ZERO),
+        ExcelChartPoiBridge::toPoiDisplayBlanks);
 
-    assertEquals(
-        ExcelChartDisplayBlanksAs.GAP,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.GAP));
-    assertEquals(
-        ExcelChartDisplayBlanksAs.SPAN,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.SPAN));
-    assertEquals(
-        ExcelChartDisplayBlanksAs.ZERO,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.ZERO));
-    assertEquals(
-        ExcelChartDisplayBlanksAs.GAP,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.GAP));
-    assertEquals(
-        ExcelChartDisplayBlanksAs.SPAN,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.SPAN));
-    assertEquals(
-        ExcelChartDisplayBlanksAs.ZERO,
-        ExcelChartPoiBridge.fromPoiDisplayBlanks(STDispBlanksAs.ZERO));
-    assertEquals(
-        DisplayBlanks.GAP, ExcelChartPoiBridge.toPoiDisplayBlanks(ExcelChartDisplayBlanksAs.GAP));
-    assertEquals(
-        DisplayBlanks.SPAN, ExcelChartPoiBridge.toPoiDisplayBlanks(ExcelChartDisplayBlanksAs.SPAN));
-    assertEquals(
-        DisplayBlanks.ZERO, ExcelChartPoiBridge.toPoiDisplayBlanks(ExcelChartDisplayBlanksAs.ZERO));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            AxisPosition.BOTTOM, ExcelChartAxisPosition.BOTTOM,
+            AxisPosition.LEFT, ExcelChartAxisPosition.LEFT,
+            AxisPosition.RIGHT, ExcelChartAxisPosition.RIGHT,
+            AxisPosition.TOP, ExcelChartAxisPosition.TOP),
+        ExcelChartPoiBridge::fromPoiAxisPosition,
+        ExcelChartPoiBridge::toPoiAxisPosition);
 
-    assertEquals(
-        ExcelChartAxisPosition.BOTTOM,
-        ExcelChartPoiBridge.fromPoiAxisPosition(AxisPosition.BOTTOM));
-    assertEquals(
-        ExcelChartAxisPosition.LEFT, ExcelChartPoiBridge.fromPoiAxisPosition(AxisPosition.LEFT));
-    assertEquals(
-        ExcelChartAxisPosition.RIGHT, ExcelChartPoiBridge.fromPoiAxisPosition(AxisPosition.RIGHT));
-    assertEquals(
-        ExcelChartAxisPosition.TOP, ExcelChartPoiBridge.fromPoiAxisPosition(AxisPosition.TOP));
+    EnumMappingAssertions.assertBidirectionalMappings(
+        Map.of(
+            AxisCrosses.AUTO_ZERO, ExcelChartAxisCrosses.AUTO_ZERO,
+            AxisCrosses.MAX, ExcelChartAxisCrosses.MAX,
+            AxisCrosses.MIN, ExcelChartAxisCrosses.MIN),
+        ExcelChartPoiBridge::fromPoiAxisCrosses,
+        ExcelChartPoiBridge::toPoiAxisCrosses);
 
-    assertEquals(
-        ExcelChartAxisCrosses.AUTO_ZERO,
-        ExcelChartPoiBridge.fromPoiAxisCrosses(AxisCrosses.AUTO_ZERO));
-    assertEquals(
-        ExcelChartAxisCrosses.MAX, ExcelChartPoiBridge.fromPoiAxisCrosses(AxisCrosses.MAX));
-    assertEquals(
-        ExcelChartAxisCrosses.MIN, ExcelChartPoiBridge.fromPoiAxisCrosses(AxisCrosses.MIN));
-    assertEquals(
-        AxisPosition.BOTTOM, ExcelChartPoiBridge.toPoiAxisPosition(ExcelChartAxisPosition.BOTTOM));
-    assertEquals(
-        AxisPosition.LEFT, ExcelChartPoiBridge.toPoiAxisPosition(ExcelChartAxisPosition.LEFT));
-    assertEquals(
-        AxisPosition.RIGHT, ExcelChartPoiBridge.toPoiAxisPosition(ExcelChartAxisPosition.RIGHT));
-    assertEquals(
-        AxisPosition.TOP, ExcelChartPoiBridge.toPoiAxisPosition(ExcelChartAxisPosition.TOP));
-    assertEquals(
-        AxisCrosses.AUTO_ZERO,
-        ExcelChartPoiBridge.toPoiAxisCrosses(ExcelChartAxisCrosses.AUTO_ZERO));
-    assertEquals(AxisCrosses.MAX, ExcelChartPoiBridge.toPoiAxisCrosses(ExcelChartAxisCrosses.MAX));
-    assertEquals(AxisCrosses.MIN, ExcelChartPoiBridge.toPoiAxisCrosses(ExcelChartAxisCrosses.MIN));
-
-    assertEquals("AREA", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("XDDFAreaChartData"));
-    assertEquals("CUSTOMPLOT", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("CustomPlot"));
-    // startsWith("XDDF") true but endsWith("ChartData") false — falls through to toUpperCase.
-    assertEquals(
-        "XDDFUNKNOWN", ExcelChartDataFamilyPoiBridge.canonicalPlotTypeToken("XDDFUnknown"));
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            "XDDFAreaChartData", "AREA",
+            "CustomPlot", "CUSTOMPLOT",
+            "XDDFUnknown", "XDDFUNKNOWN"),
+        ExcelChartDataFamilyPoiBridge::canonicalPlotTypeToken);
   }
 
   @Test

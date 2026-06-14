@@ -648,6 +648,34 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
+  void returnsStructuredFailureForSaveAsDestinationCollisions() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-save-as-collision-");
+    Path workbookPath = workspace.resolve("existing-output.xlsx");
+    Files.writeString(workbookPath, "occupied");
+
+    GridGrindResponse.Failure failure =
+        failure(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet())))));
+
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
+    assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    assertEquals(
+        "Could not write workbook to "
+            + workbookPath.toAbsolutePath()
+            + ": already exists; SAVE_AS requires a new destination path and never replaces an"
+            + " existing workbook implicitly",
+        failure.problem().message());
+  }
+
+  @Test
   void doesNotPersistWorkbookWhenReadFails() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-analysis-failure-", ".xlsx");
     Files.deleteIfExists(workbookPath);

@@ -302,18 +302,8 @@ public final class ExcelDrawingController {
     return new ExcelDrawingObjectSnapshot.SignatureLine(
         signatureLine.name(),
         signatureLine.anchor(),
-        signatureLine.setupId(),
-        signatureLine.allowComments(),
-        signatureLine.signingInstructions(),
-        signatureLine.suggestedSigner(),
-        signatureLine.suggestedSigner2(),
-        signatureLine.suggestedSignerEmail(),
-        signatureLine.previewFormat(),
-        signatureLine.previewContentType(),
-        signatureLine.previewByteSize(),
-        signatureLine.previewSha256(),
-        signatureLine.previewWidthPixels(),
-        signatureLine.previewHeightPixels());
+        signatureLine.setup(),
+        signatureLine.preview());
   }
 
   private void deleteNamedShapeIfPresent(XSSFSheet sheet, String objectName) {

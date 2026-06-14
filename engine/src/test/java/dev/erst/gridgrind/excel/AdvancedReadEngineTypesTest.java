@@ -468,22 +468,18 @@ class AdvancedReadEngineTypesTest {
             "BudgetTable",
             "Budget",
             "A1:B5",
-            1,
-            1,
-            List.of("Item", "Amount"),
-            List.of(
-                new ExcelTableColumnSnapshot(1L, "Item", null, null, null, null),
-                new ExcelTableColumnSnapshot(
-                    2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2")),
+            new ExcelTableSnapshot.Structure(
+                1,
+                1,
+                List.of("Item", "Amount"),
+                List.of(
+                    new ExcelTableColumnSnapshot(1L, "Item", null, null, null, null),
+                    new ExcelTableColumnSnapshot(
+                        2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2"))),
             new ExcelTableStyleSnapshot.Named("TableStyleMedium2", false, false, true, false),
-            true,
-            null,
-            true,
-            true,
-            false,
-            null,
-            null,
-            null);
+            new ExcelTableSnapshot.Behavior(true, true, true, false),
+            new ExcelTableSnapshot.Presentation(
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()));
     ExcelConditionalFormattingRuleSnapshot.Top10Rule top10 =
         new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
             1,
@@ -494,9 +490,9 @@ class AdvancedReadEngineTypesTest {
             new ExcelDifferentialStyleSnapshot(
                 "0.00", true, null, null, "#AABBCC", null, null, null, null, List.of()));
 
-    assertEquals("", normalized.comment());
-    assertEquals("", normalized.headerRowCellStyle());
-    assertEquals("UniqueAmount", normalized.columns().get(1).uniqueName());
+    assertEquals(Optional.empty(), normalized.presentation().comment());
+    assertEquals(Optional.empty(), normalized.presentation().headerRowCellStyle());
+    assertEquals("UniqueAmount", normalized.structure().columns().get(1).uniqueName());
     assertEquals(10, top10.rank());
     assertThrows(
         IllegalArgumentException.class,

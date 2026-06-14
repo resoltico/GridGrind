@@ -7,7 +7,6 @@ import dev.erst.gridgrind.excel.pivot.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.pivot.PivotHandle;
 import dev.erst.gridgrind.excel.pivot.ResolvedAuthoringSource;
-import dev.erst.gridgrind.excel.pivot.ResolvedAuthoringSourceKind;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -76,14 +75,64 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
   }
 
   @Test
-  void createPivotTableRejectsMissingNamedRangeAndTablePayloads() throws Exception {
+  void createPivotTableAcceptsAllResolvedSourceVariants() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Report");
+      var sheet = workbook.xssfWorkbook().getSheet("Report");
+      sheet.createRow(0).createCell(0).setCellValue("Region");
+      sheet.getRow(0).createCell(1).setCellValue("Amount");
+      sheet.createRow(1).createCell(0).setCellValue("North");
+      sheet.getRow(1).createCell(1).setCellValue(12.0d);
+      var area = new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007);
+      CellReference anchor = new CellReference("D4");
+      var name = workbook.xssfWorkbook().createName();
+      name.setNameName("BudgetRange");
+      name.setRefersToFormula("Report!$A$1:$B$2");
+
+      var table = sheet.createTable(area);
+      table.setName("BudgetTable");
+
+      assertNotNull(
+          controller.createPivotTable(
+              workbook,
+              definition(
+                  "NamedRange Pivot",
+                  "Report",
+                  new ExcelPivotTableDefinition.Source.NamedRange("BudgetRange"),
+                  "D4",
+                  List.of(),
+                  List.of("Region"),
+                  List.of()),
+              ResolvedAuthoringSource.namedRange(sheet, area, name),
+              anchor));
+
+      assertNotNull(
+          controller.createPivotTable(
+              workbook,
+              definition(
+                  "Table Pivot",
+                  "Report",
+                  new ExcelPivotTableDefinition.Source.Table("BudgetTable"),
+                  "D7",
+                  List.of(),
+                  List.of("Region"),
+                  List.of()),
+              ResolvedAuthoringSource.table(sheet, area, table),
+              new CellReference("D7")));
+    }
+  }
+
+  @Test
+  void createPivotTableRejectsSourceWithoutHeaderRowBeforePoiDoes() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Report");
       var sheet = workbook.xssfWorkbook().getSheet("Report");
       var area = new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007);
-      CellReference anchor = new CellReference("D4");
+      var name = workbook.xssfWorkbook().createName();
+      name.setNameName("BudgetRange");
+      name.setRefersToFormula("Report!$A$1:$B$2");
 
-      IllegalArgumentException missingNamedRange =
+      IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
               () ->
@@ -97,39 +146,10 @@ class ExcelPivotTableResidualCoverageTest extends ExcelPivotTableCoverageTestSup
                           List.of(),
                           List.of("Region"),
                           List.of()),
-                      new ResolvedAuthoringSource(
-                          ResolvedAuthoringSourceKind.NAMED_RANGE,
-                          sheet,
-                          area,
-                          "named range BudgetRange",
-                          Optional.empty(),
-                          Optional.empty()),
-                      anchor));
-      assertEquals("namedRange must not be absent", missingNamedRange.getMessage());
-
-      IllegalArgumentException missingTable =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  controller.createPivotTable(
-                      workbook,
-                      definition(
-                          "Table Pivot",
-                          "Report",
-                          new ExcelPivotTableDefinition.Source.Table("BudgetTable"),
-                          "D4",
-                          List.of(),
-                          List.of("Region"),
-                          List.of()),
-                      new ResolvedAuthoringSource(
-                          ResolvedAuthoringSourceKind.TABLE,
-                          sheet,
-                          area,
-                          "table BudgetTable",
-                          Optional.empty(),
-                          Optional.empty()),
-                      anchor));
-      assertEquals("table must not be absent", missingTable.getMessage());
+                      ResolvedAuthoringSource.namedRange(sheet, area, name),
+                      new CellReference("D4")));
+      assertEquals(
+          "pivot source named range BudgetRange is missing its header row", failure.getMessage());
     }
   }
 

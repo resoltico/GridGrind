@@ -44,7 +44,12 @@ class ExcelArrayFormulaTest {
               ExcelCellSnapshot.FormulaSnapshot.class, sheet.cells().snapshotCell("D3"));
       assertEquals("B2:B4*C2:C4", formulaCell.formula());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =

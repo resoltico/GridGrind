@@ -38,12 +38,12 @@ class ExcelCustomXmlControllerTest {
       assertEquals("CORSO_mapping", mapping.name());
       assertEquals("CORSO", mapping.rootElement());
       assertEquals("Schema1", mapping.schemaId());
-      assertFalse(mapping.showImportExportValidationErrors());
-      assertTrue(mapping.autoFit());
-      assertFalse(mapping.append());
-      assertTrue(mapping.preserveSortAfLayout());
-      assertTrue(mapping.preserveFormat());
-      assertTrue(mapping.schemaXml().orElseThrow().contains("<xsd:element name=\"CORSO\""));
+      assertFalse(mapping.settings().showImportExportValidationErrors());
+      assertTrue(mapping.settings().autoFit());
+      assertFalse(mapping.settings().append());
+      assertTrue(mapping.settings().preserveSortAfLayout());
+      assertTrue(mapping.settings().preserveFormat());
+      assertTrue(mapping.schema().xml().orElseThrow().contains("<xsd:element name=\"CORSO\""));
       assertEquals(8, mapping.linkedCells().size());
       assertEquals("Foglio1", mapping.linkedCells().getFirst().sheetName());
       assertEquals("A1", mapping.linkedCells().getFirst().address());
@@ -335,10 +335,10 @@ class ExcelCustomXmlControllerTest {
 
       ExcelCustomXmlMappingSnapshot snapshot = ExcelCustomXmlController.snapshot(map);
       assertEquals("OrdersMapping", snapshot.name());
-      assertEquals(Optional.empty(), snapshot.schemaNamespace());
-      assertEquals(Optional.of("XSD"), snapshot.schemaLanguage());
-      assertEquals(Optional.empty(), snapshot.schemaReference());
-      assertTrue(snapshot.schemaXml().isPresent());
+      assertEquals(Optional.empty(), snapshot.schema().namespace());
+      assertEquals(Optional.of("XSD"), snapshot.schema().language());
+      assertEquals(Optional.empty(), snapshot.schema().reference());
+      assertTrue(snapshot.schema().xml().isPresent());
       assertEquals(List.of(), snapshot.linkedCells());
       assertEquals(1, snapshot.linkedTables().size());
       assertEquals("OrdersTable", snapshot.linkedTables().getFirst().tableName());
@@ -359,17 +359,17 @@ class ExcelCustomXmlControllerTest {
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, emptySchema, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaNamespace());
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaLanguage());
-      assertEquals(Optional.empty(), emptySchemaSnapshot.schemaReference());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().namespace());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().language());
+      assertEquals(Optional.empty(), emptySchemaSnapshot.schema().reference());
 
       ExcelCustomXmlMappingSnapshot nullSchemaSnapshot =
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, null, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaNamespace());
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaLanguage());
-      assertEquals(Optional.empty(), nullSchemaSnapshot.schemaReference());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().namespace());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().language());
+      assertEquals(Optional.empty(), nullSchemaSnapshot.schema().reference());
 
       CTSchema richSchema = CTSchema.Factory.newInstance();
       richSchema.setNamespace("urn:orders");
@@ -378,9 +378,9 @@ class ExcelCustomXmlControllerTest {
           ExcelCustomXmlController.snapshot(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, richSchema, schemaNode, List.of(), List.of(table)));
-      assertEquals(Optional.of("urn:orders"), richSchemaSnapshot.schemaNamespace());
-      assertEquals(Optional.empty(), richSchemaSnapshot.schemaLanguage());
-      assertEquals(Optional.of("orders.xsd"), richSchemaSnapshot.schemaReference());
+      assertEquals(Optional.of("urn:orders"), richSchemaSnapshot.schema().namespace());
+      assertEquals(Optional.empty(), richSchemaSnapshot.schema().language());
+      assertEquals(Optional.of("orders.xsd"), richSchemaSnapshot.schema().reference());
     }
   }
 

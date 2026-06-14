@@ -3,22 +3,24 @@ package dev.erst.gridgrind.cli.discovery;
 /** Public metadata for one generated built-in example workbook plan. */
 public record ShippedExampleEntry(
     String id,
-    String suggestedRequestPath,
+    String requestFileName,
     String summary,
     ExampleWorkspaceMode workspaceMode,
-    java.util.List<String> requiredPaths) {
+    java.util.List<String> requiredWorkspacePaths) {
   public ShippedExampleEntry {
     id = CliDiscoveryValidation.requireNonBlank(id, "id");
-    suggestedRequestPath =
-        CliDiscoveryValidation.requireNonBlank(suggestedRequestPath, "suggestedRequestPath");
+    requestFileName = CliDiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
     summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");
     java.util.Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
-    requiredPaths = CliDiscoveryValidation.copyStringsAllowEmpty(requiredPaths, "requiredPaths");
-    if (!suggestedRequestPath.startsWith("examples/")) {
-      throw new IllegalArgumentException("suggestedRequestPath must start with examples/");
+    requiredWorkspacePaths =
+        CliDiscoveryValidation.copyStringsAllowEmpty(
+            requiredWorkspacePaths, "requiredWorkspacePaths");
+    if (requestFileName.contains("/") || requestFileName.contains("\\")) {
+      throw new IllegalArgumentException(
+          "requestFileName must be one portable file name, not a repository path");
     }
-    if (!suggestedRequestPath.endsWith(".json")) {
-      throw new IllegalArgumentException("suggestedRequestPath must end with .json");
+    if (!requestFileName.endsWith(".json")) {
+      throw new IllegalArgumentException("requestFileName must end with .json");
     }
   }
 }

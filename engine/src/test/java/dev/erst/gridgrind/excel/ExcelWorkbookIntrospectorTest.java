@@ -57,7 +57,7 @@ class ExcelWorkbookIntrospectorTest {
           results.autofilters().autofilters());
       assertEquals(1, results.tables().tables().size());
       assertEquals("Queue", results.tables().tables().getFirst().name());
-      assertTrue(results.tables().tables().getFirst().hasAutofilter());
+      assertTrue(results.tables().tables().getFirst().behavior().hasAutofilter());
     }
   }
 

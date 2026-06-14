@@ -1,16 +1,9 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import dev.erst.gridgrind.contract.catalog.gather.CatalogDuplicateFailures;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.step.WorkbookStep;
-import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Publishes the machine-readable GridGrind protocol surface used by CLI discovery commands.
@@ -115,13 +108,16 @@ public final class GridGrindProtocolCatalog {
   }
 
   private static Catalog buildCatalog() {
-    validateFieldShapeGroupMappings();
+    GridGrindProtocolCatalogCoverageValidator.validateFieldShapeGroupMappings(
+        NESTED_TYPE_GROUPS, PLAIN_TYPE_DESCRIPTORS);
     for (CatalogTopLevelTypeDescriptorGroup group :
         GridGrindProtocolCatalogTypeDescriptors.TOP_LEVEL_GROUPS) {
-      validateCoverage(group.sealedType(), group.typeDescriptors());
+      GridGrindProtocolCatalogCoverageValidator.validateCoverage(
+          group.sealedType(), group.typeDescriptors());
     }
     for (CatalogNestedTypeDescriptor nestedTypeGroup : NESTED_TYPE_GROUPS) {
-      validateCoverage(nestedTypeGroup.sealedType(), nestedTypeGroup.typeDescriptors());
+      GridGrindProtocolCatalogCoverageValidator.validateCoverage(
+          nestedTypeGroup.sealedType(), nestedTypeGroup.typeDescriptors());
     }
     return CatalogStepTemplateSupport.attach(
         new Catalog(
@@ -153,152 +149,5 @@ public final class GridGrindProtocolCatalog {
 
   private static List<TypeEntry> publicEntries(List<CatalogTypeDescriptor> descriptors) {
     return descriptors.stream().map(CatalogTypeDescriptor::typeEntry).toList();
-  }
-
-  private static void validateFieldShapeGroupMappings() {
-    Set<Class<?>> descriptorNestedTypes =
-        NESTED_TYPE_GROUPS.stream()
-            .map(CatalogNestedTypeDescriptor::sealedType)
-            .collect(java.util.stream.Collectors.toSet());
-    Set<Class<?>> descriptorPlainTypes =
-        PLAIN_TYPE_DESCRIPTORS.stream()
-            .map(CatalogPlainTypeDescriptor::recordType)
-            .collect(java.util.stream.Collectors.toSet());
-
-    for (CatalogNestedTypeDescriptor descriptor : NESTED_TYPE_GROUPS) {
-      CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
-          descriptor.sealedType(), descriptor.group());
-    }
-    for (CatalogPlainTypeDescriptor descriptor : PLAIN_TYPE_DESCRIPTORS) {
-      CatalogFieldMetadataSupport.validatePlainTypeGroupMapping(
-          descriptor.recordType(), descriptor.group());
-    }
-
-    // Reverse check: every registered type must appear in a descriptor.
-    validateReverseGroupMappings(descriptorNestedTypes, descriptorPlainTypes);
-  }
-
-  /**
-   * Validates that every type registered in the field-shape maps appears in one of the provided
-   * descriptor sets. Exposed as package-private so tests can exercise the failure paths with
-   * synthetic descriptor sets that are intentionally incomplete.
-   */
-  static void validateReverseGroupMappings(
-      Set<Class<?>> descriptorNestedTypes, Set<Class<?>> descriptorPlainTypes) {
-    for (Class<?> registeredType : CatalogFieldMetadataSupport.registeredNestedTypes()) {
-      if (!descriptorNestedTypes.contains(registeredType)) {
-        throw new IllegalStateException(
-            "Field-shape nested group map contains type with no catalog descriptor: "
-                + registeredType.getName());
-      }
-    }
-    for (Class<?> registeredType : CatalogFieldMetadataSupport.registeredPlainTypes()) {
-      if (!descriptorPlainTypes.contains(registeredType)) {
-        throw new IllegalStateException(
-            "Field-shape plain group map contains type with no catalog descriptor: "
-                + registeredType.getName());
-      }
-    }
-  }
-
-  private static void validateCoverage(
-      Class<?> sealedType, List<CatalogTypeDescriptor> descriptors) {
-    validateCoverage(
-        sealedType,
-        toOrderedMap(
-            descriptors,
-            CatalogTypeDescriptor::recordType,
-            descriptor -> descriptor.typeEntry().id(),
-            "catalog descriptor"));
-  }
-
-  /** Validates that a tagged union and the catalog expose the same ordered discriminator ids. */
-  static void validateCoverage(Class<?> sealedType, Map<Class<?>, String> catalogIds) {
-    if (sealedType.equals(WorkbookStep.class)) {
-      validateWorkbookStepCoverage(sealedType, catalogIds);
-      return;
-    }
-    CatalogTypeEntryFactory.discriminatorFieldFor(sealedType);
-    Map<Class<?>, String> annotationIds = annotationIds(sealedType);
-    validateCatalogRecords(catalogIds);
-    validateCoveredTypes(sealedType, annotationIds, catalogIds);
-    validateCoveredIds(annotationIds, catalogIds);
-  }
-
-  private static void validateWorkbookStepCoverage(
-      Class<?> sealedType, Map<Class<?>, String> catalogIds) {
-    Set<Class<?>> permitted =
-        Arrays.stream(sealedType.getPermittedSubclasses())
-            .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
-    if (!permitted.equals(catalogIds.keySet())) {
-      throw new IllegalStateException(
-          "Catalog coverage mismatch for "
-              + sealedType.getName()
-              + ": permitted="
-              + permitted
-              + ", catalog="
-              + catalogIds.keySet());
-    }
-  }
-
-  private static Map<Class<?>, String> annotationIds(Class<?> sealedType) {
-    return toOrderedMap(
-        List.copyOf(ProtocolTypeMetadataSupport.typeIdsByClass(sealedType).entrySet()),
-        Map.Entry::getKey,
-        Map.Entry::getValue,
-        "annotation subtype");
-  }
-
-  private static void validateCatalogRecords(Map<Class<?>, String> catalogIds) {
-    for (Class<?> recordType : catalogIds.keySet()) {
-      if (!recordType.isRecord()) {
-        throw new IllegalStateException(
-            "Catalog entry %s does not target a record type".formatted(recordType));
-      }
-    }
-  }
-
-  private static void validateCoveredTypes(
-      Class<?> sealedType, Map<Class<?>, String> annotationIds, Map<Class<?>, String> catalogIds) {
-    if (!annotationIds.keySet().equals(catalogIds.keySet())) {
-      throw new IllegalStateException(
-          "Catalog coverage mismatch for "
-              + sealedType.getName()
-              + ": annotated="
-              + annotationIds.keySet()
-              + ", catalog="
-              + catalogIds.keySet());
-    }
-  }
-
-  private static void validateCoveredIds(
-      Map<Class<?>, String> annotationIds, Map<Class<?>, String> catalogIds) {
-    for (Map.Entry<Class<?>, String> annotationEntry : annotationIds.entrySet()) {
-      String catalogId = catalogIds.get(annotationEntry.getKey());
-      if (!annotationEntry.getValue().equals(catalogId)) {
-        throw new IllegalStateException(
-            "Catalog id mismatch for "
-                + annotationEntry.getKey().getName()
-                + ": annotation="
-                + annotationEntry.getValue()
-                + ", catalog="
-                + catalogId);
-      }
-    }
-  }
-
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
-  static <T, K, V> Map<K, V> toOrderedMap(
-      List<T> items, Function<T, K> keyFn, Function<T, V> valueFn, String label) {
-    Map<K, V> result = new LinkedHashMap<>();
-    for (T item : items) {
-      K key = keyFn.apply(item);
-      V value = valueFn.apply(item);
-      if (result.containsKey(key)) {
-        throw CatalogDuplicateFailures.duplicateEntryFailure(label, result.get(key), value);
-      }
-      result.put(key, value);
-    }
-    return result;
   }
 }

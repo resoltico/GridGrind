@@ -149,25 +149,32 @@ final class WorkbookInvariantAnalysisLayoutChecks {
     WorkbookInvariantChecks.requireNonBlank(table.sheetName(), "table sheetName");
     WorkbookInvariantChecks.requireNonBlank(table.range(), "table range");
     WorkbookInvariantChecks.require(
-        table.headerRowCount() >= 0, "table headerRowCount must not be negative");
+        table.structure().headerRowCount() >= 0, "table headerRowCount must not be negative");
     WorkbookInvariantChecks.require(
-        table.totalsRowCount() >= 0, "table totalsRowCount must not be negative");
+        table.structure().totalsRowCount() >= 0, "table totalsRowCount must not be negative");
     WorkbookInvariantChecks.require(
-        table.columnNames() != null, "table columnNames must not be null");
-    WorkbookInvariantChecks.require(table.columns() != null, "table columns must not be null");
+        table.structure().columnNames() != null, "table columnNames must not be null");
     WorkbookInvariantChecks.require(
-        table.columnNames().size() == table.columns().size(),
+        table.structure().columns() != null, "table columns must not be null");
+    WorkbookInvariantChecks.require(
+        table.structure().columnNames().size() == table.structure().columns().size(),
         "table columnNames size must match columns size");
     table
+        .structure()
         .columnNames()
         .forEach(
             columnName ->
                 WorkbookInvariantChecks.require(
                     columnName != null, "table column name must not be null"));
-    for (int index = 0; index < table.columns().size(); index++) {
-      WorkbookInvariantCellSurfaceChecks.requireTableColumnShape(table.columns().get(index));
+    for (int index = 0; index < table.structure().columns().size(); index++) {
+      WorkbookInvariantCellSurfaceChecks.requireTableColumnShape(
+          table.structure().columns().get(index));
       WorkbookInvariantChecks.require(
-          table.columnNames().get(index).equals(table.columns().get(index).name()),
+          table
+              .structure()
+              .columnNames()
+              .get(index)
+              .equals(table.structure().columns().get(index).name()),
           "table columnNames must align with columns");
     }
     WorkbookInvariantChecks.require(table.style() != null, "table style must not be null");

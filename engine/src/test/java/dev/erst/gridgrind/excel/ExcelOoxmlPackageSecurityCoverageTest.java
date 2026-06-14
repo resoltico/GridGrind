@@ -51,7 +51,10 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           .setCell("A1", ExcelCellValue.text("Plain workbook"));
       workbook
           .persistence()
-          .save(plainWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              plainWorkbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelOoxmlPackageSecuritySupport.ReadableWorkbook readableWorkbook =
@@ -82,7 +85,9 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           readableWorkbook.workbookPath());
       assertEquals(
           Optional.of(encryptedWorkbook.password()), readableWorkbook.sourceEncryptionPassword());
-      assertTrue(readableWorkbook.packageSecurity().encryption().encrypted());
+      assertInstanceOf(
+          ExcelOoxmlEncryptionSnapshot.Encrypted.class,
+          readableWorkbook.packageSecurity().encryption());
       assertTrue(Files.exists(decryptedPath[0]));
     }
     assertFalse(Files.exists(decryptedPath[0]));
@@ -114,7 +119,10 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Bridge"));
       workbook
           .persistence()
-          .save(sourceWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              sourceWorkbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     Path copiedWorkbookPath = directory.resolve("copied.xlsx");
@@ -128,6 +136,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           ExcelOoxmlPackageSecuritySnapshot.none(),
           Optional.empty(),
           false,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
           ExcelOoxmlPersistenceOptions.none());
     }
 
@@ -136,6 +145,64 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             copiedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Bridge", reopened.sheet("Budget").cells().text("A1"));
     }
+  }
+
+  @Test
+  void workbookFileSupportCoversReplaceExistingCopyAndMoveBranches() throws IOException {
+    Path workspace = ExcelTempFiles.createManagedTempDirectory("gridgrind-package-file-ops-");
+    Path sourceWorkbookPath = workspace.resolve("source.xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
+      workbook.getOrCreateSheet("Budget").cells().setCell("A1", ExcelCellValue.text("Source"));
+      workbook
+          .persistence()
+          .save(
+              sourceWorkbookPath,
+              WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
+    }
+
+    Path replaceExistingTarget = workspace.resolve("replace-existing.xlsx");
+    Files.writeString(replaceExistingTarget, "old");
+    ExcelOoxmlPackageFileSupport.copySourceWorkbook(
+        sourceWorkbookPath,
+        replaceExistingTarget,
+        WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+    assertArrayEquals(
+        Files.readAllBytes(sourceWorkbookPath), Files.readAllBytes(replaceExistingTarget));
+    NullPointerException nullTargetFailure =
+        assertThrows(
+            NullPointerException.class,
+            () ->
+                ExcelOoxmlPackageFileSupport.copySourceWorkbook(
+                    sourceWorkbookPath, null, WorkbookArtifactWriteDisposition.CREATE_NEW));
+    assertEquals("targetPath must not be null", nullTargetFailure.getMessage());
+    ExcelOoxmlPackageFileSupport.copySourceWorkbook(
+        sourceWorkbookPath, sourceWorkbookPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
+    assertTrue(Files.exists(sourceWorkbookPath));
+
+    Path moveCreateNewSource = workspace.resolve("move-create-new-source.xlsx");
+    Files.copy(sourceWorkbookPath, moveCreateNewSource);
+    Path moveCreateNewTarget = workspace.resolve("move-create-new-target.xlsx");
+    ExcelOoxmlPackageFileSupport.moveWorkbook(
+        moveCreateNewSource, moveCreateNewTarget, WorkbookArtifactWriteDisposition.CREATE_NEW);
+    assertFalse(Files.exists(moveCreateNewSource));
+    assertTrue(Files.exists(moveCreateNewTarget));
+
+    Path moveReplaceSource = workspace.resolve("move-replace-source.xlsx");
+    Files.copy(sourceWorkbookPath, moveReplaceSource);
+    Path moveReplaceTarget = workspace.resolve("move-replace-target.xlsx");
+    Files.writeString(moveReplaceTarget, "old target");
+    ExcelOoxmlPackageFileSupport.moveWorkbook(
+        moveReplaceSource, moveReplaceTarget, WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+    assertFalse(Files.exists(moveReplaceSource));
+    assertArrayEquals(
+        Files.readAllBytes(sourceWorkbookPath), Files.readAllBytes(moveReplaceTarget));
+
+    Path noOpMovePath = workspace.resolve("move-no-op.xlsx");
+    Files.copy(sourceWorkbookPath, noOpMovePath);
+    ExcelOoxmlPackageFileSupport.moveWorkbook(
+        noOpMovePath, noOpMovePath, WorkbookArtifactWriteDisposition.CREATE_NEW);
+    assertTrue(Files.exists(noOpMovePath));
   }
 
   @Test
@@ -295,7 +362,10 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Materialized"));
       workbook
           .persistence()
-          .save(materializedWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              materializedWorkbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook workbook =
@@ -463,9 +533,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     invalidPackagePath, ExcelOoxmlEncryptionSnapshot.none()));
     assertTrue(packageInspectionFailure.getMessage().contains("inspect OOXML package signatures"));
 
-    assertEquals(Optional.empty(), ExcelOoxmlPackageInspectionSupport.signerSubject(null));
-    assertEquals(Optional.empty(), ExcelOoxmlPackageInspectionSupport.signerIssuer(null));
-    assertEquals(Optional.empty(), ExcelOoxmlPackageInspectionSupport.signerSerialNumber(null));
+    assertEquals(Optional.empty(), ExcelOoxmlPackageInspectionSupport.signerIdentity(null));
 
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
@@ -474,15 +542,11 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         loadPkcs12(signedWorkbook.pkcs12Path(), signedWorkbook.keystorePassword());
     java.security.cert.X509Certificate signer =
         (java.security.cert.X509Certificate) signingKeyStore.getCertificate(signedWorkbook.alias());
-    assertTrue(
-        ExcelOoxmlPackageInspectionSupport.signerSubject(signer)
-            .orElseThrow()
-            .contains("GridGrind Signing Test"));
-    assertTrue(
-        ExcelOoxmlPackageInspectionSupport.signerIssuer(signer)
-            .orElseThrow()
-            .contains("GridGrind Signing Test"));
-    assertTrue(ExcelOoxmlPackageInspectionSupport.signerSerialNumber(signer).isPresent());
+    ExcelOoxmlSignatureSnapshot.SignerIdentity signerIdentity =
+        ExcelOoxmlPackageInspectionSupport.signerIdentity(signer).orElseThrow();
+    assertTrue(signerIdentity.subject().contains("GridGrind Signing Test"));
+    assertTrue(signerIdentity.issuer().contains("GridGrind Signing Test"));
+    assertFalse(signerIdentity.serialNumberHex().isBlank());
 
     WorkbookSecurityException signingFailure =
         assertThrows(
@@ -523,7 +587,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                       throw new GeneralSecurityException("encrypt failure");
                     },
                     ExcelTempFiles.createManagedTempFile("gridgrind-encrypt-source-", ".xlsx"),
-                    ExcelTempFiles.createManagedTempFile("gridgrind-encrypt-target-", ".xlsx")));
+                    ExcelTempFiles.createManagedTempFile("gridgrind-encrypt-target-", ".xlsx"),
+                    WorkbookArtifactWriteDisposition.CREATE_NEW));
     assertTrue(
         encryptFailure.getMessage().contains("Failed to encrypt the saved OOXML workbook package"));
 
@@ -568,33 +633,42 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
   @Test
   void saveAndPersistSecurityHelpersCoverPlainAndSignedGuardBranches() throws IOException {
-    Path plainSourcePath =
-        ExcelTempFiles.createManagedTempFile("gridgrind-saveworkbook-plain-source-", ".xlsx");
+    Path workspace = ExcelTempFiles.createManagedTempDirectory("gridgrind-saveworkbook-security-");
+    Path plainSourcePath = workspace.resolve("plain-source.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Plain").cells().setCell("A1", ExcelCellValue.text("Plain save"));
       workbook
           .persistence()
-          .save(plainSourcePath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              plainSourcePath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
-    Path plainSavedPath = plainSourcePath.resolveSibling("plain-saved-via-support.xlsx");
+    Path plainSavedPath = workspace.resolve("plain-saved-via-support.xlsx");
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(plainSourcePath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
-          workbook, plainSavedPath, ExcelOoxmlPersistenceOptions.none(), Files::createTempFile);
+          workbook,
+          plainSavedPath,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
+          ExcelOoxmlPersistenceOptions.none(),
+          Files::createTempFile);
     }
     try (ExcelWorkbook workbook =
         ExcelWorkbooks.open(plainSavedPath, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
       assertEquals("Plain save", workbook.sheet("Plain").cells().text("A1"));
     }
 
-    Path plainWorkbookPath =
-        ExcelTempFiles.createManagedTempFile("gridgrind-persist-signed-plain-", ".xlsx");
+    Path plainWorkbookPath = workspace.resolve("persist-signed-plain.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbooks.create()) {
       workbook.getOrCreateSheet("Guard").cells().setCell("A1", ExcelCellValue.text("Signed guard"));
       workbook
           .persistence()
-          .save(plainWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              plainWorkbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     ExcelOoxmlSignatureSnapshot signature =
@@ -618,6 +692,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     signedSecurity,
                     Optional.empty(),
                     true,
+                    WorkbookArtifactWriteDisposition.CREATE_NEW,
                     ExcelOoxmlPersistenceOptions.none()));
     assertTrue(unsignedMutationFailure.getMessage().contains("rewritten"));
 
@@ -628,6 +703,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         signedSecurity,
         Optional.empty(),
         false,
+        WorkbookArtifactWriteDisposition.CREATE_NEW,
         ExcelOoxmlPersistenceOptions.none());
     assertTrue(Files.exists(passThroughTarget));
   }
@@ -639,7 +715,11 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       Path memoryTarget = ExcelTempFiles.createManagedTempFile("gridgrind-save-memory-", ".xlsx");
 
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
-          workbook, memoryTarget, null, Files::createTempFile);
+          workbook,
+          memoryTarget,
+          WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+          null,
+          Files::createTempFile);
 
       try (ExcelWorkbook reopened =
           ExcelWorkbooks.open(memoryTarget, ExcelTempFileFactoryTestSupport.tempFileFactory())) {
@@ -659,6 +739,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook,
           copiedWorkbookPath,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
           ExcelOoxmlPersistenceOptions.none(),
           (prefix, suffix) -> {
             tempFilesCreated.incrementAndGet();
@@ -677,6 +758,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook,
           resignedWorkbookPath,
+          WorkbookArtifactWriteDisposition.CREATE_NEW,
           new ExcelOoxmlPersistenceOptions(
               Optional.empty(),
               Optional.of(
@@ -694,11 +776,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
   private static void assertCopyDeleteAndEffectiveOptionsBranches(Path sourceWorkbookPath)
       throws IOException {
-    ExcelOoxmlPackageFileSupport.copySourceWorkbook(sourceWorkbookPath, sourceWorkbookPath);
+    ExcelOoxmlPackageFileSupport.copySourceWorkbook(
+        sourceWorkbookPath, sourceWorkbookPath, WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
     assertTrue(OoxmlSecurityTestSupport.signatureValid(sourceWorkbookPath));
 
     Path copiedWorkbookPath = sourceWorkbookPath.getParent().resolve("copied-signed.xlsx");
-    ExcelOoxmlPackageFileSupport.copySourceWorkbook(sourceWorkbookPath, copiedWorkbookPath);
+    ExcelOoxmlPackageFileSupport.copySourceWorkbook(
+        sourceWorkbookPath, copiedWorkbookPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
     assertArrayEquals(
         Files.readAllBytes(sourceWorkbookPath), Files.readAllBytes(copiedWorkbookPath));
 
@@ -715,15 +799,14 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(Files.exists(nonEmptyDirectory));
 
     ExcelOoxmlEncryptionSnapshot encryptedSnapshot =
-        new ExcelOoxmlEncryptionSnapshot(
-            true,
-            Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-            Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-            Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-            Optional.of(ExcelOoxmlChainingMode.CBC),
-            Optional.of(256),
-            Optional.of(16),
-            Optional.of(100_000));
+        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+            ExcelOoxmlEncryptionMode.AGILE,
+            ExcelOoxmlCipherAlgorithm.AES_256,
+            ExcelOoxmlHashAlgorithm.SHA_512,
+            ExcelOoxmlChainingMode.CBC,
+            256,
+            16,
+            100_000);
     IllegalStateException missingPasswordFailure =
         assertThrows(
             IllegalStateException.class,
@@ -951,7 +1034,10 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           .setCell("A1", ExcelCellValue.text("Signed workbook"));
       workbook
           .persistence()
-          .save(signableWorkbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+          .save(
+              signableWorkbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
     ExcelOoxmlPackageSigningSupport.signWorkbook(
         signableWorkbookPath,

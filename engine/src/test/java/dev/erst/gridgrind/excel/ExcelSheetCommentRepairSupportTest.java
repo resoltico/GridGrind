@@ -270,7 +270,12 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "LL", Map.of("A2", new ExcelComment("Note BudgetTotal", "GridGrind", true)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Note BudgetTotal"), Map.of("1:0", 1));
@@ -305,7 +310,12 @@ class ExcelSheetCommentRepairSupportTest {
           Map.of(
               "A2", new ExcelComment("Stationary", "GridGrind", true),
               "D2", new ExcelComment("Shifted", "GridGrind", true)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(
@@ -341,7 +351,12 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "Ops", Map.of("A2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("A2", "Moving"), Map.of("1:0", 1));
@@ -372,7 +387,12 @@ class ExcelSheetCommentRepairSupportTest {
 
       assertVisibleComments(
           workbook, "Ops", Map.of("B2", new ExcelComment("Moving", "GridGrind", true)));
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     assertCanonicalCommentParts(workbookPath, Map.of("B2", "Moving"), Map.of("1:1", 1));

@@ -476,7 +476,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     WorkbookAssetInspectionResult.TablesResult tables =
         (WorkbookAssetInspectionResult.TablesResult) success.inspections().getFirst();
     assertEquals(1, tables.tables().size());
-    assertEquals(0, tables.tables().getFirst().totalsRowCount());
+    assertEquals(0, tables.tables().getFirst().structure().totalsRowCount());
   }
 
   @Test
@@ -528,6 +528,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
       throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-invalid-request-", ".json");
     Path responsePath = Files.createTempFile("gridgrind-invalid-response-", ".json");
+    Files.deleteIfExists(responsePath);
     Files.writeString(
         requestPath,
         requestJson(

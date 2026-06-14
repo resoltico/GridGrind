@@ -155,15 +155,22 @@ single plugin application for exactly that reason.
 
 ### Structural-governance gates
 
-Root `check` now depends on `verifyJavaSourceShape`, `verifyJavaSourceDuplication`,
-`verifyJavaSemanticShape`, `verifyNoLegacyBuildSrc`, and the included-build `gradle/build-logic:test`
-task. The root build-logic plugin owns the generic
+Root `check` now depends on `verifyJavaSourceShape`, `verifyControlPlaneShape`,
+`verifyJavaSourceDuplication`, `verifyJavaSemanticShape`, `verifyNoLegacyBuildSrc`, and the
+included-build `gradle/build-logic:test` task. The root build-logic plugin owns the generic
 structural-governance truth, and JUnit seam tests audit that wiring plus the surrounding docs.
 
 `verifyJavaSourceShape`, implemented in
 `gradle/build-logic/.../VerifyJavaSourceShapeTask.java`, parses every repo-owned handwritten Java
 source set, writes `build/reports/source-shape/source-shape.tsv`, and enforces the role-owned
 policy stored in `gradle/source-shape-policy.tsv`.
+
+`verifyControlPlaneShape`, implemented in
+`gradle/build-logic/.../VerifyRepositoryFileShapeTask.java`, scans the repository-owned control
+plane outside handwritten Java: root gate shell entrypoints, release-surface shell helpers, Kotlin
+build-logic sources, and the long-lived operator ledger/protocol files included in the task's file
+inventory. It writes `build/reports/source-shape/control-plane-shape.tsv` and enforces reviewed
+budgets from `gradle/control-plane-shape-policy.tsv`.
 
 `verifyJavaSourceDuplication`, implemented in
 `gradle/build-logic/.../VerifyJavaSourceDuplicationTask.java`, scans repo-owned handwritten Java
@@ -187,12 +194,18 @@ reactivation is treated as architectural drift.
 - per-role duplication ownership through `duplicationGuard`
 - reviewed exact-surface overrides with `reviewExpiresOn` and `splitTrigger`
 
+`gradle/control-plane-shape-policy.tsv` owns the same reviewed-budget lifecycle for repository
+control-plane files that are not part of handwritten Java source sets.
+
 `gradle/semantic-shape-policy.tsv` separately owns semantic-shape reviewed exceptions.
 
 Rules:
 - treat `verifyJavaSourceShape` as the authoritative repo-wide no-regression gate for handwritten
   Java file size and API breadth across `main`, `test`, `testFixtures`, `parityTest`, and Jazzer
   source sets
+- treat `verifyControlPlaneShape` as the authoritative repo-wide no-regression gate for
+  repository-owned shell, Kotlin build-logic, and operator-control files instead of letting the
+  repo-governing machinery drift outside the source-shape model
 - treat `verifyJavaSourceDuplication` as the authoritative repo-wide duplication gate for
   handwritten Java, instead of hiding intentional mirrors behind global exclusions
 - treat `verifyJavaSemanticShape` as the authoritative repo-wide semantic PMD gate for

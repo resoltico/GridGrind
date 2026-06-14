@@ -67,6 +67,11 @@ final class ExecutionContextFixtureSupport {
   }
 
   static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
-    workbook.persistence().save(workbookPath, tempFileFactoryFor(workbookPath));
+    workbook
+        .persistence()
+        .save(
+            workbookPath,
+            dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+            tempFileFactoryFor(workbookPath));
   }
 }

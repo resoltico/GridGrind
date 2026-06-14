@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.drawingSignatureLine;
+import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.signatureLineSnapshot;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -8,11 +10,11 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlImportDefinition;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
 import java.util.Optional;
@@ -31,20 +33,14 @@ class ExcelResidualValidationCoverageTest {
     ExcelCustomXmlLinkedTableSnapshot linkedTable =
         new ExcelCustomXmlLinkedTableSnapshot("Ops", "Table1", "Table 1", "A1:B2", "/root");
     ExcelCustomXmlMappingSnapshot mapping =
-        new ExcelCustomXmlMappingSnapshot(
+        customXmlMappingSnapshot(
             1L,
             "CORSO_mapping",
             "CORSO",
             "Schema1",
-            false,
-            true,
-            false,
-            true,
-            true,
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.of("<xsd:schema/>"),
+            settings(false, true, false, true, true),
+            schema(
+                Optional.empty(), Optional.empty(), Optional.empty(), Optional.of("<xsd:schema/>")),
             Optional.empty(),
             List.of(linkedCell),
             List.of(linkedTable));
@@ -88,20 +84,13 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 0L,
                 "CORSO_mapping",
                 "CORSO",
                 "Schema1",
-                false,
-                true,
-                false,
-                true,
-                true,
-                null,
-                null,
-                null,
-                null,
+                settings(false, true, false, true, true),
+                schema(null, null, null, null),
                 null,
                 List.of(linkedCell),
                 List.of(linkedTable)));
@@ -386,7 +375,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -404,7 +393,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -422,7 +411,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -440,7 +429,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -458,7 +447,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -476,7 +465,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -494,7 +483,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "OpsSignature",
                 anchor,
                 null,
@@ -513,7 +502,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -531,7 +520,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -549,7 +538,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -567,7 +556,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -585,7 +574,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -603,7 +592,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -621,7 +610,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -639,7 +628,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -657,7 +646,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -672,7 +661,7 @@ class ExcelResidualValidationCoverageTest {
                 "hash",
                 null,
                 -1));
-    new ExcelDrawingObjectSnapshot.SignatureLine(
+    drawingSignatureLine(
         "OpsSignature",
         anchor,
         null,
@@ -687,7 +676,7 @@ class ExcelResidualValidationCoverageTest {
         "hash",
         null,
         0);
-    new ExcelDrawingObjectSnapshot.SignatureLine(
+    drawingSignatureLine(
         "OpsSignature",
         anchor,
         null,
@@ -705,7 +694,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -723,7 +712,7 @@ class ExcelResidualValidationCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "OpsSignature",
                 anchor,
                 null,
@@ -754,5 +743,45 @@ class ExcelResidualValidationCoverageTest {
         "invalid",
         Optional.of(ExcelPictureFormat.PNG),
         Optional.of(new ExcelBinaryData(new byte[] {1})));
+  }
+
+  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+      long mapId,
+      String name,
+      String rootElement,
+      String schemaId,
+      ExcelCustomXmlMappingSettings settings,
+      ExcelCustomXmlSchemaSnapshot schema,
+      Optional<dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot> dataBinding,
+      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
+      List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
+    return new ExcelCustomXmlMappingSnapshot(
+        mapId,
+        name,
+        rootElement,
+        schemaId,
+        settings,
+        schema,
+        dataBinding,
+        linkedCells,
+        linkedTables);
+  }
+
+  private static ExcelCustomXmlMappingSettings settings(
+      boolean showImportExportValidationErrors,
+      boolean autoFit,
+      boolean append,
+      boolean preserveSortAfLayout,
+      boolean preserveFormat) {
+    return new ExcelCustomXmlMappingSettings(
+        showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
+  }
+
+  private static ExcelCustomXmlSchemaSnapshot schema(
+      Optional<String> namespace,
+      Optional<String> language,
+      Optional<String> reference,
+      Optional<String> xml) {
+    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
   }
 }

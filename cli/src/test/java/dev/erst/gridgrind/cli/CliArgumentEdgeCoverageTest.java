@@ -127,6 +127,52 @@ class CliArgumentEdgeCoverageTest {
   }
 
   @Test
+  void pathHelpersParseGlobalResponseAndStructuredFormatArguments() {
+    assertEquals(Optional.empty(), CliPathArguments.outputFormat(new String[] {"help"}));
+    assertEquals(
+        Optional.of(CliOutputFormat.STRUCTURED),
+        CliPathArguments.outputFormat(new String[] {"--format", "structured"}));
+    assertEquals(
+        Optional.of(CliOutputFormat.TEXT),
+        CliPathArguments.outputFormat(new String[] {"help", "--format", "text"}));
+
+    CliPathArguments.GlobalResponseExtraction extraction =
+        CliPathArguments.extractGlobalResponse(
+            new String[] {"--format", "structured", "--response", "report.json", "help"});
+
+    assertEquals(java.util.List.of("help"), extraction.remainingArgs());
+    assertEquals(Optional.of(Path.of("report.json")), extraction.responsePath());
+    assertEquals(Optional.of(CliOutputFormat.STRUCTURED), extraction.outputFormat());
+    assertEquals(1, extraction.remainingArgsArray().length);
+    assertEquals("help", extraction.remainingArgsArray()[0]);
+
+    CliArgumentsException duplicateFormat =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliPathArguments.extractGlobalResponse(
+                    new String[] {"--format", "text", "--format", "structured"}));
+    assertEquals("--format", duplicateFormat.argument());
+    assertEquals("Duplicate argument: --format", duplicateFormat.getMessage());
+
+    CliArgumentsException duplicateAuthoredFormat =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliPathArguments.outputFormat(
+                    new String[] {"help", "--format", "text", "--format", "structured"}));
+    assertEquals("--format", duplicateAuthoredFormat.argument());
+    assertEquals("Duplicate argument: --format", duplicateAuthoredFormat.getMessage());
+
+    CliArgumentsException invalidFormat =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliPathArguments.outputFormat(new String[] {"--format", "yaml"}));
+    assertEquals("--format", invalidFormat.argument());
+    assertEquals("--format must be one of: text, structured", invalidFormat.getMessage());
+  }
+
+  @Test
   void terminalArgumentValidationRejectsConflictingExecutionShapes() {
     CliArgumentsException samePath =
         assertThrows(

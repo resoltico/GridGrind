@@ -40,15 +40,17 @@ final class InspectionResultWorkbookStructureReportSupport {
         snapshot.name(),
         snapshot.rootElement(),
         snapshot.schemaId(),
-        snapshot.showImportExportValidationErrors(),
-        snapshot.autoFit(),
-        snapshot.append(),
-        snapshot.preserveSortAfLayout(),
-        snapshot.preserveFormat(),
-        snapshot.schemaNamespace().orElse(null),
-        snapshot.schemaLanguage().orElse(null),
-        snapshot.schemaReference().orElse(null),
-        snapshot.schemaXml().orElse(null),
+        new CustomXmlMappingReport.Settings(
+            snapshot.settings().showImportExportValidationErrors(),
+            snapshot.settings().autoFit(),
+            snapshot.settings().append(),
+            snapshot.settings().preserveSortAfLayout(),
+            snapshot.settings().preserveFormat()),
+        new CustomXmlMappingReport.Schema(
+            snapshot.schema().namespace().orElse(null),
+            snapshot.schema().language().orElse(null),
+            snapshot.schema().reference().orElse(null),
+            snapshot.schema().xml().orElse(null)),
         snapshot
             .dataBinding()
             .map(InspectionResultWorkbookStructureReportSupport::toCustomXmlDataBindingReport)
@@ -140,21 +142,24 @@ final class InspectionResultWorkbookStructureReportSupport {
         snapshot.name(),
         snapshot.sheetName(),
         snapshot.range(),
-        snapshot.headerRowCount(),
-        snapshot.totalsRowCount(),
-        snapshot.columnNames(),
-        snapshot.columns().stream()
-            .map(InspectionResultWorkbookStructureReportSupport::toTableColumnReport)
-            .toList(),
+        new TableEntryReport.Structure(
+            snapshot.structure().headerRowCount(),
+            snapshot.structure().totalsRowCount(),
+            snapshot.structure().columnNames(),
+            snapshot.structure().columns().stream()
+                .map(InspectionResultWorkbookStructureReportSupport::toTableColumnReport)
+                .toList()),
         toTableStyleReport(snapshot.style()),
-        snapshot.hasAutofilter(),
-        optionalText(snapshot.comment()),
-        snapshot.published(),
-        snapshot.insertRow(),
-        snapshot.insertRowShift(),
-        optionalText(snapshot.headerRowCellStyle()),
-        optionalText(snapshot.dataCellStyle()),
-        optionalText(snapshot.totalsRowCellStyle()));
+        new TableEntryReport.Behavior(
+            snapshot.behavior().hasAutofilter(),
+            snapshot.behavior().published(),
+            snapshot.behavior().insertRow(),
+            snapshot.behavior().insertRowShift()),
+        new TableEntryReport.Presentation(
+            snapshot.presentation().comment(),
+            snapshot.presentation().headerRowCellStyle(),
+            snapshot.presentation().dataCellStyle(),
+            snapshot.presentation().totalsRowCellStyle()));
   }
 
   static PivotTableReport toPivotTableReport(ExcelPivotTableSnapshot snapshot) {

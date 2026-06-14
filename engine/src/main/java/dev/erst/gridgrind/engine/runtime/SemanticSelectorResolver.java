@@ -259,14 +259,14 @@ final class SemanticSelectorResolver {
     return new ResolvedTable(
         table,
         bounds.firstColumn(),
-        bounds.firstRow() + table.headerRowCount(),
-        bounds.lastRow() - table.totalsRowCount());
+        bounds.firstRow() + table.structure().headerRowCount(),
+        bounds.lastRow() - table.structure().totalsRowCount());
   }
 
   private static int tableColumnOffset(ExcelTableSnapshot table, String columnName) {
     String lookup = columnName.toUpperCase(Locale.ROOT);
-    for (int index = 0; index < table.columnNames().size(); index++) {
-      if (table.columnNames().get(index).toUpperCase(Locale.ROOT).equals(lookup)) {
+    for (int index = 0; index < table.structure().columnNames().size(); index++) {
+      if (table.structure().columnNames().get(index).toUpperCase(Locale.ROOT).equals(lookup)) {
         return index;
       }
     }

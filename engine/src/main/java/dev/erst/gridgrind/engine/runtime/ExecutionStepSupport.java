@@ -10,8 +10,10 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookExecutionEngine;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -147,8 +149,12 @@ final class ExecutionStepSupport {
       InspectionStep inspectionStep, ExcelWorkbook workbook) throws IOException {
     Path tempPath = null;
     try {
-      tempPath = tempFileFactory.createTempFile("gridgrind-event-read-", ".xlsx");
-      workbook.persistence().savePlainWorkbook(tempPath);
+      tempPath =
+          ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+              tempFileFactory.createTempFile("gridgrind-event-read-", ".xlsx"));
+      workbook
+          .persistence()
+          .savePlainWorkbook(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
       return executeEventInspection(tempPath, inspectionStep);
     } finally {
       ExecutionWorkbookSupport.deleteIfExists(tempPath);
@@ -161,9 +167,11 @@ final class ExecutionStepSupport {
       WorkbookLocation workbookLocation,
       ExecutionModeInput executionMode)
       throws IOException {
-    Path tempPath = tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx");
+    Path tempPath =
+        ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
     try {
-      writer.save(tempPath);
+      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
       return executeInspectionAgainstMaterializedPath(
           inspectionStep, workbookLocation, executionMode, tempPath);
     } finally {
@@ -176,9 +184,11 @@ final class ExecutionStepSupport {
       AssertionStep assertionStep,
       WorkbookLocation workbookLocation)
       throws IOException, AssertionFailedException {
-    Path tempPath = tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx");
+    Path tempPath =
+        ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+            tempFileFactory.createTempFile("gridgrind-streaming-step-", ".xlsx"));
     try {
-      writer.save(tempPath);
+      writer.save(tempPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
       return executeFullAssertionAgainstMaterializedPath(assertionStep, workbookLocation, tempPath);
     } finally {
       ExecutionWorkbookSupport.deleteIfExists(tempPath);

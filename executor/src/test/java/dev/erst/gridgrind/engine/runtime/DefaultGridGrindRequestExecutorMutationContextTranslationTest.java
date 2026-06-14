@@ -63,33 +63,16 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
         mutate(
             new SheetSelector.ByName("Budget"), new WorkbookMutationAction.ClearSheetProtection());
 
-    assertNull(formulaFor(copySheet, exception));
-    assertNull(formulaFor(setActiveSheet, exception));
+    assertSheetOnlyContext(copySheet, exception, "Budget");
+    assertSheetOnlyContext(setActiveSheet, exception, "Budget Copy");
+    assertSheetOnlyContext(setSheetVisibility, exception, "Budget");
+    assertSheetOnlyContext(setSheetProtection, exception, "Budget");
+    assertSheetOnlyContext(clearSheetProtection, exception, "Budget");
+
     assertNull(formulaFor(setSelectedSheets, exception));
-    assertNull(formulaFor(setSheetVisibility, exception));
-    assertNull(formulaFor(setSheetProtection, exception));
-    assertNull(formulaFor(clearSheetProtection, exception));
-
-    assertEquals("Budget", sheetNameFor(copySheet, exception));
-    assertEquals("Budget Copy", sheetNameFor(setActiveSheet, exception));
     assertNull(sheetNameFor(setSelectedSheets, exception));
-    assertEquals("Budget", sheetNameFor(setSheetVisibility, exception));
-    assertEquals("Budget", sheetNameFor(setSheetProtection, exception));
-    assertEquals("Budget", sheetNameFor(clearSheetProtection, exception));
-
-    assertNull(addressFor(copySheet, exception));
-    assertNull(addressFor(setActiveSheet, exception));
     assertNull(addressFor(setSelectedSheets, exception));
-    assertNull(addressFor(setSheetVisibility, exception));
-    assertNull(addressFor(setSheetProtection, exception));
-    assertNull(addressFor(clearSheetProtection, exception));
-
-    assertNull(rangeFor(copySheet, exception));
-    assertNull(rangeFor(setActiveSheet, exception));
     assertNull(rangeFor(setSelectedSheets, exception));
-    assertNull(rangeFor(setSheetVisibility, exception));
-    assertNull(rangeFor(setSheetProtection, exception));
-    assertNull(rangeFor(clearSheetProtection, exception));
 
     assertNull(namedRangeNameFor(copySheet, exception));
     assertNull(namedRangeNameFor(setActiveSheet, exception));
@@ -100,7 +83,6 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
   }
 
   @Test
-  @SuppressWarnings("PMD.NcssCount")
   void extractsContextForStructuralLayoutOperations() {
     RuntimeException exception = new RuntimeException("test");
     ExecutorTestPlanSupport.PendingMutation mergeCells =
@@ -191,109 +173,52 @@ class DefaultGridGrindRequestExecutorMutationContextTranslationTest
     ExecutorTestPlanSupport.PendingMutation clearPrintLayout =
         mutate(new SheetSelector.ByName("Budget"), new WorkbookMutationAction.ClearPrintLayout());
 
-    assertNull(formulaFor(mergeCells, exception));
-    assertEquals("Budget", sheetNameFor(mergeCells, exception));
-    assertNull(addressFor(mergeCells, exception));
-    assertEquals("A1:B2", rangeFor(mergeCells, exception));
+    assertRangeContext(mergeCells, exception, "Budget", "A1:B2");
+    assertRangeContext(unmergeCells, exception, "Budget", "A1:B2");
 
-    assertNull(formulaFor(unmergeCells, exception));
-    assertEquals("Budget", sheetNameFor(unmergeCells, exception));
-    assertNull(addressFor(unmergeCells, exception));
-    assertEquals("A1:B2", rangeFor(unmergeCells, exception));
+    for (ExecutorTestPlanSupport.PendingMutation mutation :
+        List.of(
+            setColumnWidth,
+            setRowHeight,
+            insertRows,
+            deleteRows,
+            shiftRows,
+            insertColumns,
+            deleteColumns,
+            shiftColumns,
+            setRowVisibility,
+            setColumnVisibility,
+            groupRows,
+            ungroupRows,
+            groupColumns,
+            ungroupColumns,
+            setSheetPane,
+            setSheetZoom,
+            setSheetPresentation,
+            setPrintLayout,
+            clearPrintLayout)) {
+      assertSheetOnlyContext(mutation, exception, "Budget");
+    }
+  }
 
-    assertNull(formulaFor(setColumnWidth, exception));
-    assertEquals("Budget", sheetNameFor(setColumnWidth, exception));
-    assertNull(addressFor(setColumnWidth, exception));
-    assertNull(rangeFor(setColumnWidth, exception));
+  private static void assertSheetOnlyContext(
+      ExecutorTestPlanSupport.PendingMutation mutation,
+      Exception exception,
+      String expectedSheetName) {
+    assertNull(formulaFor(mutation, exception));
+    assertEquals(expectedSheetName, sheetNameFor(mutation, exception));
+    assertNull(addressFor(mutation, exception));
+    assertNull(rangeFor(mutation, exception));
+  }
 
-    assertNull(formulaFor(setRowHeight, exception));
-    assertEquals("Budget", sheetNameFor(setRowHeight, exception));
-    assertNull(addressFor(setRowHeight, exception));
-    assertNull(rangeFor(setRowHeight, exception));
-
-    assertNull(formulaFor(insertRows, exception));
-    assertEquals("Budget", sheetNameFor(insertRows, exception));
-    assertNull(addressFor(insertRows, exception));
-    assertNull(rangeFor(insertRows, exception));
-
-    assertNull(formulaFor(deleteRows, exception));
-    assertEquals("Budget", sheetNameFor(deleteRows, exception));
-    assertNull(addressFor(deleteRows, exception));
-    assertNull(rangeFor(deleteRows, exception));
-
-    assertNull(formulaFor(shiftRows, exception));
-    assertEquals("Budget", sheetNameFor(shiftRows, exception));
-    assertNull(addressFor(shiftRows, exception));
-    assertNull(rangeFor(shiftRows, exception));
-
-    assertNull(formulaFor(insertColumns, exception));
-    assertEquals("Budget", sheetNameFor(insertColumns, exception));
-    assertNull(addressFor(insertColumns, exception));
-    assertNull(rangeFor(insertColumns, exception));
-
-    assertNull(formulaFor(deleteColumns, exception));
-    assertEquals("Budget", sheetNameFor(deleteColumns, exception));
-    assertNull(addressFor(deleteColumns, exception));
-    assertNull(rangeFor(deleteColumns, exception));
-
-    assertNull(formulaFor(shiftColumns, exception));
-    assertEquals("Budget", sheetNameFor(shiftColumns, exception));
-    assertNull(addressFor(shiftColumns, exception));
-    assertNull(rangeFor(shiftColumns, exception));
-
-    assertNull(formulaFor(setRowVisibility, exception));
-    assertEquals("Budget", sheetNameFor(setRowVisibility, exception));
-    assertNull(addressFor(setRowVisibility, exception));
-    assertNull(rangeFor(setRowVisibility, exception));
-
-    assertNull(formulaFor(setColumnVisibility, exception));
-    assertEquals("Budget", sheetNameFor(setColumnVisibility, exception));
-    assertNull(addressFor(setColumnVisibility, exception));
-    assertNull(rangeFor(setColumnVisibility, exception));
-
-    assertNull(formulaFor(groupRows, exception));
-    assertEquals("Budget", sheetNameFor(groupRows, exception));
-    assertNull(addressFor(groupRows, exception));
-    assertNull(rangeFor(groupRows, exception));
-
-    assertNull(formulaFor(ungroupRows, exception));
-    assertEquals("Budget", sheetNameFor(ungroupRows, exception));
-    assertNull(addressFor(ungroupRows, exception));
-    assertNull(rangeFor(ungroupRows, exception));
-
-    assertNull(formulaFor(groupColumns, exception));
-    assertEquals("Budget", sheetNameFor(groupColumns, exception));
-    assertNull(addressFor(groupColumns, exception));
-    assertNull(rangeFor(groupColumns, exception));
-
-    assertNull(formulaFor(ungroupColumns, exception));
-    assertEquals("Budget", sheetNameFor(ungroupColumns, exception));
-    assertNull(addressFor(ungroupColumns, exception));
-    assertNull(rangeFor(ungroupColumns, exception));
-
-    assertNull(formulaFor(setSheetPane, exception));
-    assertEquals("Budget", sheetNameFor(setSheetPane, exception));
-    assertNull(addressFor(setSheetPane, exception));
-    assertNull(rangeFor(setSheetPane, exception));
-
-    assertNull(formulaFor(setSheetZoom, exception));
-    assertEquals("Budget", sheetNameFor(setSheetZoom, exception));
-    assertNull(addressFor(setSheetZoom, exception));
-    assertNull(rangeFor(setSheetZoom, exception));
-
-    assertNull(formulaFor(setSheetPresentation, exception));
-    assertEquals("Budget", sheetNameFor(setSheetPresentation, exception));
-    assertNull(addressFor(setSheetPresentation, exception));
-    assertNull(rangeFor(setSheetPresentation, exception));
-
-    assertNull(formulaFor(setPrintLayout, exception));
-    assertEquals("Budget", sheetNameFor(setPrintLayout, exception));
-    assertNull(addressFor(setPrintLayout, exception));
-    assertNull(rangeFor(setPrintLayout, exception));
-
-    assertNull(formulaFor(clearPrintLayout, exception));
-    assertEquals("Budget", sheetNameFor(clearPrintLayout, exception));
-    assertNull(addressFor(clearPrintLayout, exception));
-    assertNull(rangeFor(clearPrintLayout, exception));
+  private static void assertRangeContext(
+      ExecutorTestPlanSupport.PendingMutation mutation,
+      Exception exception,
+      String expectedSheetName,
+      String expectedRange) {
+    assertNull(formulaFor(mutation, exception));
+    assertEquals(expectedSheetName, sheetNameFor(mutation, exception));
+    assertNull(addressFor(mutation, exception));
+    assertEquals(expectedRange, rangeFor(mutation, exception));
   }
 }

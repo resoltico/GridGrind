@@ -47,6 +47,7 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
   @Test
   void noArgInvocationWithResponsePathWritesCliFailureToFile() throws IOException {
     Path responsePath = Files.createTempFile("gridgrind-no-request-response-", ".json");
+    Files.deleteIfExists(responsePath);
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 

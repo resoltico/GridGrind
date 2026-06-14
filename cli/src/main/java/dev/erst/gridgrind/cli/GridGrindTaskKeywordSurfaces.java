@@ -131,7 +131,7 @@ final class GridGrindTaskKeywordSurfaces {
   }
 
   private static <K> String requiredSurface(Map<K, String> surfaces, K key, String surfaceLabel) {
-    return Objects.requireNonNull(
-        surfaces.get(key), () -> "Unsupported " + surfaceLabel + ": " + key);
+    Objects.requireNonNull(key, surfaceLabel + " must not be null");
+    return Objects.requireNonNull(surfaces.get(key), "Unsupported " + surfaceLabel + ": " + key);
   }
 }

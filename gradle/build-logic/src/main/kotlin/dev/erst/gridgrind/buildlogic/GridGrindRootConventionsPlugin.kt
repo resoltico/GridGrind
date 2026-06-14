@@ -144,6 +144,25 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     task.description =
                         "Fails when repo-owned handwritten Java sources outgrow their role-specific source-shape budgets."
                 }
+            val verifyControlPlaneShape =
+                tasks.register("verifyControlPlaneShape", VerifyRepositoryFileShapeTask::class.java) { task ->
+                    task.sourceFiles.from(controlPlaneShapeTargets())
+                    task.policyFile.set(
+                        repositoryLayout.repositoryRoot.resolve("gradle/control-plane-shape-policy.tsv"),
+                    )
+                    task.reportFile.set(
+                        layout.buildDirectory.file("reports/source-shape/control-plane-shape.tsv"),
+                    )
+                    task.repositoryRootPath.set(repositoryLayout.repositoryRoot.absolutePath)
+                    task.reviewDate.set(
+                        providers.provider {
+                            LocalDate.now(ZoneOffset.UTC).toString()
+                        },
+                    )
+                    task.group = "verification"
+                    task.description =
+                        "Fails when repo-owned shell, Kotlin build-logic, and operator-control files outgrow their reviewed control-plane budgets."
+                }
             val verifyJavaSourceDuplication =
                 tasks.register("verifyJavaSourceDuplication", VerifyJavaSourceDuplicationTask::class.java) { task ->
                     task.sourceRoots.from(javaSourceShapeRoots)
@@ -155,6 +174,21 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     task.group = "verification"
                     task.description =
                         "Fails when repo-owned handwritten Java sources duplicate large token sequences."
+                }
+            val verifyForbiddenJavaUnionShapes =
+                tasks.register(
+                    "verifyForbiddenJavaUnionShapes",
+                    VerifyForbiddenJavaUnionShapesTask::class.java,
+                ) { task ->
+                    task.sourceRoots.from(javaSourceShapeRoots)
+                    task.javaRelease.set(providers.gradleProperty("gridgrindJavaVersion").map(String::toInt))
+                    task.reportFile.set(
+                        layout.buildDirectory.file("reports/source-shape/java-forbidden-union-shapes.tsv"),
+                    )
+                    task.repositoryRootPath.set(repositoryLayout.repositoryRoot.absolutePath)
+                    task.group = "verification"
+                    task.description =
+                        "Fails when production Java introduces forbidden tagged-union or god-record shapes, including nested sealed-variant records."
                 }
             val semanticPmdTaskPaths = subprojects.map { subproject -> "${subproject.path}:pmdSemanticMain" }
             val semanticPmdReportFiles =
@@ -186,7 +220,9 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 checkTask.dependsOn(verifyExplicitImports)
                 checkTask.dependsOn(verifyNoLegacyBuildSrc)
                 checkTask.dependsOn(verifyJavaSourceShape)
+                checkTask.dependsOn(verifyControlPlaneShape)
                 checkTask.dependsOn(verifyJavaSourceDuplication)
+                checkTask.dependsOn(verifyForbiddenJavaUnionShapes)
                 checkTask.dependsOn(verifyJavaSemanticShape)
                 checkTask.dependsOn(verifyBuildLogicTests)
             }
@@ -310,6 +346,15 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(layout.projectDirectory.dir("gradle/build-logic/src/main/kotlin").asFile)
         }.distinct().filter(File::isDirectory)
 
+    private fun Project.controlPlaneShapeTargets(): List<Any> =
+        buildList {
+            add(rootFile("check.sh"))
+            add(rootFile("CHANGELOG.md"))
+            add(rootFile("docs/RELEASE_PROTOCOL.md"))
+            add(projectFileTree("scripts") { include("**/*.sh") })
+            add(projectFileTree("gradle/build-logic/src/main/kotlin") { include("**/*.kt") })
+        }
+
     private fun Project.repoOwnedJavaSourceRoots(repositoryRoot: File): List<File> =
         try {
             RepositoryJavaSourceRoots.discover(repositoryRoot.toPath()).map { path -> path.toFile() }
@@ -355,6 +400,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(rootFile("executor/build.gradle.kts"))
             add(rootFile("gradle/build-logic/build.gradle.kts"))
             add(rootFile("gradle/build-logic/settings.gradle.kts"))
+            add(rootFile("gradle/control-plane-shape-policy.tsv"))
             add(rootFile("gradle/libs.versions.toml"))
             add(rootFile("gradle/semantic-shape-policy.tsv"))
             add(rootFile("gradle/source-shape-policy.tsv"))

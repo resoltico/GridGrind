@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
+import java.util.function.BiConsumer;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -13,230 +14,79 @@ import org.junit.jupiter.api.Test;
 class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestSupport {
   @Test
   void privateStructureGuardsRejectEachUnsupportedRowAndColumnSurface() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet insertRowTableSheet = workbook.createSheet("InsertRowTable");
-      seedTable(insertRowTableSheet, workbook, "InsertRowTable");
-      assertTrue(
-          unsupportedStructure(
-                  () -> controller.rejectAffectedRowStructuresForInsert(insertRowTableSheet, 1))
-              .getMessage()
-              .contains("table 'InsertRowTable'"));
-
-      XSSFSheet insertRowAutofilterSheet = workbook.createSheet("InsertRowAutofilter");
-      seedSheetAutofilter(insertRowAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForInsert(insertRowAutofilterSheet, 1))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet insertRowValidationSheet = workbook.createSheet("InsertRowValidation");
-      seedDataValidation(insertRowValidationSheet);
-      assertDoesNotThrow(
-          () -> controller.rejectAffectedRowStructuresForInsert(insertRowValidationSheet, 1));
-
-      XSSFSheet deleteRowTableSheet = workbook.createSheet("DeleteRowTable");
-      seedTable(deleteRowTableSheet, workbook, "DeleteRowTable");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForDelete(
-                          deleteRowTableSheet, new ExcelRowSpan(1, 1)))
-              .getMessage()
-              .contains("table 'DeleteRowTable'"));
-
-      XSSFSheet deleteRowAutofilterSheet = workbook.createSheet("DeleteRowAutofilter");
-      seedSheetAutofilter(deleteRowAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForDelete(
-                          deleteRowAutofilterSheet, new ExcelRowSpan(1, 1)))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet deleteRowValidationSheet = workbook.createSheet("DeleteRowValidation");
-      seedDataValidation(deleteRowValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForDelete(
-                          deleteRowValidationSheet, new ExcelRowSpan(1, 1)))
-              .getMessage()
-              .contains("data validation"));
-
-      XSSFSheet shiftRowTableSheet = workbook.createSheet("ShiftRowTable");
-      seedTable(shiftRowTableSheet, workbook, "ShiftRowTable");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForShift(
-                          shiftRowTableSheet, new ExcelRowSpan(1, 1), 1))
-              .getMessage()
-              .contains("table 'ShiftRowTable'"));
-
-      XSSFSheet shiftRowAutofilterSheet = workbook.createSheet("ShiftRowAutofilter");
-      seedSheetAutofilter(shiftRowAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForShift(
-                          shiftRowAutofilterSheet, new ExcelRowSpan(1, 1), 1))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet shiftRowValidationSheet = workbook.createSheet("ShiftRowValidation");
-      seedDataValidation(shiftRowValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForShift(
-                          shiftRowValidationSheet, new ExcelRowSpan(1, 1), 1))
-              .getMessage()
-              .contains("data validation"));
-
-      XSSFSheet insertColumnTableSheet = workbook.createSheet("InsertColumnTable");
-      seedTable(insertColumnTableSheet, workbook, "InsertColumnTable");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForInsert(insertColumnTableSheet, 1))
-              .getMessage()
-              .contains("table 'InsertColumnTable'"));
-
-      XSSFSheet insertColumnAutofilterSheet = workbook.createSheet("InsertColumnAutofilter");
-      seedSheetAutofilter(insertColumnAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForInsert(
-                          insertColumnAutofilterSheet, 1))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet insertColumnValidationSheet = workbook.createSheet("InsertColumnValidation");
-      seedDataValidation(insertColumnValidationSheet);
-      assertDoesNotThrow(
-          () -> controller.rejectAffectedColumnStructuresForInsert(insertColumnValidationSheet, 0));
-
-      XSSFSheet deleteColumnTableSheet = workbook.createSheet("DeleteColumnTable");
-      seedTable(deleteColumnTableSheet, workbook, "DeleteColumnTable");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForDelete(
-                          deleteColumnTableSheet, new ExcelColumnSpan(1, 1)))
-              .getMessage()
-              .contains("table 'DeleteColumnTable'"));
-
-      XSSFSheet deleteColumnAutofilterSheet = workbook.createSheet("DeleteColumnAutofilter");
-      seedSheetAutofilter(deleteColumnAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForDelete(
-                          deleteColumnAutofilterSheet, new ExcelColumnSpan(1, 1)))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet deleteColumnValidationSheet = workbook.createSheet("DeleteColumnValidation");
-      seedDataValidation(deleteColumnValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForDelete(
-                          deleteColumnValidationSheet, new ExcelColumnSpan(0, 0)))
-              .getMessage()
-              .contains("data validation"));
-
-      XSSFSheet shiftColumnTableSheet = workbook.createSheet("ShiftColumnTable");
-      seedTable(shiftColumnTableSheet, workbook, "ShiftColumnTable");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForShift(
-                          shiftColumnTableSheet, new ExcelColumnSpan(1, 1), 1))
-              .getMessage()
-              .contains("table 'ShiftColumnTable'"));
-
-      XSSFSheet shiftColumnAutofilterSheet = workbook.createSheet("ShiftColumnAutofilter");
-      seedSheetAutofilter(shiftColumnAutofilterSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForShift(
-                          shiftColumnAutofilterSheet, new ExcelColumnSpan(0, 0), 1))
-              .getMessage()
-              .contains("sheet autofilter"));
-
-      XSSFSheet shiftColumnValidationSheet = workbook.createSheet("ShiftColumnValidation");
-      seedDataValidation(shiftColumnValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForShift(
-                          shiftColumnValidationSheet, new ExcelColumnSpan(0, 0), 1))
-              .getMessage()
-              .contains("data validation"));
+    for (GuardCase guardCase : guardCases()) {
+      assertStructureGuardCase(
+          guardCase.sheetName(),
+          guardCase.seeder(),
+          guardCase.operation(),
+          guardCase.allowed(),
+          guardCase.expectedMessageFragment());
     }
   }
 
   @Test
   void privateNamedRangeGuardsRejectDestructiveRowAndColumnEdits() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet deleteRowsSheet = workbook.createSheet("DeleteRows");
-      setString(deleteRowsSheet, "A3", "Low");
-      setString(deleteRowsSheet, "B4", "High");
-      seedNamedRange(workbook, "DeleteRowsRange", "DeleteRows!$A$3:$B$4");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectDestructiveNamedRangesForRowDelete(
-                          workbook, deleteRowsSheet, new ExcelRowSpan(2, 2)))
-              .getMessage()
-              .contains("named range 'DeleteRowsRange'"));
-
-      XSSFSheet shiftRowsSheet = workbook.createSheet("ShiftRows");
-      setString(shiftRowsSheet, "A1", "Named");
-      setString(shiftRowsSheet, "B2", "Range");
-      setString(shiftRowsSheet, "A3", "Shifted");
-      setString(shiftRowsSheet, "A4", "Rows");
-      seedNamedRange(workbook, "ShiftRowsRange", "ShiftRows!$A$1:$B$2");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectDestructiveNamedRangesForRowShift(
-                          workbook, shiftRowsSheet, new ExcelRowSpan(2, 3), -2))
-              .getMessage()
-              .contains("named range 'ShiftRowsRange'"));
-
-      XSSFSheet deleteColumnsSheet = workbook.createSheet("DeleteColumns");
-      setString(deleteColumnsSheet, "C1", "Low");
-      setString(deleteColumnsSheet, "D2", "High");
-      seedNamedRange(workbook, "DeleteColumnsRange", "DeleteColumns!$C$1:$D$2");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectDestructiveNamedRangesForColumnDelete(
-                          workbook, deleteColumnsSheet, new ExcelColumnSpan(2, 2)))
-              .getMessage()
-              .contains("named range 'DeleteColumnsRange'"));
-
-      XSSFSheet shiftColumnsSheet = workbook.createSheet("ShiftColumns");
-      setString(shiftColumnsSheet, "A1", "Named");
-      setString(shiftColumnsSheet, "B2", "Range");
-      setString(shiftColumnsSheet, "C1", "Shifted");
-      setString(shiftColumnsSheet, "D1", "Columns");
-      seedNamedRange(workbook, "ShiftColumnsRange", "ShiftColumns!$A$1:$B$2");
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectDestructiveNamedRangesForColumnShift(
-                          workbook, shiftColumnsSheet, new ExcelColumnSpan(2, 3), -2))
-              .getMessage()
-              .contains("named range 'ShiftColumnsRange'"));
-    }
+    assertRowNamedRangeRejected(
+        "DeleteRows",
+        "DeleteRowsRange",
+        "DeleteRows!$A$3:$B$4",
+        new ExcelRowSpan(2, 2),
+        (workbook, sheet, rows) ->
+            runUnchecked(
+                () -> controller.rejectDestructiveNamedRangesForRowDelete(workbook, sheet, rows)),
+        "A3",
+        "Low",
+        "B4",
+        "High");
+    assertRowNamedRangeRejected(
+        "ShiftRows",
+        "ShiftRowsRange",
+        "ShiftRows!$A$1:$B$2",
+        new ExcelRowSpan(2, 3),
+        (workbook, sheet, rows) ->
+            runUnchecked(
+                () ->
+                    controller.rejectDestructiveNamedRangesForRowShift(workbook, sheet, rows, -2)),
+        "A1",
+        "Named",
+        "B2",
+        "Range",
+        "A3",
+        "Shifted",
+        "A4",
+        "Rows");
+    assertColumnNamedRangeRejected(
+        "DeleteColumns",
+        "DeleteColumnsRange",
+        "DeleteColumns!$C$1:$D$2",
+        new ExcelColumnSpan(2, 2),
+        (workbook, sheet, columns) ->
+            runUnchecked(
+                () ->
+                    controller.rejectDestructiveNamedRangesForColumnDelete(
+                        workbook, sheet, columns)),
+        "C1",
+        "Low",
+        "D2",
+        "High");
+    assertColumnNamedRangeRejected(
+        "ShiftColumns",
+        "ShiftColumnsRange",
+        "ShiftColumns!$A$1:$B$2",
+        new ExcelColumnSpan(2, 3),
+        (workbook, sheet, columns) ->
+            runUnchecked(
+                () ->
+                    controller.rejectDestructiveNamedRangesForColumnShift(
+                        workbook, sheet, columns, -2)),
+        "A1",
+        "Named",
+        "B2",
+        "Range",
+        "C1",
+        "Shifted",
+        "D1",
+        "Columns");
   }
 
   @Test
@@ -422,4 +272,174 @@ class ExcelStructureGuardHelperCoverageTest extends ExcelRowColumnStructureTestS
         ExcelRowColumnStructureController.affectsColumns(
             new ExcelRange(0, 0, 0, 1), new ExcelColumnSpan(10, 10), 1));
   }
+
+  private List<GuardCase> guardCases() {
+    return List.of(
+        new GuardCase(
+            "InsertRowTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "InsertRowTable"),
+            sheet -> runUnchecked(() -> controller.rejectAffectedRowStructuresForInsert(sheet, 1)),
+            false,
+            "table 'InsertRowTable'"),
+        new GuardCase(
+            "InsertRowAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet -> runUnchecked(() -> controller.rejectAffectedRowStructuresForInsert(sheet, 1)),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "InsertRowValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet -> runUnchecked(() -> controller.rejectAffectedRowStructuresForInsert(sheet, 1)),
+            true,
+            ""),
+        new GuardCase(
+            "DeleteRowTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "DeleteRowTable"),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForDelete(
+                            sheet, new ExcelRowSpan(1, 1))),
+            false,
+            "table 'DeleteRowTable'"),
+        new GuardCase(
+            "DeleteRowAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForDelete(
+                            sheet, new ExcelRowSpan(1, 1))),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "DeleteRowValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForDelete(
+                            sheet, new ExcelRowSpan(1, 1))),
+            false,
+            "data validation"),
+        new GuardCase(
+            "ShiftRowTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "ShiftRowTable"),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForShift(
+                            sheet, new ExcelRowSpan(1, 1), 1)),
+            false,
+            "table 'ShiftRowTable'"),
+        new GuardCase(
+            "ShiftRowAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForShift(
+                            sheet, new ExcelRowSpan(1, 1), 1)),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "ShiftRowValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedRowStructuresForShift(
+                            sheet, new ExcelRowSpan(1, 1), 1)),
+            false,
+            "data validation"),
+        new GuardCase(
+            "InsertColumnTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "InsertColumnTable"),
+            sheet ->
+                runUnchecked(() -> controller.rejectAffectedColumnStructuresForInsert(sheet, 1)),
+            false,
+            "table 'InsertColumnTable'"),
+        new GuardCase(
+            "InsertColumnAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet ->
+                runUnchecked(() -> controller.rejectAffectedColumnStructuresForInsert(sheet, 1)),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "InsertColumnValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet ->
+                runUnchecked(() -> controller.rejectAffectedColumnStructuresForInsert(sheet, 0)),
+            true,
+            ""),
+        new GuardCase(
+            "DeleteColumnTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "DeleteColumnTable"),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForDelete(
+                            sheet, new ExcelColumnSpan(1, 1))),
+            false,
+            "table 'DeleteColumnTable'"),
+        new GuardCase(
+            "DeleteColumnAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForDelete(
+                            sheet, new ExcelColumnSpan(1, 1))),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "DeleteColumnValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForDelete(
+                            sheet, new ExcelColumnSpan(0, 0))),
+            false,
+            "data validation"),
+        new GuardCase(
+            "ShiftColumnTable",
+            (workbook, sheet) -> seedTable(sheet, workbook, "ShiftColumnTable"),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForShift(
+                            sheet, new ExcelColumnSpan(1, 1), 1)),
+            false,
+            "table 'ShiftColumnTable'"),
+        new GuardCase(
+            "ShiftColumnAutofilter",
+            (workbook, sheet) -> seedSheetAutofilter(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForShift(
+                            sheet, new ExcelColumnSpan(0, 0), 1)),
+            false,
+            "sheet autofilter"),
+        new GuardCase(
+            "ShiftColumnValidation",
+            (workbook, sheet) -> seedDataValidation(sheet),
+            sheet ->
+                runUnchecked(
+                    () ->
+                        controller.rejectAffectedColumnStructuresForShift(
+                            sheet, new ExcelColumnSpan(0, 0), 1)),
+            false,
+            "data validation"));
+  }
+
+  private record GuardCase(
+      String sheetName,
+      BiConsumer<XSSFWorkbook, XSSFSheet> seeder,
+      CheckedSheetOperation operation,
+      boolean allowed,
+      String expectedMessageFragment) {}
 }

@@ -68,23 +68,26 @@ final class ExcelTableCatalogSupport {
         Objects.requireNonNullElse(table.getName(), ""),
         sheetName,
         Objects.requireNonNullElse(ctTable.getRef(), ""),
-        table.getHeaderRowCount(),
-        table.getTotalsRowCount(),
-        table.getColumns().stream()
-            .map(column -> Objects.requireNonNullElse(column.getName(), ""))
-            .toList(),
-        Arrays.stream(ctTable.getTableColumns().getTableColumnArray())
-            .map(ExcelTableCatalogSupport::toColumnSnapshot)
-            .toList(),
+        new ExcelTableSnapshot.Structure(
+            table.getHeaderRowCount(),
+            table.getTotalsRowCount(),
+            table.getColumns().stream()
+                .map(column -> Objects.requireNonNullElse(column.getName(), ""))
+                .toList(),
+            Arrays.stream(ctTable.getTableColumns().getTableColumnArray())
+                .map(ExcelTableCatalogSupport::toColumnSnapshot)
+                .toList()),
         toStyleSnapshot(table),
-        ctTable.isSetAutoFilter(),
-        Objects.requireNonNullElse(ctTable.getComment(), ""),
-        ctTable.getPublished(),
-        ctTable.getInsertRow(),
-        ctTable.getInsertRowShift(),
-        Objects.requireNonNullElse(ctTable.getHeaderRowCellStyle(), ""),
-        Objects.requireNonNullElse(ctTable.getDataCellStyle(), ""),
-        Objects.requireNonNullElse(ctTable.getTotalsRowCellStyle(), ""));
+        new ExcelTableSnapshot.Behavior(
+            ctTable.isSetAutoFilter(),
+            ctTable.getPublished(),
+            ctTable.getInsertRow(),
+            ctTable.getInsertRowShift()),
+        new ExcelTableSnapshot.Presentation(
+            blankAsOptional(ctTable.getComment()),
+            blankAsOptional(ctTable.getHeaderRowCellStyle()),
+            blankAsOptional(ctTable.getDataCellStyle()),
+            blankAsOptional(ctTable.getTotalsRowCellStyle())));
   }
 
   /** Converts POI table-style metadata into the factual GridGrind snapshot shape. */
@@ -114,5 +117,12 @@ final class ExcelTableCatalogSupport {
         column.isSetCalculatedColumnFormula()
             ? Objects.requireNonNullElse(column.getCalculatedColumnFormula().getStringValue(), "")
             : "");
+  }
+
+  private static Optional<String> blankAsOptional(String value) {
+    if (value == null || value.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(value);
   }
 }

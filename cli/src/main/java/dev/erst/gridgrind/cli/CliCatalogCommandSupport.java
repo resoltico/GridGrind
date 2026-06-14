@@ -47,7 +47,7 @@ final class CliCatalogCommandSupport {
       return;
     }
     var requirements = GridGrindShippedExamples.requirementsFor(example);
-    String requiredPaths = String.join(", ", requirements.requiredPaths());
+    String requiredPaths = String.join(", ", requirements.requiredWorkspacePaths());
     stderr.write(
         ("Printed example "
                 + example.id()
@@ -66,7 +66,7 @@ final class CliCatalogCommandSupport {
     if (task.starter().workspaceMode() != ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS) {
       return;
     }
-    String requiredPaths = String.join(", ", task.starter().requiredPaths());
+    String requiredPaths = String.join(", ", task.starter().requiredWorkspacePaths());
     stderr.write(
         ("Printed task starter "
                 + task.id()

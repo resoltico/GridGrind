@@ -215,7 +215,12 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -362,7 +367,12 @@ class ExcelSheetCopyControllerTest {
                   ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
               .formula());
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -536,10 +546,10 @@ class ExcelSheetCopyControllerTest {
               .orElseThrow();
       assertEquals("L1:M3", copiedTable.range());
       assertNotEquals("ReplicaTable", copiedTable.name());
-      assertEquals("replica table", copiedTable.comment());
-      assertTrue(copiedTable.published());
-      assertTrue(copiedTable.insertRow());
-      assertFalse(copiedTable.insertRowShift());
+      assertEquals("replica table", copiedTable.presentation().comment().orElseThrow());
+      assertTrue(copiedTable.behavior().published());
+      assertTrue(copiedTable.behavior().insertRow());
+      assertFalse(copiedTable.behavior().insertRowShift());
       assertTrue(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-copy"));
     }
@@ -556,7 +566,12 @@ class ExcelSheetCopyControllerTest {
           source.annotations().comments(new ExcelCellSelection.Selected(List.of("E2")));
 
       workbook.sheets().copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =
@@ -734,8 +749,8 @@ class ExcelSheetCopyControllerTest {
               .findFirst()
               .orElseThrow();
       assertEquals("E1:F4", copiedTable.range());
-      assertEquals(1, copiedTable.totalsRowCount());
-      assertFalse(copiedTable.hasAutofilter());
+      assertEquals(1, copiedTable.structure().totalsRowCount());
+      assertFalse(copiedTable.behavior().hasAutofilter());
       assertInstanceOf(ExcelTableStyleSnapshot.None.class, copiedTable.style());
     }
   }

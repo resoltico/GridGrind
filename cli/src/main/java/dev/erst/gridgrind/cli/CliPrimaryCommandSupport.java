@@ -9,11 +9,16 @@ final class CliPrimaryCommandSupport {
   private static final Map<String, String> PRIMARY_COMMAND_NAMES =
       Map.ofEntries(
           Map.entry("--help", "help"),
+          Map.entry("help", "help"),
           Map.entry("-h", "help"),
           Map.entry("--help-protocol", "help-protocol"),
+          Map.entry("help-protocol", "help-protocol"),
           Map.entry("--help-guidance", "help-guidance"),
+          Map.entry("help-guidance", "help-guidance"),
           Map.entry("--version", "version"),
+          Map.entry("version", "version"),
           Map.entry("--license", "license"),
+          Map.entry("license", "license"),
           Map.entry("--print-request-template", "print-request-template"),
           Map.entry("--print-example", "print-example"),
           Map.entry("--print-example-catalog", "print-example-catalog"),
@@ -33,12 +38,37 @@ final class CliPrimaryCommandSupport {
         return commandName.orElseThrow();
       }
     }
-    return "execute";
+    return "cli";
   }
 
   static boolean isPrimaryCommandToken(String argument) {
     Objects.requireNonNull(argument, "argument must not be null");
     return commandName(argument).isPresent();
+  }
+
+  static CliArgumentsException multiplePrimaryCommands(
+      String firstCommandToken, String secondToken) {
+    Objects.requireNonNull(firstCommandToken, "firstCommandToken must not be null");
+    Objects.requireNonNull(secondToken, "secondToken must not be null");
+    return new CliArgumentsException(
+        secondToken,
+        "Only one primary command may be used per invocation; "
+            + firstCommandToken
+            + " cannot be combined with "
+            + secondToken);
+  }
+
+  static CliArgumentsException commandDoesNotAllowFlag(String commandToken, String flagName) {
+    Objects.requireNonNull(commandToken, "commandToken must not be null");
+    Objects.requireNonNull(flagName, "flagName must not be null");
+    return new CliArgumentsException(flagName, commandToken + " does not allow " + flagName);
+  }
+
+  static CliArgumentsException commandMustBePrimary(String commandToken) {
+    Objects.requireNonNull(commandToken, "commandToken must not be null");
+    return new CliArgumentsException(
+        commandToken,
+        commandToken + " must be the primary command and cannot follow execution arguments");
   }
 
   private static Optional<String> commandName(String argument) {

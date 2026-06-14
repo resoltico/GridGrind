@@ -96,15 +96,39 @@ class ExcelTableCatalogSupportTest {
       ExcelTableSnapshot snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
 
       assertEquals("Queue", snapshot.name());
-      assertEquals(List.of("Owner", "Task"), snapshot.columnNames());
-      assertTrue(snapshot.hasAutofilter());
+      assertEquals(List.of("Owner", "Task"), snapshot.structure().columnNames());
+      assertTrue(snapshot.behavior().hasAutofilter());
       assertInstanceOf(ExcelTableStyleSnapshot.Named.class, snapshot.style());
-      assertEquals("Queue comment", snapshot.comment());
-      assertEquals("HeaderStyle", snapshot.headerRowCellStyle());
-      assertEquals("UniqueAmount", snapshot.columns().get(1).uniqueName());
-      assertEquals("Total", snapshot.columns().get(1).totalsRowLabel());
-      assertEquals("sum", snapshot.columns().get(1).totalsRowFunction());
-      assertEquals("[@Task]&\"!\"", snapshot.columns().get(1).calculatedColumnFormula());
+      assertEquals("Queue comment", snapshot.presentation().comment().orElseThrow());
+      assertEquals("HeaderStyle", snapshot.presentation().headerRowCellStyle().orElseThrow());
+      assertEquals("UniqueAmount", snapshot.structure().columns().get(1).uniqueName());
+      assertEquals("Total", snapshot.structure().columns().get(1).totalsRowLabel());
+      assertEquals("sum", snapshot.structure().columns().get(1).totalsRowFunction());
+      assertEquals(
+          "[@Task]&\"!\"", snapshot.structure().columns().get(1).calculatedColumnFormula());
+    }
+  }
+
+  @Test
+  void toSnapshotNormalizesNullAndBlankPresentationMetadataToEmptyOptionals() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellValue("Owner");
+      sheet.getRow(0).createCell(1).setCellValue("Task");
+      sheet.createRow(1).createCell(0).setCellValue("Ada");
+      sheet.getRow(1).createCell(1).setCellValue("Queue");
+      XSSFTable table = sheet.createTable(new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007));
+      table.setName("Queue");
+      table.getCTTable().setHeaderRowCellStyle(" ");
+      table.getCTTable().setDataCellStyle("DataStyle");
+      table.getCTTable().setTotalsRowCellStyle("");
+
+      ExcelTableSnapshot snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
+
+      assertTrue(snapshot.presentation().comment().isEmpty());
+      assertTrue(snapshot.presentation().headerRowCellStyle().isEmpty());
+      assertEquals("DataStyle", snapshot.presentation().dataCellStyle().orElseThrow());
+      assertTrue(snapshot.presentation().totalsRowCellStyle().isEmpty());
     }
   }
 }

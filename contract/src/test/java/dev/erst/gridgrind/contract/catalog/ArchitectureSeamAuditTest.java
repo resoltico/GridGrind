@@ -32,7 +32,7 @@ class ArchitectureSeamAuditTest {
       "or --request file, delegates to executor, writes the response,";
   private static final String STALE_KOTLIN_PROTOCOL_LOAD = ".codex/AGENTS_KOTLIN24_GRADLE.md";
   private static final String CURRENT_SQLITE_SURFACE =
-      "SQLite3 Multiple Ciphers 2.3.4 / SQLite 3.53.1";
+      "SQLite surface touched: build, link, SQL, migrations, WAL, durability, bindings (baseline 3.53.2)";
 
   @Test
   void contractModuleOnlyImportsExcelFoundationTypes() throws IOException {
@@ -97,6 +97,9 @@ class ArchitectureSeamAuditTest {
     assertTrue(
         ruleset.contains("verifyJavaSourceShape"),
         "gradle/pmd/ruleset.xml must point at the build-owned source-shape gate");
+    assertTrue(
+        ruleset.contains("verifyControlPlaneShape"),
+        "gradle/pmd/ruleset.xml must point at the build-owned control-plane shape gate");
     assertTrue(
         ruleset.contains("verifyJavaSourceDuplication"),
         "gradle/pmd/ruleset.xml must point at the build-owned duplication gate");
@@ -165,6 +168,9 @@ class ArchitectureSeamAuditTest {
         developerGuide.contains("verifyJavaSourceShape"),
         "docs/DEVELOPER.md must document the build-owned source-shape gate");
     assertTrue(
+        developerGuide.contains("verifyControlPlaneShape"),
+        "docs/DEVELOPER.md must document the build-owned control-plane shape gate");
+    assertTrue(
         developerGuide.contains("verifyJavaSourceDuplication"),
         "docs/DEVELOPER.md must document the build-owned duplication gate");
     assertTrue(
@@ -184,10 +190,14 @@ class ArchitectureSeamAuditTest {
         developerGradle.contains("verifyJavaSourceShape"),
         "docs/DEVELOPER_GRADLE.md must document the root source-shape task");
     assertTrue(
+        developerGradle.contains("verifyControlPlaneShape"),
+        "docs/DEVELOPER_GRADLE.md must document the root control-plane shape task");
+    assertTrue(
         developerGradle.contains("verifyJavaSourceDuplication"),
         "docs/DEVELOPER_GRADLE.md must document the root duplication task");
     assertTrue(
-        developerGradle.contains("Root `check` now depends on `verifyJavaSourceShape`"),
+        developerGradle.contains(
+            "Root `check` now depends on `verifyJavaSourceShape`, `verifyControlPlaneShape`"),
         "docs/DEVELOPER_GRADLE.md must teach that source-shape is a build gate");
     assertTrue(
         developerGradle.contains("gradle/build-logic:test"),
@@ -211,11 +221,17 @@ class ArchitectureSeamAuditTest {
         rootConventions.contains("tasks.register(\"verifyJavaSourceShape\""),
         "GridGrindRootConventionsPlugin must register verifyJavaSourceShape");
     assertTrue(
+        rootConventions.contains("tasks.register(\"verifyControlPlaneShape\""),
+        "GridGrindRootConventionsPlugin must register verifyControlPlaneShape");
+    assertTrue(
         rootConventions.contains("tasks.register(\"verifyJavaSourceDuplication\""),
         "GridGrindRootConventionsPlugin must register verifyJavaSourceDuplication");
     assertTrue(
         rootConventions.contains("checkTask.dependsOn(verifyJavaSourceShape)"),
         "GridGrindRootConventionsPlugin must wire verifyJavaSourceShape into root check");
+    assertTrue(
+        rootConventions.contains("checkTask.dependsOn(verifyControlPlaneShape)"),
+        "GridGrindRootConventionsPlugin must wire verifyControlPlaneShape into root check");
     assertTrue(
         rootConventions.contains("checkTask.dependsOn(verifyJavaSourceDuplication)"),
         "GridGrindRootConventionsPlugin must wire verifyJavaSourceDuplication into root check");

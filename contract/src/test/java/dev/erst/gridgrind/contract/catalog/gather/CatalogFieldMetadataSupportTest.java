@@ -105,7 +105,7 @@ class CatalogFieldMetadataSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
+                CatalogFieldShapeRegistry.validateNestedTypeGroupMapping(
                     CellInput.class, "wrongGroup"));
     assertEquals(
         "Field-shape nested group mapping mismatch for dev.erst.gridgrind.contract.dto.CellInput: expected=wrongGroup, mapped=cellInputTypes",
@@ -115,7 +115,7 @@ class CatalogFieldMetadataSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
+                CatalogFieldShapeRegistry.validateNestedTypeGroupMapping(
                     ExecutionModeInput.class, "wrongGroup"));
     assertEquals(
         "Field-shape nested group mapping mismatch for dev.erst.gridgrind.contract.dto.ExecutionModeInput: expected=wrongGroup, mapped=executionModeTypes",
@@ -124,7 +124,7 @@ class CatalogFieldMetadataSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                CatalogFieldMetadataSupport.validatePlainTypeGroupMapping(
+                CatalogFieldShapeRegistry.validatePlainTypeGroupMapping(
                     ExecutionPolicyInput.class, "wrongGroup"));
     assertEquals(
         "Field-shape plain group mapping mismatch for dev.erst.gridgrind.contract.dto.ExecutionPolicyInput: expected=wrongGroup, mapped=executionPolicyInputType",
@@ -134,7 +134,7 @@ class CatalogFieldMetadataSupportTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                CatalogFieldMetadataSupport.lookupAssignableGroup(
+                CatalogFieldShapeRegistry.lookupAssignableGroup(
                     Map.of(Alpha.class, "alpha", Beta.class, "beta"), Gamma.class));
     assertTrue(
         ambiguous
@@ -157,8 +157,7 @@ class CatalogFieldMetadataSupportTest {
             .getMessage());
     assertEquals(
         java.util.Optional.of("alpha"),
-        CatalogFieldMetadataSupport.lookupAssignableGroup(
-            Map.of(Alpha.class, "alpha"), Gamma.class));
+        CatalogFieldShapeRegistry.lookupAssignableGroup(Map.of(Alpha.class, "alpha"), Gamma.class));
   }
 
   @Test
@@ -171,22 +170,22 @@ class CatalogFieldMetadataSupportTest {
 
     assertEquals(
         java.util.Optional.of(List.of("nested")),
-        CatalogFieldMetadataSupport.lookupAssignableGroupList(
+        CatalogFieldShapeRegistry.lookupAssignableGroupList(
             groups, dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
         java.util.Optional.empty(),
-        CatalogFieldMetadataSupport.lookupAssignableGroupList(
+        CatalogFieldShapeRegistry.lookupAssignableGroupList(
             groups, dev.erst.gridgrind.contract.selector.Selector.class));
     Map<Class<?>, List<String>> reversedGroups = new LinkedHashMap<>();
     reversedGroups.put(dev.erst.gridgrind.contract.selector.SheetSelector.class, List.of("nested"));
     reversedGroups.put(dev.erst.gridgrind.contract.selector.Selector.class, List.of("selector"));
     assertEquals(
         java.util.Optional.of(List.of("nested")),
-        CatalogFieldMetadataSupport.lookupAssignableGroupList(
+        CatalogFieldShapeRegistry.lookupAssignableGroupList(
             reversedGroups, dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
         java.util.Optional.of("nested"),
-        CatalogFieldMetadataSupport.lookupAssignableGroup(
+        CatalogFieldShapeRegistry.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.Selector.class,
                 "selector",
@@ -195,7 +194,7 @@ class CatalogFieldMetadataSupportTest {
             dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
         java.util.Optional.of("nested"),
-        CatalogFieldMetadataSupport.lookupAssignableGroup(
+        CatalogFieldShapeRegistry.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.SheetSelector.class,
                 "nested",
@@ -204,7 +203,7 @@ class CatalogFieldMetadataSupportTest {
             dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
     assertEquals(
         java.util.Optional.of("selector"),
-        CatalogFieldMetadataSupport.lookupAssignableGroup(
+        CatalogFieldShapeRegistry.lookupAssignableGroup(
             orderedGroupMap(
                 dev.erst.gridgrind.contract.selector.SheetSelector.class,
                 "nested",

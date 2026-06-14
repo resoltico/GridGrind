@@ -10,7 +10,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Covers compact cell input encodings and residual constructor validation paths. */
@@ -202,87 +201,27 @@ class CompactCellInputCoverageTest {
         ExecutionJournal.Status.NOT_REQUESTED, ExecutionJournal.Phase.notRequested().status());
     assertEquals(
         25L,
-        new ExecutionJournal.Phase(
-                ExecutionJournal.Status.SUCCEEDED,
-                Optional.of("2026-06-12T09:30:00Z"),
-                Optional.of("2026-06-12T09:30:25Z"),
-                25)
+        assertInstanceOf(
+                ExecutionJournal.Phase.Succeeded.class,
+                ExecutionJournal.Phase.succeeded(
+                    "2026-06-12T09:30:00Z", "2026-06-12T09:30:25Z", 25))
+            .timing()
+            .orElseThrow()
             .durationMillis());
     assertEquals(
         0L,
-        new ExecutionJournal.Phase(
-                ExecutionJournal.Status.SUCCEEDED, Optional.empty(), Optional.empty(), 0)
-            .durationMillis());
+        assertInstanceOf(
+                ExecutionJournal.Phase.Succeeded.class,
+                ExecutionJournal.Phase.succeededWithoutTiming())
+            .timing()
+            .map(ExecutionJournal.Timing::durationMillis)
+            .orElse(0L));
     assertEquals(
         "durationMillis must be >= 0",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.of("2026-06-12T09:30:00Z"),
-                        Optional.of("2026-06-12T09:30:25Z"),
-                        -1))
-            .getMessage());
-    assertEquals(
-        "startedAt and finishedAt must either both be present or both be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.of("2026-06-12T09:30:00Z"),
-                        Optional.empty(),
-                        0))
-            .getMessage());
-    assertEquals(
-        "startedAt and finishedAt must either both be present or both be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED,
-                        Optional.empty(),
-                        Optional.of("2026-06-12T09:30:25Z"),
-                        0))
-            .getMessage());
-    assertEquals(
-        "timestamp-free phases must use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.SUCCEEDED, Optional.empty(), Optional.empty(), 1))
-            .getMessage());
-    assertEquals(
-        "NOT_STARTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED,
-                        Optional.empty(),
-                        Optional.of("2026-06-12T09:30:01Z"),
-                        0))
-            .getMessage());
-    assertEquals(
-        "NOT_STARTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_STARTED, Optional.empty(), Optional.empty(), 1))
-            .getMessage());
-    assertEquals(
-        "NOT_REQUESTED phases must omit timestamps and use durationMillis=0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.Phase(
-                        ExecutionJournal.Status.NOT_REQUESTED,
-                        Optional.of("2026-06-12T09:30:00Z"),
-                        Optional.of("2026-06-12T09:30:01Z"),
-                        1))
+                    new ExecutionJournal.Timing("2026-06-12T09:30:00Z", "2026-06-12T09:30:25Z", -1))
             .getMessage());
   }
 }

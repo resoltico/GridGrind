@@ -11,6 +11,7 @@ import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
+import dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport;
 import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
 import dev.erst.gridgrind.contract.dto.PrintSetupReport;
@@ -29,30 +30,22 @@ final class WorkbookInvariantCellMetadataChecks {
     WorkbookInvariantChecks.require(security != null, "package security must not be null");
     WorkbookInvariantChecks.require(
         security.encryption() != null, "package encryption must not be null");
-    if (security.encryption().encrypted()) {
-      WorkbookInvariantChecks.requirePresent(
-          security.encryption().mode(), "encrypted package mode");
-      WorkbookInvariantChecks.requirePresent(
-          security.encryption().cipherAlgorithm(), "encrypted package cipherAlgorithm");
-      WorkbookInvariantChecks.requirePresent(
-          security.encryption().hashAlgorithm(), "encrypted package hashAlgorithm");
-      WorkbookInvariantChecks.requirePresent(
-          security.encryption().chainingMode(), "encrypted package chainingMode");
+    if (security.encryption() instanceof OoxmlEncryptionReport.Encrypted encrypted) {
       WorkbookInvariantChecks.require(
-          WorkbookInvariantChecks.requirePresent(
-                  security.encryption().keyBits(), "encrypted package keyBits")
-              > 0,
-          "encrypted package keyBits must be positive");
+          encrypted.mode() != null, "encrypted package mode must not be null");
       WorkbookInvariantChecks.require(
-          WorkbookInvariantChecks.requirePresent(
-                  security.encryption().blockSize(), "encrypted package blockSize")
-              > 0,
-          "encrypted package blockSize must be positive");
+          encrypted.cipherAlgorithm() != null,
+          "encrypted package cipherAlgorithm must not be null");
       WorkbookInvariantChecks.require(
-          WorkbookInvariantChecks.requirePresent(
-                  security.encryption().spinCount(), "encrypted package spinCount")
-              >= 0,
-          "encrypted package spinCount must be zero or positive");
+          encrypted.hashAlgorithm() != null, "encrypted package hashAlgorithm must not be null");
+      WorkbookInvariantChecks.require(
+          encrypted.chainingMode() != null, "encrypted package chainingMode must not be null");
+      WorkbookInvariantChecks.require(
+          encrypted.keyBits() > 0, "encrypted package keyBits must be positive");
+      WorkbookInvariantChecks.require(
+          encrypted.blockSize() > 0, "encrypted package blockSize must be positive");
+      WorkbookInvariantChecks.require(
+          encrypted.spinCount() >= 0, "encrypted package spinCount must be zero or positive");
     }
     WorkbookInvariantChecks.require(
         security.signatures() != null, "package signatures must not be null");
@@ -77,20 +70,21 @@ final class WorkbookInvariantCellMetadataChecks {
     WorkbookInvariantChecks.requireNonBlank(
         mapping.rootElement(), "custom XML mapping rootElement");
     WorkbookInvariantChecks.requireNonBlank(mapping.schemaId(), "custom XML mapping schemaId");
-    if (mapping.schemaNamespace() != null) {
+    if (mapping.schema().namespace() != null) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schemaNamespace(), "custom XML mapping schemaNamespace");
+          mapping.schema().namespace(), "custom XML mapping schema namespace");
     }
-    if (mapping.schemaLanguage() != null) {
+    if (mapping.schema().language() != null) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schemaLanguage(), "custom XML mapping schemaLanguage");
+          mapping.schema().language(), "custom XML mapping schema language");
     }
-    if (mapping.schemaReference() != null) {
+    if (mapping.schema().reference() != null) {
       WorkbookInvariantChecks.requireNonBlank(
-          mapping.schemaReference(), "custom XML mapping schemaReference");
+          mapping.schema().reference(), "custom XML mapping schema reference");
     }
-    if (mapping.schemaXml() != null) {
-      WorkbookInvariantChecks.requireNonBlank(mapping.schemaXml(), "custom XML mapping schemaXml");
+    if (mapping.schema().xml() != null) {
+      WorkbookInvariantChecks.requireNonBlank(
+          mapping.schema().xml(), "custom XML mapping schema xml");
     }
     if (mapping.dataBinding() != null) {
       requireCustomXmlDataBindingShape(mapping.dataBinding());

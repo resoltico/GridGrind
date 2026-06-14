@@ -1,7 +1,7 @@
 # Universal Engineering Contract
 
-**Version:** 2.1.0
-**Updated:** 2026-04-30
+**Version:** 3.0.0
+**Updated:** 2026-06-13
 **Applies to:** all languages, runtimes, frameworks, tools, and repositories.
 **Companion:** `DOMAIN_DRIVEN_DESIGN_LENS.md` for changes that touch business meaning, business rules, workflows, state transitions, or cross-context integration. Loaded on demand, not by default.
 
@@ -18,7 +18,7 @@ A passing build, a closed issue, or a generated patch is not the outcome. The ou
 
 Avoid orphan code: code that appears locally correct but has no clear owner, feedback loop, justification, invariant, or understandable place in the system.
 
-When the work touches business meaning, treat the Universal Engineering Contract as the operating discipline and the Domain-Driven Design Lens as the model-design discipline. Do not force domain ceremony onto mechanical infrastructure work.
+When the work touches business meaning (§1.7), the companion Domain-Driven Design Lens is the model-design discipline. Do not force domain ceremony onto mechanical infrastructure work.
 
 ## 1. Build the minimum system map before touching code
 
@@ -135,7 +135,7 @@ Treat architecture as accumulated system theory. Preserve the parts that encode 
 
 Architecture should emerge through repeated validated improvements, not speculative rewrites. When changing structure, make the new structure easier to explain, justify, test, and modify than the old one.
 
-For domain-heavy work, architecture must protect the domain model rather than replace it. Layered architecture, hexagonal architecture, REST, messaging, CQRS, event sourcing, data grids, and other styles are not the model. They are support structures. Use them only when they reduce real risk or satisfy real quality demands. The domain model should remain expressible in the local Ubiquitous Language, insulated from persistence, transport, UI, and foreign models where practical.
+For domain work, architecture must additionally protect the domain model; the lens §7 owns that posture.
 
 ## 5. Canonical ownership of contract facts
 
@@ -157,7 +157,7 @@ Do not hard-code contract facts in parallel across code, interfaces, tools, test
 
 When no canonical owner exists, create the smallest appropriate one before spreading the fact further.
 
-For domain work, canonical ownership is context-sensitive. A term, status, event, or identifier may have one meaning in one Bounded Context and a different meaning in another. Do not create a false global owner for language that is only locally true. Across Bounded Contexts, the canonical owner may be a Published Language, stable API resource, event schema, command contract, Open Host Service, or translation map, not a shared domain class.
+For domain work, canonical ownership is context-sensitive across model boundaries; the lens §6 owns that rule.
 
 ## 6. State ownership and mutation discipline
 
@@ -175,7 +175,7 @@ Before changing stateful behavior, identify:
 
 Do not introduce a second source of truth. Do not patch derived state when the canonical state or mutation path is wrong. Do not add hidden state that future maintainers cannot locate or reason about.
 
-For domain work, identify the Aggregate or process that owns each invariant. Aggregates are consistency boundaries, not object graphs. Keep them as small as the true invariant permits. Prefer referencing other Aggregates by identity and using eventual consistency outside the boundary unless a real business rule demands atomic consistency.
+For domain work, the invariant owner is an Aggregate or process; the lens §5.1 owns the Aggregate rules.
 
 ## 7. Feedback must match risk
 
@@ -185,7 +185,7 @@ A pure function may need a unit test. A protocol may need a contract test. A mig
 
 When fixing a bug, reproduce it first if practical. When preventing recurrence, add the feedback that would have caught it.
 
-For domain work, evidence should use business examples, not merely technical assertions. Prefer tests and executable examples that state the local language: given a domain situation, when a command or event occurs, then the invariant or state transition holds. If domain expert validation is required and unavailable, record that gap explicitly.
+For domain work, evidence should use business examples in the local language; the lens §3 owns that rule.
 
 ## 8. Deletion and simplification require proof
 
@@ -238,23 +238,7 @@ Re-cueing:
 - Theory that could not be expressed in artifacts, and who currently holds it:
 ```
 
-When the change touches domain meaning, also include a proportional domain-design block:
-
-```text
-Domain design lens:
-- Domain / subdomain:
-- Core / Supporting / Generic / non-domain judgment:
-- Bounded Context:
-- Ubiquitous Language terms changed or clarified:
-- Term collisions or foreign concepts:
-- Aggregate or consistency boundary affected:
-- Entity / Value Object / Domain Service / Factory / Repository choices:
-- Commands, workflows, or Domain Events affected:
-- Cross-context relationship, if any:
-- Published Language, Open Host Service, or Anticorruption Layer, if any:
-- Domain examples, tests, or expert validation used:
-- Known model gaps:
-```
+When the change touches domain meaning, also include the proportional domain-design block defined in lens §11.
 
 Keep the summary proportional to the change. Small changes need small summaries. Risky changes need explicit reasoning. The "Known gaps" and "Theory that could not be expressed" lines are first-class outputs, not optional caveats — silence on them claims a theory the agent does not have.
 

@@ -2,13 +2,17 @@ package dev.erst.gridgrind.excel.stream;
 
 import dev.erst.gridgrind.excel.ExcelCellTextLimits;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelDeterministicWorkbookArtifactSupport;
 import dev.erst.gridgrind.excel.ExcelFormulaWriteSupport;
 import dev.erst.gridgrind.excel.ExcelRichTextSupport;
+import dev.erst.gridgrind.excel.ExcelWorkbookDocumentMetadataSupport;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookCellCommand;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookSheetCommand;
 import dev.erst.gridgrind.excel.WorkbookStyleRegistry;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageFileSupport;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -65,13 +69,18 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
   }
 
   /** Materializes the current streaming workbook session to one `.xlsx` path. */
-  public void save(Path workbookPath) throws IOException {
+  public void save(Path workbookPath, WorkbookArtifactWriteDisposition writeDisposition)
+      throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+    Objects.requireNonNull(writeDisposition, "writeDisposition must not be null");
     Path absolutePath = workbookPath.toAbsolutePath().normalize();
     Files.createDirectories(absolutePath.getParent());
-    try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
+    ExcelWorkbookDocumentMetadataSupport.normalizeForSave(workbook.getXSSFWorkbook());
+    try (OutputStream outputStream =
+        ExcelOoxmlPackageFileSupport.newWorkbookOutputStream(absolutePath, writeDisposition)) {
       workbook.write(outputStream);
     }
+    ExcelDeterministicWorkbookArtifactSupport.normalizeWorkbookPackage(absolutePath);
   }
 
   @Override

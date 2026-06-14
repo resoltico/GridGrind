@@ -185,7 +185,9 @@ class GridGrindProtocolCatalogTest {
     IllegalStateException missingNestedDescriptor =
         assertThrows(
             IllegalStateException.class,
-            () -> GridGrindProtocolCatalog.validateReverseGroupMappings(Set.of(), Set.of()));
+            () ->
+                GridGrindProtocolCatalogCoverageValidator.validateReverseGroupMappings(
+                    Set.of(), Set.of()));
     assertTrue(
         missingNestedDescriptor
             .getMessage()
@@ -195,7 +197,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.validateCoverage(
+                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                     dev.erst.gridgrind.contract.step.WorkbookStep.class,
                     Map.of(MutationStep.class, "MUTATION")));
     assertTrue(badWorkbookStepCoverage.getMessage().contains("Catalog coverage mismatch"));
@@ -204,7 +206,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.validateCoverage(
+                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                     NonAnnotatedSealedType.class, Map.of(NotARecord.class, "BROKEN")));
     assertEquals(
         "Catalog coverage requires "
@@ -216,7 +218,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.validateCoverage(
+                GridGrindProtocolCatalogCoverageValidator.validateCoverage(
                     BlankPropertySealedType.class, Map.of(BlankPropertyRecord.class, "BROKEN")));
     assertEquals(
         "Catalog coverage requires "

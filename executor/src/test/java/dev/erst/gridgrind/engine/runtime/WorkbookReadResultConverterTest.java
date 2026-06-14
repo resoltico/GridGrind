@@ -12,11 +12,14 @@ import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlExportSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
+import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.foundation.AnalysisSeverity;
 import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
@@ -62,15 +65,14 @@ class InspectionResultConverterTest {
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.PackageSecurityResult(
                     "security",
                     new ExcelOoxmlPackageSecuritySnapshot(
-                        new ExcelOoxmlEncryptionSnapshot(
-                            true,
-                            Optional.of(ExcelOoxmlEncryptionMode.AGILE),
-                            Optional.of(ExcelOoxmlCipherAlgorithm.AES_256),
-                            Optional.of(ExcelOoxmlHashAlgorithm.SHA_512),
-                            Optional.of(ExcelOoxmlChainingMode.CBC),
-                            Optional.of(256),
-                            Optional.of(16),
-                            Optional.of(100_000)),
+                        new ExcelOoxmlEncryptionSnapshot.Encrypted(
+                            ExcelOoxmlEncryptionMode.AGILE,
+                            ExcelOoxmlCipherAlgorithm.AES_256,
+                            ExcelOoxmlHashAlgorithm.SHA_512,
+                            ExcelOoxmlChainingMode.CBC,
+                            256,
+                            16,
+                            100_000),
                         List.of(
                             new ExcelOoxmlSignatureSnapshot(
                                 "/_xmlsignatures/sig1.xml",
@@ -79,7 +81,8 @@ class InspectionResultConverterTest {
                                 Optional.of("01AB"),
                                 ExcelOoxmlSignatureState.VALID))))));
 
-    assertTrue(packageSecurity.security().encryption().encrypted());
+    assertInstanceOf(
+        OoxmlEncryptionReport.Encrypted.class, packageSecurity.security().encryption());
     assertEquals(
         ExcelOoxmlSignatureState.VALID, packageSecurity.security().signatures().getFirst().state());
   }
@@ -93,20 +96,17 @@ class InspectionResultConverterTest {
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlMappingsResult(
                     "custom-xml-mappings",
                     List.of(
-                        new ExcelCustomXmlMappingSnapshot(
+                        customXmlMappingSnapshot(
                             1L,
                             "CORSO_mapping",
                             "CORSO",
                             "Schema1",
-                            false,
-                            true,
-                            false,
-                            true,
-                            true,
-                            Optional.empty(),
-                            Optional.empty(),
-                            Optional.empty(),
-                            Optional.of("<xsd:schema/>"),
+                            settings(false, true, false, true, true),
+                            schema(
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.of("<xsd:schema/>")),
                             Optional.of(
                                 new ExcelCustomXmlDataBindingSnapshot(
                                     Optional.of("binding"),
@@ -125,20 +125,17 @@ class InspectionResultConverterTest {
                 new dev.erst.gridgrind.excel.WorkbookCoreResult.CustomXmlExportResult(
                     "custom-xml-export",
                     new ExcelCustomXmlExportSnapshot(
-                        new ExcelCustomXmlMappingSnapshot(
+                        customXmlMappingSnapshot(
                             1L,
                             "CORSO_mapping",
                             "CORSO",
                             "Schema1",
-                            false,
-                            true,
-                            false,
-                            true,
-                            true,
-                            Optional.empty(),
-                            Optional.empty(),
-                            Optional.empty(),
-                            Optional.of("<xsd:schema/>"),
+                            settings(false, true, false, true, true),
+                            schema(
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.empty(),
+                                Optional.of("<xsd:schema/>")),
                             Optional.empty(),
                             List.of(
                                 new ExcelCustomXmlLinkedCellSnapshot(
@@ -312,15 +309,19 @@ class InspectionResultConverterTest {
             InspectionResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookRuleResult.TablesResult(
                     "tables", List.of(advancedTable(), normalizedOptionalTable()))));
-    assertEquals(Optional.of("HeaderStyle"), tables.tables().getFirst().headerRowCellStyle());
     assertEquals(
-        Optional.of("Total"), tables.tables().getFirst().columns().get(1).totalsRowLabel());
-    assertEquals(Optional.empty(), tables.tables().get(1).comment());
-    assertEquals(Optional.empty(), tables.tables().get(1).headerRowCellStyle());
-    assertEquals(Optional.empty(), tables.tables().get(1).dataCellStyle());
-    assertEquals(Optional.empty(), tables.tables().get(1).totalsRowCellStyle());
-    assertEquals(Optional.empty(), tables.tables().get(1).columns().getFirst().uniqueName());
-    assertEquals(Optional.empty(), tables.tables().get(1).columns().getFirst().totalsRowLabel());
+        Optional.of("HeaderStyle"), tables.tables().getFirst().presentation().headerRowCellStyle());
+    assertEquals(
+        Optional.of("Total"),
+        tables.tables().getFirst().structure().columns().get(1).totalsRowLabel());
+    assertEquals(Optional.empty(), tables.tables().get(1).presentation().comment());
+    assertEquals(Optional.empty(), tables.tables().get(1).presentation().headerRowCellStyle());
+    assertEquals(Optional.empty(), tables.tables().get(1).presentation().dataCellStyle());
+    assertEquals(Optional.empty(), tables.tables().get(1).presentation().totalsRowCellStyle());
+    assertEquals(
+        Optional.empty(), tables.tables().get(1).structure().columns().getFirst().uniqueName());
+    assertEquals(
+        Optional.empty(), tables.tables().get(1).structure().columns().getFirst().totalsRowLabel());
   }
 
   private static void assertConditionalFormattingResult() {
@@ -343,6 +344,31 @@ class InspectionResultConverterTest {
   }
 
   private static void assertDrawingResults() {
+    var signatureSetup =
+        new ExcelSignatureLineSnapshot.Setup(
+            Optional.of("{ABC}"),
+            Optional.of(false),
+            Optional.of("Review before signing."),
+            Optional.of("Ada Lovelace"),
+            Optional.of("Finance"),
+            Optional.of("ada@example.com"));
+    var signaturePreview =
+        new ExcelSignatureLineSnapshot.Preview(
+            ExcelPictureFormat.PNG,
+            "image/png",
+            42L,
+            Optional.of("sig123"),
+            Optional.of(400),
+            Optional.of(150));
+    var signatureDrawingObject =
+        new ExcelDrawingObjectSnapshot.SignatureLine(
+            "OpsSignature",
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(7, 3, 0, 0),
+                new ExcelDrawingMarker(10, 9, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            Optional.of(signatureSetup),
+            Optional.of(signaturePreview));
     WorkbookAssetInspectionResult.DrawingObjectsResult drawingObjects =
         assertInstanceOf(
             WorkbookAssetInspectionResult.DrawingObjectsResult.class,
@@ -394,24 +420,7 @@ class InspectionResultConverterTest {
                             null,
                             null,
                             null),
-                        new ExcelDrawingObjectSnapshot.SignatureLine(
-                            "OpsSignature",
-                            new ExcelDrawingAnchor.TwoCell(
-                                new ExcelDrawingMarker(7, 3, 0, 0),
-                                new ExcelDrawingMarker(10, 9, 0, 0),
-                                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                            "{ABC}",
-                            false,
-                            "Review before signing.",
-                            "Ada Lovelace",
-                            "Finance",
-                            "ada@example.com",
-                            ExcelPictureFormat.PNG,
-                            "image/png",
-                            42L,
-                            "sig123",
-                            400,
-                            150)))));
+                        signatureDrawingObject))));
     WorkbookAssetInspectionResult.DrawingObjectPayloadResult drawingPayload =
         assertInstanceOf(
             WorkbookAssetInspectionResult.DrawingObjectPayloadResult.class,
@@ -446,9 +455,9 @@ class InspectionResultConverterTest {
     DrawingObjectReport.SignatureLine signatureLine =
         assertInstanceOf(
             DrawingObjectReport.SignatureLine.class, drawingObjects.drawingObjects().get(4));
-    assertEquals("{ABC}", signatureLine.setupId());
-    assertFalse(signatureLine.allowComments());
-    assertEquals(400, signatureLine.previewWidthPixels());
+    assertEquals("{ABC}", signatureLine.setup().orElseThrow().setupId().orElseThrow());
+    assertFalse(signatureLine.setup().orElseThrow().allowComments().orElseThrow());
+    assertEquals(400, signatureLine.preview().orElseThrow().widthPixels().orElseThrow());
     assertEquals("cGF5bG9hZA==", drawingPayload.payload().base64Data());
     DrawingObjectPayloadReport.Picture picturePayload =
         assertInstanceOf(
@@ -1056,22 +1065,21 @@ class InspectionResultConverterTest {
         "QueueTable",
         "Budget",
         "A1:B5",
-        1,
-        1,
-        List.of("Item", "Amount"),
-        List.of(
-            new ExcelTableColumnSnapshot(1L, "Item", "", "", "", ""),
-            new ExcelTableColumnSnapshot(
-                2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2")),
+        new ExcelTableSnapshot.Structure(
+            1,
+            1,
+            List.of("Item", "Amount"),
+            List.of(
+                new ExcelTableColumnSnapshot(1L, "Item", "", "", "", ""),
+                new ExcelTableColumnSnapshot(
+                    2L, "Amount", "UniqueAmount", "Total", "sum", "[@Amount]*2"))),
         new ExcelTableStyleSnapshot.Named("TableStyleMedium2", false, false, true, false),
-        true,
-        "Queue comment",
-        true,
-        true,
-        false,
-        "HeaderStyle",
-        "DataStyle",
-        "TotalsStyle");
+        new ExcelTableSnapshot.Behavior(true, true, true, false),
+        new ExcelTableSnapshot.Presentation(
+            Optional.of("Queue comment"),
+            Optional.of("HeaderStyle"),
+            Optional.of("DataStyle"),
+            Optional.of("TotalsStyle")));
   }
 
   private static ExcelTableSnapshot normalizedOptionalTable() {
@@ -1079,19 +1087,55 @@ class InspectionResultConverterTest {
         "OptionalTable",
         "Budget",
         "D1:E2",
-        1,
-        0,
-        List.of("Code"),
-        List.of(new ExcelTableColumnSnapshot(3L, "Code", null, " ", "", " ")),
+        new ExcelTableSnapshot.Structure(
+            1,
+            0,
+            List.of("Code"),
+            List.of(new ExcelTableColumnSnapshot(3L, "Code", null, " ", "", " "))),
         new ExcelTableStyleSnapshot.None(),
-        false,
-        " ",
-        false,
-        false,
-        false,
-        "",
-        " ",
-        null);
+        new ExcelTableSnapshot.Behavior(false, false, false, false),
+        new ExcelTableSnapshot.Presentation(
+            Optional.of(" "), Optional.of(""), Optional.of(" "), Optional.empty()));
+  }
+
+  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+      long mapId,
+      String name,
+      String rootElement,
+      String schemaId,
+      ExcelCustomXmlMappingSettings settings,
+      ExcelCustomXmlSchemaSnapshot schema,
+      Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
+      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
+      List<dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
+    return new ExcelCustomXmlMappingSnapshot(
+        mapId,
+        name,
+        rootElement,
+        schemaId,
+        settings,
+        schema,
+        dataBinding,
+        linkedCells,
+        linkedTables);
+  }
+
+  private static ExcelCustomXmlMappingSettings settings(
+      boolean showImportExportValidationErrors,
+      boolean autoFit,
+      boolean append,
+      boolean preserveSortAfLayout,
+      boolean preserveFormat) {
+    return new ExcelCustomXmlMappingSettings(
+        showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
+  }
+
+  private static ExcelCustomXmlSchemaSnapshot schema(
+      Optional<String> namespace,
+      Optional<String> language,
+      Optional<String> reference,
+      Optional<String> xml) {
+    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
   }
 
   private static ExcelDifferentialStyleSnapshot differentialStyle() {

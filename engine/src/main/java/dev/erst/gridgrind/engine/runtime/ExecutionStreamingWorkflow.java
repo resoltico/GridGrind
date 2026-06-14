@@ -15,6 +15,8 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import dev.erst.gridgrind.excel.ExcelTempFileWriteTargetSupport;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
@@ -102,8 +104,10 @@ final class ExecutionStreamingWorkflow {
             protocolVersion, journal, request.steps().size(), calculation, problem, null, null);
       }
 
-      materializedPath = tempFileFactory.createTempFile("gridgrind-streaming-write-", ".xlsx");
-      writer.save(materializedPath);
+      materializedPath =
+          ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
+              tempFileFactory.createTempFile("gridgrind-streaming-write-", ".xlsx"));
+      writer.save(materializedPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
     } catch (IOException exception) {
       ExecutionWorkbookSupport.deleteIfExists(materializedPath);
       GridGrindProblemDetail.Problem problem =

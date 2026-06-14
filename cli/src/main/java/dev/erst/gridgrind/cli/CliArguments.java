@@ -10,6 +10,11 @@ final class CliArguments {
 
   /** Parses the raw CLI args into the corresponding command model. */
   static CliCommand parse(String[] args) {
+    return parseInvocation(args).command();
+  }
+
+  /** Parses the raw CLI args into one command plus the authored global render options. */
+  static CliInvocation parseInvocation(String[] args) {
     Objects.requireNonNull(args, "args must not be null");
     CliPathArguments.GlobalResponseExtraction extraction =
         CliPathArguments.extractGlobalResponse(args);
@@ -20,33 +25,12 @@ final class CliArguments {
           CliImmediateCommandParser.parse(remainingArgs, 0, remainingArgs[0], responsePath);
       if (immediate.isPresent()) {
         CliImmediateCommandParser.Result result = immediate.orElseThrow();
-        requireNoTrailingArguments(remainingArgs, result.nextIndex(), result.commandToken());
-        return result.command();
+        CliTrailingArgumentValidator.requireNoTrailingArguments(
+            remainingArgs, result.nextIndex(), result.commandToken());
+        return new CliInvocation(result.command(), extraction.outputFormat());
       }
     }
-    return CliExecutionCommandParser.parse(remainingArgs, responsePath);
-  }
-
-  private static void requireNoTrailingArguments(
-      String[] args, int nextIndex, String commandToken) {
-    if (nextIndex == args.length) {
-      return;
-    }
-    String trailingArgument = args[nextIndex];
-    if (CliPrimaryCommandSupport.isPrimaryCommandToken(trailingArgument)) {
-      throw new CliArgumentsException(
-          trailingArgument,
-          "Only one primary command may be used per invocation; "
-              + commandToken
-              + " cannot be combined with "
-              + trailingArgument);
-    }
-    if ("--request".equals(trailingArgument)
-        || "--execution-root".equals(trailingArgument)
-        || "--temp-root".equals(trailingArgument)) {
-      throw new CliArgumentsException(
-          trailingArgument, commandToken + " does not allow " + trailingArgument);
-    }
-    throw CliExecutionCommandParser.unknownArgumentException(trailingArgument);
+    return new CliInvocation(
+        CliExecutionCommandParser.parse(remainingArgs, responsePath), extraction.outputFormat());
   }
 }

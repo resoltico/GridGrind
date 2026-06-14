@@ -150,22 +150,19 @@ public final class ExcelPivotTableController {
       ExcelPivotTableDefinition definition,
       ResolvedAuthoringSource source,
       CellReference anchor) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(definition, "definition must not be null");
+    Objects.requireNonNull(source, "source must not be null");
+    Objects.requireNonNull(anchor, "anchor must not be null");
+
     var sheet = ExcelPivotTableSourceSupport.requiredSheet(workbook, definition.sheetName());
-    return switch (source.kind()) {
-      case RANGE -> sheet.createPivotTable(source.area(), anchor, source.sheet());
-      case NAMED_RANGE ->
-          sheet.createPivotTable(
-              source
-                  .namedRange()
-                  .orElseThrow(() -> new IllegalArgumentException("namedRange must not be absent")),
-              anchor,
-              source.sheet());
-      case TABLE ->
-          sheet.createPivotTable(
-              source
-                  .table()
-                  .orElseThrow(() -> new IllegalArgumentException("table must not be absent")),
-              anchor);
+    ExcelPivotTableSourceSupport.sourceColumns(source.sheet(), source.area(), source.description());
+    return switch (source) {
+      case ResolvedAuthoringSource.Range range ->
+          sheet.createPivotTable(range.area(), anchor, range.sheet());
+      case ResolvedAuthoringSource.NamedRange namedRange ->
+          sheet.createPivotTable(namedRange.namedRange(), anchor, namedRange.sheet());
+      case ResolvedAuthoringSource.Table table -> sheet.createPivotTable(table.table(), anchor);
     };
   }
 

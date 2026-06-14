@@ -101,7 +101,8 @@ final class ExcelTableStructureSupport {
     }
     ExcelRange parsedRange = range.orElseThrow();
     int lastFilterRow =
-        parsedRange.lastRow() - Math.min(table.totalsRowCount(), parsedRange.rowCount() - 1);
+        parsedRange.lastRow()
+            - Math.min(table.structure().totalsRowCount(), parsedRange.rowCount() - 1);
     return new CellRangeAddress(
             parsedRange.firstRow(),
             lastFilterRow,

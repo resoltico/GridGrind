@@ -165,14 +165,14 @@ final class XlsxParityProbeRegistry {
   }
 
   static boolean hasEncryptedAgilePackage(OoxmlPackageSecurityReport security) {
-    return security.encryption().encrypted()
-        && security.encryption().mode().orElse(null) == ExcelOoxmlEncryptionMode.AGILE
+    return security.encryption() instanceof OoxmlEncryptionReport.Encrypted encrypted
+        && encrypted.mode() == ExcelOoxmlEncryptionMode.AGILE
         && security.signatures().isEmpty();
   }
 
   static boolean hasSingleSignatureState(
       OoxmlPackageSecurityReport security, ExcelOoxmlSignatureState state) {
-    return !security.encryption().encrypted()
+    return security.encryption() instanceof OoxmlEncryptionReport.None
         && security.signatures().size() == 1
         && security.signatures().getFirst().state() == state;
   }
@@ -476,20 +476,26 @@ final class XlsxParityProbeRegistry {
         && (expectedName == null || observed.name().equals(expectedName))
         && (expectedSheetName == null || observed.sheetName().equals(expectedSheetName))
         && observed.range().equals(expected.range())
-        && observed.headerRowCount() == expected.headerRowCount()
-        && observed.totalsRowCount() == expected.totalsRowCount()
-        && observed.columnNames().equals(expected.columnNames())
-        && normalizedTableColumns(observed.columns())
-            .equals(normalizedTableColumns(expected.columns()))
+        && observed.structure().headerRowCount() == expected.structure().headerRowCount()
+        && observed.structure().totalsRowCount() == expected.structure().totalsRowCount()
+        && observed.structure().columnNames().equals(expected.structure().columnNames())
+        && normalizedTableColumns(observed.structure().columns())
+            .equals(normalizedTableColumns(expected.structure().columns()))
         && observed.style().equals(expected.style())
-        && observed.hasAutofilter() == expected.hasAutofilter()
-        && observed.comment().equals(expected.comment())
-        && observed.published() == expected.published()
-        && observed.insertRow() == expected.insertRow()
-        && observed.insertRowShift() == expected.insertRowShift()
-        && observed.headerRowCellStyle().equals(expected.headerRowCellStyle())
-        && observed.dataCellStyle().equals(expected.dataCellStyle())
-        && observed.totalsRowCellStyle().equals(expected.totalsRowCellStyle());
+        && observed.behavior().hasAutofilter() == expected.behavior().hasAutofilter()
+        && observed.presentation().comment().equals(expected.presentation().comment())
+        && observed.behavior().published() == expected.behavior().published()
+        && observed.behavior().insertRow() == expected.behavior().insertRow()
+        && observed.behavior().insertRowShift() == expected.behavior().insertRowShift()
+        && observed
+            .presentation()
+            .headerRowCellStyle()
+            .equals(expected.presentation().headerRowCellStyle())
+        && observed.presentation().dataCellStyle().equals(expected.presentation().dataCellStyle())
+        && observed
+            .presentation()
+            .totalsRowCellStyle()
+            .equals(expected.presentation().totalsRowCellStyle());
   }
 
   static List<String> normalizedTableColumns(List<TableColumnReport> columns) {

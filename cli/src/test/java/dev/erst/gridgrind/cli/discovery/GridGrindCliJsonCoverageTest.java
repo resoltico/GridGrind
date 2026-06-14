@@ -27,15 +27,15 @@ class GridGrindCliJsonCoverageTest {
 
     assertEquals(
         taskCatalog,
-        GridGrindCliJson.readTaskCatalog(GridGrindCliJson.writeTaskCatalogBytes(taskCatalog)));
+        GridGrindCliJson.readBytes(GridGrindCliJson.writeBytes(taskCatalog), TaskCatalog.class));
     assertEquals(
         taskKeywordMatchReport,
-        GridGrindCliJson.readTaskKeywordMatchReport(
-            GridGrindCliJson.writeTaskKeywordMatchReportBytes(taskKeywordMatchReport)));
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(taskKeywordMatchReport), TaskKeywordMatchReport.class));
     assertEquals(
         exampleCatalog,
-        GridGrindCliJson.readShippedExampleCatalog(
-            GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog)));
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(exampleCatalog), ShippedExampleCatalog.class));
     assertEquals(
         protocolCatalogSearchReport,
         ProtocolCatalogCliJson.readProtocolCatalogSearchReport(
@@ -43,24 +43,21 @@ class GridGrindCliJsonCoverageTest {
                 protocolCatalogSearchReport)));
     assertEquals(
         cliFailureReport,
-        GridGrindCliJson.readCliFailureReport(
-            GridGrindCliJson.writeCliFailureReportBytes(cliFailureReport)));
+        GridGrindCliJson.readBytes(
+            GridGrindCliJson.writeBytes(cliFailureReport), CliFailureReport.class));
 
     try (TrackingInputStream taskCatalogStream =
-            new TrackingInputStream(GridGrindCliJson.writeTaskCatalogBytes(taskCatalog));
+            new TrackingInputStream(GridGrindCliJson.writeBytes(taskCatalog));
         TrackingInputStream taskKeywordMatchReportStream =
-            new TrackingInputStream(
-                GridGrindCliJson.writeTaskKeywordMatchReportBytes(taskKeywordMatchReport));
+            new TrackingInputStream(GridGrindCliJson.writeBytes(taskKeywordMatchReport));
         TrackingInputStream exampleCatalogStream =
-            new TrackingInputStream(
-                GridGrindCliJson.writeShippedExampleCatalogBytes(exampleCatalog));
+            new TrackingInputStream(GridGrindCliJson.writeBytes(exampleCatalog));
         TrackingInputStream protocolCatalogSearchReportStream =
             new TrackingInputStream(
                 ProtocolCatalogCliJson.writeProtocolCatalogSearchReportBytes(
                     protocolCatalogSearchReport));
         TrackingInputStream cliFailureReportStream =
-            new TrackingInputStream(
-                GridGrindCliJson.writeCliFailureReportBytes(cliFailureReport))) {
+            new TrackingInputStream(GridGrindCliJson.writeBytes(cliFailureReport))) {
       assertEquals(taskCatalog, GridGrindCliJsonStreams.readTaskCatalog(taskCatalogStream));
       assertEquals(
           taskKeywordMatchReport,
@@ -92,7 +89,8 @@ class GridGrindCliJsonCoverageTest {
     assertEquals(
         "bytes must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindCliJson.readTaskCatalog((byte[]) null))
+                NullPointerException.class,
+                () -> GridGrindCliJson.readBytes(null, TaskCatalog.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -103,7 +101,7 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readTaskKeywordMatchReport((byte[]) null))
+                () -> GridGrindCliJson.readBytes(null, TaskKeywordMatchReport.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -115,7 +113,7 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readShippedExampleCatalog((byte[]) null))
+                () -> GridGrindCliJson.readBytes(null, ShippedExampleCatalog.class))
             .getMessage());
     assertEquals(
         "bytes must not be null",
@@ -139,7 +137,7 @@ class GridGrindCliJsonCoverageTest {
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.readCliFailureReport((byte[]) null))
+                () -> GridGrindCliJson.readBytes(null, CliFailureReport.class))
             .getMessage());
     assertEquals(
         "inputStream must not be null",
@@ -149,39 +147,36 @@ class GridGrindCliJsonCoverageTest {
             .getMessage());
     assertEquals(
         "outputStream must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindCliJson.writeTaskEntry(null, task))
+        assertThrows(NullPointerException.class, () -> GridGrindCliJson.writeValue(null, task))
             .getMessage());
     assertEquals(
         "value must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.writeTaskCatalog(new ByteArrayOutputStream(), null))
+                () -> GridGrindCliJson.writeValue(new ByteArrayOutputStream(), null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.writeTaskKeywordMatchReport(null, taskKeywordMatchReport))
+                () -> GridGrindCliJson.writeValue(null, taskKeywordMatchReport))
             .getMessage());
     assertEquals(
         "value must not be null",
         assertThrows(
                 NullPointerException.class,
-                () ->
-                    GridGrindCliJson.writeTaskKeywordMatchReport(new ByteArrayOutputStream(), null))
+                () -> GridGrindCliJson.writeValue(new ByteArrayOutputStream(), null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
         assertThrows(
-                NullPointerException.class,
-                () -> GridGrindCliJson.writeShippedExampleCatalog(null, exampleCatalog))
+                NullPointerException.class, () -> GridGrindCliJson.writeValue(null, exampleCatalog))
             .getMessage());
     assertEquals(
         "value must not be null",
         assertThrows(
                 NullPointerException.class,
-                () ->
-                    GridGrindCliJson.writeShippedExampleCatalog(new ByteArrayOutputStream(), null))
+                () -> GridGrindCliJson.writeValue(new ByteArrayOutputStream(), null))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -203,13 +198,13 @@ class GridGrindCliJsonCoverageTest {
         "outputStream must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.writeCliFailureReport(null, cliFailureReport))
+                () -> GridGrindCliJson.writeValue(null, cliFailureReport))
             .getMessage());
     assertEquals(
         "value must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindCliJson.writeCliFailureReport(new ByteArrayOutputStream(), null))
+                () -> GridGrindCliJson.writeValue(new ByteArrayOutputStream(), null))
             .getMessage());
   }
 
@@ -217,14 +212,13 @@ class GridGrindCliJsonCoverageTest {
   void discoverySerializersOmitExplicitNullProperties() throws IOException {
     String taskCatalogJson =
         new String(
-            GridGrindCliJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog()),
-            StandardCharsets.UTF_8);
+            GridGrindCliJson.writeBytes(GridGrindTaskCatalog.catalog()), StandardCharsets.UTF_8);
     String exampleCatalogJson =
         new String(
-            GridGrindCliJson.writeShippedExampleCatalogBytes(GridGrindShippedExamples.catalog()),
+            GridGrindCliJson.writeBytes(GridGrindShippedExamples.catalog()),
             StandardCharsets.UTF_8);
     ByteArrayOutputStream taskEntryOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeTaskEntry(
+    GridGrindCliJson.writeValue(
         taskEntryOutput, GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow());
     String taskEntryJson = taskEntryOutput.toString(StandardCharsets.UTF_8);
 
@@ -233,17 +227,15 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(taskEntryJson.contains(": null"));
 
     ByteArrayOutputStream taskCatalogOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeTaskCatalog(taskCatalogOutput, GridGrindTaskCatalog.catalog());
+    GridGrindCliJson.writeValue(taskCatalogOutput, GridGrindTaskCatalog.catalog());
     assertFalse(taskCatalogOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream taskKeywordMatchOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeTaskKeywordMatchReport(
-        taskKeywordMatchOutput, sampleTaskKeywordMatchReport());
+    GridGrindCliJson.writeValue(taskKeywordMatchOutput, sampleTaskKeywordMatchReport());
     assertFalse(taskKeywordMatchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream exampleCatalogOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeShippedExampleCatalog(
-        exampleCatalogOutput, GridGrindShippedExamples.catalog());
+    GridGrindCliJson.writeValue(exampleCatalogOutput, GridGrindShippedExamples.catalog());
     assertFalse(exampleCatalogOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream protocolCatalogSearchOutput = new ByteArrayOutputStream();
@@ -252,7 +244,7 @@ class GridGrindCliJsonCoverageTest {
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream cliFailureReportOutput = new ByteArrayOutputStream();
-    GridGrindCliJson.writeCliFailureReport(cliFailureReportOutput, sampleCliFailureReport());
+    GridGrindCliJson.writeValue(cliFailureReportOutput, sampleCliFailureReport());
     assertFalse(cliFailureReportOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     assertTrue(

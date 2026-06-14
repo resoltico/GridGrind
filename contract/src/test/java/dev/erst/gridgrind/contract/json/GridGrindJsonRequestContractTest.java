@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 class GridGrindJsonRequestContractTest {
   @Test
   void requestRequiresExplicitProtocolVersion() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -42,9 +42,9 @@ class GridGrindJsonRequestContractTest {
 
   @Test
   void requestRequiresExplicitPersistenceAndSteps() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -74,9 +74,9 @@ class GridGrindJsonRequestContractTest {
 
   @Test
   void requestRequiresExplicitTopLevelExecutionAndFormulaEnvironment() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -94,9 +94,9 @@ class GridGrindJsonRequestContractTest {
 
   @Test
   void requestRejectsSparsePrintLayoutPayloadsThatPreviouslyReliedOnImplicitDefaults() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -150,9 +150,9 @@ class GridGrindJsonRequestContractTest {
 
   @Test
   void requestRejectsSparseChartPayloadsThatPreviouslyReliedOnImplicitDefaults() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """

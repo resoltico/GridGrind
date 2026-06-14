@@ -11,7 +11,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
@@ -180,6 +180,49 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
     assertTrue(problemMessages.contains("Missing required field 'execution'"));
     assertTrue(problemMessages.contains("Missing required field 'formulaEnvironment'"));
+  }
+
+  @Test
+  void diagnoseClassifiesMissingRootFieldsAsRequestShapeProblems() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        """
+        {
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "execution": {
+            "mode": { "type": "FULL_XSSF" },
+            "journal": { "level": "SUMMARY" },
+            "calculation": {
+              "strategy": { "type": "DO_NOT_CALCULATE" },
+              "markRecalculateOnOpen": false
+            }
+          },
+          "formulaEnvironment": {
+            "externalWorkbooks": [],
+            "missingWorkbookPolicy": "ERROR",
+            "udfToolpacks": []
+          },
+          "steps": []
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertFalse(report.valid());
+    assertEquals(1, doctor.directCalls());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST_SHAPE, report.primaryProblem().orElseThrow().code());
+    assertEquals(Optional.of("protocolVersion"), readRequestContext(report).jsonPath());
   }
 
   @Test
@@ -447,7 +490,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertEquals(0, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
     assertEquals(
-        GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+        GridGrindProblemCode.INVALID_REQUEST_SHAPE, report.primaryProblem().orElseThrow().code());
   }
 
   @Test
@@ -549,7 +592,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
   private static GridGrindProblemDetail.Problem missingFieldProblem(String jsonPath) {
     return GridGrindProblems.fromException(
-        new InvalidRequestException(
+        new InvalidRequestShapeException(
             "Missing required field '" + jsonPath + "'",
             Optional.of(jsonPath),
             Optional.empty(),

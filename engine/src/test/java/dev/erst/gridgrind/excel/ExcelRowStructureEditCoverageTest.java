@@ -63,68 +63,68 @@ class ExcelRowStructureEditCoverageTest extends ExcelRowColumnStructureTestSuppo
 
   @Test
   void rowDeleteRejectsOverlappingRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A3", "Low");
-      setString(sheet, "B4", "High");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$A$3:$B$4");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> rowController.deleteRows(sheet, new ExcelRowSpan(2, 2)));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertRowNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$A$3:$B$4",
+        new ExcelRowSpan(2, 2),
+        (workbook, sheet, rows) -> runUnchecked(() -> rowController.deleteRows(sheet, rows)),
+        "A3",
+        "Low",
+        "B4",
+        "High");
   }
 
   @Test
   void rowShiftRejectsDestructiveRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A1", "Named");
-      setString(sheet, "B2", "Range");
-      setString(sheet, "A3", "Shifted");
-      setString(sheet, "A4", "Rows");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$A$1:$B$2");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> rowController.shiftRows(sheet, new ExcelRowSpan(2, 3), -2));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertRowNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$A$1:$B$2",
+        new ExcelRowSpan(2, 3),
+        (workbook, sheet, rows) -> runUnchecked(() -> rowController.shiftRows(sheet, rows, -2)),
+        "A1",
+        "Named",
+        "B2",
+        "Range",
+        "A3",
+        "Shifted",
+        "A4",
+        "Rows");
   }
 
   @Test
   void rowShiftAllowsUntouchedRangeBackedNamedRangesBetweenSourceAndDestination() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A1", "Move");
-      setString(sheet, "A6", "Named");
-      setString(sheet, "A7", "Range");
-      setString(sheet, "A11", "Tail");
-      seedNamedRange(workbook, "UntouchedRows", "Budget!$A$6:$A$7");
-
-      assertDoesNotThrow(() -> rowController.shiftRows(sheet, new ExcelRowSpan(0, 0), 10));
-      assertEquals("Budget!$A$6:$A$7", workbook.getName("UntouchedRows").getRefersToFormula());
-    }
+    assertRowNamedRangeUntouched(
+        "Budget",
+        "UntouchedRows",
+        "Budget!$A$6:$A$7",
+        new ExcelRowSpan(0, 0),
+        (workbook, sheet, rows) -> runUnchecked(() -> rowController.shiftRows(sheet, rows, 10)),
+        "A1",
+        "Move",
+        "A6",
+        "Named",
+        "A7",
+        "Range",
+        "A11",
+        "Tail");
   }
 
   @Test
   void rowShiftRejectsPartiallyMovedRangeBackedNamedRanges() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("Budget");
-      setString(sheet, "A2", "Named");
-      setString(sheet, "B3", "Range");
-      setString(sheet, "A4", "Rows");
-      seedNamedRange(workbook, "BudgetWindow", "Budget!$A$2:$B$3");
-
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> rowController.shiftRows(sheet, new ExcelRowSpan(2, 3), -2));
-      assertTrue(failure.getMessage().contains("named range 'BudgetWindow'"));
-    }
+    assertRowNamedRangeRejected(
+        "Budget",
+        "BudgetWindow",
+        "Budget!$A$2:$B$3",
+        new ExcelRowSpan(2, 3),
+        (workbook, sheet, rows) -> runUnchecked(() -> rowController.shiftRows(sheet, rows, -2)),
+        "A2",
+        "Named",
+        "B3",
+        "Range",
+        "A4",
+        "Rows");
   }
 
   @Test

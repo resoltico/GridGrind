@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -89,5 +91,28 @@ class GridGrindRequestProblemSupportTest {
         Optional.empty(),
         GridGrindRequestProblemSupport.specificResolution(
             GridGrindProblemCode.INVALID_REQUEST_SHAPE, " ", Optional.of("steps[0].action.type")));
+  }
+
+  @Test
+  void shapeViolationHeuristicRecognizesOnlyStructuralRequestMessages() {
+    assertFalse(GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(null));
+    assertFalse(GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(" "));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Missing required field 'protocolVersion'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Unknown field 'steps[0].bogus'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Unknown type value 'MOVEE'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Unsupported value 'MOVEE' for field 'steps[0].action.type'"));
+    assertFalse(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "steps must not contain duplicate stepId values: budget"));
+    assertFalse(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation("planId must not be blank"));
   }
 }

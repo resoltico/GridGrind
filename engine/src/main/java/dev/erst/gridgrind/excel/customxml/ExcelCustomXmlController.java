@@ -150,21 +150,23 @@ public final class ExcelCustomXmlController {
         ctMap.getName(),
         ctMap.getRootElement(),
         ctMap.getSchemaID(),
-        ctMap.getShowImportExportValidationErrors(),
-        ctMap.getAutoFit(),
-        ctMap.getAppend(),
-        ctMap.getPreserveSortAFLayout(),
-        ctMap.getPreserveFormat(),
-        schema != null && schema.isSetNamespace()
-            ? blankAsOptional(schema.getNamespace())
-            : Optional.empty(),
-        schema != null && schema.isSetSchemaLanguage()
-            ? blankAsOptional(schema.getSchemaLanguage())
-            : Optional.empty(),
-        schema != null && schema.isSetSchemaRef()
-            ? blankAsOptional(schema.getSchemaRef())
-            : Optional.empty(),
-        schemaXml(mapping),
+        new ExcelCustomXmlMappingSettings(
+            ctMap.getShowImportExportValidationErrors(),
+            ctMap.getAutoFit(),
+            ctMap.getAppend(),
+            ctMap.getPreserveSortAFLayout(),
+            ctMap.getPreserveFormat()),
+        new ExcelCustomXmlSchemaSnapshot(
+            schema != null && schema.isSetNamespace()
+                ? blankAsOptional(schema.getNamespace())
+                : Optional.empty(),
+            schema != null && schema.isSetSchemaLanguage()
+                ? blankAsOptional(schema.getSchemaLanguage())
+                : Optional.empty(),
+            schema != null && schema.isSetSchemaRef()
+                ? blankAsOptional(schema.getSchemaRef())
+                : Optional.empty(),
+            schemaXml(mapping)),
         dataBinding(ctMap),
         linkedCells(mapping),
         linkedTables(mapping));

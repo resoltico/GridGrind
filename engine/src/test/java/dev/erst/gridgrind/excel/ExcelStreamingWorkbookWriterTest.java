@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.stream.ExcelStreamingWorkbookWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,7 +50,8 @@ class ExcelStreamingWorkbookWriterTest {
           new WorkbookCellCommand.AppendRow(
               "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
       writer.markRecalculateOnOpen();
-      writer.save(workbookPath);
+      writer.save(
+          workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
     }
 
     try (var workbook = WorkbookFactory.create(workbookPath.toFile())) {
@@ -145,7 +148,9 @@ class ExcelStreamingWorkbookWriterTest {
       for (int rowIndex = 0; rowIndex < 4_000; rowIndex++) {
         writer.apply(repeatedAppendRow);
       }
-      writer.save(gridGrindWorkbookPath);
+      writer.save(
+          gridGrindWorkbookPath,
+          dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
     }
 
     try (SXSSFWorkbook workbook = new SXSSFWorkbook(new XSSFWorkbook(), 100, true, false)) {
@@ -175,5 +180,45 @@ class ExcelStreamingWorkbookWriterTest {
                 + gridGrindWorkbookSize
                 + " vs "
                 + inlineWorkbookSize);
+  }
+
+  @Test
+  void repeatedEquivalentStreamingSavesProduceIdenticalBytesAndCreateNewRejectsCollisions()
+      throws IOException {
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-streaming-deterministic-", ".xlsx");
+    try {
+      byte[] firstSaveBytes = saveStreamingBudgetWorkbook(workbookPath);
+      byte[] secondSaveBytes = saveStreamingBudgetWorkbook(workbookPath);
+
+      assertArrayEquals(firstSaveBytes, secondSaveBytes);
+
+      try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
+        writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
+        writer.apply(
+            new WorkbookCellCommand.AppendRow("Ops", List.of(ExcelCellValue.text("collision"))));
+        assertThrows(
+            FileAlreadyExistsException.class,
+            () ->
+                writer.save(
+                    workbookPath,
+                    dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.CREATE_NEW));
+      }
+    } finally {
+      Files.deleteIfExists(workbookPath);
+    }
+  }
+
+  private static byte[] saveStreamingBudgetWorkbook(Path workbookPath) throws IOException {
+    try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
+      writer.apply(new WorkbookSheetCommand.CreateSheet("Ops"));
+      writer.apply(
+          new WorkbookCellCommand.AppendRow(
+              "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
+      writer.markRecalculateOnOpen();
+      writer.save(
+          workbookPath, dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING);
+    }
+    return Files.readAllBytes(workbookPath);
   }
 }

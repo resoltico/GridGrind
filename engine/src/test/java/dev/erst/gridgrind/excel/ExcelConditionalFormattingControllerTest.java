@@ -96,7 +96,12 @@ class ExcelConditionalFormattingControllerTest {
                               List.of()))))),
           sheet.metadata().conditionalFormatting(new ExcelRangeSelection.All()));
 
-      workbook.persistence().save(workbookPath, ExcelTempFileFactoryTestSupport.tempFileFactory());
+      workbook
+          .persistence()
+          .save(
+              workbookPath,
+              dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+              ExcelTempFileFactoryTestSupport.tempFileFactory());
     }
 
     try (ExcelWorkbook reopened =

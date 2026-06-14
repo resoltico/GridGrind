@@ -61,8 +61,8 @@ final class ExcelTableAnalysisSupport {
       ExcelTableSnapshot table,
       ExcelRange range,
       WorkbookAnalysis.AnalysisLocation location) {
-    int minimumRows = table.headerRowCount() + table.totalsRowCount() + 1;
-    if (table.headerRowCount() < 1 || range.rowCount() < minimumRows) {
+    int minimumRows = table.structure().headerRowCount() + table.structure().totalsRowCount() + 1;
+    if (table.structure().headerRowCount() < 1 || range.rowCount() < minimumRows) {
       findings.add(
           new WorkbookAnalysis.AnalysisFinding(
               AnalysisFindingCode.TABLE_BROKEN_REFERENCE,
@@ -85,7 +85,7 @@ final class ExcelTableAnalysisSupport {
     List<String> duplicateHeaders = new ArrayList<>();
     List<String> blankHeaders = new ArrayList<>();
     Set<String> seen = new LinkedHashSet<>();
-    for (String header : table.columnNames()) {
+    for (String header : table.structure().columnNames()) {
       if (header.isBlank()) {
         blankHeaders.add(header);
         continue;

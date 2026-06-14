@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Instant;
-import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +29,11 @@ class ExcelWorkbookDocumentMetadataSupportTest {
 
       String sourceDateEpoch = System.getenv("SOURCE_DATE_EPOCH");
       if (sourceDateEpoch == null || sourceDateEpoch.isBlank()) {
-        assertNull(core.getCreated());
-        assertNull(core.getModified());
+        Instant expected = Instant.parse("2000-01-01T00:00:00Z");
+        assertNotNull(core.getCreated());
+        assertNotNull(core.getModified());
+        assertEquals(expected, core.getCreated().toInstant());
+        assertEquals(expected, core.getModified().toInstant());
       } else {
         Instant expected = Instant.ofEpochSecond(Long.parseLong(sourceDateEpoch.trim()));
         assertNotNull(core.getCreated());
@@ -46,9 +48,13 @@ class ExcelWorkbookDocumentMetadataSupportTest {
   @Test
   void deterministicTimestampParserCoversBlankValidAndRejectedValues() {
     assertEquals(
-        Optional.empty(), ExcelWorkbookDocumentMetadataSupport.deterministicTimestamp(null));
+        Instant.parse("2000-01-01T00:00:00Z"),
+        ExcelWorkbookDocumentMetadataSupport.deterministicTimestamp(null)
+            .orElseThrow()
+            .toInstant());
     assertEquals(
-        Optional.empty(), ExcelWorkbookDocumentMetadataSupport.deterministicTimestamp(" "));
+        Instant.parse("2000-01-01T00:00:00Z"),
+        ExcelWorkbookDocumentMetadataSupport.deterministicTimestamp(" ").orElseThrow().toInstant());
     assertEquals(
         Instant.ofEpochSecond(1_717_782_600L),
         ExcelWorkbookDocumentMetadataSupport.deterministicTimestamp("1717782600")

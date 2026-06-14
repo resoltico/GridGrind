@@ -4,8 +4,10 @@ import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.json.PayloadException;
 import dev.erst.gridgrind.contract.json.PayloadLocation;
+import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,12 +26,13 @@ public final class GridGrindProblems {
       Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
     Objects.requireNonNull(exception, "exception must not be null");
     Objects.requireNonNull(context, "context must not be null");
+    String publicMessage = messageFor(exception, context);
     return problem(
         codeFor(exception),
-        messageFor(exception),
+        publicMessage,
         enrichContext(context, exception),
         Optional.ofNullable(assertionFailureFor(exception)),
-        causesFor(exception, context.stage()));
+        causesFor(exception, context.stage(), publicMessage));
   }
 
   /** Builds a fully populated problem from an explicit code and message. */
@@ -44,7 +47,7 @@ public final class GridGrindProblems {
         message,
         context,
         Optional.ofNullable(assertionFailureFor(cause)),
-        causesFor(cause, context.stage()));
+        causesFor(cause, context.stage(), cause == null ? message : messageFor(cause, context)));
   }
 
   /**
@@ -128,20 +131,44 @@ public final class GridGrindProblems {
     return message == null || message.isBlank() ? simpleName(exception) : message;
   }
 
+  static String messageFor(
+      Throwable exception, dev.erst.gridgrind.contract.dto.ProblemContext context) {
+    Objects.requireNonNull(exception, "exception must not be null");
+    Objects.requireNonNull(context, "context must not be null");
+    if (exception instanceof FileAlreadyExistsException) {
+      if (context instanceof ProblemContext.PersistWorkbook persistWorkbook) {
+        return persistWorkbook
+            .persistencePath()
+            .map(
+                persistencePath ->
+                    "Could not write workbook to "
+                        + persistencePath
+                        + ": already exists; SAVE_AS requires a new destination path and"
+                        + " never replaces an existing workbook implicitly")
+            .orElseGet(() -> messageFor(exception));
+      }
+      return messageFor(exception);
+    }
+    return messageFor(exception);
+  }
+
   /**
    * Returns the public diagnostic entries for one failure without exposing raw throwable internals.
    */
   static List<GridGrindProblemDetail.ProblemCause> causesFor(Throwable exception) {
-    return causesFor(exception, "EXECUTE_REQUEST");
+    if (exception == null) {
+      return List.of();
+    }
+    return causesFor(exception, "EXECUTE_REQUEST", messageFor(exception));
   }
 
   private static List<GridGrindProblemDetail.ProblemCause> causesFor(
-      @Nullable Throwable exception, String stage) {
+      @Nullable Throwable exception, String stage, String publicMessage) {
     if (exception == null) {
       return List.of();
     }
     return List.of(
-        new GridGrindProblemDetail.ProblemCause(codeFor(exception), messageFor(exception), stage));
+        new GridGrindProblemDetail.ProblemCause(codeFor(exception), publicMessage, stage));
   }
 
   private static @Nullable AssertionFailure assertionFailureFor(@Nullable Throwable exception) {

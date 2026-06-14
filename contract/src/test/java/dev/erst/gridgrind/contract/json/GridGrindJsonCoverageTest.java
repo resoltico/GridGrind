@@ -157,13 +157,13 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "JSON payload must not be null",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () -> GridGrindJson.readRequest("null".getBytes(StandardCharsets.UTF_8)))
             .getMessage());
     assertEquals(
         "JSON payload must not be null",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readRequest(
                         new ByteArrayInputStream("null".getBytes(StandardCharsets.UTF_8))))
@@ -171,7 +171,7 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'steps[0]'",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readRequest(
                         """
@@ -218,7 +218,7 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'warnings'",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readResponse(
                         new ByteArrayInputStream(
@@ -228,7 +228,7 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'warnings'",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readResponse(
                         withTopLevelNull(GridGrindJson.writeResponseBytes(response), "warnings")))
@@ -236,7 +236,7 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'plainTypes'",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readProtocolCatalog(
                         withTopLevelNull(
@@ -245,7 +245,7 @@ class GridGrindJsonCoverageTest {
     assertEquals(
         "Missing required field 'warnings'",
         assertThrows(
-                InvalidRequestException.class,
+                InvalidRequestShapeException.class,
                 () ->
                     GridGrindJson.readRequestDoctorReport(
                         withTopLevelNull(
@@ -581,9 +581,9 @@ class GridGrindJsonCoverageTest {
 
   @Test
   void rejectsExplicitNullInDeepNestedRequestFieldWithFullDottedPath() {
-    InvalidRequestException exception =
+    InvalidRequestShapeException exception =
         assertThrows(
-            InvalidRequestException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
@@ -623,9 +623,9 @@ class GridGrindJsonCoverageTest {
     NullPointerException nullMessageNull = new NullPointerException();
 
     assertInstanceOf(
-        InvalidRequestException.class,
+        InvalidRequestShapeException.class,
         invokeInvalidPayload(new WrappedJacksonException("wrapper", explicitNull)),
-        "NPE with 'must not be null' message should be treated as a validation error");
+        "NPE with 'must not be null' message should be treated as a request-shape error");
     assertInstanceOf(
         InvalidJsonException.class,
         invokeInvalidPayload(new WrappedJacksonException("wrapper", jvmNull)),

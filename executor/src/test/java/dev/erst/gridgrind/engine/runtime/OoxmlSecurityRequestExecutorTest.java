@@ -56,7 +56,7 @@ class OoxmlSecurityRequestExecutorTest {
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
 
-    assertTrue(security.security().encryption().encrypted());
+    assertInstanceOf(OoxmlEncryptionReport.Encrypted.class, security.security().encryption());
     assertEquals(List.of(), security.security().signatures());
     assertEquals(
         "Encrypted workbook",
@@ -220,7 +220,7 @@ class OoxmlSecurityRequestExecutorTest {
     SheetInspectionResult.CellsResult cells =
         read(reopened, "cells", SheetInspectionResult.CellsResult.class);
 
-    assertTrue(security.security().encryption().encrypted());
+    assertInstanceOf(OoxmlEncryptionReport.Encrypted.class, security.security().encryption());
     assertEquals(1, security.security().signatures().size());
     assertEquals(
         dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.VALID,

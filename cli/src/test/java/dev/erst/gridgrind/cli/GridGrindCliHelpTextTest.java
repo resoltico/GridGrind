@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.cli.discovery.CliHelpReport;
+import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
+import dev.erst.gridgrind.cli.discovery.CliVersionReport;
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import java.io.ByteArrayInputStream;
@@ -179,6 +183,44 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertGuidanceHelpSurface(guidance);
   }
 
+  @Test
+  void structuredIdentitySurfacesExposeMachineReadableReports() throws IOException {
+    CliHelpReport helpReport =
+        GridGrindCliJson.readBytes(
+            runStructuredIdentitySurface("help", "--format", "structured"), CliHelpReport.class);
+    CliVersionReport versionReport =
+        GridGrindCliJson.readBytes(
+            runStructuredIdentitySurface("version", "--format", "structured"),
+            CliVersionReport.class);
+    CliLicenseReport licenseReport =
+        GridGrindCliJson.readBytes(
+            runStructuredIdentitySurface("license", "--format", "structured"),
+            CliLicenseReport.class);
+
+    assertEquals("OVERVIEW", helpReport.topic());
+    assertEquals(GridGrindCliProductInfo.version(), helpReport.version());
+    assertEquals(GridGrindCliProductInfo.description(), helpReport.description());
+    assertEquals(
+        GridGrindCliProductInfo.documentRef(GridGrindCliProductInfo.version()),
+        helpReport.documentRef());
+    assertEquals(
+        GridGrindCliProductInfo.containerImageRef(GridGrindCliProductInfo.version()),
+        helpReport.containerImageRef());
+    assertEquals(GridGrindProtocolCatalogCliSurface.CLI_SURFACE, helpReport.surface());
+
+    assertEquals(GridGrindCliProductInfo.version(), versionReport.version());
+    assertEquals(GridGrindCliProductInfo.description(), versionReport.description());
+    assertEquals(
+        GridGrindCliProductInfo.documentRef(GridGrindCliProductInfo.version()),
+        versionReport.documentRef());
+    assertEquals(
+        GridGrindCliProductInfo.containerImageRef(GridGrindCliProductInfo.version()),
+        versionReport.containerImageRef());
+
+    assertEquals(GridGrindCliProductInfo.version(), licenseReport.version());
+    assertFalse(licenseReport.licenseText().isBlank());
+  }
+
   private static void assertShortHelpAliasMatchesOverview(String overview) throws IOException {
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
@@ -191,9 +233,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
 
   private static void assertOverviewHelpSurface(String overview) {
     assertTrue(overview.contains("Primary Commands:"));
-    assertTrue(overview.contains("Quick Start:"));
     assertTrue(overview.contains("Command Rules:"));
-    assertTrue(overview.contains("Docs At A Glance:"));
+    assertTrue(overview.contains("Next Commands:"));
     assertTrue(overview.contains("--print-example --lookup <id>"));
     assertTrue(overview.contains("--print-task-plan --lookup <id>"));
     assertTrue(overview.contains("--print-task-keyword-match --query <text>"));
@@ -207,6 +248,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--print-task-catalog [--lookup <id>]"));
     assertTrue(overview.contains("--help-protocol"));
     assertTrue(overview.contains("--help-guidance"));
+    assertTrue(overview.contains("Use --format structured"));
+    assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
   }
@@ -255,6 +298,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertFalse(guidance.contains("Minimal Valid Request:"));
   }
 
+  private static byte[] runStructuredIdentitySurface(String... args) throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode = new GridGrindCli().run(args, new ByteArrayInputStream(new byte[0]), stdout);
+    assertEquals(0, exitCode);
+    return stdout.toByteArray();
+  }
+
   @Test
   void helpSurfacesUseVersionedAndFallbackReferencesCorrectly() {
     String unknownOverview = GridGrindCli.helpText("unknown");
@@ -265,12 +315,14 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     String guidance = GridGrindCliProductInfo.helpText(CliCommand.HelpTopic.GUIDANCE, "0.9.0");
 
     assertTrue(overview.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
-    assertTrue(overview.contains("blob/v0.9.0/docs/OPERATIONS.md"));
-    assertTrue(overview.contains("blob/v0.9.0/docs/ERRORS.md"));
+    assertFalse(overview.contains("blob/v0.9.0/docs/OPERATIONS.md"));
+    assertFalse(overview.contains("blob/v0.9.0/docs/ERRORS.md"));
     assertTrue(protocol.contains("GridGrind 0.9.0"));
     assertFalse(protocol.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
     assertTrue(guidance.contains("ghcr.io/resoltico/gridgrind:0.9.0"));
     assertTrue(guidance.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
+    assertTrue(guidance.contains("blob/v0.9.0/docs/OPERATIONS.md"));
+    assertTrue(guidance.contains("blob/v0.9.0/docs/ERRORS.md"));
   }
 
   @Test
@@ -298,9 +350,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     for (ShippedExampleEntry example : GridGrindShippedExamples.catalog().examples()) {
       assertTrue(help.contains(example.id()), () -> "missing example id " + example.id());
       assertTrue(
-          help.contains(example.suggestedRequestPath()),
-          () -> "missing example path " + example.suggestedRequestPath());
-      for (String requiredPath : example.requiredPaths()) {
+          help.contains(example.requestFileName()),
+          () -> "missing example file name " + example.requestFileName());
+      for (String requiredPath : example.requiredWorkspacePaths()) {
         assertTrue(help.contains(requiredPath), () -> "missing required path " + requiredPath);
       }
     }

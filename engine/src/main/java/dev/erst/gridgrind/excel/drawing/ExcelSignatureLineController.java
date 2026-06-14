@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel.drawing;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.office.office.CTSignatureLine;
-import com.microsoft.schemas.vml.CTImageData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
@@ -11,7 +10,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import javax.xml.namespace.QName;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -25,10 +23,7 @@ import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 /** Reads and mutates VML-backed Excel signature lines. */
 @SuppressWarnings("PMD.CommentRequired")
 public final class ExcelSignatureLineController {
-  private static final String DEFAULT_ALT_TEXT = "Microsoft Office Signature Line...";
-  private static final String MS_OFFICE_URN = "urn:schemas-microsoft-com:office:office";
   private static final Pattern VML_ANCHOR_SEPARATOR = Pattern.compile("\\s*,\\s*");
-  private static final QName SIGNING_INSTRUCTIONS = new QName(MS_OFFICE_URN, "signinginstructions");
 
   public List<ExcelSignatureLineSnapshot> signatureLines(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -39,7 +34,7 @@ public final class ExcelSignatureLineController {
 
     List<ExcelSignatureLineSnapshot> snapshots = new ArrayList<>();
     int index = 1;
-    for (CTShape shape : signatureShapes(vmlDrawing)) {
+    for (CTShape shape : ExcelSignatureLineSnapshotSupport.signatureShapes(vmlDrawing)) {
       int currentIndex = index;
       index++;
       snapshots.add(snapshot(vmlDrawing, shape, currentIndex));
@@ -106,7 +101,7 @@ public final class ExcelSignatureLineController {
   }
 
   private ExcelSignatureLineSnapshot snapshot(XSSFVMLDrawing vmlDrawing, CTShape shape, int index) {
-    String objectName = resolvedName(shape, index);
+    String objectName = ExcelSignatureLineSnapshotSupport.resolvedName(shape, index);
     PackagePart previewPart = previewPart(vmlDrawing, shape);
     ExcelPictureFormat previewFormat =
         previewPart == null
@@ -119,30 +114,13 @@ public final class ExcelSignatureLineController {
             ? ExcelDrawingSnapshotSupport.RasterDimensions.none()
             : ExcelDrawingSnapshotSupport.rasterDimensions(previewBytes);
     CTSignatureLine signatureLine = shape.getSignaturelineArray(0);
-    @Nullable String signingInstructions;
-    try (XmlCursor cursor = signatureLine.newCursor()) {
-      signingInstructions =
-          ExcelDrawingBinarySupport.blankAsOptional(cursor.getAttributeText(SIGNING_INSTRUCTIONS))
-              .orElse(null);
-    }
     return new ExcelSignatureLineSnapshot(
         objectName,
         anchor(shape, objectName),
-        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getId()).orElse(null),
-        signatureLine.isSetAllowcomments()
-            ? STTrueFalse.TRUE.equals(signatureLine.getAllowcomments())
-            : null,
-        signingInstructions,
-        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigner()).orElse(null),
-        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigner2()).orElse(null),
-        ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getSuggestedsigneremail())
-            .orElse(null),
-        previewFormat,
-        previewPart == null ? null : previewPart.getContentType(),
-        previewBytes == null ? null : (long) previewBytes.length,
-        previewBytes == null ? null : ExcelDrawingBinarySupport.sha256(previewBytes),
-        previewDimensions.widthPixels(),
-        previewDimensions.heightPixels());
+        ExcelSignatureLineSnapshotSupport.signatureLineSetup(
+            signatureLine, ExcelSignatureLineSnapshotSupport.signingInstructions(signatureLine)),
+        ExcelSignatureLineSnapshotSupport.signatureLinePreview(
+            previewFormat, previewPart, previewBytes, previewDimensions));
   }
 
   private Optional<LocatedSignatureLine> find(XSSFSheet sheet, String objectName) {
@@ -161,7 +139,7 @@ public final class ExcelSignatureLineController {
         if (!(object instanceof CTShape shape) || shape.sizeOfSignaturelineArray() == 0) {
           continue;
         }
-        if (!resolvedName(shape, index).equals(objectName)) {
+        if (!ExcelSignatureLineSnapshotSupport.resolvedName(shape, index).equals(objectName)) {
           index++;
           continue;
         }
@@ -239,19 +217,6 @@ public final class ExcelSignatureLineController {
     }
   }
 
-  private static List<CTShape> signatureShapes(XSSFVMLDrawing vmlDrawing) {
-    List<CTShape> shapes = new ArrayList<>();
-    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
-      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
-        XmlObject object = cursor.getObject();
-        if (object instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
-          shapes.add(shape);
-        }
-      }
-    }
-    return List.copyOf(shapes);
-  }
-
   public static boolean usesImagePart(
       XSSFSheet sheet, org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
@@ -260,7 +225,7 @@ public final class ExcelSignatureLineController {
     if (vmlDrawing == null) {
       return false;
     }
-    for (CTShape shape : signatureShapes(vmlDrawing)) {
+    for (CTShape shape : ExcelSignatureLineSnapshotSupport.signatureShapes(vmlDrawing)) {
       PackagePart previewPart = previewPart(vmlDrawing, shape);
       if (previewPart != null && previewPart.getPartName().equals(imagePartName)) {
         return true;
@@ -324,44 +289,6 @@ public final class ExcelSignatureLineController {
     return clientData;
   }
 
-  private static String missingClientDataMessage(@Nullable XSSFSheet sheet, String objectName) {
-    return sheet == null
-        ? "Signature line '" + objectName + "' is missing VML clientData"
-        : "Signature line '"
-            + objectName
-            + "' on sheet '"
-            + sheet.getSheetName()
-            + "' is missing VML clientData";
-  }
-
-  private static String missingAnchorMessage(@Nullable XSSFSheet sheet, String objectName) {
-    return sheet == null
-        ? "Signature line '" + objectName + "' is missing its VML anchor"
-        : "Signature line '"
-            + objectName
-            + "' on sheet '"
-            + sheet.getSheetName()
-            + "' is missing its VML anchor";
-  }
-
-  private static String resolvedName(CTShape shape, int index) {
-    if (shape.sizeOfImagedataArray() > 0) {
-      CTImageData imageData = shape.getImagedataArray(0);
-      String titledName =
-          ExcelDrawingBinarySupport.blankAsOptional(imageData.getTitle()).orElse(null);
-      if (titledName != null) {
-        return titledName;
-      }
-    }
-    String alt = ExcelDrawingBinarySupport.blankAsOptional(shape.getAlt()).orElse(null);
-    if (alt != null && !DEFAULT_ALT_TEXT.equals(alt)) {
-      return alt;
-    }
-    CTSignatureLine signatureLine = shape.getSignaturelineArray(0);
-    String setupId = ExcelDrawingBinarySupport.blankAsOptional(signatureLine.getId()).orElse(null);
-    return setupId == null ? "SignatureLine-" + index : "SignatureLine-" + setupId;
-  }
-
   private static String anchorString(ExcelDrawingAnchor.TwoCell anchor) {
     return anchor.from().columnIndex()
         + ", "
@@ -400,4 +327,24 @@ public final class ExcelSignatureLineController {
   }
 
   private record LocatedSignatureLine(CTShape shape, XmlCursor cursor, int index) {}
+
+  private static String missingClientDataMessage(@Nullable XSSFSheet sheet, String objectName) {
+    return sheet == null
+        ? "Signature line '" + objectName + "' is missing VML clientData"
+        : "Signature line '"
+            + objectName
+            + "' on sheet '"
+            + sheet.getSheetName()
+            + "' is missing VML clientData";
+  }
+
+  private static String missingAnchorMessage(@Nullable XSSFSheet sheet, String objectName) {
+    return sheet == null
+        ? "Signature line '" + objectName + "' is missing its VML anchor"
+        : "Signature line '"
+            + objectName
+            + "' on sheet '"
+            + sheet.getSheetName()
+            + "' is missing its VML anchor";
+  }
 }

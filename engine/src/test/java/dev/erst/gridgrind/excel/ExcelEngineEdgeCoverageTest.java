@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.drawingSignatureLine;
+import static dev.erst.gridgrind.excel.ExcelSignatureLineSnapshotTestSupport.signatureLineSnapshot;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,13 +14,14 @@ import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlDataBindingSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSettings;
 import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingSnapshot;
+import dev.erst.gridgrind.excel.customxml.ExcelCustomXmlSchemaSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingController;
 import dev.erst.gridgrind.excel.drawing.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineController;
 import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineDefinition;
-import dev.erst.gridgrind.excel.drawing.ExcelSignatureLineSnapshot;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
@@ -60,7 +63,7 @@ class ExcelEngineEdgeCoverageTest {
 
     assertDoesNotThrow(
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -78,7 +81,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 " ",
                 anchor,
                 "setup",
@@ -96,7 +99,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 " ",
@@ -114,7 +117,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -132,7 +135,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -150,7 +153,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -168,7 +171,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -186,7 +189,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -204,7 +207,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -222,7 +225,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -239,7 +242,7 @@ class ExcelEngineEdgeCoverageTest {
                 150));
     assertEquals(
         0L,
-        new ExcelSignatureLineSnapshot(
+        signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -254,11 +257,13 @@ class ExcelEngineEdgeCoverageTest {
                 "hash",
                 400,
                 150)
-            .previewByteSize());
+            .preview()
+            .orElseThrow()
+            .byteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -276,7 +281,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -294,7 +299,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -312,7 +317,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -330,7 +335,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelSignatureLineSnapshot(
+            signatureLineSnapshot(
                 "Signature",
                 anchor,
                 "setup",
@@ -346,27 +351,30 @@ class ExcelEngineEdgeCoverageTest {
                 400,
                 -1));
 
-    assertDoesNotThrow(
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                5L,
-                "hash",
-                400,
-                150));
+    ExcelDrawingObjectSnapshot.SignatureLine drawingSignature =
+        assertDoesNotThrow(
+            () ->
+                drawingSignatureLine(
+                    "Signature",
+                    anchor,
+                    "setup",
+                    true,
+                    "instructions",
+                    "Ada",
+                    "Finance",
+                    "ada@example.com",
+                    ExcelPictureFormat.PNG,
+                    "image/png",
+                    5L,
+                    "hash",
+                    400,
+                    150));
+    assertEquals("setup", drawingSignature.setup().orElseThrow().setupId().orElseThrow());
+    assertEquals(ExcelPictureFormat.PNG, drawingSignature.preview().orElseThrow().format());
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 " ",
                 anchor,
                 "setup",
@@ -384,79 +392,7 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                " ",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                5L,
-                "hash",
-                400,
-                150));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                " ",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                5L,
-                "hash",
-                400,
-                150));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                null,
-                "image/png",
-                5L,
-                "hash",
-                400,
-                150));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                " ",
-                5L,
-                "hash",
-                400,
-                150));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
+            drawingSignatureLine(
                 "Signature",
                 anchor,
                 "setup",
@@ -473,7 +409,7 @@ class ExcelEngineEdgeCoverageTest {
                 150));
     assertEquals(
         0L,
-        new ExcelDrawingObjectSnapshot.SignatureLine(
+        drawingSignatureLine(
                 "Signature",
                 anchor,
                 "setup",
@@ -488,43 +424,9 @@ class ExcelEngineEdgeCoverageTest {
                 "hash",
                 400,
                 150)
-            .previewByteSize());
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                -1L,
-                "hash",
-                400,
-                150));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ExcelDrawingObjectSnapshot.SignatureLine(
-                "Signature",
-                anchor,
-                "setup",
-                true,
-                "instructions",
-                "Ada",
-                "Finance",
-                "ada@example.com",
-                ExcelPictureFormat.PNG,
-                "image/png",
-                5L,
-                " ",
-                400,
-                150));
+            .preview()
+            .orElseThrow()
+            .byteSize());
 
     assertDoesNotThrow(
         () ->
@@ -699,20 +601,17 @@ class ExcelEngineEdgeCoverageTest {
         new ExcelCustomXmlLinkedTableSnapshot("Sheet1", "Table1", "Table1", "A1:B2", "/root");
     assertDoesNotThrow(
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.of("urn:test"),
-                Optional.of("XSD"),
-                Optional.of("schema.xsd"),
-                Optional.of("<schema/>"),
+                settings(true, false, true, false, true),
+                schema(
+                    Optional.of("urn:test"),
+                    Optional.of("XSD"),
+                    Optional.of("schema.xsd"),
+                    Optional.of("<schema/>")),
                 Optional.of(
                     new ExcelCustomXmlDataBindingSnapshot(
                         Optional.of("binding"),
@@ -725,160 +624,104 @@ class ExcelEngineEdgeCoverageTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 0L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 " ",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 " ",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 " ",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.of(" "),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.of(" "), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.of(" "),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.of(" "), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(" "),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.of(" "), Optional.empty()),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(" "),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.of(" ")),
                 Optional.empty(),
                 List.of(linkedCell),
                 List.of(linkedTable)));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ExcelCustomXmlMappingSnapshot(
+            customXmlMappingSnapshot(
                 1L,
                 "Map",
                 "Root",
                 "Schema",
-                true,
-                false,
-                true,
-                false,
-                true,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
+                settings(true, false, true, false, true),
+                schema(Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
                 Optional.empty(),
                 List.of((ExcelCustomXmlLinkedCellSnapshot) null),
                 List.of(linkedTable)));
@@ -1099,5 +942,45 @@ class ExcelEngineEdgeCoverageTest {
       }
     }
     return List.copyOf(shapes);
+  }
+
+  private static ExcelCustomXmlMappingSnapshot customXmlMappingSnapshot(
+      long mapId,
+      String name,
+      String rootElement,
+      String schemaId,
+      ExcelCustomXmlMappingSettings settings,
+      ExcelCustomXmlSchemaSnapshot schema,
+      Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding,
+      List<ExcelCustomXmlLinkedCellSnapshot> linkedCells,
+      List<ExcelCustomXmlLinkedTableSnapshot> linkedTables) {
+    return new ExcelCustomXmlMappingSnapshot(
+        mapId,
+        name,
+        rootElement,
+        schemaId,
+        settings,
+        schema,
+        dataBinding,
+        linkedCells,
+        linkedTables);
+  }
+
+  private static ExcelCustomXmlMappingSettings settings(
+      boolean showImportExportValidationErrors,
+      boolean autoFit,
+      boolean append,
+      boolean preserveSortAfLayout,
+      boolean preserveFormat) {
+    return new ExcelCustomXmlMappingSettings(
+        showImportExportValidationErrors, autoFit, append, preserveSortAfLayout, preserveFormat);
+  }
+
+  private static ExcelCustomXmlSchemaSnapshot schema(
+      Optional<String> namespace,
+      Optional<String> language,
+      Optional<String> reference,
+      Optional<String> xml) {
+    return new ExcelCustomXmlSchemaSnapshot(namespace, language, reference, xml);
   }
 }
