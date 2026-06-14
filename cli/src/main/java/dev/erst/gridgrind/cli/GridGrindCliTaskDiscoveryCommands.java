@@ -37,7 +37,7 @@ final class GridGrindCliTaskDiscoveryCommands {
               List.of("gridgrind --print-example-catalog", "gridgrind --help-guidance"),
               Optional.of(
                   "Use --print-example-catalog first when you need the stable example ids,"
-                      + " workspaceMode, and requiredPaths.")));
+                      + " requestFileName, workspaceMode, and requiredWorkspacePaths.")));
     }
     CliCatalogCommandSupport.emitExamplePortabilityWarning(example.get(), stderr);
     return CliCatalogPayloadSupport.writePayload(

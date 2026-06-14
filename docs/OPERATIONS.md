@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: OPERATIONS
-updated: "2026-06-12"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -52,8 +52,8 @@ Task discovery is layered on top of that same catalog surface:
 and `--print-task-keyword-match --query "<query>" --response task-keyword-match.json` now cover
 dashboards, tabular reports, data-entry flows, pivot reports, custom XML workflows, workbook
 maintenance, and drawing/signature workflows. Each published task entry also carries
-`starter.suggestedRequestPath`, `starter.workspaceMode`, and `starter.requiredPaths`, so callers
-can stage the right workspace before printing or executing the starter. Task-plan output is one
+`starter.requestFileName`, `starter.workspaceMode`, and `starter.requiredWorkspacePaths`, so
+callers can stage the right workspace before printing or executing the starter. Task-plan output is one
 curated executable starter request validated from the packaged artifact; keyword-match responses
 stay compact, are weighted by typed goal/artifact metadata first, and point at the matched task
 id plus why it ranked.

@@ -26,9 +26,9 @@ final class CliResponseWriter {
   /**
    * Writes a CLI failure report to the configured destination.
    *
-   * <p>When {@code responsePath} is empty, failure JSON goes to {@code stdout} so every
-   * machine-readable primary payload shares one default channel. The {@code stderr} stream is used
-   * only for response-file pointer lines and response-file fallback notices.
+   * <p>When {@code responsePath} is empty, CLI failure JSON goes to {@code stderr} so non-success
+   * CLI transport failures do not masquerade as primary stdout payloads. The {@code stderr} stream
+   * also carries response-file pointer lines and response-file fallback notices.
    */
   int writeCliFailureReport(
       Optional<Path> responsePath,
@@ -61,7 +61,7 @@ final class CliResponseWriter {
       throws IOException {
     Objects.requireNonNull(report, "report must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stdout, GridGrindCliJson.writeBytes(report));
+      writePayload(stderr, GridGrindCliJson.writeBytes(report));
       return report.exitCode();
     }
 

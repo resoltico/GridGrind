@@ -84,8 +84,9 @@ gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --respo
 gridgrind --print-protocol-catalog --full --response protocol-catalog.json
 ```
 
-The example and task catalogs publish `workspaceMode` plus `requiredPaths`, so you can tell
-whether a printed request is self-contained before you try to run it.
+The example and task catalogs publish `requestFileName`, `workspaceMode`, and
+`requiredWorkspacePaths`, so you can tell whether a printed request is self-contained before you
+try to run it.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use
 `--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow

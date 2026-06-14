@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-06-12"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -155,6 +155,9 @@ Then verify every item in this checklist. All must be true before any Step 2 com
 - `CHANGELOG.md` preserves the project's normal top-level structure. If the file carries
   `## [Unreleased]`, leave that section in place and add a separate `## [X.Y.Z] - YYYY-MM-DD`
   release section with at least one entry.
+- If `CHANGELOG.md` no longer fits the reviewed `release-ledger` budget, move older release
+  sections into `docs/CHANGELOG_ARCHIVE.md` instead of broadening the live root ledger just to
+  make the release pass.
 - `CHANGELOG.md` link footer has:
   - `[Unreleased]: .../compare/vX.Y.Z...HEAD`
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
@@ -658,6 +661,15 @@ If a disposable release worktree was created and is no longer needed:
 
 ```bash
 git worktree remove "$RELEASE_WORKTREE"
+```
+
+If a temporary local bootstrap branch or bootstrap manifest exists only to carry the release
+payload into that worktree and no longer represents live unpublished work, delete it during
+closeout:
+
+```bash
+git -C "$PRIMARY_CHECKOUT" branch -D "$BOOTSTRAP_BRANCH"
+rm -f "$PRIMARY_CHECKOUT/tmp/release-bootstrap/X.Y.Z.env"
 ```
 
 ---

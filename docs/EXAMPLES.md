@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: EXAMPLES
-updated: "2026-05-26"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -22,8 +22,9 @@ GridGrind ships the same example workflows in two forms:
 
 - **Built-in artifact examples** from `gridgrind --print-example --lookup <ID> --response request.json`.
   These are designed to run from an artifact working directory and use request-relative paths such
-  as `generated-workbooks/...`. The suggested request path usually lives under `examples/...`,
-  while any repo-backed asset requirements are published separately through `requiredPaths`.
+  as `generated-workbooks/...`. The machine-readable catalog publishes one portable
+  `requestFileName`, while any repo-backed asset requirements are published separately through
+  `requiredWorkspacePaths`.
   They are not all equally portable: most are self-contained in a blank working directory, while a
   few are intentionally repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
@@ -35,7 +36,7 @@ GridGrind ships the same example workflows in two forms:
 - Built-in examples are for the release JAR, Docker image, or `:cli:run` when you first print the
   example into your own working directory.
 - Self-contained built-ins can run from a blank artifact workspace after you print the request.
-- Repo-asset-backed built-ins require the matching asset paths named in `requiredPaths` to exist
+- Repo-asset-backed built-ins require the matching asset paths named in `requiredWorkspacePaths` to exist
   in the working directory before you run them.
 - Any example that saves a workbook writes under `generated-workbooks/` beside the request file.
 - Checked-in `examples/*.json` therefore persist into `examples/generated-workbooks/` because the
@@ -64,7 +65,7 @@ Self-contained built-ins execute from a blank artifact workspace after `--print-
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
 Repo-asset-backed built-ins still use `--print-example --lookup <ID>`, but they also require the
-copied asset paths named in `requiredPaths`:
+copied asset paths named in `requiredWorkspacePaths`:
 
 | Built-in ID | Matching fixture | Required assets |
 |:------------|:-----------------|:----------------|
@@ -73,14 +74,15 @@ copied asset paths named in `requiredPaths`:
 | `PACKAGE_SECURITY_INSPECTION` | [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | [`../examples/package-security-assets/`](../examples/package-security-assets/) |
 
 The CLI help now prints each built-in example with its `workspaceMode`, and asset-backed entries
-also print their exact `requiredPaths`, so artifact-only workspaces do not silently assume every
+also print their exact `requiredWorkspacePaths`, so artifact-only workspaces do not silently assume every
 example is self-contained.
 
 The machine-readable CLI example catalog exposes stable example ids, file names, summaries, a
-portable `workspaceMode` contract, and exact `requiredPaths` for asset-backed examples.
+portable `requestFileName` plus `workspaceMode` contract, and exact
+`requiredWorkspacePaths` for asset-backed examples.
 `SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
 `REQUIRES_EXAMPLE_ASSETS` means the request expects copied `examples/` assets beside the request
-file, and `requiredPaths` names those files directly.
+file, and `requiredWorkspacePaths` names those files directly.
 Print it directly with `gridgrind --print-example-catalog --response example-catalog.json`.
 
 ## JSON Request Fixtures

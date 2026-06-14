@@ -127,7 +127,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writeCliFailureReportWithoutResponsePathWritesTheCompactFailureToStdout()
+  void writeCliFailureReportWithoutResponsePathWritesTheCompactFailureToStderr()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();

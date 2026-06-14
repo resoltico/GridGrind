@@ -62,6 +62,13 @@ fixed_pattern_exists() {
     grep -Fq -- "${pattern}" "${path}"
 }
 
+dockerfile_copies_built_cli_jar() {
+    local path=$1
+    grep -Eq \
+        '^COPY --from=build( --chown=[^[:space:]]+)? /workspace/cli/build/libs/gridgrind\.jar [^[:space:]]*gridgrind\.jar$' \
+        "${path}"
+}
+
 grep -Eq \
     '^FROM azul/zulu-openjdk-alpine:26@sha256:[0-9a-f]{64} AS build$' \
     "${dockerfile}" || die "Dockerfile builder image is not digest-pinned"
@@ -148,7 +155,7 @@ grep -Fq 'COPY executor ./executor' "${dockerfile}" || die \
     "Dockerfile no longer copies executor into the builder stage"
 grep -Fq 'RUN --mount=type=cache,target=/root/.gradle ./gradlew --no-daemon :cli:shadowJar' "${dockerfile}" || die \
     "Dockerfile no longer builds the packaged CLI JAR inside the pinned builder stage"
-grep -Fq 'COPY --from=build /workspace/cli/build/libs/gridgrind.jar gridgrind.jar' "${dockerfile}" || die \
+dockerfile_copies_built_cli_jar "${dockerfile}" || die \
     "Dockerfile no longer copies the packaged CLI JAR from the builder stage into the runtime image"
 grep -Fq 'COPY cli/build/libs/gridgrind.jar gridgrind.jar' "${dockerfile}" && die \
     "Dockerfile reintroduced a prebuilt host-JAR dependency"

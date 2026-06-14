@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-06-05"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -195,7 +195,8 @@ reactivation is treated as architectural drift.
 - reviewed exact-surface overrides with `reviewExpiresOn` and `splitTrigger`
 
 `gradle/control-plane-shape-policy.tsv` owns the same reviewed-budget lifecycle for repository
-control-plane files that are not part of handwritten Java source sets.
+control-plane files that are not part of handwritten Java source sets, including the live root
+release ledger after older changelog history rotates into the archive doc.
 
 `gradle/semantic-shape-policy.tsv` separately owns semantic-shape reviewed exceptions.
 

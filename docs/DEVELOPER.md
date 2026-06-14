@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: DEVELOPER
-updated: "2026-05-26"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -358,7 +358,7 @@ enforce that reviewed waivers stay live and near-term instead of being parked in
 
 `gradle/control-plane-shape-policy.tsv` applies the same owner/expiry/split-trigger lifecycle to
 repository control-plane surfaces that sit outside handwritten Java source sets, including shell
-gates, Kotlin build-logic, and the long-lived operator ledger/protocol files in the task
+gates, Kotlin build-logic, and the live operator ledger/protocol files in the task
 inventory.
 
 `gradle/semantic-shape-policy.tsv` is the semantic-shape exception registry. Every entry is

@@ -164,13 +164,13 @@ class JazzerReplaySupportTest {
 
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
-    assertEquals("InvalidRequestException", expectedInvalid.invalidKind());
+    assertEquals("InvalidRequestShapeException", expectedInvalid.invalidKind());
     assertEquals(
         Optional.of("Missing required field 'digestAlgorithm'"), expectedInvalid.message());
     assertEquals(
         new ProtocolRequestDetails(
             input.length,
-            "INVALID_REQUEST",
+            "INVALID_REQUEST_SHAPE",
             "NOT_PARSED",
             "NOT_PARSED",
             0,

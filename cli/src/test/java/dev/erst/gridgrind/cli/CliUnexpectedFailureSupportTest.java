@@ -101,6 +101,25 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void emitRetriesStructuredFailureOnStderrAfterThePrimaryStderrWriteAndStdoutFallbackBothFail()
+      throws IOException {
+    try (FailOnceThenCaptureOutputStream stderr = new FailOnceThenCaptureOutputStream()) {
+      int exitCode =
+          CliUnexpectedFailureSupport.emit(
+              new String[] {"--help"},
+              Optional.empty(),
+              new AlwaysFailingOutputStream("stdout exploded"),
+              stderr,
+              new IllegalStateException("boom"));
+
+      CliFailureReport failure = cliFailure(stderr.toByteArray());
+      assertEquals(1, exitCode);
+      assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.code());
+      assertEquals("boom", failure.message());
+    }
+  }
+
+  @Test
   void emitFallsBackToHumanReadableMessageWhenNoStructuredChannelCanRecover() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-cli-bad-dir-");
     try (FailTwiceThenCaptureOutputStream stderr = new FailTwiceThenCaptureOutputStream()) {

@@ -27,15 +27,16 @@ ARG GRIDGRIND_UID=65532
 ARG GRIDGRIND_GID=65532
 
 # Signature-line preview generation relies on Java2D/fontconfig even in headless mode.
-# Ship a minimal deterministic font stack and a writable cache location so Docker matches the
-# fat-JAR surface without requiring root at runtime.
+# Ship a minimal deterministic font stack and route HOME/XDG cache into tmp-backed directories so
+# the container stays quiet even when callers override --user to match host file ownership.
 RUN apk add --no-cache fontconfig ttf-dejavu >/dev/null \
     && addgroup -g "${GRIDGRIND_GID}" -S gridgrind \
     && adduser -S -D -H -u "${GRIDGRIND_UID}" -G gridgrind -h /home/gridgrind gridgrind \
-    && install -d -o gridgrind -g gridgrind /home/gridgrind /home/gridgrind/.cache /home/gridgrind/.cache/fontconfig /work \
+    && install -d -o gridgrind -g gridgrind /home/gridgrind /work \
+    && install -d -m 1777 /tmp/gridgrind-home /tmp/gridgrind-cache /tmp/gridgrind-cache/fontconfig \
     && fc-cache -f >/dev/null
-ENV HOME=/home/gridgrind
-ENV XDG_CACHE_HOME=/home/gridgrind/.cache
+ENV HOME=/tmp/gridgrind-home
+ENV XDG_CACHE_HOME=/tmp/gridgrind-cache
 
 WORKDIR /work
 

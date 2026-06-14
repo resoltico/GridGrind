@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.engine.runtime.ExecutionInputBindings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.ExcelWorkbooks;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,7 +30,12 @@ public final class JazzerWorkbookIoSupport {
   /** Saves one workbook using a temp factory rooted next to the workbook path. */
   public static void saveWorkbook(ExcelWorkbook workbook, Path workbookPath) throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    workbook.persistence().save(workbookPath, tempFileFactoryFor(workbookPath));
+    workbook
+        .persistence()
+        .save(
+            workbookPath,
+            WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
+            tempFileFactoryFor(workbookPath));
   }
 
   /** Returns a temp-file factory rooted beside one anchored workbook path. */

@@ -81,12 +81,12 @@ write_json_file() {
 case "${command_name}" in
     --print-example-catalog)
         cat <<'JSON'
-{"examples":[{"id":"BUDGET","suggestedRequestPath":"requests/budget.json","requiredPaths":[]}]}
+{"examples":[{"id":"BUDGET","requestFileName":"budget-request.json","requiredWorkspacePaths":[]}]}
 JSON
         ;;
     --print-task-catalog)
         cat <<'JSON'
-{"tasks":[{"id":"DASHBOARD","starter":{"suggestedRequestPath":"requests/dashboard.json","requiredPaths":[]}}]}
+{"tasks":[{"id":"DASHBOARD","starter":{"requestFileName":"dashboard-request.json","requiredWorkspacePaths":[]}}]}
 JSON
         ;;
     --print-example)
@@ -160,12 +160,12 @@ write_json_file() {
 case "${command_name}" in
     --print-example-catalog)
         cat <<'JSON'
-{"examples":[{"id":"BUDGET","suggestedRequestPath":"requests/budget.json","requiredPaths":[]}]}
+{"examples":[{"id":"BUDGET","requestFileName":"budget-request.json","requiredWorkspacePaths":[]}]}
 JSON
         ;;
     --print-task-catalog)
         cat <<'JSON'
-{"tasks":[{"id":"DASHBOARD","starter":{"suggestedRequestPath":"requests/dashboard.json","requiredPaths":[]}}]}
+{"tasks":[{"id":"DASHBOARD","starter":{"requestFileName":"dashboard-request.json","requiredWorkspacePaths":[]}}]}
 JSON
         ;;
     --print-example)

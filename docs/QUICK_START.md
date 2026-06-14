@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.68.0"
+version: "0.69.0"
 domain: QUICK_START
-updated: "2026-06-05"
+updated: "2026-06-14"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -83,9 +83,10 @@ Use the built-in `BUDGET` example for the first pass. It writes a sample workboo
 response, so you can see both the output file and the run result. If you are already in a repo
 checkout, [budget-request.json](../examples/budget-request.json) is the matching checked-in copy.
 `BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
-examples are repo-asset-backed and expect the copied asset paths named by `requiredPaths`;
-[EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and `--print-example-catalog` exposes
-that distinction through each example's `workspaceMode` plus asset-backed `requiredPaths`.
+examples are repo-asset-backed and expect the copied asset paths named by
+`requiredWorkspacePaths`; [EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and
+`--print-example-catalog` exposes that distinction through each example's `requestFileName`,
+`workspaceMode`, and asset-backed `requiredWorkspacePaths`.
 
 ### Docker Example
 
