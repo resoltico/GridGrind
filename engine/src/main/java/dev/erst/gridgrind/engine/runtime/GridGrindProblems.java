@@ -76,7 +76,7 @@ public final class GridGrindProblems {
         code.title(),
         Objects.requireNonNull(message, "message must not be null"),
         GridGrindRequestProblemSupport.specificResolution(code, message, context)
-            .orElse(code.resolution()),
+            .orElse(code.resolutionFor(message, context)),
         context,
         Objects.requireNonNull(assertionFailure, "assertionFailure must not be null"),
         List.copyOf(Objects.requireNonNull(causes, "causes must not be null")));

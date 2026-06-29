@@ -7,11 +7,11 @@ Earlier release history through `0.64.0` is archived in [docs/CHANGELOG_ARCHIVE.
 ## [Unreleased]
 
 ### Fixed
-
 - Help now documents the real stderr/stdout split, executed failure responses stay on stdout, and explicit `null` request placeholders surface a dedicated “omit the field instead” shape error.
 - Request doctor now reports every independently provable semantic validation problem in one machine-readable response.
 - Authored `LAMBDA` and `LET` now surface as `UNSUPPORTED_FORMULA_CONSTRUCT`, and only the packaged shadow distribution owns the canonical `gridgrind` launcher name.
 - Request envelopes can now omit the default `execution` and `formulaEnvironment` blocks; generated templates, examples, task starters, and protocol docs stay minimal while explicit `null` remains rejected.
+- Assertion and I/O failure responses now emit cause-specific recovery text, and request-shape `jsonPath` locations now pinpoint the offending nested value instead of collapsing broad step-level parser failures onto parent objects.
 
 ## [0.69.0] - 2026-06-14
 

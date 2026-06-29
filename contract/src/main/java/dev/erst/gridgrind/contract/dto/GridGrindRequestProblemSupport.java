@@ -21,6 +21,8 @@ public final class GridGrindRequestProblemSupport {
       Pattern.compile("^steps must not contain duplicate stepId values: (.+)$");
   private static final Pattern NON_BLANK_FIELD_PATTERN =
       Pattern.compile("^([A-Za-z0-9.\\[\\]_]+) must not be blank$");
+  private static final Pattern FIELD_CONSTRAINT_PATTERN =
+      Pattern.compile("^([a-z][A-Za-z0-9.\\[\\]_]*) must .*");
 
   private GridGrindRequestProblemSupport() {}
 
@@ -75,6 +77,10 @@ public final class GridGrindRequestProblemSupport {
     Matcher nonBlankField = NON_BLANK_FIELD_PATTERN.matcher(normalized);
     if (nonBlankField.matches()) {
       return Optional.of(nonBlankField.group(1));
+    }
+    Matcher fieldConstraint = FIELD_CONSTRAINT_PATTERN.matcher(normalized);
+    if (fieldConstraint.matches()) {
+      return Optional.of(fieldConstraint.group(1));
     }
     return Optional.empty();
   }
