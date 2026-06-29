@@ -141,6 +141,34 @@ class GridGrindJsonTest {
 
   @Test
   void rejectsExplicitNullPlaceholdersDuringRequestRead() {
+    InvalidRequestShapeException optionalNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "planId": null,
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": {
+                        "mode": { "type": "FULL_XSSF" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "DO_NOT_CALCULATE" },
+                          "markRecalculateOnOpen": false
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
     InvalidRequestShapeException topLevelNull =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -173,8 +201,16 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals("Missing required field 'execution'", topLevelNull.getMessage());
-    assertEquals("Missing required field 'steps[0].target'", nestedNull.getMessage());
+    assertEquals(
+        "Field 'planId' must be omitted when absent; explicit null is not accepted.",
+        optionalNull.getMessage());
+    assertEquals(
+        "Field 'execution' must be omitted when absent; explicit null is not accepted.",
+        topLevelNull.getMessage());
+    assertEquals(
+        "Field 'steps[0].target' must be omitted when absent; explicit null is not accepted.",
+        nestedNull.getMessage());
+    assertEquals(Optional.of("planId"), optionalNull.jsonPath());
     assertEquals(Optional.of("execution"), topLevelNull.jsonPath());
     assertEquals(Optional.of("steps[0].target"), nestedNull.jsonPath());
   }

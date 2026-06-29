@@ -249,6 +249,9 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--help-protocol"));
     assertTrue(overview.contains("--help-guidance"));
     assertTrue(overview.contains("Use --format structured"));
+    assertTrue(overview.contains("CLI argument errors and request-content failure reports"));
+    assertTrue(overview.contains("structured JSON on stderr"));
+    assertTrue(overview.contains("executed responses stay on stdout."));
     assertTrue(overview.contains("docs/QUICK_REFERENCE.md"));
     assertFalse(overview.contains("Minimal Valid Request:"));
     assertFalse(overview.contains("Built-in generated examples:"));
@@ -278,6 +281,10 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("formulaEnvironment.udfToolpacks[]"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
+    assertTrue(protocol.contains("CLI argument errors and"));
+    assertTrue(protocol.contains("request-content failure reports stay on stderr"));
+    assertTrue(protocol.contains("executed GridGrindResponse payloads stay on"));
+    assertTrue(protocol.contains("stdout even when status=FAILED."));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }

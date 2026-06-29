@@ -22,15 +22,6 @@ import org.junit.jupiter.api.Test;
 
 /** Argument and failure-classification integration tests for GridGrindCli. */
 class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
-  private static String[] stdinExecutionArguments(String... trailingArguments) throws IOException {
-    Path workspace = Files.createTempDirectory("gridgrind-cli-failure-stdin-");
-    String[] args = new String[2 + trailingArguments.length];
-    args[0] = "--execution-root";
-    args[1] = workspace.toString();
-    System.arraycopy(trailingArguments, 0, args, 2, trailingArguments.length);
-    return args;
-  }
-
   @Test
   void versionFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -755,7 +746,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote the response to stdout instead."
+            + ": Is a directory. Wrote the failure response to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(GridGrindResponse.Failure.class, response);

@@ -13,6 +13,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Objects;
 
 /** Shared helpers for CLI integration tests. */
@@ -105,6 +107,16 @@ class GridGrindCliTestSupport {
           "udfToolpacks": []
         }
         """;
+  }
+
+  protected static String[] stdinExecutionArguments(String... trailingArguments)
+      throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-failure-stdin-");
+    String[] args = new String[2 + trailingArguments.length];
+    args[0] = "--execution-root";
+    args[1] = workspace.toString();
+    System.arraycopy(trailingArguments, 0, args, 2, trailingArguments.length);
+    return args;
   }
 
   protected static ProblemContext.ParseArguments parseArgumentsContext(

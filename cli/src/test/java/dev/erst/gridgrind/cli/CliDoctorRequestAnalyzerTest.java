@@ -257,7 +257,9 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertTrue(
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
-            .anyMatch("Missing required field 'execution'"::equals));
+            .anyMatch(
+                "Field 'execution' must be omitted when absent; explicit null is not accepted."
+                    ::equals));
   }
 
   @Test

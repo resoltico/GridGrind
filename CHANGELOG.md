@@ -2,11 +2,14 @@
 
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-
 Earlier release history through `0.64.0` is archived in [docs/CHANGELOG_ARCHIVE.md](docs/CHANGELOG_ARCHIVE.md).
 
 ## [Unreleased]
+
+### Fixed
+
+- Help now documents the real stderr/stdout split, executed failure responses stay on stdout, and
+  explicit `null` request placeholders surface a dedicated “omit the field instead” shape error.
 
 ## [0.69.0] - 2026-06-14
 

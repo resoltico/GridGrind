@@ -67,7 +67,8 @@ final class CliResponseWriter {
 
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, GridGrindCliJson.writeBytes(report));
+      byte[] reportBytes = GridGrindCliJson.writeBytes(report);
+      writePayload(targetPath, reportBytes);
       writeNonSuccessPointerIfNeeded(
           stderr,
           report.exitCode(),
@@ -77,8 +78,12 @@ final class CliResponseWriter {
           Optional.of(report.code().name() + ": " + report.message()));
       return report.exitCode();
     } catch (IOException exception) {
-      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
-      writePayload(stdout, GridGrindCliJson.writeBytes(report));
+      CliStdoutFallbackSupport.write(
+          stderr,
+          stdout,
+          exception,
+          targetPath,
+          CliStdoutFallbackSupport.cliFailureReport(payloadName, report));
       return report.exitCode();
     }
   }
@@ -140,10 +145,13 @@ final class CliResponseWriter {
       writePayload(targetPath, payload);
       return successExitCode;
     } catch (IOException exception) {
-      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, payloadName);
-      writePayload(
+      CliStdoutFallbackSupport.write(
+          stderr,
           stdout,
-          GridGrindCliJson.writeBytes(
+          exception,
+          targetPath,
+          CliStdoutFallbackSupport.cliFailureReport(
+              "structured failure report",
               CliFailureReports.responseWriteFailure(
                   command, payloadName, targetPath, exception, stdoutSuggestion)));
       return 1;
@@ -207,14 +215,20 @@ final class CliResponseWriter {
               : Optional.empty());
       return logicalExitCode;
     } catch (IOException exception) {
-      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, "response");
       GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (response instanceof GridGrindResponse.Failure failure) {
         problem =
             GridGrindProblems.appendCause(
                 problem, GridGrindProblems.problemCause(failure.problem()));
       }
-      write(stdout, GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem));
+      CliStdoutFallbackSupport.write(
+          stderr,
+          stdout,
+          exception,
+          targetPath,
+          CliStdoutFallbackSupport.response(
+              "failure response",
+              GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem)));
       return 1;
     }
   }
@@ -269,15 +283,20 @@ final class CliResponseWriter {
           report.primaryProblem().map(problem -> problem.code().name() + ": " + problem.message()));
       return doctorExitCodeFor(report);
     } catch (IOException exception) {
-      writeStdoutPayloadFallbackNotice(stderr, exception, targetPath, "doctor report");
       GridGrindProblemDetail.Problem problem = writeResponseProblem(exception, targetPath);
       if (report.primaryProblem().isPresent()) {
         problem =
             GridGrindProblems.appendCause(
                 problem, GridGrindProblems.problemCause(report.primaryProblem().orElseThrow()));
       }
-      writeDoctorReport(
-          stdout, RequestDoctorReport.invalid(report.summary(), report.warnings(), problem));
+      CliStdoutFallbackSupport.write(
+          stderr,
+          stdout,
+          exception,
+          targetPath,
+          CliStdoutFallbackSupport.doctorReport(
+              "doctor report",
+              RequestDoctorReport.invalid(report.summary(), report.warnings(), problem)));
       return 1;
     }
   }
@@ -345,19 +364,6 @@ final class CliResponseWriter {
   static String formattedProblemSummary(Optional<String> problemSummary) {
     Objects.requireNonNull(problemSummary, "problemSummary must not be null");
     return problemSummary.filter(text -> !text.isBlank()).map(text -> " [" + text + "]").orElse("");
-  }
-
-  private static void writeStdoutPayloadFallbackNotice(
-      OutputStream stderr, IOException exception, Path targetPath, String payloadName)
-      throws IOException {
-    String line =
-        responseWriteMessage(exception, targetPath)
-            + ". Wrote the "
-            + payloadName
-            + " to stdout instead."
-            + System.lineSeparator();
-    stderr.write(line.getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
   }
 
   static GridGrindProblemDetail.Problem writeResponseProblem(

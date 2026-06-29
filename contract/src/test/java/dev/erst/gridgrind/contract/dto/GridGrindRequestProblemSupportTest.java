@@ -23,6 +23,11 @@ class GridGrindRequestProblemSupportTest {
         GridGrindRequestProblemSupport.jsonPathFromMessage(
             "Unsupported value 'MOVEE' for field 'steps[0].action.type'"));
     assertEquals(
+        Optional.of("execution.calculation.markRecalculateOnOpen"),
+        GridGrindRequestProblemSupport.jsonPathFromMessage(
+            "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent;"
+                + " explicit null is not accepted."));
+    assertEquals(
         Optional.of("planId"),
         GridGrindRequestProblemSupport.jsonPathFromMessage("planId must not be blank"));
     assertEquals(Optional.empty(), GridGrindRequestProblemSupport.jsonPathFromMessage(null));
@@ -109,6 +114,10 @@ class GridGrindRequestProblemSupportTest {
     assertTrue(
         GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
             "Unsupported value 'MOVEE' for field 'steps[0].action.type'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent;"
+                + " explicit null is not accepted."));
     assertFalse(
         GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
             "steps must not contain duplicate stepId values: budget"));

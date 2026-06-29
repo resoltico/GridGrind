@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 public final class GridGrindRequestProblemSupport {
   private static final Pattern MISSING_REQUIRED_FIELD_PATTERN =
       Pattern.compile("^Missing required field '([^']+)'$");
+  private static final Pattern EXPLICIT_NULL_FIELD_PATTERN =
+      Pattern.compile(
+          "^Field '([^']+)' must be omitted when absent; explicit null is not accepted\\.$");
   private static final Pattern UNKNOWN_FIELD_PATTERN = Pattern.compile("^Unknown field '([^']+)'$");
   private static final Pattern UNKNOWN_TYPE_VALUE_PATTERN =
       Pattern.compile("^Unknown type value '([^']+)'");
@@ -30,6 +33,10 @@ public final class GridGrindRequestProblemSupport {
     Matcher missingRequired = MISSING_REQUIRED_FIELD_PATTERN.matcher(normalized);
     if (missingRequired.matches()) {
       return Optional.of(missingRequired.group(1));
+    }
+    Matcher explicitNullField = EXPLICIT_NULL_FIELD_PATTERN.matcher(normalized);
+    if (explicitNullField.matches()) {
+      return Optional.of(explicitNullField.group(1));
     }
     Matcher unknownField = UNKNOWN_FIELD_PATTERN.matcher(normalized);
     if (unknownField.matches()) {
@@ -74,6 +81,15 @@ public final class GridGrindRequestProblemSupport {
     if (missingRequired.matches()) {
       return Optional.of(missingFieldResolution(missingRequired.group(1)));
     }
+    Matcher explicitNullField = EXPLICIT_NULL_FIELD_PATTERN.matcher(normalizedMessage);
+    if (explicitNullField.matches()) {
+      String field = explicitNullField.group(1);
+      return Optional.of(
+          "Remove field '"
+              + field
+              + "' entirely when it is absent; explicit null is not part of the request"
+              + " contract.");
+    }
     Matcher unknownField = UNKNOWN_FIELD_PATTERN.matcher(normalizedMessage);
     if (unknownField.matches()) {
       String field = unknownField.group(1);
@@ -116,6 +132,7 @@ public final class GridGrindRequestProblemSupport {
       return false;
     }
     return MISSING_REQUIRED_FIELD_PATTERN.matcher(normalizedMessage).matches()
+        || EXPLICIT_NULL_FIELD_PATTERN.matcher(normalizedMessage).matches()
         || UNKNOWN_FIELD_PATTERN.matcher(normalizedMessage).matches()
         || UNKNOWN_TYPE_VALUE_PATTERN.matcher(normalizedMessage).find()
         || UNSUPPORTED_VALUE_PATTERN.matcher(normalizedMessage).find();

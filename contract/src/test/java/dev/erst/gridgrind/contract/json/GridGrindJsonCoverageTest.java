@@ -169,7 +169,7 @@ class GridGrindJsonCoverageTest {
                         new ByteArrayInputStream("null".getBytes(StandardCharsets.UTF_8))))
             .getMessage());
     assertEquals(
-        "Missing required field 'steps[0]'",
+        "Field 'steps[0]' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -216,7 +216,7 @@ class GridGrindJsonCoverageTest {
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
 
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -226,7 +226,7 @@ class GridGrindJsonCoverageTest {
                                 GridGrindJson.writeResponseBytes(response), "warnings"))))
             .getMessage());
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -234,7 +234,7 @@ class GridGrindJsonCoverageTest {
                         withTopLevelNull(GridGrindJson.writeResponseBytes(response), "warnings")))
             .getMessage());
     assertEquals(
-        "Missing required field 'plainTypes'",
+        "Field 'plainTypes' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -243,7 +243,7 @@ class GridGrindJsonCoverageTest {
                             GridGrindJson.writeProtocolCatalogBytes(catalog), "plainTypes")))
             .getMessage());
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -609,7 +609,8 @@ class GridGrindJsonCoverageTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
     assertEquals(
-        "Missing required field 'execution.calculation.markRecalculateOnOpen'",
+        "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent; explicit"
+            + " null is not accepted.",
         exception.getMessage());
     assertEquals(
         Optional.of("execution.calculation.markRecalculateOnOpen"),
