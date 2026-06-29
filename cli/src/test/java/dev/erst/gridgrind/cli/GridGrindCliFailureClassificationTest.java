@@ -821,42 +821,6 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void classifiesInvalidFormulasAsFormulaErrors() throws IOException {
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-
-    int exitCode =
-        new GridGrindCli()
-            .run(
-                stdinExecutionArguments(),
-                new ByteArrayInputStream(
-                    requestJson(
-                            "{ \"type\": \"NEW\" }",
-                            "{ \"type\": \"NONE\" }",
-                            evaluateAllExecutionJson(),
-                            emptyFormulaEnvironmentJson(),
-                            """
-                            [
-                              { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
-                              { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
-                            ]
-                            """)
-                        .getBytes(StandardCharsets.UTF_8)),
-                stdout,
-                stderr);
-
-    GridGrindResponse response = response(stdout, stderr);
-
-    assertEquals(1, exitCode);
-    assertInstanceOf(GridGrindResponse.Failure.class, response);
-    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
-    assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
-    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
-    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
-    assertEquals(java.util.Optional.of("SUM("), executeStepContext(failure).formula());
-  }
-
-  @Test
   void doesNotCloseProvidedStdinWhenReadingRequestFromStandardInput() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 

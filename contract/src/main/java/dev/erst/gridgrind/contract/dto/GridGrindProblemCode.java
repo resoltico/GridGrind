@@ -43,6 +43,12 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid formula",
       "Fix the formula syntax or workbook references, then retry."),
+  UNSUPPORTED_FORMULA_CONSTRUCT(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Unsupported formula construct",
+      "Use a formula construct that Apache POI can parse on the authored request path, then"
+          + " retry."),
   MISSING_EXTERNAL_WORKBOOK(
       GridGrindProblemCategory.FORMULA,
       GridGrindProblemRecovery.CHANGE_REQUEST,

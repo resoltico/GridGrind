@@ -341,9 +341,11 @@ class ExecutorPolicyCoverageTest {
                     "workbook",
                     new WorkbookSelector.Current(),
                     new WorkbookIntrospectionQuery.GetWorkbookSummary())));
-    Optional<String> executionModeFailure =
-        executor.executionModeFailure(streamingInspectionBeforeEnsure);
-    assertTrue(executionModeFailure.orElseThrow().contains("before any inspection step"));
+    List<String> executionModeFailures =
+        executor.executionModeFailures(streamingInspectionBeforeEnsure);
+    assertTrue(
+        executionModeFailures.stream()
+            .anyMatch(failure -> failure.contains("before any inspection step")));
   }
 
   private static void assertDeleteAndSourceHelpers() throws IOException {

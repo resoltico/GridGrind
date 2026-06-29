@@ -91,9 +91,9 @@ public final class GridGrindContractText {
   /** One stable description of request-authored formula boundaries. */
   public static String formulaAuthoringLimitSummary() {
     return "request-authored formulas are scalar only; array-formula braces such as"
-        + " {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and LAMBDA/LET are currently"
-        + " rejected as INVALID_FORMULA because Apache POI cannot parse them."
-        + " Other newer constructs may fail the same way.";
+        + " {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and authored LAMBDA/LET"
+        + " currently surface as UNSUPPORTED_FORMULA_CONSTRUCT because Apache POI cannot"
+        + " parse them on the write path.";
   }
 
   /** One stable description of loaded-formula evaluation boundaries. */

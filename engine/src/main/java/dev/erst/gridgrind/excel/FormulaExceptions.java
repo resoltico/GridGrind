@@ -16,6 +16,7 @@ import org.jspecify.annotations.Nullable;
  * entries.
  */
 final class FormulaExceptions {
+  private static final Set<String> AUTHORED_UNSUPPORTED_CONSTRUCTS = Set.of("LAMBDA", "LET");
   private static final Pattern EXTERNAL_WORKBOOK_NAME_PATTERN =
       Pattern.compile("Could not resolve external workbook name '([^']+)'");
   private static final Pattern EXTERNAL_WORKBOOK_REFERENCE_PATTERN =
@@ -107,6 +108,19 @@ final class FormulaExceptions {
     if (isUnhandledFormulaEvaluationFailure(exception)) {
       return exception;
     }
+    if (isUnsupportedAuthoredConstructFailure(normalizedFormula, exception)) {
+      return new UnsupportedFormulaConstructException(
+          sheetName,
+          address,
+          normalizedFormula,
+          "Unsupported formula construct"
+              + functionLabel(normalizedFormula)
+              + " at "
+              + location(sheetName, address)
+              + ": "
+              + normalizedFormula,
+          exception);
+    }
     if (isInvalidFormulaFailure(exception)) {
       return new InvalidFormulaException(
           sheetName,
@@ -116,6 +130,12 @@ final class FormulaExceptions {
           exception);
     }
     return exception;
+  }
+
+  private static boolean isUnsupportedAuthoredConstructFailure(
+      String formula, Throwable exception) {
+    return isInvalidFormulaFailure(exception)
+        && unsupportedAuthoredConstructName(formula).isPresent();
   }
 
   private static boolean isUnsupportedFormulaFailure(Throwable exception) {
@@ -211,9 +231,24 @@ final class FormulaExceptions {
   }
 
   static boolean isKnownBuiltinFunction(String normalizedFunctionName) {
-    return FunctionMetadataRegistry.getFunctionByName(normalizedFunctionName) != null
-        || AnalysisToolPak.getSupportedFunctionNames().contains(normalizedFunctionName)
-        || AnalysisToolPak.getNotSupportedFunctionNames().contains(normalizedFunctionName);
+    String canonicalFunctionName = canonicalFunctionName(normalizedFunctionName);
+    return AUTHORED_UNSUPPORTED_CONSTRUCTS.contains(canonicalFunctionName)
+        || FunctionMetadataRegistry.getFunctionByName(canonicalFunctionName) != null
+        || AnalysisToolPak.getSupportedFunctionNames().contains(canonicalFunctionName)
+        || AnalysisToolPak.getNotSupportedFunctionNames().contains(canonicalFunctionName);
+  }
+
+  private static Optional<String> unsupportedAuthoredConstructName(String formula) {
+    return leadingFunctionName(formula)
+        .map(name -> name.toUpperCase(Locale.ROOT))
+        .map(FormulaExceptions::canonicalFunctionName)
+        .filter(AUTHORED_UNSUPPORTED_CONSTRUCTS::contains);
+  }
+
+  private static String canonicalFunctionName(String functionName) {
+    return functionName.startsWith("_XLFN.")
+        ? functionName.substring("_XLFN.".length())
+        : functionName;
   }
 
   static boolean messageMentionsFunctionName(Throwable exception, String normalizedFunctionName) {

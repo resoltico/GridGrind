@@ -95,6 +95,28 @@ class FormulaExceptionsTest {
   }
 
   @Test
+  void classifiesBuiltinParserLimitationsAsUnsupportedConstructs() {
+    IllegalStateException parserFailure = new IllegalStateException("Unsupported formula");
+    parserFailure.setStackTrace(
+        new StackTraceElement[] {
+          new StackTraceElement(
+              "org.apache.poi.ss.formula.FormulaParser", "parse", "FormulaParser.java", 231),
+          new StackTraceElement(
+              "org.apache.poi.xssf.usermodel.XSSFCell", "setFormula", "XSSFCell.java", 496)
+        });
+
+    RuntimeException unsupported =
+        FormulaExceptions.wrap("Budget", "C7", "LAMBDA(x,x+1)(2)", parserFailure);
+
+    assertInstanceOf(UnsupportedFormulaConstructException.class, unsupported);
+    assertEquals("Budget", ((UnsupportedFormulaConstructException) unsupported).sheetName());
+    assertEquals("C7", ((UnsupportedFormulaConstructException) unsupported).address());
+    assertEquals(
+        "LAMBDA(x,x+1)(2)", ((UnsupportedFormulaConstructException) unsupported).formula());
+    assertSame(parserFailure, unsupported.getCause());
+  }
+
+  @Test
   void leavesUnclassifiedRuntimeExceptionsUntouched() {
     RuntimeException original = new RuntimeException("boom");
     RuntimeException evalFailure = new org.apache.poi.ss.formula.eval.FakeEvalFailure("eval boom");
@@ -184,9 +206,18 @@ class FormulaExceptionsTest {
             new RuntimeException("function double is unknown"), "DOUBLE"));
 
     assertTrue(FormulaExceptions.isKnownBuiltinFunction("SUM"));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction("LAMBDA"));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction("LET"));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction("_XLFN.LET"));
 
     ExcelFormulaRuntimeContext emptyContext =
         new ExcelFormulaRuntimeContext(Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of());
+
+    assertFalse(
+        FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+            emptyContext,
+            new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException("OTHER"),
+            "DOUBLE(A1)"));
 
     String unsupportedPoiFunction =
         FunctionEval.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
