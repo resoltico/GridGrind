@@ -45,6 +45,18 @@ readonly legacy_packaged_zip="${distribution_root}/cli-shadow-${version}.zip"
 readonly legacy_packaged_tar="${distribution_root}/cli-shadow-${version}.tar"
 readonly stale_zip="${distribution_root}/gridgrind-0.00.0.zip"
 readonly stale_tar="${distribution_root}/gridgrind-0.00.0.tar"
+readonly version_fallback_response_path="${distribution_root}/version-fallback-existing.json"
+readonly version_fallback_stdout_path="${distribution_root}/version-fallback.stdout"
+readonly version_fallback_stderr_path="${distribution_root}/version-fallback.stderr"
+
+cleanup() {
+    rm -f \
+        "${version_fallback_response_path}" \
+        "${version_fallback_stdout_path}" \
+        "${version_fallback_stderr_path}"
+}
+
+trap cleanup EXIT
 
 mkdir -p "${thin_install_root}" "${install_root}" "${legacy_install_root}/bin" "${generated_scripts_root}" "${distribution_root}"
 printf '#!/usr/bin/env bash\nexit 99\n' > "${duplicate_thin_launcher}"
@@ -96,5 +108,28 @@ chmod +x "${duplicate_thin_launcher}" "${old_named_launcher}" "${old_named_gener
     "shadowDistTar left the stale archive behind at ${stale_tar}"
 
 "${verify_script}" binary "${packaged_launcher}" >/dev/null
+
+printf 'sentinel\n' > "${version_fallback_response_path}"
+set +e
+"${packaged_launcher}" --version --response "${version_fallback_response_path}" \
+    > "${version_fallback_stdout_path}" \
+    2> "${version_fallback_stderr_path}"
+version_fallback_exit_code=$?
+set -e
+
+[[ ${version_fallback_exit_code} -eq 1 ]] || die \
+    "packaged gridgrind --version --response existing-file exited ${version_fallback_exit_code} instead of 1"
+grep -Fqx 'sentinel' "${version_fallback_response_path}" || die \
+    "packaged gridgrind --version overwrote the pre-existing response target"
+grep -Eq '"code"[[:space:]]*:[[:space:]]*"IO_ERROR"' "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer emits IO_ERROR"
+grep -Eq '"command"[[:space:]]*:[[:space:]]*"version"' "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer identifies the version command"
+grep -Eq '"argument"[[:space:]]*:[[:space:]]*"--response"' "${version_fallback_stdout_path}" || die \
+    "packaged gridgrind --version fallback stdout no longer points at --response"
+expected_version_fallback_notice="Could not write response file ${version_fallback_response_path}: already exists; GridGrind never replaces an existing response file implicitly. Wrote the structured failure report to stdout instead."
+actual_version_fallback_notice="$(tr -d '\r' < "${version_fallback_stderr_path}")"
+[[ "${actual_version_fallback_notice}" == "${expected_version_fallback_notice}" ]] || die \
+    "packaged gridgrind --version fallback notice drifted from the structured failure report wording"
 
 printf 'cli-distribution-surface regression: success\n'

@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.cli.discovery.CliHelpReport;
 import dev.erst.gridgrind.cli.discovery.CliLicenseReport;
 import dev.erst.gridgrind.cli.discovery.CliVersionReport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -348,6 +350,42 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertEquals(0, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertTrue(Files.readString(responsePath).contains("Workflow Playbooks:"));
+  }
+
+  @Test
+  void versionFallsBackToStructuredFailureReportWhenResponsePathAlreadyExists() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-version-", ".json");
+    Files.writeString(responsePath, "sentinel\n");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--version", "--response", responsePath.toString()},
+                new ByteArrayInputStream(new byte[0]),
+                stdout,
+                stderr);
+
+    CliFailureReport failure =
+        GridGrindCliJson.readBytes(stdout.toByteArray(), CliFailureReport.class);
+
+    assertEquals(1, exitCode);
+    assertEquals(
+        "Could not write response file "
+            + responsePath.toAbsolutePath()
+            + ": already exists; GridGrind never replaces an existing response file implicitly."
+            + " Wrote the structured failure report to stdout instead."
+            + System.lineSeparator(),
+        stderr.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals("version", failure.command());
+    assertEquals(java.util.Optional.of("--response"), failure.argument());
+    assertTrue(
+        failure.message().contains(responsePath.toAbsolutePath().toString()),
+        "fallback report should point at the rejected response path");
+    assertEquals(
+        "sentinel\n", Files.readString(responsePath), "existing response file must stay untouched");
   }
 
   @Test

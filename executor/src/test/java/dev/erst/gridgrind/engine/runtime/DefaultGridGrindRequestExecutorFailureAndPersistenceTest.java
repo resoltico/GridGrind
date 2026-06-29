@@ -742,6 +742,35 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   }
 
   @Test
+  void returnsOnlyTheFirstIndependentSemanticValidationProblemDuringExecution() {
+    GridGrindResponse.Failure failure =
+        failure(
+            execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
+                    null,
+                    mutations(),
+                    inspections())));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals(
+        "execution.mode.type=EVENT_READ requires"
+            + " execution.calculation.strategy=DO_NOT_CALCULATE and"
+            + " markRecalculateOnOpen=false",
+        failure.problem().message());
+    assertTrue(
+        failure.problem().causes().isEmpty(),
+        "execute should report the first validation problem directly instead of batching causes");
+    assertFalse(
+        failure.problem().message().contains("OVERWRITE persistence requires"),
+        "execute must not switch to a later semantic validation problem");
+  }
+
+  @Test
   void returnsFormulaErrorForInvalidFormulaOperations() {
     GridGrindResponse.Failure failure =
         failure(
