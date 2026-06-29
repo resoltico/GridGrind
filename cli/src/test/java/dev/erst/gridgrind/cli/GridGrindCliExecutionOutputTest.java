@@ -64,10 +64,12 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     assertTrue(stdout.size() > 0, "executed assertion failures must stay on stdout");
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
 
-    JsonNode response = JsonMapper.builder().build().readTree(stdout.toByteArray());
+    JsonNode response =
+        JsonMapper.builder().build().readTree(new ByteArrayInputStream(stdout.toByteArray()));
 
     assertEquals("ASSERTION_FAILED", response.path("problem").path("code").asText());
-    assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("stage").asText());
+    assertEquals(
+        "EXECUTE_STEP", response.path("problem").path("context").path("stage").asText());
     assertEquals(
         "EXPECT_CELL_VALUE",
         response.path("problem").path("assertionFailure").path("assertionType").asText());
