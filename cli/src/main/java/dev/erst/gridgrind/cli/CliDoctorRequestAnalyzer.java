@@ -247,9 +247,15 @@ final class CliDoctorRequestAnalyzer {
       for (var field : template.properties()) {
         String childPath = path.isEmpty() ? field.getKey() : path + "." + field.getKey();
         JsonNode existing = authored.get(field.getKey());
-        if (existing == null || existing.isNull()) {
+        if (existing == null) {
           authored.set(field.getKey(), field.getValue().deepCopy());
           problems.add(missingFieldProblem(requestInput, childPath));
+          mutated = true;
+          continue;
+        }
+        if (existing.isNull()) {
+          authored.set(field.getKey(), field.getValue().deepCopy());
+          problems.add(explicitNullProblem(requestInput, childPath));
           mutated = true;
           continue;
         }
@@ -293,7 +299,22 @@ final class CliDoctorRequestAnalyzer {
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
           new InvalidRequestShapeException(
-              "Missing required field '" + jsonPath + "'",
+              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
+                  .missingRequiredFieldMessage(jsonPath),
+              Optional.of(jsonPath),
+              Optional.empty(),
+              Optional.empty(),
+              null),
+          new ProblemContext.ReadRequest(
+              requestInput, ProblemContextRequestSurfaces.JsonLocation.pathOnly(jsonPath)));
+    }
+
+    private static GridGrindProblemDetail.Problem explicitNullProblem(
+        ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
+      return GridGrindProblems.fromException(
+          new InvalidRequestShapeException(
+              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
+                  .explicitNullFieldMessage(jsonPath),
               Optional.of(jsonPath),
               Optional.empty(),
               Optional.empty(),

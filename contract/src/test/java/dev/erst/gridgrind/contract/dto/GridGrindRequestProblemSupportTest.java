@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
@@ -9,6 +10,34 @@ import org.junit.jupiter.api.Test;
 
 /** Direct coverage for request-problem path extraction and resolution wording. */
 class GridGrindRequestProblemSupportTest {
+  @Test
+  void canonicalMessageHelpersOwnMissingAndExplicitNullWording() {
+    assertEquals(
+        "Missing required field 'protocolVersion'",
+        GridGrindRequestProblemSupport.missingRequiredFieldMessage("protocolVersion"));
+    assertEquals(
+        "Field 'planId' must be omitted when absent; explicit null is not accepted.",
+        GridGrindRequestProblemSupport.explicitNullFieldMessage("planId"));
+    assertTrue(
+        GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(
+            "Missing required field 'protocolVersion'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.isExplicitNullFieldMessage(
+            "Field 'planId' must be omitted when absent; explicit null is not accepted."));
+    assertFalse(
+        GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(
+            "Field 'planId' must be omitted when absent; explicit null is not accepted."));
+    assertFalse(
+        GridGrindRequestProblemSupport.isExplicitNullFieldMessage(
+            "Missing required field 'protocolVersion'"));
+    assertEquals(
+        "jsonPath must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> GridGrindRequestProblemSupport.missingRequiredFieldMessage(" "))
+            .getMessage());
+  }
+
   @Test
   void extractsActionableJsonPathsFromPublicRequestMessages() {
     assertEquals(
@@ -22,6 +51,11 @@ class GridGrindRequestProblemSupportTest {
         Optional.of("steps[0].action.type"),
         GridGrindRequestProblemSupport.jsonPathFromMessage(
             "Unsupported value 'MOVEE' for field 'steps[0].action.type'"));
+    assertEquals(
+        Optional.of("execution.calculation.markRecalculateOnOpen"),
+        GridGrindRequestProblemSupport.jsonPathFromMessage(
+            "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent;"
+                + " explicit null is not accepted."));
     assertEquals(
         Optional.of("planId"),
         GridGrindRequestProblemSupport.jsonPathFromMessage("planId must not be blank"));
@@ -109,6 +143,10 @@ class GridGrindRequestProblemSupportTest {
     assertTrue(
         GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
             "Unsupported value 'MOVEE' for field 'steps[0].action.type'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
+            "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent;"
+                + " explicit null is not accepted."));
     assertFalse(
         GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(
             "steps must not contain duplicate stepId values: budget"));

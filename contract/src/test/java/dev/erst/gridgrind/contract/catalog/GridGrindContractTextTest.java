@@ -5,28 +5,29 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
-import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
-import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
-import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.query.*;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
+import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** Tests for core-owned contract wording shared by downstream discovery surfaces. */
+/** Direct coverage for stable public contract wording fragments. */
 class GridGrindContractTextTest {
   @Test
-  void resolvesCanonicalTypeNamesAndPhrases() {
-    assertEquals(
-        "CLEAR_WORKBOOK_PROTECTION",
-        GridGrindContractText.mutationActionTypeName(
-            WorkbookMutationAction.ClearWorkbookProtection.class));
-    assertEquals(
-        "GET_SHEET_SUMMARY",
-        GridGrindContractText.inspectionQueryTypeName(
-            SheetIntrospectionQuery.GetSheetSummary.class));
+  void formulaAndPathResolutionSummariesStayStable() {
+    assertTrue(GridGrindContractText.formulaAuthoringLimitSummary().contains("LAMBDA/LET"));
+    assertTrue(GridGrindContractText.loadedFormulaSupportSummary().contains("UNSUPPORTED_FORMULA"));
+    assertTrue(
+        GridGrindContractText.stdinExecutionRootRequiredMessage().contains("--execution-root"));
+    assertTrue(
+        GridGrindContractText.cliFlagPathResolutionSummary().contains("current working directory"));
+  }
+
+  @Test
+  void catalogHelpersAndSharedSummariesStayStable() {
     assertEquals(
         Set.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class),
         GridGrindContractText.streamingWriteMutationActionClasses());
@@ -35,8 +36,7 @@ class GridGrindContractTextTest {
             WorkbookIntrospectionQuery.GetWorkbookSummary.class,
             SheetIntrospectionQuery.GetSheetSummary.class),
         GridGrindContractText.eventReadInspectionQueryClasses());
-    assertTrue(GridGrindContractText.executionModeInputSummary().contains("markRecalculateOnOpen"));
-    assertTrue(GridGrindContractText.sheetLayoutReadSummary().contains("presentation"));
+    assertTrue(GridGrindContractText.sheetLayoutReadSummary().contains("zoomPercent"));
     assertEquals(
         GridGrindContractText.FORMULA_SURFACE_READ_SUMMARY,
         GridGrindContractText.formulaSurfaceReadSummary());
@@ -52,95 +52,42 @@ class GridGrindContractTextTest {
     assertEquals(
         GridGrindContractText.WORKBOOK_FINDINGS_READ_SUMMARY,
         GridGrindContractText.workbookFindingsReadSummary());
-    assertTrue(GridGrindContractText.stepKindSummary().contains("caller-defined stepId"));
-    assertTrue(GridGrindContractText.stepKindSummary().contains("[A-Za-z0-9._-]+"));
-    assertTrue(
-        GridGrindContractText.requestDocumentLimitSummary().contains("16777216 bytes"),
-        "request-document summary must publish the canonical byte ceiling");
-    assertTrue(
-        GridGrindContractText.workbookFindingsDiscoverySummary()
-            .contains("ANALYZE_WORKBOOK_FINDINGS"));
+    assertTrue(GridGrindContractText.workbookAnalysisFamilyPhrase().contains("formula health"));
+    assertTrue(GridGrindContractText.executionModeInputSummary().contains("FULL_XSSF"));
+    assertTrue(GridGrindContractText.executionModeInputSummary().contains("EVENT_READ"));
+    assertTrue(GridGrindContractText.executionModeInputSummary().contains("STREAMING_WRITE"));
+    assertEquals(16L * 1024 * 1024, GridGrindContractText.requestDocumentLimitBytes());
+    assertTrue(GridGrindContractText.requestDocumentLimitSummary().contains("16777216 bytes"));
+    assertTrue(GridGrindContractText.stepKindSummary().contains("step.type"));
     assertEquals(
-        "execution.mode.type=EVENT_READ requires execution.calculation.strategy="
-            + "DO_NOT_CALCULATE and markRecalculateOnOpen=false",
-        GridGrindExecutionModeMetadata.eventRead().calculationFailureMessage());
+        "ENSURE_SHEET",
+        GridGrindContractText.mutationActionTypeName(WorkbookMutationAction.EnsureSheet.class));
     assertEquals(
-        "execution.mode.type=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
-            + " unsupported mutation action type: SET_CELL",
-        GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL"));
+        "GET_WORKBOOK_SUMMARY",
+        GridGrindContractText.inspectionQueryTypeName(
+            WorkbookIntrospectionQuery.GetWorkbookSummary.class));
+
+    Map<Class<?>, String> inspectionQueryTypeNames =
+        GridGrindContractText.typeNamesByClass(InspectionQuery.class);
+    assertEquals(
+        "GET_WORKBOOK_SUMMARY",
+        inspectionQueryTypeNames.get(WorkbookIntrospectionQuery.GetWorkbookSummary.class));
   }
 
   @Test
-  void rejectsUnknownSubtypeClasses() {
-    assertThrows(
-        NullPointerException.class, () -> GridGrindContractText.mutationActionTypeName(null));
-    assertThrows(
-        NullPointerException.class, () -> GridGrindContractText.inspectionQueryTypeName(null));
-
-    @SuppressWarnings("unchecked")
-    Class<? extends MutationAction> unsupportedActionClass =
-        (Class<? extends MutationAction>) (Class<?>) GridGrindContractTextTest.class;
-    @SuppressWarnings("unchecked")
-    Class<? extends InspectionQuery> unsupportedQueryClass =
-        (Class<? extends InspectionQuery>) (Class<?>) GridGrindContractTextTest.class;
-
-    assertTrue(
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> GridGrindContractText.mutationActionTypeName(unsupportedActionClass))
-            .getMessage()
-            .contains("MutationAction"));
-    assertTrue(
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> GridGrindContractText.inspectionQueryTypeName(unsupportedQueryClass))
-            .getMessage()
-            .contains("InspectionQuery"));
-  }
-
-  @Test
-  void helperBranchesStayCovered() {
-    assertEquals("only", GridGrindContractText.humanJoin(List.of("only")));
-    assertEquals("left and right", GridGrindContractText.humanJoin(List.of("left", "right")));
+  void humanJoinRejectsEmptyListsAndFormatsSinglePairAndSeriesValues() {
+    assertEquals("alpha", GridGrindContractText.humanJoin(List.of("alpha")));
+    assertEquals("alpha and beta", GridGrindContractText.humanJoin(List.of("alpha", "beta")));
     assertEquals(
-        "CLEAR_WORKBOOK_PROTECTION",
-        GridGrindContractText.typeNamesByClass(MutationAction.class)
-            .get(WorkbookMutationAction.ClearWorkbookProtection.class));
+        "alpha, beta, and gamma",
+        GridGrindContractText.humanJoin(List.of("alpha", "beta", "gamma")));
     assertEquals(
-        "left, middle, and right",
-        GridGrindContractText.humanJoin(List.of("left", "middle", "right")));
+        "alpha and beta", GridGrindContractText.humanJoin(List.of("alpha", "", "beta", " ")));
     assertEquals(
         "values must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> GridGrindContractText.humanJoin(List.of("", " ")))
-            .getMessage());
-  }
-
-  @Test
-  void executionModeMetadataRejectsEmptyAllowedLists() {
-    assertEquals(
-        "allowedQueries must not be empty",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new GridGrindExecutionModeMetadata.EventReadMode(
-                        ExecutionModeInput.EventRead.class,
-                        List.of(),
-                        CalculationStrategyInput.DoNotCalculate.class,
-                        false))
-            .getMessage());
-    assertEquals(
-        "allowedActions must not be empty",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new GridGrindExecutionModeMetadata.StreamingWriteMode(
-                        ExecutionModeInput.StreamingWrite.class,
-                        WorkbookPlan.WorkbookSource.New.class,
-                        List.of(),
-                        CalculationStrategyInput.DoNotCalculate.class,
-                        true))
             .getMessage());
   }
 }

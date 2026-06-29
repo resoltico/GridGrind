@@ -74,6 +74,18 @@ class GridGrindJsonProblemMessageSupportTest {
         GridGrindJsonProblemMessageSupport.message(nullTargetType));
   }
 
+  @Test
+  void creatorNullMessagesMapToExplicitNullFieldsWithoutChangingMissingRequiredFields() {
+    assertEquals(
+        "Field 'protocolVersion' must be omitted when absent; explicit null is not accepted.",
+        GridGrindJsonValueProblemSupport.productOwnedJacksonMessage(
+            "protocolVersion must not be null"));
+    assertEquals(
+        "Missing required field 'protocolVersion'",
+        GridGrindJsonValueProblemSupport.productOwnedJacksonMessage(
+            "Missing required creator property 'protocolVersion'"));
+  }
+
   private static JsonParser parser(String json) throws IOException {
     return new JsonFactory()
         .createParser(

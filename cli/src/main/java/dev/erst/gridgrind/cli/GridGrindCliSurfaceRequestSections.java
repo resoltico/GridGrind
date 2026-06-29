@@ -84,6 +84,9 @@ final class GridGrindCliSurfaceRequestSections {
                 "--response <path>",
                 "write the primary command output to one new file; parent directories are"
                     + " created, but existing files are never replaced implicitly."
+                    + " Without --response, CLI argument errors and request-content failure"
+                    + " reports stay on stderr, while executed GridGrindResponse payloads"
+                    + " stay on stdout even when status=FAILED."
                     + " Execution writes the JSON response, doctoring writes the doctor"
                     + " report, and help or discovery commands write their rendered text"
                     + " or JSON payload. Non-success results also emit one stderr pointer"

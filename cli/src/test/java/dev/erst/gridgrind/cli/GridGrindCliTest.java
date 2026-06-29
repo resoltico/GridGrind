@@ -51,7 +51,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     }
   }
 
-  private static String[] stdinExecutionArguments(String... trailingArguments) throws IOException {
+  protected static String[] stdinExecutionArguments(String... trailingArguments)
+      throws IOException {
     Path workspace = Files.createTempDirectory("gridgrind-cli-stdin-");
     String[] args = new String[2 + trailingArguments.length];
     args[0] = "--execution-root";

@@ -63,6 +63,10 @@ class GridGrindJsonCoverageTest {
       assertEquals(response, GridGrindJson.readResponse(responseStream));
       assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
       assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
+      assertEquals(
+          doctorReport,
+          GridGrindJson.readRequestDoctorReport(
+              GridGrindJson.writeRequestDoctorReportBytes(doctorReport)));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
       assertFalse(doctorReportStream.closed);
@@ -169,7 +173,7 @@ class GridGrindJsonCoverageTest {
                         new ByteArrayInputStream("null".getBytes(StandardCharsets.UTF_8))))
             .getMessage());
     assertEquals(
-        "Missing required field 'steps[0]'",
+        "Field 'steps[0]' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -216,7 +220,7 @@ class GridGrindJsonCoverageTest {
                 "NEW", "NONE", "FULL_XSSF", "DO_NOT_CALCULATE", false, false, 0, 0, 0, 0));
 
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -226,7 +230,7 @@ class GridGrindJsonCoverageTest {
                                 GridGrindJson.writeResponseBytes(response), "warnings"))))
             .getMessage());
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -234,7 +238,7 @@ class GridGrindJsonCoverageTest {
                         withTopLevelNull(GridGrindJson.writeResponseBytes(response), "warnings")))
             .getMessage());
     assertEquals(
-        "Missing required field 'plainTypes'",
+        "Field 'plainTypes' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -243,7 +247,7 @@ class GridGrindJsonCoverageTest {
                             GridGrindJson.writeProtocolCatalogBytes(catalog), "plainTypes")))
             .getMessage());
     assertEquals(
-        "Missing required field 'warnings'",
+        "Field 'warnings' must be omitted when absent; explicit null is not accepted.",
         assertThrows(
                 InvalidRequestShapeException.class,
                 () ->
@@ -383,10 +387,10 @@ class GridGrindJsonCoverageTest {
         "JSON value at 'items[0].bar[1]' must be an integer value",
         GridGrindJson.mismatchedInputMessage(floatingPointWithNestedPath));
     assertEquals(
-        "Missing required field 'fieldName'",
+        "Field 'fieldName' must be omitted when absent; explicit null is not accepted.",
         GridGrindJson.message(new NullPointerException("fieldName must not be null")));
     assertEquals(
-        "Missing required field 'steps[0].target'",
+        "Field 'steps[0].target' must be omitted when absent; explicit null is not accepted.",
         GridGrindJson.message(new NullPointerException("steps[0].target must not be null")));
     assertEquals(
         "JSON value has the wrong shape for this field",
@@ -609,7 +613,8 @@ class GridGrindJsonCoverageTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
     assertEquals(
-        "Missing required field 'execution.calculation.markRecalculateOnOpen'",
+        "Field 'execution.calculation.markRecalculateOnOpen' must be omitted when absent; explicit"
+            + " null is not accepted.",
         exception.getMessage());
     assertEquals(
         Optional.of("execution.calculation.markRecalculateOnOpen"),
@@ -634,6 +639,19 @@ class GridGrindJsonCoverageTest {
         InvalidJsonException.class,
         invokeInvalidPayload(new WrappedJacksonException("wrapper", nullMessageNull)),
         "NPE with null message should not be treated as a validation error");
+  }
+
+  @Test
+  void prefersMissingRequiredCreatorMessagesOverExplicitNullValidationCauses() {
+    InvalidRequestShapeException failure =
+        assertInstanceOf(
+            InvalidRequestShapeException.class,
+            invokeInvalidPayload(
+                new WrappedJacksonException(
+                    "Missing required creator property 'protocolVersion'",
+                    new NullPointerException("protocolVersion must not be null"))));
+
+    assertEquals("Missing required field 'protocolVersion'", failure.getMessage());
   }
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {

@@ -51,7 +51,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
     assertEquals(
         "Could not write response file "
             + responseDirectory.toAbsolutePath()
-            + ": Is a directory. Wrote the request template to stdout instead."
+            + ": Is a directory. Wrote the structured failure report to stdout instead."
             + System.lineSeparator(),
         stderr.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProblemCode.IO_ERROR, fallback.code());

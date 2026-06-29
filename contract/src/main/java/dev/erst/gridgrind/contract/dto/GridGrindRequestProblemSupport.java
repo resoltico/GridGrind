@@ -9,6 +9,9 @@ import java.util.regex.Pattern;
 public final class GridGrindRequestProblemSupport {
   private static final Pattern MISSING_REQUIRED_FIELD_PATTERN =
       Pattern.compile("^Missing required field '([^']+)'$");
+  private static final Pattern EXPLICIT_NULL_FIELD_PATTERN =
+      Pattern.compile(
+          "^Field '([^']+)' must be omitted when absent; explicit null is not accepted\\.$");
   private static final Pattern UNKNOWN_FIELD_PATTERN = Pattern.compile("^Unknown field '([^']+)'$");
   private static final Pattern UNKNOWN_TYPE_VALUE_PATTERN =
       Pattern.compile("^Unknown type value '([^']+)'");
@@ -21,6 +24,32 @@ public final class GridGrindRequestProblemSupport {
 
   private GridGrindRequestProblemSupport() {}
 
+  /** Returns the canonical public wording for one missing required request field. */
+  public static String missingRequiredFieldMessage(String jsonPath) {
+    return "Missing required field '" + requireJsonPath(jsonPath) + "'";
+  }
+
+  /** Returns the canonical public wording for one explicit-null request field. */
+  public static String explicitNullFieldMessage(String jsonPath) {
+    return "Field '"
+        + requireJsonPath(jsonPath)
+        + "' must be omitted when absent; explicit null is not accepted.";
+  }
+
+  /** Returns whether one public request message reports one missing required field. */
+  public static boolean isMissingRequiredFieldMessage(String message) {
+    return MISSING_REQUIRED_FIELD_PATTERN
+        .matcher(Objects.requireNonNullElse(message, "").trim())
+        .matches();
+  }
+
+  /** Returns whether one public request message reports one explicit-null field. */
+  public static boolean isExplicitNullFieldMessage(String message) {
+    return EXPLICIT_NULL_FIELD_PATTERN
+        .matcher(Objects.requireNonNullElse(message, "").trim())
+        .matches();
+  }
+
   /** Extracts one actionable JSON path when the public request error wording carries it. */
   public static Optional<String> jsonPathFromMessage(String message) {
     String normalized = Objects.requireNonNullElse(message, "").trim();
@@ -30,6 +59,10 @@ public final class GridGrindRequestProblemSupport {
     Matcher missingRequired = MISSING_REQUIRED_FIELD_PATTERN.matcher(normalized);
     if (missingRequired.matches()) {
       return Optional.of(missingRequired.group(1));
+    }
+    Matcher explicitNullField = EXPLICIT_NULL_FIELD_PATTERN.matcher(normalized);
+    if (explicitNullField.matches()) {
+      return Optional.of(explicitNullField.group(1));
     }
     Matcher unknownField = UNKNOWN_FIELD_PATTERN.matcher(normalized);
     if (unknownField.matches()) {
@@ -74,6 +107,15 @@ public final class GridGrindRequestProblemSupport {
     if (missingRequired.matches()) {
       return Optional.of(missingFieldResolution(missingRequired.group(1)));
     }
+    Matcher explicitNullField = EXPLICIT_NULL_FIELD_PATTERN.matcher(normalizedMessage);
+    if (explicitNullField.matches()) {
+      String field = explicitNullField.group(1);
+      return Optional.of(
+          "Remove field '"
+              + field
+              + "' entirely when it is absent; explicit null is not part of the request"
+              + " contract.");
+    }
     Matcher unknownField = UNKNOWN_FIELD_PATTERN.matcher(normalizedMessage);
     if (unknownField.matches()) {
       String field = unknownField.group(1);
@@ -116,6 +158,7 @@ public final class GridGrindRequestProblemSupport {
       return false;
     }
     return MISSING_REQUIRED_FIELD_PATTERN.matcher(normalizedMessage).matches()
+        || EXPLICIT_NULL_FIELD_PATTERN.matcher(normalizedMessage).matches()
         || UNKNOWN_FIELD_PATTERN.matcher(normalizedMessage).matches()
         || UNKNOWN_TYPE_VALUE_PATTERN.matcher(normalizedMessage).find()
         || UNSUPPORTED_VALUE_PATTERN.matcher(normalizedMessage).find();
@@ -136,5 +179,13 @@ public final class GridGrindRequestProblemSupport {
       return "Add the required type discriminator at '" + jsonPath + "'.";
     }
     return "Add required field '" + jsonPath + "' to the request payload.";
+  }
+
+  private static String requireJsonPath(String jsonPath) {
+    Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+    if (jsonPath.isBlank()) {
+      throw new IllegalArgumentException("jsonPath must not be blank");
+    }
+    return jsonPath;
   }
 }

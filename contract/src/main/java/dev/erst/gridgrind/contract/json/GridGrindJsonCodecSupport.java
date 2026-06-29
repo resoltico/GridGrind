@@ -1,7 +1,9 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import tools.jackson.core.JacksonException;
@@ -79,8 +81,31 @@ final class GridGrindJsonCodecSupport {
       rejectExplicitNullMembers(node, "");
       return mapper.treeToValue(node, targetType);
     } catch (JacksonException exception) {
-      throw failureMapper.apply(exception);
+      throw normalizeMissingRequiredFailure(node, failureMapper.apply(exception));
     }
+  }
+
+  private static IllegalArgumentException normalizeMissingRequiredFailure(
+      JsonNode node, IllegalArgumentException failure) {
+    if (!(failure instanceof InvalidRequestShapeException shapeFailure)) {
+      return failure;
+    }
+    String message = Objects.requireNonNullElse(shapeFailure.getMessage(), "");
+    if (!GridGrindRequestProblemSupport.isExplicitNullFieldMessage(message)) {
+      return failure;
+    }
+    String messagePath = GridGrindRequestProblemSupport.jsonPathFromMessage(message).orElseThrow();
+    if (GridGrindJsonPathSupport.pathExists(node, messagePath)) {
+      return failure;
+    }
+    String missingRequiredMessage =
+        GridGrindRequestProblemSupport.missingRequiredFieldMessage(messagePath);
+    return new InvalidRequestShapeException(
+        missingRequiredMessage,
+        shapeFailure.jsonPath().or(() -> Optional.of(messagePath)),
+        shapeFailure.jsonLine(),
+        shapeFailure.jsonColumn(),
+        shapeFailure.getCause());
   }
 
   private static void rejectExplicitNullMembers(JsonNode node, String path) {
@@ -89,7 +114,7 @@ final class GridGrindJsonCodecSupport {
         String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
         if (entry.getValue().isNull()) {
           throw new InvalidRequestShapeException(
-              "Missing required field '" + childPath + "'",
+              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
               Optional.of(childPath),
               Optional.empty(),
               Optional.empty(),
@@ -105,7 +130,7 @@ final class GridGrindJsonCodecSupport {
         String childPath = path + "[" + index + "]";
         if (child.isNull()) {
           throw new InvalidRequestShapeException(
-              "Missing required field '" + childPath + "'",
+              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
               Optional.of(childPath),
               Optional.empty(),
               Optional.empty(),

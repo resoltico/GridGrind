@@ -129,8 +129,9 @@ public final class GridGrindCliHelp {
                     "A bare gridgrind invocation expects one request JSON document on standard"
                         + " input together with --execution-root <path>, or one --request"
                         + " <path>.",
-                    "With no --response path, CLI failures are emitted as structured primary"
-                        + " output on stdout.",
+                    "With no --response path, CLI argument errors and request-content failure"
+                        + " reports are emitted as structured JSON on stderr, while executed"
+                        + " responses stay on stdout.",
                     "Use --format structured when you want JSON help, version, or license"
                         + " discovery instead of prose."))),
         renderSection(
