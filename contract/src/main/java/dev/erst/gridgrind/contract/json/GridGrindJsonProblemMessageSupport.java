@@ -150,15 +150,41 @@ final class GridGrindJsonProblemMessageSupport {
         validationCause
             .filter(PayloadException.class::isInstance)
             .map(PayloadException.class::cast);
+    Optional<String> messagePath =
+        GridGrindRequestProblemSupport.jsonPathFromMessage(publicMessage);
     Optional<String> jsonPath =
-        payloadCause
-            .flatMap(PayloadException::jsonPath)
-            .or(metadata::jsonPath)
-            .or(() -> GridGrindRequestProblemSupport.jsonPathFromMessage(publicMessage));
+        mergedJsonPath(
+            mergedJsonPath(metadata.jsonPath(), payloadCause.flatMap(PayloadException::jsonPath)),
+            messagePath);
     Optional<Integer> jsonLine =
         payloadCause.flatMap(PayloadException::jsonLine).or(metadata::jsonLine);
     Optional<Integer> jsonColumn =
         payloadCause.flatMap(PayloadException::jsonColumn).or(metadata::jsonColumn);
     return new GridGrindJsonPayloadMetadataSupport.PayloadMetadata(jsonPath, jsonLine, jsonColumn);
+  }
+
+  static Optional<String> mergedJsonPath(Optional<String> basePath, Optional<String> detailPath) {
+    Objects.requireNonNull(basePath, "basePath must not be null");
+    Objects.requireNonNull(detailPath, "detailPath must not be null");
+    if (detailPath.isEmpty()) {
+      return basePath;
+    }
+    String detail = detailPath.orElseThrow();
+    if (basePath.isPresent()) {
+      String base = basePath.orElseThrow();
+      if (base.equals(detail)
+          || base.endsWith("." + detail)
+          || (base.endsWith(detail) && detail.startsWith("["))) {
+        return Optional.of(base);
+      }
+      if (isRelativeFieldPath(detail)) {
+        return Optional.of(base + "." + detail);
+      }
+    }
+    return Optional.of(detail);
+  }
+
+  static boolean isRelativeFieldPath(String jsonPath) {
+    return !jsonPath.contains(".") && !jsonPath.contains("[");
   }
 }

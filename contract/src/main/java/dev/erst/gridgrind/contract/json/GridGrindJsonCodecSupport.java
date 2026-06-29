@@ -79,6 +79,7 @@ final class GridGrindJsonCodecSupport {
     requireNonNullRoot(node);
     try {
       rejectExplicitNullMembers(node, "");
+      GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(node);
       return mapper.treeToValue(node, targetType);
     } catch (JacksonException exception) {
       throw normalizeMissingRequiredFailure(node, failureMapper.apply(exception));
