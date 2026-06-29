@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: ERRORS
-updated: "2026-05-16"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -189,7 +189,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
     "recovery": "CHANGE_REQUEST",
     "title": "Assertion failed",
     "message": "EXPECT_CELL_VALUE mismatched effective values at B2",
-    "resolution": "Inspect the observed workbook facts, then adjust the plan expectations or authored mutations and retry.",
+    "resolution": "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
     "context": {
       "stage": "EXECUTE_STEP",
       "stepIndex": 3,
@@ -296,7 +296,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
-| `IO_ERROR` | File could not be read or written — wrong path, missing permissions, disk full, or file locked. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
+| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and existing-file collisions, and `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)
 
@@ -355,7 +355,7 @@ The `context` block provides structured metadata about where the failure occurre
 | `range` | Range, if applicable. |
 | `formula` | Formula text, if applicable. |
 | `namedRangeName` | Named range involved in the failure, if applicable. |
-| `jsonPath` | JSON Pointer to the field that failed parsing (transport errors only). |
+| `jsonPath` | GridGrind dotted JSON path to the offending request value, such as `steps[0].target.type` (transport errors only). |
 | `jsonLine` | Line number in the request payload (transport errors only). |
 | `jsonColumn` | Column number in the request payload (transport errors only). |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |

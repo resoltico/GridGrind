@@ -639,7 +639,7 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals("Missing required field 'type'", missingAssertionType.getMessage());
-    assertEquals(Optional.of("steps[0].assertion"), missingAssertionType.jsonPath());
+    assertEquals(Optional.of("steps[0].assertion.type"), missingAssertionType.jsonPath());
   }
 
   @Test
@@ -669,7 +669,7 @@ class GridGrindJsonTest {
     assertEquals(
         "Each step must contain exactly one of 'action', 'assertion', or 'query'",
         invalidStep.getMessage());
-    assertEquals(Optional.of("steps[0]"), invalidStep.jsonPath());
+    assertEquals(Optional.of("steps[0].query"), invalidStep.jsonPath());
   }
 
   @Test

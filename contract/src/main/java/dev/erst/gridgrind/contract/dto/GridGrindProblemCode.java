@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
+import java.util.Objects;
+
 /** Stable machine-readable problem codes returned by the agent protocol. */
 public enum GridGrindProblemCode {
   INVALID_ARGUMENTS(
@@ -166,5 +168,46 @@ public enum GridGrindProblemCode {
 
   public String resolution() {
     return resolution;
+  }
+
+  /** Returns the most specific public remediation text for the classified problem cause. */
+  public String resolutionFor(String message, ProblemContext context) {
+    Objects.requireNonNull(context, "context must not be null");
+    return switch (this) {
+      case ASSERTION_FAILED ->
+          "Inspect problem.assertionFailure observations, then adjust the failing assertion or"
+              + " preceding workbook mutations and retry.";
+      case IO_ERROR -> ioResolution(message, context);
+      default -> resolution;
+    };
+  }
+
+  private String ioResolution(String message, ProblemContext context) {
+    String normalized = Objects.requireNonNullElse(message, "").trim();
+    return switch (context) {
+      case ProblemContext.PersistWorkbook persistWorkbook -> {
+        if (persistWorkbook.persistencePath().isPresent()) {
+          yield normalized.contains("already exists")
+              ? "Choose a new SAVE_AS destination path or remove the conflicting file, then"
+                  + " retry."
+              : "Check the SAVE_AS destination path, parent directory permissions, free disk"
+                  + " space, and file locks before retrying.";
+        }
+        yield "Check the destination workbook path, permissions, free disk space, and file"
+            + " locks before retrying.";
+      }
+      case ProblemContext.OpenWorkbook openWorkbook ->
+          openWorkbook.sourceWorkbookPath().isPresent()
+              ? "Check the source workbook path, permissions, and file locks before retrying."
+              : resolution;
+      case ProblemContext.WriteResponse writeResponse ->
+          writeResponse.responsePath().isPresent()
+              ? normalized.contains("already exists")
+                  ? "Choose a new --response path or remove the conflicting file, then retry."
+                  : "Check the --response destination path, parent directory permissions, free"
+                      + " disk space, and file locks before retrying."
+              : resolution;
+      default -> resolution;
+    };
   }
 }

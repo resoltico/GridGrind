@@ -59,6 +59,10 @@ class GridGrindRequestProblemSupportTest {
     assertEquals(
         Optional.of("planId"),
         GridGrindRequestProblemSupport.jsonPathFromMessage("planId must not be blank"));
+    assertEquals(
+        Optional.of("zoomPercent"),
+        GridGrindRequestProblemSupport.jsonPathFromMessage(
+            "zoomPercent must be between 10 and 400 inclusive: 401"));
     assertEquals(Optional.empty(), GridGrindRequestProblemSupport.jsonPathFromMessage(null));
     assertEquals(
         Optional.empty(),
