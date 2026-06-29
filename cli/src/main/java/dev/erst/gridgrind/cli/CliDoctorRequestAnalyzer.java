@@ -299,7 +299,8 @@ final class CliDoctorRequestAnalyzer {
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
           new InvalidRequestShapeException(
-              "Missing required field '" + jsonPath + "'",
+              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
+                  .missingRequiredFieldMessage(jsonPath),
               Optional.of(jsonPath),
               Optional.empty(),
               Optional.empty(),
@@ -312,9 +313,8 @@ final class CliDoctorRequestAnalyzer {
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
           new InvalidRequestShapeException(
-              "Field '"
-                  + jsonPath
-                  + "' must be omitted when absent; explicit null is not accepted.",
+              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
+                  .explicitNullFieldMessage(jsonPath),
               Optional.of(jsonPath),
               Optional.empty(),
               Optional.empty(),

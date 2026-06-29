@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
@@ -89,9 +90,7 @@ final class GridGrindJsonCodecSupport {
         String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
         if (entry.getValue().isNull()) {
           throw new InvalidRequestShapeException(
-              "Field '"
-                  + childPath
-                  + "' must be omitted when absent; explicit null is not accepted.",
+              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
               Optional.of(childPath),
               Optional.empty(),
               Optional.empty(),
@@ -107,9 +106,7 @@ final class GridGrindJsonCodecSupport {
         String childPath = path + "[" + index + "]";
         if (child.isNull()) {
           throw new InvalidRequestShapeException(
-              "Field '"
-                  + childPath
-                  + "' must be omitted when absent; explicit null is not accepted.",
+              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
               Optional.of(childPath),
               Optional.empty(),
               Optional.empty(),

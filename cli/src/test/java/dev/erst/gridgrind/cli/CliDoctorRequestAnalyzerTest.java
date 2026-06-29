@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
@@ -595,7 +596,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   private static GridGrindProblemDetail.Problem missingFieldProblem(String jsonPath) {
     return GridGrindProblems.fromException(
         new InvalidRequestShapeException(
-            "Missing required field '" + jsonPath + "'",
+            GridGrindRequestProblemSupport.missingRequiredFieldMessage(jsonPath),
             Optional.of(jsonPath),
             Optional.empty(),
             Optional.empty(),

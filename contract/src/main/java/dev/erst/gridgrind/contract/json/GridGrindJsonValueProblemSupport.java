@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -14,7 +15,7 @@ final class GridGrindJsonValueProblemSupport {
       Pattern.compile("missing required creator property '([^']+)'", Pattern.CASE_INSENSITIVE);
   private static final Pattern MISSING_TYPE_ID_FIELD_PATTERN =
       Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
-  private static final Pattern NULL_FIELD_PROBLEM_PATTERN =
+  private static final Pattern CREATOR_NULL_FIELD_PATTERN =
       Pattern.compile("([A-Za-z0-9.\\[\\]_]+) must not be null", Pattern.CASE_INSENSITIVE);
 
   private GridGrindJsonValueProblemSupport() {}
@@ -60,15 +61,17 @@ final class GridGrindJsonValueProblemSupport {
     String normalized = GridGrindJsonProblemMessageSupport.cleanJacksonMessage(cleaned);
     Matcher missingRequiredField = MISSING_REQUIRED_FIELD_PATTERN.matcher(normalized);
     if (missingRequiredField.find()) {
-      return "Missing required field '" + missingRequiredField.group(1) + "'";
+      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(
+          missingRequiredField.group(1));
     }
     Matcher missingTypeIdField = MISSING_TYPE_ID_FIELD_PATTERN.matcher(normalized);
     if (missingTypeIdField.find()) {
-      return "Missing required field '" + missingTypeIdField.group(1) + "'";
+      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(
+          missingTypeIdField.group(1));
     }
-    Matcher nullFieldProblem = NULL_FIELD_PROBLEM_PATTERN.matcher(normalized);
-    if (nullFieldProblem.find()) {
-      return "Missing required field '" + nullFieldProblem.group(1) + "'";
+    Matcher creatorNullField = CREATOR_NULL_FIELD_PATTERN.matcher(normalized);
+    if (creatorNullField.find()) {
+      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(creatorNullField.group(1));
     }
     if (normalized.startsWith("Cannot deserialize value")) {
       return "JSON value has the wrong shape for this field";

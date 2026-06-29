@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Optional;
@@ -9,6 +10,22 @@ import org.junit.jupiter.api.Test;
 
 /** Direct coverage for request-problem path extraction and resolution wording. */
 class GridGrindRequestProblemSupportTest {
+  @Test
+  void canonicalMessageHelpersOwnMissingAndExplicitNullWording() {
+    assertEquals(
+        "Missing required field 'protocolVersion'",
+        GridGrindRequestProblemSupport.missingRequiredFieldMessage("protocolVersion"));
+    assertEquals(
+        "Field 'planId' must be omitted when absent; explicit null is not accepted.",
+        GridGrindRequestProblemSupport.explicitNullFieldMessage("planId"));
+    assertEquals(
+        "jsonPath must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> GridGrindRequestProblemSupport.missingRequiredFieldMessage(" "))
+            .getMessage());
+  }
+
   @Test
   void extractsActionableJsonPathsFromPublicRequestMessages() {
     assertEquals(

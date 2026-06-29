@@ -24,6 +24,18 @@ public final class GridGrindRequestProblemSupport {
 
   private GridGrindRequestProblemSupport() {}
 
+  /** Returns the canonical public wording for one missing required request field. */
+  public static String missingRequiredFieldMessage(String jsonPath) {
+    return "Missing required field '" + requireJsonPath(jsonPath) + "'";
+  }
+
+  /** Returns the canonical public wording for one explicit-null request field. */
+  public static String explicitNullFieldMessage(String jsonPath) {
+    return "Field '"
+        + requireJsonPath(jsonPath)
+        + "' must be omitted when absent; explicit null is not accepted.";
+  }
+
   /** Extracts one actionable JSON path when the public request error wording carries it. */
   public static Optional<String> jsonPathFromMessage(String message) {
     String normalized = Objects.requireNonNullElse(message, "").trim();
@@ -153,5 +165,13 @@ public final class GridGrindRequestProblemSupport {
       return "Add the required type discriminator at '" + jsonPath + "'.";
     }
     return "Add required field '" + jsonPath + "' to the request payload.";
+  }
+
+  private static String requireJsonPath(String jsonPath) {
+    Objects.requireNonNull(jsonPath, "jsonPath must not be null");
+    if (jsonPath.isBlank()) {
+      throw new IllegalArgumentException("jsonPath must not be blank");
+    }
+    return jsonPath;
   }
 }
