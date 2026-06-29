@@ -24,7 +24,7 @@ google-java-format = "1.35.0"
 jacoco = "0.8.15"
 pmd = "7.25.0"
 shadow = "9.4.2"
-spotless = "8.6.0"
+spotless = "8.7.0"
 
 [libraries]
 bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
