@@ -74,6 +74,14 @@ class GridGrindJsonProblemMessageSupportTest {
         GridGrindJsonProblemMessageSupport.message(nullTargetType));
   }
 
+  @Test
+  void nullCreatorMessagesStillMapToMissingRequiredFields() {
+    assertEquals(
+        "Missing required field 'protocolVersion'",
+        GridGrindJsonValueProblemSupport.productOwnedJacksonMessage(
+            "protocolVersion must not be null"));
+  }
+
   private static JsonParser parser(String json) throws IOException {
     return new JsonFactory()
         .createParser(
