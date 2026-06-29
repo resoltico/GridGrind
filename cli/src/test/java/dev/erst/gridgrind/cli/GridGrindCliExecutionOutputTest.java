@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Focused stdout/stderr integration tests for executed responses. */
+/** Focused stdout/stderr and formula-classification integration tests for executed responses. */
 class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
   @Test
   void executedFailureResponsesStayOnStdoutWhenNoResponsePathIsConfigured() throws IOException {
@@ -76,6 +76,58 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
         "assert-a1", response.path("problem").path("assertionFailure").path("stepId").asText());
   }
 
+  @Test
+  void classifiesInvalidFormulasAsFormulaErrors() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    formulaRequestJson("SUM(", evaluateAllExecutionJson())
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    GridGrindResponse response = response(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
+    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
+    assertEquals(java.util.Optional.of("SUM("), executeStepContext(failure).formula());
+  }
+
+  @Test
+  void classifiesUnsupportedAuthoredFormulaConstructsSeparately() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    formulaRequestJson("LAMBDA(x,x+1)(2)", defaultExecutionJson())
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    GridGrindResponse response = response(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT, failure.problem().code());
+    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
+    assertEquals(java.util.Optional.of("A1"), executeStepContext(failure).address());
+    assertEquals(java.util.Optional.of("LAMBDA(x,x+1)(2)"), executeStepContext(failure).formula());
+  }
+
   private static String assertionMismatchRequestJson(String actualText, String expectedText) {
     return requestJson(
         "{ \"type\": \"NEW\" }",
@@ -90,5 +142,20 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
         ]
         """
             .formatted(actualText, expectedText));
+  }
+
+  private static String formulaRequestJson(String formula, String executionJson) {
+    return requestJson(
+        "{ \"type\": \"NEW\" }",
+        "{ \"type\": \"NONE\" }",
+        executionJson,
+        emptyFormulaEnvironmentJson(),
+        """
+        [
+          { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
+          { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "%s" } } } }
+        ]
+        """
+            .formatted(formula));
   }
 }

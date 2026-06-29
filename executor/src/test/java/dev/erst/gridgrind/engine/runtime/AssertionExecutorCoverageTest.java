@@ -1464,7 +1464,7 @@ class AssertionExecutorCoverageTest {
 
     assertTrue(
         executor
-            .executionModeFailure(
+            .executionModeFailures(
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.None(),
@@ -1479,8 +1479,9 @@ class AssertionExecutorCoverageTest {
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
                                     "Owner")))),
                     List.of()))
-            .orElseThrow()
-            .contains("requires ENSURE_SHEET before any assertion step"));
+            .stream()
+            .anyMatch(
+                failure -> failure.contains("requires ENSURE_SHEET before any assertion step")));
   }
 
   private static WorkbookPlan rewritePersistence(WorkbookPlan plan, Path workbookPath) {

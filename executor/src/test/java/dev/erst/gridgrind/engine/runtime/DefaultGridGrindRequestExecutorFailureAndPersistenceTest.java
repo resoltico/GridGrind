@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -836,14 +835,19 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                             new CellSelector.ByAddress("Data", "A1"),
                             new CellMutationAction.SetCell(formulaCell("LET(x,5,x*2)")))))));
 
-    assertEquals(GridGrindProblemCode.INVALID_FORMULA, lambdaFailure.problem().code());
-    assertEquals("Invalid formula at Data!A1: LAMBDA(x,x*2)(5)", lambdaFailure.problem().message());
+    assertEquals(
+        GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT, lambdaFailure.problem().code());
+    assertEquals(
+        "Unsupported formula construct function LAMBDA at Data!A1: LAMBDA(x,x*2)(5)",
+        lambdaFailure.problem().message());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(lambdaFailure).address());
     assertEquals(
         java.util.Optional.of("LAMBDA(x,x*2)(5)"), executeStepContext(lambdaFailure).formula());
 
-    assertEquals(GridGrindProblemCode.INVALID_FORMULA, letFailure.problem().code());
-    assertEquals("Invalid formula at Data!A1: LET(x,5,x*2)", letFailure.problem().message());
+    assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT, letFailure.problem().code());
+    assertEquals(
+        "Unsupported formula construct function LET at Data!A1: LET(x,5,x*2)",
+        letFailure.problem().message());
     assertEquals(java.util.Optional.of("A1"), executeStepContext(letFailure).address());
     assertEquals(java.util.Optional.of("LET(x,5,x*2)"), executeStepContext(letFailure).formula());
   }
@@ -891,8 +895,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void calculationPolicyFailureRejectsMutationsAfterObservationSteps() {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    Optional<String> failure =
-        executor.calculationPolicyFailure(
+    List<String> failures =
+        executor.calculationPolicyFailures(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -912,15 +916,17 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         new CellSelector.ByAddress("Data", "A1"),
                         new CellMutationAction.SetCell(new CellInput.NumberValue(1.0))))));
 
-    assertTrue(failure.orElseThrow().contains("mutation-to-observation boundary"));
+    assertTrue(
+        failures.stream()
+            .anyMatch(failure -> failure.contains("mutation-to-observation boundary")));
   }
 
   @Test
   void executionModeFailureRejectsCalculationForEventReadAndStreamingWrite() {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
 
-    Optional<String> eventReadFailure =
-        executor.executionModeFailure(
+    List<String> eventReadFailures =
+        executor.executionModeFailures(
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/book.xlsx"),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -932,8 +938,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                         "summary",
                         new WorkbookSelector.Current(),
                         new WorkbookIntrospectionQuery.GetWorkbookSummary()))));
-    Optional<String> streamingFailure =
-        executor.executionModeFailure(
+    List<String> streamingFailures =
+        executor.executionModeFailures(
             request(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -945,8 +951,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 List.of(),
                 List.of()));
 
-    assertTrue(eventReadFailure.orElseThrow().contains("markRecalculateOnOpen=false"));
-    assertTrue(streamingFailure.orElseThrow().contains("low-memory streaming writes"));
+    assertTrue(
+        eventReadFailures.stream()
+            .anyMatch(failure -> failure.contains("markRecalculateOnOpen=false")));
+    assertTrue(
+        streamingFailures.stream()
+            .anyMatch(failure -> failure.contains("low-memory streaming writes")));
   }
 
   @Test

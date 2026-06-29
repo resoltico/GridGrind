@@ -25,11 +25,15 @@ readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly gradlew="${repo_root}/gradlew"
 readonly verify_script="${repo_root}/scripts/verify-cli-contract.sh"
+readonly thin_install_root="${repo_root}/cli/build/install/cli/bin"
 readonly install_root="${repo_root}/cli/build/install/gridgrind/bin"
 readonly legacy_install_root="${repo_root}/cli/build/install/cli-shadow"
 readonly generated_scripts_root="${repo_root}/cli/build/scriptsShadow"
 readonly distribution_root="${repo_root}/cli/build/distributions"
 readonly version="$(awk -F= '/^version=/{print $2}' "${repo_root}/gradle.properties")"
+readonly thin_launcher="${thin_install_root}/cli"
+readonly duplicate_thin_launcher="${thin_install_root}/gridgrind"
+readonly duplicate_thin_windows_launcher="${thin_install_root}/gridgrind.bat"
 readonly packaged_launcher="${install_root}/gridgrind"
 readonly old_named_launcher="${install_root}/cli"
 readonly old_named_windows_launcher="${install_root}/cli.bat"
@@ -42,7 +46,9 @@ readonly legacy_packaged_tar="${distribution_root}/cli-shadow-${version}.tar"
 readonly stale_zip="${distribution_root}/gridgrind-0.00.0.zip"
 readonly stale_tar="${distribution_root}/gridgrind-0.00.0.tar"
 
-mkdir -p "${install_root}" "${legacy_install_root}/bin" "${generated_scripts_root}" "${distribution_root}"
+mkdir -p "${thin_install_root}" "${install_root}" "${legacy_install_root}/bin" "${generated_scripts_root}" "${distribution_root}"
+printf '#!/usr/bin/env bash\nexit 99\n' > "${duplicate_thin_launcher}"
+printf '@echo off\r\nexit /b 99\r\n' > "${duplicate_thin_windows_launcher}"
 printf '#!/usr/bin/env bash\nexit 99\n' > "${old_named_launcher}"
 printf '@echo off\r\nexit /b 99\r\n' > "${old_named_windows_launcher}"
 printf '#!/usr/bin/env bash\nexit 99\n' > "${old_named_generated_launcher}"
@@ -52,11 +58,18 @@ printf 'stale zip\n' > "${stale_zip}"
 printf 'stale tar\n' > "${stale_tar}"
 printf 'legacy zip\n' > "${legacy_packaged_zip}"
 printf 'legacy tar\n' > "${legacy_packaged_tar}"
-chmod +x "${old_named_launcher}" "${old_named_generated_launcher}" "${legacy_install_root}/bin/gridgrind"
+chmod +x "${duplicate_thin_launcher}" "${old_named_launcher}" "${old_named_generated_launcher}" "${legacy_install_root}/bin/gridgrind"
 
+"${gradlew}" :cli:installDist --console=plain --no-daemon >/dev/null
 "${gradlew}" :cli:installShadowDist --console=plain --no-daemon >/dev/null
 "${gradlew}" :cli:shadowDistZip :cli:shadowDistTar --console=plain --no-daemon >/dev/null
 
+[[ -x "${thin_launcher}" ]] || die \
+    "installDist did not produce the renamed thin launcher at ${thin_launcher}"
+[[ ! -e "${duplicate_thin_launcher}" ]] || die \
+    "installDist still produced the duplicate gridgrind launcher at ${duplicate_thin_launcher}"
+[[ ! -e "${duplicate_thin_windows_launcher}" ]] || die \
+    "installDist still produced the duplicate Windows gridgrind launcher at ${duplicate_thin_windows_launcher}"
 [[ -x "${packaged_launcher}" ]] || die \
     "installShadowDist did not produce the packaged gridgrind launcher at ${packaged_launcher}"
 [[ ! -e "${legacy_install_root}" ]] || die \

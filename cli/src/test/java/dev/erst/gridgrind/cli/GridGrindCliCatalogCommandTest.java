@@ -742,6 +742,60 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void doctorRequestBatchesIndependentSemanticValidationProblems() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-semantic-batch-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "OVERWRITE" },
+                      "execution": {
+                        "mode": { "type": "EVENT_READ" },
+                        "journal": { "level": "NORMAL" },
+                        "calculation": {
+                          "strategy": { "type": "EVALUATE_ALL" },
+                          "markRecalculateOnOpen": true
+                        }
+                      },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(2, report.problems().size());
+    assertTrue(
+        problemMessages.contains(
+            "execution.mode.type=EVENT_READ requires"
+                + " execution.calculation.strategy=DO_NOT_CALCULATE and"
+                + " markRecalculateOnOpen=false"));
+    assertTrue(
+        problemMessages.contains(
+            "OVERWRITE persistence requires an EXISTING source; a NEW workbook has no source"
+                + " file to overwrite"));
+  }
+
+  @Test
   void doctorRequestCanReadTheRequestFromAFile() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-doctor-request-", ".json");
     Files.writeString(

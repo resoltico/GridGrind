@@ -562,8 +562,8 @@ empty instead of storing a string value.
 and the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
 `FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
-rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA`
-because Apache POI cannot parse them. Other newer Excel constructs may fail the same way. Loaded
+rejected as `INVALID_FORMULA`. Authored `LAMBDA` and `LET` currently surface as
+`UNSUPPORTED_FORMULA_CONSTRUCT` because Apache POI cannot parse them on the write path. Loaded
 formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
 
 ---

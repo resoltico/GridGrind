@@ -55,7 +55,7 @@ tasks.named<JavaExec>("run") {
 }
 
 tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts") {
-    applicationName = "gridgrind"
+    applicationName = "cli"
     dependsOn(cleanStartScripts)
 }
 

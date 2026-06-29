@@ -193,8 +193,8 @@ Rules to remember:
   surface `CELL_NOT_FOUND`; existing non-formula cells are rejected as `INVALID_REQUEST`.
 - Scalar `FORMULA` cell payloads reject array-formula braces such as `{=SUM(A1:A2*B1:B2)}`.
   Use `SET_ARRAY_FORMULA` for contiguous array groups.
-- `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse
-  them yet.
+- Authored `LAMBDA` and `LET` currently surface as `UNSUPPORTED_FORMULA_CONSTRUCT` because Apache
+  POI cannot parse them on the write path.
 
 ## Common Step Snippets
 

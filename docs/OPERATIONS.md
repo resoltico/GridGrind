@@ -150,8 +150,8 @@ Common response anchors:
 
 - Scalar `FORMULA` cell values reject request-authored array-formula braces such as `{=...}`.
   Use `SET_ARRAY_FORMULA` for contiguous array groups.
-- `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse
-  them yet.
+- Authored `LAMBDA` and `LET` currently surface as `UNSUPPORTED_FORMULA_CONSTRUCT` because Apache
+  POI cannot parse them on the write path.
 - `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
   `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
 - `execution.calculation.markRecalculateOnOpen` persists Excel's workbook-open recalculation flag

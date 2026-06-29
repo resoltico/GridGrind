@@ -8,6 +8,7 @@ package dev.erst.gridgrind.excel;
 public sealed interface FormulaException
     permits InvalidFormulaException,
         MissingExternalWorkbookException,
+        UnsupportedFormulaConstructException,
         UnregisteredUserDefinedFunctionException,
         UnsupportedFormulaException {
   /** Name of the sheet containing the failing formula cell. */

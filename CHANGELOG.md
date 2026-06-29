@@ -8,8 +8,10 @@ Earlier release history through `0.64.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ### Fixed
 
-- Help now documents the real stderr/stdout split, executed failure responses stay on stdout, and
-  explicit `null` request placeholders surface a dedicated “omit the field instead” shape error.
+- Help now documents the real stderr/stdout split, executed failure responses stay on stdout, and explicit `null` request placeholders surface a dedicated “omit the field instead” shape error.
+- Request doctor now reports every independently provable semantic validation problem in one machine-readable response.
+- Authored `LAMBDA` and `LET` now surface as `UNSUPPORTED_FORMULA_CONSTRUCT`, and only the
+  packaged shadow distribution owns the canonical `gridgrind` launcher name.
 
 ## [0.69.0] - 2026-06-14
 

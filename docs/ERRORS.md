@@ -4,7 +4,7 @@ version: "0.69.0"
 domain: ERRORS
 updated: "2026-05-16"
 route:
-  keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
+  keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
 ---
 
@@ -266,7 +266,8 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the current request path. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse them, and other newer constructs may fail the same way. |
+| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the current request path. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. |
+| `UNSUPPORTED_FORMULA_CONSTRUCT` | The authored formula uses a valid Excel construct that Apache POI cannot parse on the write path. Authored `LAMBDA` and `LET` currently surface here. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |
@@ -393,8 +394,9 @@ Each entry carries:
 | `stage` | Pipeline stage where this diagnostic originated; omitted when the entry is not attributed to a stage. |
 
 Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA`,
-`MISSING_EXTERNAL_WORKBOOK`, `UNREGISTERED_USER_DEFINED_FUNCTION`, and `UNSUPPORTED_FORMULA`
-without depending on Java exception class names or parser-library details.
+`UNSUPPORTED_FORMULA_CONSTRUCT`, `MISSING_EXTERNAL_WORKBOOK`,
+`UNREGISTERED_USER_DEFINED_FUNCTION`, and `UNSUPPORTED_FORMULA` without depending on Java
+exception class names or parser-library details.
 
 ## Assertion Failure Payload
 

@@ -156,7 +156,7 @@ final class XlsxParityDocsTest {
     assertTrue(inventory.contains("CLEAR_CACHES_ONLY"));
     assertFalse(inventory.contains("FORCE_FORMULA_RECALCULATION_ON_OPEN"));
     assertFalse(inventory.contains("FORCE_FORMULA_RECALC_ON_OPEN"));
-    assertTrue(inventory.contains("`LAMBDA` and `LET` are currently rejected"));
+    assertTrue(inventory.contains("`UNSUPPORTED_FORMULA_CONSTRUCT`"));
     assertTrue(inventory.contains("surface.totalFormulaCellCount"));
     assertTrue(inventory.contains("surface.workbookScopedCount"));
     assertTrue(inventory.contains("analysis.checkedNamedRangeCount"));
@@ -234,6 +234,9 @@ final class XlsxParityDocsTest {
     assertTrue(
         formulaAndAnalysisCorpus.contains("INVALID_FORMULA"),
         "public docs must describe the INVALID_FORMULA boundary");
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("UNSUPPORTED_FORMULA_CONSTRUCT"),
+        "public docs must describe the authored unsupported-formula-construct boundary");
     assertTrue(
         formulaAndAnalysisCorpus.contains("surface.totalFormulaCellCount"),
         "public docs must describe formula-surface aggregate counts");

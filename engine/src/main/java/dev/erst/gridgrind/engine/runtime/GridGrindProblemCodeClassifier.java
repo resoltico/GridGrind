@@ -14,6 +14,7 @@ import dev.erst.gridgrind.excel.MissingExternalWorkbookException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
+import dev.erst.gridgrind.excel.UnsupportedFormulaConstructException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
@@ -43,6 +44,8 @@ final class GridGrindProblemCodeClassifier {
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
       case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
+      case UnsupportedFormulaConstructException _ ->
+          GridGrindProblemCode.UNSUPPORTED_FORMULA_CONSTRUCT;
       case MissingExternalWorkbookException _ -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
       case UnregisteredUserDefinedFunctionException _ ->
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;

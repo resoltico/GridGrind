@@ -54,7 +54,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     ExecutionJournalRecorder.PhaseHandle validationPhase = journal.beginValidation();
     Optional<GridGrindProblemDetail.Problem> validationError =
-        validationSupport.validateRequest(authoredRequest);
+        validationSupport.firstValidationProblem(authoredRequest);
     if (validationError.isPresent()) {
       validationPhase.fail("failed (" + validationError.get().code() + ")");
       return ExecutionResponseSupport.failureResponse(
@@ -173,12 +173,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         dependencies.workbookEngine(), selectorResolver, assertionExecutor, tempFileFactory);
   }
 
-  Optional<String> calculationPolicyFailure(WorkbookPlan request) {
-    return ExecutionModeRules.calculationPolicyFailure(request);
+  List<String> calculationPolicyFailures(WorkbookPlan request) {
+    return ExecutionModeRules.calculationPolicyFailures(request);
   }
 
-  Optional<String> executionModeFailure(WorkbookPlan request) { // LIM-019, LIM-020
-    return ExecutionModeRules.executionModeFailure(request, executionMode(request));
+  List<String> executionModeFailures(WorkbookPlan request) { // LIM-019, LIM-020
+    return ExecutionModeRules.executionModeFailures(request, executionMode(request));
   }
 
   static boolean directEventReadEligible(WorkbookPlan request, ExecutionModeInput executionMode) {

@@ -43,10 +43,10 @@ public final class GridGrindRequestDoctor {
       WorkbookPlan request, Optional<ExecutionInputBindings> bindings) {
     RequestDoctorReport.Summary summary = summaryFor(request);
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
-    Optional<GridGrindProblemDetail.Problem> validationProblem =
+    List<GridGrindProblemDetail.Problem> validationProblems =
         validationSupport.validateRequest(request);
-    if (validationProblem.isPresent()) {
-      return RequestDoctorReport.invalid(summary, warnings, validationProblem.get());
+    if (!validationProblems.isEmpty()) {
+      return RequestDoctorReport.invalid(summary, warnings, validationProblems);
     }
     if (bindings.isPresent()) {
       ExecutionInputBindings boundInputs = bindings.orElseThrow();

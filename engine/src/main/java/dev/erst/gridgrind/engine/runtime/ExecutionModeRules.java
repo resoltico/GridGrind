@@ -11,7 +11,8 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import java.util.Optional;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 /** Execution-mode and calculation-policy validation rules for request execution. */
@@ -28,15 +29,15 @@ final class ExecutionModeRules {
 
   private ExecutionModeRules() {}
 
-  static Optional<String> calculationPolicyFailure(WorkbookPlan request) {
+  static List<String> calculationPolicyFailures(WorkbookPlan request) {
     if (!CalculationPolicyExecutor.requiresMutationPrefix(request.calculationPolicy())) {
-      return Optional.empty();
+      return List.of();
     }
     boolean seenObservationStep = false;
     for (WorkbookStep step : request.steps()) {
       if (step instanceof MutationStep) {
         if (seenObservationStep) {
-          return Optional.of(
+          return List.of(
               "execution.calculation.strategy="
                   + request.calculationPolicy().effectiveStrategy().strategyType()
                   + " requires all MUTATION steps to appear before any ASSERTION or INSPECTION"
@@ -46,15 +47,15 @@ final class ExecutionModeRules {
         seenObservationStep = true;
       }
     }
-    return Optional.empty();
+    return List.of();
   }
 
-  static Optional<String> executionModeFailure(
+  static List<String> executionModeFailures(
       WorkbookPlan request, ExecutionModeInput executionMode) {
     return switch (executionMode) {
-      case ExecutionModeInput.FullXssf _ -> Optional.empty();
-      case ExecutionModeInput.EventRead _ -> eventReadFailure(request);
-      case ExecutionModeInput.StreamingWrite _ -> streamingWriteFailure(request);
+      case ExecutionModeInput.FullXssf _ -> List.of();
+      case ExecutionModeInput.EventRead _ -> eventReadFailures(request);
+      case ExecutionModeInput.StreamingWrite _ -> streamingWriteFailures(request);
     };
   }
 
@@ -70,52 +71,46 @@ final class ExecutionModeRules {
     return request.effectiveExecutionMode();
   }
 
-  private static Optional<String> eventReadFailure(WorkbookPlan request) {
+  private static List<String> eventReadFailures(WorkbookPlan request) {
+    Set<String> failures = new LinkedHashSet<>();
     if (!CalculationPolicyExecutor.allowsEventRead(request.calculationPolicy())) {
-      return Optional.of(EVENT_READ.calculationFailureMessage());
+      failures.add(EVENT_READ.calculationFailureMessage());
     }
     for (WorkbookStep step : request.steps()) {
       if (!(step instanceof InspectionStep inspectionStep)) {
-        return Optional.of(EVENT_READ.unsupportedStepMessage(step.stepKind()));
+        failures.add(EVENT_READ.unsupportedStepMessage(step.stepKind()));
+        continue;
       }
       if (!EVENT_READ_INSPECTION_QUERY_TYPES.contains(inspectionStep.query().getClass())) {
-        return Optional.of(EVENT_READ.unsupportedQueryMessage(inspectionStep.query().queryType()));
+        failures.add(EVENT_READ.unsupportedQueryMessage(inspectionStep.query().queryType()));
       }
     }
-    return Optional.empty();
+    return List.copyOf(failures);
   }
 
-  private static Optional<String> streamingWriteFailure(WorkbookPlan request) {
+  private static List<String> streamingWriteFailures(WorkbookPlan request) {
+    Set<String> failures = new LinkedHashSet<>();
     if (!CalculationPolicyExecutor.allowsStreamingWrite(request.calculationPolicy())) {
-      return Optional.of(STREAMING_WRITE.calculationFailureMessage());
+      failures.add(STREAMING_WRITE.calculationFailureMessage());
     }
     if (!(request.source() instanceof WorkbookPlan.WorkbookSource.New)) {
-      return Optional.of(STREAMING_WRITE.invalidSourceMessage());
+      failures.add(STREAMING_WRITE.invalidSourceMessage());
     }
     boolean seenEnsureSheet = false;
     for (WorkbookStep step : request.steps()) {
-      Optional<String> failure = streamingWriteStepFailure(step, seenEnsureSheet);
-      if (failure.isPresent()) {
-        return failure;
-      }
+      failures.addAll(streamingWriteStepFailures(step, seenEnsureSheet));
       seenEnsureSheet |= isEnsureSheet(step);
     }
     if (!seenEnsureSheet) {
-      return Optional.of(STREAMING_WRITE.missingEnsureSheetMutationMessage());
+      failures.add(STREAMING_WRITE.missingEnsureSheetMutationMessage());
     }
-    return Optional.empty();
+    return List.copyOf(failures);
   }
 
-  private static Optional<String> streamingWriteStepFailure(
+  private static List<String> streamingWriteStepFailures(
       WorkbookStep step, boolean seenEnsureSheet) {
     return switch (step) {
-      case MutationStep mutationStep ->
-          unsupportedStreamingMutationAction(mutationStep.action())
-              .or(
-                  () ->
-                      requiresEnsureSheetBeforeAppend(mutationStep.action(), seenEnsureSheet)
-                          ? Optional.of(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage())
-                          : Optional.empty());
+      case MutationStep mutationStep -> mutationFailures(mutationStep.action(), seenEnsureSheet);
       case AssertionStep _ ->
           missingEnsureSheetBeforeObservation(
               seenEnsureSheet, STREAMING_WRITE.missingEnsureSheetBeforeAssertionMessage());
@@ -125,10 +120,20 @@ final class ExecutionModeRules {
     };
   }
 
-  private static Optional<String> unsupportedStreamingMutationAction(MutationAction action) {
+  private static List<String> mutationFailures(MutationAction action, boolean seenEnsureSheet) {
+    Set<String> failures = new LinkedHashSet<>();
+    unsupportedStreamingMutationAction(action).ifPresent(failures::add);
+    if (requiresEnsureSheetBeforeAppend(action, seenEnsureSheet)) {
+      failures.add(STREAMING_WRITE.missingEnsureSheetBeforeAppendMessage());
+    }
+    return List.copyOf(failures);
+  }
+
+  private static java.util.Optional<String> unsupportedStreamingMutationAction(
+      MutationAction action) {
     return STREAMING_WRITE_MUTATION_ACTION_TYPES.contains(action.getClass())
-        ? Optional.empty()
-        : Optional.of(STREAMING_WRITE.unsupportedActionMessage(action.actionType()));
+        ? java.util.Optional.empty()
+        : java.util.Optional.of(STREAMING_WRITE.unsupportedActionMessage(action.actionType()));
   }
 
   private static boolean requiresEnsureSheetBeforeAppend(
@@ -136,9 +141,9 @@ final class ExecutionModeRules {
     return action instanceof CellMutationAction.AppendRow && !seenEnsureSheet;
   }
 
-  private static Optional<String> missingEnsureSheetBeforeObservation(
+  private static List<String> missingEnsureSheetBeforeObservation(
       boolean seenEnsureSheet, String message) {
-    return seenEnsureSheet ? Optional.empty() : Optional.of(message);
+    return seenEnsureSheet ? List.of() : List.of(message);
   }
 
   private static boolean isEnsureSheet(WorkbookStep step) {
