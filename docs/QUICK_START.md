@@ -11,9 +11,9 @@ route:
 # Quick Start
 
 Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example --lookup BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
-Generated example JSON already includes the explicit top-level request envelope, so the first
-printed request is ready for copy-paste edits without inventing missing execution or formula
-sections yourself.
+Generated example JSON already includes the top-level request envelope and omits the default
+`execution` and `formulaEnvironment` blocks, so the first printed request is ready for copy-paste
+edits without hand-authoring boilerplate defaults yourself.
 
 ---
 

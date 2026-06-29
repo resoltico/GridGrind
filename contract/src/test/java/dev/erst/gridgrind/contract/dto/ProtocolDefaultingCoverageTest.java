@@ -546,6 +546,15 @@ class ProtocolDefaultingCoverageTest {
             ExecutionPolicyInput.journal(new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)),
             FormulaEnvironmentInput.empty(),
             List.of());
+    WorkbookPlan wireDefaultedPlan =
+        new WorkbookPlan(
+            GridGrindProtocolVersion.current(),
+            Optional.empty(),
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            null,
+            null,
+            List.of());
     TableColumnReport tableColumn = new TableColumnReport(4L, "Owner");
     AutofilterSortConditionReport conditionReport =
         new AutofilterSortConditionReport.CellColor("B2:B9", false, CellColorReport.rgb("#aabbcc"));
@@ -613,6 +622,8 @@ class ProtocolDefaultingCoverageTest {
 
     assertTrue(defaultPlan.execution().isDefault());
     assertTrue(defaultPlan.formulaEnvironment().isEmpty());
+    assertTrue(wireDefaultedPlan.execution().isDefault());
+    assertTrue(wireDefaultedPlan.formulaEnvironment().isEmpty());
     assertEquals(
         ExecutionJournalLevel.VERBOSE, explicitExecutionPlan.execution().journal().level());
     assertTrue(explicitExecutionPlan.formulaEnvironment().isEmpty());

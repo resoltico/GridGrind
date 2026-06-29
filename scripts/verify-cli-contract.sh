@@ -565,23 +565,10 @@ if request_template.get("source", {}).get("type") != "NEW":
     die("request template no longer emits source.type=NEW")
 if request_template.get("persistence", {}).get("type") != "NONE":
     die("request template no longer emits persistence.type=NONE")
-mode = request_template.get("execution", {}).get("mode", {})
-if mode.get("type") != "FULL_XSSF":
-    die("request template no longer emits type=FULL_XSSF execution defaults")
-journal = request_template.get("execution", {}).get("journal", {})
-if journal.get("level") != "SUMMARY":
-    die("request template no longer emits execution.journal.level=SUMMARY")
-calculation = request_template.get("execution", {}).get("calculation", {})
-strategy = calculation.get("strategy", {})
-if strategy.get("type") != "DO_NOT_CALCULATE" or calculation.get("markRecalculateOnOpen") is not False:
-    die("request template no longer emits the DO_NOT_CALCULATE calculation default")
-formula_environment = request_template.get("formulaEnvironment", {})
-if formula_environment.get("externalWorkbooks") != []:
-    die("request template no longer emits an empty external workbook list")
-if formula_environment.get("missingWorkbookPolicy") != "ERROR":
-    die("request template no longer emits missingWorkbookPolicy=ERROR")
-if formula_environment.get("udfToolpacks") != []:
-    die("request template no longer emits an empty UDF toolpack list")
+if "execution" in request_template:
+    die("request template no longer omits the default execution block")
+if "formulaEnvironment" in request_template:
+    die("request template no longer omits the default formulaEnvironment block")
 if request_template.get("steps") != []:
     die("request template no longer emits an empty steps list")
 

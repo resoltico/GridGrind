@@ -28,19 +28,6 @@ print_cli_contract_minimal_request() {
   "protocolVersion": "V1",
   "source": { "type": "NEW" },
   "persistence": { "type": "NONE" },
-  "execution": {
-    "mode": {"type": "FULL_XSSF"},
-    "journal": { "level": "SUMMARY" },
-    "calculation": {
-      "strategy": { "type": "DO_NOT_CALCULATE" },
-      "markRecalculateOnOpen": false
-    }
-  },
-  "formulaEnvironment": {
-    "externalWorkbooks": [],
-    "missingWorkbookPolicy": "ERROR",
-    "udfToolpacks": []
-  },
   "steps": []
 }
 JSON

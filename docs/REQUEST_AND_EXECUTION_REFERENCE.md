@@ -87,8 +87,6 @@ resolution, and existing workbook-source accessibility without mutating a workbo
   "protocolVersion": "V1",
   "source":      { ... },
   "persistence": { ... },
-  "execution": { ... },
-  "formulaEnvironment": { ... },
   "steps": [ ... ]
 }
 ```
@@ -98,8 +96,8 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 | `protocolVersion` | Yes | Wire-contract version. The current public value is `V1`. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | Yes | Where and whether to save. Use `{"type":"NONE"}` for unsaved runs. |
-| `execution` | Yes | Explicit execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Use the standard template or `ExecutionPolicyInput.defaults()` from Java authoring for the normal full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`. |
-| `formulaEnvironment` | Yes | Explicit evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Use empty workbook and UDF lists with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended. |
+| `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit it for the standard full-XSSF path with `SUMMARY` journaling and `DO_NOT_CALCULATE`, or supply it explicitly when you need non-default behavior. |
+| `formulaEnvironment` | No | Optional evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. Omit it when the default evaluator is intended, or supply it when execution needs workbook bindings, `USE_CACHED_VALUE`, or UDF toolpacks. |
 | `steps` | Yes | Ordered list of workbook mutations, assertions, and inspections. Send `[]` for a no-op plan. Every non-empty step needs a caller-defined `stepId`; `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
@@ -107,21 +105,22 @@ Every tagged request union uses `type` as its discriminator field: `source`, `pe
 Every step object carries a caller-defined `stepId` plus exactly one of `action`, `assertion`, or
 `query`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step
 kind is inferred from that field; request steps do not carry a separate `step.type`.
-`gridgrind --print-request-template` emits the canonical minimal valid request with the full
-top-level envelope shown above.
+`gridgrind --print-request-template` emits the canonical minimal valid request with the minimal
+top-level envelope shown above. Add `execution` and/or `formulaEnvironment` only when the request
+needs non-default behavior.
 
 When the CLI reads the request from `--request <path>`, relative request-owned paths inside the
 JSON follow the request file directory. That includes `source.path`, `persistence.path`,
-source-backed `UTF8_FILE` / `FILE` payloads, `formulaEnvironment.externalWorkbooks[*].path`, and
-`persistence.security.signature.pkcs12Path`. The CLI flags themselves are separate: `--request`
-and `--response` still resolve from the shell working directory.
+source-backed `UTF8_FILE` / `FILE` payloads, `formulaEnvironment.externalWorkbooks[*].path` when
+present, and `persistence.security.signature.pkcs12Path`. The CLI flags themselves are separate:
+`--request` and `--response` still resolve from the shell working directory.
 
 ### Formula Environment
 
-`formulaEnvironment` is explicit on the wire. Use empty `externalWorkbooks` and `udfToolpacks`
-lists together with `missingWorkbookPolicy: "ERROR"` when the default evaluator is intended.
-Supply other values when server-side formula evaluation needs external workbook bindings,
-cached-value fallback for unresolved external references, or template-backed UDFs.
+`formulaEnvironment` is optional at the top level. Omit it when the default evaluator is
+intended. Supply it when server-side formula evaluation needs external workbook bindings,
+cached-value fallback for unresolved external references, or template-backed UDFs. When the block
+is present, the nested fields below stay explicit on the wire.
 
 ```json
 {
@@ -160,9 +159,10 @@ For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 
 ### Execution Policy
 
-`execution` is explicit on the wire. Use the standard request template or
-`ExecutionPolicyInput.defaults()` from Java authoring for the default `FULL_XSSF` request path
-with `SUMMARY` journaling.
+`execution` is optional at the top level. Omit it when the standard `FULL_XSSF` / `SUMMARY` /
+`DO_NOT_CALCULATE` policy is intended. Supply it when the request needs a non-default execution
+mode, journal level, or calculation policy. When the block is present, the nested fields below
+stay explicit on the wire.
 
 ```json
 {
@@ -354,25 +354,6 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
   },
   "persistence": {
     "type": "NONE"
-  },
-  "execution": {
-    "mode": {
-      "type": "FULL_XSSF"
-    },
-    "journal": {
-      "level": "SUMMARY"
-    },
-    "calculation": {
-      "strategy": {
-        "type": "DO_NOT_CALCULATE"
-      },
-      "markRecalculateOnOpen": false
-    }
-  },
-  "formulaEnvironment": {
-    "externalWorkbooks": [],
-    "missingWorkbookPolicy": "ERROR",
-    "udfToolpacks": []
   },
   "steps": [
     {

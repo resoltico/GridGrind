@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 /** Tests for the ordered step-based workbook plan contract. */
 class WorkbookPlanTest {
   @Test
-  void standardFactoryBuildsExplicitDefaultSectionsAndRejectsNullSteps() {
+  void standardFactoryBuildsDefaultSectionsAndRejectsNullSteps() {
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
@@ -143,17 +143,18 @@ class WorkbookPlanTest {
     assertInstanceOf(ExecutionModeInput.EventRead.class, plan.effectiveExecutionMode());
     assertEquals(formulaEnvironment, plan.formulaEnvironment());
     assertEquals("set-cell", plan.steps().getFirst().stepId());
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
-                Optional.empty(),
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                null,
-                formulaEnvironment,
-                List.of()));
+    WorkbookPlan defaultedExecutionPlan =
+        new WorkbookPlan(
+            GridGrindProtocolVersion.current(),
+            Optional.empty(),
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            null,
+            formulaEnvironment,
+            List.of());
+
+    assertTrue(defaultedExecutionPlan.execution().isDefault());
+    assertEquals(formulaEnvironment, defaultedExecutionPlan.formulaEnvironment());
   }
 
   @Test
@@ -212,6 +213,15 @@ class WorkbookPlanTest {
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
+    WorkbookPlan wireDefaultedPlan =
+        new WorkbookPlan(
+            GridGrindProtocolVersion.current(),
+            Optional.empty(),
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            null,
+            null,
+            List.of());
 
     assertEquals(executionPolicy, explicitPlan.execution());
     assertEquals(ExecutionJournalLevel.SUMMARY, explicitPlan.journalLevel());
@@ -219,28 +229,8 @@ class WorkbookPlanTest {
     assertEquals(
         ExecutionJournalLevel.SUMMARY, defaultPlan.effectiveExecution().effectiveJournalLevel());
     assertInstanceOf(ExecutionModeInput.FullXssf.class, defaultPlan.effectiveExecutionMode());
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
-                Optional.empty(),
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                null,
-                FormulaEnvironmentInput.empty(),
-                List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new WorkbookPlan(
-                GridGrindProtocolVersion.current(),
-                Optional.empty(),
-                new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.None(),
-                executionPolicy,
-                null,
-                List.of()));
+    assertTrue(wireDefaultedPlan.execution().isDefault());
+    assertTrue(wireDefaultedPlan.formulaEnvironment().isEmpty());
   }
 
   @Test

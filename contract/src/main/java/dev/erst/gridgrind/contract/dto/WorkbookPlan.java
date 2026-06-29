@@ -23,8 +23,14 @@ public record WorkbookPlan(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     WorkbookSource source,
     WorkbookPersistence persistence,
-    ExecutionPolicyInput execution,
-    FormulaEnvironmentInput formulaEnvironment,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = ExecutionPolicyInput.DefaultFilter.class)
+        ExecutionPolicyInput execution,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = FormulaEnvironmentInput.EmptyFilter.class)
+        FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookStep> steps) {
   /** Normalizes one authored plan instance. */
   public WorkbookPlan {
@@ -36,8 +42,9 @@ public record WorkbookPlan(
     planId = normalizedPlanId;
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
-    Objects.requireNonNull(execution, "execution must not be null");
-    Objects.requireNonNull(formulaEnvironment, "formulaEnvironment must not be null");
+    execution = execution == null ? ExecutionPolicyInput.defaults() : execution;
+    formulaEnvironment =
+        formulaEnvironment == null ? FormulaEnvironmentInput.empty() : formulaEnvironment;
     steps = copySteps(steps);
   }
 

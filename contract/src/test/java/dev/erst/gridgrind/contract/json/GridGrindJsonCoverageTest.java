@@ -119,14 +119,31 @@ class GridGrindJsonCoverageTest {
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of());
+    WorkbookPlan explicitRequest =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.mode(ExecutionModeInput.eventRead()),
+            new FormulaEnvironmentInput(
+                List.of(new FormulaExternalWorkbookInput("rates.xlsx", "tmp/rates.xlsx")),
+                FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
+                List.of()),
+            List.of());
 
     ObjectNode requestTree = GridGrindJson.requestTree(request);
+    ObjectNode explicitRequestTree = GridGrindJson.requestTree(explicitRequest);
 
     assertEquals("V1", requestTree.path("protocolVersion").stringValue());
     assertEquals("NEW", requestTree.path("source").path("type").stringValue());
-    assertEquals(
-        "FULL_XSSF", requestTree.path("execution").path("mode").path("type").stringValue());
     assertTrue(requestTree.path("steps").isArray());
+    assertFalse(requestTree.has("execution"));
+    assertFalse(requestTree.has("formulaEnvironment"));
+    assertEquals(
+        "EVENT_READ",
+        explicitRequestTree.path("execution").path("mode").path("type").stringValue());
+    assertEquals(
+        "USE_CACHED_VALUE",
+        explicitRequestTree.path("formulaEnvironment").path("missingWorkbookPolicy").stringValue());
     assertEquals(
         "request must not be null",
         assertThrows(NullPointerException.class, () -> GridGrindJson.requestTree(null))
@@ -581,6 +598,8 @@ class GridGrindJsonCoverageTest {
 
     assertFalse(requestJson.contains(": null"));
     assertFalse(responseJson.contains(": null"));
+    assertFalse(requestJson.contains("\"execution\""));
+    assertFalse(requestJson.contains("\"formulaEnvironment\""));
   }
 
   @Test

@@ -72,8 +72,8 @@ paths and execution scratch space resolve from one explicit directory.
 - **Inspection query**: a `steps[]` entry carrying `query`.
 - **Source-backed authored input**: request text or binary content loaded from `INLINE`,
   `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` rather than embedded directly in the JSON request body.
-- **Execution policy**: the required request-level `execution` block that controls low-memory modes,
-  journaling, and formula handling.
+- **Execution policy**: the request-level `execution` block when present. Omit it to use the
+  standard `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` behavior.
 
 ## Reference Map
 

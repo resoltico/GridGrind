@@ -126,7 +126,7 @@ class GridGrindPublicSurfaceLintTest {
   }
 
   @Test
-  void publicSurfacesDoNotAdvertiseRemovedOmissionDefaultingContracts() throws IOException {
+  void publicSurfacesDoNotAdvertiseStaleOmissionOrRequirednessContracts() throws IOException {
     record SurfaceText(String name, String text) {}
 
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
@@ -153,8 +153,11 @@ class GridGrindPublicSurfaceLintTest {
 
     List<String> forbiddenPhrases =
         List.of(
-            "execution is optional; omit it",
-            "formulaEnvironment is optional; omit it",
+            "execution is explicit on the wire.",
+            "formulaEnvironment is explicit on the wire.",
+            "the required request-level `execution` block",
+            "| `execution` | Yes |",
+            "| `formulaEnvironment` | Yes |",
             "Null fields default to empty string.",
             "All fields are optional and normalize to defaults when omitted.",
             "Omitted nested fields normalize to defaults or clear state.",
@@ -164,8 +167,7 @@ class GridGrindPublicSurfaceLintTest {
             "defaults to `MOVE_AND_RESIZE` when omitted.",
             "Defaults to `rect` when omitted.",
             "GridGrind writes the default axis set for that plot family.",
-            "Generated example JSON omits absent optional sections",
-            "optional request-level `execution` block");
+            "Generated example JSON omits absent optional sections");
 
     List<String> violations = new ArrayList<>();
     for (SurfaceText surface : surfaces) {
@@ -178,8 +180,7 @@ class GridGrindPublicSurfaceLintTest {
 
     assertTrue(
         violations.isEmpty(),
-        () ->
-            "Removed omission-defaulting contract text leaked into public surfaces: " + violations);
+        () -> "Stale omission/defaulting contract text leaked into public surfaces: " + violations);
   }
 
   private static void collectUnknown(

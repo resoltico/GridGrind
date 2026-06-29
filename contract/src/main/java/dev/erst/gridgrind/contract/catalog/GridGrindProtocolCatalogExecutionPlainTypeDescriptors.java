@@ -160,8 +160,7 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "formulaEnvironmentInputType",
               FormulaEnvironmentInput.class,
               "FormulaEnvironmentInput",
-              "Request-scoped formula-evaluation environment covering external workbook bindings,"
-                  + " missing-workbook policy, and template-backed UDF toolpacks.",
+              GridGrindContractText.formulaEnvironmentInputSummary(),
               List.of("externalWorkbooks", "missingWorkbookPolicy", "udfToolpacks")),
           plainTypeDescriptor(
               "ooxmlOpenSecurityInputType",

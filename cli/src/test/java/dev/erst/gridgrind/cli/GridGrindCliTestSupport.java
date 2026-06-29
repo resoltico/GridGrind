@@ -31,6 +31,19 @@ class GridGrindCliTestSupport {
         stepsJson);
   }
 
+  protected static String minimalRequestJson(
+      String sourceJson, String persistenceJson, String stepsJson) {
+    return """
+        {
+          "protocolVersion": "V1",
+          "source": %s,
+          "persistence": %s,
+          "steps": %s
+        }
+        """
+        .formatted(sourceJson, persistenceJson, stepsJson);
+  }
+
   protected static String requestJson(
       String sourceJson,
       String persistenceJson,

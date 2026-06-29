@@ -84,4 +84,17 @@ public record ExecutionPolicyInput(
   public CalculationPolicyInput effectiveCalculation() {
     return calculation;
   }
+
+  /** Custom Jackson inclusion filter that omits the standard default execution policy. */
+  public static final class DefaultFilter {
+    @Override
+    public boolean equals(Object other) {
+      return other == null || (other instanceof ExecutionPolicyInput input && input.isDefault());
+    }
+
+    @Override
+    public int hashCode() {
+      return DefaultFilter.class.hashCode();
+    }
+  }
 }

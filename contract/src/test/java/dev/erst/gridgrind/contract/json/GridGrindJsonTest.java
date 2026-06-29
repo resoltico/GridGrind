@@ -44,7 +44,7 @@ import tools.jackson.databind.node.ObjectNode;
 @SuppressWarnings("NotJavadoc")
 class GridGrindJsonTest {
   @Test
-  void readsRequestsFromAnExplicitTopLevelProtocolEnvelope() throws IOException {
+  void readsRequestsFromTheMinimalTopLevelProtocolEnvelope() throws IOException {
     WorkbookPlan plan =
         GridGrindJson.readRequest(
             """
@@ -52,25 +52,18 @@ class GridGrindJsonTest {
               "protocolVersion": "V1",
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
-              "execution": {
-                "mode": {"type": "FULL_XSSF"},
-                "journal": { "level": "NORMAL" },
-                "calculation": {
-                  "strategy": { "type": "DO_NOT_CALCULATE" },
-                  "markRecalculateOnOpen": false
-                }
-              },
-              "formulaEnvironment": {
-                "externalWorkbooks": [],
-                "missingWorkbookPolicy": "ERROR",
-                "udfToolpacks": []
-              },
               "steps": []
             }
             """
                 .getBytes(StandardCharsets.UTF_8));
 
     assertEquals(GridGrindProtocolVersion.V1, plan.protocolVersion());
+    assertTrue(plan.execution().isDefault());
+    assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
+    assertTrue(plan.formulaEnvironment().isEmpty());
+    String serialized = new String(GridGrindJson.writeRequestBytes(plan), StandardCharsets.UTF_8);
+    assertFalse(serialized.contains("\"execution\""));
+    assertFalse(serialized.contains("\"formulaEnvironment\""));
   }
 
   @Test

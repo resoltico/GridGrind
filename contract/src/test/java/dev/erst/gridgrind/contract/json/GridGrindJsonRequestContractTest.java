@@ -1,12 +1,15 @@
 package dev.erst.gridgrind.contract.json;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
-/** Covers the explicit request JSON contract with no request-only default expansion. */
+/** Covers the request JSON contract, including top-level omission defaults. */
 class GridGrindJsonRequestContractTest {
   @Test
   void requestRequiresExplicitProtocolVersion() {
@@ -73,23 +76,22 @@ class GridGrindJsonRequestContractTest {
   }
 
   @Test
-  void requestRequiresExplicitTopLevelExecutionAndFormulaEnvironment() {
-    InvalidRequestShapeException exception =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    """
-                    {
-                      "protocolVersion": "V1",
-                      "source": { "type": "NEW" },
-                      "persistence": { "type": "NONE" },
-                      "steps": []
-                    }
-                    """
-                        .getBytes(StandardCharsets.UTF_8)));
+  void requestAllowsOmittedTopLevelExecutionAndFormulaEnvironment() throws Exception {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": "V1",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
 
-    assertTrue(exception.getMessage().contains("execution"));
+    assertTrue(request.execution().isDefault());
+    assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
+    assertTrue(request.formulaEnvironment().isEmpty());
   }
 
   @Test

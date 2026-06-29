@@ -24,7 +24,9 @@ GridGrind ships the same example workflows in two forms:
   These are designed to run from an artifact working directory and use request-relative paths such
   as `generated-workbooks/...`. The machine-readable catalog publishes one portable
   `requestFileName`, while any repo-backed asset requirements are published separately through
-  `requiredWorkspacePaths`.
+  `requiredWorkspacePaths`. When one example uses the default execution path and empty evaluator
+  environment, the printed JSON omits those two top-level blocks and keeps only the minimal
+  request envelope.
   They are not all equally portable: most are self-contained in a blank working directory, while a
   few are intentionally repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from

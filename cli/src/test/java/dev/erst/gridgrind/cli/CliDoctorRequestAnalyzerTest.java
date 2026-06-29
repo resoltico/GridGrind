@@ -173,14 +173,39 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
 
     assertFalse(report.valid());
     assertEquals(1, doctor.directCalls());
+    assertTrue(doctor.lastRequest().execution().isDefault());
+    assertTrue(doctor.lastRequest().formulaEnvironment().isEmpty());
     assertEquals("__gridgrind_missing_source__.xlsx", inputPath(doctor.lastRequest()));
     assertEquals("__gridgrind_missing_output__.xlsx", outputPath(doctor.lastRequest()));
     List<String> problemMessages =
         report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
-    assertTrue(problemMessages.contains("Missing required field 'execution'"));
-    assertTrue(problemMessages.contains("Missing required field 'formulaEnvironment'"));
+    assertFalse(problemMessages.contains("Missing required field 'execution'"));
+    assertFalse(problemMessages.contains("Missing required field 'formulaEnvironment'"));
+  }
+
+  @Test
+  void diagnoseAcceptsMinimalRequestsAndAppliesTopLevelDefaults() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        minimalRequestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]")
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertTrue(report.valid());
+    assertEquals(1, doctor.directCalls());
+    assertTrue(doctor.lastRequest().execution().isDefault());
+    assertTrue(doctor.lastRequest().formulaEnvironment().isEmpty());
   }
 
   @Test
@@ -227,7 +252,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void diagnoseTreatsNullAndBlankConditionalPathsAsMissingWorkbookPaths() throws IOException {
+  void diagnoseRejectsExplicitNullTopLevelDefaultsBeforeDoctorExecution() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     byte[] requestBytes =
@@ -253,13 +278,43 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals("__gridgrind_missing_source__.xlsx", inputPath(doctor.lastRequest()));
-    assertEquals("__gridgrind_missing_output__.xlsx", outputPath(doctor.lastRequest()));
+    assertEquals(0, doctor.directCalls());
+    assertEquals(0, doctor.boundCalls());
     assertTrue(
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
             .anyMatch(
                 "Field 'execution' must be omitted when absent; explicit null is not accepted."
+                    ::equals));
+  }
+
+  @Test
+  void diagnoseTurnsTemplateCoveredExplicitNullsIntoFieldProblems() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        minimalRequestJson("{ \"type\": null }", "{ \"type\": \"NONE\" }", "[]")
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertFalse(report.valid());
+    assertEquals(1, doctor.directCalls());
+    assertEquals(0, doctor.boundCalls());
+    assertEquals("NEW", sourceType(doctor.lastRequest()));
+    assertEquals(Optional.of("source.type"), readRequestContext(report).jsonPath());
+    assertTrue(
+        report.problems().stream()
+            .map(GridGrindProblemDetail.Problem::message)
+            .anyMatch(
+                "Field 'source.type' must be omitted when absent; explicit null is not accepted."
                     ::equals));
   }
 
@@ -573,19 +628,13 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   private static RequestDoctorReport.Summary summaryFor(WorkbookPlan request) {
-    JsonNode requestTree = GridGrindJson.requestTree(request);
-    int stepCount = requestTree.path("steps").size();
+    int stepCount = request.steps().size();
     return new RequestDoctorReport.Summary(
         sourceType(request),
         persistenceType(request),
-        requestTree.path("execution").path("mode").path("type").stringValue(),
-        requestTree
-            .path("execution")
-            .path("calculation")
-            .path("strategy")
-            .path("type")
-            .stringValue(),
-        requestTree.path("execution").path("calculation").path("markRecalculateOnOpen").asBoolean(),
+        request.effectiveExecutionMode().modeType(),
+        request.calculationPolicy().effectiveStrategy().strategyType(),
+        request.calculationPolicy().markRecalculateOnOpen(),
         false,
         stepCount,
         stepCount,

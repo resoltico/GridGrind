@@ -174,10 +174,17 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `ExecutionPolicyInput`. */
   public static String executionPolicyInputSummary() {
-    return "Explicit request execution policy covering execution.mode, execution.journal,"
+    return "Optional request execution policy covering execution.mode, execution.journal,"
         + " and execution.calculation."
-        + " Use ExecutionPolicyInput.defaults() when the standard FULL_XSSF / SUMMARY /"
-        + " DO_NOT_CALCULATE policy is intended.";
+        + " Omit execution when the standard FULL_XSSF / SUMMARY / DO_NOT_CALCULATE policy"
+        + " is intended.";
+  }
+
+  /** One stable catalog summary for `FormulaEnvironmentInput`. */
+  public static String formulaEnvironmentInputSummary() {
+    return "Optional request-scoped formula-evaluation environment covering external workbook"
+        + " bindings, missing-workbook policy, and template-backed UDF toolpacks."
+        + " Omit formulaEnvironment when the default evaluator is intended.";
   }
 
   /** One stable catalog summary for `ExecutionJournalInput`. */
