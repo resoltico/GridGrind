@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: INDEX
-updated: "2026-05-16"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, index, docs, documentation, reference, map]
   questions: ["where is the gridgrind documentation index", "what docs does gridgrind have", "how is the gridgrind documentation organized"]
@@ -18,7 +18,7 @@ Complete map of every file in `docs/`. Files are grouped by audience and topic.
 
 | File | What it covers |
 |:-----|:---------------|
-| [QUICK_START.md](./QUICK_START.md) | First successful run — Docker or JAR, new workbook, read result back |
+| [QUICK_START.md](./QUICK_START.md) | First successful run — packaged launcher, Docker, or JAR; new workbook; read result back |
 | [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) | Copy-paste request fragments: cells, styles, assertions, inspections, charts |
 | [OPERATIONS.md](./OPERATIONS.md) | Stable public index of every mutation action, assertion, and inspection query; links to each detail reference |
 | [EXAMPLES.md](./EXAMPLES.md) | Runnable example files in `examples/`, path-rooting rules, and refresh flow |

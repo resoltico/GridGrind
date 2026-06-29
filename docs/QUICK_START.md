@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: QUICK_START
-updated: "2026-06-14"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -19,7 +19,7 @@ edits without hand-authoring boilerplate defaults yourself.
 
 ## What You Need
 
-- A GridGrind runtime: Docker image or the release JAR
+- A GridGrind runtime: the packaged `gridgrind` launcher, the Docker image, or the release JAR
 - A working directory where GridGrind can read the request file and write the response file
 - One example request to start from: the built-in `BUDGET` example emitted by `--print-example --lookup BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
 

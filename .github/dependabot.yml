@@ -8,6 +8,8 @@ updates:
     directory: "/jazzer"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "gradle-wrapper"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

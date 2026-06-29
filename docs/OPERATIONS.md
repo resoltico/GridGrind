@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: OPERATIONS
-updated: "2026-06-14"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
