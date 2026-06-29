@@ -47,30 +47,11 @@ The bare `--print-protocol-catalog` output is the compact first-contact index. `
   "persistence": {
     "type": "NONE"
   },
-  "execution": {
-    "mode": {
-      "type": "FULL_XSSF"
-    },
-    "journal": {
-      "level": "SUMMARY"
-    },
-    "calculation": {
-      "strategy": {
-        "type": "DO_NOT_CALCULATE"
-      },
-      "markRecalculateOnOpen": false
-    }
-  },
-  "formulaEnvironment": {
-    "externalWorkbooks": [],
-    "missingWorkbookPolicy": "ERROR",
-    "udfToolpacks": []
-  },
   "steps": []
 }
 ```
 
-Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical scaffold. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live event output.
+Every non-empty step needs a caller-defined `stepId`. `stepId` values must be unique within `steps[]` and must match `[A-Za-z0-9._-]+`. Step kind is inferred from exactly one of `action`, `assertion`, or `query`; do not send `step.type`. `gridgrind --print-request-template` emits this same canonical minimal envelope. Top-level `execution` and `formulaEnvironment` are optional: omit them for the default `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` path and the empty evaluator environment, or add them only when the request needs non-default behavior. The step snippets below are request fragments, not standalone full requests, unless the section explicitly shows the full top-level envelope. `SUMMARY` is the default journal level because it keeps the response compact and deterministic by omitting timing telemetry and live event output.
 
 ## Common Source And Persistence Shapes
 
@@ -138,7 +119,7 @@ inside the request root or explicit execution root.
 
 ## Execution, Formula, And Mode Rules
 
-Common execution block:
+Add an execution block when you need non-default mode, journal, or calculation behavior:
 
 ```json
 {
@@ -158,6 +139,9 @@ Common execution block:
   }
 }
 ```
+
+`formulaEnvironment` is also optional at the top level. Add it only when the request needs
+external workbook bindings, `USE_CACHED_VALUE`, or template-backed UDF toolpacks.
 
 Targeted evaluation:
 

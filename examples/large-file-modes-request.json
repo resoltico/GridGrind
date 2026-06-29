@@ -22,11 +22,6 @@
       "markRecalculateOnOpen" : true
     }
   },
-  "formulaEnvironment" : {
-    "externalWorkbooks" : [ ],
-    "missingWorkbookPolicy" : "ERROR",
-    "udfToolpacks" : [ ]
-  },
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {

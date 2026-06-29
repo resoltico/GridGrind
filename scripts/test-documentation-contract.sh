@@ -33,14 +33,7 @@ import os
 
 root = Path(os.environ["GRIDGRIND_REPO_ROOT"])
 frontmatter_files = sorted([*root.glob("docs/*.md"), root / "jazzer/README.md"])
-request_required = {
-    "protocolVersion",
-    "source",
-    "persistence",
-    "execution",
-    "formulaEnvironment",
-    "steps",
-}
+request_required = {"protocolVersion", "source", "persistence", "steps"}
 
 for doc in [root / "README.md", *frontmatter_files]:
     for line in doc.read_text(encoding="utf-8").splitlines():

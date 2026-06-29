@@ -371,9 +371,14 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindTaskPlanner.requestFor("DASHBOARD"), request);
+    assertTrue(request.execution().isDefault());
+    assertTrue(request.formulaEnvironment().isEmpty());
+    assertFalse(rendered.contains("\"execution\""));
+    assertFalse(rendered.contains("\"formulaEnvironment\""));
   }
 
   @Test
@@ -544,9 +549,13 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     dev.erst.gridgrind.contract.dto.WorkbookPlan template =
         GridGrindJson.readRequest(stdout.toByteArray());
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
 
     assertEquals(0, exitCode);
     assertEquals("FULL_XSSF", template.execution().mode().modeType());
+    assertTrue(template.formulaEnvironment().isEmpty());
+    assertFalse(rendered.contains("\"execution\""));
+    assertFalse(rendered.contains("\"formulaEnvironment\""));
   }
 
   @Test

@@ -25,9 +25,28 @@ class GridGrindProtocolCatalogTest {
   void exposesMinimalStepBasedRequestTemplate() throws IOException {
     WorkbookPlan template = GridGrindProtocolCatalog.requestTemplate();
     WorkbookPlan decoded = GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(template));
+    var templateTree = GridGrindJson.requestTree(template);
 
     assertEquals(GridGrindProtocolVersion.V1, template.protocolVersion());
+    assertTrue(template.execution().isDefault());
+    assertTrue(template.formulaEnvironment().isEmpty());
     assertTrue(template.steps().isEmpty());
+    assertFalse(templateTree.has("execution"));
+    assertFalse(templateTree.has("formulaEnvironment"));
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        GridGrindProtocolCatalog.catalog()
+            .requestType()
+            .field("execution")
+            .orElseThrow()
+            .requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        GridGrindProtocolCatalog.catalog()
+            .requestType()
+            .field("formulaEnvironment")
+            .orElseThrow()
+            .requirement());
     assertEquals(template, decoded);
   }
 

@@ -16,9 +16,11 @@ final class GridGrindCliSurfaceRequestSections {
                 + " EXISTING requires source.path.",
             "persistence is required. NONE keeps the workbook in memory only.",
             "planId is optional. When omitted, the response journal omits it.",
-            "execution is required. execution.mode is a typed discriminator;"
-                + " choose type=FULL_XSSF, EVENT_READ, or STREAMING_WRITE under the"
-                + " limits above.",
+            "execution is optional. When omitted, GridGrind uses FULL_XSSF with"
+                + " SUMMARY journaling and DO_NOT_CALCULATE without"
+                + " markRecalculateOnOpen. When supplied, execution.mode is a typed"
+                + " discriminator; choose type=FULL_XSSF, EVENT_READ, or"
+                + " STREAMING_WRITE under the limits above.",
             "execution.journal.level controls journal detail; SUMMARY is the default and"
                 + " keeps the response stable by omitting timing telemetry."
                 + " VERBOSE also streams live phase events to stderr as timestamped CATEGORY"
@@ -38,8 +40,9 @@ final class GridGrindCliSurfaceRequestSections {
             GridGrindContractText.standardInputRequiresRequestMessage()
                 + " because stdin cannot carry both the request JSON and authored input"
                 + " content in one CLI invocation.",
-            "formulaEnvironment is required. The empty-environment shape is"
-                + " externalWorkbooks=[], missingWorkbookPolicy=ERROR, udfToolpacks=[]."
+            "formulaEnvironment is optional. When omitted, GridGrind uses the empty"
+                + " evaluator environment: externalWorkbooks=[],"
+                + " missingWorkbookPolicy=ERROR, udfToolpacks=[]."
                 + " missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE;"
                 + " udfToolpacks[] registers named UDF packs for formula evaluation.",
             "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as"
@@ -147,7 +150,9 @@ final class GridGrindCliSurfaceRequestSections {
                     + " report without mutating a workbook. The doctor response returns"
                     + " warnings plus every independently provable blocking problem."),
             new CliSurface.DefinitionEntry(
-                "--print-request-template", "Print a minimal valid request JSON document."),
+                "--print-request-template",
+                "Print a minimal valid request JSON document with default execution and"
+                    + " formula settings omitted."),
             new CliSurface.DefinitionEntry(
                 "--print-example-catalog",
                 "Print the machine-readable built-in example catalog, including the stable"

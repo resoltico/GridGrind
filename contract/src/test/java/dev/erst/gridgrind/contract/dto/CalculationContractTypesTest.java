@@ -122,6 +122,22 @@ class CalculationContractTypesTest {
   }
 
   @Test
+  void executionPolicyDefaultFilterOnlyMatchesNullOrDefaultPolicies() {
+    ExecutionPolicyInput.DefaultFilter filter = new ExecutionPolicyInput.DefaultFilter();
+    ExecutionPolicyInput defaultPolicy = ExecutionPolicyInput.defaults();
+    ExecutionPolicyInput customPolicy =
+        ExecutionPolicyInput.modeAndCalculation(
+            ExecutionModeInput.eventRead(),
+            new CalculationPolicyInput(new CalculationStrategyInput.EvaluateAll(), true));
+
+    assertTrue(filterMatches(filter, null));
+    assertTrue(filterMatches(filter, defaultPolicy));
+    assertFalse(filterMatches(filter, customPolicy));
+    assertFalse(filterMatches(filter, "not-an-execution-policy"));
+    assertEquals(ExecutionPolicyInput.DefaultFilter.class.hashCode(), filter.hashCode());
+  }
+
+  @Test
   void validatesCalculationReportsAndJournalCalculationEnvelope() {
     CalculationReport.FormulaCapability evaluable =
         new CalculationReport.FormulaCapability(
@@ -285,5 +301,10 @@ class CalculationContractTypesTest {
     assertEquals(java.util.Optional.of("Ops"), preserved.sheetName());
     assertEquals(java.util.Optional.of("C4"), preserved.address());
     assertEquals(java.util.Optional.of("SUM(A1:A3)"), preserved.formula());
+  }
+
+  private static boolean filterMatches(
+      ExecutionPolicyInput.DefaultFilter filter, Object candidate) {
+    return filter.equals(candidate);
   }
 }

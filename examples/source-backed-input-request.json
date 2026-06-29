@@ -7,25 +7,6 @@
   "persistence" : {
     "type" : "NONE"
   },
-  "execution" : {
-    "mode" : {
-      "type" : "FULL_XSSF"
-    },
-    "journal" : {
-      "level" : "SUMMARY"
-    },
-    "calculation" : {
-      "strategy" : {
-        "type" : "DO_NOT_CALCULATE"
-      },
-      "markRecalculateOnOpen" : false
-    }
-  },
-  "formulaEnvironment" : {
-    "externalWorkbooks" : [ ],
-    "missingWorkbookPolicy" : "ERROR",
-    "udfToolpacks" : [ ]
-  },
   "steps" : [ {
     "stepId" : "ensure-inputs",
     "target" : {

@@ -21,11 +21,6 @@
       "markRecalculateOnOpen" : false
     }
   },
-  "formulaEnvironment" : {
-    "externalWorkbooks" : [ ],
-    "missingWorkbookPolicy" : "ERROR",
-    "udfToolpacks" : [ ]
-  },
   "steps" : [ {
     "stepId" : "ensure-budget",
     "target" : {
