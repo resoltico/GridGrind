@@ -18,6 +18,18 @@ class GridGrindRequestProblemSupportTest {
     assertEquals(
         "Field 'planId' must be omitted when absent; explicit null is not accepted.",
         GridGrindRequestProblemSupport.explicitNullFieldMessage("planId"));
+    assertTrue(
+        GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(
+            "Missing required field 'protocolVersion'"));
+    assertTrue(
+        GridGrindRequestProblemSupport.isExplicitNullFieldMessage(
+            "Field 'planId' must be omitted when absent; explicit null is not accepted."));
+    assertFalse(
+        GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(
+            "Field 'planId' must be omitted when absent; explicit null is not accepted."));
+    assertFalse(
+        GridGrindRequestProblemSupport.isExplicitNullFieldMessage(
+            "Missing required field 'protocolVersion'"));
     assertEquals(
         "jsonPath must not be blank",
         assertThrows(

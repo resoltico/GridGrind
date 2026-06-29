@@ -34,7 +34,10 @@ class RequestDoctorReportTest {
     assertEquals(AnalysisSeverity.INFO, clean.severity());
     assertEquals(AnalysisSeverity.WARNING, warnings.severity());
     assertEquals(AnalysisSeverity.ERROR, invalid.severity());
+    assertEquals(List.of(problem), invalid.problems());
     assertEquals(List.of(problem), invalidBatch.problems());
+    assertEquals(Optional.empty(), clean.primaryProblem());
+    assertEquals(Optional.of(problem), invalid.primaryProblem());
     assertEquals(List.of(warning), warnings.warnings());
     assertEquals(GridGrindProtocolVersion.current(), clean.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> warnings.warnings().add(warning));

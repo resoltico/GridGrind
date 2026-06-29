@@ -30,7 +30,7 @@ final class GridGrindJsonProblemMessageSupport {
     }
     if (validationCause.isPresent()) {
       Throwable cause = validationCause.orElseThrow();
-      String publicMessage = message(cause);
+      String publicMessage = publicValidationMessage(exception, cause);
       GridGrindJsonPayloadMetadataSupport.PayloadMetadata validationMetadata =
           effectivePayloadMetadata(metadata, Optional.of(cause), publicMessage);
       if (GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(publicMessage)) {
@@ -127,6 +127,17 @@ final class GridGrindJsonProblemMessageSupport {
   private static boolean isExplicitNullCheck(NullPointerException npe) {
     String message = npe.getMessage();
     return message != null && message.endsWith("must not be null");
+  }
+
+  private static String publicValidationMessage(JacksonException exception, Throwable cause) {
+    String causeMessage = message(cause);
+    if (cause instanceof NullPointerException) {
+      String exceptionMessage = message(exception);
+      if (GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(exceptionMessage)) {
+        return exceptionMessage;
+      }
+    }
+    return causeMessage;
   }
 
   private static GridGrindJsonPayloadMetadataSupport.PayloadMetadata effectivePayloadMetadata(

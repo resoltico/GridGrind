@@ -63,6 +63,10 @@ class GridGrindJsonCoverageTest {
       assertEquals(response, GridGrindJson.readResponse(responseStream));
       assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
       assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
+      assertEquals(
+          doctorReport,
+          GridGrindJson.readRequestDoctorReport(
+              GridGrindJson.writeRequestDoctorReportBytes(doctorReport)));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
       assertFalse(doctorReportStream.closed);
@@ -383,10 +387,10 @@ class GridGrindJsonCoverageTest {
         "JSON value at 'items[0].bar[1]' must be an integer value",
         GridGrindJson.mismatchedInputMessage(floatingPointWithNestedPath));
     assertEquals(
-        "Missing required field 'fieldName'",
+        "Field 'fieldName' must be omitted when absent; explicit null is not accepted.",
         GridGrindJson.message(new NullPointerException("fieldName must not be null")));
     assertEquals(
-        "Missing required field 'steps[0].target'",
+        "Field 'steps[0].target' must be omitted when absent; explicit null is not accepted.",
         GridGrindJson.message(new NullPointerException("steps[0].target must not be null")));
     assertEquals(
         "JSON value has the wrong shape for this field",
@@ -635,6 +639,19 @@ class GridGrindJsonCoverageTest {
         InvalidJsonException.class,
         invokeInvalidPayload(new WrappedJacksonException("wrapper", nullMessageNull)),
         "NPE with null message should not be treated as a validation error");
+  }
+
+  @Test
+  void prefersMissingRequiredCreatorMessagesOverExplicitNullValidationCauses() {
+    InvalidRequestShapeException failure =
+        assertInstanceOf(
+            InvalidRequestShapeException.class,
+            invokeInvalidPayload(
+                new WrappedJacksonException(
+                    "Missing required creator property 'protocolVersion'",
+                    new NullPointerException("protocolVersion must not be null"))));
+
+    assertEquals("Missing required field 'protocolVersion'", failure.getMessage());
   }
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {

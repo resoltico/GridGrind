@@ -36,6 +36,20 @@ public final class GridGrindRequestProblemSupport {
         + "' must be omitted when absent; explicit null is not accepted.";
   }
 
+  /** Returns whether one public request message reports one missing required field. */
+  public static boolean isMissingRequiredFieldMessage(String message) {
+    return MISSING_REQUIRED_FIELD_PATTERN
+        .matcher(Objects.requireNonNullElse(message, "").trim())
+        .matches();
+  }
+
+  /** Returns whether one public request message reports one explicit-null field. */
+  public static boolean isExplicitNullFieldMessage(String message) {
+    return EXPLICIT_NULL_FIELD_PATTERN
+        .matcher(Objects.requireNonNullElse(message, "").trim())
+        .matches();
+  }
+
   /** Extracts one actionable JSON path when the public request error wording carries it. */
   public static Optional<String> jsonPathFromMessage(String message) {
     String normalized = Objects.requireNonNullElse(message, "").trim();

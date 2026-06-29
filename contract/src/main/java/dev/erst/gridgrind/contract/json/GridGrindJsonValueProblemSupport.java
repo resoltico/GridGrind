@@ -71,7 +71,7 @@ final class GridGrindJsonValueProblemSupport {
     }
     Matcher creatorNullField = CREATOR_NULL_FIELD_PATTERN.matcher(normalized);
     if (creatorNullField.find()) {
-      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(creatorNullField.group(1));
+      return GridGrindRequestProblemSupport.explicitNullFieldMessage(creatorNullField.group(1));
     }
     if (normalized.startsWith("Cannot deserialize value")) {
       return "JSON value has the wrong shape for this field";
