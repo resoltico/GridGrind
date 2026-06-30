@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.69.0"
+version: "0.70.0"
 domain: JAVA_AUTHORING
 updated: "2026-05-01"
 route:

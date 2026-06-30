@@ -6,6 +6,8 @@ Earlier release history through `0.65.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ## [Unreleased]
 
+## [0.70.0] - 2026-06-30
+
 ### Added
 - Added `UNSUPPORTED_FORMULA_CONSTRUCT` as a public problem code for authored formulas that parse successfully but rely on unsupported constructs such as `LAMBDA` and `LET`.
 
@@ -267,7 +269,8 @@ Earlier release history through `0.65.0` is archived in [docs/CHANGELOG_ARCHIVE.
   merge-handoff gate cannot fail on quiet watchdog timeouts while black-box artifact verification
   is actively running.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.69.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.70.0...HEAD
+[0.70.0]: https://github.com/resoltico/GridGrind/compare/v0.69.0...v0.70.0
 [0.69.0]: https://github.com/resoltico/GridGrind/compare/v0.68.0...v0.69.0
 [0.68.0]: https://github.com/resoltico/GridGrind/compare/v0.67.0...v0.68.0
 [0.67.0]: https://github.com/resoltico/GridGrind/compare/v0.66.0...v0.67.0
