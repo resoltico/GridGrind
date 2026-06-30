@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-06-12"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]

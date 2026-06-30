@@ -47,6 +47,8 @@ release archive, or `java -jar gridgrind.jar` if you downloaded the standalone J
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
+`--doctor-request` returns every independently provable blocking problem it can confirm before any
+workbook mutation or save attempt.
 
 If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and replace
 `gridgrind` below with `java -jar cli/build/libs/gridgrind.jar`.
@@ -103,9 +105,10 @@ A single JSON request describes every step: create a sheet, write cells, assert 
 read facts back, and save. GridGrind executes the steps in order and writes the file only when
 every step succeeds. If an assertion fails or any step errors, no workbook is saved.
 
-The top-level envelope is always explicit: `protocolVersion`, `source`, `persistence`,
-`execution`, `formulaEnvironment`, and ordered `steps`. Steps can mix mutation, assertion, and
-inspection in the same plan.
+The smallest valid top-level envelope is `protocolVersion`, `source`, `persistence`, and ordered
+`steps`. `execution` and `formulaEnvironment` are optional when you want the default
+`FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` execution path and the empty evaluator environment.
+Steps can mix mutation, assertion, and inspection in the same plan.
 
 The safest way to start is to ask GridGrind to emit a valid request for you:
 
@@ -118,7 +121,7 @@ gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 ## Documentation
 
 - [Full docs index](docs/INDEX.md) — every reference file organized by topic
-- [First run guide](docs/QUICK_START.md) — first successful run, Docker or JAR
+- [First run guide](docs/QUICK_START.md) — first successful run from the packaged launcher, Docker, or JAR
 - [Snippets](docs/QUICK_REFERENCE.md) — copy-paste request patterns
 - [Java authoring](docs/JAVA_AUTHORING.md) — build requests from Java instead of JSON
 - [Operations reference](docs/OPERATIONS.md) — every field and operation

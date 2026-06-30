@@ -259,8 +259,8 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         """
         {
           "protocolVersion": "V1",
-          "source": { "type": "EXISTING", "path": " " },
-          "persistence": { "type": "SAVE_AS", "path": null },
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
           "execution": null,
           "formulaEnvironment": null,
           "steps": []
@@ -278,14 +278,18 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
                 InputStream.nullInputStream());
 
     assertFalse(report.valid());
-    assertEquals(0, doctor.directCalls());
+    assertEquals(1, doctor.directCalls());
     assertEquals(0, doctor.boundCalls());
+    assertTrue(doctor.lastRequest().execution().isDefault());
+    assertTrue(doctor.lastRequest().formulaEnvironment().isEmpty());
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
     assertTrue(
-        report.problems().stream()
-            .map(GridGrindProblemDetail.Problem::message)
-            .anyMatch(
-                "Field 'execution' must be omitted when absent; explicit null is not accepted."
-                    ::equals));
+        problemMessages.contains(
+            "Field 'execution' must be omitted when absent; explicit null is not accepted."));
+    assertTrue(
+        problemMessages.contains(
+            "Field 'formulaEnvironment' must be omitted when absent; explicit null is not accepted."));
   }
 
   @Test
@@ -417,6 +421,52 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         {
           "protocolVersion": "V1",
           "source": { "type": "EXISTING", "path": {} },
+          "persistence": { "type": "NONE" },
+          "execution": {
+            "mode": { "type": "FULL_XSSF" },
+            "journal": { "level": "NORMAL" },
+            "calculation": {
+              "strategy": { "type": "DO_NOT_CALCULATE" },
+              "markRecalculateOnOpen": false
+            }
+          },
+          "formulaEnvironment": {
+            "externalWorkbooks": [],
+            "missingWorkbookPolicy": "ERROR",
+            "udfToolpacks": []
+          },
+          "steps": []
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertFalse(report.valid());
+    assertEquals(1, doctor.directCalls());
+    assertEquals("__gridgrind_missing_source__.xlsx", inputPath(doctor.lastRequest()));
+    assertTrue(
+        report.problems().stream()
+            .map(GridGrindProblemDetail.Problem::message)
+            .anyMatch("Missing required field 'source.path'"::equals));
+  }
+
+  @Test
+  void diagnoseTreatsNullWorkbookPathsAsMissingConditionalPaths() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        """
+        {
+          "protocolVersion": "V1",
+          "source": { "type": "EXISTING", "path": null },
           "persistence": { "type": "NONE" },
           "execution": {
             "mode": { "type": "FULL_XSSF" },

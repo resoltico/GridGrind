@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: EXAMPLES
-updated: "2026-06-14"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -35,8 +35,8 @@ GridGrind ships the same example workflows in two forms:
 
 ## Path Rules
 
-- Built-in examples are for the release JAR, Docker image, or `:cli:run` when you first print the
-  example into your own working directory.
+- Built-in examples are for the packaged `gridgrind` launcher, the release JAR, the Docker image,
+  or `:cli:run` when you first print the example into your own working directory.
 - Self-contained built-ins can run from a blank artifact workspace after you print the request.
 - Repo-asset-backed built-ins require the matching asset paths named in `requiredWorkspacePaths` to exist
   in the working directory before you run them.

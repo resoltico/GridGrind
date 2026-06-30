@@ -29,24 +29,24 @@ distributions.named("shadow") {
     distributionBaseName.set("gridgrind")
 }
 
-val cleanStartScripts by tasks.registering(Delete::class) {
+val cleanStartScripts = tasks.register<Delete>("cleanStartScripts") {
     delete(layout.buildDirectory.dir("scripts"))
 }
 
-val cleanShadowStartScripts by tasks.registering(Delete::class) {
+val cleanShadowStartScripts = tasks.register<Delete>("cleanShadowStartScripts") {
     delete(layout.buildDirectory.dir("scriptsShadow"))
 }
 
-val cleanInstalledDist by tasks.registering(Delete::class) {
+val cleanInstalledDist = tasks.register<Delete>("cleanInstalledDist") {
     delete(layout.buildDirectory.dir("install/cli"))
 }
 
-val cleanInstalledShadowDist by tasks.registering(Delete::class) {
+val cleanInstalledShadowDist = tasks.register<Delete>("cleanInstalledShadowDist") {
     delete(layout.buildDirectory.dir("install/gridgrind"))
     delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 
-val cleanDistributionArchives by tasks.registering(Delete::class) {
+val cleanDistributionArchives = tasks.register<Delete>("cleanDistributionArchives") {
     delete(layout.buildDirectory.dir("distributions"))
 }
 

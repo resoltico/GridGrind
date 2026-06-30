@@ -217,6 +217,10 @@ final class CliDoctorRequestAnalyzer {
               requestInput,
               problems);
       usesSyntheticValues |=
+          stripExplicitNullOptionalField(sanitized, requestInput, problems, "execution");
+      usesSyntheticValues |=
+          stripExplicitNullOptionalField(sanitized, requestInput, problems, "formulaEnvironment");
+      usesSyntheticValues |=
           applyConditionalWorkbookPathDefaults(
               sanitized,
               requestInput,
@@ -235,6 +239,20 @@ final class CliDoctorRequestAnalyzer {
               "path",
               SYNTHETIC_SAVE_AS_PATH);
       return new TreePreflight(sanitized, problems, usesSyntheticValues);
+    }
+
+    private static boolean stripExplicitNullOptionalField(
+        ObjectNode root,
+        ProblemContextRequestSurfaces.RequestInput requestInput,
+        List<GridGrindProblemDetail.Problem> problems,
+        String fieldName) {
+      JsonNode node = root.get(fieldName);
+      if (node == null || !node.isNull()) {
+        return false;
+      }
+      root.remove(fieldName);
+      problems.add(explicitNullProblem(requestInput, fieldName));
+      return true;
     }
 
     private static boolean applyTemplateDefaults(

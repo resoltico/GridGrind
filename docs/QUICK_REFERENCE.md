@@ -2,7 +2,7 @@
 afad: "4.0"
 version: "0.69.0"
 domain: QUICK_REFERENCE
-updated: "2026-06-14"
+updated: "2026-06-29"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
