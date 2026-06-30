@@ -39,6 +39,19 @@ public final class GridGrindJson {
         GridGrindJsonProblemMessageSupport::invalidRequestPayload);
   }
 
+  /** Reads a request from one in-memory JSON string without exposing a checked I/O seam. */
+  public static WorkbookPlan readRequest(String json) {
+    Objects.requireNonNull(json, "json must not be null");
+    return GridGrindJsonCodecSupport.decodeTree(
+        GridGrindJsonCodecSupport.readTree(
+            json,
+            GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+            GridGrindJsonProblemMessageSupport::invalidRequestPayload),
+        GridGrindJsonMapperSupport.REQUEST_JSON_MAPPER,
+        WorkbookPlan.class,
+        GridGrindJsonProblemMessageSupport::invalidRequestPayload);
+  }
+
   /** Reads one request JSON tree from an input stream without closing the caller-owned stream. */
   public static JsonNode readRequestTree(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");

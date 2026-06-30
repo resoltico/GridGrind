@@ -602,6 +602,58 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void diagnoseBatchesIndependentMalformedStepsAndSuppressesSyntheticSummary() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        requestJson(
+                "{ \"type\": \"NEW\" }",
+                "{ \"type\": \"NONE\" }",
+                """
+                [
+                  {
+                    "stepId": "zoom-too-far",
+                    "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                    "action": { "type": "SET_SHEET_ZOOM", "zoomPercent": 9999 }
+                  },
+                  {
+                    "stepId": "column-too-wide",
+                    "target": {
+                      "type": "COLUMN_BAND_SPAN",
+                      "sheetName": "Budget",
+                      "firstColumnIndex": 0,
+                      "lastColumnIndex": 0
+                    },
+                    "action": { "type": "SET_COLUMN_WIDTH", "widthCharacters": 999 }
+                  }
+                ]
+                """)
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+
+    assertFalse(report.valid());
+    assertTrue(report.summary().isEmpty());
+    assertEquals(1, doctor.directCalls());
+    assertEquals(0, doctor.boundCalls());
+    assertEquals(2, doctor.lastRequest().steps().size());
+    assertTrue(problemMessages.contains("zoomPercent must be between 10 and 400 inclusive: 9999"));
+    assertTrue(
+        problemMessages.contains(
+            "widthCharacters must not exceed 255.0 (Excel column width limit): got 999.0"));
+  }
+
+  @Test
   void diagnoseCarriesExistingRequestShapeForStandardInputBindingConflicts() throws IOException {
     RecordingDoctor doctor =
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));

@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.69.0"
+version: "0.70.0"
 domain: QUICK_REFERENCE
 updated: "2026-06-29"
 route:
@@ -32,7 +32,7 @@ gridgrind --print-request-template | gridgrind --doctor-request --execution-root
 gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
-`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem without mutating a workbook. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
+`--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup <group>:<id>` once you want one exact machine-readable entry, and use `--full` only when you need the entire catalog payload in one response. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it.
 

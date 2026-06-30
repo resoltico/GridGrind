@@ -67,13 +67,13 @@ class GridGrindCliExecutionOutputTest extends GridGrindCliTestSupport {
     JsonNode response =
         JsonMapper.builder().build().readTree(new ByteArrayInputStream(stdout.toByteArray()));
 
-    assertEquals("ASSERTION_FAILED", response.path("problem").path("code").asText());
-    assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("stage").asText());
+    assertEquals("ASSERTION_FAILED", response.path("problem").path("code").asString());
+    assertEquals("EXECUTE_STEP", response.path("problem").path("context").path("stage").asString());
     assertEquals(
         "EXPECT_CELL_VALUE",
-        response.path("problem").path("assertionFailure").path("assertionType").asText());
+        response.path("problem").path("assertionFailure").path("assertionType").asString());
     assertEquals(
-        "assert-a1", response.path("problem").path("assertionFailure").path("stepId").asText());
+        "assert-a1", response.path("problem").path("assertionFailure").path("stepId").asString());
   }
 
   @Test

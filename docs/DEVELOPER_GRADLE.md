@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.69.0"
+version: "0.70.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-06-14"
 route:
@@ -24,7 +24,7 @@ GridGrind's machine-level setup rule is simple:
 - let the wrapper download the official Gradle distribution pinned by the repository
 - keep the repository checkout on the local Mac filesystem as part of the normal supported setup
 
-The wrapper version is currently `9.5.0`, as declared in
+The wrapper version is currently `9.6.1`, as declared in
 [gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
 
 This file therefore documents build architecture and ownership boundaries, not how to install a

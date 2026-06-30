@@ -151,6 +151,44 @@ class GridGrindJsonCoverageTest {
   }
 
   @Test
+  void readRequestFromJsonStringDecodesWithoutATransportLayer() {
+    WorkbookPlan request =
+        WorkbookPlan.standard(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            ExecutionPolicyInput.defaults(),
+            FormulaEnvironmentInput.empty(),
+            List.of());
+    String requestJson = GridGrindJson.requestTree(request).toString();
+
+    assertEquals(request, GridGrindJson.readRequest(requestJson));
+    assertEquals(
+        "json must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJson.readRequest((String) null))
+            .getMessage());
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(InvalidJsonException.class, () -> GridGrindJson.readRequest("{")));
+    InvalidRequestShapeException explicitNull =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "execution": null,
+                      "steps": [ ]
+                    }
+                    """));
+    assertEquals(
+        "Field 'execution' must be omitted when absent; explicit null is not accepted.",
+        explicitNull.getMessage());
+  }
+
+  @Test
   void invalidRequestDoctorReportBytesSurfaceInvalidJson() {
     assertInstanceOf(
         InvalidJsonException.class,

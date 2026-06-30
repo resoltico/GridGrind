@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.69.0"
+version: "0.70.0"
 domain: QUICK_START
 updated: "2026-06-29"
 route:
@@ -149,7 +149,7 @@ After a successful run:
   - `--print-task-catalog --response tasks.json` lists the CLI-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
   - `--print-task-plan --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
   - `--print-task-keyword-match --query "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
-  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem without mutating a workbook.
+  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)

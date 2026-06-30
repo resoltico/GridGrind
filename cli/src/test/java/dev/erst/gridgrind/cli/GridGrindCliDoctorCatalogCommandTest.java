@@ -2,10 +2,13 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
@@ -15,6 +18,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -173,6 +177,77 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals(
         java.util.Optional.of(requestDirectory.resolve("missing-workbook.xlsx").toString()),
         openWorkbookContext(report).sourceWorkbookPath());
+  }
+
+  @Test
+  void doctorRequestBatchesIndependentMalformedStepsAndSuppressesSyntheticSummary()
+      throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-doctor-step-batch-");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--execution-root", workspace.toString()},
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "zoom-too-far",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "SET_SHEET_ZOOM", "zoomPercent": 9999 }
+                              },
+                              {
+                                "stepId": "zoom-too-far-again",
+                                "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
+                                "action": { "type": "SET_SHEET_ZOOM", "zoomPercent": 9998 }
+                              },
+                              {
+                                "stepId": "column-too-wide",
+                                "target": {
+                                  "type": "COLUMN_BAND_SPAN",
+                                  "sheetName": "Budget",
+                                  "firstColumnIndex": 0,
+                                  "lastColumnIndex": 0
+                                },
+                                "action": {
+                                  "type": "SET_COLUMN_WIDTH",
+                                  "widthCharacters": 999
+                                }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    List<String> problemMessages =
+        report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
+    List<java.util.Optional<String>> problemPaths =
+        report.problems().stream()
+            .map(
+                problem ->
+                    assertInstanceOf(ProblemContext.ReadRequest.class, problem.context())
+                        .jsonPath())
+            .toList();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertTrue(report.summary().isEmpty());
+    assertEquals(3, report.problems().size());
+    assertTrue(problemMessages.contains("zoomPercent must be between 10 and 400 inclusive: 9999"));
+    assertTrue(problemMessages.contains("zoomPercent must be between 10 and 400 inclusive: 9998"));
+    assertTrue(
+        problemMessages.contains(
+            "widthCharacters must not exceed 255.0 (Excel column width limit): got 999.0"));
+    assertTrue(problemPaths.contains(java.util.Optional.of("steps[0].action.zoomPercent")));
+    assertTrue(problemPaths.contains(java.util.Optional.of("steps[1].action.zoomPercent")));
+    assertTrue(problemPaths.contains(java.util.Optional.of("steps[2].action.widthCharacters")));
   }
 
   @Test
