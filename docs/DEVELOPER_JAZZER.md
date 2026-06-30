@@ -303,7 +303,7 @@ plugins from the shared included build logic under `../gradle/build-logic`.
 - standard `main` source set for shared support and local operator tooling
 - standard `test` source set for deterministic support tests
 - custom `fuzz` source set for Jazzer harness classes and committed regression inputs
-- shared version-catalog dependency alignment for JUnit 6, Jazzer 0.30.0, Jackson 3.1.2,
+- shared version-catalog dependency alignment for JUnit 6.1.1, Jazzer 0.30.0, Jackson 3.2.0,
   Apache POI 5.5.1, Log4j, and the local product modules
 - `JavaExec` tasks for local operator commands and per-harness Jazzer execution
 - one explicit JUnit Platform launcher entrypoint for running Jazzer harnesses outside Gradle's
@@ -464,7 +464,7 @@ Telemetry semantics:
 
 Jazzer/JUnit:
 - Jazzer 0.30.0 publishes JUnit integration in "JUnit 5" terminology
-- the nested build pins JUnit 6 explicitly and works with Gradle 9.5.0 in practice
+- the nested build pins JUnit 6.1.1 explicitly and works with Gradle 9.6.1 in practice
 
 Structured replay:
 - replay for the structured harnesses uses Jazzer's internal

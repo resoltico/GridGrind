@@ -59,8 +59,9 @@ stay compact, are weighted by typed goal/artifact metadata first, and point at t
 id plus why it ranked.
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits,
 source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
-workbook and returns every independently provable blocking problem in one report. `--response
-<path>` applies across execution, doctoring, and discovery, so primary outputs can be written
+workbook and returns every independently provable blocking problem it can isolate safely in one
+report, including multiple malformed steps in one pass. `--response <path>` applies across
+execution, doctoring, and discovery, so primary outputs can be written
 directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on
 stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative
 paths and execution scratch space resolve from one explicit directory.

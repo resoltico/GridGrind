@@ -17,7 +17,6 @@ import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestRequirements;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,9 +63,7 @@ final class CliDoctorRequestAnalyzer {
     TreePreflight preflight = TreePreflight.from(requestTree, requestInput);
     WorkbookPlan request;
     try {
-      request =
-          GridGrindJson.readRequest(
-              preflight.sanitizedTree().toString().getBytes(StandardCharsets.UTF_8));
+      request = GridGrindJson.readRequest(preflight.sanitizedTree().toString());
     } catch (InvalidRequestException | InvalidRequestShapeException exception) {
       return RequestDoctorReport.invalid(
           Optional.empty(),
@@ -85,6 +82,8 @@ final class CliDoctorRequestAnalyzer {
             stdin,
             preflight.usesSyntheticValues(),
             request);
+    Optional<RequestDoctorReport.Summary> reportSummary =
+        preflight.summaryTrustworthy() ? baseReport.summary() : Optional.empty();
     if (requestPath.isEmpty() && GridGrindRequestRequirements.requiresStandardInput(request)) {
       GridGrindProblemDetail.Problem standardInputProblem =
           GridGrindProblems.problem(
@@ -93,7 +92,7 @@ final class CliDoctorRequestAnalyzer {
               new ProblemContext.ValidateRequest(requestShape(request)),
               List.of());
       return RequestDoctorReport.invalid(
-          baseReport.summary(),
+          reportSummary,
           baseReport.warnings(),
           mergeProblems(
               List.of(standardInputProblem),
@@ -102,8 +101,7 @@ final class CliDoctorRequestAnalyzer {
     List<GridGrindProblemDetail.Problem> mergedProblems =
         mergeProblems(preflight.problems(), mergeableProblems(baseReport));
     if (!mergedProblems.isEmpty()) {
-      return RequestDoctorReport.invalid(
-          baseReport.summary(), baseReport.warnings(), mergedProblems);
+      return RequestDoctorReport.invalid(reportSummary, baseReport.warnings(), mergedProblems);
     }
     return baseReport;
   }
@@ -184,7 +182,8 @@ final class CliDoctorRequestAnalyzer {
   private record TreePreflight(
       ObjectNode sanitizedTree,
       List<GridGrindProblemDetail.Problem> problems,
-      boolean usesSyntheticValues) {
+      boolean usesSyntheticValues,
+      boolean summaryTrustworthy) {
     private TreePreflight {
       Objects.requireNonNull(sanitizedTree, "sanitizedTree must not be null");
       problems = List.copyOf(Objects.requireNonNull(problems, "problems must not be null"));
@@ -204,7 +203,8 @@ final class CliDoctorRequestAnalyzer {
                     new ProblemContext.ReadRequest(
                         requestInput, ProblemContextRequestSurfaces.JsonLocation.unavailable()),
                     List.of())),
-            true);
+            true,
+            false);
       }
 
       ObjectNode sanitized = requestObject.deepCopy();
@@ -238,7 +238,12 @@ final class CliDoctorRequestAnalyzer {
               "SAVE_AS",
               "path",
               SYNTHETIC_SAVE_AS_PATH);
-      return new TreePreflight(sanitized, problems, usesSyntheticValues);
+      CliDoctorRequestStepPreflight.StepPreflight stepPreflight =
+          CliDoctorRequestStepPreflight.from(sanitized, requestInput);
+      problems.addAll(stepPreflight.problems());
+      usesSyntheticValues |= stepPreflight.usesSyntheticValues();
+      return new TreePreflight(
+          sanitized, problems, usesSyntheticValues, stepPreflight.summaryTrustworthy());
     }
 
     private static boolean stripExplicitNullOptionalField(

@@ -29,21 +29,18 @@ distributions.named("shadow") {
     distributionBaseName.set("gridgrind")
 }
 
-val cleanStartScripts = tasks.register<Delete>("cleanStartScripts") {
-    delete(layout.buildDirectory.dir("scripts"))
-}
-
 val cleanShadowStartScripts = tasks.register<Delete>("cleanShadowStartScripts") {
     delete(layout.buildDirectory.dir("scriptsShadow"))
 }
 
-val cleanInstalledDist = tasks.register<Delete>("cleanInstalledDist") {
+val cleanLegacyCliDistribution = tasks.register<Delete>("cleanLegacyCliDistribution") {
+    delete(layout.buildDirectory.dir("scripts"))
     delete(layout.buildDirectory.dir("install/cli"))
+    delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 
 val cleanInstalledShadowDist = tasks.register<Delete>("cleanInstalledShadowDist") {
     delete(layout.buildDirectory.dir("install/gridgrind"))
-    delete(layout.buildDirectory.dir("install/cli-shadow"))
 }
 
 val cleanDistributionArchives = tasks.register<Delete>("cleanDistributionArchives") {
@@ -55,8 +52,7 @@ tasks.named<JavaExec>("run") {
 }
 
 tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startScripts") {
-    applicationName = "cli"
-    dependsOn(cleanStartScripts)
+    enabled = false
 }
 
 tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startShadowScripts") {
@@ -65,19 +61,20 @@ tasks.named<org.gradle.jvm.application.tasks.CreateStartScripts>("startShadowScr
 }
 
 tasks.named<Sync>("installDist") {
-    dependsOn(cleanInstalledDist)
+    enabled = false
 }
 
 tasks.named<Sync>("installShadowDist") {
+    dependsOn(cleanLegacyCliDistribution)
     dependsOn(cleanInstalledShadowDist)
 }
 
 tasks.named("distZip") {
-    dependsOn(cleanDistributionArchives)
+    enabled = false
 }
 
 tasks.named("distTar") {
-    dependsOn(cleanDistributionArchives)
+    enabled = false
 }
 
 tasks.named("shadowDistZip") {

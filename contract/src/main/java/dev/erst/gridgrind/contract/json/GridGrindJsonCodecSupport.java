@@ -33,12 +33,22 @@ final class GridGrindJsonCodecSupport {
     return decodeValue(readTree(bytes, mapper, failureMapper), mapper, targetType, failureMapper);
   }
 
+  static JsonNode readTree(
+      String json,
+      JsonMapper mapper,
+      Function<JacksonException, IllegalArgumentException> failureMapper) {
+    try {
+      return requirePresentDocument(mapper.readTree(json));
+    } catch (JacksonException exception) {
+      throw failureMapper.apply(exception);
+    }
+  }
+
   static <T> T decodeTree(
       JsonNode node,
       JsonMapper mapper,
       Class<T> targetType,
-      Function<JacksonException, IllegalArgumentException> failureMapper)
-      throws IOException {
+      Function<JacksonException, IllegalArgumentException> failureMapper) {
     return decodeValue(node, mapper, targetType, failureMapper);
   }
 
@@ -74,8 +84,7 @@ final class GridGrindJsonCodecSupport {
       JsonNode node,
       JsonMapper mapper,
       Class<T> targetType,
-      Function<JacksonException, IllegalArgumentException> failureMapper)
-      throws IOException {
+      Function<JacksonException, IllegalArgumentException> failureMapper) {
     requireNonNullRoot(node);
     try {
       rejectExplicitNullMembers(node, "");

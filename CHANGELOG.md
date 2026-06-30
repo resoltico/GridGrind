@@ -11,14 +11,15 @@ Earlier release history through `0.65.0` is archived in [docs/CHANGELOG_ARCHIVE.
 
 ### Changed
 - Request envelopes can now omit the default `execution` and `formulaEnvironment` blocks; emitted request templates, built-in examples, task starters, and protocol docs now use the minimal envelope while still defaulting omitted blocks to `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` and an empty evaluator environment.
-- The packaged shadow distribution is now the sole owner of the canonical `gridgrind` launcher name, and the README, quick-start guidance, example guide, and CLI distribution verification now all describe and test that single launcher contract instead of splitting guidance across competing launcher paths.
+- The packaged shadow distribution is now the only install/archive path: the legacy thin `installDist` / `distZip` / `distTar` tasks no longer materialize a second launcher tree, `installShadowDist` cleans leftover thin-script artifacts, and the README, quick-start guidance, and CLI distribution verification now all describe and test one canonical `gridgrind` launcher contract instead of split launcher paths.
 - Refreshed the shared maintenance baseline to Gradle `9.6.1`, JUnit `6.1.1`, NullAway `0.13.7`, Spotless `8.7.0`, `actions/checkout` `7.0.0`, `actions/setup-java` `5.3.0`, and `gradle/actions` `6.2.0`, and taught Dependabot to stop opening duplicate root-wrapper PRs from the nested `/jazzer` build.
 - The public error catalog now gives each problem code cause-specific resolution text instead of falling back to one generic recovery message.
+- Refreshed the developer and operator docs to the live Gradle `9.6.1`, Jackson `3.2.0`, JUnit `6.1.1`, Log4j `2.26.0`, and doctor-request batching contract so first-contact guidance and contributor references match current HEAD.
 
 ### Fixed
 - Help, `--help-protocol`, and `--response` prose now match the real stdout/stderr contract: transport and argument failures emit structured JSON on stderr, executed request failures remain primary stdout payloads, and `--response` write-fallback notices now describe the structured failure report that is actually written.
 - Explicit `null` placeholders now produce the dedicated message `Field '<x>' must be omitted when absent; explicit null is not accepted.`, and `--doctor-request` now reports both top-level omission-legal `execution` and `formulaEnvironment` null violations in one report instead of stopping after the first one.
-- Request doctor now returns every independently provable semantic validation problem in one machine-readable response while normal execution still stops at the first blocking semantic failure.
+- Request doctor now batches independently provable blocking problems across request-default preflight, multiple malformed step payloads, and semantic validation while normal execution still stops at the first blocking failure.
 - Nested request-shape diagnostics now keep `location.jsonPath` pinned to the offending value itself, including step envelope, selector target, and payload-shape errors, instead of collapsing failures onto a broader parent object.
 - Authored unsupported formulas such as `LAMBDA` and `LET` now classify as `UNSUPPORTED_FORMULA_CONSTRUCT` instead of `INVALID_FORMULA`, and assertion and save-as I/O failures now return recovery guidance that matches the actual cause.
 

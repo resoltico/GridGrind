@@ -47,8 +47,7 @@ release archive, or `java -jar gridgrind.jar` if you downloaded the standalone J
 
 For first contact, prefer `--request <path>` over stdin. Stdin-driven execution and doctoring
 require `--execution-root <path>` so request-owned paths resolve from one explicit invocation root.
-`--doctor-request` returns every independently provable blocking problem it can confirm before any
-workbook mutation or save attempt.
+`--doctor-request` returns every independently provable blocking problem it can isolate safely before any workbook mutation or save attempt, including multiple malformed steps in one pass when their failures are independent.
 
 If you want the repository JAR surface directly, run `./gradlew :cli:shadowJar` and replace
 `gridgrind` below with `java -jar cli/build/libs/gridgrind.jar`.

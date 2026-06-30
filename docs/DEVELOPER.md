@@ -133,13 +133,13 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
-| Jackson Databind | 3.1.2 |
-| JUnit Jupiter | 6.1.0 |
-| Log4j Core | 2.25.3 |
+| Jackson Databind | 3.2.0 |
+| JUnit Jupiter | 6.1.1 |
+| Log4j Core | 2.26.0 |
 
 GridGrind's runtime, product modules, and shared included build logic under `gradle/build-logic`
 all target Java 26 now. The included build is no longer a JVM 25 exception: it compiles with
-Kotlin `2.4.0-Beta2`, emits JVM 26 bytecode directly, and stays aligned with the repository's
+Kotlin `2.4.0`, emits JVM 26 bytecode directly, and stays aligned with the repository's
 single Java baseline instead of carrying a separate bytecode-level footnote.
 
 Jackson dependency note: Jackson 3.x databind intentionally still uses the
@@ -482,7 +482,7 @@ public walkthrough for that surface lives in [JAVA_AUTHORING.md](./JAVA_AUTHORIN
 
 ## Jackson 3.x Package Notes
 
-GridGrind uses Jackson 3.x (`tools.jackson.core:jackson-databind:3.1.2`). The package split:
+GridGrind uses Jackson 3.x (`tools.jackson.core:jackson-databind:3.2.0`). The package split:
 
 | Surface | Package |
 |:--------|:--------|

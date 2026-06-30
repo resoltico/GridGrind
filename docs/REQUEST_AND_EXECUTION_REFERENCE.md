@@ -72,6 +72,8 @@ resolution, and existing workbook-source accessibility without mutating a workbo
   unreadable authored inputs can fail under `journal.inputResolution`.
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
+- When multiple authored steps fail independently during request decoding, doctoring isolates and
+  reports those step-level failures together instead of stopping after the first malformed step.
 - It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
 - When the request JSON arrives on stdin, pass `--execution-root <path>` so doctoring uses one
   explicit request root instead of ambient process state.

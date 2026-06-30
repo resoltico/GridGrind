@@ -148,7 +148,8 @@ final class GridGrindCliSurfaceRequestSections {
                 "Lint one request, preflight source-backed input resolution plus existing"
                     + " workbook-source accessibility, and emit a machine-readable doctor"
                     + " report without mutating a workbook. The doctor response returns"
-                    + " warnings plus every independently provable blocking problem."),
+                    + " warnings plus every independently provable blocking problem it can"
+                    + " isolate safely, including multiple malformed steps in one pass."),
             new CliSurface.DefinitionEntry(
                 "--print-request-template",
                 "Print a minimal valid request JSON document with default execution and"
