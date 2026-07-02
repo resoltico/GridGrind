@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.cli;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -14,11 +13,6 @@ final class CliPathArguments {
   static Optional<Path> responsePath(String[] args) {
     Objects.requireNonNull(args, "args must not be null");
     return authoredPath(args, "--response", false);
-  }
-
-  static Optional<CliOutputFormat> outputFormat(String[] args) {
-    Objects.requireNonNull(args, "args must not be null");
-    return authoredOutputFormat(args);
   }
 
   static Optional<Path> requestPath(String[] args) {
@@ -82,41 +76,6 @@ final class CliPathArguments {
     return Path.of(normalized);
   }
 
-  static GlobalResponseExtraction extractGlobalResponse(String[] args) {
-    Objects.requireNonNull(args, "args must not be null");
-    java.util.List<String> remainingArgs = new java.util.ArrayList<>(args.length);
-    Optional<Path> responsePath = Optional.empty();
-    Optional<CliOutputFormat> outputFormat = Optional.empty();
-    int index = 0;
-    while (index < args.length) {
-      String argument = args[index];
-      if ("--response".equals(argument)) {
-        if (responsePath.isPresent()) {
-          throw new CliArgumentsException("--response", "Duplicate argument: --response");
-        }
-        int valueIndex = nextValueIndex(args, index, "--response");
-        responsePath =
-            Optional.of(requirePathValue("--response", args[valueIndex], "response path", false));
-        index = valueIndex + 1;
-        continue;
-      }
-      if ("--format".equals(argument)) {
-        if (outputFormat.isPresent()) {
-          throw new CliArgumentsException("--format", "Duplicate argument: --format");
-        }
-        int valueIndex = nextValueIndex(args, index, "--format");
-        String formatValue =
-            requireNonBlankValue("--format", args[valueIndex], "output format value");
-        outputFormat = Optional.of(CliOutputFormat.parse(formatValue));
-        index = valueIndex + 1;
-        continue;
-      }
-      remainingArgs.add(argument);
-      index++;
-    }
-    return new GlobalResponseExtraction(List.copyOf(remainingArgs), responsePath, outputFormat);
-  }
-
   private static Optional<Path> authoredPath(
       String[] args, String flagName, boolean allowStandardInput) {
     Optional<Path> value = Optional.empty();
@@ -137,40 +96,5 @@ final class CliPathArguments {
       index = valueIndex + 1;
     }
     return value;
-  }
-
-  private static Optional<CliOutputFormat> authoredOutputFormat(String[] args) {
-    Optional<CliOutputFormat> value = Optional.empty();
-    int index = 0;
-    while (index < args.length) {
-      if (!"--format".equals(args[index])) {
-        index++;
-        continue;
-      }
-      if (value.isPresent()) {
-        throw new CliArgumentsException("--format", "Duplicate argument: --format");
-      }
-      int valueIndex = nextValueIndex(args, index, "--format");
-      String formatValue =
-          requireNonBlankValue("--format", args[valueIndex], "output format value");
-      value = Optional.of(CliOutputFormat.parse(formatValue));
-      index = valueIndex + 1;
-    }
-    return value;
-  }
-
-  record GlobalResponseExtraction(
-      List<String> remainingArgs,
-      Optional<Path> responsePath,
-      Optional<CliOutputFormat> outputFormat) {
-    GlobalResponseExtraction {
-      Objects.requireNonNull(remainingArgs, "remainingArgs must not be null");
-      Objects.requireNonNull(responsePath, "responsePath must not be null");
-      Objects.requireNonNull(outputFormat, "outputFormat must not be null");
-    }
-
-    String[] remainingArgsArray() {
-      return remainingArgs.toArray(String[]::new);
-    }
   }
 }

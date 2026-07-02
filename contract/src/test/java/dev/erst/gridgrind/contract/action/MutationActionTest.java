@@ -284,7 +284,7 @@ class MutationActionTest {
                         Optional.empty()))
             .getMessage());
     assertEquals(
-        "values must not be null",
+        "cells must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->

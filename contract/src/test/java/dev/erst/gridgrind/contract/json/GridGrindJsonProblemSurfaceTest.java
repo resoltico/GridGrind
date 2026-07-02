@@ -37,24 +37,26 @@ class GridGrindJsonProblemSurfaceTest {
     assertEquals(
         "catalog must not be null",
         assertThrows(
-                NullPointerException.class, () -> GridGrindJson.writeProtocolCatalogBytes(null))
+                NullPointerException.class,
+                () -> GridGrindJsonOutput.writeProtocolCatalogBytes(null))
             .getMessage());
     assertEquals(
         "value must not be null",
         assertThrows(
                 NullPointerException.class,
-                () -> GridGrindJson.writeTypeEntry(new ByteArrayOutputStream(), null))
+                () -> GridGrindJsonOutput.writeTypeEntry(new ByteArrayOutputStream(), null))
             .getMessage());
 
     try (TrackingOutputStream outputStream = new TrackingOutputStream()) {
-      GridGrindJson.writeRequest(
+      GridGrindJsonOutput.writeRequest(
           outputStream,
           WorkbookPlan.standard(
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.None(),
               dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
               dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
-              List.of()));
+              List.of()),
+          false);
       assertFalse(outputStream.closed);
     }
   }
@@ -141,10 +143,11 @@ class GridGrindJsonProblemSurfaceTest {
             UnrecognizedPropertyException.from(
                 utf8Parser(jsonFactory, "{}"), WorkbookPlan.class, "reads", List.of())));
     assertEquals(
-        "JSON object is missing required fields or has the wrong shape",
+        "Cannot construct instance of `x`",
         GridGrindJson.message(new IllegalArgumentException("Cannot construct instance of `x`")));
     assertEquals(
-        "Cannot deserialize value",
+        "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
+            + " (but could if coercion was enabled using `CoercionConfig`)",
         GridGrindJson.cleanJacksonMessage(
             "Cannot deserialize value as a subtype of `x` (for POJO property 'target')"
                 + " (but could if coercion was enabled using `CoercionConfig`)"));
@@ -218,6 +221,53 @@ class GridGrindJsonProblemSurfaceTest {
     assertTrue(
         badAnchor.getMessage().startsWith("Unknown type value 'ONE_CELL'"),
         "unknown anchor type from @JsonSubTypes-annotated field should be reported");
+  }
+
+  @Test
+  void requestUnknownFieldDiagnosticsPointAtTheOffendingFieldOnce() {
+    InvalidRequestShapeException topLevelUnknownField =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [],
+                      "bogus": 1
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException nestedUnknownField =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "steps": [
+                        {
+                          "stepId": "summary",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": {
+                            "type": "GET_WORKBOOK_SUMMARY",
+                            "extra": true
+                          }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Unknown field 'bogus'", topLevelUnknownField.getMessage());
+    assertEquals(Optional.of("bogus"), topLevelUnknownField.jsonPath());
+    assertEquals("Unknown field 'steps[0].query.extra'", nestedUnknownField.getMessage());
+    assertEquals(Optional.of("steps[0].query.extra"), nestedUnknownField.jsonPath());
   }
 
   /** Tracks whether the request writer closes the destination stream after producing JSON. */

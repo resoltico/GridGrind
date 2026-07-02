@@ -14,6 +14,7 @@ import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
@@ -43,7 +44,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             stdout,
             stderr,
             "{\"status\":\"ok\"}".getBytes(StandardCharsets.UTF_8),
-            0);
+            0,
+            false);
 
     CliFailureReport fallback = cliFailure(stdout.toByteArray());
 
@@ -79,8 +81,10 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of("gridgrind --help"),
             Optional.empty(),
             stdout,
+            OutputStream.nullOutputStream(),
             "{\"status\":\"ok\"}\n".getBytes(StandardCharsets.UTF_8),
-            0);
+            0,
+            false);
 
     assertEquals(0, exitCode);
     assertEquals("{\"status\":\"ok\"}\n", stdout.toString(StandardCharsets.UTF_8));
@@ -97,8 +101,10 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of("gridgrind --help"),
             Optional.empty(),
             stdout,
+            OutputStream.nullOutputStream(),
             new byte[0],
-            0);
+            0,
+            false);
 
     assertEquals(0, exitCode);
     assertEquals("\n", stdout.toString(StandardCharsets.UTF_8));
@@ -119,7 +125,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             stdout,
             stderr,
             "{\"status\":\"error\"}".getBytes(StandardCharsets.UTF_8),
-            2);
+            2,
+            false);
 
     assertEquals(2, exitCode);
     assertEquals("{\"status\":\"error\"}\n", stdout.toString(StandardCharsets.UTF_8));
@@ -147,7 +154,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 Optional.empty(),
                 Optional.of("--flag"),
                 List.of("gridgrind --help"),
-                Optional.of("Use one primary command.")));
+                Optional.of("Use one primary command.")),
+            false);
 
     CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
     assertEquals(2, exitCode);
@@ -176,7 +184,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 Optional.empty(),
                 Optional.of("--flag"),
                 List.of("gridgrind --help"),
-                Optional.of("Use one primary command.")));
+                Optional.of("Use one primary command.")),
+            false);
 
     CliFailureReport fallback = cliFailure(stdout.toByteArray());
 
@@ -214,7 +223,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 Optional.empty(),
                 Optional.of("--request"),
                 List.of("gridgrind --help-protocol"),
-                Optional.empty()));
+                Optional.empty()),
+            false);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -241,7 +251,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             Optional.of(responseDirectory),
             stdout,
             stderr,
-            RequestDoctorReport.warnings(summary, List.of(warning)));
+            RequestDoctorReport.warnings(summary, List.of(warning)),
+            false);
 
     RequestDoctorReport fallback = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
 
@@ -287,7 +298,14 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                         .known("NEW", "NONE")),
                 new IllegalArgumentException("bad request")));
 
-    int exitCode = responseWriter.write(Optional.of(responsePath), stdout, stderr, failure);
+    int exitCode =
+        responseWriter.write(
+            Optional.of(responsePath),
+            stdout,
+            stderr,
+            failure,
+            CliResponseWriter.exitCodeFor(failure),
+            false);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -311,9 +329,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         responseWriter.write(
             Optional.of(responsePath),
             stdout,
+            OutputStream.nullOutputStream(),
             GridGrindResponses.success(
                 java.util.List.of(), java.util.List.of(), java.util.List.of()),
-            2);
+            2,
+            false);
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -336,7 +356,8 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
             stderr,
             GridGrindResponses.success(
                 java.util.List.of(), java.util.List.of(), java.util.List.of()),
-            2);
+            2,
+            false);
 
     assertEquals(2, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -367,8 +388,11 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         responseWriter.write(
             Optional.of(responsePath),
             stdout,
+            OutputStream.nullOutputStream(),
             GridGrindResponses.success(
-                java.util.List.of(), java.util.List.of(), java.util.List.of()));
+                java.util.List.of(), java.util.List.of(), java.util.List.of()),
+            0,
+            false);
 
     assertEquals(0, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -396,7 +420,7 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
                 new IllegalArgumentException("bad request")));
 
     int exitCode =
-        responseWriter.writeDoctorReport(Optional.of(responsePath), stdout, stderr, report);
+        responseWriter.writeDoctorReport(Optional.of(responsePath), stdout, stderr, report, false);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
@@ -427,7 +451,9 @@ class CliResponseWriterTest extends GridGrindCliTestSupport {
         responseWriter.writeDoctorReport(
             Optional.of(responseDirectory),
             stdout,
-            RequestDoctorReport.invalid(summary, List.of(), originalProblem));
+            OutputStream.nullOutputStream(),
+            RequestDoctorReport.invalid(summary, List.of(), originalProblem),
+            false);
 
     RequestDoctorReport fallback = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
 

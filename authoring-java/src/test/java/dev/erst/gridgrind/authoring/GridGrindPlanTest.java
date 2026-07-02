@@ -54,7 +54,8 @@ class GridGrindPlanTest {
     GridGrindPlan plan =
         GridGrindPlan.newWorkbook()
             .planId("budget-plan")
-            .saveAs(tempDir.resolve("budget.xlsx"))
+            .saveAs(
+                tempDir.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
             .journal(ExecutionJournalLevel.VERBOSE)
             .mutate(Targets.sheet("Budget").ensureExists())
             .mutate(Targets.cell("Budget", "A1").set(Values.text("Owner")))
@@ -70,11 +71,11 @@ class GridGrindPlanTest {
 
     WorkbookPlan reread = GridGrindJson.readRequest(plan.toJsonBytes());
     assertEquals(canonical, reread);
-    assertTrue(plan.toJsonString().contains("\"planId\" : \"budget-plan\""));
+    assertTrue(plan.toJsonString().contains("\"planId\":\"budget-plan\""));
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     plan.writeJson(outputStream);
     assertTrue(
-        outputStream.toString(StandardCharsets.UTF_8).contains("\"planId\" : \"budget-plan\""));
+        outputStream.toString(StandardCharsets.UTF_8).contains("\"planId\":\"budget-plan\""));
   }
 
   @Test
@@ -165,13 +166,13 @@ class GridGrindPlanTest {
     assertEquals(plan, plan.clearPlanId());
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.None.class,
-        plan.saveAs(tempDir.resolve("copy.xlsx")).inMemoryOnly().toPlan().persistence());
-    assertInstanceOf(
-        WorkbookPlan.WorkbookPersistence.OverwriteSource.class,
-        GridGrindPlan.open(tempDir.resolve("source.xlsx"))
-            .overwriteSource()
+        plan.saveAs(tempDir.resolve("copy.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
+            .inMemoryOnly()
             .toPlan()
             .persistence());
+    assertInstanceOf(
+        WorkbookPlan.WorkbookPersistence.Overwrite.class,
+        GridGrindPlan.open(tempDir.resolve("source.xlsx")).overwrite().toPlan().persistence());
   }
 
   @Test
@@ -181,7 +182,7 @@ class GridGrindPlanTest {
 
     GridGrindPlan plan =
         GridGrindPlan.newWorkbook()
-            .saveAs(outputPath)
+            .saveAs(outputPath, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
             .journal(ExecutionJournalLevel.VERBOSE)
             .mutate(Targets.sheet("Budget").ensureExists())
             .mutate(
@@ -233,7 +234,7 @@ class GridGrindPlanTest {
             cellsResult.cells().getFirst());
     assertEquals("Budget", cellsResult.sheetName());
     assertEquals("B2", numberReport.address());
-    assertEquals(125.0, numberReport.numberValue());
+    assertEquals(125.0, numberReport.numberValue().orElseThrow());
   }
 
   @Test

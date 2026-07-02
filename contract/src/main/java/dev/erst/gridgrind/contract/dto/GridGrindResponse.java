@@ -30,6 +30,9 @@ public sealed interface GridGrindResponse {
    */
   CalculationReport calculation();
 
+  /** Structured workbook-persistence outcome returned for every response. */
+  PersistenceOutcome persistence();
+
   /** Successful workbook execution result. */
   record Success(
       GridGrindProtocolVersion protocolVersion,
@@ -60,6 +63,7 @@ public sealed interface GridGrindResponse {
       GridGrindProtocolVersion protocolVersion,
       ExecutionJournal journal,
       CalculationReport calculation,
+      PersistenceOutcome persistence,
       List<AssertionResult> assertions,
       Problem problem)
       implements GridGrindResponse {
@@ -67,6 +71,7 @@ public sealed interface GridGrindResponse {
       Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
       Objects.requireNonNull(journal, "journal must not be null");
       Objects.requireNonNull(calculation, "calculation must not be null");
+      Objects.requireNonNull(persistence, "persistence must not be null");
       assertions =
           GridGrindResponseSupport.copyValues(
               Objects.requireNonNull(assertions, "assertions must not be null"), "assertions");

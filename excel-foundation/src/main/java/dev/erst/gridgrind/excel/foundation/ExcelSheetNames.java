@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel.foundation;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared Excel sheet-name validation rules reused across protocol and engine surfaces. */
 public final class ExcelSheetNames {
@@ -11,10 +12,33 @@ public final class ExcelSheetNames {
   /** Validates one sheet name against GridGrind's Excel-facing contract. */
   public static void requireValid(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
-    requireNonBlank(value, fieldName);
-    requireLengthWithinExcelLimit(value, fieldName);
-    requireNoBoundaryQuote(value, fieldName);
-    requireOnlyValidExcelCharacters(value, fieldName);
+    violation(value)
+        .ifPresent(
+            violation -> {
+              throw new IllegalArgumentException(violation.message(fieldName));
+            });
+  }
+
+  /** Returns the first sheet-name rule violation, if any. */
+  public static Optional<ExcelSheetNameProblem> violation(String value) {
+    Objects.requireNonNull(value, "value must not be null");
+    if (value.isBlank()) {
+      return Optional.of(ExcelSheetNameProblem.blank());
+    }
+    if (value.length() > 31) {
+      return Optional.of(ExcelSheetNameProblem.tooLong(value));
+    }
+    if (value.charAt(0) == '\'' || value.charAt(value.length() - 1) == '\'') {
+      return Optional.of(ExcelSheetNameProblem.boundaryQuote(value));
+    }
+    for (int index = 0; index < value.length(); index++) {
+      char current = value.charAt(index);
+      if (isInvalidExcelSheetCharacter(current)) {
+        return Optional.of(
+            ExcelSheetNameProblem.invalidCharacter(displayCharacter(current), index + 1, value));
+      }
+    }
+    return Optional.empty();
   }
 
   private static boolean isInvalidExcelSheetCharacter(char value) {
@@ -26,40 +50,5 @@ public final class ExcelSheetNames {
       return "U+%04X".formatted((int) value);
     }
     return "'" + value + "'";
-  }
-
-  private static void requireNonBlank(String value, String fieldName) {
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-  }
-
-  private static void requireLengthWithinExcelLimit(String value, String fieldName) {
-    if (value.length() > 31) {
-      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
-    }
-  }
-
-  private static void requireNoBoundaryQuote(String value, String fieldName) {
-    if (value.charAt(0) == '\'' || value.charAt(value.length() - 1) == '\'') {
-      throw new IllegalArgumentException(
-          fieldName + " must not begin or end with a single quote: " + value);
-    }
-  }
-
-  private static void requireOnlyValidExcelCharacters(String value, String fieldName) {
-    for (int index = 0; index < value.length(); index++) {
-      char current = value.charAt(index);
-      if (isInvalidExcelSheetCharacter(current)) {
-        throw new IllegalArgumentException(
-            fieldName
-                + " contains invalid Excel character "
-                + displayCharacter(current)
-                + " at position "
-                + (index + 1)
-                + ": "
-                + value);
-      }
-    }
   }
 }

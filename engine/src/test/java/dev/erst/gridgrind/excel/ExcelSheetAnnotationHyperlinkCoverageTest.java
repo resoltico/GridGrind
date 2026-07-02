@@ -353,7 +353,7 @@ class ExcelSheetAnnotationHyperlinkCoverageTest extends ExcelSheetTestSupport {
 
       WorkbookSheetResult.Window window = sheet.cells().window("A1", 3, 1);
       assertEquals("A2", window.rows().get(1).cells().getFirst().address());
-      assertEquals("BLANK", window.rows().get(1).cells().getFirst().effectiveType());
+      assertEquals("BLANK", window.rows().get(1).cells().getFirst().type());
 
       WorkbookSheetResult.SheetLayout layout = sheet.layout().snapshot();
       assertEquals(3, layout.rows().size());

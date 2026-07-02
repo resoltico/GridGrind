@@ -31,7 +31,7 @@ final class ExecutionValidationSupport {
 
   private static Optional<String> persistenceFailureMessage(WorkbookPlan request) {
     return switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
           switch (request.source()) {
             case WorkbookPlan.WorkbookSource.New _ ->
                 Optional.of(

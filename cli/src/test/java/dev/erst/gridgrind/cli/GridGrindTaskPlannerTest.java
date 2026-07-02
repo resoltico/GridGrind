@@ -15,7 +15,7 @@ import dev.erst.gridgrind.cli.discovery.TaskPhase;
 import dev.erst.gridgrind.cli.discovery.TaskSourceMode;
 import dev.erst.gridgrind.cli.discovery.TaskTestFixtures;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,7 @@ class GridGrindTaskPlannerTest {
 
     assertEquals("NEW", sourceType(request));
     assertEquals("SAVE_AS", persistenceType(request));
+    assertEquals("REPLACE", persistenceIfExists(request));
     assertTrue(outputPath(request).endsWith(".xlsx"));
     assertTrue(outputPath(request).contains("dashboard"));
     assertFalse(steps(request).isEmpty());
@@ -59,11 +60,13 @@ class GridGrindTaskPlannerTest {
 
     assertEquals("EXISTING", sourceType(customXml));
     assertEquals("SAVE_AS", persistenceType(customXml));
+    assertEquals("REPLACE", persistenceIfExists(customXml));
     assertFalse(steps(customXml).isEmpty());
     assertEquals("generated-workbooks/custom-xml-workflow.xlsx", outputPath(customXml));
 
     assertEquals("EXISTING", sourceType(maintenance));
     assertEquals("SAVE_AS", persistenceType(maintenance));
+    assertEquals("REPLACE", persistenceIfExists(maintenance));
     assertFalse(steps(maintenance).isEmpty());
     assertTrue(outputPath(maintenance).contains("workbook-maintenance"));
     assertTrue(inputPath(maintenance).contains("task-starter-assets/workbook-ops-source.xlsx"));
@@ -81,7 +84,7 @@ class GridGrindTaskPlannerTest {
             "INVALID_OVERWRITE",
             new TaskExecutionProfile(
                 TaskSourceMode.NEW_WORKBOOK,
-                TaskPersistenceMode.OVERWRITE_SOURCE,
+                TaskPersistenceMode.OVERWRITE,
                 TaskMutationMode.MUTATING,
                 TaskAssetMode.SELF_CONTAINED),
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
@@ -111,7 +114,7 @@ class GridGrindTaskPlannerTest {
             "OVERWRITE_EXISTING",
             new TaskExecutionProfile(
                 TaskSourceMode.EXISTING_WORKBOOK,
-                TaskPersistenceMode.OVERWRITE_SOURCE,
+                TaskPersistenceMode.OVERWRITE,
                 TaskMutationMode.MUTATING,
                 TaskAssetMode.SELF_CONTAINED),
             List.of(phase(List.of(new TaskCapabilityRef("mutationActionTypes", "SET_CELL")))));
@@ -156,6 +159,7 @@ class GridGrindTaskPlannerTest {
     assertEquals("EXISTING", sourceType(saveAsRequest));
     assertEquals("starter-ad-hoc-export-input.xlsx", inputPath(saveAsRequest));
     assertEquals("SAVE_AS", persistenceType(saveAsRequest));
+    assertEquals("REPLACE", persistenceIfExists(saveAsRequest));
     assertEquals("starter-ad-hoc-export-output.xlsx", outputPath(saveAsRequest));
     assertFalse(steps(saveAsRequest).isEmpty());
   }
@@ -236,6 +240,7 @@ class GridGrindTaskPlannerTest {
 
     assertEquals("EXISTING", sourceType(externalPayloadRequest));
     assertEquals("SAVE_AS", persistenceType(externalPayloadRequest));
+    assertEquals("REPLACE", persistenceIfExists(externalPayloadRequest));
   }
 
   @Test
@@ -273,6 +278,10 @@ class GridGrindTaskPlannerTest {
     return textField(requestTree(request).path("source"), "path");
   }
 
+  private static String persistenceIfExists(WorkbookPlan request) {
+    return textField(requestTree(request).path("persistence"), "ifExists");
+  }
+
   private static String outputPath(WorkbookPlan request) {
     return textField(requestTree(request).path("persistence"), "path");
   }
@@ -290,7 +299,7 @@ class GridGrindTaskPlannerTest {
   }
 
   private static ObjectNode requestTree(WorkbookPlan request) {
-    return GridGrindJson.requestTree(request);
+    return GridGrindJsonOutput.requestTree(request);
   }
 
   private static String textField(JsonNode node, String fieldName) {

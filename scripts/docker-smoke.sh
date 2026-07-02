@@ -39,6 +39,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
 readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX")"
 readonly docker_run_user="$(id -u):$(id -g)"
+readonly custom_container_workdir="/gridgrind-smoke-root"
 readonly repo_lock_support="${repo_root}/scripts/repo-verification-lock-support.sh"
 readonly lock_dir="${repo_root}/tmp/repo-verification-lock"
 readonly pid_file="${lock_dir}/pid"
@@ -244,7 +245,8 @@ cat > "${request_path}" <<JSON
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "${workbook_rel}"
+    "path": "${workbook_rel}",
+    "ifExists": "REPLACE"
   },
 ${verbose_execution_block}
 ${default_formula_environment_block}
@@ -306,7 +308,8 @@ cat > "${signature_request_path}" <<JSON
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "${signature_workbook_rel}"
+    "path": "${signature_workbook_rel}",
+    "ifExists": "REPLACE"
   },
 ${default_execution_block}
 ${default_formula_environment_block}
@@ -385,7 +388,8 @@ cat > "${streaming_request_path}" <<JSON
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "${streaming_workbook_rel}"
+    "path": "${streaming_workbook_rel}",
+    "ifExists": "REPLACE"
   },
 ${streaming_execution_block}
 ${default_formula_environment_block}
@@ -410,7 +414,7 @@ ${default_formula_environment_block}
         "type": "APPEND_ROW",
         "values": {
           "type": "TYPED",
-          "values": [
+          "cells": [
             {
               "type": "TEXT",
               "source": {
@@ -446,7 +450,7 @@ ${default_formula_environment_block}
         "type": "APPEND_ROW",
         "values": {
           "type": "TYPED",
-          "values": [
+          "cells": [
             {
               "type": "TEXT",
               "source": {
@@ -533,8 +537,8 @@ fi
 printf 'Docker smoke: verifying custom workdir and weird paths\n'
 help_output="$(docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --help | tr -d '\r')"
 require_match "${help_output}" '^GridGrind ' \
@@ -544,8 +548,8 @@ require_match "${help_output}" '^Usage:' \
 
 version_output="$(docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --version | tr -d '\r')"
 require_match "${version_output}" '^GridGrind ' \
@@ -553,8 +557,8 @@ require_match "${version_output}" '^GridGrind ' \
 
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${request_rel}" \
     --response "${response_rel}" >/dev/null 2>"${create_stderr_path}"
@@ -577,8 +581,8 @@ grep -Fq '[gridgrind]' "${create_stderr_path}" || die \
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${existing_request_rel}" \
     --response "${existing_response_rel}" >/dev/null 2>"${existing_stderr_path}"
@@ -593,8 +597,8 @@ grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${existing_response_pat
 printf 'Docker smoke: verifying signature-line authoring under container fonts\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${signature_request_rel}" \
     --response "${signature_response_rel}" >/dev/null 2>"${signature_stderr_path}"
@@ -615,8 +619,8 @@ grep -Eq '"BudgetSignature"' "${signature_response_path}" || die \
 printf 'Docker smoke: verifying STREAMING_WRITE readback from materialized output\n'
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${streaming_request_rel}" \
     --response "${streaming_response_rel}" >/dev/null 2>"${streaming_stderr_path}"
@@ -634,8 +638,8 @@ grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCEEDED"' "${streaming_response_pa
 
 docker_with_repo_config run --rm \
     --user "${docker_run_user}" \
-    -w /workdir \
-    -v "${smoke_root}:/workdir" \
+    -w "${custom_container_workdir}" \
+    -v "${smoke_root}:${custom_container_workdir}" \
     "${image_tag}" \
     --request "${streaming_read_request_rel}" \
     --response "${streaming_read_response_rel}" >/dev/null 2>"${streaming_read_stderr_path}"

@@ -104,7 +104,10 @@ class SemanticSelectorResolverTest {
 
       SemanticSelectorResolver.ResolvedInspectionTarget cellsResult =
           resolver.resolveInspectionTarget(
-              "inspect-cells", workbook, missingTarget, new SheetIntrospectionQuery.GetCells());
+              "inspect-cells",
+              workbook,
+              missingTarget,
+              DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery());
       assertTrue(cellsResult.isShortCircuit());
       assertEquals(
           "Texts",
@@ -153,7 +156,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("NumberTable"), "Item", textCell("Hosting")),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -164,7 +167,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("TextTable"), "Item", new CellInput.Blank()),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -177,7 +180,7 @@ class SemanticSelectorResolverTest {
                           "Item",
                           new CellInput.NumberValue(99.0d)),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -190,7 +193,7 @@ class SemanticSelectorResolverTest {
                           "Item",
                           new CellInput.BooleanValue(false)),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -201,7 +204,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("TextTable"), "Item", formulaCell("2+2")),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -212,7 +215,7 @@ class SemanticSelectorResolverTest {
                       new TableRowSelector.ByKeyCell(
                           new TableSelector.ByName("FormulaTable"), "Item", formulaCell("1+1")),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -225,7 +228,7 @@ class SemanticSelectorResolverTest {
                           "Item",
                           new CellInput.NumberValue(42.0d)),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
       assertTrue(
           resolver
@@ -238,7 +241,7 @@ class SemanticSelectorResolverTest {
                           "Item",
                           new CellInput.BooleanValue(true)),
                       "Amount"),
-                  new SheetIntrospectionQuery.GetCells())
+                  DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())
               .isShortCircuit());
     }
   }
@@ -284,7 +287,7 @@ class SemanticSelectorResolverTest {
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
-                      new SheetIntrospectionQuery.GetCells()));
+                      DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery()));
       assertTrue(missingTable.getMessage().contains("table not found"));
 
       IllegalArgumentException missingTableOnExpectedSheet =
@@ -300,7 +303,7 @@ class SemanticSelectorResolverTest {
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
-                      new SheetIntrospectionQuery.GetCells()));
+                      DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery()));
       assertTrue(
           missingTableOnExpectedSheet.getMessage().contains("table not found on expected sheet"));
 
@@ -317,7 +320,7 @@ class SemanticSelectorResolverTest {
                               "Item",
                               textCell("Hosting")),
                           "Amount"),
-                      new SheetIntrospectionQuery.GetCells()));
+                      DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery()));
       assertTrue(
           missingNamedTableOnExpectedSheet
               .getMessage()
@@ -391,8 +394,11 @@ class SemanticSelectorResolverTest {
 
     CellStyleReport expectedStyle =
         InspectionResultCellReportSupport.toCellReport(
-                workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress))
-            .style();
+                workbook.sheet(expectedSheet).cells().snapshotCell(expectedAddress),
+                DefaultGridGrindRequestExecutorTestSupport.projection(),
+                false)
+            .style()
+            .orElseThrow();
     assertEquals(
         expectedAddress,
         assertInstanceOf(
@@ -460,7 +466,10 @@ class SemanticSelectorResolverTest {
 
     SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
         resolver.resolveInspectionTarget(
-            "inspect-cell", workbook, target, new SheetIntrospectionQuery.GetCells());
+            "inspect-cell",
+            workbook,
+            target,
+            DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery());
     assertFalse(inspectionTarget.isShortCircuit());
     CellSelector.ByAddress inspectionAddress =
         assertInstanceOf(CellSelector.ByAddress.class, inspectionTarget.selector());

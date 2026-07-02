@@ -104,7 +104,7 @@ final class ExecutionWorkflowSupport {
         return responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
+                protocolVersion, journal, request, calculation, problem, null, null),
             request,
             journal,
             problem.code(),
@@ -160,13 +160,7 @@ final class ExecutionWorkflowSupport {
         responseSupport.closeWorkbook(
             workbook,
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                protocolVersion,
-                journal,
-                request.steps().size(),
-                outcome.report(),
-                problem,
-                null,
-                null),
+                protocolVersion, journal, request, outcome.report(), problem, null, null),
             request,
             journal,
             problem.code(),
@@ -221,7 +215,7 @@ final class ExecutionWorkflowSupport {
         ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
             executionContext.protocolVersion(),
             executionContext.journal(),
-            executionContext.request().steps().size(),
+            executionContext.request(),
             calculation,
             List.copyOf(assertions),
             problem,
@@ -261,13 +255,7 @@ final class ExecutionWorkflowSupport {
           responseSupport.closeWorkbook(
               workbook,
               ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-                  protocolVersion,
-                  journal,
-                  request.steps().size(),
-                  calculation,
-                  problem,
-                  null,
-                  null),
+                  protocolVersion, journal, request, calculation, problem, null, null),
               request,
               journal,
               problem.code(),

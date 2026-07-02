@@ -742,9 +742,10 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(1, exitCode);
     assertFalse(report.valid());
-    assertEquals(3, report.problems().size());
+    assertEquals(4, report.problems().size());
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
+    assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
     assertTrue(
         problemMessages.stream()
             .anyMatch(message -> message.contains("duplicate stepId values: duplicate-step")));

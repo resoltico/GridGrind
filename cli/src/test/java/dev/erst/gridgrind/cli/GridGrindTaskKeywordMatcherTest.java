@@ -167,7 +167,7 @@ class GridGrindTaskKeywordMatcherTest {
   void keywordMatcherProfileAndPhaseSurfaceTextCoversHiddenEnumBranches() {
     assertEquals(
         "overwrite in place",
-        GridGrindTaskKeywordSurfaces.persistenceModeSurface(TaskPersistenceMode.OVERWRITE_SOURCE));
+        GridGrindTaskKeywordSurfaces.persistenceModeSurface(TaskPersistenceMode.OVERWRITE));
     assertEquals(
         "export extract",
         GridGrindTaskKeywordSurfaces.phasePurposeSurface(TaskPhasePurpose.EXPORT));

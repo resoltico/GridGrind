@@ -2,6 +2,9 @@ package dev.erst.gridgrind.engine.runtime;
 
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
 import dev.erst.gridgrind.contract.dto.CellStyleReport;
+import dev.erst.gridgrind.contract.dto.CellValueReport;
+import dev.erst.gridgrind.contract.query.CellReadFacet;
+import dev.erst.gridgrind.contract.query.CellReadProjection;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
@@ -52,7 +55,12 @@ final class AssertionValueEvaluator {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
             observations.executeObservation(
-                stepId, target, new SheetIntrospectionQuery.GetCells(), workbook, workbookLocation);
+                stepId,
+                target,
+                new SheetIntrospectionQuery.GetCells(
+                    java.util.Optional.of(CellReadProjection.of(CellReadFacet.VALUE))),
+                workbook,
+                workbookLocation);
     if (cellsResult.cells().isEmpty()) {
       return AssertionEvaluation.fail(
           List.of(cellsResult), "EXPECT_CELL_VALUE resolved no matching cells to compare");
@@ -78,14 +86,19 @@ final class AssertionValueEvaluator {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
             observations.executeObservation(
-                stepId, target, new SheetIntrospectionQuery.GetCells(), workbook, workbookLocation);
+                stepId,
+                target,
+                new SheetIntrospectionQuery.GetCells(
+                    java.util.Optional.of(CellReadProjection.of(CellReadFacet.FORMAT))),
+                workbook,
+                workbookLocation);
     if (cellsResult.cells().isEmpty()) {
       return AssertionEvaluation.fail(
           List.of(cellsResult), "EXPECT_DISPLAY_VALUE resolved no matching cells to compare");
     }
     List<String> mismatches =
         cellsResult.cells().stream()
-            .filter(cell -> !cell.displayValue().equals(expectedDisplayValue))
+            .filter(cell -> !cell.displayValue().orElseThrow().equals(expectedDisplayValue))
             .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
@@ -104,7 +117,12 @@ final class AssertionValueEvaluator {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
             observations.executeObservation(
-                stepId, target, new SheetIntrospectionQuery.GetCells(), workbook, workbookLocation);
+                stepId,
+                target,
+                new SheetIntrospectionQuery.GetCells(
+                    java.util.Optional.of(CellReadProjection.of(CellReadFacet.FORMULA))),
+                workbook,
+                workbookLocation);
     if (cellsResult.cells().isEmpty()) {
       return AssertionEvaluation.fail(
           List.of(cellsResult), "EXPECT_FORMULA_TEXT resolved no matching cells to compare");
@@ -116,7 +134,7 @@ final class AssertionValueEvaluator {
                     !(cell
                             instanceof
                             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport)
-                        || !formulaReport.formula().equals(expectedFormula))
+                        || !formulaReport.formula().orElseThrow().equals(expectedFormula))
             .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
@@ -135,14 +153,19 @@ final class AssertionValueEvaluator {
     SheetInspectionResult.CellsResult cellsResult =
         (SheetInspectionResult.CellsResult)
             observations.executeObservation(
-                stepId, target, new SheetIntrospectionQuery.GetCells(), workbook, workbookLocation);
+                stepId,
+                target,
+                new SheetIntrospectionQuery.GetCells(
+                    java.util.Optional.of(CellReadProjection.of(CellReadFacet.STYLE))),
+                workbook,
+                workbookLocation);
     if (cellsResult.cells().isEmpty()) {
       return AssertionEvaluation.fail(
           List.of(cellsResult), "EXPECT_CELL_STYLE resolved no matching cells to compare");
     }
     List<String> mismatches =
         cellsResult.cells().stream()
-            .filter(cell -> !cell.style().equals(expectedStyle))
+            .filter(cell -> !cell.style().orElseThrow().equals(expectedStyle))
             .map(dev.erst.gridgrind.contract.dto.CellReport::address)
             .toList();
     return mismatches.isEmpty()
@@ -155,23 +178,43 @@ final class AssertionValueEvaluator {
   static boolean matchesCellValue(
       dev.erst.gridgrind.contract.dto.CellReport cell, CellScalarValue expectedValue) {
     if (cell instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport) {
-      return matchesCellValue(formulaReport.evaluation(), expectedValue);
+      return formulaReport.evaluation().isPresent()
+          && matchesCellValue(formulaReport.evaluation().orElseThrow(), expectedValue);
     }
     return switch (expectedValue) {
       case CellScalarValue.Blank _ ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
       case CellScalarValue.Text expectedText ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
-              && textReport.stringValue().equals(expectedText.text());
+              && textReport.textValue().orElseThrow().equals(expectedText.text());
       case CellScalarValue.NumberValue expectedNumber ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
-              && Double.compare(numberReport.numberValue(), expectedNumber.number()) == 0;
+              && Double.compare(numberReport.numberValue().orElseThrow(), expectedNumber.number())
+                  == 0;
       case CellScalarValue.BooleanValue expectedBoolean ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
-              && booleanReport.booleanValue().equals(expectedBoolean.bool());
+              && booleanReport.booleanValue().orElseThrow().equals(expectedBoolean.bool());
       case CellScalarValue.ErrorValue expectedError ->
           cell instanceof dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorReport
-              && errorReport.errorValue().equals(expectedError.error());
+              && errorReport.errorValue().orElseThrow().equals(expectedError.error());
+    };
+  }
+
+  private static boolean matchesCellValue(CellValueReport cell, CellScalarValue expectedValue) {
+    return switch (expectedValue) {
+      case CellScalarValue.Blank _ -> cell instanceof CellValueReport.BlankValue;
+      case CellScalarValue.Text expectedText ->
+          cell instanceof CellValueReport.TextValue textValue
+              && textValue.textValue().equals(expectedText.text());
+      case CellScalarValue.NumberValue expectedNumber ->
+          cell instanceof CellValueReport.NumberValue numberValue
+              && Double.compare(numberValue.numberValue(), expectedNumber.number()) == 0;
+      case CellScalarValue.BooleanValue expectedBoolean ->
+          cell instanceof CellValueReport.BooleanValue booleanValue
+              && booleanValue.booleanValue().equals(expectedBoolean.bool());
+      case CellScalarValue.ErrorValue expectedError ->
+          cell instanceof CellValueReport.ErrorValue errorValue
+              && errorValue.errorValue().equals(expectedError.error());
     };
   }
 }

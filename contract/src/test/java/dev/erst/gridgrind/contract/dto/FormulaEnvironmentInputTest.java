@@ -2,7 +2,9 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Validation coverage for formula-environment request DTOs. */
@@ -89,6 +91,11 @@ class FormulaEnvironmentInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new FormulaExternalWorkbookInput("Rates].xlsx", "tmp/rates.xlsx"));
+    InvalidRequestException invalidExternalWorkbookPath =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> new FormulaExternalWorkbookInput("Rates.xlsx", "tmp/rates.txt"));
+    assertEquals(Optional.of("path"), invalidExternalWorkbookPath.jsonPath());
 
     assertThrows(NullPointerException.class, () -> new FormulaUdfFunctionInput(null, 1, 1, "ARG1"));
     assertThrows(

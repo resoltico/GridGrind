@@ -55,7 +55,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Tests for converting advanced engine read results into protocol response shapes. */
-class InspectionResultConverterTest {
+class InspectionResultConverterTest extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void convertsPackageSecurityReadResultsIntoProtocolShapes() {
     WorkbookInspectionResult.PackageSecurityResult packageSecurity =
@@ -200,16 +200,15 @@ class InspectionResultConverterTest {
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
-                    "cells", "Budget", List.of(advancedCell()))));
+                excelCellsResult("cells", "Budget", List.of(advancedCell()))));
     dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
-    assertEquals(CellColorReport.theme(2, 0.25d), cell.style().font().fontColor());
-    assertEquals(CellColorReport.indexed(12), cell.style().border().bottom().color());
+    assertEquals(CellColorReport.theme(2, 0.25d), style(cell).font().fontColor());
+    assertEquals(CellColorReport.indexed(12), style(cell).border().bottom().color());
     assertEquals(
         2,
-        assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(cell.style().fill()))
+        assertInstanceOf(CellGradientFillReport.Linear.class, fillGradient(style(cell).fill()))
             .stops()
             .size());
     assertEquals(
@@ -900,7 +899,6 @@ class InspectionResultConverterTest {
         new ExcelRichTextSnapshot(List.of(new ExcelRichTextRunSnapshot("Styled", advancedFont())));
     return new ExcelCellSnapshot.TextSnapshot(
         "C3",
-        "STRING",
         "Styled",
         advancedStyle(),
         ExcelCellMetadataSnapshot.of(

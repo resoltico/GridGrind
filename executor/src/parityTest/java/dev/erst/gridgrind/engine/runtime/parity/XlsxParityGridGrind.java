@@ -140,8 +140,12 @@ final class XlsxParityGridGrind {
   private static WorkbookPlan.WorkbookPersistence.SaveAs saveAsPersistence(
       Path saveAsPath, OoxmlPersistenceSecurityInput persistenceSecurity) {
     return persistenceSecurity == null
-        ? new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString())
-        : new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString(), persistenceSecurity);
+        ? new WorkbookPlan.WorkbookPersistence.SaveAs(
+            saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT)
+        : new WorkbookPlan.WorkbookPersistence.SaveAs(
+            saveAsPath.toString(),
+            WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
+            persistenceSecurity);
   }
 
   static GridGrindResponse.Success readWorkbook(Path workbookPath, InspectionStep... inspections) {
@@ -363,7 +367,7 @@ final class XlsxParityGridGrind {
             XlsxParitySupport.executionRootFor(workbookPath),
             ParityPlanSupport.request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(),
                 execution,
                 formulaEnvironment,
                 mutations,
@@ -420,11 +424,19 @@ final class XlsxParityGridGrind {
   static String savedPath(GridGrindResponse.Success success) {
     return switch (success.persistence()) {
       case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
-          savedAs.executionPath();
+          writtenExecutionPath(savedAs.write());
       case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
-          overwritten.executionPath();
+          writtenExecutionPath(overwritten.write());
       case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("Expected the workbook to be persisted");
+    };
+  }
+
+  private static String writtenExecutionPath(GridGrindResponsePersistence.WriteResult write) {
+    return switch (write) {
+      case GridGrindResponsePersistence.WriteResult.Written written -> written.executionPath();
+      case GridGrindResponsePersistence.WriteResult.NotWritten _ ->
+          throw new AssertionError("Expected the workbook to be written");
     };
   }
 

@@ -22,24 +22,38 @@ public final class ProtocolCatalogCliJson {
   /** Writes one compact protocol-catalog index report to UTF-8 JSON bytes. */
   static byte[] writeProtocolCatalogIndexReportBytes(ProtocolCatalogIndexReport report)
       throws IOException {
-    return GridGrindCliJsonCodecSupport.writeBytes(report);
+    return writeProtocolCatalogIndexReportBytes(report, false);
+  }
+
+  /** Writes one compact protocol-catalog index report to UTF-8 JSON bytes. */
+  static byte[] writeProtocolCatalogIndexReportBytes(
+      ProtocolCatalogIndexReport report, boolean pretty) throws IOException {
+    return GridGrindCliJsonCodecSupport.writeBytes(report, pretty);
   }
 
   /** Writes one protocol-catalog search report to UTF-8 JSON bytes. */
   static byte[] writeProtocolCatalogSearchReportBytes(ProtocolCatalogSearchReport report)
       throws IOException {
-    return GridGrindCliJsonCodecSupport.writeBytes(report);
+    return writeProtocolCatalogSearchReportBytes(report, false);
+  }
+
+  /** Writes one protocol-catalog search report to UTF-8 JSON bytes. */
+  static byte[] writeProtocolCatalogSearchReportBytes(
+      ProtocolCatalogSearchReport report, boolean pretty) throws IOException {
+    return GridGrindCliJsonCodecSupport.writeBytes(report, pretty);
   }
 
   /** Writes one compact protocol-catalog index report as JSON without closing the caller stream. */
   public static void writeProtocolCatalogIndexReport(
-      OutputStream outputStream, ProtocolCatalogIndexReport report) throws IOException {
-    GridGrindCliJsonCodecSupport.writeValue(outputStream, report);
+      OutputStream outputStream, ProtocolCatalogIndexReport report, boolean pretty)
+      throws IOException {
+    GridGrindCliJsonCodecSupport.writeValue(outputStream, report, pretty);
   }
 
   /** Writes one protocol-catalog search report as JSON without closing the caller stream. */
   public static void writeProtocolCatalogSearchReport(
-      OutputStream outputStream, ProtocolCatalogSearchReport report) throws IOException {
-    GridGrindCliJsonCodecSupport.writeValue(outputStream, report);
+      OutputStream outputStream, ProtocolCatalogSearchReport report, boolean pretty)
+      throws IOException {
+    GridGrindCliJsonCodecSupport.writeValue(outputStream, report, pretty);
   }
 }

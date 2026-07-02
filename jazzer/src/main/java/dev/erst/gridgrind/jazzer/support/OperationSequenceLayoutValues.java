@@ -231,7 +231,8 @@ final class OperationSequenceLayoutValues {
       case 1 ->
           new OperationSequenceValueFactory.WorkflowStorage(
               new WorkbookPlan.WorkbookSource.New(),
-              new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
+              new WorkbookPlan.WorkbookPersistence.SaveAs(
+                  saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
               directory);
       case 2 -> {
         writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
@@ -244,14 +245,15 @@ final class OperationSequenceLayoutValues {
         writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
         yield new OperationSequenceValueFactory.WorkflowStorage(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
             directory);
       }
       default -> {
         writeExistingWorkbook(sourcePath, primarySheet, secondarySheet, data);
         yield new OperationSequenceValueFactory.WorkflowStorage(
             new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             directory);
       }
     };

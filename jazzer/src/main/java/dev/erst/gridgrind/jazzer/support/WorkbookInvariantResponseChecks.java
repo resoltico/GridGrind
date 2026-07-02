@@ -31,28 +31,36 @@ final class WorkbookInvariantResponseChecks {
   static void requireWorkflowOutcomeShape(WorkbookPlan request, GridGrindResponse response) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(response, "response must not be null");
+    requireResponseShape(response);
 
-    switch (response) {
-      case GridGrindResponse.Failure _ -> {
-        return;
+    WorkbookPlan.StepPartition stepPartition = request.stepPartition();
+    if (response instanceof GridGrindResponse.Failure failure) {
+      requirePersistenceMatchesRequest(request, failure.persistence());
+      require(
+          failure.assertions().size() <= stepPartition.assertions().size(),
+          "failure assertions size must not exceed the requested assertion count");
+      for (int index = 0; index < failure.assertions().size(); index++) {
+        requireAssertionMatchesRequest(
+            stepPartition.assertions().get(index), failure.assertions().get(index));
       }
-      case GridGrindResponse.Success success -> {
-        requirePersistenceMatchesRequest(request.persistence(), success.persistence());
-        require(
-            success.assertions().size() == request.stepPartition().assertions().size(),
-            "assertions size must match the requested assertion count");
-        for (int index = 0; index < request.stepPartition().assertions().size(); index++) {
-          requireAssertionMatchesRequest(
-              request.stepPartition().assertions().get(index), success.assertions().get(index));
-        }
-        require(
-            success.inspections().size() == request.stepPartition().inspections().size(),
-            "inspections size must match the requested inspection count");
-        for (int index = 0; index < request.stepPartition().inspections().size(); index++) {
-          WorkbookInvariantInspectionResultChecks.requireReadMatchesRequest(
-              request.stepPartition().inspections().get(index), success.inspections().get(index));
-        }
-      }
+      return;
+    }
+
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    requirePersistenceMatchesRequest(request, success.persistence());
+    require(
+        success.assertions().size() == stepPartition.assertions().size(),
+        "assertions size must match the requested assertion count");
+    for (int index = 0; index < stepPartition.assertions().size(); index++) {
+      requireAssertionMatchesRequest(
+          stepPartition.assertions().get(index), success.assertions().get(index));
+    }
+    require(
+        success.inspections().size() == stepPartition.inspections().size(),
+        "inspections size must match the requested inspection count");
+    for (int index = 0; index < stepPartition.inspections().size(); index++) {
+      WorkbookInvariantInspectionResultChecks.requireReadMatchesRequest(
+          stepPartition.inspections().get(index), success.inspections().get(index));
     }
   }
 
@@ -68,6 +76,10 @@ final class WorkbookInvariantResponseChecks {
   }
 
   private static void requireFailureResponseShape(GridGrindResponse.Failure failure) {
+    require(failure.persistence() != null, "persistence must not be null");
+    requirePersistenceOutcomeShape(failure.persistence());
+    require(failure.assertions() != null, "assertions must not be null");
+    failure.assertions().forEach(WorkbookInvariantResponseChecks::requireAssertionResultShape);
     require(failure.problem() != null, "problem must not be null");
     require(failure.problem().code() != null, "problem code must not be null");
     require(failure.problem().category() != null, "problem category must not be null");
@@ -92,8 +104,8 @@ final class WorkbookInvariantResponseChecks {
   }
 
   private static void requirePersistenceMatchesRequest(
-      WorkbookPlan.WorkbookPersistence requestPersistence,
-      GridGrindResponsePersistence.PersistenceOutcome persistenceOutcome) {
+      WorkbookPlan request, GridGrindResponsePersistence.PersistenceOutcome persistenceOutcome) {
+    WorkbookPlan.WorkbookPersistence requestPersistence = request.persistence();
     switch (requestPersistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> {
         switch (persistenceOutcome) {
@@ -104,12 +116,28 @@ final class WorkbookInvariantResponseChecks {
               throw new IllegalStateException("NONE persistence must return NONE outcome");
         }
       }
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> {
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
             persistenceOutcome
                 instanceof GridGrindResponsePersistence.PersistenceOutcome.Overwritten,
             "OVERWRITE persistence must return OVERWRITE outcome");
+        GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten =
+            (GridGrindResponsePersistence.PersistenceOutcome.Overwritten) persistenceOutcome;
+        switch (request.source()) {
+          case WorkbookPlan.WorkbookSource.ExistingFile existingFile -> {
+            require(
+                overwritten.sourcePath().isPresent(),
+                "OVERWRITE persistence with an EXISTING source must include sourcePath");
+            require(
+                existingFile.path().equals(overwritten.sourcePath().orElseThrow()),
+                "OVERWRITE persistence sourcePath must echo the request source path");
+          }
+          case WorkbookPlan.WorkbookSource.New _ ->
+              require(
+                  overwritten.sourcePath().isEmpty(),
+                  "OVERWRITE persistence with a NEW source must omit sourcePath");
+        }
       }
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
@@ -126,12 +154,20 @@ final class WorkbookInvariantResponseChecks {
       case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ -> {}
       case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs -> {
         requireNonBlank(savedAs.requestedPath(), "requestedPath");
-        requireExecutionWorkbookPath(savedAs.executionPath());
+        requireWriteResultShape(savedAs.write());
       }
       case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten -> {
-        requireNonBlank(overwritten.sourcePath(), "sourcePath");
-        requireExecutionWorkbookPath(overwritten.executionPath());
+        overwritten.sourcePath().ifPresent(sourcePath -> requireNonBlank(sourcePath, "sourcePath"));
+        requireWriteResultShape(overwritten.write());
       }
+    }
+  }
+
+  private static void requireWriteResultShape(GridGrindResponsePersistence.WriteResult write) {
+    switch (write) {
+      case GridGrindResponsePersistence.WriteResult.NotWritten _ -> {}
+      case GridGrindResponsePersistence.WriteResult.Written written ->
+          requireExecutionWorkbookPath(written.executionPath());
     }
   }
 

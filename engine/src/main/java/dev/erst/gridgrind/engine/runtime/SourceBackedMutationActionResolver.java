@@ -87,8 +87,8 @@ final class SourceBackedMutationActionResolver {
       return setRange;
     }
     List<List<CellInput>> resolvedRows =
-        SourceBackedPlanResolver.resolveRows(typedRows.rows(), bindings);
-    return sameReference(resolvedRows, typedRows.rows())
+        SourceBackedPlanResolver.resolveRows(typedRows.cells(), bindings);
+    return sameReference(resolvedRows, typedRows.cells())
         ? setRange
         : new CellMutationAction.SetRange(new CellGridInput.Typed(resolvedRows));
   }
@@ -109,8 +109,8 @@ final class SourceBackedMutationActionResolver {
       return appendRow;
     }
     List<CellInput> resolvedValues =
-        SourceBackedPlanResolver.resolveCells(typedValues.values(), bindings);
-    return sameReference(resolvedValues, typedValues.values())
+        SourceBackedPlanResolver.resolveCells(typedValues.cells(), bindings);
+    return sameReference(resolvedValues, typedValues.cells())
         ? appendRow
         : new CellMutationAction.AppendRow(new CellRowInput.Typed(resolvedValues));
   }

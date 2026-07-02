@@ -68,7 +68,9 @@ class WorkbookReadResultTest {
                 0));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookSheetResult.CellsResult("cells", "Budget", null));
+        () ->
+            new WorkbookSheetResult.CellsResult(
+                "cells", "Budget", null, WorkbookReadTestSupport.projection(), false));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSheetResult.Window("Budget", "A1", 0, 1, List.of()));
@@ -167,8 +169,8 @@ class WorkbookReadResultTest {
                 "Item",
                 0,
                 0,
-                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
-                "STRING"));
+                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
+                "TEXT"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -178,8 +180,8 @@ class WorkbookReadResultTest {
                 "Item",
                 -1,
                 0,
-                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
-                "STRING"));
+                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
+                "TEXT"));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -189,10 +191,10 @@ class WorkbookReadResultTest {
                 "Item",
                 0,
                 -1,
-                List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
-                "STRING"));
+                List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
+                "TEXT"));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookSurfaceResult.TypeCount("STRING", 0));
+        IllegalArgumentException.class, () -> new WorkbookSurfaceResult.TypeCount("TEXT", 0));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookSurfaceResult.NamedRangeSurface(-1, 0, 0, 0, List.of()));
@@ -268,7 +270,7 @@ class WorkbookReadResultTest {
   void reportsExcelNativeIndexDiagnosticsForReadResults() {
     ExcelCellSnapshot.BlankSnapshot blank =
         new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
 
     IllegalArgumentException windowRowFailure =
         assertThrows(
@@ -301,8 +303,8 @@ class WorkbookReadResultTest {
                     "Item",
                     0,
                     0,
-                    List.of(new WorkbookSurfaceResult.TypeCount("STRING", 1)),
-                    "STRING"));
+                    List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 1)),
+                    "TEXT"));
     assertTrue(schemaColumnFailure.getMessage().contains("columnIndex -1"));
     assertTrue(schemaColumnFailure.getMessage().contains("Excel column A"));
 
@@ -412,7 +414,7 @@ class WorkbookReadResultTest {
   private ReadResultFixture createReadResultFixture() {
     ExcelCellSnapshot.BlankSnapshot blank =
         new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
     List<ExcelNamedRangeSnapshot> namedRanges =
         new ArrayList<>(
@@ -487,8 +489,8 @@ class WorkbookReadResultTest {
                     "Item",
                     2,
                     0,
-                    List.of(new WorkbookSurfaceResult.TypeCount("STRING", 2)),
-                    "STRING")));
+                    List.of(new WorkbookSurfaceResult.TypeCount("TEXT", 2)),
+                    "TEXT")));
     List<WorkbookSurfaceResult.NamedRangeSurfaceEntry> namedRangeEntries =
         new ArrayList<>(
             List.of(
@@ -528,8 +530,8 @@ class WorkbookReadResultTest {
                 4,
                 3,
                 2)),
-        new WorkbookSheetResult.CellsResult("cells", "Budget", cells),
-        new WorkbookSheetResult.WindowResult(
+        WorkbookReadTestSupport.cellsResult("cells", "Budget", cells),
+        WorkbookReadTestSupport.windowResult(
             "window", new WorkbookSheetResult.Window("Budget", "A1", 1, 1, rows)),
         new WorkbookSheetResult.MergedRegionsResult("merged", "Budget", mergedRegions),
         new WorkbookSheetResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks),
@@ -556,7 +558,7 @@ class WorkbookReadResultTest {
             new WorkbookSurfaceResult.FormulaSurface(
                 1,
                 List.of(new WorkbookSurfaceResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
-        new WorkbookSurfaceResult.SheetSchemaResult(
+        WorkbookReadTestSupport.sheetSchemaResult(
             "schema",
             new WorkbookSurfaceResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
         new WorkbookSurfaceResult.NamedRangeSurfaceResult(
@@ -585,8 +587,7 @@ class WorkbookReadResultTest {
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
     assertEquals(1, fixture.formulaSurfaceResult().surface().totalFormulaCellCount());
-    assertEquals(
-        "STRING", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
+    assertEquals("TEXT", fixture.sheetSchemaResult().surface().columns().getFirst().dominantType());
     assertEquals(
         WorkbookSurfaceResult.NamedRangeBackingKind.RANGE,
         fixture.namedRangeSurfaceResult().surface().namedRanges().getFirst().kind());

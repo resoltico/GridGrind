@@ -162,7 +162,7 @@ class WorkbookCommandExecutorTest {
               .style()
               .alignment()
               .horizontalAlignment());
-      assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").effectiveType());
+      assertEquals("BLANK", workbook.sheet("Budget").cells().snapshotCell("A2").type());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.formulas().recalculateOnOpenEnabled());
       WorkbookRuleResult.AutofiltersResult autofilters =

@@ -87,7 +87,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses("Budget", List.of("A1", "B2")),
-                            new SheetIntrospectionQuery.GetCells())))));
+                            allFacetCellsQuery())))));
 
     assertEquals(List.of("assert-owner", "assert-formula"), assertionIds(success));
     assertEquals(List.of("cells"), inspectionIds(success));
@@ -96,7 +96,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Owner",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   @Test
@@ -216,7 +217,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
                 null,
                 mutations(
@@ -261,7 +263,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1", "B4", "C2")),
-                    new SheetIntrospectionQuery.GetCells()),
+                    allFacetCellsQuery()),
                 inspect(
                     "window",
                     new RangeSelector.RectangularWindow("Budget", "A1", 4, 3),
@@ -289,24 +291,23 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Item",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
         cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cells.cells().get(1));
-    assertEquals("SUM(B2:B3)", formulaCell.formula());
+    assertEquals("SUM(B2:B3)", formulaText(formulaCell));
     assertEquals(
         61.0,
-        cast(
-                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
-                formulaCell.evaluation())
-            .numberValue());
+        assertInstanceOf(CellValueReport.NumberValue.class, evaluation(formulaCell)).numberValue());
     assertTrue(
         cast(dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class, cells.cells().get(2))
-            .booleanValue());
+            .booleanValue()
+            .orElseThrow());
 
     assertEquals("Budget", window.sheetName());
     assertEquals("A1", window.topLeftAddress());
-    assertEquals(4, window.rows().size());
-    assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
+    assertEquals(4, window.dimensions().rowCount());
+    assertEquals("A1", windowCells(window).getFirst().address());
   }
 
   @Test
@@ -336,7 +337,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
                             new SheetSelector.ByName("Ops"),
@@ -430,7 +432,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
-                    new SheetIntrospectionQuery.GetCells())));
+                    allFacetCellsQuery())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -438,19 +440,18 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     dev.erst.gridgrind.contract.dto.CellReport.TextReport cell =
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
 
-    assertEquals("Budget FY26", cell.stringValue());
-    assertTrue(cell.richText().isPresent());
-    assertEquals(2, cell.richText().orElseThrow().size());
-    assertEquals("Budget", cell.richText().orElseThrow().get(0).text());
-    assertEquals("Aptos", cell.richText().orElseThrow().get(0).font().fontName());
-    assertEquals(rgb("#112233"), cell.richText().orElseThrow().get(0).font().fontColor());
-    assertTrue(cell.richText().orElseThrow().get(0).font().italic());
-    assertFalse(cell.richText().orElseThrow().get(0).font().bold());
-    assertEquals(" FY26", cell.richText().orElseThrow().get(1).text());
-    assertEquals("Aptos", cell.richText().orElseThrow().get(1).font().fontName());
-    assertEquals(rgb("#FF0000"), cell.richText().orElseThrow().get(1).font().fontColor());
-    assertTrue(cell.richText().orElseThrow().get(1).font().bold());
-    assertTrue(cell.richText().orElseThrow().get(1).font().italic());
+    assertEquals("Budget FY26", textValue(cell));
+    assertEquals(2, runs(cell).size());
+    assertEquals("Budget", runs(cell).get(0).text());
+    assertEquals("Aptos", runs(cell).get(0).font().fontName());
+    assertEquals(rgb("#112233"), runs(cell).get(0).font().fontColor());
+    assertTrue(runs(cell).get(0).font().italic());
+    assertFalse(runs(cell).get(0).font().bold());
+    assertEquals(" FY26", runs(cell).get(1).text());
+    assertEquals("Aptos", runs(cell).get(1).font().fontName());
+    assertEquals(rgb("#FF0000"), runs(cell).get(1).font().fontColor());
+    assertTrue(runs(cell).get(1).font().bold());
+    assertTrue(runs(cell).get(1).font().italic());
   }
 
   @Test
@@ -502,7 +503,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(),
                 mutations(
                     mutate(
                         new CellSelector.ByAddress("Budget", "A1"),
@@ -513,7 +514,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1", "B1")),
-                    new SheetIntrospectionQuery.GetCells())));
+                    allFacetCellsQuery())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -523,11 +524,13 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "After",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(
         12.0,
         cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(1))
-            .numberValue());
+            .numberValue()
+            .orElseThrow());
   }
 
   @Test
@@ -539,7 +542,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -601,7 +605,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
-                    new SheetIntrospectionQuery.GetCells()),
+                    allFacetCellsQuery()),
                 inspect(
                     "merged",
                     new SheetSelector.ByName("Budget"),
@@ -635,7 +639,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Quarterly",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(
         List.of("A1:B1"), merged.mergedRegions().stream().map(MergedRegionReport::range).toList());
     assertInstanceOf(PaneReport.Frozen.class, layout.pane());
@@ -690,7 +695,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Layout"),
@@ -843,7 +849,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Moves"),
@@ -895,7 +902,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Moves", List.of("A2", "B1", "A3", "C3", "E4")),
-                    new SheetIntrospectionQuery.GetCells())));
+                    allFacetCellsQuery())));
 
     GridGrindResponse.Success success = success(response);
     SheetInspectionResult.CellsResult cells =
@@ -905,23 +912,28 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
     assertEquals(
         "Spacer",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(0))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(
         "Pad",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(1))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(
         "Hosting",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(2))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(
         42.0,
         cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, cells.cells().get(3))
-            .numberValue());
+            .numberValue()
+            .orElseThrow());
     assertEquals(
         "Beta",
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().get(4))
-            .stringValue());
+            .textValue()
+            .orElseThrow());
 
     try (ExcelWorkbook workbook = ExecutionContextFixtureSupport.openWorkbook(workbookPath)) {
       assertEquals("Spacer", workbook.sheet("Moves").cells().text("A2"));
@@ -1010,7 +1022,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -1042,7 +1055,7 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1", "B4")),
-                    new SheetIntrospectionQuery.GetCells()),
+                    allFacetCellsQuery()),
                 inspect(
                     "hyperlinks",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
@@ -1127,7 +1140,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -1211,7 +1225,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -1306,7 +1321,8 @@ class DefaultGridGrindRequestExecutorWorkbookWorkflowTest
             new DefaultGridGrindRequestExecutor(),
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 mutations(
                     mutate(
                         new SheetSelector.ByName("Budget"),

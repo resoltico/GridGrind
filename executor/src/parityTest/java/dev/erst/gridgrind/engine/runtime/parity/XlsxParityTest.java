@@ -212,7 +212,8 @@ final class XlsxParityTest {
                   ParityPlanSupport.request(
                       new WorkbookPlan.WorkbookSource.ExistingFile(
                           scenario.workbookPath().toString()),
-                      new WorkbookPlan.WorkbookPersistence.SaveAs(outputPath.toString()),
+                      new WorkbookPlan.WorkbookPersistence.SaveAs(
+                          outputPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                       ExecutionPolicyInput.calculation(
                           CalculationPolicyInput.strategy(
                               new CalculationStrategyInput.EvaluateAll())),
@@ -228,7 +229,7 @@ final class XlsxParityTest {
                           inspect(
                               "cells",
                               new CellSelector.ByAddresses("Ops", List.of("B1")),
-                              new SheetIntrospectionQuery.GetCells()))),
+                              XlsxParityProbeRegistry.allFacetCellsQuery()))),
                   XlsxParitySupport.bindings(temporaryRoot),
                   ExecutionJournalSink.NOOP);
       assertInstanceOf(GridGrindResponse.Success.class, response);

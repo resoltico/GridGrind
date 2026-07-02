@@ -45,6 +45,7 @@ public final class App {
           CliUnexpectedFailureSupport.emit(
               args,
               CliPathArguments.responsePathHint(args),
+              CliRenderArguments.prettyJsonHint(args),
               Objects.requireNonNull(stdout, "stdout must not be null"),
               Objects.requireNonNull(stderr, "stderr must not be null"),
               exception);

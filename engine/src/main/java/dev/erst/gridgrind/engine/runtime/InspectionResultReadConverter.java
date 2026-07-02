@@ -68,11 +68,17 @@ final class InspectionResultReadConverter {
           new SheetInspectionResult.CellsResult(
               cells.stepId(),
               cells.sheetName(),
-              cells.cells().stream().map(InspectionResultCellReportSupport::toCellReport).toList());
+              cells.cells().stream()
+                  .map(
+                      cell ->
+                          InspectionResultCellReportSupport.toCellReport(
+                              cell, cells.projection(), cells.date1904()))
+                  .toList());
       case dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult window ->
           new SheetInspectionResult.WindowResult(
               window.stepId(),
-              InspectionResultWorkbookLayoutReportSupport.toWindowReport(window.window()));
+              InspectionResultWorkbookLayoutReportSupport.toWindowReport(
+                  window.window(), window.projection(), window.includeBlanks(), window.date1904()));
       case dev.erst.gridgrind.excel.WorkbookSheetResult.MergedRegionsResult mergedRegions ->
           new SheetInspectionResult.MergedRegionsResult(
               mergedRegions.stepId(),
@@ -166,7 +172,8 @@ final class InspectionResultReadConverter {
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult sheetSchema ->
           new WorkbookSurfaceInspectionResult.SheetSchemaResult(
               sheetSchema.stepId(),
-              InspectionResultSurfaceReportSupport.toSheetSchemaReport(sheetSchema.surface()));
+              InspectionResultSurfaceReportSupport.toSheetSchemaReport(
+                  sheetSchema.surface(), sheetSchema.projection(), sheetSchema.date1904()));
       case dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult
               namedRangeSurface ->
           new WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(

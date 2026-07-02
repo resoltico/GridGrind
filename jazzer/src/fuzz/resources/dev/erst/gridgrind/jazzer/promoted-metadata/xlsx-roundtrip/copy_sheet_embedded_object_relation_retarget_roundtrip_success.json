@@ -10,10 +10,10 @@
       "inputBytes" : 68,
       "commandCount" : 8,
       "commandKinds" : {
-        "SET_EMBEDDED_OBJECT" : 1,
-        "COPY_SHEET" : 1,
         "CREATE_SHEET" : 5,
-        "SET_COMMENT" : 1
+        "SET_COMMENT" : 1,
+        "SET_EMBEDDED_OBJECT" : 1,
+        "COPY_SHEET" : 1
       },
       "styleKinds" : { }
     }

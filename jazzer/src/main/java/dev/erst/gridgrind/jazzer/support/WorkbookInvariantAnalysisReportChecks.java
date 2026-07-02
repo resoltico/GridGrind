@@ -13,8 +13,11 @@ import dev.erst.gridgrind.contract.dto.NamedRangeSurfaceReport;
 import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
 import dev.erst.gridgrind.contract.dto.SheetSchemaReport;
 import dev.erst.gridgrind.contract.dto.TableHealthReport;
+import dev.erst.gridgrind.contract.dto.TypeCountReport;
 import dev.erst.gridgrind.contract.dto.WorkbookFindingsReport;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /** Owns invariant checks for analysis summaries, findings, and report-style analysis payloads. */
 final class WorkbookInvariantAnalysisReportChecks {
@@ -85,17 +88,30 @@ final class WorkbookInvariantAnalysisReportChecks {
                   "schema populatedCellCount must not be negative");
               WorkbookInvariantChecks.require(
                   column.blankCellCount() >= 0, "schema blankCellCount must not be negative");
-              column
-                  .observedTypes()
-                  .forEach(
-                      typeCount -> {
-                        WorkbookInvariantChecks.require(
-                            typeCount.type() != null, "type count type must not be null");
-                        WorkbookInvariantChecks.require(
-                            !typeCount.type().isBlank(), "type count type must not be blank");
-                        WorkbookInvariantChecks.require(
-                            typeCount.count() > 0, "type count must be greater than 0");
-                      });
+              Set<String> observedTypes = new HashSet<>();
+              int observedTypeCountTotal = 0;
+              for (TypeCountReport typeCount : column.observedTypes()) {
+                WorkbookInvariantChecks.require(
+                    typeCount.type() != null, "type count type must not be null");
+                WorkbookInvariantChecks.require(
+                    !typeCount.type().isBlank(), "type count type must not be blank");
+                TypeCountReport.requireSupportedType(typeCount.type(), "type");
+                WorkbookInvariantChecks.require(
+                    typeCount.count() > 0, "type count must be greater than 0");
+                WorkbookInvariantChecks.require(
+                    observedTypes.add(typeCount.type()),
+                    "schema observedTypes must not contain duplicate types");
+                observedTypeCountTotal += typeCount.count();
+              }
+              WorkbookInvariantChecks.require(
+                  observedTypeCountTotal == column.populatedCellCount(),
+                  "schema observedTypes counts must sum to populatedCellCount");
+              if (column.dominantType() != null) {
+                TypeCountReport.requireSupportedType(column.dominantType(), "dominantType");
+                WorkbookInvariantChecks.require(
+                    observedTypes.contains(column.dominantType()),
+                    "schema dominantType must match one observedTypes entry");
+              }
             });
   }
 

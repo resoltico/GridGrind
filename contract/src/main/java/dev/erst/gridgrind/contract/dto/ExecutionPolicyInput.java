@@ -1,6 +1,9 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
 /**
@@ -8,7 +11,18 @@ import java.util.Objects;
  * explicit calculation handling.
  */
 public record ExecutionPolicyInput(
-    ExecutionModeInput mode, ExecutionJournalInput journal, CalculationPolicyInput calculation) {
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = ExecutionModeInput.DefaultFilter.class)
+        ExecutionModeInput mode,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = ExecutionJournalInput.DefaultFilter.class)
+        ExecutionJournalInput journal,
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = CalculationPolicyInput.DefaultFilter.class)
+        CalculationPolicyInput calculation) {
   /** Returns the default execution policy for mode, journaling, and calculation handling. */
   public static ExecutionPolicyInput defaults() {
     return new ExecutionPolicyInput(
@@ -51,6 +65,18 @@ public record ExecutionPolicyInput(
   public static ExecutionPolicyInput modeAndCalculation(
       ExecutionModeInput mode, CalculationPolicyInput calculation) {
     return new ExecutionPolicyInput(mode, ExecutionJournalInput.defaults(), calculation);
+  }
+
+  /** Reads one execution-policy block while applying the documented omission defaults. */
+  @JsonCreator
+  static ExecutionPolicyInput create(
+      @JsonProperty("mode") ExecutionModeInput mode,
+      @JsonProperty("journal") ExecutionJournalInput journal,
+      @JsonProperty("calculation") CalculationPolicyInput calculation) {
+    return new ExecutionPolicyInput(
+        mode == null ? ExecutionModeInput.defaults() : mode,
+        journal == null ? ExecutionJournalInput.defaults() : journal,
+        calculation == null ? CalculationPolicyInput.defaults() : calculation);
   }
 
   public ExecutionPolicyInput {

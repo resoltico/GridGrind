@@ -11,34 +11,41 @@ final class GridGrindJsonSubtypeProblemSupport {
       tools.jackson.databind.exc.InvalidTypeIdException exception) {
     String typeId = exception.getTypeId();
     if (typeId == null) {
-      return GridGrindJsonValueProblemSupport.productOwnedJacksonMessage(
-          GridGrindJsonProblemMessageSupport.cleanJacksonMessage(exception.getOriginalMessage()));
+      return "JSON object is missing required fields or has the wrong shape";
     }
     String defaultMessage = "Unknown type value '" + typeId + "'";
-    Optional<String> containerName =
-        GridGrindJsonPayloadMetadataSupport.terminalContainerName(exception.getPath());
-    if (containerName.isPresent() && "source".equals(containerName.orElseThrow())) {
-      if ("FILE".equals(typeId)) {
-        return defaultMessage
-            + "; use source.type='EXISTING' to open a workbook from disk"
-            + " (FILE is only valid for source-backed authored payload inputs)";
-      }
-      return withCandidates(defaultMessage, exception, typeId);
+    Optional<String> specificGuidance = specificGuidance(exception, typeId);
+    if (specificGuidance.isPresent()) {
+      defaultMessage += "; " + specificGuidance.orElseThrow();
     }
-    return withCandidates(defaultMessage, exception, typeId);
+    List<String> candidates = similarTypeIds(exception, typeId);
+    if (!candidates.isEmpty()) {
+      return defaultMessage + "; similar valid values: " + String.join(", ", candidates);
+    }
+    return defaultMessage;
   }
 
-  private static String withCandidates(
-      String base, tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
+  static Optional<String> specificGuidance(
+      tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
+    Optional<String> containerName =
+        GridGrindJsonPayloadMetadataSupport.terminalContainerName(exception.getPath());
+    if (containerName.isPresent()
+        && "source".equals(containerName.orElseThrow())
+        && "FILE".equals(typeId)) {
+      return Optional.of(
+          "use source.type='EXISTING' to open a workbook from disk"
+              + " (FILE is only valid for source-backed authored payload inputs)");
+    }
+    return Optional.empty();
+  }
+
+  static List<String> similarTypeIds(
+      tools.jackson.databind.exc.InvalidTypeIdException exception, String typeId) {
     tools.jackson.databind.JavaType baseType = exception.getBaseType();
     if (baseType == null) {
-      return base;
+      return List.of();
     }
-    List<String> candidates = similarTypeIds(baseType.getRawClass(), typeId);
-    if (candidates.isEmpty()) {
-      return base;
-    }
-    return base + "; similar valid values: " + String.join(", ", candidates);
+    return similarTypeIds(baseType.getRawClass(), typeId);
   }
 
   private static List<String> similarTypeIds(Class<?> baseClass, String typeId) {

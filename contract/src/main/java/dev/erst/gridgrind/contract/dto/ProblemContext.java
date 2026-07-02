@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
@@ -8,7 +9,6 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInpu
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestShape;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.ResponseOutput;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.InputReference;
-import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.ProblemLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.StepReference;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.WorkbookReference;
@@ -310,11 +310,28 @@ public sealed interface ProblemContext {
   }
 
   /** Context for failures that occur while persisting the workbook to its destination path. */
-  record PersistWorkbook(RequestShape request, PersistenceReference persistence)
+  record PersistWorkbook(
+      RequestShape request,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> sourceWorkbookPath,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> persistencePath)
       implements ProblemContext {
     public PersistWorkbook {
       Objects.requireNonNull(request, "request must not be null");
-      Objects.requireNonNull(persistence, "persistence must not be null");
+      sourceWorkbookPath = normalizeOptionalPath(sourceWorkbookPath, "sourceWorkbookPath");
+      persistencePath = normalizeOptionalPath(persistencePath, "persistencePath");
+      if (sourceWorkbookPath.isPresent() == persistencePath.isPresent()) {
+        throw new IllegalArgumentException(
+            "PersistWorkbook requires exactly one of sourceWorkbookPath or persistencePath");
+      }
+    }
+
+    /** Creates one persist-workbook context from the typed persistence-target helper. */
+    public PersistWorkbook(
+        RequestShape request, ProblemContextWorkbookSurfaces.PersistenceReference persistence) {
+      this(
+          request,
+          requiredPersistence(persistence).sourceWorkbookPathValue(),
+          requiredPersistence(persistence).persistencePathValue());
     }
 
     /** Returns the decoded request source family when persistence reached that point. */
@@ -327,19 +344,22 @@ public sealed interface ProblemContext {
       return request.persistenceTypeValue();
     }
 
-    /** Returns the overwritten source path when persistence targeted the opened workbook. */
-    public Optional<String> sourceWorkbookPath() {
-      return persistence.sourceWorkbookPathValue();
-    }
-
-    /** Returns the explicit save-as path when persistence targeted one new file. */
-    public Optional<String> persistencePath() {
-      return persistence.persistencePathValue();
-    }
-
     @Override
     public String stage() {
       return "PERSIST_WORKBOOK";
+    }
+
+    private static Optional<String> normalizeOptionalPath(Optional<String> path, String fieldName) {
+      Optional<String> normalized = Objects.requireNonNullElseGet(path, Optional::empty);
+      if (normalized.isEmpty()) {
+        return Optional.empty();
+      }
+      return Optional.of(WorkbookPlan.requireNonBlank(normalized.orElseThrow(), fieldName));
+    }
+
+    private static ProblemContextWorkbookSurfaces.PersistenceReference requiredPersistence(
+        ProblemContextWorkbookSurfaces.PersistenceReference persistence) {
+      return Objects.requireNonNull(persistence, "persistence must not be null");
     }
   }
 

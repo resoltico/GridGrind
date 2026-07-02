@@ -285,7 +285,6 @@ final class ExcelSheetCellReadSupport {
     CellValue evaluatedCell = evaluateFormulaCell(address, formula, cell);
     return new ExcelCellSnapshot.FormulaSnapshot(
         address,
-        "FORMULA",
         displayValue,
         style,
         metadata,
@@ -312,29 +311,22 @@ final class ExcelSheetCellReadSupport {
     return switch (evaluatedType) {
       case STRING ->
           new ExcelCellSnapshot.TextSnapshot(
-              address,
-              "STRING",
-              displayValue,
-              style,
-              metadata,
-              evaluatedCell.getStringValue(),
-              null);
+              address, displayValue, style, metadata, evaluatedCell.getStringValue(), null);
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
-              address, "NUMBER", displayValue, style, metadata, evaluatedCell.getNumberValue());
+              address, displayValue, style, metadata, evaluatedCell.getNumberValue());
       case BOOLEAN ->
           new ExcelCellSnapshot.BooleanSnapshot(
-              address, "BOOLEAN", displayValue, style, metadata, evaluatedCell.getBooleanValue());
+              address, displayValue, style, metadata, evaluatedCell.getBooleanValue());
       case ERROR ->
           new ExcelCellSnapshot.ErrorSnapshot(
               address,
-              "ERROR",
               displayValue,
               style,
               metadata,
               FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
       case BLANK, _NONE, FORMULA ->
-          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style, metadata);
+          new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
     };
   }
 
@@ -349,7 +341,6 @@ final class ExcelSheetCellReadSupport {
       case STRING ->
           new ExcelCellSnapshot.TextSnapshot(
               address,
-              "STRING",
               displayValue,
               style,
               metadata,
@@ -361,26 +352,25 @@ final class ExcelSheetCellReadSupport {
                   .orElse(null));
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
-              address, "NUMBER", displayValue, style, metadata, cell.getNumericCellValue());
+              address, displayValue, style, metadata, cell.getNumericCellValue());
       case BOOLEAN ->
           new ExcelCellSnapshot.BooleanSnapshot(
-              address, "BOOLEAN", displayValue, style, metadata, cell.getBooleanCellValue());
+              address, displayValue, style, metadata, cell.getBooleanCellValue());
       case ERROR ->
           new ExcelCellSnapshot.ErrorSnapshot(
               address,
-              "ERROR",
               displayValue,
               style,
               metadata,
               FormulaError.forInt(cell.getErrorCellValue()).getString());
       case BLANK, _NONE, FORMULA ->
-          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style, metadata);
+          new ExcelCellSnapshot.BlankSnapshot(address, displayValue, style, metadata);
     };
   }
 
   private ExcelCellSnapshot blankSnapshot(String address) {
     return new ExcelCellSnapshot.BlankSnapshot(
-        address, "BLANK", "", styleRegistry.defaultSnapshot(), ExcelCellMetadataSnapshot.empty());
+        address, "", styleRegistry.defaultSnapshot(), ExcelCellMetadataSnapshot.empty());
   }
 
   private XSSFSheet xssfSheet() {

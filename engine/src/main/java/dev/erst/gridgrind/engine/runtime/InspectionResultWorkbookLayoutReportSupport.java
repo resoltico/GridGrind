@@ -21,13 +21,14 @@ import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryReport;
 import dev.erst.gridgrind.contract.dto.SheetPresentationReport;
 import dev.erst.gridgrind.contract.dto.SheetProtectionReport;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.contract.dto.WindowReport;
-import dev.erst.gridgrind.contract.dto.WindowRowReport;
+import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Converts sheet/window/layout/readback snapshots into protocol report records. */
 final class InspectionResultWorkbookLayoutReportSupport {
@@ -43,21 +44,44 @@ final class InspectionResultWorkbookLayoutReportSupport {
     };
   }
 
-  static WindowReport toWindowReport(dev.erst.gridgrind.excel.WorkbookSheetResult.Window window) {
-    return new WindowReport(
-        window.sheetName(),
-        window.topLeftAddress(),
-        window.rowCount(),
-        window.columnCount(),
-        window.rows().stream()
-            .map(
-                row ->
-                    new WindowRowReport(
-                        row.rowIndex(),
-                        row.cells().stream()
-                            .map(InspectionResultCellReportSupport::toCellReport)
-                            .toList()))
-            .toList());
+  static dev.erst.gridgrind.contract.dto.WindowReport toWindowReport(
+      dev.erst.gridgrind.excel.WorkbookSheetResult.Window window,
+      ExcelCellReadProjection projection,
+      boolean includeBlanks,
+      boolean date1904) {
+    dev.erst.gridgrind.contract.dto.WindowDimensionsReport dimensions =
+        new dev.erst.gridgrind.contract.dto.WindowDimensionsReport(
+            window.rowCount(), window.columnCount());
+    if (includeBlanks) {
+      return new dev.erst.gridgrind.contract.dto.WindowReport.Dense(
+          window.sheetName(),
+          window.topLeftAddress(),
+          dimensions,
+          window.rows().stream()
+              .map(
+                  row ->
+                      new dev.erst.gridgrind.contract.dto.WindowRowReport(
+                          row.rowIndex(),
+                          row.cells().stream()
+                              .map(
+                                  cell ->
+                                      InspectionResultCellReportSupport.toCellReport(
+                                          cell, projection, date1904))
+                              .toList()))
+              .toList());
+    }
+    List<dev.erst.gridgrind.contract.dto.CellReport> populatedCells = new ArrayList<>();
+    for (dev.erst.gridgrind.excel.WorkbookSheetResult.WindowRow row : window.rows()) {
+      for (dev.erst.gridgrind.excel.ExcelCellSnapshot cell : row.cells()) {
+        if (cell instanceof dev.erst.gridgrind.excel.ExcelCellSnapshot.BlankSnapshot) {
+          continue;
+        }
+        populatedCells.add(
+            InspectionResultCellReportSupport.toCellReport(cell, projection, date1904));
+      }
+    }
+    return new dev.erst.gridgrind.contract.dto.WindowReport.Sparse(
+        window.sheetName(), window.topLeftAddress(), dimensions, List.copyOf(populatedCells));
   }
 
   static CellHyperlinkReport toCellHyperlinkReport(

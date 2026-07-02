@@ -11,35 +11,17 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelPrintMarginsSnapshot;
-import dev.erst.gridgrind.excel.ExcelPrintSetupSnapshot;
-import dev.erst.gridgrind.excel.ExcelSheetDefaults;
-import dev.erst.gridgrind.excel.ExcelSheetDisplay;
-import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
-import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookTempFileFactory;
-import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 
 /** Shared helpers for DefaultGridGrindRequestExecutor integration tests. */
-class DefaultGridGrindRequestExecutorTestSupport {
+class DefaultGridGrindRequestExecutorTestSupport
+    extends DefaultGridGrindRequestExecutorReadSupport {
   protected DefaultGridGrindRequestExecutorTestSupport() {}
 
   static WorkbookPlan request(
@@ -89,8 +71,60 @@ class DefaultGridGrindRequestExecutorTestSupport {
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence,
       List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(source, persistence, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
       InspectionStep... inspections) {
     return ExecutorTestPlanSupport.request(source, persistence, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, formulaEnvironment, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, formulaEnvironment, mutations, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<ExecutorTestPlanSupport.PendingAssertion> assertions,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, executionMode, formulaEnvironment, mutations, assertions, inspections);
+  }
+
+  static WorkbookPlan request(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<ExecutorTestPlanSupport.PendingMutation> mutations,
+      List<InspectionStep> inspections) {
+    return ExecutorTestPlanSupport.request(
+        source, persistence, executionMode, formulaEnvironment, mutations, inspections);
   }
 
   static GridGrindResponse.Success success(GridGrindResponse response) {
@@ -164,13 +198,35 @@ class DefaultGridGrindRequestExecutorTestSupport {
   }
 
   static String savedPath(GridGrindResponse.Success success) {
-    return switch (success.persistence()) {
+    return writtenExecutionPath(success.persistence());
+  }
+
+  static String writtenExecutionPath(GridGrindResponsePersistence.PersistenceOutcome persistence) {
+    return switch (persistence) {
       case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
-          savedAs.executionPath();
+          writtenExecutionPath(savedAs);
       case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
-          overwritten.executionPath();
+          writtenExecutionPath(overwritten);
       case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
           throw new AssertionError("expected persisted workbook");
+    };
+  }
+
+  static String writtenExecutionPath(
+      GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs) {
+    return writtenExecutionPath(savedAs.write());
+  }
+
+  static String writtenExecutionPath(
+      GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten) {
+    return writtenExecutionPath(overwritten.write());
+  }
+
+  static String writtenExecutionPath(GridGrindResponsePersistence.WriteResult write) {
+    return switch (write) {
+      case GridGrindResponsePersistence.WriteResult.Written written -> written.executionPath();
+      case GridGrindResponsePersistence.WriteResult.NotWritten _ ->
+          throw new AssertionError("expected written workbook");
     };
   }
 
@@ -230,10 +286,6 @@ class DefaultGridGrindRequestExecutorTestSupport {
 
   static String readType(InspectionStep step) {
     return step.query().queryType();
-  }
-
-  static <T> T cast(Class<T> type, Object value) {
-    return type.cast(assertInstanceOf(type, value));
   }
 
   static String sheetNameFor(WorkbookStep step) {
@@ -308,76 +360,7 @@ class DefaultGridGrindRequestExecutorTestSupport {
     assertEquals(expectedNamedRangeName, namedRangeNameFor(step, exception));
   }
 
-  static <T extends InspectionResult> T read(
-      GridGrindResponse.Success success, String stepId, Class<T> type) {
-    return inspection(success, stepId, type);
-  }
-
   CellStyleReport toResponseStyleReport(dev.erst.gridgrind.excel.ExcelCellStyleSnapshot style) {
-    return InspectionResultCellReportSupport.toCellStyleReport(style);
-  }
-
-  static ExcelCellStyleSnapshot defaultStyle() {
-    return new ExcelCellStyleSnapshot(
-        "",
-        new ExcelCellAlignmentSnapshot(
-            false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
-        new ExcelCellFontSnapshot(
-            false,
-            false,
-            "Aptos",
-            ExcelFontHeight.fromPoints(new BigDecimal("11")),
-            null,
-            false,
-            false),
-        ExcelCellFillSnapshot.pattern(dev.erst.gridgrind.excel.foundation.ExcelFillPattern.NONE),
-        new ExcelBorderSnapshot(
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
-        new ExcelCellProtectionSnapshot(true, false));
-  }
-
-  static ExcelPrintSetupSnapshot defaultPrintSetupSnapshot() {
-    return new ExcelPrintSetupSnapshot(
-        new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
-        false,
-        false,
-        false,
-        0,
-        false,
-        false,
-        0,
-        false,
-        0,
-        List.of(),
-        List.of());
-  }
-
-  static dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot
-      defaultSheetPresentationSnapshot() {
-    return new dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot(
-        ExcelSheetDisplay.defaults(),
-        Optional.empty(),
-        ExcelSheetOutlineSummary.defaults(),
-        ExcelSheetDefaults.defaults(),
-        List.of());
-  }
-
-  static SheetProtectionSettings protectionSettings() {
-    return new SheetProtectionSettings(
-        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
-        false);
-  }
-
-  static CellColorReport rgb(String rgb) {
-    return CellColorReport.rgb(rgb);
-  }
-
-  static ExcelSheetProtectionSettings excelProtectionSettings() {
-    return new ExcelSheetProtectionSettings(
-        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
-        false);
+    return InspectionResultCellStyleReportSupport.toCellStyleReport(style);
   }
 }

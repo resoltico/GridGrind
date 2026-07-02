@@ -188,8 +188,8 @@ public enum GridGrindProblemCode {
       case ProblemContext.PersistWorkbook persistWorkbook -> {
         if (persistWorkbook.persistencePath().isPresent()) {
           yield normalized.contains("already exists")
-              ? "Choose a new SAVE_AS destination path or remove the conflicting file, then"
-                  + " retry."
+              ? "Choose a new SAVE_AS destination path, remove the conflicting file, or set"
+                  + " SAVE_AS.ifExists=REPLACE before retrying."
               : "Check the SAVE_AS destination path, parent directory permissions, free disk"
                   + " space, and file locks before retrying.";
         }

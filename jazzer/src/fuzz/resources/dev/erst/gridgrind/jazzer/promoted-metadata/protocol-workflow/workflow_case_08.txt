@@ -2,8 +2,8 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_08.bin
 Harness: protocol-workflow
 Outcome: EXPECTED_INVALID
-Kind: IllegalArgumentException
-Message: ranges[0] range address must not be blank
+Kind: InvalidRequestException
+Message: ranges[0] must not be blank
 Input Bytes: 204
 Source Kind: NOT_GENERATED
 Persistence Kind: NOT_GENERATED

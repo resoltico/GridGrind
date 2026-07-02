@@ -18,7 +18,6 @@ final class ExecutionJournalRecorder {
   private final @Nullable String planId;
   private final ExecutionJournalLevel level;
   private final ExecutionJournal.SourceSummary source;
-  private final ExecutionJournal.PersistenceSummary persistence;
   private final ExecutionJournalSink sink;
   private final long planStartNanos;
   private final List<ExecutionJournal.Step> steps = new ArrayList<>();
@@ -36,12 +35,10 @@ final class ExecutionJournalRecorder {
       @Nullable String planId,
       ExecutionJournalLevel level,
       ExecutionJournal.SourceSummary source,
-      ExecutionJournal.PersistenceSummary persistence,
       ExecutionJournalSink sink) {
     this.planId = planId;
     this.level = level;
     this.source = source;
-    this.persistence = persistence;
     this.sink = sink;
     this.planStartNanos = System.nanoTime();
     emit("PLAN", "started", null, null);
@@ -60,15 +57,7 @@ final class ExecutionJournalRecorder {
                 Optional.of(ExecutionRequestPaths.reqSourceType(request)),
                 Optional.ofNullable(
                     ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
-    ExecutionJournal.PersistenceSummary persistence =
-        request == null
-            ? new ExecutionJournal.PersistenceSummary(Optional.empty(), Optional.empty())
-            : new ExecutionJournal.PersistenceSummary(
-                Optional.of(ExecutionRequestPaths.reqPersistenceType(request)),
-                Optional.ofNullable(
-                    ExecutionRequestPaths.persistencePath(
-                        request.source(), request.persistence(), workingDirectory)));
-    return new ExecutionJournalRecorder(planId, level, source, persistence, liveSink);
+    return new ExecutionJournalRecorder(planId, level, source, liveSink);
   }
 
   PhaseHandle beginValidation() {
@@ -135,7 +124,6 @@ final class ExecutionJournalRecorder {
         Optional.ofNullable(planId),
         level,
         source,
-        persistence,
         validation,
         inputResolution,
         open,
@@ -169,7 +157,6 @@ final class ExecutionJournalRecorder {
         Optional.ofNullable(planId),
         level,
         source,
-        persistence,
         validation,
         inputResolution,
         open,

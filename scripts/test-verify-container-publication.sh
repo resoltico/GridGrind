@@ -38,6 +38,11 @@ readonly expected_description="$(
 [[ -x "${verify_script}" ]] || die "missing executable verifier script at ${verify_script}"
 [[ -n "${expected_description}" ]] || die "missing gridgrindDescription in gradle.properties"
 
+# shellcheck source=/dev/null
+source "${repo_root}/scripts/lib/test-cli-case-file-support.sh"
+# shellcheck source=/dev/null
+source "${repo_root}/scripts/lib/test-container-publication-support.sh"
+
 readonly temp_parent="${repo_root}/tmp/test-verify-container-publication"
 mkdir -p "${temp_parent}"
 test_root="${temp_parent}/run.$$"
@@ -52,224 +57,57 @@ readonly fake_bin="${test_root}/bin"
 readonly fake_log="${test_root}/docker.log"
 readonly fake_discovery_verify="${test_root}/fake-verify-cli-discovery-execution.sh"
 mkdir -p "${fake_bin}"
-
-cat > "${fake_bin}/docker" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-emit_fixture_file() {
-    local fixture_path=$1
-    [[ -f "${fixture_path}" ]] || {
-        printf 'missing fixture file: %s\n' "${fixture_path}" >&2
-        exit 1
-    }
-    cat "${fixture_path}"
-}
-
-log_path=${FAKE_DOCKER_LOG:?}
-printf '%s\n' "$*" >> "${log_path}"
-
-args=("$@")
-offset=0
-if [[ ${#args[@]} -ge 2 && "${args[0]}" == "--config" ]]; then
-    offset=2
-fi
-
-if [[ ${#args[@]} -le ${offset} ]]; then
-    printf 'unexpected docker invocation: %s\n' "$*" >&2
-    exit 1
-fi
-
-command=${args[${offset}]}
-case "${command}" in
-    pull)
-        image_ref=${args[$((offset + 1))]:-}
-        [[ -n "${image_ref}" ]] || exit 1
-        exit 0
-        ;;
-    run)
-        run_index=$((offset + 1))
-        while [[ ${#args[@]} -gt ${run_index} ]]; do
-            case "${args[${run_index}]}" in
-                --rm|--interactive|--tty|-i|-t|-it|-ti)
-                    ((run_index += 1))
-                    ;;
-                *)
-                    break
-                    ;;
-            esac
-        done
-        image_ref=${args[${run_index}]:-}
-        cli_flag=${args[$((run_index + 1))]:-}
-        case "${cli_flag}" in
-            '')
-                emit_fixture_file "${FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE:?}" >&2
-                exit 2
-                ;;
-            --version)
-                case "${image_ref}" in
-                    *:latest)
-                        emit_fixture_file "${FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE:?}"
-                        ;;
-                    *)
-                        emit_fixture_file "${FAKE_DOCKER_VERSION_OUTPUT_FILE:?}"
-                        ;;
-                esac
-                ;;
-            --help)
-                emit_fixture_file "${FAKE_DOCKER_HELP_OVERVIEW_OUTPUT_FILE:?}"
-                ;;
-            --help-protocol)
-                emit_fixture_file "${FAKE_DOCKER_HELP_PROTOCOL_OUTPUT_FILE:?}"
-                ;;
-            --help-guidance)
-                emit_fixture_file "${FAKE_DOCKER_HELP_GUIDANCE_OUTPUT_FILE:?}"
-                ;;
-            --print-request-template)
-                emit_fixture_file "${FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE:?}"
-                ;;
-            --print-task-catalog)
-                emit_fixture_file "${FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE:?}"
-                ;;
-            --print-example-catalog)
-                emit_fixture_file "${FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE:?}"
-                ;;
-            --print-task-plan)
-                emit_fixture_file "${FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE:?}"
-                ;;
-            --print-task-keyword-match)
-                emit_fixture_file "${FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE:?}"
-                ;;
-            --doctor-request)
-                emit_fixture_file "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE:?}"
-                ;;
-            --print-protocol-catalog)
-                if [[ "${args[$((run_index + 2))]:-}" == "--full" ]]; then
-                    emit_fixture_file "${FAKE_DOCKER_CATALOG_FULL_OUTPUT_FILE:?}"
-                else
-                    emit_fixture_file "${FAKE_DOCKER_CATALOG_INDEX_OUTPUT_FILE:?}"
-                fi
-                ;;
-            *)
-                printf 'unexpected docker run invocation: %s\n' "$*" >&2
-                exit 1
-                ;;
-        esac
-        ;;
-    *)
-        printf 'unexpected docker subcommand: %s\n' "${command}" >&2
-        exit 1
-        ;;
-esac
-EOF
-chmod +x "${fake_bin}/docker"
-
-cat > "${fake_discovery_verify}" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-printf 'discovery %s\n' "$*" >> "${FAKE_DOCKER_LOG:?}"
-if [[ "${FAKE_DISCOVERY_SHOULD_FAIL:-0}" == 1 ]]; then
-    printf 'forced discovery failure for %s\n' "$*" >&2
-    exit 1
-fi
-exit 0
-EOF
-chmod +x "${fake_discovery_verify}"
+write_fake_docker_cli "${fake_bin}/docker"
+write_fake_discovery_verify_script "${fake_discovery_verify}"
 
 verify_case_counter=0
 
-next_case_dir() {
-    verify_case_counter=$((verify_case_counter + 1))
-    local case_dir="${test_root}/verify-case-${verify_case_counter}"
-    mkdir -p "${case_dir}"
-    printf '%s' "${case_dir}"
+run_verify_expect_success() {
+    run_fake_docker_verify_with_fixture_texts "$@"
 }
 
-write_case_fixture() {
-    local case_dir=$1
-    local fixture_name=$2
-    local fixture_text=$3
-    local fixture_path="${case_dir}/${fixture_name}"
-
-    printf '%s' "${fixture_text}" > "${fixture_path}"
-    printf '%s' "${fixture_path}"
-}
-
-run_verify_with_fixture_texts() {
+run_verify_expect_failure() {
     local version_output=$1
     local latest_version_output=$2
     local help_overview_output=$3
     local help_protocol_output=$4
     local help_guidance_output=$5
     local catalog_index_output=$6
-    local catalog_full_output=$7
-    local example_catalog_output=$8
-    local task_catalog_output=$9
-    local task_plan_output=${10}
-    local task_keyword_match_output=${11}
-    local doctor_report_output=${12}
-    local noargs_failure_output=${13}
-    local case_dir
-    local version_output_file
-    local latest_version_output_file
-    local help_overview_output_file
-    local help_protocol_output_file
-    local help_guidance_output_file
-    local catalog_index_output_file
-    local catalog_full_output_file
-    local example_catalog_output_file
-    local task_catalog_output_file
-    local task_plan_output_file
-    local task_keyword_match_output_file
-    local request_template_output_file
-    local doctor_report_output_file
-    local noargs_failure_output_file
-
-    case_dir="$(next_case_dir)"
-    version_output_file="$(write_case_fixture "${case_dir}" 'version.txt' "${version_output}")"
-    latest_version_output_file="$(write_case_fixture "${case_dir}" 'latest-version.txt' "${latest_version_output}")"
-    help_overview_output_file="$(write_case_fixture "${case_dir}" 'help-overview.txt' "${help_overview_output}")"
-    help_protocol_output_file="$(write_case_fixture "${case_dir}" 'help-protocol.txt' "${help_protocol_output}")"
-    help_guidance_output_file="$(write_case_fixture "${case_dir}" 'help-guidance.txt' "${help_guidance_output}")"
-    catalog_index_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-index.json' "${catalog_index_output}")"
-    catalog_full_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog-full.json' "${catalog_full_output}")"
-    example_catalog_output_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_output}")"
-    task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
-    task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
-    task_keyword_match_output_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_output}")"
-    request_template_output_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
-    doctor_report_output_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_output}")"
-    noargs_failure_output_file="$(write_case_fixture "${case_dir}" 'noargs-failure.json' "${noargs_failure_output}")"
-
-    PATH="${fake_bin}:${PATH}" \
-        FAKE_DOCKER_LOG="${fake_log}" \
-        GRIDGRIND_VERIFY_CLI_DISCOVERY_EXECUTION_SCRIPT="${fake_discovery_verify}" \
-        FAKE_DOCKER_VERSION_OUTPUT_FILE="${version_output_file}" \
-        FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE="${latest_version_output_file}" \
-        FAKE_DOCKER_HELP_OVERVIEW_OUTPUT_FILE="${help_overview_output_file}" \
-        FAKE_DOCKER_HELP_PROTOCOL_OUTPUT_FILE="${help_protocol_output_file}" \
-        FAKE_DOCKER_HELP_GUIDANCE_OUTPUT_FILE="${help_guidance_output_file}" \
-        FAKE_DOCKER_CATALOG_INDEX_OUTPUT_FILE="${catalog_index_output_file}" \
-        FAKE_DOCKER_CATALOG_FULL_OUTPUT_FILE="${catalog_full_output_file}" \
-        FAKE_DOCKER_EXAMPLE_CATALOG_OUTPUT_FILE="${example_catalog_output_file}" \
-        FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
-        FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
-        FAKE_DOCKER_TASK_KEYWORD_MATCH_OUTPUT_FILE="${task_keyword_match_output_file}" \
-        FAKE_DOCKER_REQUEST_TEMPLATE_OUTPUT_FILE="${request_template_output_file}" \
-        FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE="${doctor_report_output_file}" \
-        FAKE_DOCKER_NOARGS_FAILURE_OUTPUT_FILE="${noargs_failure_output_file}" \
-        GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
-        GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \
-        "${verify_script}" "ghcr.io/example/gridgrind" "9.9.9" >/dev/null
-}
-
-run_verify_expect_success() {
-    run_verify_with_fixture_texts "$@"
-}
-
-run_verify_expect_failure() {
-    if run_verify_with_fixture_texts "$@" >/dev/null 2>&1; then
+    local source_types_output=${7:-${success_source_types}}
+    local persistence_types_output=${8:-${success_persistence_types}}
+    local step_types_output=${9:-${success_step_types}}
+    local mutation_action_types_output=${10:-${success_mutation_action_types}}
+    local assertion_types_output=${11:-${success_assertion_types}}
+    local inspection_query_types_output=${12:-${success_inspection_query_types}}
+    local execution_mode_types_output=${13:-${success_execution_mode_types}}
+    local execution_policy_input_type_output=${14:-${success_execution_policy_input_type}}
+    local example_catalog_output=${15:-${success_example_catalog}}
+    local task_catalog_output=${16:-${success_task_catalog}}
+    local task_plan_output=${17:-${success_task_plan}}
+    local task_keyword_match_output=${18:-${success_task_keyword_match}}
+    local doctor_report_output=${19:-${success_doctor_report}}
+    local noargs_failure_output=${20:-${success_noargs_failure}}
+    if run_fake_docker_verify_with_fixture_texts \
+        "${version_output}" \
+        "${latest_version_output}" \
+        "${help_overview_output}" \
+        "${help_protocol_output}" \
+        "${help_guidance_output}" \
+        "${catalog_index_output}" \
+        "${source_types_output}" \
+        "${persistence_types_output}" \
+        "${step_types_output}" \
+        "${mutation_action_types_output}" \
+        "${assertion_types_output}" \
+        "${inspection_query_types_output}" \
+        "${execution_mode_types_output}" \
+        "${execution_policy_input_type_output}" \
+        "${example_catalog_output}" \
+        "${task_catalog_output}" \
+        "${task_plan_output}" \
+        "${task_keyword_match_output}" \
+        "${doctor_report_output}" \
+        "${noargs_failure_output}" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
     fi
 }
@@ -286,7 +124,14 @@ run_verify_expect_success \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
     "${success_catalog_index}" \
-    "${success_catalog}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
+    "${success_mutation_action_types}" \
+    "${success_assertion_types}" \
+    "${success_inspection_query_types}" \
+    "${success_execution_mode_types}" \
+    "${success_execution_policy_input_type}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
@@ -299,8 +144,12 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:9.9.9 --help' "${fake_log}" || die 
     "verifier did not inspect the version tag help surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag catalog surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --full' "${fake_log}" || die \
-    "verifier did not inspect the latest tag full catalog surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup mutationActionTypes' "${fake_log}" || die \
+    "verifier did not inspect the latest tag scoped catalog group surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup nestedTypes:executionModeTypes' "${fake_log}" || die \
+    "verifier did not inspect the latest tag nested catalog group surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup plainTypes:executionPolicyInputType' "${fake_log}" || die \
+    "verifier did not inspect the latest tag plain catalog group surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-example-catalog' "${fake_log}" || die \
     "verifier did not inspect the latest tag example-catalog surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-catalog' "${fake_log}" || die \
@@ -325,7 +174,14 @@ FAKE_DISCOVERY_SHOULD_FAIL=1 run_verify_expect_failure \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
     "${success_catalog_index}" \
-    "${success_catalog}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
+    "${success_mutation_action_types}" \
+    "${success_assertion_types}" \
+    "${success_inspection_query_types}" \
+    "${success_execution_mode_types}" \
+    "${success_execution_policy_input_type}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
@@ -340,41 +196,20 @@ run_verify_expect_failure \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
-    "${success_catalog_index}" \
-    "${success_catalog}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
-    "${success_doctor_report}" \
-    "${success_noargs_failure}"
+    "${success_catalog_index}"
 run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
     "$(printf 'GridGrind 9.9.9\nWrong description')" \
     "${success_help_overview}" \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
-    "${success_catalog_index}" \
-    "${success_catalog}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
-    "${success_doctor_report}" \
-    "${success_noargs_failure}"
+    "${success_catalog_index}"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
     "${success_help_overview}" \
     "$(append_fixture_line "${success_help_protocol}" 'FORCE_FORMULA_RECALC_ON_OPEN')" \
     "${success_help_guidance}" \
-    "${success_catalog_index}" \
-    "${success_catalog}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
-    "${success_doctor_report}" \
-    "${success_noargs_failure}"
+    "${success_catalog_index}"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
@@ -384,14 +219,7 @@ run_verify_expect_failure \
     "$(replace_fixture_token \
         "${success_catalog_index}" \
         '"lookupNamespaces"' \
-        '"lookupNamespacez"')" \
-    "${success_catalog}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
-    "${success_doctor_report}" \
-    "${success_noargs_failure}"
+        '"lookupNamespacez"')"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
@@ -399,16 +227,13 @@ run_verify_expect_failure \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
     "${success_catalog_index}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
     "$(replace_fixture_token \
-        "${success_catalog}" \
-        '"plainTypes"' \
-        '"plainTypez"')" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
-    "${success_doctor_report}" \
-    "${success_noargs_failure}"
+        "${success_mutation_action_types}" \
+        '"SET_TABLE"' \
+        '"SET_TABLEx"')"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
@@ -416,16 +241,22 @@ run_verify_expect_failure \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
     "${success_catalog_index}" \
-    "${success_catalog}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
+    "${success_mutation_action_types}" \
+    "${success_assertion_types}" \
+    "${success_inspection_query_types}" \
+    "${success_execution_mode_types}" \
+    "${success_execution_policy_input_type}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "${success_task_keyword_match}" \
     "$(replace_fixture_token \
         "${success_doctor_report}" \
-        '"valid" : true' \
-        '"valid" : false')" \
-    "${success_noargs_failure}"
+        '"valid":true' \
+        '"valid":false')"
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
@@ -433,18 +264,38 @@ run_verify_expect_failure \
     "${success_help_protocol}" \
     "${success_help_guidance}" \
     "${success_catalog_index}" \
-    "${success_catalog}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
+    "${success_mutation_action_types}" \
+    "${success_assertion_types}" \
+    "${success_inspection_query_types}" \
+    "${success_execution_mode_types}" \
+    "$(replace_fixture_token \
+        "${success_execution_policy_input_type}" \
+        'execution.journal' \
+        'executionJournal')"
+run_verify_expect_failure \
+    "${expected_header}" \
+    "${expected_header}" \
+    "${success_help_overview}" \
+    "${success_help_protocol}" \
+    "${success_help_guidance}" \
+    "${success_catalog_index}" \
+    "${success_source_types}" \
+    "${success_persistence_types}" \
+    "${success_step_types}" \
+    "${success_mutation_action_types}" \
+    "${success_assertion_types}" \
+    "${success_inspection_query_types}" \
+    "${success_execution_mode_types}" \
+    "${success_execution_policy_input_type}" \
     "${success_example_catalog}" \
     "${success_task_catalog}" \
     "${success_task_plan}" \
     "$(replace_fixture_token \
         "${success_task_keyword_match}" \
-        '"taskId" : "DASHBOARD"' \
-        '"taskId" : "TABULAR_REPORT"')" \
-    "$(replace_fixture_token \
-        "${success_doctor_report}" \
-        '"valid" : true' \
-        '"valid" : false')" \
-    "${success_noargs_failure}"
+        '"taskId":"DASHBOARD"' \
+        '"taskId":"TABULAR_REPORT"')"
 
 printf 'verify-container-publication regression: success\n'

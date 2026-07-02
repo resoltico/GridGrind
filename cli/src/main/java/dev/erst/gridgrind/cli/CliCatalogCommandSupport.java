@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.GridGrindTaskCatalog;
+import dev.erst.gridgrind.cli.discovery.ProtocolCatalogFieldMetadataKey;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogGroupIndex;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogLookupNamespace;
@@ -120,6 +121,15 @@ final class CliCatalogCommandSupport {
         catalog.plainTypes().stream()
             .map(group -> new ProtocolCatalogGroupIndex(group.group(), List.of(group.type().id())))
             .toList(),
+        List.of(
+            new ProtocolCatalogFieldMetadataKey(
+                "projectedByFacets",
+                "Field is present only when one of the listed read-projection facets is"
+                    + " requested."),
+            new ProtocolCatalogFieldMetadataKey(
+                "enumValueDocs",
+                "Field publishes per-enum-value summaries aligned with enumValues so agents can"
+                    + " choose the right token directly.")),
         List.of(
             new ProtocolCatalogLookupNamespace(
                 "<topLevelGroup>:<id>",

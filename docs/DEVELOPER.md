@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: DEVELOPER
-updated: "2026-06-14"
+updated: "2026-07-01"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, devcontainer, zulu26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the preferred contributor setup for gridgrind", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -444,7 +444,10 @@ The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
 the artifact-native built-in examples directly with `gridgrind --print-example --lookup <id>`. The full
-map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). These
+map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). Do not
+hand-edit the checked-in `examples/*.json` fixtures or the generated package-security workbook;
+regenerate them from the CLI-owned registry so the committed examples, built-in example surface,
+and verification loop stay on one source of truth. These
 fixtures and authoring examples cover the core surface:
 
 | File | What It Tests |

@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.contract.query;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
+import java.util.Objects;
+import java.util.Optional;
 
 /** Sheet-, cell-, and range-scoped factual inspection queries. */
 public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspection
@@ -35,19 +38,59 @@ public sealed interface SheetIntrospectionQuery extends InspectionQuery.Introspe
 
   @ProtocolTypeMetadata(
       id = "GET_CELLS",
-      summary = "Return exact cell snapshots for explicit addresses.",
+      summary =
+          "Return exact cell snapshots for explicit addresses."
+              + " Omit projection for the default compact VALUE readback.",
+      optionalFields = {"projection"},
       targetSelectors = {
         CellSelector.ByAddress.class,
         CellSelector.ByAddresses.class,
         TableCellSelector.ByColumnName.class
       })
-  record GetCells() implements SheetIntrospectionQuery {}
+  record GetCells(
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection)
+      implements SheetIntrospectionQuery {
+    /** Creates a cell-read query that relies on the default cell-read projection. */
+    public GetCells() {
+      this(Optional.empty());
+    }
+
+    public GetCells {
+      projection = Objects.requireNonNullElseGet(projection, Optional::empty);
+    }
+
+    /** Returns the effective projection after applying the default when omitted on the wire. */
+    public CellReadProjection resolvedProjection() {
+      return projection.orElseGet(CellReadProjection::defaults);
+    }
+  }
 
   @ProtocolTypeMetadata(
       id = "GET_WINDOW",
-      summary = "Return a rectangular window of cell snapshots.",
+      summary =
+          "Return a rectangular window of cell snapshots."
+              + " Omit projection for the default compact VALUE readback and omit"
+              + " includeBlanks for the sparse default.",
+      optionalFields = {"projection", "includeBlanks"},
       targetSelectors = {RangeSelector.RectangularWindow.class})
-  record GetWindow() implements SheetIntrospectionQuery {}
+  record GetWindow(
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellReadProjection> projection,
+      @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean includeBlanks)
+      implements SheetIntrospectionQuery {
+    /** Creates a sparse window query that relies on the default cell-read projection. */
+    public GetWindow() {
+      this(Optional.empty(), false);
+    }
+
+    public GetWindow {
+      projection = Objects.requireNonNullElseGet(projection, Optional::empty);
+    }
+
+    /** Returns the effective projection after applying the default when omitted on the wire. */
+    public CellReadProjection resolvedProjection() {
+      return projection.orElseGet(CellReadProjection::defaults);
+    }
+  }
 
   @ProtocolTypeMetadata(
       id = "GET_MERGED_REGIONS",

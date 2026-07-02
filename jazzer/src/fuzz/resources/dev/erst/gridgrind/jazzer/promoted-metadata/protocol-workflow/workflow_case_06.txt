@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_06.bin
 Harness: protocol-workflow
 Outcome: EXPECTED_INVALID
-Kind: IllegalArgumentException
+Kind: InvalidRequestException
 Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 317
 Source Kind: NOT_GENERATED

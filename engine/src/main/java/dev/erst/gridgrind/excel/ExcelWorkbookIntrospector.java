@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.ss.util.CellReference;
 import org.jspecify.annotations.Nullable;
@@ -68,15 +69,20 @@ final class ExcelWorkbookIntrospector {
           new WorkbookSheetResult.CellsResult(
               getCells.stepId(),
               getCells.sheetName(),
-              sheetIntrospector.cells(workbook.sheet(getCells.sheetName()), getCells.addresses()));
+              sheetIntrospector.cells(workbook.sheet(getCells.sheetName()), getCells.addresses()),
+              getCells.projection(),
+              workbook.xssfWorkbook().isDate1904());
       case WorkbookReadCommand.GetWindow getWindow ->
           new WorkbookSheetResult.WindowResult(
               getWindow.stepId(),
               sheetIntrospector.window(
                   workbook.sheet(getWindow.sheetName()),
-                  getWindow.topLeftAddress(),
-                  getWindow.rowCount(),
-                  getWindow.columnCount()));
+                  getWindow.window().topLeftAddress(),
+                  getWindow.window().rowCount(),
+                  getWindow.window().columnCount()),
+              getWindow.projection(),
+              getWindow.includeBlanks(),
+              workbook.xssfWorkbook().isDate1904());
       case WorkbookReadCommand.GetMergedRegions getMergedRegions ->
           new WorkbookSheetResult.MergedRegionsResult(
               getMergedRegions.stepId(),
@@ -164,9 +170,13 @@ final class ExcelWorkbookIntrospector {
               sheetSchema(
                   workbook,
                   getSheetSchema.sheetName(),
-                  getSheetSchema.topLeftAddress(),
-                  getSheetSchema.rowCount(),
-                  getSheetSchema.columnCount()));
+                  getSheetSchema.window().topLeftAddress(),
+                  getSheetSchema.window().rowCount(),
+                  getSheetSchema.window().columnCount(),
+                  getSheetSchema.projection(),
+                  workbook.xssfWorkbook().isDate1904()),
+              getSheetSchema.projection(),
+              workbook.xssfWorkbook().isDate1904());
       case WorkbookReadCommand.GetNamedRangeSurface getNamedRangeSurface ->
           new WorkbookSurfaceResult.NamedRangeSurfaceResult(
               getNamedRangeSurface.stepId(),
@@ -297,7 +307,9 @@ final class ExcelWorkbookIntrospector {
       String sheetName,
       String topLeftAddress,
       int rowCount,
-      int columnCount) {
+      int columnCount,
+      ExcelCellReadProjection projection,
+      boolean date1904) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelSheet sheet = workbook.sheet(sheetName);
     WorkbookSheetResult.Window window =
@@ -305,7 +317,7 @@ final class ExcelWorkbookIntrospector {
     int topLeftColumn = new CellReference(topLeftAddress).getCol();
     boolean headerRowIsBlank =
         window.rows().getFirst().cells().stream()
-            .allMatch(cell -> "BLANK".equals(cell.effectiveType()));
+            .allMatch(ExcelCellSnapshot.BlankSnapshot.class::isInstance);
     int dataRowCount = headerRowIsBlank ? 0 : Math.max(0, rowCount - 1);
 
     List<WorkbookSurfaceResult.SchemaColumn> columns = new ArrayList<>(columnCount);
@@ -320,23 +332,23 @@ final class ExcelWorkbookIntrospector {
           case ExcelCellSnapshot.BlankSnapshot _ -> blankCellCount++;
           case ExcelCellSnapshot.FormulaSnapshot f -> {
             populatedCellCount++;
-            typeCounts.merge(f.evaluation().effectiveType(), 1, Integer::sum);
+            typeCounts.merge(schemaObservedType(f.evaluation(), projection), 1, Integer::sum);
           }
           case ExcelCellSnapshot.TextSnapshot _ -> {
             populatedCellCount++;
-            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+            typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
           case ExcelCellSnapshot.NumberSnapshot _ -> {
             populatedCellCount++;
-            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+            typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
           case ExcelCellSnapshot.BooleanSnapshot _ -> {
             populatedCellCount++;
-            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+            typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
           case ExcelCellSnapshot.ErrorSnapshot _ -> {
             populatedCellCount++;
-            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+            typeCounts.merge(schemaObservedType(cell, projection), 1, Integer::sum);
           }
         }
       }
@@ -425,5 +437,33 @@ final class ExcelWorkbookIntrospector {
       }
     }
     return tie ? null : dominantType;
+  }
+
+  private static String schemaObservedType(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+    return switch (snapshot) {
+      case ExcelCellSnapshot.TextSnapshot _ -> "TEXT";
+      case ExcelCellSnapshot.NumberSnapshot number ->
+          projection.includes(ExcelCellReadFacet.TEMPORAL)
+              ? temporalObservedType(number).orElse("NUMBER")
+              : "NUMBER";
+      case ExcelCellSnapshot.BooleanSnapshot _ -> "BOOLEAN";
+      case ExcelCellSnapshot.ErrorSnapshot _ -> "ERROR";
+      case ExcelCellSnapshot.BlankSnapshot _ -> "BLANK";
+      case ExcelCellSnapshot.FormulaSnapshot _ ->
+          throw new IllegalArgumentException(
+              "Schema observed types must not receive FORMULA directly");
+    };
+  }
+
+  private static Optional<String> temporalObservedType(ExcelCellSnapshot.NumberSnapshot snapshot) {
+    return ExcelTemporalFormatSupport.observedKind(snapshot.style().numberFormat())
+        .map(
+            observedKind ->
+                switch (observedKind) {
+                  case DATE -> "DATE";
+                  case TIME -> "TIME";
+                  case DATE_TIME -> "DATE_TIME";
+                });
   }
 }

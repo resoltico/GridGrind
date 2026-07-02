@@ -11,6 +11,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.FileAlreadyExistsException;
@@ -30,62 +31,29 @@ class GridGrindProblemsCoverageTest {
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
                 readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.of("steps[0].target"),
-                    Optional.of(11),
-                    Optional.empty(),
-                    new IllegalArgumentException("bad")));
+                badRequest(Optional.of("steps[0].target"), Optional.of(11), Optional.empty()));
     ProblemContext.ReadRequest pathOnlyFromMissingLineContext =
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
                 readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.of("steps[0].target"),
-                    Optional.empty(),
-                    Optional.of(7),
-                    new IllegalArgumentException("bad")));
+                badRequest(Optional.of("steps[0].target"), Optional.empty(), Optional.of(7)));
     ProblemContext.ReadRequest lineColumnContext =
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
-                readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.empty(),
-                    Optional.of(11),
-                    Optional.of(7),
-                    new IllegalArgumentException("bad")));
+                readContext, badRequest(Optional.empty(), Optional.of(11), Optional.of(7)));
     ProblemContext.ReadRequest locatedContext =
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
                 readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.of("steps[0].target"),
-                    Optional.of(11),
-                    Optional.of(7),
-                    new IllegalArgumentException("bad")));
+                badRequest(Optional.of("steps[0].target"), Optional.of(11), Optional.of(7)));
     ProblemContext.ReadRequest unavailableContext =
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
-                readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.empty(),
-                    Optional.of(11),
-                    Optional.empty(),
-                    new IllegalArgumentException("bad")));
+                readContext, badRequest(Optional.empty(), Optional.of(11), Optional.empty()));
     ProblemContext.ReadRequest unavailableFromMissingLineContext =
         (ProblemContext.ReadRequest)
             GridGrindProblems.enrichContext(
-                readContext,
-                new InvalidRequestException(
-                    "bad request",
-                    Optional.empty(),
-                    Optional.empty(),
-                    Optional.of(7),
-                    new IllegalArgumentException("bad")));
+                readContext, badRequest(Optional.empty(), Optional.empty(), Optional.of(7)));
 
     assertEquals(Optional.of("steps[0].target"), pathOnlyContext.jsonPath());
     assertEquals(Optional.empty(), pathOnlyContext.jsonLine());
@@ -160,10 +128,13 @@ class GridGrindProblemsCoverageTest {
 
     assertEquals(GridGrindProblemCode.IO_ERROR, saveAsConflict.code());
     assertEquals(
-        "Choose a new SAVE_AS destination path or remove the conflicting file, then retry.",
+        "Choose a new SAVE_AS destination path, remove the conflicting file, or set"
+            + " SAVE_AS.ifExists=REPLACE before retrying.",
         saveAsConflict.resolution());
     assertEquals(
-        "Could not write workbook to /tmp/out.xlsx: already exists; SAVE_AS requires a new destination path and never replaces an existing workbook implicitly",
+        "Could not write workbook to /tmp/out.xlsx: already exists; SAVE_AS.ifExists=REJECT"
+            + " requires a new destination path. Use ifExists=REPLACE to allow"
+            + " create-or-replace.",
         saveAsConflict.message());
 
     assertEquals(
@@ -172,5 +143,15 @@ class GridGrindProblemsCoverageTest {
     assertEquals(
         "Check the --response destination path, parent directory permissions, free disk space, and file locks before retrying.",
         writeResponseDenied.resolution());
+  }
+
+  private static InvalidRequestException badRequest(
+      Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
+    return new InvalidRequestException(
+        new MessageInvariant("bad request", jsonPath),
+        jsonPath,
+        jsonLine,
+        jsonColumn,
+        new IllegalArgumentException("bad"));
   }
 }

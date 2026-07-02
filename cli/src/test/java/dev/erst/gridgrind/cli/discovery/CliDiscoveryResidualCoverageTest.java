@@ -40,6 +40,10 @@ class CliDiscoveryResidualCoverageTest {
             List.of(new ProtocolCatalogGroupIndex("topLevel", List.of("A", "B"))),
             List.of(new ProtocolCatalogGroupIndex("nested", List.of("C"))),
             List.of(new ProtocolCatalogGroupIndex("plain", List.of("NUMBER"))),
+            List.of(
+                new ProtocolCatalogFieldMetadataKey(
+                    "projectedByFacets",
+                    "Field is present only when one listed facet is requested.")),
             List.of(new ProtocolCatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")));
 
     assertEquals(2, report.topLevelGroups().getFirst().entryCount());
@@ -48,8 +52,33 @@ class CliDiscoveryResidualCoverageTest {
     assertEquals(report, ProtocolCatalogCliJson.readProtocolCatalogIndexReport(bytes));
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    ProtocolCatalogCliJson.writeProtocolCatalogIndexReport(outputStream, report);
+    ProtocolCatalogCliJson.writeProtocolCatalogIndexReport(outputStream, report, false);
     assertEquals(
         report, ProtocolCatalogCliJson.readProtocolCatalogIndexReport(outputStream.toByteArray()));
+  }
+
+  @Test
+  void genericDiscoveryCodecConvenienceWritersDefaultToCompactJson() throws IOException {
+    ProtocolCatalogSearchReport report =
+        new ProtocolCatalogSearchReport(
+            GridGrindProtocolVersion.current(),
+            "chart title",
+            List.of(
+                new ProtocolCatalogSearchHit(
+                    "mutationActionTypes",
+                    "SET_CHART",
+                    "mutationActionTypes:SET_CHART",
+                    "ENTRY",
+                    "Create or mutate one supported simple chart on one sheet.",
+                    List.of("SET_CHART"),
+                    List.of("chartInputType:ChartInput"))));
+
+    byte[] bytes = GridGrindCliJsonCodecSupport.writeBytes(report);
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    GridGrindCliJsonCodecSupport.writeValue(outputStream, report);
+
+    assertEquals(report, ProtocolCatalogCliJson.readProtocolCatalogSearchReport(bytes));
+    assertEquals(
+        report, ProtocolCatalogCliJson.readProtocolCatalogSearchReport(outputStream.toByteArray()));
   }
 }

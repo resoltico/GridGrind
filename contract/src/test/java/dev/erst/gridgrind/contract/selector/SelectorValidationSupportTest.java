@@ -2,6 +2,12 @@ package dev.erst.gridgrind.contract.selector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.contract.json.FieldValidationAddressRule;
+import dev.erst.gridgrind.contract.json.FieldValidationProblem;
+import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -114,13 +120,13 @@ class SelectorValidationSupportTest {
                 () -> SelectorValueValidation.requireNonZero(0, "delta"))
             .getMessage());
     assertEquals(
-        "row must be within Excel .xlsx row bounds",
+        "row must not exceed 1048575 (Excel row limit)",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SelectorValueValidation.requireRowIndexWithinBounds(1_048_576, "row"))
             .getMessage());
     assertEquals(
-        "column must be within Excel .xlsx column bounds",
+        "column must not exceed 16383 (Excel column limit)",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SelectorValueValidation.requireColumnIndexWithinBounds(16_384, "column"))
@@ -130,6 +136,14 @@ class SelectorValidationSupportTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> SelectorValueValidation.requireWindowSize(501, 500))
+            .getMessage());
+    assertEquals(
+        "addresses must not exceed 250000 but was 250001",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    SelectorListValidation.copyDistinctAddresses(
+                        exactAddresses(ExcelReadLimits.MAX_READ_CELLS + 1), "addresses"))
             .getMessage());
   }
 
@@ -176,7 +190,7 @@ class SelectorValidationSupportTest {
                 IllegalArgumentException.class,
                 () -> SelectorListValidation.copyDistinctAddresses(List.of("A0"), "cells"))
             .getMessage()
-            .startsWith("cells[0] address "));
+            .startsWith("cells[0] must be a single-cell A1-style address"));
     assertEquals(
         "ranges must not contain duplicates",
         assertThrows(
@@ -251,6 +265,10 @@ class SelectorValidationSupportTest {
             .getMessage());
   }
 
+  private static List<String> exactAddresses(int count) {
+    return java.util.stream.IntStream.rangeClosed(1, count).mapToObj(index -> "A" + index).toList();
+  }
+
   @Test
   void selectorSupportCoversZeroIterationAddressParsingAndCatalogLookupOrdering() {
     assertEquals(-1, SelectorAddressSupport.columnIndex(""));
@@ -268,5 +286,24 @@ class SelectorValidationSupportTest {
         SelectorValueValidation.prefixedValidationMessage("field", "field must not be blank"));
     assertEquals(
         "field invalid", SelectorValueValidation.prefixedValidationMessage("field", "invalid"));
+  }
+
+  @Test
+  void selectorInvalidFieldCarriesTypedAddressGuidance() {
+    var failure =
+        SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField("address", FieldValidationAddressRule.ADDRESS_SYNTAX));
+    FieldValidationProblem requestProblem =
+        assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
+
+    assertEquals("address must be a single-cell A1-style address", failure.getMessage());
+    assertEquals(FieldValidationAddressRule.ADDRESS_SYNTAX, requestProblem.rule());
+    assertEquals(
+        "Use a single-cell A1-style address such as A1 or BC12 within Excel .xlsx bounds for field 'address'.",
+        GridGrindRequestProblemSupport.resolution(
+            requestProblem,
+            new ProblemContext.ReadRequest(
+                ProblemContextRequestSurfaces.RequestInput.standardInput(),
+                ProblemContextRequestSurfaces.JsonLocation.unavailable())));
   }
 }

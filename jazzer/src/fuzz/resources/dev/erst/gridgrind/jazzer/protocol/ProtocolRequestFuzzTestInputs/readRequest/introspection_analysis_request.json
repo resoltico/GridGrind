@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-introspection-analysis.xlsx"
+    "path": "generated-workbooks/gridgrind-introspection-analysis.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {
@@ -295,8 +296,12 @@
             "copies": 1,
             "useFirstPageNumber": false,
             "firstPageNumber": 1,
-            "rowBreaks": [],
-            "columnBreaks": []
+            "rowBreaks": [
+
+            ],
+            "columnBreaks": [
+
+            ]
           }
         }
       },

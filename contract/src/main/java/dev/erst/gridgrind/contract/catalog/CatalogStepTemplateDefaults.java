@@ -10,6 +10,8 @@ import tools.jackson.databind.node.ObjectNode;
  * Owns preference tables and placeholder defaults used while synthesizing catalog step templates.
  */
 final class CatalogStepTemplateDefaults {
+  private static final Set<String> TYPED_CELL_INPUT_TEMPLATE_GROUPS =
+      Set.of("cellRowInputTypes", "cellGridInputTypes");
   private static final Set<String> PRIMARY_SELECTOR_TYPE_IDS =
       Set.of(
           "SHEET_BY_NAME",
@@ -109,6 +111,13 @@ final class CatalogStepTemplateDefaults {
       return 1;
     }
     return TERTIARY_ENTRY_TYPE_IDS.contains(typeId) ? 2 : 3;
+  }
+
+  static int entryPreference(String groupName, String typeId) {
+    if (TYPED_CELL_INPUT_TEMPLATE_GROUPS.contains(groupName) && "TYPED".equals(typeId)) {
+      return -1;
+    }
+    return entryPreference(typeId);
   }
 
   static String stringPlaceholder(String fieldName) {

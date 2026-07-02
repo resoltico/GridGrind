@@ -15,6 +15,7 @@ final class CliUnexpectedFailureSupport {
   static int emit(
       String[] args,
       Optional<Path> responsePathHint,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       Throwable exception) {
@@ -29,22 +30,26 @@ final class CliUnexpectedFailureSupport {
             CliPrimaryCommandSupport.primaryCommandName(args), "unexpected-failure", exception);
     try {
       return new CliResponseWriter()
-          .writeCliFailureReport(responsePathHint, stdout, stderr, report);
+          .writeCliFailureReport(responsePathHint, stdout, stderr, report, prettyJson);
     } catch (Throwable writeFailure) {
-      directFallback(report, stdout, stderr, responsePathHint.isPresent());
+      directFallback(report, stdout, stderr, responsePathHint.isPresent(), prettyJson);
       return report.exitCode();
     }
   }
 
   private static void directFallback(
-      CliFailureReport report, OutputStream stdout, OutputStream stderr, boolean responsePathUsed) {
+      CliFailureReport report,
+      OutputStream stdout,
+      OutputStream stderr,
+      boolean responsePathUsed,
+      boolean prettyJson) {
     try {
-      byte[] payload = GridGrindCliJson.writeBytes(report);
+      byte[] payload = GridGrindCliJson.writeBytes(report, prettyJson);
       writePayload(stdout, payload);
       return;
     } catch (IOException exception) {
       try {
-        writePayload(stderr, GridGrindCliJson.writeBytes(report));
+        writePayload(stderr, GridGrindCliJson.writeBytes(report, prettyJson));
         return;
       } catch (IOException exceptionOnStderr) {
         exception.addSuppressed(exceptionOnStderr);

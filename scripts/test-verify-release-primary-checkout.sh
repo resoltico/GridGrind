@@ -28,13 +28,13 @@ create_repo() {
     local origin_dir="${target_dir}/origin.git"
     local primary_dir="${target_dir}/primary"
 
-    git init --bare "${origin_dir}" >/dev/null
+    git -c init.defaultBranch=main init --bare "${origin_dir}" >/dev/null
     git clone "${origin_dir}" "${primary_dir}" >/dev/null 2>&1
     (
         cd "${primary_dir}"
         git config user.name "GridGrind Test"
         git config user.email "gridgrind-test@example.com"
-        git checkout -b main >/dev/null 2>&1
+        git checkout -B main >/dev/null 2>&1
         cat > gradle.properties <<EOF
 version=${version}
 gridgrindDescription=GridGrind test description

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Protocol-owned validation helpers for defined names and related identifiers. */
 public final class ProtocolDefinedNameValidation {
@@ -10,12 +11,33 @@ public final class ProtocolDefinedNameValidation {
   /** Validates one protocol-facing defined-name identifier and returns its canonical text. */
   public static String validateName(String name) {
     Objects.requireNonNull(name, "name must not be null");
-    requireNotBlank(name);
-    requireDefinedNameSyntax(name);
-    requireNotReservedPrefix(name);
-    requireNotA1CellReference(name);
-    requireNotR1c1CellReference(name);
+    violation(name)
+        .ifPresent(
+            violation -> {
+              throw new IllegalArgumentException(renderViolation(violation));
+            });
     return name;
+  }
+
+  /** Returns the first defined-name rule violation, if any. */
+  public static Optional<Violation> violation(String name) {
+    Objects.requireNonNull(name, "name must not be null");
+    if (name.isBlank()) {
+      return Optional.of(Violation.BLANK);
+    }
+    if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
+      return Optional.of(Violation.SYNTAX);
+    }
+    if (name.regionMatches(true, 0, "_xlnm.", 0, "_xlnm.".length())) {
+      return Optional.of(Violation.RESERVED_PREFIX);
+    }
+    if (looksLikeA1CellReference(name)) {
+      return Optional.of(Violation.A1_COLLISION);
+    }
+    if (name.matches("(?i)^R[1-9][0-9]*C[1-9][0-9]*$")) {
+      return Optional.of(Violation.R1C1_COLLISION);
+    }
+    return Optional.empty();
   }
 
   private static boolean looksLikeA1CellReference(String candidate) {
@@ -31,36 +53,24 @@ public final class ProtocolDefinedNameValidation {
     return columnNumber <= 16384;
   }
 
-  private static void requireNotBlank(String name) {
-    if (name.isBlank()) {
-      throw new IllegalArgumentException("name must not be blank");
-    }
+  private static String renderViolation(Violation violation) {
+    return switch (violation) {
+      case BLANK -> "name must not be blank";
+      case SYNTAX ->
+          "name must start with a letter or underscore and contain only letters, digits,"
+              + " underscore, or period";
+      case RESERVED_PREFIX -> "name must not use the reserved _xlnm. prefix";
+      case A1_COLLISION -> "name must not collide with A1-style cell reference syntax";
+      case R1C1_COLLISION -> "name must not collide with R1C1-style cell reference syntax";
+    };
   }
 
-  private static void requireDefinedNameSyntax(String name) {
-    if (!name.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
-      throw new IllegalArgumentException(
-          "name must start with a letter or underscore and contain only letters, digits, underscore, or period");
-    }
-  }
-
-  private static void requireNotReservedPrefix(String name) {
-    if (name.regionMatches(true, 0, "_xlnm.", 0, "_xlnm.".length())) {
-      throw new IllegalArgumentException("name must not use the reserved _xlnm. prefix");
-    }
-  }
-
-  private static void requireNotA1CellReference(String name) {
-    if (looksLikeA1CellReference(name)) {
-      throw new IllegalArgumentException(
-          "name must not collide with A1-style cell reference syntax");
-    }
-  }
-
-  private static void requireNotR1c1CellReference(String name) {
-    if (name.matches("(?i)^R[1-9][0-9]*C[1-9][0-9]*$")) {
-      throw new IllegalArgumentException(
-          "name must not collide with R1C1-style cell reference syntax");
-    }
+  /** Structured defined-name violation family. */
+  public enum Violation {
+    BLANK,
+    SYNTAX,
+    RESERVED_PREFIX,
+    A1_COLLISION,
+    R1C1_COLLISION
   }
 }

@@ -50,11 +50,7 @@ abstract sealed class CatalogLookupValue
     @Override
     String searchableText(Catalog catalog, boolean includeReferencedShapes) {
       return String.join(
-              " ",
-              entry.fields().stream()
-                  .flatMap(
-                      field -> Stream.concat(Stream.of(field.name()), field.enumValues().stream()))
-                  .toList())
+              " ", entry.fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens).toList())
           + " "
           + String.join(
               " ",
@@ -113,7 +109,7 @@ abstract sealed class CatalogLookupValue
               entry ->
                   Stream.concat(
                       Stream.of(entry.id(), entry.summary()),
-                      entry.fields().stream().map(FieldEntry::name)))
+                      entry.fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens)))
           .collect(java.util.stream.Collectors.joining(" "));
     }
 
@@ -151,7 +147,7 @@ abstract sealed class CatalogLookupValue
     String searchableText(Catalog catalog, boolean includeReferencedShapes) {
       return Stream.concat(
               Stream.of(group.type().id(), group.type().summary()),
-              group.type().fields().stream().map(FieldEntry::name))
+              group.type().fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens))
           .collect(java.util.stream.Collectors.joining(" "));
     }
 
@@ -194,7 +190,7 @@ abstract sealed class CatalogLookupValue
               entry ->
                   Stream.concat(
                       Stream.of(entry.id(), entry.summary()),
-                      entry.fields().stream().map(FieldEntry::name)))
+                      entry.fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens)))
           .collect(java.util.stream.Collectors.joining(" "));
     }
 
@@ -202,5 +198,16 @@ abstract sealed class CatalogLookupValue
     List<String> relatedEntryIds(Catalog catalog) {
       return List.of();
     }
+  }
+
+  private static Stream<String> fieldSearchTokens(FieldEntry field) {
+    return Stream.concat(
+        Stream.of(field.name()),
+        Stream.concat(
+            field.enumValues().stream(),
+            Stream.concat(
+                field.projectedByFacets().stream(),
+                field.enumValueDocs().stream()
+                    .flatMap(doc -> Stream.of(doc.value(), doc.summary())))));
   }
 }

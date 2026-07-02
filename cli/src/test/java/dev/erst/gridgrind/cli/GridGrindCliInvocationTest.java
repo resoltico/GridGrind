@@ -17,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Focused invocation-path tests for stdin discovery and execution behavior. */
@@ -114,6 +115,142 @@ class GridGrindCliInvocationTest extends GridGrindCliTestSupport {
     assertEquals("", stderr.toString(StandardCharsets.UTF_8));
     assertInstanceOf(
         GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+  }
+
+  @Test
+  void invocationPinsNonStringSubtypeDiscriminatorsToTheExactTypeField() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "bad-shape",
+                                "target": { "type": "WORKBOOK_CURRENT" },
+                                "query": { "type": 1 }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertEquals("execute", failure.command());
+    assertEquals(
+        java.util.Optional.of("steps[0].query.type"), failure.location().orElseThrow().jsonPath());
+    assertEquals("Field 'type' must be a string", failure.message());
+    assertEquals(
+        "Replace field 'type' with a JSON string type id. Use --print-protocol-catalog --search \"sheet layout\" or --help-protocol when you need the authoritative field and discriminator contract.",
+        failure.resolution().orElseThrow());
+  }
+
+  @Test
+  void invocationQualifiesStepTargetMissingTypeMessagesToTheExactNestedPath() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "bad-target",
+                                "target": {},
+                                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertEquals(Optional.of("steps[0].target.type"), failure.location().orElseThrow().jsonPath());
+    assertEquals("Missing required field 'steps[0].target.type'", failure.message());
+    assertTrue(failure.resolution().orElseThrow().contains("steps[0].target.type"));
+  }
+
+  @Test
+  void invocationNamesTheOwnedTargetTypeFieldForCustomTargetShapeFailures() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"NONE\" }",
+                            """
+                            [
+                              {
+                                "stepId": "bad-target",
+                                "target": { "type": 7 },
+                                "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                              }
+                            ]
+                            """)
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
+    assertEquals(Optional.of("steps[0].target.type"), failure.location().orElseThrow().jsonPath());
+    assertEquals("Field 'target.type' must be a string", failure.message());
+    assertTrue(failure.resolution().orElseThrow().contains("target.type"));
+  }
+
+  @Test
+  void invocationPinsNonXlsxPathViolationsToTheExactPathField() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(
+                    requestJson(
+                            "{ \"type\": \"NEW\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"budget.txt\", \"ifExists\": \"REJECT\" }",
+                            "[]")
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals(Optional.of("persistence.path"), failure.location().orElseThrow().jsonPath());
+    assertEquals("path must end in .xlsx (got: '.txt')", failure.message());
+    assertTrue(failure.resolution().orElseThrow().contains("persistence.path"));
   }
 
   @Test

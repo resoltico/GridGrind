@@ -145,7 +145,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
-                    new SheetIntrospectionQuery.GetCells()),
+                    allFacetCellsQuery()),
                 inspect(
                     "hyperlinks",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
@@ -255,7 +255,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
     assertEquals(2, schema.columnCount());
     assertEquals(3, schema.dataRowCount());
     assertEquals("Item", schema.columns().getFirst().headerDisplayValue());
-    assertEquals("STRING", schema.columns().getFirst().dominantType());
+    assertEquals("TEXT", schema.columns().getFirst().dominantType());
 
     assertEquals(1, ranges.workbookScopedCount());
     assertEquals(0, ranges.sheetScopedCount());
@@ -350,7 +350,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     new RangeSelector.ByRange("Budget", "A1:"),
                     new WorkbookMutationAction.MergeCells()));
 
-    assertEquals("range address must not be blank", failure.getMessage());
+    assertEquals("range must not be blank", failure.getMessage());
   }
 
   @Test
@@ -452,7 +452,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress("Budget", "C3"),
@@ -460,7 +460,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("C3")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertEquals(
@@ -468,7 +468,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
         cast(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
     assertEquals(List.of("Budget", "Summary"), XlsxRoundTrip.sheetOrder(workbookPath));
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
@@ -633,7 +634,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Budget"),
@@ -641,6 +643,12 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
+    assertEquals(workbookPath.toString(), persistence.requestedPath());
+    assertInstanceOf(
+        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         java.util.Optional.of(workbookPath.toAbsolutePath().toString()),
         persistWorkbookContext(failure).persistencePath());
@@ -658,7 +666,8 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     List.of(
                         mutate(
                             new SheetSelector.ByName("Budget"),
@@ -666,12 +675,52 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
 
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, failure.persistence());
+    assertEquals(workbookPath.toString(), persistence.requestedPath());
+    assertInstanceOf(
+        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
     assertEquals(
         "Could not write workbook to "
             + workbookPath.toAbsolutePath()
-            + ": already exists; SAVE_AS requires a new destination path and never replaces an"
-            + " existing workbook implicitly",
+            + ": already exists; SAVE_AS.ifExists=REJECT requires a new destination path. Use"
+            + " ifExists=REPLACE to allow create-or-replace.",
         failure.problem().message());
+  }
+
+  @Test
+  void saveAsReplaceCanOverwriteAnExistingDestination() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-save-as-replace-");
+    Path workbookPath = workspace.resolve("existing-output.xlsx");
+    Files.writeString(workbookPath, "occupied");
+
+    GridGrindResponse.Success success =
+        success(
+            ExecutionContextFixtureSupport.execute(
+                new DefaultGridGrindRequestExecutor(),
+                request(
+                    new WorkbookPlan.WorkbookSource.New(),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE),
+                    List.of(
+                        mutate(
+                            new SheetSelector.ByName("Budget"),
+                            new WorkbookMutationAction.EnsureSheet())))));
+
+    GridGrindResponsePersistence.PersistenceOutcome.SavedAs persistence =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, success.persistence());
+
+    assertEquals(workbookPath.toString(), persistence.requestedPath());
+    assertEquals(workbookPath.toAbsolutePath().toString(), writtenExecutionPath(persistence));
+    assertTrue(Files.size(workbookPath) > 0L);
+    assertDoesNotThrow(
+        () -> {
+          try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+            assertNotNull(workbook.getSheet("Budget"));
+          }
+        });
   }
 
   @Test
@@ -685,12 +734,13 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     List.of(),
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Missing", List.of("A1")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertFalse(Files.exists(workbookPath));
@@ -705,10 +755,9 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Data", List.of("A1", "BADADDR")),
-                    new SheetIntrospectionQuery.GetCells()));
+                    allFacetCellsQuery()));
 
-    assertEquals(
-        "addresses[1] address must be a single-cell A1-style address", failure.getMessage());
+    assertEquals("addresses[1] must be a single-cell A1-style address", failure.getMessage());
   }
 
   @Test
@@ -720,25 +769,31 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Data", List.of("A0")),
-                    new SheetIntrospectionQuery.GetCells()));
+                    allFacetCellsQuery()));
 
-    assertEquals(
-        "addresses[0] address must be a single-cell A1-style address", failure.getMessage());
+    assertEquals("addresses[0] must be a single-cell A1-style address", failure.getMessage());
   }
 
   @Test
-  void returnsStructuredFailureForInvalidOverwriteSourceUsage() {
+  void returnsStructuredFailureForInvalidOverwriteUsage() {
     GridGrindResponse.Failure failure =
         failure(
             ExecutionContextFixtureSupport.execute(
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     List.of())));
+    GridGrindResponsePersistence.PersistenceOutcome.Overwritten persistence =
+        assertInstanceOf(
+            GridGrindResponsePersistence.PersistenceOutcome.Overwritten.class,
+            failure.persistence());
 
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
+    assertEquals(java.util.Optional.empty(), persistence.sourcePath());
+    assertInstanceOf(
+        GridGrindResponsePersistence.WriteResult.NotWritten.class, persistence.write());
   }
 
   @Test
@@ -749,7 +804,7 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     executionPolicy(ExecutionModeInput.eventRead(), calculateAll()),
                     null,
                     mutations(),

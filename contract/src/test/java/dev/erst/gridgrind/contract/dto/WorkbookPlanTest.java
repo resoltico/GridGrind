@@ -109,15 +109,51 @@ class WorkbookPlanTest {
 
   @Test
   void existingAndSaveAsWorkbookPathsMustPointToXlsxFiles() {
+    WorkbookPlan.WorkbookPersistence.SaveAs saveAs =
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            "budget.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
+
     assertEquals("budget.xlsx", new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx").path());
-    assertEquals("budget.xlsx", new WorkbookPlan.WorkbookPersistence.SaveAs("budget.xlsx").path());
+    assertEquals("budget.xlsx", saveAs.path());
+    assertEquals(WorkbookPlan.WorkbookPersistence.IfExists.REJECT, saveAs.ifExists());
+    assertTrue(
+        new WorkbookPlan.WorkbookSource.ExistingFile(
+                "budget.xlsx", new OoxmlOpenSecurityInput(Optional.of("secret")))
+            .security()
+            .isPresent());
+    assertTrue(
+        new WorkbookPlan.WorkbookSource.ExistingFile(
+                "budget.xlsx", new OoxmlOpenSecurityInput(Optional.empty()))
+            .security()
+            .isEmpty());
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsm"));
+        () -> new WorkbookPlan.WorkbookSource.ExistingFile("folder.with.dot/budget"));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookPlan.WorkbookPersistence.SaveAs("budget.xls"));
+        () -> new WorkbookPlan.WorkbookSource.ExistingFile("budget"));
+    InvalidRequestException invalidExistingPath =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsm"));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookPlan.WorkbookPersistence.SaveAs("budget.xlsx", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "budget.", WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
+    InvalidRequestException invalidSaveAsPath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    "budget.xls", WorkbookPlan.WorkbookPersistence.IfExists.REJECT));
+
+    assertEquals(Optional.of("path"), invalidExistingPath.jsonPath());
+    assertEquals(Optional.of("path"), invalidSaveAsPath.jsonPath());
   }
 
   @Test
@@ -238,7 +274,8 @@ class WorkbookPlanTest {
     WorkbookPlan plan =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.SaveAs("report.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "report.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             ExecutionPolicyInput.defaults(),
             FormulaEnvironmentInput.empty(),
             List.of(

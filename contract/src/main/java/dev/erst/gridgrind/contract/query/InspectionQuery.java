@@ -13,12 +13,13 @@ public sealed interface InspectionQuery
     permits InspectionQuery.Introspection, InspectionQuery.Surface, InspectionQuery.Analysis {
 
   /**
-   * Maximum number of cells ({@code rowCount * columnCount}) permitted in one rectangular-window
-   * selector. Requests exceeding this limit are rejected during plan validation to prevent
-   * out-of-memory failures during serialization of large cell grids. See docs/LIMITATIONS.md
-   * LIM-001.
+   * Maximum number of factual cells permitted in one cell-returning read surface. Exact-address
+   * reads enforce this as an address-count cap, while rectangular reads enforce it on {@code
+   * rowCount * columnCount}. Requests exceeding this limit are rejected during plan validation to
+   * prevent out-of-memory failures during serialization of large cell grids. See
+   * docs/LIMITATIONS.md LIM-001.
    */
-  int MAX_WINDOW_CELLS = ExcelReadLimits.MAX_WINDOW_CELLS; // LIM-001
+  int MAX_READ_CELLS = ExcelReadLimits.MAX_READ_CELLS; // LIM-001
 
   /** Marker for raw workbook-fact queries with no higher-level interpretation. */
   sealed interface Introspection extends InspectionQuery

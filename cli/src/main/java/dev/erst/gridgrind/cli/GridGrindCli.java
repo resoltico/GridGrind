@@ -82,10 +82,12 @@ public final class GridGrindCli {
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Optional<java.nio.file.Path> responsePathHint = CliPathArguments.responsePathHint(args);
+    boolean prettyJsonHint = CliRenderArguments.prettyJsonHint(args);
     try {
-      return runInternal(args, stdin, stdout, stderr, responsePathHint);
+      return runInternal(args, stdin, stdout, stderr, responsePathHint, prettyJsonHint);
     } catch (Throwable exception) {
-      return CliUnexpectedFailureSupport.emit(args, responsePathHint, stdout, stderr, exception);
+      return CliUnexpectedFailureSupport.emit(
+          args, responsePathHint, prettyJsonHint, stdout, stderr, exception);
     }
   }
 
@@ -178,60 +180,80 @@ public final class GridGrindCli {
       InputStream stdin,
       OutputStream stdout,
       OutputStream stderr,
-      Optional<java.nio.file.Path> responsePathHint)
+      Optional<java.nio.file.Path> responsePathHint,
+      boolean prettyJsonHint)
       throws IOException {
     CliInvocation invocation;
     try {
       invocation = CliArguments.parseInvocation(args);
     } catch (CliArgumentsException exception) {
       return responseWriter.writeCliFailureReport(
-          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
+          responsePathHint,
+          stdout,
+          stderr,
+          CliArgumentFailureSupport.reportFor(args, exception),
+          prettyJsonHint);
     } catch (IllegalArgumentException exception) {
       return responseWriter.writeCliFailureReport(
-          responsePathHint, stdout, stderr, CliArgumentFailureSupport.reportFor(args, exception));
+          responsePathHint,
+          stdout,
+          stderr,
+          CliArgumentFailureSupport.reportFor(args, exception),
+          prettyJsonHint);
     }
     CliCommand command = invocation.command();
     Optional<CliOutputFormat> outputFormat = invocation.outputFormat();
+    boolean prettyJson = invocation.prettyJson();
 
     return switch (command) {
       case CliCommand.Help cmd ->
-          GridGrindCliIdentityCommands.help(cmd, outputFormat, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.help(
+              cmd, outputFormat, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.Version cmd ->
-          GridGrindCliIdentityCommands.version(cmd, outputFormat, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.version(
+              cmd, outputFormat, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.License cmd ->
-          GridGrindCliIdentityCommands.license(cmd, outputFormat, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.license(
+              cmd, outputFormat, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintRequestTemplate cmd ->
-          GridGrindCliIdentityCommands.requestTemplate(cmd, stdout, stderr, responseWriter);
+          GridGrindCliIdentityCommands.requestTemplate(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintExample cmd ->
-          GridGrindCliTaskDiscoveryCommands.example(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.example(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintExampleCatalog cmd ->
-          GridGrindCliTaskDiscoveryCommands.exampleCatalog(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.exampleCatalog(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskCatalog cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskCatalog(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskCatalog(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskPlan cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskPlan(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskPlan(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintTaskKeywordMatch cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskKeywordMatch(cmd, stdout, stderr, responseWriter);
+          GridGrindCliTaskDiscoveryCommands.taskKeywordMatch(
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.DoctorRequest doctor ->
-          executionCommands.doctorRequest(doctor, stdin, stdout, stderr);
+          executionCommands.doctorRequest(doctor, stdin, stdout, stderr, prettyJson);
       case CliCommand.PrintProtocolCatalogIndex cmd ->
           GridGrindCliProtocolCatalogCommands.protocolCatalogIndex(
-              cmd, stdout, stderr, responseWriter);
-      case CliCommand.PrintProtocolCatalogAll cmd ->
-          GridGrindCliProtocolCatalogCommands.protocolCatalogAll(
-              cmd, stdout, stderr, responseWriter);
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogSearch cmd ->
           GridGrindCliProtocolCatalogCommands.protocolCatalogSearch(
-              cmd, stdout, stderr, responseWriter);
+              cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.PrintProtocolCatalogLookup cmd ->
           GridGrindCliProtocolCatalogCommands.protocolCatalogLookup(
-              cmd, stdout, stderr, responseWriter);
-      case CliCommand.Execute execute -> execute(execute, stdin, stdout, stderr);
+              cmd, prettyJson, stdout, stderr, responseWriter);
+      case CliCommand.Execute execute -> execute(execute, stdin, stdout, stderr, prettyJson);
     };
   }
 
   private int execute(
-      CliCommand.Execute execute, InputStream stdin, OutputStream stdout, OutputStream stderr)
+      CliCommand.Execute execute,
+      InputStream stdin,
+      OutputStream stdout,
+      OutputStream stderr,
+      boolean prettyJson)
       throws IOException {
     Optional<InputStream> requestInput = executionCommands.standardInputIfPresent(execute, stdin);
     if (requestInput.isEmpty()) {
@@ -252,9 +274,11 @@ public final class GridGrindCli {
                   "Use one real request document. Standard-input request mode always requires"
                       + " --execution-root so relative request-owned paths resolve from one"
                       + " explicit directory."));
-      return responseWriter.writeCliFailureReport(execute.responsePath(), stdout, stderr, report);
+      return responseWriter.writeCliFailureReport(
+          execute.responsePath(), stdout, stderr, report, prettyJson);
     }
-    return executionCommands.executeCommand(execute, requestInput.orElseThrow(), stdout, stderr);
+    return executionCommands.executeCommand(
+        execute, requestInput.orElseThrow(), stdout, stderr, prettyJson);
   }
 
   /** Supplies request-template bytes for help rendering. */

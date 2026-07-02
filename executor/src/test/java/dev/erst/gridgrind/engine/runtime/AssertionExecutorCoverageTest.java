@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
@@ -70,7 +69,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 /** Coverage lock-in for Phase-4 assertion execution, helper seams, and composite failures. */
-class AssertionExecutorCoverageTest {
+class AssertionExecutorCoverageTest extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void executesLeafAssertionsAcrossWorkbookFactsAndAnalysis() throws IOException {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
@@ -82,7 +81,8 @@ class AssertionExecutorCoverageTest {
             executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -150,7 +150,7 @@ class AssertionExecutorCoverageTest {
                             "cells",
                             new CellSelector.ByAddresses(
                                 "Budget", List.of("A2", "B2", "C2", "D2", "E2", "F2")),
-                            new SheetIntrospectionQuery.GetCells()),
+                            allFacetCellsQuery()),
                         inspect(
                             "protection",
                             new WorkbookSelector.Current(),
@@ -247,19 +247,19 @@ class AssertionExecutorCoverageTest {
                             new CellSelector.ByAddress("Budget", "A2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                    owner.stringValue()))),
+                                    textValue(owner)))),
                         assertThat(
                             "cell-number",
                             new CellSelector.ByAddress("Budget", "B2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
-                                    amount.numberValue()))),
+                                    numberValue(amount)))),
                         assertThat(
                             "cell-boolean",
                             new CellSelector.ByAddress("Budget", "C2"),
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.BooleanValue(
-                                    enabled.booleanValue()))),
+                                    booleanValue(enabled)))),
                         assertThat(
                             "cell-blank",
                             new CellSelector.ByAddress("Budget", "D2"),
@@ -271,9 +271,9 @@ class AssertionExecutorCoverageTest {
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.ErrorValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.contract.dto.CellReport.ErrorReport
-                                                .class,
-                                            errorFormula.evaluation())
+                                            dev.erst.gridgrind.contract.dto.CellValueReport
+                                                .ErrorValue.class,
+                                            evaluation(errorFormula))
                                         .errorValue()))),
                         assertThat(
                             "cell-formula-evaluation",
@@ -281,22 +281,22 @@ class AssertionExecutorCoverageTest {
                             new CellAssertion.CellValue(
                                 new dev.erst.gridgrind.contract.dto.CellScalarValue.NumberValue(
                                     assertInstanceOf(
-                                            dev.erst.gridgrind.contract.dto.CellReport.NumberReport
-                                                .class,
-                                            totalFormula.evaluation())
+                                            dev.erst.gridgrind.contract.dto.CellValueReport
+                                                .NumberValue.class,
+                                            evaluation(totalFormula))
                                         .numberValue()))),
                         assertThat(
                             "display-value",
                             new CellSelector.ByAddress("Budget", "B2"),
-                            new CellAssertion.DisplayValue(amount.displayValue())),
+                            new CellAssertion.DisplayValue(displayValue(amount))),
                         assertThat(
                             "formula-text",
                             new CellSelector.ByAddress("Budget", "F2"),
-                            new CellAssertion.FormulaText(totalFormula.formula())),
+                            new CellAssertion.FormulaText(formulaText(totalFormula))),
                         assertThat(
                             "cell-style",
                             new CellSelector.ByAddress("Budget", "A2"),
-                            new CellAssertion.CellStyle(owner.style())),
+                            new CellAssertion.CellStyle(style(owner))),
                         assertThat(
                             "workbook-protection",
                             new WorkbookSelector.Current(),
@@ -343,8 +343,8 @@ class AssertionExecutorCoverageTest {
                                 List.of(
                                     new CellAssertion.CellValue(
                                         new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            owner.stringValue())),
-                                    new CellAssertion.DisplayValue(owner.displayValue())))),
+                                            textValue(owner))),
+                                    new CellAssertion.DisplayValue(displayValue(owner))))),
                         assertThat(
                             "any-of",
                             new CellSelector.ByAddress("Budget", "A2"),
@@ -353,7 +353,7 @@ class AssertionExecutorCoverageTest {
                                     new CellAssertion.DisplayValue("Wrong"),
                                     new CellAssertion.CellValue(
                                         new dev.erst.gridgrind.contract.dto.CellScalarValue.Text(
-                                            owner.stringValue()))))),
+                                            textValue(owner)))))),
                         assertThat(
                             "not",
                             new CellSelector.ByAddress("Budget", "A2"),
@@ -408,7 +408,8 @@ class AssertionExecutorCoverageTest {
             executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -472,7 +473,7 @@ class AssertionExecutorCoverageTest {
                         inspect(
                             "cells",
                             new CellSelector.ByAddress("Budget", "A2"),
-                            new SheetIntrospectionQuery.GetCells()),
+                            allFacetCellsQuery()),
                         inspect(
                             "protection",
                             new WorkbookSelector.Current(),
@@ -575,11 +576,11 @@ class AssertionExecutorCoverageTest {
             new CellAssertion.CellStyle(
                 new CellStyleReport(
                     "0",
-                    owner.style().alignment(),
-                    owner.style().font(),
-                    owner.style().fill(),
-                    owner.style().border(),
-                    owner.style().protection())));
+                    style(owner).alignment(),
+                    style(owner).font(),
+                    style(owner).fill(),
+                    style(owner).border(),
+                    style(owner).protection())));
     assertTrue(styleMismatch.problem().message().contains("EXPECT_CELL_STYLE"));
 
     GridGrindResponse.Failure formulaTextMismatch =
@@ -707,7 +708,8 @@ class AssertionExecutorCoverageTest {
             executor,
             request(
                 new WorkbookPlan.WorkbookSource.New(),
-                new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(
                     mutate(
                         new SheetSelector.ByName("Budget"),
@@ -1165,55 +1167,18 @@ class AssertionExecutorCoverageTest {
             List.of("E2"));
     CellStyleReport style = style();
     dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
-            "A1", "BLANK", "", style, java.util.Optional.empty(), java.util.Optional.empty());
+        blankReadCell("A1", "", style);
     dev.erst.gridgrind.contract.dto.CellReport.TextReport textCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
-            "A2",
-            "STRING",
-            "Owner",
-            style,
-            java.util.Optional.empty(),
-            java.util.Optional.empty(),
-            "Owner",
-            java.util.Optional.empty());
+        textReadCell("A2", "Owner", style, "Owner");
     dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
-            "B2",
-            "NUMERIC",
-            "42",
-            style,
-            java.util.Optional.empty(),
-            java.util.Optional.empty(),
-            42.0d);
+        numberReadCell("B2", "42", style, 42.0d);
     dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
-            "C2",
-            "BOOLEAN",
-            "TRUE",
-            style,
-            java.util.Optional.empty(),
-            java.util.Optional.empty(),
-            true);
+        booleanReadCell("C2", "TRUE", style, true);
     dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
-            "D2",
-            "ERROR",
-            "#DIV/0!",
-            style,
-            java.util.Optional.empty(),
-            java.util.Optional.empty(),
-            "#DIV/0!");
+        errorReadCell("D2", "#DIV/0!", style, "#DIV/0!");
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
-        new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
-            "E2",
-            "FORMULA",
-            "42",
-            style,
-            java.util.Optional.empty(),
-            java.util.Optional.empty(),
-            "2+40",
-            numberCell);
+        formulaReadCell(
+            "E2", "42", style, "2+40", new CellValueReport.NumberValue(42.0d, Optional.empty()));
 
     assertTrue(AssertionExecutor.matchesCellValue(blankCell, new CellScalarValue.Blank()));
     assertFalse(AssertionExecutor.matchesCellValue(textCell, new CellScalarValue.Blank()));
@@ -1303,7 +1268,7 @@ class AssertionExecutorCoverageTest {
                         inspect(
                             "stream-read",
                             new CellSelector.ByAddress("Ops", "A1"),
-                            new SheetIntrospectionQuery.GetCells())))));
+                            allFacetCellsQuery())))));
     assertEquals(
         List.of("stream-assert"),
         success.assertions().stream()
@@ -1412,7 +1377,8 @@ class AssertionExecutorCoverageTest {
         DefaultGridGrindRequestExecutor.directEventReadEligible(
             request(
                 new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new WorkbookPlan.WorkbookPersistence.SaveAs("copy.xlsx"),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    "copy.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 List.of(),
                 List.of(
                     inspect(
@@ -1487,7 +1453,8 @@ class AssertionExecutorCoverageTest {
   private static WorkbookPlan rewritePersistence(WorkbookPlan plan, Path workbookPath) {
     return WorkbookPlan.standard(
         plan.source(),
-        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
         plan.execution(),
         plan.formulaEnvironment(),
         plan.steps());
@@ -1592,17 +1559,6 @@ class AssertionExecutorCoverageTest {
       assertEquals(0, AssertionExecutor.observedCount(presence));
       assertEquals(0, AssertionExecutor.observedCount(charts));
     }
-  }
-
-  private static GridGrindResponse.Success success(GridGrindResponse response) {
-    if (response instanceof GridGrindResponse.Failure failure) {
-      fail(failure.problem().code() + ": " + failure.problem().message());
-    }
-    return assertInstanceOf(GridGrindResponse.Success.class, response);
-  }
-
-  private static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Failure.class, response);
   }
 
   private static ExecutionStepSupport executionStepSupport() {

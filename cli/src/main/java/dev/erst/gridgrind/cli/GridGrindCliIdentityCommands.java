@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,11 +15,12 @@ final class GridGrindCliIdentityCommands {
   static int help(
       CliCommand.Help command,
       Optional<CliOutputFormat> outputFormat,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    byte[] payload = renderHelpPayload(command, outputFormat);
+    byte[] payload = renderHelpPayload(command, outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "help",
@@ -28,17 +29,19 @@ final class GridGrindCliIdentityCommands {
         command.responsePath(),
         stdout,
         stderr,
-        payload);
+        payload,
+        prettyJson);
   }
 
   static int version(
       CliCommand.Version command,
       Optional<CliOutputFormat> outputFormat,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    byte[] payload = renderVersionPayload(outputFormat);
+    byte[] payload = renderVersionPayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "version",
@@ -47,17 +50,19 @@ final class GridGrindCliIdentityCommands {
         command.responsePath(),
         stdout,
         stderr,
-        payload);
+        payload,
+        prettyJson);
   }
 
   static int license(
       CliCommand.License command,
       Optional<CliOutputFormat> outputFormat,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
       throws IOException {
-    byte[] payload = renderLicensePayload(outputFormat);
+    byte[] payload = renderLicensePayload(outputFormat, prettyJson);
     return CliCatalogPayloadSupport.writePayload(
         responseWriter,
         "license",
@@ -66,11 +71,13 @@ final class GridGrindCliIdentityCommands {
         command.responsePath(),
         stdout,
         stderr,
-        payload);
+        payload,
+        prettyJson);
   }
 
   static int requestTemplate(
       CliCommand.PrintRequestTemplate command,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
@@ -83,24 +90,28 @@ final class GridGrindCliIdentityCommands {
         command.responsePath(),
         stdout,
         stderr,
-        GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
+        GridGrindJsonOutput.writeRequestBytes(
+            GridGrindProtocolCatalog.requestTemplate(), prettyJson),
+        prettyJson);
   }
 
   private static byte[] renderHelpPayload(
-      CliCommand.Help command, Optional<CliOutputFormat> outputFormat) throws IOException {
+      CliCommand.Help command, Optional<CliOutputFormat> outputFormat, boolean prettyJson)
+      throws IOException {
     if (CliCatalogPayloadSupport.effectiveTextSurfaceFormat(outputFormat)
         == CliOutputFormat.STRUCTURED) {
-      return GridGrindCliJson.writeBytes(GridGrindCliProductInfo.helpReport(command.topic()));
+      return GridGrindCliJson.writeBytes(
+          GridGrindCliProductInfo.helpReport(command.topic()), prettyJson);
     }
     return GridGrindCliProductInfo.helpText(command.topic(), GridGrindCliProductInfo.version())
         .getBytes(StandardCharsets.UTF_8);
   }
 
-  private static byte[] renderVersionPayload(Optional<CliOutputFormat> outputFormat)
-      throws IOException {
+  private static byte[] renderVersionPayload(
+      Optional<CliOutputFormat> outputFormat, boolean prettyJson) throws IOException {
     if (CliCatalogPayloadSupport.effectiveTextSurfaceFormat(outputFormat)
         == CliOutputFormat.STRUCTURED) {
-      return GridGrindCliJson.writeBytes(GridGrindCliProductInfo.versionReport());
+      return GridGrindCliJson.writeBytes(GridGrindCliProductInfo.versionReport(), prettyJson);
     }
     String version = GridGrindCliProductInfo.version();
     String description = GridGrindCliProductInfo.description();
@@ -108,11 +119,11 @@ final class GridGrindCliIdentityCommands {
         .getBytes(StandardCharsets.UTF_8);
   }
 
-  private static byte[] renderLicensePayload(Optional<CliOutputFormat> outputFormat)
-      throws IOException {
+  private static byte[] renderLicensePayload(
+      Optional<CliOutputFormat> outputFormat, boolean prettyJson) throws IOException {
     if (CliCatalogPayloadSupport.effectiveTextSurfaceFormat(outputFormat)
         == CliOutputFormat.STRUCTURED) {
-      return GridGrindCliJson.writeBytes(GridGrindCliProductInfo.licenseReport());
+      return GridGrindCliJson.writeBytes(GridGrindCliProductInfo.licenseReport(), prettyJson);
     }
     return GridGrindCliProductInfo.licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8);
   }

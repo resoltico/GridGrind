@@ -45,7 +45,8 @@ final class CliExecutionCommandParser {
       case "--full" ->
           new CliArgumentsException(
               "--full",
-              "--full requires --print-protocol-catalog and emits the complete protocol catalog");
+              "--full is no longer part of the CLI grammar; use --print-protocol-catalog"
+                  + " --lookup <lookup-id> for one scoped catalog payload");
       default -> new CliArgumentsException(argument, "Unknown argument: " + argument);
     };
   }

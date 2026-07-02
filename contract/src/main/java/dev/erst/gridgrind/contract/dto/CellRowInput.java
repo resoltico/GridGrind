@@ -34,25 +34,25 @@ public sealed interface CellRowInput
   /** Returns this authored row in canonical per-cell form. */
   List<CellInput> toCellInputs();
 
-  record Typed(List<CellInput> values) implements CellRowInput {
+  record Typed(List<CellInput> cells) implements CellRowInput {
     public Typed {
-      values = copyTyped(values);
+      cells = copyTyped(cells, "cells");
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values;
+      return cells;
     }
   }
 
-  record TextValues(List<String> values) implements CellRowInput {
+  record TextValues(List<String> cells) implements CellRowInput {
     public TextValues {
-      values = copyScalars(values, "values");
+      cells = copyScalars(cells, "cells");
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream()
+      return cells.stream()
           .map(TextSourceInput::inline)
           .map(CellInput.Text::new)
           .map(CellInput.class::cast)
@@ -60,74 +60,74 @@ public sealed interface CellRowInput
     }
   }
 
-  record NumberValues(List<Double> values) implements CellRowInput {
+  record NumberValues(List<Double> cells) implements CellRowInput {
     public NumberValues {
-      values = copyScalars(values, "values");
-      values.forEach(value -> CellInput.Validation.requireFinite(value, "values element"));
+      cells = copyScalars(cells, "cells");
+      cells.forEach(value -> CellInput.Validation.requireFinite(value, "cells element"));
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream().map(CellInput.NumberValue::new).map(CellInput.class::cast).toList();
+      return cells.stream().map(CellInput.NumberValue::new).map(CellInput.class::cast).toList();
     }
   }
 
-  record BooleanValues(List<Boolean> values) implements CellRowInput {
+  record BooleanValues(List<Boolean> cells) implements CellRowInput {
     public BooleanValues {
-      values = copyScalars(values, "values");
+      cells = copyScalars(cells, "cells");
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream().map(CellInput.BooleanValue::new).map(CellInput.class::cast).toList();
+      return cells.stream().map(CellInput.BooleanValue::new).map(CellInput.class::cast).toList();
     }
   }
 
-  record ErrorValues(List<String> values) implements CellRowInput {
+  record ErrorValues(List<String> cells) implements CellRowInput {
     public ErrorValues {
-      values = copyScalars(values, "values");
-      values.forEach(value -> CellInput.Validation.requireErrorLiteral(value, "values element"));
+      cells = copyScalars(cells, "cells");
+      cells.forEach(value -> CellInput.Validation.requireErrorLiteral(value, "cells element"));
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream().map(CellInput.ErrorValue::new).map(CellInput.class::cast).toList();
+      return cells.stream().map(CellInput.ErrorValue::new).map(CellInput.class::cast).toList();
     }
   }
 
-  record DateValues(List<LocalDate> values) implements CellRowInput {
+  record DateValues(List<LocalDate> cells) implements CellRowInput {
     public DateValues {
-      values = copyScalars(values, "values");
+      cells = copyScalars(cells, "cells");
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream().map(CellInput.Date::new).map(CellInput.class::cast).toList();
+      return cells.stream().map(CellInput.Date::new).map(CellInput.class::cast).toList();
     }
   }
 
-  record DateTimeValues(List<LocalDateTime> values) implements CellRowInput {
+  record DateTimeValues(List<LocalDateTime> cells) implements CellRowInput {
     public DateTimeValues {
-      values = copyScalars(values, "values");
+      cells = copyScalars(cells, "cells");
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream().map(CellInput.DateTime::new).map(CellInput.class::cast).toList();
+      return cells.stream().map(CellInput.DateTime::new).map(CellInput.class::cast).toList();
     }
   }
 
-  record FormulaValues(List<String> values) implements CellRowInput {
+  record FormulaValues(List<String> cells) implements CellRowInput {
     public FormulaValues {
-      values =
-          copyScalars(values, "values").stream()
-              .map(value -> CellInput.Validation.normalizeInlineFormula(value, "values element"))
+      cells =
+          copyScalars(cells, "cells").stream()
+              .map(value -> CellInput.Validation.normalizeInlineFormula(value, "cells element"))
               .toList();
     }
 
     @Override
     public List<CellInput> toCellInputs() {
-      return values.stream()
+      return cells.stream()
           .map(TextSourceInput::inline)
           .map(CellInput.Formula::new)
           .map(CellInput.class::cast)
@@ -135,14 +135,14 @@ public sealed interface CellRowInput
     }
   }
 
-  private static List<CellInput> copyTyped(List<CellInput> values) {
-    Objects.requireNonNull(values, "values must not be null");
-    List<CellInput> copy = new ArrayList<>(values.size());
-    if (values.isEmpty()) {
-      throw new IllegalArgumentException("values must not be empty");
+  private static List<CellInput> copyTyped(List<CellInput> cells, String fieldName) {
+    Objects.requireNonNull(cells, fieldName + " must not be null");
+    List<CellInput> copy = new ArrayList<>(cells.size());
+    if (cells.isEmpty()) {
+      throw new IllegalArgumentException(fieldName + " must not be empty");
     }
-    for (CellInput value : values) {
-      copy.add(Objects.requireNonNull(value, "values must not contain nulls"));
+    for (CellInput value : cells) {
+      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
     }
     return List.copyOf(copy);
   }

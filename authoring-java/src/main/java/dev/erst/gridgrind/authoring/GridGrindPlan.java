@@ -6,7 +6,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -119,15 +119,16 @@ public final class GridGrindPlan {
   }
 
   /** Saves the resulting workbook to a new `.xlsx` path. */
-  public GridGrindPlan saveAs(Path path) {
+  public GridGrindPlan saveAs(Path path, WorkbookPlan.WorkbookPersistence.IfExists ifExists) {
     Objects.requireNonNull(path, "path must not be null");
-    this.persistence = new WorkbookPlan.WorkbookPersistence.SaveAs(path.toString());
+    Objects.requireNonNull(ifExists, "ifExists must not be null");
+    this.persistence = new WorkbookPlan.WorkbookPersistence.SaveAs(path.toString(), ifExists);
     return this;
   }
 
   /** Overwrites the source workbook path. */
-  public GridGrindPlan overwriteSource() {
-    this.persistence = new WorkbookPlan.WorkbookPersistence.OverwriteSource();
+  public GridGrindPlan overwrite() {
+    this.persistence = new WorkbookPlan.WorkbookPersistence.Overwrite();
     return this;
   }
 
@@ -171,17 +172,17 @@ public final class GridGrindPlan {
 
   /** Serializes the canonical workbook plan as UTF-8 JSON bytes. */
   public byte[] toJsonBytes() throws IOException {
-    return GridGrindJson.writeRequestBytes(toPlan());
+    return GridGrindJsonOutput.writeRequestBytes(toPlan());
   }
 
-  /** Serializes the canonical workbook plan as an indented UTF-8 JSON string. */
+  /** Serializes the canonical workbook plan as a compact UTF-8 JSON string. */
   public String toJsonString() throws IOException {
     return new String(toJsonBytes(), StandardCharsets.UTF_8);
   }
 
   /** Writes the canonical workbook-plan JSON to one caller-owned output stream. */
   public void writeJson(OutputStream outputStream) throws IOException {
-    GridGrindJson.writeRequest(outputStream, toPlan());
+    GridGrindJsonOutput.writeRequest(outputStream, toPlan(), false);
   }
 
   private String nextStepId(String prefix, int index) {

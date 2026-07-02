@@ -29,12 +29,15 @@ final class GridGrindResponseSupport {
   }
 
   static GridGrindResponse.Failure failure(
-      GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindResponsePersistence.PersistenceOutcome persistence,
+      GridGrindProblemDetail.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new GridGrindResponse.Failure(
         Objects.requireNonNull(protocolVersion, "protocolVersion must not be null"),
         syntheticFailureJournal(problem.code()),
         CalculationReport.notRequested(),
+        Objects.requireNonNull(persistence, "persistence must not be null"),
         List.of(),
         problem);
   }
@@ -60,7 +63,6 @@ final class GridGrindResponseSupport {
         Optional.empty(),
         ExecutionJournalLevel.SUMMARY,
         new ExecutionJournal.SourceSummary(Optional.empty(), Optional.empty()),
-        new ExecutionJournal.PersistenceSummary(Optional.empty(), Optional.empty()),
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),

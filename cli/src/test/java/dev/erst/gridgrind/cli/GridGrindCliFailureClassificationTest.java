@@ -476,7 +476,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
             new ByteArrayInputStream(
                 requestJson(
                         "{ \"type\": \"EXISTING\", \"path\": \"/tmp/source.xlsx\" }",
-                        "{ \"type\": \"SAVE_AS\", \"path\": \"/tmp/output.xlsx\" }",
+                        "{ \"type\": \"SAVE_AS\", \"path\": \"/tmp/output.xlsx\", \"ifExists\": \"REJECT\" }",
                         "[]")
                     .getBytes(StandardCharsets.UTF_8)),
             stdout,

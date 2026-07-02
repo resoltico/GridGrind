@@ -5,13 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogCliJson;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogIndexReport;
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogSearchReport;
-import dev.erst.gridgrind.contract.catalog.Catalog;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +19,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
 /** Protocol-catalog command integration tests for {@link GridGrindCli}. */
 class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
@@ -43,10 +43,17 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertEquals("type", indexReport.discriminatorField());
     assertEquals("WorkbookPlan", indexReport.requestTypeId());
     assertFalse(indexReport.topLevelGroups().isEmpty());
+    assertFalse(indexReport.fieldMetadataKeys().isEmpty());
     assertFalse(indexReport.lookupNamespaces().isEmpty());
     assertTrue(
         indexReport.lookupNamespaces().stream()
             .anyMatch(namespace -> "<topLevelGroup>:<id>".equals(namespace.shape())));
+    assertTrue(
+        indexReport.fieldMetadataKeys().stream()
+            .anyMatch(key -> "projectedByFacets".equals(key.name())));
+    assertTrue(
+        indexReport.fieldMetadataKeys().stream()
+            .anyMatch(key -> "enumValueDocs".equals(key.name())));
     assertFalse(
         stdout.toString(StandardCharsets.UTF_8).contains(": null"),
         "compact protocol catalog index output must omit explicit null placeholders");
@@ -76,23 +83,26 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void printProtocolCatalogFullFlagPrintsCurrentCatalogAndReturnsExitCodeZero() throws IOException {
+  void printProtocolCatalogFullFlagReturnsScopedLookupGuidance() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
 
     int exitCode =
         new GridGrindCli()
             .run(
                 new String[] {"--print-protocol-catalog", "--full"},
                 new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
-                stdout);
+                stdout,
+                stderr);
 
-    Catalog catalog = GridGrindJson.readProtocolCatalog(stdout.toByteArray());
-
-    assertEquals(0, exitCode);
-    assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
-    assertFalse(
-        stdout.toString(StandardCharsets.UTF_8).contains(": null"),
-        "full protocol catalog output must omit explicit null placeholders");
+    assertEquals(2, exitCode);
+    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(java.util.Optional.of("--full"), failure.argument());
+    assertEquals(
+        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
+            + " <lookup-id> for one scoped catalog payload",
+        failure.message());
   }
 
   @Test
@@ -137,6 +147,110 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(
         output.contains(": null"),
         "filtered catalog entry output must omit explicit null placeholders");
+  }
+
+  @Test
+  void appendRowAndSetRangeStepTemplatesPreferTypedCellWrappers() throws IOException {
+    JsonNode setRange = protocolCatalogLookupJson("mutationActionTypes:SET_RANGE");
+    JsonNode appendRow = protocolCatalogLookupJson("mutationActionTypes:APPEND_ROW");
+
+    assertEquals(
+        "TYPED",
+        setRange
+            .path("stepTemplate")
+            .path("template")
+            .path("action")
+            .path("rows")
+            .path("type")
+            .asText());
+    assertTrue(
+        setRange.path("stepTemplate").path("template").path("action").path("rows").has("cells"));
+    assertEquals(
+        "TYPED",
+        appendRow
+            .path("stepTemplate")
+            .path("template")
+            .path("action")
+            .path("values")
+            .path("type")
+            .asText());
+    assertTrue(
+        appendRow.path("stepTemplate").path("template").path("action").path("values").has("cells"));
+  }
+
+  @Test
+  void projectionAwareReadCatalogTemplatesStayMinimalAndSparseByDefault() throws IOException {
+    JsonNode getCells = protocolCatalogLookupJson("inspectionQueryTypes:GET_CELLS");
+    JsonNode getWindow = protocolCatalogLookupJson("inspectionQueryTypes:GET_WINDOW");
+    JsonNode getSheetSchema = protocolCatalogLookupJson("inspectionQueryTypes:GET_SHEET_SCHEMA");
+
+    assertFalse(getCells.path("stepTemplate").path("template").path("query").has("projection"));
+    assertFalse(getWindow.path("stepTemplate").path("template").path("query").has("projection"));
+    assertFalse(getWindow.path("stepTemplate").path("template").path("query").has("includeBlanks"));
+    assertFalse(
+        getSheetSchema.path("stepTemplate").path("template").path("query").has("projection"));
+  }
+
+  @Test
+  void cellReadLookupPublishesFacetGatingMetadata() throws IOException {
+    JsonNode cellReports = protocolCatalogLookupJson("nestedTypes:cellReportTypes");
+    JsonNode cellValues = protocolCatalogLookupJson("nestedTypes:cellValueReportTypes");
+    JsonNode projection = protocolCatalogLookupJson("plainTypes:cellReadProjectionType");
+    JsonNode number = catalogType(cellReports, "NUMBER");
+    JsonNode formula = catalogType(cellReports, "FORMULA");
+    JsonNode text = catalogType(cellReports, "TEXT");
+    JsonNode evaluatedText = catalogType(cellValues, "TEXT");
+    JsonNode evaluatedNumber = catalogType(cellValues, "NUMBER");
+    JsonNode facets = catalogField(projection.path("type"), "facets");
+
+    assertEquals("OPTIONAL", catalogField(number, "displayValue").path("requirement").asText());
+    assertEquals(
+        "FORMAT", catalogField(number, "displayValue").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "style").path("requirement").asText());
+    assertEquals("STYLE", catalogField(number, "style").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "hyperlink").path("requirement").asText());
+    assertEquals(
+        "HYPERLINK", catalogField(number, "hyperlink").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "comment").path("requirement").asText());
+    assertEquals(
+        "COMMENT", catalogField(number, "comment").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "numberValue").path("requirement").asText());
+    assertEquals(
+        "VALUE", catalogField(number, "numberValue").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(number, "temporal").path("requirement").asText());
+    assertEquals(
+        "TEMPORAL", catalogField(number, "temporal").path("projectedByFacets").get(0).asText());
+    assertTrue(number.path("summary").asText().contains("TEMPORAL"));
+    assertEquals("OPTIONAL", catalogField(text, "runs").path("requirement").asText());
+    assertEquals(
+        "RICH_TEXT_RUNS", catalogField(text, "runs").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(formula, "formula").path("requirement").asText());
+    assertEquals(
+        "FORMULA", catalogField(formula, "formula").path("projectedByFacets").get(0).asText());
+    assertEquals("OPTIONAL", catalogField(formula, "evaluation").path("requirement").asText());
+    assertEquals(
+        "VALUE", catalogField(formula, "evaluation").path("projectedByFacets").get(0).asText());
+    assertFalse(catalogField(evaluatedText, "textValue").has("projectedByFacets"));
+    assertEquals("OPTIONAL", catalogField(evaluatedText, "runs").path("requirement").asText());
+    assertEquals(
+        "RICH_TEXT_RUNS",
+        catalogField(evaluatedText, "runs").path("projectedByFacets").get(0).asText());
+    assertEquals(
+        "OPTIONAL", catalogField(evaluatedNumber, "temporal").path("requirement").asText());
+    assertEquals(
+        "TEMPORAL",
+        catalogField(evaluatedNumber, "temporal").path("projectedByFacets").get(0).asText());
+    assertEquals("FORMAT", facets.path("enumValueDocs").get(2).path("value").asText());
+    assertTrue(
+        facets.path("enumValueDocs").get(2).path("summary").asText().contains("displayValue"));
+    assertEquals("VALUE", facets.path("enumValueDocs").get(0).path("value").asText());
+    assertTrue(
+        facets
+            .path("enumValueDocs")
+            .get(0)
+            .path("summary")
+            .asText()
+            .contains("formula evaluation"));
   }
 
   @Test
@@ -194,6 +308,37 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
         "qualified lookup must not silently return the named-range report variant");
   }
 
+  private static JsonNode protocolCatalogLookupJson(String lookupId) throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--lookup", lookupId},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    return GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
+  }
+
+  private static JsonNode catalogType(JsonNode group, String id) {
+    for (JsonNode type : group.path("types")) {
+      if (id.equals(type.path("id").asText())) {
+        return type;
+      }
+    }
+    throw new IllegalArgumentException("Missing catalog type " + id);
+  }
+
+  private static JsonNode catalogField(JsonNode type, String name) {
+    for (JsonNode field : type.path("fields")) {
+      if (name.equals(field.path("name").asText())) {
+        return field;
+      }
+    }
+    throw new IllegalArgumentException("Missing catalog field " + name);
+  }
+
   @Test
   void printProtocolCatalogWithNestedGroupFilterReturnsMatchingNestedGroup() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -205,10 +350,28 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     assertEquals(0, exitCode);
-    String output = stdout.toString(StandardCharsets.UTF_8).trim();
-    assertTrue(output.contains("\"group\" : \"cellInputTypes\""));
-    assertTrue(output.contains("\"discriminatorField\" : \"type\""));
-    assertTrue(output.contains("\"TEXT\""));
+    JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
+    assertEquals("cellInputTypes", output.path("group").asText());
+    assertEquals("type", output.path("discriminatorField").asText());
+    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("\"TEXT\""));
+  }
+
+  @Test
+  void printProtocolCatalogWithTopLevelGroupFilterReturnsMatchingTopLevelGroup()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--lookup", "mutationActionTypes"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
+    assertEquals("mutationActionTypes", output.path("group").asText());
+    assertTrue(output.path("types").isArray());
+    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("\"SET_CELL\""));
   }
 
   @Test
@@ -222,10 +385,28 @@ class GridGrindCliProtocolCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout);
 
     assertEquals(0, exitCode);
-    String output = stdout.toString(StandardCharsets.UTF_8).trim();
-    assertTrue(output.contains("\"group\" : \"chartInputType\""));
-    assertTrue(output.contains("\"ChartInput\""));
-    assertTrue(output.contains("\"plots\""));
+    JsonNode output = GridGrindCliJson.readBytes(stdout.toByteArray(), JsonNode.class);
+    assertEquals("chartInputType", output.path("group").asText());
+    String rendered = stdout.toString(StandardCharsets.UTF_8);
+    assertTrue(rendered.contains("\"ChartInput\""));
+    assertTrue(rendered.contains("\"plots\""));
+  }
+
+  @Test
+  void printProtocolCatalogPrettyFlagIndentsJson() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--pretty"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8);
+    assertTrue(output.startsWith("{\n"));
+    assertTrue(output.contains("\n  \"protocolVersion\" : "));
   }
 
   @Test

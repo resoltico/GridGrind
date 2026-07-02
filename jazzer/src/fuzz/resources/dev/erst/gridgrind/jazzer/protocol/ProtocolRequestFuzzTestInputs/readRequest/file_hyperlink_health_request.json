@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-file-hyperlink-health.xlsx"
+    "path": "generated-workbooks/gridgrind-file-hyperlink-health.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

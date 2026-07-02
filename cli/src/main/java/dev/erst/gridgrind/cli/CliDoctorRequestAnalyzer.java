@@ -9,6 +9,7 @@ import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
@@ -29,6 +30,7 @@ import tools.jackson.databind.node.ObjectNode;
 final class CliDoctorRequestAnalyzer {
   private static final String SYNTHETIC_EXISTING_SOURCE_PATH = "__gridgrind_missing_source__.xlsx";
   private static final String SYNTHETIC_SAVE_AS_PATH = "__gridgrind_missing_output__.xlsx";
+  private static final String SYNTHETIC_SAVE_AS_IF_EXISTS = "REJECT";
 
   private final GridGrindRequestDoctor requestDoctor;
 
@@ -96,10 +98,11 @@ final class CliDoctorRequestAnalyzer {
           baseReport.warnings(),
           mergeProblems(
               List.of(standardInputProblem),
-              mergeProblems(preflight.problems(), mergeableProblems(baseReport))));
+              mergeProblems(
+                  preflight.problems(), baseReport.valid() ? List.of() : baseReport.problems())));
     }
     List<GridGrindProblemDetail.Problem> mergedProblems =
-        mergeProblems(preflight.problems(), mergeableProblems(baseReport));
+        mergeProblems(preflight.problems(), baseReport.valid() ? List.of() : baseReport.problems());
     if (!mergedProblems.isEmpty()) {
       return RequestDoctorReport.invalid(reportSummary, baseReport.warnings(), mergedProblems);
     }
@@ -124,12 +127,6 @@ final class CliDoctorRequestAnalyzer {
               requestPath, executionRootPath, tempRootPath, request, stdin));
     }
     return requestDoctor.diagnose(request);
-  }
-
-  private static List<GridGrindProblemDetail.Problem> mergeableProblems(
-      RequestDoctorReport report) {
-    Objects.requireNonNull(report, "report must not be null");
-    return report.valid() ? List.of() : report.problems();
   }
 
   private static List<GridGrindProblemDetail.Problem> mergeProblems(
@@ -174,7 +171,7 @@ final class CliDoctorRequestAnalyzer {
         },
         switch (request.persistence()) {
           case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
-          case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+          case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
           case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
         });
   }
@@ -195,7 +192,7 @@ final class CliDoctorRequestAnalyzer {
       Objects.requireNonNull(requestInput, "requestInput must not be null");
       if (!(requestTree instanceof ObjectNode requestObject)) {
         return new TreePreflight(
-            GridGrindJson.requestTree(GridGrindProtocolCatalog.requestTemplate()),
+            GridGrindJsonOutput.requestTree(GridGrindProtocolCatalog.requestTemplate()),
             List.of(
                 GridGrindProblems.problem(
                     GridGrindProblemCode.INVALID_REQUEST_SHAPE,
@@ -212,7 +209,7 @@ final class CliDoctorRequestAnalyzer {
       boolean usesSyntheticValues =
           applyTemplateDefaults(
               sanitized,
-              GridGrindJson.requestTree(GridGrindProtocolCatalog.requestTemplate()),
+              GridGrindJsonOutput.requestTree(GridGrindProtocolCatalog.requestTemplate()),
               "",
               requestInput,
               problems);
@@ -238,6 +235,15 @@ final class CliDoctorRequestAnalyzer {
               "SAVE_AS",
               "path",
               SYNTHETIC_SAVE_AS_PATH);
+      usesSyntheticValues |=
+          applyConditionalStringFieldDefault(
+              sanitized,
+              requestInput,
+              problems,
+              "persistence",
+              "SAVE_AS",
+              "ifExists",
+              SYNTHETIC_SAVE_AS_IF_EXISTS);
       CliDoctorRequestStepPreflight.StepPreflight stepPreflight =
           CliDoctorRequestStepPreflight.from(sanitized, requestInput);
       problems.addAll(stepPreflight.problems());
@@ -318,12 +324,34 @@ final class CliDoctorRequestAnalyzer {
       return true;
     }
 
+    private static boolean applyConditionalStringFieldDefault(
+        ObjectNode root,
+        ProblemContextRequestSurfaces.RequestInput requestInput,
+        List<GridGrindProblemDetail.Problem> problems,
+        String objectField,
+        String expectedType,
+        String fieldName,
+        String syntheticValue) {
+      JsonNode node = root.get(objectField);
+      if (!(node instanceof ObjectNode objectNode)) {
+        return false;
+      }
+      if (!hasExpectedWorkbookObjectType(objectNode, expectedType)) {
+        return false;
+      }
+      if (objectNode.get(fieldName) != null) {
+        return false;
+      }
+      objectNode.put(fieldName, syntheticValue);
+      problems.add(missingFieldProblem(requestInput, objectField + "." + fieldName));
+      return true;
+    }
+
     private static GridGrindProblemDetail.Problem missingFieldProblem(
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
           new InvalidRequestShapeException(
-              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
-                  .missingRequiredFieldMessage(jsonPath),
+              new dev.erst.gridgrind.contract.json.MissingRequiredField(jsonPath),
               Optional.of(jsonPath),
               Optional.empty(),
               Optional.empty(),
@@ -336,8 +364,7 @@ final class CliDoctorRequestAnalyzer {
         ProblemContextRequestSurfaces.RequestInput requestInput, String jsonPath) {
       return GridGrindProblems.fromException(
           new InvalidRequestShapeException(
-              dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport
-                  .explicitNullFieldMessage(jsonPath),
+              new dev.erst.gridgrind.contract.json.ExplicitNullField(jsonPath),
               Optional.of(jsonPath),
               Optional.empty(),
               Optional.empty(),

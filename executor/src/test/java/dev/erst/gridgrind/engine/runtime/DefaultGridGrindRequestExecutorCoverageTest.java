@@ -45,7 +45,8 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Focused current-API coverage for executor-owned helper and conversion seams. */
-class DefaultGridGrindRequestExecutorCoverageTest {
+class DefaultGridGrindRequestExecutorCoverageTest
+    extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void classifiesExceptionsAndEnrichesExecuteStepContexts() {
     assertEquals(
@@ -201,13 +202,12 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         assertInstanceOf(
             SheetInspectionResult.CellsResult.class,
             InspectionResultConverter.toReadResult(
-                new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
+                excelCellsResult(
                     "step-02-cells",
                     "Budget",
                     List.of(
                         new ExcelCellSnapshot.NumberSnapshot(
                             "B4",
-                            "NUMBER",
                             "61",
                             defaultStyle(),
                             ExcelCellMetadataSnapshot.empty(),
@@ -219,7 +219,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     assertEquals("B4", cells.cells().getFirst().address());
   }
 
-  private static ExcelCellStyleSnapshot defaultStyle() {
+  static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
         new ExcelCellAlignmentSnapshot(

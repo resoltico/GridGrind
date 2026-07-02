@@ -7,15 +7,38 @@ import tools.jackson.databind.JsonNode;
 final class GridGrindJsonPathSupport {
   private GridGrindJsonPathSupport() {}
 
+  static java.util.Optional<String> qualifyPath(
+      java.util.Optional<String> outerPath, java.util.Optional<String> innerPath) {
+    if (innerPath.isEmpty()) {
+      return outerPath;
+    }
+    if (outerPath.isEmpty()) {
+      return innerPath;
+    }
+    String outer = outerPath.orElseThrow();
+    String inner = innerPath.orElseThrow();
+    if (inner.equals(outer) || inner.startsWith(outer + ".") || inner.startsWith(outer + "[")) {
+      return innerPath;
+    }
+    if (outer.endsWith("." + inner) || (inner.startsWith("[") && outer.endsWith(inner))) {
+      return outerPath;
+    }
+    return java.util.Optional.of(inner.startsWith("[") ? outer + inner : outer + "." + inner);
+  }
+
   static boolean pathExists(JsonNode root, String jsonPath) {
+    return nodeAt(root, jsonPath).isPresent();
+  }
+
+  static java.util.Optional<JsonNode> nodeAt(JsonNode root, String jsonPath) {
     JsonNode current = root;
     for (String segment : jsonPath.split("\\.", -1)) {
       current = descendSegment(current, segment);
       if (current == null) {
-        return false;
+        return java.util.Optional.empty();
       }
     }
-    return true;
+    return java.util.Optional.of(current);
   }
 
   private static @Nullable JsonNode descendSegment(JsonNode current, String segment) {

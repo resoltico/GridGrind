@@ -90,7 +90,7 @@ class ExecutorConverterDelegationCoverageTest {
     assertEquals(5, anchorReport.to().columnIndex());
     assertEquals(
         "Calibri",
-        InspectionResultCellReportSupport.toCellFontReport(
+        InspectionResultCellStyleReportSupport.toCellFontReport(
                 new ExcelCellFontSnapshot(
                     true,
                     false,
@@ -102,7 +102,7 @@ class ExecutorConverterDelegationCoverageTest {
             .fontName());
     assertEquals(
         ExcelBorderStyle.THIN,
-        InspectionResultCellReportSupport.toCellBorderSideReport(
+        InspectionResultCellStyleReportSupport.toCellBorderSideReport(
                 new ExcelBorderSideSnapshot(
                     ExcelBorderStyle.THIN, ExcelColorSnapshot.rgb("#112233")))
             .style());
@@ -124,7 +124,7 @@ class ExecutorConverterDelegationCoverageTest {
                         ExcelFillPattern.BRICKS, ColorInput.indexed(10)))
                 .orElseThrow());
     CellStyleReport backgroundOnlyReport =
-        InspectionResultCellReportSupport.toCellStyleReport(
+        InspectionResultCellStyleReportSupport.toCellStyleReport(
             new ExcelCellStyleSnapshot(
                 "General",
                 new ExcelCellAlignmentSnapshot(

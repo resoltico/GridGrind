@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-formatting-depth.xlsx"
+    "path": "generated-workbooks/gridgrind-formatting-depth.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "ops/table-autofilter-demo.xlsx"
+    "path": "ops/table-autofilter-demo.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

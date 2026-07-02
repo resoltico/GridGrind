@@ -29,7 +29,7 @@ class ProblemContextCoverageTest {
     ProblemContextWorkbookSurfaces.WorkbookReference newWorkbook =
         ProblemContextWorkbookSurfaces.WorkbookReference.newWorkbook();
     ProblemContextWorkbookSurfaces.PersistenceReference overwrite =
-        ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource("/tmp/source.xlsx");
+        ProblemContextWorkbookSurfaces.PersistenceReference.overwrite("/tmp/source.xlsx");
     ProblemContextWorkbookSurfaces.PersistenceReference saveAs =
         ProblemContextWorkbookSurfaces.PersistenceReference.saveAs("/tmp/output.xlsx");
 
@@ -89,8 +89,7 @@ class ProblemContextCoverageTest {
     ProblemContext.PersistWorkbook persistOverwrite =
         new ProblemContext.PersistWorkbook(
             requestShape,
-            ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource(
-                "/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwrite("/tmp/source.xlsx"));
     ProblemContext.PersistWorkbook persistSaveAs =
         new ProblemContext.PersistWorkbook(
             requestShape,
@@ -203,6 +202,26 @@ class ProblemContextCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> ProblemContextRequestSurfaces.JsonLocation.located("steps[0]", 1, 0))
+            .getMessage());
+    ProblemContextRequestSurfaces.RequestShape requestShape =
+        ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "SAVE_AS");
+    assertEquals(
+        "PersistWorkbook requires exactly one of sourceWorkbookPath or persistencePath",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ProblemContext.PersistWorkbook(
+                        requestShape, Optional.empty(), Optional.empty()))
+            .getMessage());
+    assertEquals(
+        "PersistWorkbook requires exactly one of sourceWorkbookPath or persistencePath",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ProblemContext.PersistWorkbook(
+                        requestShape,
+                        Optional.of("/tmp/source.xlsx"),
+                        Optional.of("/tmp/out.xlsx")))
             .getMessage());
   }
 }

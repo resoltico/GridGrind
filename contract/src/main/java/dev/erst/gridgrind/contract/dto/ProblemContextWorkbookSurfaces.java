@@ -108,14 +108,14 @@ public interface ProblemContextWorkbookSurfaces {
   /** Persistence attempt reference without nullable source/output path padding. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = PersistenceReference.OverwriteSource.class, name = "OVERWRITE"),
+    @JsonSubTypes.Type(value = PersistenceReference.Overwrite.class, name = "OVERWRITE"),
     @JsonSubTypes.Type(value = PersistenceReference.SaveAs.class, name = "SAVE_AS")
   })
   sealed interface PersistenceReference
-      permits PersistenceReference.OverwriteSource, PersistenceReference.SaveAs {
+      permits PersistenceReference.Overwrite, PersistenceReference.SaveAs {
     /** Returns the persistence-reference variant that targets the opened source workbook. */
-    static PersistenceReference overwriteSource(String sourceWorkbookPath) {
-      return new OverwriteSource(requireNonBlank(sourceWorkbookPath, "sourceWorkbookPath"));
+    static PersistenceReference overwrite(String sourceWorkbookPath) {
+      return new Overwrite(requireNonBlank(sourceWorkbookPath, "sourceWorkbookPath"));
     }
 
     /** Returns the persistence-reference variant that targets one explicit save-as path. */
@@ -126,7 +126,7 @@ public interface ProblemContextWorkbookSurfaces {
     /** Returns the overwritten source path when persistence targeted the opened workbook. */
     default Optional<String> sourceWorkbookPathValue() {
       return switch (this) {
-        case OverwriteSource overwriteSource -> Optional.of(overwriteSource.sourceWorkbookPath());
+        case Overwrite overwriteSource -> Optional.of(overwriteSource.sourceWorkbookPath());
         case SaveAs _ -> Optional.empty();
       };
     }
@@ -135,13 +135,13 @@ public interface ProblemContextWorkbookSurfaces {
     default Optional<String> persistencePathValue() {
       return switch (this) {
         case SaveAs saveAs -> Optional.of(saveAs.persistencePath());
-        case OverwriteSource _ -> Optional.empty();
+        case Overwrite _ -> Optional.empty();
       };
     }
 
     /** Workbook persistence attempted to overwrite the opened source file. */
-    record OverwriteSource(String sourceWorkbookPath) implements PersistenceReference {
-      public OverwriteSource {
+    record Overwrite(String sourceWorkbookPath) implements PersistenceReference {
+      public Overwrite {
         sourceWorkbookPath = requireNonBlank(sourceWorkbookPath, "sourceWorkbookPath");
       }
     }

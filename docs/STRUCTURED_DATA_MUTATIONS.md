@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: STRUCTURED_DATA_MUTATIONS
 updated: "2026-05-15"
 route:
@@ -431,7 +431,7 @@ Append a single row of typed values after the last value-bearing row in a sheet.
 If the next append position lands on cells that already exist because they carry only style,
 hyperlink, or comment state, that existing state is preserved when values are written there.
 Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
-`values.values` when you use the canonical `CellRowInput` wrapper with `type: "TYPED"`.
+`values.cells` when you use the canonical `CellRowInput` wrapper with `type: "TYPED"`.
 Homogeneous rows may use the compact scalar-family encodings instead.
 
 ```json
@@ -443,7 +443,7 @@ Homogeneous rows may use the compact scalar-family encodings instead.
   },
   "action": {
     "type": "APPEND_ROW",
-    "values": { "type": "TYPED", "values": [
+    "values": { "type": "TYPED", "cells": [
       {
         "type": "TEXT",
         "source": {

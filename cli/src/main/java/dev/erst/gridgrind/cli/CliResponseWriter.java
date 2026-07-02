@@ -8,7 +8,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.GridGrindResponses;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -34,9 +34,11 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliFailureReport report)
+      CliFailureReport report,
+      boolean prettyJson)
       throws IOException {
-    return writeCliFailureReportNamed("CLI failure report", responsePath, stdout, stderr, report);
+    return writeCliFailureReportNamed(
+        "CLI failure report", responsePath, stdout, stderr, report, prettyJson);
   }
 
   /**
@@ -46,10 +48,11 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliFailureReport report)
+      CliFailureReport report,
+      boolean prettyJson)
       throws IOException {
     return writeCliFailureReportNamed(
-        "request failure report", responsePath, stdout, stderr, report);
+        "request failure report", responsePath, stdout, stderr, report, prettyJson);
   }
 
   private int writeCliFailureReportNamed(
@@ -57,17 +60,18 @@ final class CliResponseWriter {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliFailureReport report)
+      CliFailureReport report,
+      boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(report, "report must not be null");
     if (responsePath.isEmpty()) {
-      writePayload(stderr, GridGrindCliJson.writeBytes(report));
+      writePayload(stderr, GridGrindCliJson.writeBytes(report, prettyJson));
       return report.exitCode();
     }
 
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
-      byte[] reportBytes = GridGrindCliJson.writeBytes(report);
+      byte[] reportBytes = GridGrindCliJson.writeBytes(report, prettyJson);
       writePayload(targetPath, reportBytes);
       writeNonSuccessPointerIfNeeded(
           stderr,
@@ -83,13 +87,14 @@ final class CliResponseWriter {
           stdout,
           exception,
           targetPath,
-          CliStdoutFallbackSupport.cliFailureReport(payloadName, report));
+          CliStdoutFallbackSupport.cliFailureReport(payloadName, report, prettyJson));
       return report.exitCode();
     }
   }
 
   /**
-   * Writes one arbitrary command payload to stdout or a configured response file.
+   * Writes one arbitrary command payload to stdout or a configured response file while also
+   * reporting response-file fallback details on stderr.
    *
    * <p>When the response file cannot be written, a structured failure response is emitted to stdout
    * so every command family keeps the same fallback contract.
@@ -100,33 +105,10 @@ final class CliResponseWriter {
       Optional<String> stdoutSuggestion,
       Optional<Path> responsePath,
       OutputStream stdout,
-      byte[] payload,
-      int successExitCode)
-      throws IOException {
-    return writePayload(
-        command,
-        payloadName,
-        stdoutSuggestion,
-        responsePath,
-        stdout,
-        OutputStream.nullOutputStream(),
-        payload,
-        successExitCode);
-  }
-
-  /**
-   * Writes one arbitrary command payload to stdout or a configured response file while also
-   * reporting response-file fallback details on stderr.
-   */
-  int writePayload(
-      String command,
-      String payloadName,
-      Optional<String> stdoutSuggestion,
-      Optional<Path> responsePath,
-      OutputStream stdout,
       OutputStream stderr,
       byte[] payload,
-      int successExitCode)
+      int successExitCode,
+      boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(command, "command must not be null");
     Objects.requireNonNull(payloadName, "payloadName must not be null");
@@ -153,57 +135,33 @@ final class CliResponseWriter {
           CliStdoutFallbackSupport.cliFailureReport(
               "structured failure report",
               CliFailureReports.responseWriteFailure(
-                  command, payloadName, targetPath, exception, stdoutSuggestion)));
+                  command, payloadName, targetPath, exception, stdoutSuggestion),
+              prettyJson));
       return 1;
     }
   }
 
-  /** Writes the response to the configured destination and returns the corresponding exit code. */
-  int write(Optional<Path> responsePath, OutputStream stdout, GridGrindResponse response)
-      throws IOException {
-    return write(responsePath, stdout, OutputStream.nullOutputStream(), response);
-  }
-
-  /** Writes the response and returns one caller-chosen logical exit code on success. */
-  int write(
-      Optional<Path> responsePath,
-      OutputStream stdout,
-      GridGrindResponse response,
-      int logicalExitCode)
-      throws IOException {
-    return write(responsePath, stdout, OutputStream.nullOutputStream(), response, logicalExitCode);
-  }
-
-  /** Writes the response to the configured destination and returns the corresponding exit code. */
-  int write(
-      Optional<Path> responsePath,
-      OutputStream stdout,
-      OutputStream stderr,
-      GridGrindResponse response)
-      throws IOException {
-    return write(responsePath, stdout, stderr, response, exitCodeFor(response));
-  }
-
   /** Writes the response and returns one caller-chosen logical exit code on success. */
   int write(
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
       GridGrindResponse response,
-      int logicalExitCode)
+      int logicalExitCode,
+      boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(response, "response must not be null");
     if (responsePath.isEmpty()) {
-      write(stdout, response);
+      write(stdout, response, prettyJson);
       return logicalExitCode;
     }
 
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, GridGrindJson.writeResponseBytes(response));
+      writePayload(targetPath, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
       writeNonSuccessPointerIfNeeded(
           stderr,
           logicalExitCode,
@@ -228,16 +186,19 @@ final class CliResponseWriter {
           targetPath,
           CliStdoutFallbackSupport.response(
               "failure response",
-              GridGrindResponses.failure(GridGrindProtocolVersion.current(), problem)));
+              GridGrindResponses.failure(
+                  GridGrindProtocolVersion.current(), response.persistence(), problem),
+              prettyJson));
       return 1;
     }
   }
 
   /** Writes one response to an already-open output stream, preserving caller stream ownership. */
-  void write(OutputStream outputStream, GridGrindResponse response) throws IOException {
+  void write(OutputStream outputStream, GridGrindResponse response, boolean prettyJson)
+      throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(response, "response must not be null");
-    writePayload(outputStream, GridGrindJson.writeResponseBytes(response));
+    writePayload(outputStream, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
   }
 
   /** Returns the process exit code associated with the response shape. */
@@ -250,30 +211,25 @@ final class CliResponseWriter {
 
   /** Writes one doctor report to stdout or a configured response file. */
   int writeDoctorReport(
-      Optional<Path> responsePath, OutputStream stdout, RequestDoctorReport report)
-      throws IOException {
-    return writeDoctorReport(responsePath, stdout, OutputStream.nullOutputStream(), report);
-  }
-
-  /** Writes one doctor report to stdout or a configured response file. */
-  int writeDoctorReport(
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      RequestDoctorReport report)
+      RequestDoctorReport report,
+      boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(responsePath, "responsePath must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(report, "report must not be null");
     if (responsePath.isEmpty()) {
-      writeDoctorReport(stdout, report);
+      writeDoctorReport(stdout, report, prettyJson);
       return doctorExitCodeFor(report);
     }
 
     Path targetPath = responseTargetPath(responsePath.orElseThrow());
     try {
-      writePayload(targetPath, GridGrindJson.writeRequestDoctorReportBytes(report));
+      writePayload(
+          targetPath, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
       writeNonSuccessPointerIfNeeded(
           stderr,
           doctorExitCodeFor(report),
@@ -296,16 +252,19 @@ final class CliResponseWriter {
           targetPath,
           CliStdoutFallbackSupport.doctorReport(
               "doctor report",
-              RequestDoctorReport.invalid(report.summary(), report.warnings(), problem)));
+              RequestDoctorReport.invalid(report.summary(), report.warnings(), problem),
+              prettyJson));
       return 1;
     }
   }
 
   /** Writes one doctor report to an already-open output stream, preserving caller ownership. */
-  void writeDoctorReport(OutputStream outputStream, RequestDoctorReport report) throws IOException {
+  void writeDoctorReport(OutputStream outputStream, RequestDoctorReport report, boolean prettyJson)
+      throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(report, "report must not be null");
-    writePayload(outputStream, GridGrindJson.writeRequestDoctorReportBytes(report));
+    writePayload(
+        outputStream, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
   }
 
   /** Returns the process exit code associated with one request doctor report. */

@@ -5,7 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
+import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
+import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 
@@ -92,6 +96,48 @@ class GridGrindJsonRequestContractTest {
     assertTrue(request.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
     assertTrue(request.formulaEnvironment().isEmpty());
+  }
+
+  @Test
+  void requestAllowsSparseExecutionFormulaEnvironmentAndOoxmlSecurityBlocks() throws Exception {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "protocolVersion": "V1",
+              "source": { "type": "NEW" },
+	              "persistence": {
+	                "type": "SAVE_AS",
+	                "path": "secured.xlsx",
+	                "ifExists": "REJECT",
+	                "security": {
+                  "encryption": {
+                    "password": "persist-pass"
+                  },
+                  "signature": {
+                    "pkcs12Path": "keys/signing.p12",
+                    "keystorePassword": "store-pass"
+                  }
+                }
+              },
+              "execution": {
+                "calculation": {}
+              },
+              "formulaEnvironment": {},
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertTrue(request.execution().isDefault());
+    assertEquals(ExecutionJournalLevel.SUMMARY, request.journalLevel());
+    assertTrue(request.formulaEnvironment().isEmpty());
+    OoxmlPersistenceSecurityInput security =
+        ((WorkbookPlan.WorkbookPersistence.SaveAs) request.persistence()).security().orElseThrow();
+    assertEquals(ExcelOoxmlEncryptionMode.AGILE, security.encryption().mode());
+    OoxmlSignatureInput signature = security.signature();
+    assertEquals("store-pass", signature.keyPassword());
+    assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
   }
 
   @Test
@@ -219,6 +265,9 @@ class GridGrindJsonRequestContractTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertTrue(exception.getMessage().contains("Missing required field 'from'"));
+    assertTrue(
+        exception
+            .getMessage()
+            .contains("Missing required field 'steps[0].action.chart.anchor.from'"));
   }
 }

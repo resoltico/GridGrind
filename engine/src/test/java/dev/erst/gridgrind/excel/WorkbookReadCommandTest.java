@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableSelection;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,9 +19,9 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.GetSheetSummary sheetSummary =
         new WorkbookReadCommand.GetSheetSummary("sheet", "Budget");
     WorkbookReadCommand.GetCells cells =
-        new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1"));
+        WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1"));
     WorkbookReadCommand.GetWindow window =
-        new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 2, 2);
+        WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 2, 2);
     WorkbookReadCommand.GetMergedRegions mergedRegions =
         new WorkbookReadCommand.GetMergedRegions("merged", "Budget");
     WorkbookReadCommand.GetHyperlinks hyperlinks =
@@ -44,7 +45,7 @@ class WorkbookReadCommandTest {
         new WorkbookReadCommand.GetFormulaSurface(
             "formula", new ExcelSheetSelection.Selected(List.of("Budget")));
     WorkbookReadCommand.GetSheetSchema schema =
-        new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 3, 2);
+        WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 2);
     WorkbookReadCommand.GetNamedRangeSurface namedRangeSurface =
         new WorkbookReadCommand.GetNamedRangeSurface("surface", new ExcelNamedRangeSelection.All());
     WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
@@ -78,7 +79,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRanges.selection());
     assertEquals("Budget", sheetSummary.sheetName());
     assertEquals(List.of("A1"), cells.addresses());
-    assertEquals("A1", window.topLeftAddress());
+    assertEquals("A1", window.window().topLeftAddress());
     assertEquals("Budget", mergedRegions.sheetName());
     assertInstanceOf(ExcelCellSelection.AllUsedCells.class, hyperlinks.selection());
     assertInstanceOf(ExcelCellSelection.Selected.class, comments.selection());
@@ -88,7 +89,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelTableSelection.All.class, tables.selection());
     assertInstanceOf(ExcelPivotTableSelection.All.class, pivotTables.selection());
     assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
-    assertEquals(3, schema.rowCount());
+    assertEquals(3, schema.window().rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, formulaHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, dataValidationHealth.selection());
@@ -106,7 +107,7 @@ class WorkbookReadCommandTest {
     List<String> addresses = new ArrayList<>(List.of("A1", "B2"));
 
     WorkbookReadCommand.GetCells cells =
-        new WorkbookReadCommand.GetCells("cells", "Budget", addresses);
+        WorkbookReadTestSupport.getCells("cells", "Budget", addresses);
     addresses.clear();
 
     assertEquals(List.of("A1", "B2"), cells.addresses());
@@ -120,25 +121,38 @@ class WorkbookReadCommandTest {
         NullPointerException.class, () -> new WorkbookReadCommand.GetSheetSummary("sheet", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetCells("cells", "Budget", List.of()));
+        () -> WorkbookReadTestSupport.getCells("cells", "Budget", List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1", null)));
+        () -> WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1", null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1", "A1")));
+        () -> WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1", "A1")));
+    assertEquals(
+        "addresses must not exceed 250000 but was 250001",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    WorkbookReadTestSupport.getCells(
+                        "cells",
+                        "Budget",
+                        java.util.stream.IntStream.rangeClosed(
+                                1, ExcelReadLimits.MAX_READ_CELLS + 1)
+                            .mapToObj(index -> "A" + index)
+                            .toList()))
+            .getMessage());
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 0, 1));
+        () -> WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 0, 1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 0));
+        () -> WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1000, 1000));
+        () -> WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1000, 1000));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 1000, 1000));
+        () -> WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 1000, 1000));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.GetHyperlinks("links", "Budget", null));
@@ -160,7 +174,7 @@ class WorkbookReadCommandTest {
         () -> new WorkbookReadCommand.GetFormulaSurface("formula", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 0, 1));
+        () -> WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 0, 1));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.GetNamedRangeSurface("surface", null));

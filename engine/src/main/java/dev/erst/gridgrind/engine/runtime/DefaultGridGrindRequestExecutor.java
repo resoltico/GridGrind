@@ -60,7 +60,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          authoredRequest.steps().size(),
+          authoredRequest,
           CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           validationError.get(),
           null,
@@ -80,7 +80,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          authoredRequest.steps().size(),
+          authoredRequest,
           CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           problem,
           null,
@@ -139,7 +139,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
           journal,
-          authoredRequest.steps().size(),
+          authoredRequest,
           CalculationPolicyExecutor.notRequestedReport(authoredRequest.calculationPolicy()),
           problem,
           null,

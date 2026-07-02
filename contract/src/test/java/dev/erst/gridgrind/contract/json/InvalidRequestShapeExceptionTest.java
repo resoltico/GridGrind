@@ -13,7 +13,11 @@ class InvalidRequestShapeExceptionTest {
     RuntimeException cause = new RuntimeException("boom");
     InvalidRequestShapeException exception =
         new InvalidRequestShapeException(
-            "bad shape", Optional.of("reads[0]"), Optional.of(4), Optional.of(12), cause);
+            new MessageShape("bad shape", Optional.of("reads[0]")),
+            Optional.of("reads[0]"),
+            Optional.of(4),
+            Optional.of(12),
+            cause);
 
     assertEquals("bad shape", exception.getMessage());
     assertEquals(cause, exception.getCause());
@@ -26,7 +30,11 @@ class InvalidRequestShapeExceptionTest {
   void allowsMissingJsonLocationMetadata() {
     InvalidRequestShapeException exception =
         new InvalidRequestShapeException(
-            "bad shape", Optional.empty(), Optional.empty(), Optional.empty(), null);
+            new MessageShape("bad shape", Optional.empty()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.empty(),
+            null);
 
     assertTrue(exception.jsonPath().isEmpty());
     assertTrue(exception.jsonLine().isEmpty());

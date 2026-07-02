@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: INVENTORY
 updated: "2026-05-15"
 route:

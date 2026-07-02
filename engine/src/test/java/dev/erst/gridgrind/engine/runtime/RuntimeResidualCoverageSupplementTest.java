@@ -121,7 +121,8 @@ class RuntimeResidualCoverageSupplementTest {
       ExcelCellSnapshot snapshot = workbook.sheet("Budget").cells().snapshotCell("A1");
 
       boolean matched =
-          SemanticSelectorResolver.matchesKeyCell(snapshot, new CellInput.ErrorValue("#REF!"));
+          SemanticSelectorResolver.matchesKeyCell(
+              snapshot, new CellInput.ErrorValue("#REF!"), false);
 
       assertFalse(matched);
     }

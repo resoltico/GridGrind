@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: LIMITATIONS
-updated: "2026-05-15"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -45,29 +45,36 @@ catalog summary, or help line.
 
 ## GridGrind Operational Limits
 
-### LIM-001 — Read Window Cell Count
+### LIM-001 — Cell-Returning Read Count
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `rowCount * columnCount` must not exceed 250,000 |
+| **Limit** | `GET_CELLS.addresses` and `GET_WINDOW` / `GET_SHEET_SCHEMA` requested cells must not exceed 250,000 |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `rowCount * columnCount must not exceed 250000 but was {n}` |
-| **Applies to** | `GET_WINDOW`, `GET_SHEET_SCHEMA` |
-| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorValueValidation.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowSize // LIM-001` |
-| **UX** | `--help` Limits section; `GET_WINDOW` and `GET_SHEET_SCHEMA` catalog summaries |
+| **Message** | `addresses must not exceed 250000 but was {n}` / `rowCount * columnCount must not exceed 250000 but was {n}` |
+| **Applies to** | `GET_CELLS`, `GET_WINDOW`, `GET_SHEET_SCHEMA` |
+| **Code** | `ExcelReadLimits.MAX_READ_CELLS`; `SelectorNumberValidation.requireReadCellCount // LIM-001`; `SelectorValueValidation.requireWindowSize // LIM-001`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-001`; `WorkbookReadCommand.MAX_READ_CELLS // LIM-001` |
+| **UX** | `--help` Limits section; `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` docs |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
-large windows; GridGrind must then serialize the result to JSON. A 1,000 x 1,000 window
-produces roughly one million cell objects; at typical containerized JVM heap sizes (128-512 MB)
-this exhausts memory during serialization. The 250,000-cell cap (e.g., 500 x 500) prevents
-`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures.
+large windows and exact address lists; GridGrind must then materialize and serialize factual cell
+payloads. Sparse `GET_WINDOW` readback reduces blank-heavy payloads, but it does not change the
+worst case: a dense 50,000-cell window still returns 50,000 factual cells, `GET_SHEET_SCHEMA`
+still examines the entire rectangular sample even when many cells are blank, and an oversized
+`GET_CELLS` address list still asks GridGrind to return one factual cell report per address. The
+250,000-cell cap keeps the request gate deterministic before workbook IO and prevents
+`OutOfMemoryError`, empty response files, and unstructured exit-code-1 failures on worst-case
+cell-returning reads.
 
-This limit is not from Apache POI or Excel. It may be raised in a future release if response
-streaming is introduced.
+This limit is not from Apache POI or Excel. A serialized-bytes cap was considered, but it would be
+data-dependent and only knowable after reading the workbook, so the current contract keeps the
+deterministic cell-count cap until response streaming or an equivalent two-phase size negotiation
+exists.
 
 **Recommended pattern for large sheets:** Use `GET_SHEET_SUMMARY` to discover `lastRowIndex` and
-`lastColumnIndex`, then tile the populated region with multiple bounded `GET_WINDOW` reads.
+`lastColumnIndex`, then either chunk exact `GET_CELLS` address lists or tile the populated region
+with multiple bounded `GET_WINDOW` reads.
 
 ---
 

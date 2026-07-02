@@ -142,7 +142,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Encrypted", List.of("A1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult sourceSecurityResult =
         XlsxParityGridGrind.read(
             sourceRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -175,7 +175,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Encrypted", List.of("A1", "A2")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult preservedSecurityResult =
         XlsxParityGridGrind.read(
             preservedRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -209,7 +209,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Secure", List.of("A1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult authoredSecurityResult =
         XlsxParityGridGrind.read(
             authoredRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -319,7 +319,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Signed", List.of("A1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult sourceSecurityResult =
         XlsxParityGridGrind.read(
             sourceRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -385,7 +385,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Signed", List.of("C1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult resignedSecurityResult =
         XlsxParityGridGrind.read(
             resignedRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -419,7 +419,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Signed", List.of("A1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult authoredSecurityResult =
         XlsxParityGridGrind.read(
             authoredRead, "security", WorkbookInspectionResult.PackageSecurityResult.class);
@@ -497,7 +497,7 @@ final class XlsxParitySecurityProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Signed", List.of("A1")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     WorkbookInspectionResult.PackageSecurityResult security =
         XlsxParityGridGrind.read(
             read, "security", WorkbookInspectionResult.PackageSecurityResult.class);

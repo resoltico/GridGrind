@@ -25,10 +25,13 @@ public sealed interface WorkbookSurfaceResult extends WorkbookReadSurfaceResult
   }
 
   /** Returns inferred schema facts for one rectangular sheet window. */
-  record SheetSchemaResult(String stepId, SheetSchema surface) implements WorkbookSurfaceResult {
+  record SheetSchemaResult(
+      String stepId, SheetSchema surface, ExcelCellReadProjection projection, boolean date1904)
+      implements WorkbookSurfaceResult {
     public SheetSchemaResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(surface, "surface must not be null");
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 

@@ -67,6 +67,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
           CliUnexpectedFailureSupport.emit(
               new String[] {"--help", "--response", responseDirectory.toString()},
               Optional.of(responseDirectory),
+              false,
               stdout,
               stderr,
               new IllegalStateException("boom"));
@@ -89,6 +90,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
           CliUnexpectedFailureSupport.emit(
               new String[] {"--help"},
               Optional.empty(),
+              false,
               stdout,
               stderr,
               new IllegalStateException("boom"));
@@ -108,6 +110,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
           CliUnexpectedFailureSupport.emit(
               new String[] {"--help"},
               Optional.empty(),
+              false,
               new AlwaysFailingOutputStream("stdout exploded"),
               stderr,
               new IllegalStateException("boom"));
@@ -127,6 +130,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
           CliUnexpectedFailureSupport.emit(
               new String[] {"--help", "--response", responseDirectory.toString()},
               Optional.of(responseDirectory),
+              false,
               new AlwaysFailingOutputStream("stdout exploded"),
               stderr,
               new IllegalStateException("boom"));
@@ -146,6 +150,7 @@ class CliUnexpectedFailureSupportTest extends GridGrindCliTestSupport {
         CliUnexpectedFailureSupport.emit(
             new String[] {"--help"},
             Optional.empty(),
+            false,
             new AlwaysFailingOutputStream("stdout exploded"),
             new AlwaysFailingOutputStream("stderr exploded"),
             new IllegalStateException("boom"));

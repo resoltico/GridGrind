@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Missing required field 'type'
+Message: Missing required field 'steps[0].assertion.type'
 Input Bytes: 242
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED

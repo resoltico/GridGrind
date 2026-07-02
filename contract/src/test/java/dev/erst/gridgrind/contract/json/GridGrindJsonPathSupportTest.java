@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.contract.json;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
@@ -75,6 +77,36 @@ class GridGrindJsonPathSupportTest {
             """);
 
     assertFalse(GridGrindJsonPathSupport.pathExists(node, "steps[0"));
+  }
+
+  @Test
+  void qualifyPathPreservesAbsoluteAndIndexedPaths() {
+    assertEquals(
+        Optional.of("steps[0].target.name"),
+        GridGrindJsonPathSupport.qualifyPath(
+            Optional.of("steps[0]"), Optional.of("steps[0].target.name")));
+    assertEquals(
+        Optional.of("steps[0]"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.of("steps[0]"), Optional.of("steps[0]")));
+    assertEquals(
+        Optional.of("steps[0]"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.of("steps"), Optional.of("steps[0]")));
+    assertEquals(
+        Optional.of("steps[0][1]"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.of("steps[0]"), Optional.of("[1]")));
+    assertEquals(
+        Optional.of("steps[0].target"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.of("steps[0]"), Optional.of("target")));
+    assertEquals(
+        Optional.of("steps[0].target.type"),
+        GridGrindJsonPathSupport.qualifyPath(
+            Optional.of("steps[0].target.type"), Optional.of("target.type")));
+    assertEquals(
+        Optional.of("steps[0]"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.of("steps[0]"), Optional.empty()));
+    assertEquals(
+        Optional.of("target"),
+        GridGrindJsonPathSupport.qualifyPath(Optional.empty(), Optional.of("target")));
   }
 
   private static JsonNode readTree(String json) throws IOException {

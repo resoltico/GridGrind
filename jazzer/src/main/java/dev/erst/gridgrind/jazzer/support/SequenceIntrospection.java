@@ -112,7 +112,7 @@ public final class SequenceIntrospection {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
     };
   }

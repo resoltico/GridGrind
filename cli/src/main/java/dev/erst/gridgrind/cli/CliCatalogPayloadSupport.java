@@ -19,10 +19,19 @@ final class CliCatalogPayloadSupport {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      byte[] payload)
+      byte[] payload,
+      boolean prettyJson)
       throws IOException {
     return responseWriter.writePayload(
-        command, payloadName, stdoutSuggestion, responsePath, stdout, stderr, payload, 0);
+        command,
+        payloadName,
+        stdoutSuggestion,
+        responsePath,
+        stdout,
+        stderr,
+        payload,
+        0,
+        prettyJson);
   }
 
   static int writeRenderedPayload(
@@ -33,7 +42,8 @@ final class CliCatalogPayloadSupport {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      OutputRenderer renderer)
+      OutputRenderer renderer,
+      boolean prettyJson)
       throws IOException {
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
     renderer.write(buffer);
@@ -45,7 +55,8 @@ final class CliCatalogPayloadSupport {
         stdout,
         stderr,
         buffer.toByteArray(),
-        0);
+        0,
+        prettyJson);
   }
 
   static int writeCliFailure(
@@ -53,9 +64,11 @@ final class CliCatalogPayloadSupport {
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliFailureReport failureReport)
+      CliFailureReport failureReport,
+      boolean prettyJson)
       throws IOException {
-    return responseWriter.writeCliFailureReport(responsePath, stdout, stderr, failureReport);
+    return responseWriter.writeCliFailureReport(
+        responsePath, stdout, stderr, failureReport, prettyJson);
   }
 
   static CliOutputFormat effectiveTextSurfaceFormat(Optional<CliOutputFormat> outputFormat) {

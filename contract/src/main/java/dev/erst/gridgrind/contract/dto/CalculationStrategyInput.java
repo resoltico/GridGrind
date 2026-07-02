@@ -34,6 +34,20 @@ public sealed interface CalculationStrategyInput {
     return this instanceof DoNotCalculate;
   }
 
+  /** Custom Jackson inclusion filter that omits the standard DO_NOT_CALCULATE strategy. */
+  final class DefaultFilter {
+    @Override
+    public boolean equals(Object other) {
+      return other == null
+          || (other instanceof CalculationStrategyInput strategy && strategy.isDefault());
+    }
+
+    @Override
+    public int hashCode() {
+      return DefaultFilter.class.hashCode();
+    }
+  }
+
   /** Do not run server-side formula evaluation or cache clearing. */
   record DoNotCalculate() implements CalculationStrategyInput {
     @Override

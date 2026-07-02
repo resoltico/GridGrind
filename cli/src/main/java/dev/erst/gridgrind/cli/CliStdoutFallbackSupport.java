@@ -4,7 +4,7 @@ import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -17,17 +17,34 @@ final class CliStdoutFallbackSupport {
 
   static StdoutFallback cliFailureReport(String description, CliFailureReport report)
       throws IOException {
-    return new StdoutFallback(description, GridGrindCliJson.writeBytes(report));
+    return cliFailureReport(description, report, false);
+  }
+
+  static StdoutFallback cliFailureReport(
+      String description, CliFailureReport report, boolean prettyJson) throws IOException {
+    return new StdoutFallback(description, GridGrindCliJson.writeBytes(report, prettyJson));
   }
 
   static StdoutFallback response(String description, GridGrindResponse response)
       throws IOException {
-    return new StdoutFallback(description, GridGrindJson.writeResponseBytes(response));
+    return response(description, response, false);
+  }
+
+  static StdoutFallback response(String description, GridGrindResponse response, boolean prettyJson)
+      throws IOException {
+    return new StdoutFallback(
+        description, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
   }
 
   static StdoutFallback doctorReport(String description, RequestDoctorReport report)
       throws IOException {
-    return new StdoutFallback(description, GridGrindJson.writeRequestDoctorReportBytes(report));
+    return doctorReport(description, report, false);
+  }
+
+  static StdoutFallback doctorReport(
+      String description, RequestDoctorReport report, boolean prettyJson) throws IOException {
+    return new StdoutFallback(
+        description, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
   }
 
   static void write(

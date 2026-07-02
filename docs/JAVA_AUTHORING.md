@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: JAVA_AUTHORING
 updated: "2026-05-01"
 route:
@@ -70,7 +70,9 @@ and executed by `:authoring-java:test`. A shortened excerpt:
 ```java
 GridGrindPlan plan =
     GridGrindPlan.newWorkbook()
-        .saveAs(workspace.resolve("budget.xlsx"))
+        .saveAs(
+            workspace.resolve("budget.xlsx"),
+            WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
         .journal(ExecutionJournalLevel.VERBOSE)
         .mutate(Targets.sheet("Budget").ensureExists())
         .mutate(

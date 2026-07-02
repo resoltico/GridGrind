@@ -2,16 +2,19 @@ package dev.erst.gridgrind.contract.step;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.json.ActionableShapeMessage;
+import dev.erst.gridgrind.contract.json.MissingRequiredField;
+import dev.erst.gridgrind.contract.json.UnknownField;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
-import java.util.Iterator;
+import java.util.Optional;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.DeserializationContext;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
-import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.node.ObjectNode;
 
 /** Deserializes workbook steps from the canonical step envelope without a redundant outer type. */
@@ -23,7 +26,13 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
   public WorkbookStep deserialize(JsonParser parser, DeserializationContext context) {
     JsonNode rawNode = parser.readValueAsTree();
     if (!(rawNode instanceof ObjectNode stepNode)) {
-      throw inputMismatch(parser, "steps entries must be JSON objects");
+      throw WorkbookStepJsonFailurePathSupport.inputMismatch(
+          parser,
+          new ActionableShapeMessage(
+              "steps entries must be JSON objects",
+              "Replace each steps entry with one JSON object containing stepId, target, and"
+                  + " exactly one of action, assertion, or query.",
+              Optional.empty()));
     }
     rejectUnknownFields(stepNode, context);
 
@@ -38,7 +47,11 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
             + (queryNode == null ? 0 : 1);
     if (stepPayloadCount != 1) {
       throw stepFailure(
-          context, "Each step must contain exactly one of 'action', 'assertion', or 'query'");
+          context,
+          new ActionableShapeMessage(
+              "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+              "Add exactly one of action, assertion, or query to each step.",
+              Optional.empty()));
     }
     if (actionNode != null) {
       MutationAction action = deserializeField(actionNode, parser, MutationAction.class, "action");
@@ -62,14 +75,12 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
   }
 
   private static void rejectUnknownFields(ObjectNode stepNode, DeserializationContext context) {
-    Iterator<String> fields = stepNode.propertyNames().iterator();
-    while (fields.hasNext()) {
-      String fieldName = fields.next();
-      if (!ALLOWED_FIELDS.contains(fieldName)) {
-        throw fieldFailure(
-            fieldName,
-            inputMismatch(context.getParser(), "Unknown field '%s'".formatted(fieldName)));
-      }
+    String fieldName = firstUnexpectedFieldName(stepNode);
+    if (fieldName != null) {
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
+          fieldName,
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(), new UnknownField(fieldName)));
     }
   }
 
@@ -77,9 +88,10 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       ObjectNode stepNode, String fieldName, DeserializationContext context) {
     JsonNode node = stepNode.get(fieldName);
     if (node == null) {
-      throw fieldFailure(
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
           fieldName,
-          inputMismatch(context.getParser(), "Missing required field '%s'".formatted(fieldName)));
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(), new MissingRequiredField(fieldName)));
     }
     return node;
   }
@@ -88,9 +100,14 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       ObjectNode stepNode, String fieldName, DeserializationContext context) {
     JsonNode node = requiredNode(stepNode, fieldName, context);
     if (!node.isString()) {
-      throw fieldFailure(
+      throw WorkbookStepJsonFailurePathSupport.fieldFailure(
           fieldName,
-          inputMismatch(context.getParser(), "Field '%s' must be a string".formatted(fieldName)));
+          WorkbookStepJsonFailurePathSupport.inputMismatch(
+              context.getParser(),
+              new ActionableShapeMessage(
+                  "Field '%s' must be a string".formatted(fieldName),
+                  "Replace field '%s' with a JSON string value.".formatted(fieldName),
+                  Optional.empty())));
     }
     return node.asString();
   }
@@ -101,27 +118,32 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
     }
   }
 
-  private static MismatchedInputException inputMismatch(JsonParser parser, String message) {
-    return MismatchedInputException.from(parser, WorkbookStep.class, message);
-  }
-
   static <T> T deserializeField(
       JsonNode node, JsonParser parser, Class<T> targetType, String fieldName) {
     try {
       return deserializeNode(node, parser, targetType);
     } catch (JacksonException exception) {
-      throw WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(fieldName, exception);
+      throw WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+          fieldName, node, targetType, exception);
     } catch (IllegalArgumentException exception) {
       throw WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(
           parser, fieldName, exception);
     }
   }
 
-  private static JacksonException fieldFailure(String fieldName, JacksonException failure) {
-    return failure.prependPath(WorkbookStep.class, fieldName);
+  private static @Nullable String firstUnexpectedFieldName(ObjectNode stepNode) {
+    var fields = stepNode.propertyNames().iterator();
+    while (fields.hasNext()) {
+      String fieldName = fields.next();
+      if (!ALLOWED_FIELDS.contains(fieldName)) {
+        return fieldName;
+      }
+    }
+    return null;
   }
 
-  private static JacksonException stepFailure(DeserializationContext context, String message) {
-    return inputMismatch(context.getParser(), message);
+  private static JacksonException stepFailure(
+      DeserializationContext context, ActionableShapeMessage requestProblem) {
+    return WorkbookStepJsonFailurePathSupport.inputMismatch(context.getParser(), requestProblem);
   }
 }

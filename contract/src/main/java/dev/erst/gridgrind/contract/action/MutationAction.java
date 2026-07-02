@@ -4,14 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadataSupport;
 import dev.erst.gridgrind.contract.dto.CellInput;
-import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
 import dev.erst.gridgrind.contract.selector.Selector;
-import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
-import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
-import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,130 +48,77 @@ public sealed interface MutationAction
     private Validation() {}
 
     static void requireNonBlank(String value, String fieldName) {
-      Objects.requireNonNull(value, fieldName + " must not be null");
-      if (value.isBlank()) {
-        throw new IllegalArgumentException(fieldName + " must not be blank");
-      }
+      MutationActionNameValidation.requireNonBlank(value, fieldName);
     }
 
     static void requireSheetName(String value, String fieldName) { // LIM-003
-      ExcelSheetNames.requireValid(value, fieldName);
+      MutationActionNameValidation.requireSheetName(value, fieldName);
     }
 
     static void requireNonNegative(int value, String fieldName) {
-      if (value < 0) {
-        throw new IllegalArgumentException(fieldName + " must not be negative");
-      }
+      MutationActionNumericValidation.requireNonNegative(value, fieldName);
     }
 
     static void requirePositive(int value, String fieldName) {
-      if (value <= 0) {
-        throw new IllegalArgumentException(fieldName + " must be greater than 0");
-      }
+      MutationActionNumericValidation.requirePositive(value, fieldName);
     }
 
     static void requireNonZero(int value, String fieldName) {
-      if (value == 0) {
-        throw new IllegalArgumentException(fieldName + " must not be 0");
-      }
+      MutationActionNumericValidation.requireNonZero(value, fieldName);
     }
 
     static void requireRowIndex(int value, String fieldName) {
-      // LIM-008
-      requireNonNegative(value, fieldName);
-      if (value > ExcelRowSpan.MAX_ROW_INDEX) {
-        throw new IllegalArgumentException(
-            fieldName + " must not exceed " + ExcelRowSpan.MAX_ROW_INDEX + " (Excel row limit)");
-      }
+      MutationActionNumericValidation.requireRowIndex(value, fieldName);
     }
 
     static void requireColumnIndex(int value, String fieldName) {
-      // LIM-009
-      requireNonNegative(value, fieldName);
-      if (value > ExcelColumnSpan.MAX_COLUMN_INDEX) {
-        throw new IllegalArgumentException(
-            fieldName
-                + " must not exceed "
-                + ExcelColumnSpan.MAX_COLUMN_INDEX
-                + " (Excel column limit)");
-      }
+      MutationActionNumericValidation.requireColumnIndex(value, fieldName);
     }
 
     static void requireOrderedSpan(
         int firstValue, int lastValue, String firstFieldName, String lastFieldName) {
-      if (lastValue < firstValue) {
-        throw new IllegalArgumentException(
-            lastFieldName + " must not be less than " + firstFieldName);
-      }
+      MutationActionNumericValidation.requireOrderedSpan(
+          firstValue, lastValue, firstFieldName, lastFieldName);
     }
 
     static void requireColumnWidthCharacters(double widthCharacters) { // LIM-004
-      ExcelSheetLayoutLimits.requireColumnWidthCharacters(widthCharacters, "widthCharacters");
+      MutationActionNumericValidation.requireColumnWidthCharacters(widthCharacters);
     }
 
     static void requireRowHeightPoints(double heightPoints) { // LIM-005
-      ExcelSheetLayoutLimits.requireRowHeightPoints(heightPoints, "heightPoints");
+      MutationActionNumericValidation.requireRowHeightPoints(heightPoints);
     }
 
     static void requireNamedRangeName(String name) {
-      ProtocolDefinedNameValidation.validateName(name);
+      MutationActionNameValidation.requireNamedRangeName(name);
     }
 
     static void requirePivotTableName(String name) {
-      ExcelPivotTableNaming.validateName(name);
+      MutationActionNameValidation.requirePivotTableName(name);
     }
 
     static void requireZoomPercent(int zoomPercent) { // LIM-022
-      ExcelSheetLayoutLimits.requireZoomPercent(zoomPercent, "zoomPercent");
+      MutationActionNumericValidation.requireZoomPercent(zoomPercent);
     }
 
     static List<List<CellInput>> copyRows(List<List<CellInput>> rows) {
-      Objects.requireNonNull(rows, "rows must not be null");
-      List<List<CellInput>> copy = new ArrayList<>(rows.size());
-      for (List<CellInput> row : rows) {
-        copy.add(new ArrayList<>(Objects.requireNonNull(row, "rows must not contain null rows")));
-      }
-      return java.util.Collections.unmodifiableList(copy);
+      return MutationActionCollectionValidation.copyRows(rows);
     }
 
     static List<List<CellInput>> freezeRows(List<List<CellInput>> rows) {
-      return rows.stream().map(List::copyOf).toList();
+      return MutationActionCollectionValidation.freezeRows(rows);
     }
 
     static List<String> copySheetNames(List<String> sheetNames, String fieldName) {
-      Objects.requireNonNull(sheetNames, fieldName + " must not be null");
-      List<String> copy = new ArrayList<>(sheetNames);
-      for (String sheetName : copy) {
-        requireSheetName(sheetName, fieldName);
-      }
-      return List.copyOf(copy);
+      return MutationActionCollectionValidation.copySheetNames(sheetNames, fieldName);
     }
 
     static void requireDistinct(List<String> values, String fieldName) {
-      if (new java.util.LinkedHashSet<>(values).size() != values.size()) {
-        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
-      }
+      MutationActionCollectionValidation.requireDistinct(values, fieldName);
     }
 
     static void requireRectangularRows(List<List<CellInput>> rows) {
-      if (rows.isEmpty()) {
-        throw new IllegalArgumentException("rows must not be empty");
-      }
-      int expectedWidth = -1;
-      for (List<CellInput> row : rows) {
-        Objects.requireNonNull(row, "rows must not contain null rows");
-        if (row.isEmpty()) {
-          throw new IllegalArgumentException("rows must not contain empty rows");
-        }
-        if (expectedWidth < 0) {
-          expectedWidth = row.size();
-        } else if (row.size() != expectedWidth) {
-          throw new IllegalArgumentException("rows must describe a rectangular matrix");
-        }
-        for (CellInput value : row) {
-          Objects.requireNonNull(value, "rows must not contain null cell values");
-        }
-      }
+      MutationActionCollectionValidation.requireRectangularRows(rows);
     }
   }
 }

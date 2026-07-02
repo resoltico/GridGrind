@@ -67,8 +67,8 @@ class ExcelWorkbookTest {
 
       ExcelCellSnapshot.FormulaSnapshot totalSnapshot =
           (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("B4");
-      assertEquals("FORMULA", totalSnapshot.declaredType());
-      assertEquals("FORMULA", totalSnapshot.effectiveType());
+      assertEquals("FORMULA", totalSnapshot.type());
+      assertEquals("FORMULA", totalSnapshot.type());
       assertEquals("SUM(B2:B3)", totalSnapshot.formula());
       assertEquals(
           61.0, ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation()).numberValue());
@@ -77,8 +77,7 @@ class ExcelWorkbookTest {
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address());
       assertEquals(
-          "Hosting",
-          ((ExcelCellSnapshot.TextSnapshot) preview.get(1).cells().get(0)).stringValue());
+          "Hosting", ((ExcelCellSnapshot.TextSnapshot) preview.get(1).cells().get(0)).textValue());
       assertEquals("61", preview.get(3).cells().get(1).displayValue());
     }
   }
@@ -641,7 +640,7 @@ class ExcelWorkbookTest {
           assertInstanceOf(
               ExcelCellSnapshot.NumberSnapshot.class,
               workbook.sheet("Budget").cells().snapshotCell("A1"));
-      assertEquals("NUMBER", snapshot.declaredType());
+      assertEquals("NUMBER", snapshot.type());
       assertEquals(0.0d, snapshot.numberValue());
     }
   }

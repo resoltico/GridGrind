@@ -270,7 +270,7 @@ final class XlsxRoundTripExpectationVerification {
               workbook.sheet(entry.getKey()).cells().snapshotCell(cellEntry.getKey().a1Address());
           if (!(actualSnapshot instanceof ExcelCellSnapshot.TextSnapshot textSnapshot)) {
             throw new IllegalStateException(
-                "rich text cell must reopen as STRING for "
+                "rich text cell must reopen as a text snapshot for "
                     + entry.getKey()
                     + "!"
                     + cellEntry.getKey().a1Address());
@@ -278,9 +278,9 @@ final class XlsxRoundTripExpectationVerification {
           requireEquals(
               entry.getKey(),
               cellEntry.getKey(),
-              "stringValue",
+              "textValue",
               cellEntry.getValue().plainText(),
-              textSnapshot.stringValue());
+              textSnapshot.textValue());
           requireEquals(
               entry.getKey(),
               cellEntry.getKey(),

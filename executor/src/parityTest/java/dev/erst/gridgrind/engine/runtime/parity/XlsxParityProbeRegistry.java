@@ -4,7 +4,10 @@ import static dev.erst.gridgrind.engine.runtime.parity.ParityPlanSupport.mutate;
 
 import dev.erst.gridgrind.contract.action.StructuredMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
+import dev.erst.gridgrind.contract.query.CellReadFacet;
+import dev.erst.gridgrind.contract.query.CellReadProjection;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
+import dev.erst.gridgrind.contract.query.SheetIntrospectionQuery;
 import dev.erst.gridgrind.contract.query.WorkbookAssetInspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -23,6 +26,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -181,7 +185,22 @@ final class XlsxParityProbeRegistry {
     return cast(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
             byAddress(cells.cells()).get(address))
-        .stringValue();
+        .textValue()
+        .orElseThrow();
+  }
+
+  static SheetIntrospectionQuery.GetCells allFacetCellsQuery() {
+    return new SheetIntrospectionQuery.GetCells(
+        Optional.of(
+            CellReadProjection.of(
+                CellReadFacet.VALUE,
+                CellReadFacet.STYLE,
+                CellReadFacet.FORMAT,
+                CellReadFacet.HYPERLINK,
+                CellReadFacet.COMMENT,
+                CellReadFacet.FORMULA,
+                CellReadFacet.RICH_TEXT_RUNS,
+                CellReadFacet.TEMPORAL)));
   }
 
   static Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress(

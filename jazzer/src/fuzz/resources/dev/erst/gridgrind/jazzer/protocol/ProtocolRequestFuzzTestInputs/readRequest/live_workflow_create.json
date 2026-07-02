@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/live-finance-workbook.xlsx"
+    "path": "generated-workbooks/live-finance-workbook.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

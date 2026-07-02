@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-advanced-readback.xlsx"
+    "path": "generated-workbooks/gridgrind-advanced-readback.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

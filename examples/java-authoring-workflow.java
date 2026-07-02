@@ -5,6 +5,7 @@ import dev.erst.gridgrind.authoring.Targets;
 import dev.erst.gridgrind.authoring.Values;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindJournalSink;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
@@ -23,7 +24,7 @@ final class JavaAuthoringWorkflowExample {
    */
   public static GridGrindPlan build(Path workspace) {
     return GridGrindPlan.newWorkbook()
-        .saveAs(workspace.resolve("budget.xlsx"))
+        .saveAs(workspace.resolve("budget.xlsx"), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE)
         .journal(ExecutionJournalLevel.VERBOSE)
         .mutate(Targets.sheet("Budget").ensureExists())
         .mutate(

@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-pivot.xlsx"
+    "path": "generated-workbooks/gridgrind-pivot.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {
@@ -257,7 +258,9 @@
           "columnLabels": [
             "Stage"
           ],
-          "reportFilters": [],
+          "reportFilters": [
+
+          ],
           "dataFields": [
             {
               "sourceColumnName": "Amount",
@@ -291,7 +294,9 @@
           "rowLabels": [
             "Region"
           ],
-          "columnLabels": [],
+          "columnLabels": [
+
+          ],
           "reportFilters": [
             "Owner"
           ],
@@ -328,8 +333,12 @@
           "rowLabels": [
             "Stage"
           ],
-          "columnLabels": [],
-          "reportFilters": [],
+          "columnLabels": [
+
+          ],
+          "reportFilters": [
+
+          ],
           "dataFields": [
             {
               "sourceColumnName": "Amount",

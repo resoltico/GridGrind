@@ -49,12 +49,14 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                       CellInput.Date.class,
                       "DATE",
                       "Write an ISO-8601 date value."
-                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMBER with a formatted displayValue."),
+                          + " Stored as an Excel serial number; readback keeps type=NUMBER,"
+                          + " and the TEMPORAL facet can expose kind=DATE."),
                   descriptor(
                       CellInput.DateTime.class,
                       "DATE_TIME",
                       "Write an ISO-8601 date-time value."
-                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMBER with a formatted displayValue."),
+                          + " Stored as an Excel serial number; readback keeps type=NUMBER,"
+                          + " and the TEMPORAL facet can expose kind=DATE_TIME."),
                   descriptor(
                       CellInput.Formula.class,
                       "FORMULA",

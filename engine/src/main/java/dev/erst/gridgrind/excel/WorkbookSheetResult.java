@@ -38,20 +38,33 @@ public sealed interface WorkbookSheetResult extends WorkbookReadIntrospectionRes
   }
 
   /** Returns exact cell snapshots for one sheet. */
-  record CellsResult(String stepId, String sheetName, List<ExcelCellSnapshot> cells)
+  record CellsResult(
+      String stepId,
+      String sheetName,
+      List<ExcelCellSnapshot> cells,
+      ExcelCellReadProjection projection,
+      boolean date1904)
       implements WorkbookSheetResult {
     public CellsResult {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       cells = copyValues(cells, "cells");
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  record WindowResult(String stepId, Window window) implements WorkbookSheetResult {
+  record WindowResult(
+      String stepId,
+      Window window,
+      ExcelCellReadProjection projection,
+      boolean includeBlanks,
+      boolean date1904)
+      implements WorkbookSheetResult {
     public WindowResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(window, "window must not be null");
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 

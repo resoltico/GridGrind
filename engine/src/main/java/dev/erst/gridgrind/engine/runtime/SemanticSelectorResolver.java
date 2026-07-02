@@ -169,7 +169,8 @@ final class SemanticSelectorResolver {
         rowIndex++) {
       String address = a1Address(rowIndex, table.firstColumnIndex() + keyColumnOffset);
       ExcelCellSnapshot snapshot = sheet.cells().snapshotCell(address);
-      if (matchesKeyCell(snapshot, selector.expectedValue())) {
+      if (matchesKeyCell(
+          snapshot, selector.expectedValue(), workbook.xssfWorkbook().isDate1904())) {
         if (matchedRowIndex != null) {
           throw new IllegalArgumentException(
               "table row selector matched more than one row for table "
@@ -193,36 +194,9 @@ final class SemanticSelectorResolver {
     return new ResolvedTableRow(table.table(), matchedRowIndex, table.firstColumnIndex());
   }
 
-  static boolean matchesKeyCell(ExcelCellSnapshot snapshot, CellInput expectedValue) {
-    dev.erst.gridgrind.contract.dto.CellReport report =
-        InspectionResultCellReportSupport.toCellReport(snapshot);
-    return switch (expectedValue) {
-      case CellInput.Blank _ ->
-          report instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport;
-      case CellInput.Text text ->
-          report instanceof dev.erst.gridgrind.contract.dto.CellReport.TextReport textReport
-              && textReport.stringValue().equals(inlineText(text.source(), "table row key TEXT"));
-      case CellInput.NumberValue numberValue ->
-          report instanceof dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberReport
-              && Double.compare(numberReport.numberValue(), numberValue.number()) == 0;
-      case CellInput.BooleanValue booleanValue ->
-          report instanceof dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanReport
-              && booleanReport.booleanValue().equals(booleanValue.bool());
-      case CellInput.Formula formula ->
-          report instanceof dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaReport
-              && formulaReport
-                  .formula()
-                  .equals(inlineText(formula.source(), "table row key FORMULA"));
-      default -> false;
-    };
-  }
-
-  private static String inlineText(
-      dev.erst.gridgrind.contract.source.TextSourceInput source, String context) {
-    if (source instanceof dev.erst.gridgrind.contract.source.TextSourceInput.Inline inline) {
-      return inline.text();
-    }
-    throw new IllegalStateException(context + " must be resolved to INLINE text before execution");
+  static boolean matchesKeyCell(
+      ExcelCellSnapshot snapshot, CellInput expectedValue, boolean date1904) {
+    return SemanticSelectorKeyMatchSupport.matchesKeyCell(snapshot, expectedValue, date1904);
   }
 
   private ResolvedTable resolveExactTable(ExcelWorkbook workbook, TableSelector selector) {

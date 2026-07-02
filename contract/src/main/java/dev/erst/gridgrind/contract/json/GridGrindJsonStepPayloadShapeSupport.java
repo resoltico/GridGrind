@@ -57,7 +57,9 @@ final class GridGrindJsonStepPayloadShapeSupport {
 
   private static InvalidRequestShapeException invalidStepPayloadShape(String jsonPath) {
     return new InvalidRequestShapeException(
-        "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+        new MessageShape(
+            "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+            Optional.of(jsonPath)),
         Optional.of(jsonPath),
         Optional.empty(),
         Optional.empty(),

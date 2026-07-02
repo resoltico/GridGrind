@@ -67,7 +67,7 @@ class ExcelArrayFormulaTest {
       assertEquals(
           List.of("F2"),
           sheet.cells().arrayFormulas().stream().map(ExcelArrayFormulaSnapshot::range).toList());
-      assertEquals("BLANK", sheet.cells().snapshotCell("D2").effectiveType());
+      assertEquals("BLANK", sheet.cells().snapshotCell("D2").type());
 
       IllegalArgumentException notArray =
           assertThrows(IllegalArgumentException.class, () -> sheet.cells().clearArrayFormula("A1"));

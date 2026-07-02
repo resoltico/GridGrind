@@ -4,6 +4,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -34,15 +36,26 @@ public final class CatalogFieldMetadataSupport {
 
   /** Returns the catalog field entry derived from one reflected record component. */
   public static FieldEntry fieldEntry(RecordComponent component, Set<String> optionalFields) {
+    return fieldEntry(component, optionalFields, Map.of());
+  }
+
+  /** Returns the catalog field entry derived from one reflected record component. */
+  public static FieldEntry fieldEntry(
+      RecordComponent component,
+      Set<String> optionalFields,
+      Map<String, List<String>> projectedFieldsByName) {
     Objects.requireNonNull(component, "component must not be null");
     Objects.requireNonNull(optionalFields, "optionalFields must not be null");
+    Objects.requireNonNull(projectedFieldsByName, "projectedFieldsByName must not be null");
     return new FieldEntry(
         component.getName(),
         optionalFields.contains(component.getName())
             ? FieldRequirement.OPTIONAL
             : FieldRequirement.REQUIRED,
         fieldShape(component.getGenericType()),
-        enumValues(component.getGenericType()));
+        enumValues(component.getGenericType()),
+        enumValueDocs(component.getGenericType()),
+        projectedFieldsByName.getOrDefault(component.getName(), List.of()));
   }
 
   /** Returns the machine-readable field shape for one record component type. */
@@ -122,7 +135,11 @@ public final class CatalogFieldMetadataSupport {
     return java.util.List.of();
   }
 
-  private static Type singleTypeArgument(ParameterizedType parameterizedType, String typeName) {
+  static List<EnumValueDocEntry> enumValueDocs(Type type) {
+    return CatalogEnumValueDocumentationSupport.enumValueDocs(type);
+  }
+
+  static Type singleTypeArgument(ParameterizedType parameterizedType, String typeName) {
     Type[] typeArguments = parameterizedType.getActualTypeArguments();
     if (typeArguments.length != 1) {
       throw new IllegalStateException(

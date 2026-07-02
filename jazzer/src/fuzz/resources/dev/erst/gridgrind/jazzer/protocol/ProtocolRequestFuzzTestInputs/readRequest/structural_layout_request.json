@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "reports/structural-layout.xlsx"
+    "path": "reports/structural-layout.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

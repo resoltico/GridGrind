@@ -62,7 +62,7 @@ final class ExecutionDirectEventReadWorkflow {
       return responseSupport.closeReadableWorkbook(
           null,
           ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
-              protocolVersion, journal, request.steps().size(), calculation, problem, null, null),
+              protocolVersion, journal, request, calculation, problem, null, null),
           request,
           journal,
           problem.code(),
@@ -90,7 +90,7 @@ final class ExecutionDirectEventReadWorkflow {
             ExecutionResponseSupport.failureResponseWithoutPlanOutcomeEvent(
                 protocolVersion,
                 journal,
-                request.steps().size(),
+                request,
                 calculation,
                 problem,
                 stepIndex,

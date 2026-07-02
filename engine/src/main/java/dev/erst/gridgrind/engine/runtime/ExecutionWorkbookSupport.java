@@ -59,13 +59,14 @@ final class ExecutionWorkbookSupport {
             .persistence()
             .save(
                 executionPath,
-                WorkbookArtifactWriteDisposition.CREATE_NEW,
+                ExecutionRequestPaths.writeDisposition(saveAs),
                 ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
                 tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-            saveAs.path(), executionPath.toString());
+            saveAs.path(),
+            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
       }
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource overwrite -> {
+      case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
@@ -79,7 +80,8 @@ final class ExecutionWorkbookSupport {
                 ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
                 tempFileFactory::createTempFile);
         yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-            existingFile.path(), executionPath.toString());
+            existingFile.path(),
+            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
       }
     };
   }
@@ -102,12 +104,13 @@ final class ExecutionWorkbookSupport {
             ExecutionRequestPaths.sourcePackageSecurity(source),
             ExecutionRequestPaths.sourceEncryptionPassword(source),
             true,
-            WorkbookArtifactWriteDisposition.CREATE_NEW,
+            ExecutionRequestPaths.writeDisposition(saveAs),
             ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory));
         yield new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-            saveAs.path(), executionPath.toString());
+            saveAs.path(),
+            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
       }
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource overwrite -> {
+      case WorkbookPlan.WorkbookPersistence.Overwrite overwrite -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
@@ -122,7 +125,8 @@ final class ExecutionWorkbookSupport {
             WorkbookArtifactWriteDisposition.REPLACE_EXISTING,
             ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory));
         yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-            existingFile.path(), executionPath.toString());
+            existingFile.path(),
+            new GridGrindResponsePersistence.WriteResult.Written(executionPath.toString()));
       }
     };
   }

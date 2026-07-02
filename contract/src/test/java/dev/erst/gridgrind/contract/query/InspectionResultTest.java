@@ -48,9 +48,8 @@ class InspectionResultTest {
     cells.add(
         new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
             "A1",
-            "BLANK",
-            "",
-            minimalStyle(),
+            java.util.Optional.of(""),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
             java.util.Optional.empty()));
     SheetInspectionResult.CellsResult result =

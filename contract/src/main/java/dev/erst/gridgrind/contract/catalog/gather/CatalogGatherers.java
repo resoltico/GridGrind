@@ -6,6 +6,8 @@ import dev.erst.gridgrind.contract.catalog.CatalogIgnored;
 import dev.erst.gridgrind.contract.catalog.FieldEntry;
 import java.lang.reflect.RecordComponent;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -49,18 +51,31 @@ public final class CatalogGatherers {
   /** Expands reflected record components into enriched protocol-catalog field entries. */
   public static Gatherer<RecordComponent, ?, FieldEntry> expandFieldsWithMetadata(
       Set<String> optionalFields) {
+    return expandFieldsWithMetadata(optionalFields, Map.of());
+  }
+
+  /** Expands reflected record components into enriched protocol-catalog field entries. */
+  public static Gatherer<RecordComponent, ?, FieldEntry> expandFieldsWithMetadata(
+      Set<String> optionalFields, Map<String, List<String>> projectedFieldsByName) {
     Objects.requireNonNull(optionalFields, "optionalFields must not be null");
+    Objects.requireNonNull(projectedFieldsByName, "projectedFieldsByName must not be null");
     Set<String> optionalFieldSet = Set.copyOf(optionalFields);
+    Map<String, List<String>> projectedFieldMap = Map.copyOf(projectedFieldsByName);
     return Gatherer.ofSequential(
-        () -> optionalFieldSet,
+        () -> new FieldMetadataState(optionalFieldSet, projectedFieldMap),
         (state, component, downstream) -> {
           if (component.isAnnotationPresent(CatalogIgnored.class)
               || component.getAccessor().isAnnotationPresent(CatalogIgnored.class)
               || component.getAccessor().isAnnotationPresent(JsonIgnore.class)) {
             return true;
           }
-          downstream.push(CatalogFieldMetadataSupport.fieldEntry(component, state));
+          downstream.push(
+              CatalogFieldMetadataSupport.fieldEntry(
+                  component, state.optionalFields(), state.projectedFieldsByName()));
           return true;
         });
   }
+
+  private record FieldMetadataState(
+      Set<String> optionalFields, Map<String, List<String>> projectedFieldsByName) {}
 }

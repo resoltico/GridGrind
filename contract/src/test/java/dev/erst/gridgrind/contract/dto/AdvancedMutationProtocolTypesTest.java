@@ -101,10 +101,10 @@ class AdvancedMutationProtocolTypesTest {
                 Optional.empty()));
     WorkbookPlan.WorkbookSource.ExistingFile source =
         new WorkbookPlan.WorkbookSource.ExistingFile("budget.xlsx", openSecurity);
-    WorkbookPlan.WorkbookPersistence.OverwriteSource unsecuredOverwrite =
-        new WorkbookPlan.WorkbookPersistence.OverwriteSource();
-    WorkbookPlan.WorkbookPersistence.OverwriteSource securedOverwrite =
-        new WorkbookPlan.WorkbookPersistence.OverwriteSource(encryptionOnly);
+    WorkbookPlan.WorkbookPersistence.Overwrite unsecuredOverwrite =
+        new WorkbookPlan.WorkbookPersistence.Overwrite();
+    WorkbookPlan.WorkbookPersistence.Overwrite securedOverwrite =
+        new WorkbookPlan.WorkbookPersistence.Overwrite(encryptionOnly);
 
     assertEquals(Optional.empty(), openSecurity.password());
     assertTrue(openSecurity.isEmpty());
@@ -112,13 +112,12 @@ class AdvancedMutationProtocolTypesTest {
     assertTrue(unsecuredOverwrite.security().isEmpty());
     assertThrows(
         NullPointerException.class,
-        () ->
-            new WorkbookPlan.WorkbookPersistence.OverwriteSource(
-                (OoxmlPersistenceSecurityInput) null));
+        () -> new WorkbookPlan.WorkbookPersistence.Overwrite((OoxmlPersistenceSecurityInput) null));
     assertEquals(encryptionOnly, securedOverwrite.security().orElseThrow());
     assertEquals(
         signatureOnly,
-        new WorkbookPlan.WorkbookPersistence.SaveAs("secured.xlsx", signatureOnly)
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "secured.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT, signatureOnly)
             .security()
             .orElseThrow());
   }

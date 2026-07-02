@@ -1,7 +1,8 @@
 package dev.erst.gridgrind.cli;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,46 +14,16 @@ import org.junit.jupiter.api.Test;
 /** Direct edge coverage for CLI argument helpers and protocol-catalog parser variants. */
 class CliArgumentEdgeCoverageTest {
   @Test
-  void protocolCatalogFullParsesIntoDedicatedCommand() {
-    CliCommand.PrintProtocolCatalogAll command =
-        assertInstanceOf(
-            CliCommand.PrintProtocolCatalogAll.class,
-            CliArguments.parse(new String[] {"--print-protocol-catalog", "--full"}));
-
-    assertEquals(Optional.empty(), command.responsePath());
-  }
-
-  @Test
-  void protocolCatalogRejectsDuplicateAndConflictingFullFlags() {
-    CliArgumentsException duplicate =
+  void protocolCatalogFullFlagIsRejectedWithScopedLookupGuidance() {
+    CliArgumentsException trailingFull =
         assertThrows(
             CliArgumentsException.class,
-            () ->
-                CliArguments.parse(new String[] {"--print-protocol-catalog", "--full", "--full"}));
-    assertEquals("--full", duplicate.argument());
-    assertEquals("Duplicate argument: --full", duplicate.getMessage());
-
-    CliArgumentsException conflictingLookup =
-        assertThrows(
-            CliArgumentsException.class,
-            () ->
-                CliArguments.parse(
-                    new String[] {"--print-protocol-catalog", "--full", "--lookup", "SET_CELL"}));
-    assertEquals("--full", conflictingLookup.argument());
+            () -> CliArguments.parse(new String[] {"--print-protocol-catalog", "--full"}));
+    assertEquals("--full", trailingFull.argument());
     assertEquals(
-        "--print-protocol-catalog does not allow --full together with --lookup or --search",
-        conflictingLookup.getMessage());
-
-    CliArgumentsException conflictingSearch =
-        assertThrows(
-            CliArgumentsException.class,
-            () ->
-                CliArguments.parse(
-                    new String[] {"--print-protocol-catalog", "--search", "chart", "--full"}));
-    assertEquals("--full", conflictingSearch.argument());
-    assertEquals(
-        "--print-protocol-catalog does not allow --full together with --lookup or --search",
-        conflictingSearch.getMessage());
+        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
+            + " <lookup-id> for one scoped catalog payload",
+        trailingFull.getMessage());
   }
 
   @Test
@@ -63,7 +34,8 @@ class CliArgumentEdgeCoverageTest {
 
     assertEquals("--full", exception.argument());
     assertEquals(
-        "--full requires --print-protocol-catalog and emits the complete protocol catalog",
+        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
+            + " <lookup-id> for one scoped catalog payload",
         exception.getMessage());
   }
 
@@ -127,22 +99,25 @@ class CliArgumentEdgeCoverageTest {
   }
 
   @Test
-  void pathHelpersParseGlobalResponseAndStructuredFormatArguments() {
-    assertEquals(Optional.empty(), CliPathArguments.outputFormat(new String[] {"help"}));
+  void pathHelpersParseGlobalResponseStructuredFormatAndPrettyArguments() {
+    assertEquals(Optional.empty(), CliRenderArguments.outputFormat(new String[] {"help"}));
     assertEquals(
         Optional.of(CliOutputFormat.STRUCTURED),
-        CliPathArguments.outputFormat(new String[] {"--format", "structured"}));
+        CliRenderArguments.outputFormat(new String[] {"--format", "structured"}));
     assertEquals(
         Optional.of(CliOutputFormat.TEXT),
-        CliPathArguments.outputFormat(new String[] {"help", "--format", "text"}));
+        CliRenderArguments.outputFormat(new String[] {"help", "--format", "text"}));
 
-    CliPathArguments.GlobalResponseExtraction extraction =
-        CliPathArguments.extractGlobalResponse(
-            new String[] {"--format", "structured", "--response", "report.json", "help"});
+    CliRenderArguments.GlobalResponseExtraction extraction =
+        CliRenderArguments.extractGlobalResponse(
+            new String[] {
+              "--format", "structured", "--pretty", "--response", "report.json", "help"
+            });
 
     assertEquals(java.util.List.of("help"), extraction.remainingArgs());
     assertEquals(Optional.of(Path.of("report.json")), extraction.responsePath());
     assertEquals(Optional.of(CliOutputFormat.STRUCTURED), extraction.outputFormat());
+    assertTrue(extraction.prettyJson());
     assertEquals(1, extraction.remainingArgsArray().length);
     assertEquals("help", extraction.remainingArgsArray()[0]);
 
@@ -150,7 +125,7 @@ class CliArgumentEdgeCoverageTest {
         assertThrows(
             CliArgumentsException.class,
             () ->
-                CliPathArguments.extractGlobalResponse(
+                CliRenderArguments.extractGlobalResponse(
                     new String[] {"--format", "text", "--format", "structured"}));
     assertEquals("--format", duplicateFormat.argument());
     assertEquals("Duplicate argument: --format", duplicateFormat.getMessage());
@@ -159,7 +134,7 @@ class CliArgumentEdgeCoverageTest {
         assertThrows(
             CliArgumentsException.class,
             () ->
-                CliPathArguments.outputFormat(
+                CliRenderArguments.outputFormat(
                     new String[] {"help", "--format", "text", "--format", "structured"}));
     assertEquals("--format", duplicateAuthoredFormat.argument());
     assertEquals("Duplicate argument: --format", duplicateAuthoredFormat.getMessage());
@@ -167,9 +142,59 @@ class CliArgumentEdgeCoverageTest {
     CliArgumentsException invalidFormat =
         assertThrows(
             CliArgumentsException.class,
-            () -> CliPathArguments.outputFormat(new String[] {"--format", "yaml"}));
+            () -> CliRenderArguments.outputFormat(new String[] {"--format", "yaml"}));
     assertEquals("--format", invalidFormat.argument());
     assertEquals("--format must be one of: text, structured", invalidFormat.getMessage());
+
+    CliArgumentsException duplicatePretty =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliRenderArguments.extractGlobalResponse(new String[] {"--pretty", "--pretty"}));
+    assertEquals("--pretty", duplicatePretty.argument());
+    assertEquals("Duplicate argument: --pretty", duplicatePretty.getMessage());
+  }
+
+  @Test
+  void formatFlagIsRejectedForJsonNativeCommands() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--print-request-template", "--format", "structured"}));
+
+    assertEquals("--format", exception.argument());
+    assertEquals(
+        "--format is only valid with --help, --help-protocol, --help-guidance, --version, or"
+            + " --license; JSON-native commands already emit JSON and use --pretty when"
+            + " indentation is desired",
+        exception.getMessage());
+  }
+
+  @Test
+  void renderHelpersAcceptProseFormatsAndSuppressDuplicatePrettyHints() {
+    assertDoesNotThrow(() -> CliArguments.parse(new String[] {"--help", "--format", "structured"}));
+    assertDoesNotThrow(() -> CliArguments.parse(new String[] {"--version", "--format", "text"}));
+    assertDoesNotThrow(() -> CliArguments.parse(new String[] {"--license", "--format", "text"}));
+    CliArgumentsException protocolCatalogFormat =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliRenderOptionValidation.validate(
+                    new CliCommand.PrintProtocolCatalogIndex(Optional.empty()),
+                    Optional.of(CliOutputFormat.TEXT)));
+    assertEquals("--format", protocolCatalogFormat.argument());
+    CliArgumentsException executeFormat =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliRenderOptionValidation.validate(
+                    new CliCommand.Execute(
+                        Optional.empty(), Optional.empty(), Optional.empty(), Optional.empty()),
+                    Optional.of(CliOutputFormat.TEXT)));
+    assertEquals("--format", executeFormat.argument());
+    assertTrue(CliRenderArguments.prettyJsonHint(new String[] {"--pretty"}));
+    assertFalse(CliRenderArguments.prettyJsonHint(new String[] {"--pretty", "--pretty"}));
   }
 
   @Test

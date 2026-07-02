@@ -7,4 +7,4 @@ Message: Sheet does not exist: A
 Input Bytes: 72
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: SET_SHEET_VISIBILITY=2, CLEAR_SHEET_PROTECTION=1, CREATE_SHEET=1
+Command Kinds: SET_SHEET_VISIBILITY=2, CREATE_SHEET=1, CLEAR_SHEET_PROTECTION=1

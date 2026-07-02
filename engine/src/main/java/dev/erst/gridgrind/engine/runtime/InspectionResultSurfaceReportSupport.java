@@ -9,6 +9,7 @@ import dev.erst.gridgrind.contract.dto.SchemaColumnReport;
 import dev.erst.gridgrind.contract.dto.SheetFormulaSurfaceReport;
 import dev.erst.gridgrind.contract.dto.SheetSchemaReport;
 import dev.erst.gridgrind.contract.dto.TypeCountReport;
+import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 
 /** Converts derived factual surface snapshots into protocol surface reports. */
 final class InspectionResultSurfaceReportSupport {
@@ -37,7 +38,9 @@ final class InspectionResultSurfaceReportSupport {
   }
 
   static SheetSchemaReport toSheetSchemaReport(
-      dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema surface) {
+      dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema surface,
+      ExcelCellReadProjection projection,
+      boolean date1904) {
     return new SheetSchemaReport(
         surface.sheetName(),
         surface.topLeftAddress(),

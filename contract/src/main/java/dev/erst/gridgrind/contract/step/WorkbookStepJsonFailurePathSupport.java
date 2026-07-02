@@ -1,26 +1,40 @@
 package dev.erst.gridgrind.contract.step;
 
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
+import dev.erst.gridgrind.contract.json.GridGrindJsonRequestProblemDetector;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.RequestProblemDescriptor;
+import dev.erst.gridgrind.contract.json.RequestProblemSource;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JacksonException.Reference;
 import tools.jackson.core.JsonParser;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.exc.MismatchedInputException;
 
 /** Derives precise nested request-field paths for step payload failures. */
 final class WorkbookStepJsonFailurePathSupport {
-  private static final Pattern FIELD_MESSAGE_PATTERN = Pattern.compile("^Field '([^']+)' must .*");
-  private static final Pattern RAW_MISSING_REQUIRED_FIELD_PATTERN =
-      Pattern.compile("missing required creator property '([^']+)'", Pattern.CASE_INSENSITIVE);
-  private static final Pattern RAW_MISSING_TYPE_ID_FIELD_PATTERN =
-      Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
-
   private WorkbookStepJsonFailurePathSupport() {}
 
-  static String qualifiedFieldName(String fieldName, Exception failure) {
-    String nestedFieldPath = nestedFieldPath(failure);
+  static MismatchedInputException inputMismatch(
+      JsonParser parser, RequestProblemDescriptor.Shape requestProblem) {
+    InvalidRequestShapeException shapeException =
+        new InvalidRequestShapeException(
+            requestProblem, Optional.empty(), Optional.empty(), Optional.empty(), null);
+    MismatchedInputException failure =
+        MismatchedInputException.from(parser, WorkbookStep.class, shapeException.getMessage());
+    failure.initCause(shapeException);
+    return failure;
+  }
+
+  static JacksonException fieldFailure(String fieldName, JacksonException failure) {
+    return failure.prependPath(WorkbookStep.class, fieldName);
+  }
+
+  static String qualifiedFieldName(
+      String fieldName, @Nullable JsonNode node, Class<?> targetType, Exception failure) {
+    String nestedFieldPath = nestedFieldPath(node, targetType, failure);
     if (nestedFieldPath.isEmpty()) {
       return fieldName;
     }
@@ -42,49 +56,36 @@ final class WorkbookStepJsonFailurePathSupport {
             WorkbookStep.class,
             Objects.requireNonNullElse(exception.getMessage(), "Invalid request shape"));
     failure.initCause(exception);
-    return failure.prependPath(WorkbookStep.class, qualifiedFieldName(fieldName, exception));
+    return fieldFailure(qualifiedFieldName(fieldName, null, Object.class, exception), failure);
   }
 
-  static JacksonException wrapJacksonFailure(String fieldName, JacksonException exception) {
+  static JacksonException wrapJacksonFailure(
+      String fieldName, JsonNode node, Class<?> targetType, JacksonException exception) {
     return exception.prependPath(
         WorkbookStep.class,
-        exception.getPath().isEmpty() ? qualifiedFieldName(fieldName, exception) : fieldName);
+        exception.getPath().isEmpty()
+            ? qualifiedFieldName(fieldName, node, targetType, exception)
+            : fieldName);
   }
 
-  private static String nestedFieldPath(Exception failure) {
+  private static String nestedFieldPath(
+      @Nullable JsonNode node, Class<?> targetType, Exception failure) {
     if (failure instanceof JacksonException jacksonException) {
       String renderedPath = renderPath(jacksonException.getPath());
       if (!renderedPath.isEmpty()) {
         return renderedPath;
       }
-      String inferredFromOriginalMessage = inferFieldPath(jacksonException.getOriginalMessage());
-      if (!inferredFromOriginalMessage.isEmpty()) {
-        return inferredFromOriginalMessage;
+      if (node != null) {
+        return GridGrindJsonRequestProblemDetector.detect(node, targetType, jacksonException)
+            .flatMap(problem -> problem.jsonPath())
+            .orElse("");
       }
     }
-    return inferFieldPath(Objects.requireNonNullElse(failure.getMessage(), ""));
-  }
-
-  private static String inferFieldPath(String message) {
-    String normalized = Objects.requireNonNullElse(message, "").trim();
-    if (normalized.isEmpty()) {
-      return "";
-    }
-    var publicPath = GridGrindRequestProblemSupport.jsonPathFromMessage(normalized);
-    if (publicPath.isPresent()) {
-      return publicPath.orElseThrow();
-    }
-    Matcher fieldMessage = FIELD_MESSAGE_PATTERN.matcher(normalized);
-    if (fieldMessage.matches()) {
-      return fieldMessage.group(1);
-    }
-    Matcher missingRequiredField = RAW_MISSING_REQUIRED_FIELD_PATTERN.matcher(normalized);
-    if (missingRequiredField.find()) {
-      return missingRequiredField.group(1);
-    }
-    Matcher missingTypeIdField = RAW_MISSING_TYPE_ID_FIELD_PATTERN.matcher(normalized);
-    if (missingTypeIdField.find()) {
-      return missingTypeIdField.group(1);
+    if (failure instanceof RequestProblemSource requestProblemSource) {
+      Optional<String> jsonPath = requestProblemSource.requestProblem().jsonPath();
+      if (jsonPath.isPresent()) {
+        return jsonPath.orElseThrow();
+      }
     }
     return "";
   }

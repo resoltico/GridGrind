@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.LinkedHashSet;
@@ -59,7 +60,7 @@ final class GridGrindTaskPlanner {
 
   private static ObjectNode requestTemplateFor(TaskEntry task, WorkbookPlan templatePlan) {
     ObjectNode requestTemplate =
-        dev.erst.gridgrind.contract.json.GridGrindJson.requestTree(templatePlan);
+        dev.erst.gridgrind.contract.json.GridGrindJsonOutput.requestTree(templatePlan);
     requestTemplate.set("steps", stepsFor(task));
     return requestTemplate;
   }
@@ -111,15 +112,17 @@ final class GridGrindTaskPlanner {
       TaskEntry task, WorkbookPlan.WorkbookSource source) {
     return switch (task.executionProfile().persistenceMode()) {
       case NONE -> new WorkbookPlan.WorkbookPersistence.None();
-      case SAVE_AS -> new WorkbookPlan.WorkbookPersistence.SaveAs(defaultOutputPath(task.id()));
-      case OVERWRITE_SOURCE -> {
+      case SAVE_AS ->
+          new WorkbookPlan.WorkbookPersistence.SaveAs(
+              defaultOutputPath(task.id()), WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
+      case OVERWRITE -> {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile)) {
           throw new IllegalStateException(
               "Task "
                   + task.id()
                   + " cannot plan OVERWRITE persistence without an EXISTING source");
         }
-        yield new WorkbookPlan.WorkbookPersistence.OverwriteSource();
+        yield new WorkbookPlan.WorkbookPersistence.Overwrite();
       }
     };
   }
@@ -127,7 +130,7 @@ final class GridGrindTaskPlanner {
   static WorkbookPlan decodedRequest(String taskId, ObjectNode requestTemplate) {
     try {
       ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-      GridGrindJson.writeCatalogLookupValue(buffer, requestTemplate);
+      GridGrindJsonOutput.writeCatalogLookupValue(buffer, requestTemplate);
       return GridGrindJson.readRequest(buffer.toByteArray());
     } catch (IOException | RuntimeException exception) {
       throw new IllegalStateException(

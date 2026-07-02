@@ -6,13 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MissingRequiredField;
 import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestInputs;
@@ -62,7 +62,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
-                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\" }",
+                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\": \"REJECT\" }",
                 "[]")
             .getBytes(StandardCharsets.UTF_8);
 
@@ -97,7 +97,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
-                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\" }",
+                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\": \"REJECT\" }",
                 "[]")
             .getBytes(StandardCharsets.UTF_8);
 
@@ -128,7 +128,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"NEW\" }",
-                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\" }",
+                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\": \"REJECT\" }",
                 "[]")
             .getBytes(StandardCharsets.UTF_8);
 
@@ -181,6 +181,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         report.problems().stream().map(GridGrindProblemDetail.Problem::message).toList();
     assertTrue(problemMessages.contains("Missing required field 'source.path'"));
     assertTrue(problemMessages.contains("Missing required field 'persistence.path'"));
+    assertTrue(problemMessages.contains("Missing required field 'persistence.ifExists'"));
     assertFalse(problemMessages.contains("Missing required field 'execution'"));
     assertFalse(problemMessages.contains("Missing required field 'formulaEnvironment'"));
   }
@@ -373,10 +374,14 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
     byte[] requestBytes =
         """
-        {
-          "protocolVersion": "V1",
-          "source": { "type": "NEW" },
-          "persistence": { "type": "SAVE_AS", "path": true },
+	        {
+	          "protocolVersion": "V1",
+	          "source": { "type": "NEW" },
+	          "persistence": {
+	            "type": "SAVE_AS",
+	            "path": true,
+	            "ifExists": "REJECT"
+	          },
           "execution": {
             "mode": { "type": "FULL_XSSF" },
             "journal": { "level": "NORMAL" },
@@ -410,6 +415,51 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         report.problems().stream()
             .map(GridGrindProblemDetail.Problem::message)
             .anyMatch("Missing required field 'persistence.path'"::equals));
+  }
+
+  @Test
+  void diagnoseDoesNotTreatNonObjectSaveAsPersistenceAsMissingIfExists() throws IOException {
+    RecordingDoctor doctor =
+        new RecordingDoctor((request, inputs) -> RequestDoctorReport.clean(summaryFor(request)));
+    byte[] requestBytes =
+        """
+        {
+          "protocolVersion": "V1",
+          "source": { "type": "NEW" },
+          "persistence": [],
+          "execution": {
+            "mode": { "type": "FULL_XSSF" },
+            "journal": { "level": "NORMAL" },
+            "calculation": {
+              "strategy": { "type": "DO_NOT_CALCULATE" },
+              "markRecalculateOnOpen": false
+            }
+          },
+          "formulaEnvironment": {
+            "externalWorkbooks": [],
+            "missingWorkbookPolicy": "ERROR",
+            "udfToolpacks": []
+          },
+          "steps": []
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
+
+    RequestDoctorReport report =
+        new CliDoctorRequestAnalyzer(doctor)
+            .diagnose(
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                requestBytes,
+                InputStream.nullInputStream());
+
+    assertFalse(report.valid());
+    assertEquals(0, doctor.directCalls());
+    assertFalse(
+        report.problems().stream()
+            .map(GridGrindProblemDetail.Problem::message)
+            .anyMatch("Missing required field 'persistence.ifExists'"::equals));
   }
 
   @Test
@@ -698,9 +748,9 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     byte[] requestBytes =
         requestJson(
                 "{ \"type\": \"EXISTING\", \"path\": \"input.xlsx\" }",
-                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\" }",
+                "{ \"type\": \"SAVE_AS\", \"path\": \"output.xlsx\", \"ifExists\": \"REJECT\" }",
                 """
-                [
+	                [
                   {
                     "stepId": "set-title",
                     "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
@@ -747,7 +797,7 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   private static GridGrindProblemDetail.Problem missingFieldProblem(String jsonPath) {
     return GridGrindProblems.fromException(
         new InvalidRequestShapeException(
-            GridGrindRequestProblemSupport.missingRequiredFieldMessage(jsonPath),
+            new MissingRequiredField(jsonPath),
             Optional.of(jsonPath),
             Optional.empty(),
             Optional.empty(),
@@ -758,19 +808,21 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
   }
 
   private static String sourceType(WorkbookPlan request) {
-    return requiredString(GridGrindJson.requestTree(request).path("source").path("type"));
+    return requiredString(GridGrindJsonOutput.requestTree(request).path("source").path("type"));
   }
 
   private static String persistenceType(WorkbookPlan request) {
-    return requiredString(GridGrindJson.requestTree(request).path("persistence").path("type"));
+    return requiredString(
+        GridGrindJsonOutput.requestTree(request).path("persistence").path("type"));
   }
 
   private static String inputPath(WorkbookPlan request) {
-    return optionalString(GridGrindJson.requestTree(request).path("source").path("path"));
+    return optionalString(GridGrindJsonOutput.requestTree(request).path("source").path("path"));
   }
 
   private static String outputPath(WorkbookPlan request) {
-    return optionalString(GridGrindJson.requestTree(request).path("persistence").path("path"));
+    return optionalString(
+        GridGrindJsonOutput.requestTree(request).path("persistence").path("path"));
   }
 
   private static String requiredString(JsonNode node) {

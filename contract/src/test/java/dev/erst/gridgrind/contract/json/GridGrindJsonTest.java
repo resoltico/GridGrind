@@ -61,7 +61,8 @@ class GridGrindJsonTest {
     assertTrue(plan.execution().isDefault());
     assertEquals(ExecutionJournalLevel.SUMMARY, plan.journalLevel());
     assertTrue(plan.formulaEnvironment().isEmpty());
-    String serialized = new String(GridGrindJson.writeRequestBytes(plan), StandardCharsets.UTF_8);
+    String serialized =
+        new String(GridGrindJsonOutput.writeRequestBytes(plan), StandardCharsets.UTF_8);
     assertFalse(serialized.contains("\"execution\""));
     assertFalse(serialized.contains("\"formulaEnvironment\""));
   }
@@ -245,6 +246,89 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void derivesJsonPathForMissingSaveAsIfExists() {
+    IllegalArgumentException missingIfExists =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "SAVE_AS", "path": "budget.xlsx" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertInstanceOf(InvalidRequestShapeException.class, missingIfExists);
+    assertInstanceOf(PayloadException.class, missingIfExists);
+    PayloadException payloadException = (PayloadException) missingIfExists;
+    assertEquals("Missing required field 'persistence.ifExists'", missingIfExists.getMessage());
+    assertEquals(Optional.of("persistence.ifExists"), payloadException.jsonPath());
+  }
+
+  @Test
+  void derivesPreciseJsonPathForNonXlsxWorkbookPathViolations() {
+    InvalidRequestException invalidSourcePath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "EXISTING", "path": "budget.txt" },
+                      "persistence": { "type": "NONE" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException invalidPersistencePath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "SAVE_AS", "path": "budget.txt", "ifExists": "REJECT" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestException invalidExternalWorkbookPath =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "source": { "type": "NEW" },
+                      "persistence": { "type": "NONE" },
+                      "formulaEnvironment": {
+                        "externalWorkbooks": [
+                          { "workbookName": "Rates.xlsx", "path": "rates.txt" }
+                        ],
+                        "missingWorkbookPolicy": "ERROR",
+                        "udfToolpacks": []
+                      },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(Optional.of("source.path"), invalidSourcePath.jsonPath());
+    assertEquals(Optional.of("persistence.path"), invalidPersistencePath.jsonPath());
+    assertEquals(
+        Optional.of("formulaEnvironment.externalWorkbooks[0].path"),
+        invalidExternalWorkbookPath.jsonPath());
+  }
+
+  @Test
   @SuppressWarnings("StringConcatToTextBlock")
   void roundTripsRequestsResponsesAndCatalogs() throws IOException {
     WorkbookPlan request =
@@ -284,11 +368,13 @@ class GridGrindJsonTest {
                         1, List.of("Budget"), "Budget", List.of("Budget"), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
 
-    assertEquals(request, GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request)));
-    assertEquals(response, GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(response)));
+    assertEquals(
+        request, GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
+    assertEquals(
+        response, GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(response)));
     assertEquals(
         catalog,
-        GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog)));
+        GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog)));
   }
 
   @Test
@@ -296,6 +382,8 @@ class GridGrindJsonTest {
     GridGrindResponse resolveInputsFailure =
         GridGrindResponses.failure(
             GridGrindProtocolVersion.V1,
+            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+                "out/report.xlsx", new GridGrindResponsePersistence.WriteResult.NotWritten()),
             new GridGrindProblemDetail.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
@@ -333,10 +421,10 @@ class GridGrindJsonTest {
 
     assertEquals(
         resolveInputsFailure,
-        GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(resolveInputsFailure)));
+        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(resolveInputsFailure)));
     assertEquals(
         calculationFailure,
-        GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(calculationFailure)));
+        GridGrindJson.readResponse(GridGrindJsonOutput.writeResponseBytes(calculationFailure)));
   }
 
   private static TextSourceInput text(String value) {
@@ -371,7 +459,7 @@ class GridGrindJsonTest {
             """
                 .getBytes(StandardCharsets.UTF_8));
 
-    byte[] serialized = GridGrindJson.writeRequestBytes(request);
+    byte[] serialized = GridGrindJsonOutput.writeRequestBytes(request);
     String serializedJson = new String(serialized, StandardCharsets.UTF_8);
 
     assertFalse(serializedJson.contains("\"default\""));
@@ -472,7 +560,7 @@ class GridGrindJsonTest {
   }
 
   @Test
-  void rejectsUnknownTypeValuesAndFractionalIntegersWithProductOwnedMessages() {
+  void rejectsUnknownTypeValuesNonStringTypeIdsAndFractionalIntegersWithProductOwnedMessages() {
     InvalidRequestShapeException unknownType =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -486,6 +574,24 @@ class GridGrindJsonTest {
                           "stepId": "bad",
                           "target": { "type": "WORKBOOK_CURRENT" },
                           "query": { "type": "NO_SUCH_QUERY" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException nonStringType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "bad-shape",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "query": { "type": 1 }
                         }
                       ]
                     }
@@ -517,6 +623,9 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertEquals("Unknown type value 'NO_SUCH_QUERY'", unknownType.getMessage());
+    assertEquals(Optional.of("steps[0].query.type"), unknownType.jsonPath());
+    assertEquals("Field 'type' must be a string", nonStringType.getMessage());
+    assertEquals(Optional.of("steps[0].query.type"), nonStringType.jsonPath());
     assertEquals("Field 'rowCount' must be an integer value", fractionalInteger.getMessage());
     assertEquals(Optional.of("steps[0].target.rowCount"), fractionalInteger.jsonPath());
   }
@@ -638,7 +747,8 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertEquals("Missing required field 'type'", missingAssertionType.getMessage());
+    assertEquals(
+        "Missing required field 'steps[0].assertion.type'", missingAssertionType.getMessage());
     assertEquals(Optional.of("steps[0].assertion.type"), missingAssertionType.jsonPath());
   }
 
@@ -675,7 +785,7 @@ class GridGrindJsonTest {
   @Test
   void defaultsDataValidationPayloadsThatOmitValidationBooleans() throws IOException {
     ObjectNode missingAllowBlank =
-        GridGrindJson.requestTree(
+        GridGrindJsonOutput.requestTree(
             GridGrindJson.readRequest(
                 """
                 {
@@ -719,7 +829,7 @@ class GridGrindJsonTest {
                 """
                     .getBytes(StandardCharsets.UTF_8)));
     ObjectNode missingSuppressDropDownArrow =
-        GridGrindJson.requestTree(
+        GridGrindJsonOutput.requestTree(
             GridGrindJson.readRequest(
                 """
                 {

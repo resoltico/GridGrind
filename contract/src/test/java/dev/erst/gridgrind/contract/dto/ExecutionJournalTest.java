@@ -17,7 +17,6 @@ class ExecutionJournalTest {
             Optional.of("plan-1"),
             ExecutionJournalLevel.NORMAL,
             new ExecutionJournal.SourceSummary(Optional.of("NEW"), Optional.empty()),
-            new ExecutionJournal.PersistenceSummary(Optional.of("NONE"), Optional.empty()),
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
             ExecutionJournal.Phase.notStarted(),
@@ -163,7 +162,7 @@ class ExecutionJournalTest {
   }
 
   @Test
-  void sourceAndPersistenceSummariesRequireTypeWhenPathIsPresent() {
+  void sourceSummariesRequireTypeWhenPathIsPresent() {
     assertEquals(
         "type must be present when path is present",
         assertThrows(
@@ -171,14 +170,6 @@ class ExecutionJournalTest {
                 () ->
                     new ExecutionJournal.SourceSummary(
                         Optional.empty(), Optional.of("/tmp/source.xlsx")))
-            .getMessage());
-    assertEquals(
-        "type must be present when path is present",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ExecutionJournal.PersistenceSummary(
-                        Optional.empty(), Optional.of("/tmp/output.xlsx")))
             .getMessage());
   }
 

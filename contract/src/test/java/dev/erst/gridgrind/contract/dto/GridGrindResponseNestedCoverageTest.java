@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.excel.foundation.AnalysisFindingCode;
@@ -23,21 +24,19 @@ class GridGrindResponseNestedCoverageTest {
     dev.erst.gridgrind.contract.dto.CellReport textCell =
         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
             "A1",
-            "STRING",
-            "Owner",
-            style(),
+            Optional.of("Owner"),
+            Optional.of(style()),
             Optional.empty(),
             Optional.empty(),
-            "Owner",
+            Optional.of("Owner"),
             Optional.of(List.of(new RichTextRunReport("Owner", style().font()))));
     WindowRowReport row = new WindowRowReport(0, List.of(textCell));
-    WindowReport window = new WindowReport("Budget", "A1", 1, 1, List.of(row));
+    WindowReport window =
+        new WindowReport.Dense("Budget", "A1", new WindowDimensionsReport(1, 1), List.of(row));
     assertEquals("Budget", window.sheetName());
     assertEquals(
         "rowCount must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new WindowReport("Budget", "A1", 0, 1, List.of(row)))
+        assertThrows(IllegalArgumentException.class, () -> new WindowDimensionsReport(0, 1))
             .getMessage());
 
     SheetLayoutReport layout =
@@ -72,11 +71,19 @@ class GridGrindResponseNestedCoverageTest {
             1,
             List.of(
                 new SchemaColumnReport(
-                    0, "A", "Owner", 1, 0, List.of(new TypeCountReport("STRING", 1)), "STRING")));
+                    0, "A", "Owner", 1, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT")));
     assertEquals(1, schema.columns().size());
+    SchemaColumnReport optionalDominantTypeColumn =
+        new SchemaColumnReport(
+            1, "B", "Cost", 1, 0, List.of(new TypeCountReport("NUMBER", 1)), null);
+    assertNull(optionalDominantTypeColumn.dominantType());
     assertEquals(
         "count must be greater than 0",
-        assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("STRING", 0))
+        assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("TEXT", 0))
+            .getMessage());
+    assertEquals(
+        "type must be one of TEXT, NUMBER, BOOLEAN, ERROR, DATE, TIME, DATE_TIME but was STRING",
+        assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("STRING", 1))
             .getMessage());
 
     NamedRangeSurfaceReport surface =
@@ -147,52 +154,43 @@ class GridGrindResponseNestedCoverageTest {
     dev.erst.gridgrind.contract.dto.CellReport.NumberReport numberCell =
         new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
             "A1",
-            "NUMERIC",
-            "1",
-            style(),
+            java.util.Optional.of("1"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            1.0d);
+            java.util.Optional.of(1.0d),
+            java.util.Optional.empty());
     dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
             "A2",
-            "BOOLEAN",
-            "TRUE",
-            style(),
+            java.util.Optional.of("TRUE"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            true);
+            java.util.Optional.of(true));
     dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
         new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
             "A3",
-            "ERROR",
-            "#DIV/0!",
-            style(),
+            java.util.Optional.of("#DIV/0!"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            "#DIV/0!");
+            java.util.Optional.of("#DIV/0!"));
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formulaCell =
         new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
             "A4",
-            "FORMULA",
-            "1",
-            style(),
+            java.util.Optional.of("1"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            "SUM(A1:A2)",
-            new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
-                "A4",
-                "NUMERIC",
-                "1",
-                style(),
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
-                1.0d));
+            java.util.Optional.of("SUM(A1:A2)"),
+            java.util.Optional.of(
+                new CellValueReport.NumberValue(1.0d, java.util.Optional.empty())));
 
-    assertEquals(1.0d, numberCell.numberValue());
-    assertEquals(true, booleanCell.booleanValue());
-    assertEquals("#DIV/0!", errorCell.errorValue());
-    assertEquals("SUM(A1:A2)", formulaCell.formula());
+    assertEquals(1.0d, numberCell.numberValue().orElseThrow());
+    assertEquals(true, booleanCell.booleanValue().orElseThrow());
+    assertEquals("#DIV/0!", errorCell.errorValue().orElseThrow());
+    assertEquals("SUM(A1:A2)", formulaCell.formula().orElseThrow());
     assertInstanceOf(
         NamedRangeReport.FormulaReport.class,
         new NamedRangeReport.FormulaReport("Expr", new NamedRangeScope.Workbook(), "SUM(A1:A2)"));

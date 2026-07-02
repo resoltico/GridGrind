@@ -12,42 +12,36 @@ final class GridGrindCliSurfaceSynopsisSections {
     return new CliSurface.CliSection(
         "Usage",
         List.of(
-            "gridgrind --request <path> [--temp-root <path>] [--response <path>]"
-                + " [--format <text|structured>]",
+            "gridgrind --request <path> [--temp-root <path>] [--response <path>] [--pretty]",
             "gridgrind --execution-root <path> [--temp-root <path>] [--response <path>]"
-                + " [--format <text|structured>]"
+                + " [--pretty]"
                 + " < request.json",
             "gridgrind --doctor-request --request <path> [--temp-root <path>]"
-                + " [--response <path>] [--format <text|structured>]",
+                + " [--response <path>] [--pretty]",
             "gridgrind --doctor-request --execution-root <path> [--temp-root <path>]"
-                + " [--response <path>] [--format <text|structured>] < request.json",
-            "gridgrind --print-request-template [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --print-example-catalog [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --print-task-catalog [--lookup <id>] [--response <path>]"
-                + " [--format <text|structured>]",
-            "gridgrind --print-task-plan --lookup <id> [--response <path>] [--format"
-                + " <text|structured>]",
+                + " [--response <path>] [--pretty] < request.json",
+            "gridgrind --print-request-template [--response <path>] [--pretty]",
+            "gridgrind --print-example-catalog [--response <path>] [--pretty]",
+            "gridgrind --print-task-catalog [--lookup <id>] [--response <path>] [--pretty]",
+            "gridgrind --print-task-plan --lookup <id> [--response <path>] [--pretty]",
             "gridgrind --print-task-keyword-match --query <text> [--response <path>]"
-                + " [--format <text|structured>]",
-            "gridgrind --print-protocol-catalog [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --print-protocol-catalog --full [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --print-protocol-catalog --lookup <id>|<group>:<id> [--response"
-                + " <path>] [--format <text|structured>]",
+                + " [--pretty]",
+            "gridgrind --print-protocol-catalog [--response <path>] [--pretty]",
+            "gridgrind --print-protocol-catalog --lookup <lookup-id> [--response"
+                + " <path>] [--pretty]",
             "gridgrind --print-protocol-catalog --search <text> [--response <path>]"
-                + " [--format <text|structured>]",
-            "gridgrind --print-example --lookup <id> [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --help | -h | help [--response <path>] [--format <text|structured>]",
+                + " [--pretty]",
+            "gridgrind --print-example --lookup <id> [--response <path>] [--pretty]",
+            "gridgrind --help | -h | help [--response <path>] [--format <text|structured>]"
+                + " [--pretty]",
             "gridgrind --help-protocol | help-protocol [--response <path>] [--format"
-                + " <text|structured>]",
+                + " <text|structured>] [--pretty]",
             "gridgrind --help-guidance | help-guidance [--response <path>] [--format"
-                + " <text|structured>]",
-            "gridgrind --version | version [--response <path>] [--format" + " <text|structured>]",
-            "gridgrind --license | license [--response <path>] [--format" + " <text|structured>]"));
+                + " <text|structured>] [--pretty]",
+            "gridgrind --version | version [--response <path>] [--format <text|structured>]"
+                + " [--pretty]",
+            "gridgrind --license | license [--response <path>] [--format <text|structured>]"
+                + " [--pretty]"));
   }
 
   static CliSurface.CliWorkflowSection workflows() {
@@ -65,7 +59,7 @@ final class GridGrindCliSurfaceSynopsisSections {
                         + " --print-protocol-catalog --response protocol-index.json",
                     "Search exact protocol shapes: gridgrind --print-protocol-catalog"
                         + " --search \"chart title\" --response catalog-search.json",
-                    "Resolve one exact catalog group: gridgrind --print-protocol-catalog"
+                    "Resolve one scoped catalog group: gridgrind --print-protocol-catalog"
                         + " --lookup calculationStrategyTypes --response"
                         + " calculation-strategy-types.json")),
             new CliSurface.WorkflowEntry(
@@ -91,6 +85,7 @@ final class GridGrindCliSurfaceSynopsisSections {
                         + " pointing source.path at the .xlsx file you want to inspect"
                         + " or mutate.",
                     "Use persistence.type=SAVE_AS when the workbook should be written,"
+                        + " together with one explicit SAVE_AS.ifExists policy,"
                         + " and persistence.type=NONE when the run is read-only or"
                         + " diagnostic."))));
   }
@@ -102,8 +97,9 @@ final class GridGrindCliSurfaceSynopsisSections {
             "GridGrind executes ordered steps in sequence, then saves the workbook (unless"
                 + " persistence is NONE); if any step fails, no workbook is written.",
             "source.type=NEW starts with zero sheets; ENSURE_SHEET creates the first" + " sheet.",
-            "execution is explicit; the request supplies execution.mode,"
-                + " execution.journal, and execution.calculation."));
+            "execution is optional; omit it for FULL_XSSF / SUMMARY / DO_NOT_CALCULATE,"
+                + " or supply only the nested execution.mode, execution.journal, and"
+                + " execution.calculation fields that need non-default behavior."));
   }
 
   static CliSurface.CliDefinitionSection limits() {
@@ -116,9 +112,18 @@ final class GridGrindCliSurfaceSynopsisSections {
                 "Sheet names",
                 "1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing" + " apostrophes."),
             new CliSurface.DefinitionEntry(
-                "GET_WINDOW cell count", "rowCount * columnCount must not exceed 250,000."),
+                "GET_CELLS addresses",
+                "addresses must not exceed 250,000; the cap keys off the exact returned cell"
+                    + " count."),
             new CliSurface.DefinitionEntry(
-                "GET_SHEET_SCHEMA cells", "rowCount * columnCount must not exceed 250,000."),
+                "GET_WINDOW cell count",
+                "rowCount * columnCount must not exceed 250,000; sparse output lowers"
+                    + " blank-heavy payloads but the request cap still keys off the full"
+                    + " rectangle."),
+            new CliSurface.DefinitionEntry(
+                "GET_SHEET_SCHEMA cells",
+                "rowCount * columnCount must not exceed 250,000 because schema inference"
+                    + " still examines the full rectangular sample."),
             new CliSurface.DefinitionEntry(
                 "Request JSON size",
                 "request JSON must not exceed 16 MiB ("
@@ -183,7 +188,9 @@ final class GridGrindCliSurfaceSynopsisSections {
                     + " unchanged and creates no partial artifacts."),
             new CliSurface.DefinitionEntry(
                 "DATE / DATE_TIME inputs",
-                "stored as numeric serial; GET_CELLS returns declaredType=NUMBER."),
+                "stored as numeric serial; default VALUE readback keeps type=NUMBER, and the"
+                    + " TEMPORAL facet reveals DATE / TIME / DATE_TIME semantics when that"
+                    + " distinction matters."),
             new CliSurface.DefinitionEntry(
                 "Formula authoring", GridGrindContractText.formulaAuthoringLimitSummary()),
             new CliSurface.DefinitionEntry(
