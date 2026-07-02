@@ -3,8 +3,8 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Missing required field 'kind'
-Input Bytes: 6259
+Message: Missing required field 'steps[5].action.presentation.tabColor.kind'
+Input Bytes: 6286
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

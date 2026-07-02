@@ -19,9 +19,9 @@ class JazzerContractAlignmentTest {
             CellGridInput.Typed.class,
             FuzzDataDecoders.nextProtocolGrid(GridGrindFuzzData.replay(new byte[0]), 2, 2));
 
-    assertEquals(2, gridInput.rows().size());
-    assertEquals(2, gridInput.rows().getFirst().size());
-    assertEquals(new CellInput.Blank(), gridInput.rows().getFirst().getFirst());
+    assertEquals(2, gridInput.cells().size());
+    assertEquals(2, gridInput.cells().getFirst().size());
+    assertEquals(new CellInput.Blank(), gridInput.cells().getFirst().getFirst());
   }
 
   @Test
@@ -31,8 +31,8 @@ class JazzerContractAlignmentTest {
             CellRowInput.Typed.class,
             FuzzDataDecoders.nextProtocolRow(GridGrindFuzzData.replay(new byte[0]), 3));
 
-    assertEquals(3, rowInput.values().size());
-    assertEquals(new CellInput.Blank(), rowInput.values().getFirst());
+    assertEquals(3, rowInput.cells().size());
+    assertEquals(new CellInput.Blank(), rowInput.cells().getFirst());
   }
 
   @Test

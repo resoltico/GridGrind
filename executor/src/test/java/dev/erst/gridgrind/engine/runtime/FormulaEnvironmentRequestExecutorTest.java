@@ -15,7 +15,6 @@ import dev.erst.gridgrind.contract.dto.FormulaUdfFunctionInput;
 import dev.erst.gridgrind.contract.dto.FormulaUdfToolpackInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
@@ -60,7 +59,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
-                            new SheetIntrospectionQuery.GetCells())))));
+                            DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -71,7 +70,8 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
+                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                formula.evaluation().orElseThrow())
             .numberValue());
   }
 
@@ -96,7 +96,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
-                            new SheetIntrospectionQuery.GetCells())))));
+                            DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -107,7 +107,8 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
+                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                formula.evaluation().orElseThrow())
             .numberValue());
   }
 
@@ -136,7 +137,7 @@ class FormulaEnvironmentRequestExecutorTest {
                         inspect(
                             "cells",
                             new CellSelector.ByAddresses("Ops", List.of("B1")),
-                            new SheetIntrospectionQuery.GetCells())))));
+                            DefaultGridGrindRequestExecutorTestSupport.allFacetCellsQuery())))));
 
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         assertInstanceOf(
@@ -147,7 +148,8 @@ class FormulaEnvironmentRequestExecutorTest {
     assertEquals(
         42.0d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
+                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                formula.evaluation().orElseThrow())
             .numberValue());
   }
 
@@ -186,7 +188,8 @@ class FormulaEnvironmentRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(
                         calculateTargets(new CellSelector.QualifiedAddress("Budget", "B1"))),
                     null,
@@ -225,7 +228,8 @@ class FormulaEnvironmentRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(calculateAll()),
                     null,
                     mutations(
@@ -251,7 +255,7 @@ class FormulaEnvironmentRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     executionPolicy(clearFormulaCaches()),
                     null,
                     List.of(),
@@ -263,14 +267,7 @@ class FormulaEnvironmentRequestExecutorTest {
   }
 
   private static String savedPath(GridGrindResponse.Success success) {
-    return switch (success.persistence()) {
-      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
-          savedAs.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
-          overwritten.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
-          throw new AssertionError("Expected the workbook to be persisted");
-    };
+    return DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(success.persistence());
   }
 
   private static ExternalFormulaScenario createExternalFormulaScenario(boolean seedCachedValue)

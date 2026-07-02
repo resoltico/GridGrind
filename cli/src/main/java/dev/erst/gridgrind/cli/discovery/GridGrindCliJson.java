@@ -14,11 +14,22 @@ public final class GridGrindCliJson {
 
   /** Writes one CLI discovery payload to UTF-8 JSON bytes. */
   public static byte[] writeBytes(Object value) throws IOException {
-    return GridGrindCliJsonCodecSupport.writeBytes(value);
+    return writeBytes(value, false);
+  }
+
+  /** Writes one CLI discovery payload to UTF-8 JSON bytes. */
+  public static byte[] writeBytes(Object value, boolean pretty) throws IOException {
+    return GridGrindCliJsonCodecSupport.writeBytes(value, pretty);
   }
 
   /** Writes one CLI discovery payload as JSON without closing the caller-owned output stream. */
   public static void writeValue(OutputStream outputStream, Object value) throws IOException {
-    GridGrindCliJsonCodecSupport.writeValue(outputStream, value);
+    writeValue(outputStream, value, false);
+  }
+
+  /** Writes one CLI discovery payload as JSON without closing the caller-owned output stream. */
+  public static void writeValue(OutputStream outputStream, Object value, boolean pretty)
+      throws IOException {
+    GridGrindCliJsonCodecSupport.writeValue(outputStream, value, pretty);
   }
 }

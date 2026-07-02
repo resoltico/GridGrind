@@ -91,7 +91,7 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
       ExcelCellSnapshot blankEvaluatedFormula = nullEvaluatedCellSheet.cells().snapshotCell("A1");
-      assertEquals("FORMULA", blankEvaluatedFormula.effectiveType());
+      assertEquals("FORMULA", blankEvaluatedFormula.type());
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().number("A1"));
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.cells().bool("A1"));
       assertInstanceOf(

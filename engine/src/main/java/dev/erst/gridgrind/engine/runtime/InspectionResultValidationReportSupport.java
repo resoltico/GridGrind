@@ -141,7 +141,7 @@ final class InspectionResultValidationReportSupport {
             style.italic(),
             style.fontHeight() == null
                 ? null
-                : InspectionResultCellReportSupport.toFontHeightReport(style.fontHeight()),
+                : InspectionResultCellStyleReportSupport.toFontHeightReport(style.fontHeight()),
             Optional.ofNullable(style.fontColor()),
             style.underline(),
             style.strikeout(),

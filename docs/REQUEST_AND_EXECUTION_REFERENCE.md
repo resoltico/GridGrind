@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-06-29"
+updated: "2026-07-01"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -152,9 +152,9 @@ is present, the nested fields below stay explicit on the wire.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `externalWorkbooks` | Yes | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. Each `path` follows the same request-owned path rule described above. Use `[]` when no external workbook bindings are needed. |
-| `missingWorkbookPolicy` | Yes | `ERROR` or `USE_CACHED_VALUE`. |
-| `udfToolpacks` | Yes | Named collections of template-backed UDFs. Use `[]` when no UDF toolpacks are needed. |
+| `externalWorkbooks` | No | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. Each `path` follows the same request-owned path rule described above. Defaults to `[]` when omitted. |
+| `missingWorkbookPolicy` | No | `ERROR` or `USE_CACHED_VALUE`. Defaults to `ERROR` when omitted. |
+| `udfToolpacks` | No | Named collections of template-backed UDFs. Defaults to `[]` when omitted. |
 
 For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 `minimumArgumentCount`. `formulaTemplate` may reference `ARG1`, `ARG2`, and higher placeholders.
@@ -163,23 +163,15 @@ For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 
 `execution` is optional at the top level. Omit it when the standard `FULL_XSSF` / `SUMMARY` /
 `DO_NOT_CALCULATE` policy is intended. Supply it when the request needs a non-default execution
-mode, journal level, or calculation policy. When the block is present, the nested fields below
-stay explicit on the wire.
+mode, journal level, or calculation policy. When the block is present, each nested field may still
+be omitted to keep its own default, so callers can send only the execution axis they want to
+override.
 
 ```json
 {
   "execution": {
-    "mode": {
-      "type": "EVENT_READ"
-    },
     "journal": {
       "level": "VERBOSE"
-    },
-    "calculation": {
-      "strategy": {
-        "type": "DO_NOT_CALCULATE"
-      },
-      "markRecalculateOnOpen": false
     }
   }
 }
@@ -187,9 +179,9 @@ stay explicit on the wire.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `mode` | Yes | Explicit execution-mode variant selection through `type=FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE`. |
-| `journal` | Yes | Explicit structured-journal policy. |
-| `calculation` | Yes | Explicit formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. |
+| `mode` | No | Explicit execution-mode variant selection through `type=FULL_XSSF`, `EVENT_READ`, or `STREAMING_WRITE`. Defaults to `FULL_XSSF` when omitted. |
+| `journal` | No | Explicit structured-journal policy. Defaults to `SUMMARY` when omitted. |
+| `calculation` | No | Explicit formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. Defaults to `DO_NOT_CALCULATE` with `markRecalculateOnOpen=false` when omitted. |
 
 - `execution.mode.type: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
@@ -223,20 +215,30 @@ stay explicit on the wire.
 
 ### Response Journal
 
-Every success and failure response includes a structured `journal` object:
+Every success and failure response includes one top-level `persistence` outcome plus a structured
+`journal` object. Persist-workbook failures keep that save outcome at the response root; their
+`problem.context` adds `sourceWorkbookPath` or `persistencePath` directly instead of nesting a
+second `persistence` object. The excerpt below focuses on that canonical persistence outcome and
+the journal telemetry it travels with:
 
 ```json
 {
+  "status": "SUCCEEDED",
+  "protocolVersion": "V1",
+  "persistence": {
+    "type": "SAVE_AS",
+    "requestedPath": "out/budget-reviewed.xlsx",
+    "write": {
+      "status": "WRITTEN",
+      "executionPath": "/work/out/budget-reviewed.xlsx"
+    }
+  },
   "journal": {
     "planId": "budget-pass",
     "level": "NORMAL",
     "source": {
       "type": "EXISTING",
       "path": "budget.xlsx"
-    },
-    "persistence": {
-      "type": "SAVE_AS",
-      "path": "out/budget-reviewed.xlsx"
     },
     "validation": {
       "status": "SUCCEEDED",
@@ -303,14 +305,14 @@ Every success and failure response includes a structured `journal` object:
         "outcome": "SUCCEEDED"
       }
     ],
-    "warnings": [],
     "outcome": {
       "status": "SUCCEEDED",
       "plannedStepCount": 1,
       "completedStepCount": 1,
       "durationMillis": 29
     }
-  }
+  },
+  "warnings": []
 }
 ```
 
@@ -318,6 +320,7 @@ Every success and failure response includes a structured `journal` object:
 |:------|:------------|
 | `planId` | Caller-supplied plan correlation ID when present. When omitted in the request, the response journal omits it too. |
 | `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
+| `source` | Structured echo of the authored workbook source family and, when applicable, the authored source path string. |
 | `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. `SUMMARY` keeps these phases timestamp-free with `durationMillis=0`; `NORMAL` and `VERBOSE` add observational `startedAt`, `finishedAt`, and non-zero timing where applicable. `NOT_STARTED` and `NOT_REQUESTED` always omit timestamps and use `durationMillis=0`. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
 | `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
@@ -327,6 +330,11 @@ Every success and failure response includes a structured `journal` object:
 `VERBOSE` keeps the full response journal and also streams `events[]` entries live to CLI stderr
 while the request is running as `[gridgrind] <timestamp> <CATEGORY> <detail>` with optional
 `stepIndex=<n>` and `stepId=<id>` suffixes on step-scoped events.
+
+The top-level response `persistence` field is the canonical save outcome. The journal records
+`persistencePhase` timing only; it no longer repeats the intended or actual save target, and
+`problem.context` uses `sourceWorkbookPath` / `persistencePath` fields instead of another nested
+`persistence` block.
 
 ## Coordinate Systems
 
@@ -427,20 +435,23 @@ non-`.xlsx` extension are rejected as invalid requests.
 The response `persistence.type` field always echoes the request `persistence.type` value, making
 it straightforward to correlate request and response: a `SAVE_AS` request yields a `SAVE_AS`
 response, an `OVERWRITE` request yields an `OVERWRITE` response, and a `NONE` request yields a
-`NONE` response.
+`NONE` response. When an `OVERWRITE` request fails before any `EXISTING` source path exists, the
+response still reports `type=OVERWRITE` but omits `sourcePath` rather than inventing one.
 
 ```json
 {
   "type": "SAVE_AS",
-  "path": "path/to/output.xlsx"
+  "path": "path/to/output.xlsx",
+  "ifExists": "REJECT"
 }
 ```
-Write the workbook to the given path, creating parent directories as needed.
+Write the workbook to the given path, creating parent directories as needed. `SAVE_AS.ifExists` is required: use `REJECT` to fail when the destination already exists, or `REPLACE` to allow create-or-replace writes.
 
 ```json
 {
   "type": "SAVE_AS",
   "path": "secured-output.xlsx",
+  "ifExists": "REPLACE",
   "security": {
     "encryption": {
       "password": "GridGrind-2026",
@@ -456,14 +467,15 @@ Write the workbook to the given path, creating parent directories as needed.
 }
 ```
 
-`security.encryption` applies OOXML package encryption to the persisted workbook. Supply both the
-password and the explicit package-encryption `mode`; `AGILE` is the normal choice.
+`security.encryption` applies OOXML package encryption to the persisted workbook. Supply the
+password and optionally set the package-encryption `mode`; `mode` defaults to `AGILE`, which is
+the normal choice.
 
 `security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
-`pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` plus
-`keyPassword` must unlock the selected key entry. Omit `alias` to use the sole keystore entry or
-the first key entry POI can resolve. `pkcs12Path` follows the same request-owned path rule as
-other request file paths.
+`pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` must unlock
+the keystore. `keyPassword` defaults to `keystorePassword`, `digestAlgorithm` defaults to
+`SHA256`, and `alias` may be omitted to use the sole keystore entry or the first key entry POI can
+resolve. `pkcs12Path` follows the same request-owned path rule as other request file paths.
 
 When the CLI reads the request via `--request <path>`, relative persistence `path` values resolve
 from that request file's directory. When the request JSON arrives on stdin, pass
@@ -471,12 +483,41 @@ from that request file's directory. When the request JSON arrives on stdin, pass
 
 The save path must end in `.xlsx`.
 
-The response includes two path fields:
+The response uses one failure-capable save result:
 - `requestedPath` — the literal `path` string from the request.
-- `executionPath` — the absolute normalized path where the file was actually written.
+- `write.status=WRITTEN` plus `write.executionPath` when the file was actually written.
+- `write.status=NOT_WRITTEN` when the run failed before any file write happened.
+
+`ifExists=REJECT` requires the destination path to be absent. `ifExists=REPLACE` enables create-or-replace behavior while preserving the same `requestedPath` versus `executionPath` response split.
 
 They are identical when an absolute path with no `..` segments is supplied. They differ when a
 relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
+
+Successful `SAVE_AS` responses therefore look like:
+
+```json
+{
+  "type": "SAVE_AS",
+  "requestedPath": "out/report.xlsx",
+  "write": {
+    "status": "WRITTEN",
+    "executionPath": "/work/out/report.xlsx"
+  }
+}
+```
+
+If the run fails before persistence, the same `SAVE_AS` intent still appears on the failure
+response, but the write result becomes:
+
+```json
+{
+  "type": "SAVE_AS",
+  "requestedPath": "out/report.xlsx",
+  "write": {
+    "status": "NOT_WRITTEN"
+  }
+}
+```
 
 ```json
 {
@@ -485,7 +526,9 @@ relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 ```
 Overwrite the source file (requires `source.type=EXISTING`). `OVERWRITE` does not accept its own
 `path` field; it always writes back to `source.path`. The response includes `sourcePath` (the
-original source path string) and `executionPath` (the absolute normalized path).
+original source path string) whenever an `EXISTING` source path was available, and otherwise keeps
+`type=OVERWRITE` while omitting `sourcePath`. In both cases it carries the same failure-capable
+`write` result described above.
 
 ```json
 {
@@ -504,8 +547,7 @@ Use `OVERWRITE.security.signature` when persisting mutations to a signed source 
 signed sources can be copied or overwritten without re-signing, but once a signed workbook is
 mutated GridGrind requires explicit signature configuration before it will persist the result.
 
-Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations, assertions, and
-inspections without saving.
+Use `{ "type": "NONE" }` to run mutations, assertions, and inspections without saving.
 
 ---
 

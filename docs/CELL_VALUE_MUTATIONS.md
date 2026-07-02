@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: CELL_VALUE_MUTATIONS
 updated: "2026-05-01"
 route:
@@ -65,7 +65,7 @@ Write a rectangular grid of typed values. The `rows` matrix must exactly match t
 `range`. Row count must equal `range` row span; column count of each row must equal `range`
 column span. Existing style, hyperlink, and comment state on the targeted cells is preserved.
 Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside
-`rows.rows` when you use the canonical `CellGridInput` wrapper with `type: "TYPED"`. Homogeneous
+`rows.cells` when you use the canonical `CellGridInput` wrapper with `type: "TYPED"`. Homogeneous
 grids may use the compact scalar-family encodings instead.
 
 ```json
@@ -78,7 +78,7 @@ grids may use the compact scalar-family encodings instead.
   },
   "action": {
     "type": "SET_RANGE",
-    "rows": { "type": "TYPED", "rows": [
+    "rows": { "type": "TYPED", "cells": [
       [
         {
           "type": "TEXT",

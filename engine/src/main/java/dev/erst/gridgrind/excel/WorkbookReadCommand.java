@@ -123,33 +123,38 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Returns exact cell snapshots for the provided ordered A1 addresses. */
-  record GetCells(String stepId, String sheetName, List<String> addresses)
+  record GetCells(
+      String stepId, String sheetName, List<String> addresses, ExcelCellReadProjection projection)
       implements Introspection {
     public GetCells {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       addresses = copyAddresses(addresses);
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 
   /**
-   * Maximum number of cells ({@code rowCount * columnCount}) permitted in a single window command.
-   * Enforced in both the protocol and engine layers to prevent out-of-memory failures during
-   * cell-grid serialization. See docs/LIMITATIONS.md LIM-001.
+   * Maximum number of factual cells permitted in one cell-returning read surface. Exact-address
+   * reads enforce this as an address-count cap, while rectangular reads enforce it on {@code
+   * rowCount * columnCount}. Enforced in both the protocol and engine layers to prevent
+   * out-of-memory failures during cell-grid serialization. See docs/LIMITATIONS.md LIM-001.
    */
-  int MAX_WINDOW_CELLS = ExcelReadLimits.MAX_WINDOW_CELLS; // LIM-001
+  int MAX_READ_CELLS = ExcelReadLimits.MAX_READ_CELLS; // LIM-001
 
   /** Returns a rectangular window of cell snapshots anchored at the provided top-left address. */
   record GetWindow(
-      String stepId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
+      String stepId,
+      String sheetName,
+      ExcelReadWindow window,
+      ExcelCellReadProjection projection,
+      boolean includeBlanks)
       implements Introspection {
     public GetWindow {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
-      topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
-      requirePositive(rowCount, "rowCount");
-      requirePositive(columnCount, "columnCount");
-      requireWindowSize(rowCount, columnCount);
+      Objects.requireNonNull(window, "window must not be null");
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 
@@ -278,15 +283,13 @@ public sealed interface WorkbookReadCommand
 
   /** Infers a simple column schema from a rectangular window on one sheet. */
   record GetSheetSchema(
-      String stepId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
+      String stepId, String sheetName, ExcelReadWindow window, ExcelCellReadProjection projection)
       implements Surface {
     public GetSheetSchema {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
-      topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
-      requirePositive(rowCount, "rowCount");
-      requirePositive(columnCount, "columnCount");
-      requireWindowSize(rowCount, columnCount);
+      Objects.requireNonNull(window, "window must not be null");
+      Objects.requireNonNull(projection, "projection must not be null");
     }
   }
 
@@ -380,20 +383,6 @@ public sealed interface WorkbookReadCommand
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
     return value;
-  }
-
-  private static void requirePositive(int value, String fieldName) {
-    if (value <= 0) {
-      throw new IllegalArgumentException(fieldName + " must be greater than 0");
-    }
-  }
-
-  private static void requireWindowSize(int rowCount, int columnCount) { // LIM-001
-    long cells = (long) rowCount * columnCount;
-    if (cells > MAX_WINDOW_CELLS) {
-      throw new IllegalArgumentException(
-          "rowCount * columnCount must not exceed " + MAX_WINDOW_CELLS + " but was " + cells);
-    }
   }
 
   private static List<String> copyAddresses(List<String> addresses) {

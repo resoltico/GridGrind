@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.query.CellReadFacet;
+import dev.erst.gridgrind.contract.query.CellReadProjection;
 import dev.erst.gridgrind.contract.query.InspectionAnalysisQuery;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionSurfaceQuery;
@@ -16,7 +18,11 @@ import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.excel.ExcelCellReadFacet;
+import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import java.util.EnumSet;
+import java.util.Set;
 
 /** Converts contract inspection steps into workbook-core read commands. */
 final class InspectionCommandConverter {
@@ -54,19 +60,25 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetArrayFormulas(
               stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
       case SheetIntrospectionQuery.GetCells _ -> {
+        SheetIntrospectionQuery.GetCells getCells = (SheetIntrospectionQuery.GetCells) query;
         SelectorConverter.SheetLocalCellAddresses selection =
             SelectorConverter.toSheetLocalCellAddresses((CellSelector) target);
         yield new WorkbookReadCommand.GetCells(
-            stepId, selection.sheetName(), selection.addresses());
+            stepId,
+            selection.sheetName(),
+            selection.addresses(),
+            toExcelProjection(getCells.resolvedProjection()));
       }
       case SheetIntrospectionQuery.GetWindow _ -> {
+        SheetIntrospectionQuery.GetWindow getWindow = (SheetIntrospectionQuery.GetWindow) query;
         RangeSelector.RectangularWindow selector = (RangeSelector.RectangularWindow) target;
         yield new WorkbookReadCommand.GetWindow(
             stepId,
             selector.sheetName(),
-            selector.topLeftAddress(),
-            selector.rowCount(),
-            selector.columnCount());
+            new dev.erst.gridgrind.excel.ExcelReadWindow(
+                selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
+            toExcelProjection(getWindow.resolvedProjection()),
+            getWindow.includeBlanks());
       }
       case SheetIntrospectionQuery.GetMergedRegions _ ->
           new WorkbookReadCommand.GetMergedRegions(
@@ -129,13 +141,15 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetFormulaSurface(
               stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
       case InspectionSurfaceQuery.GetSheetSchema _ -> {
+        InspectionSurfaceQuery.GetSheetSchema getSheetSchema =
+            (InspectionSurfaceQuery.GetSheetSchema) query;
         RangeSelector.RectangularWindow selector = (RangeSelector.RectangularWindow) target;
         yield new WorkbookReadCommand.GetSheetSchema(
             stepId,
             selector.sheetName(),
-            selector.topLeftAddress(),
-            selector.rowCount(),
-            selector.columnCount());
+            new dev.erst.gridgrind.excel.ExcelReadWindow(
+                selector.topLeftAddress(), selector.rowCount(), selector.columnCount()),
+            toExcelProjection(getSheetSchema.resolvedProjection()));
       }
       case InspectionSurfaceQuery.GetNamedRangeSurface _ ->
           new WorkbookReadCommand.GetNamedRangeSurface(
@@ -174,5 +188,23 @@ final class InspectionCommandConverter {
           dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
     return new dev.erst.gridgrind.excel.customxml.ExcelCustomXmlMappingLocator(
         locator.mapId(), locator.name());
+  }
+
+  private static ExcelCellReadProjection toExcelProjection(CellReadProjection projection) {
+    Set<ExcelCellReadFacet> facets = EnumSet.noneOf(ExcelCellReadFacet.class);
+    for (CellReadFacet facet : projection.facets()) {
+      facets.add(
+          switch (facet) {
+            case VALUE -> ExcelCellReadFacet.VALUE;
+            case STYLE -> ExcelCellReadFacet.STYLE;
+            case FORMAT -> ExcelCellReadFacet.FORMAT;
+            case HYPERLINK -> ExcelCellReadFacet.HYPERLINK;
+            case COMMENT -> ExcelCellReadFacet.COMMENT;
+            case FORMULA -> ExcelCellReadFacet.FORMULA;
+            case RICH_TEXT_RUNS -> ExcelCellReadFacet.RICH_TEXT_RUNS;
+            case TEMPORAL -> ExcelCellReadFacet.TEMPORAL;
+          });
+    }
+    return new ExcelCellReadProjection(facets);
   }
 }

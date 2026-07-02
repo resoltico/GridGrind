@@ -34,6 +34,7 @@ final class ExampleWorkbookPlans {
   }
 
   static WorkbookPlan.WorkbookPersistence.SaveAs saveAs(String path) {
-    return new WorkbookPlan.WorkbookPersistence.SaveAs(path);
+    return new WorkbookPlan.WorkbookPersistence.SaveAs(
+        path, WorkbookPlan.WorkbookPersistence.IfExists.REPLACE);
   }
 }

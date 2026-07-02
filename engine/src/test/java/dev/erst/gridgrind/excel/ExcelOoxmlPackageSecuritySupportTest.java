@@ -47,7 +47,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
           assertInstanceOf(
                   ExcelCellSnapshot.TextSnapshot.class,
                   workbook.sheet("Encrypted").cells().snapshotCell("A1"))
-              .stringValue());
+              .textValue());
 
       WorkbookCoreResult.PackageSecurityResult securityResult =
           assertInstanceOf(

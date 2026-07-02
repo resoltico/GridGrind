@@ -8,6 +8,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.core.exc.StreamConstraintsException;
 import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.exc.InvalidFormatException;
 
 /** Owns public error wording for JSON failures. */
@@ -17,50 +18,59 @@ final class GridGrindJsonProblemMessageSupport {
   static IllegalArgumentException invalidPayload(JacksonException exception) {
     GridGrindJsonPayloadMetadataSupport.PayloadMetadata metadata =
         GridGrindJsonPayloadMetadataSupport.payloadMetadata(exception);
-    Optional<Throwable> validationCause = validationCause(exception);
-    GridGrindJsonPayloadMetadataSupport.PayloadMetadata effectiveMetadata =
-        effectivePayloadMetadata(metadata, validationCause, message(exception));
     if (exception instanceof StreamReadException) {
       return new InvalidJsonException(
           message(exception),
-          effectiveMetadata.jsonPath(),
-          effectiveMetadata.jsonLine(),
-          effectiveMetadata.jsonColumn(),
-          exception);
-    }
-    if (validationCause.isPresent()) {
-      Throwable cause = validationCause.orElseThrow();
-      String publicMessage = publicValidationMessage(exception, cause);
-      GridGrindJsonPayloadMetadataSupport.PayloadMetadata validationMetadata =
-          effectivePayloadMetadata(metadata, Optional.of(cause), publicMessage);
-      if (GridGrindRequestProblemSupport.looksLikeRequestShapeViolation(publicMessage)) {
-        return new InvalidRequestShapeException(
-            publicMessage,
-            validationMetadata.jsonPath(),
-            validationMetadata.jsonLine(),
-            validationMetadata.jsonColumn(),
-            exception);
-      }
-      return new InvalidRequestException(
-          publicMessage,
-          validationMetadata.jsonPath(),
-          validationMetadata.jsonLine(),
-          validationMetadata.jsonColumn(),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
           exception);
     }
     if (exception instanceof DatabindException) {
       return new InvalidRequestShapeException(
-          message(exception),
-          effectiveMetadata.jsonPath(),
-          effectiveMetadata.jsonLine(),
-          effectiveMetadata.jsonColumn(),
+          new MessageShape(message(exception), metadata.jsonPath()),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
           exception);
     }
     return new InvalidJsonException(
         message(exception),
-        effectiveMetadata.jsonPath(),
-        effectiveMetadata.jsonLine(),
-        effectiveMetadata.jsonColumn(),
+        metadata.jsonPath(),
+        metadata.jsonLine(),
+        metadata.jsonColumn(),
+        exception);
+  }
+
+  static IllegalArgumentException invalidPayload(
+      JacksonException exception, JsonNode rootNode, Class<?> targetType) {
+    Objects.requireNonNull(rootNode, "rootNode must not be null");
+    Objects.requireNonNull(targetType, "targetType must not be null");
+    GridGrindJsonPayloadMetadataSupport.PayloadMetadata metadata =
+        GridGrindJsonPayloadMetadataSupport.payloadMetadata(exception);
+    Optional<RequestProblemDescriptor.Shape> structuralProblem =
+        GridGrindJsonRequestProblemDetector.detect(rootNode, targetType, exception);
+    if (structuralProblem.filter(problem -> !(problem instanceof MessageShape)).isPresent()) {
+      RequestProblemDescriptor.Shape requestProblem = structuralProblem.orElseThrow();
+      return new InvalidRequestShapeException(
+          requestProblem,
+          preciseJsonPath(requestProblem, metadata.jsonPath()),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
+          exception);
+    }
+    Optional<Throwable> validationCause = validationCause(exception);
+    if (validationCause.isPresent()) {
+      return invalidValidationCause(exception, metadata, validationCause.orElseThrow());
+    }
+    RequestProblemDescriptor.Shape requestProblem =
+        structuralProblem.orElseGet(
+            () -> new MessageShape(message(exception), metadata.jsonPath()));
+    return new InvalidRequestShapeException(
+        requestProblem,
+        preciseJsonPath(requestProblem, metadata.jsonPath()),
+        metadata.jsonLine(),
+        metadata.jsonColumn(),
         exception);
   }
 
@@ -72,6 +82,9 @@ final class GridGrindJsonProblemMessageSupport {
   }
 
   static String message(Throwable throwable) {
+    if (throwable instanceof RequestProblemSource requestProblemSource) {
+      return GridGrindRequestProblemSupport.message(requestProblemSource.requestProblem());
+    }
     if (throwable instanceof tools.jackson.databind.exc.InvalidTypeIdException invalidTypeId) {
       return GridGrindJsonSubtypeProblemSupport.unknownTypeValueMessage(invalidTypeId);
     }
@@ -90,22 +103,14 @@ final class GridGrindJsonProblemMessageSupport {
         throwable instanceof JacksonException jacksonException
             ? jacksonException.getOriginalMessage()
             : throwable.getMessage();
-    return GridGrindJsonValueProblemSupport.productOwnedJacksonMessage(
-        cleanJacksonMessage(message));
+    return cleanJacksonMessage(message);
   }
 
   static String cleanJacksonMessage(@Nullable String message) {
     if (message == null || message.isBlank()) {
       return "Invalid JSON payload";
     }
-    int startMarkerIndex = message.indexOf(" (start marker at [Source:");
-    String trimmed = startMarkerIndex >= 0 ? message.substring(0, startMarkerIndex) : message;
-    String cleaned =
-        trimmed
-            .replaceAll(" as a subtype of `[^`]+`", "")
-            .replaceAll(" \\(for POJO property '[^']+'\\)", "")
-            .replaceAll(" \\(but could if coercion[^)]*\\)", "")
-            .strip();
+    String cleaned = message.replaceAll("\\s*\\([^()]*\\[Source:.*\\)$", "").strip();
     return cleaned.isBlank() ? "Invalid JSON payload" : cleaned;
   }
 
@@ -116,75 +121,51 @@ final class GridGrindJsonProblemMessageSupport {
           || current instanceof java.time.DateTimeException) {
         return Optional.of(current);
       }
-      if (current instanceof NullPointerException npe && isExplicitNullCheck(npe)) {
-        return Optional.of(current);
-      }
       current = current.getCause();
     }
     return Optional.empty();
   }
 
-  private static boolean isExplicitNullCheck(NullPointerException npe) {
-    String message = npe.getMessage();
-    return message != null && message.endsWith("must not be null");
-  }
-
-  private static String publicValidationMessage(JacksonException exception, Throwable cause) {
-    String causeMessage = message(cause);
-    if (cause instanceof NullPointerException) {
-      String exceptionMessage = message(exception);
-      if (GridGrindRequestProblemSupport.isMissingRequiredFieldMessage(exceptionMessage)) {
-        return exceptionMessage;
-      }
-    }
-    return causeMessage;
-  }
-
-  private static GridGrindJsonPayloadMetadataSupport.PayloadMetadata effectivePayloadMetadata(
+  private static IllegalArgumentException invalidValidationCause(
+      JacksonException exception,
       GridGrindJsonPayloadMetadataSupport.PayloadMetadata metadata,
-      Optional<Throwable> validationCause,
-      String publicMessage) {
+      Throwable cause) {
     Objects.requireNonNull(metadata, "metadata must not be null");
-    Objects.requireNonNull(validationCause, "validationCause must not be null");
+    Objects.requireNonNull(cause, "cause must not be null");
     Optional<PayloadException> payloadCause =
-        validationCause
-            .filter(PayloadException.class::isInstance)
-            .map(PayloadException.class::cast);
-    Optional<String> messagePath =
-        GridGrindRequestProblemSupport.jsonPathFromMessage(publicMessage);
+        cause instanceof PayloadException payloadException
+            ? Optional.of(payloadException)
+            : Optional.empty();
     Optional<String> jsonPath =
-        mergedJsonPath(
-            mergedJsonPath(metadata.jsonPath(), payloadCause.flatMap(PayloadException::jsonPath)),
-            messagePath);
+        GridGrindJsonPathSupport.qualifyPath(
+            metadata.jsonPath(), payloadCause.flatMap(PayloadException::jsonPath));
     Optional<Integer> jsonLine =
         payloadCause.flatMap(PayloadException::jsonLine).or(metadata::jsonLine);
     Optional<Integer> jsonColumn =
         payloadCause.flatMap(PayloadException::jsonColumn).or(metadata::jsonColumn);
-    return new GridGrindJsonPayloadMetadataSupport.PayloadMetadata(jsonPath, jsonLine, jsonColumn);
+    if (cause instanceof InvalidRequestShapeException shapeException) {
+      return new InvalidRequestShapeException(
+          (RequestProblemDescriptor.Shape) shapeException.requestProblem(),
+          jsonPath,
+          jsonLine,
+          jsonColumn,
+          exception);
+    }
+    if (cause instanceof InvalidRequestException requestException) {
+      return new InvalidRequestException(
+          (RequestProblemDescriptor.Invariant) requestException.requestProblem(),
+          jsonPath,
+          jsonLine,
+          jsonColumn,
+          exception);
+    }
+    RequestProblemDescriptor.Invariant requestProblem =
+        new MessageInvariant(message(cause), jsonPath);
+    return new InvalidRequestException(requestProblem, jsonPath, jsonLine, jsonColumn, exception);
   }
 
-  static Optional<String> mergedJsonPath(Optional<String> basePath, Optional<String> detailPath) {
-    Objects.requireNonNull(basePath, "basePath must not be null");
-    Objects.requireNonNull(detailPath, "detailPath must not be null");
-    if (detailPath.isEmpty()) {
-      return basePath;
-    }
-    String detail = detailPath.orElseThrow();
-    if (basePath.isPresent()) {
-      String base = basePath.orElseThrow();
-      if (base.equals(detail)
-          || base.endsWith("." + detail)
-          || (base.endsWith(detail) && detail.startsWith("["))) {
-        return Optional.of(base);
-      }
-      if (isRelativeFieldPath(detail)) {
-        return Optional.of(base + "." + detail);
-      }
-    }
-    return Optional.of(detail);
-  }
-
-  static boolean isRelativeFieldPath(String jsonPath) {
-    return !jsonPath.contains(".") && !jsonPath.contains("[");
+  private static Optional<String> preciseJsonPath(
+      RequestProblemDescriptor requestProblem, Optional<String> metadataJsonPath) {
+    return requestProblem.jsonPath().or(() -> metadataJsonPath);
   }
 }

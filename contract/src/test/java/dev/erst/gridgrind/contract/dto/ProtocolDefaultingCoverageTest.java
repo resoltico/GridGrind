@@ -25,6 +25,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
@@ -147,7 +148,7 @@ class ProtocolDefaultingCoverageTest {
 
   @Test
   void requestConstructorsDefaultWireBooleansWhileRejectingMissingRequiredState() {
-    assertThrows(NullPointerException.class, () -> new CalculationPolicyInput(null, null));
+    assertThrows(NullPointerException.class, () -> new CalculationPolicyInput(null, false));
     assertThrows(NullPointerException.class, () -> ExecutionPolicyInput.mode(null));
     assertThrows(NullPointerException.class, () -> new ExecutionJournalInput(null));
     assertThrows(NullPointerException.class, () -> new FormulaEnvironmentInput(null, null, null));
@@ -165,6 +166,63 @@ class ProtocolDefaultingCoverageTest {
                 text("Use one of the allowed values."),
                 (Boolean) null)
             .showErrorBox());
+  }
+
+  @Test
+  void requestJsonCreatorsApplyCatalogOwnedOmissionDefaults() {
+    JsonMapper mapper = JsonMapper.builder().build();
+
+    ExecutionPolicyInput execution = readJson(mapper, "{}", ExecutionPolicyInput.class);
+    ExecutionJournalInput journal = readJson(mapper, "{}", ExecutionJournalInput.class);
+    CalculationPolicyInput calculation = readJson(mapper, "{}", CalculationPolicyInput.class);
+    FormulaEnvironmentInput formulaEnvironment =
+        readJson(mapper, "{}", FormulaEnvironmentInput.class);
+    OoxmlEncryptionInput encryption =
+        readJson(
+            mapper,
+            """
+            {
+              "password": "persist-pass"
+            }
+            """,
+            OoxmlEncryptionInput.class);
+    OoxmlSignatureInput signature =
+        readJson(
+            mapper,
+            """
+            {
+              "pkcs12Path": "keys/signing.p12",
+              "keystorePassword": "store-pass"
+            }
+            """,
+            OoxmlSignatureInput.class);
+    OoxmlEncryptionInput explicitEncryption =
+        OoxmlEncryptionInput.create("persist-pass", ExcelOoxmlEncryptionMode.STANDARD);
+    OoxmlSignatureInput createdSignatureWithNullOptionals =
+        OoxmlSignatureInput.create(
+            "keys/signing.p12",
+            "store-pass",
+            "key-pass",
+            nullOptional(),
+            ExcelOoxmlSignatureDigestAlgorithm.SHA512,
+            nullOptional());
+
+    assertTrue(execution.isDefault());
+    assertTrue(journal.isDefault());
+    assertTrue(calculation.isDefault());
+    assertTrue(formulaEnvironment.isEmpty());
+    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
+    assertEquals(ExcelOoxmlEncryptionMode.STANDARD, explicitEncryption.mode());
+    assertEquals("store-pass", signature.keyPassword());
+    assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
+    assertEquals(Optional.empty(), signature.alias());
+    assertEquals(Optional.empty(), signature.description());
+    assertEquals("key-pass", createdSignatureWithNullOptionals.keyPassword());
+    assertEquals(
+        ExcelOoxmlSignatureDigestAlgorithm.SHA512,
+        createdSignatureWithNullOptionals.digestAlgorithm());
+    assertEquals(Optional.empty(), createdSignatureWithNullOptionals.alias());
+    assertEquals(Optional.empty(), createdSignatureWithNullOptionals.description());
   }
 
   @Test

@@ -18,9 +18,12 @@ final class GridGrindCliSurfaceRequestSections {
             "planId is optional. When omitted, the response journal omits it.",
             "execution is optional. When omitted, GridGrind uses FULL_XSSF with"
                 + " SUMMARY journaling and DO_NOT_CALCULATE without"
-                + " markRecalculateOnOpen. When supplied, execution.mode is a typed"
-                + " discriminator; choose type=FULL_XSSF, EVENT_READ, or"
-                + " STREAMING_WRITE under the limits above.",
+                + " markRecalculateOnOpen. When supplied, execution may include any"
+                + " subset of execution.mode, execution.journal, and"
+                + " execution.calculation. execution.mode is a typed discriminator"
+                + " when present; choose type=FULL_XSSF, EVENT_READ, or"
+                + " STREAMING_WRITE under the limits above."
+                + " Any omitted nested execution field keeps that same default.",
             "execution.journal.level controls journal detail; SUMMARY is the default and"
                 + " keeps the response stable by omitting timing telemetry."
                 + " VERBOSE also streams live phase events to stderr as timestamped CATEGORY"
@@ -29,10 +32,13 @@ final class GridGrindCliSurfaceRequestSections {
                 + " open-time recalc flags. strategy.type accepts DO_NOT_CALCULATE,"
                 + " EVALUATE_ALL, EVALUATE_TARGETS, and CLEAR_CACHES_ONLY."
                 + " EVALUATE_TARGETS also requires strategy.cells[]."
-                + " markRecalculateOnOpen is independent.",
+                + " Omit execution.calculation entirely, or supply execution.calculation"
+                + " with neither strategy nor markRecalculateOnOpen, to keep the default"
+                + " DO_NOT_CALCULATE / false behavior."
+                + " markRecalculateOnOpen is otherwise independent.",
             "Response telemetry is split intentionally: journal.* captures execution-phase"
-                + " timing and event chronology, while root calculation/warnings/assertions/"
-                + "inspections carry the authoritative outcome payloads.",
+                + " timing and event chronology, while root persistence/calculation/warnings/"
+                + "assertions/inspections carry the authoritative outcome payloads.",
             "NORMAL and VERBOSE journal timings are observational runtime telemetry and vary"
                 + " between runs; assert status/category/detail, not literal timings.",
             "Source-backed text and binary fields support INLINE, UTF8_FILE or FILE, and"
@@ -43,6 +49,7 @@ final class GridGrindCliSurfaceRequestSections {
             "formulaEnvironment is optional. When omitted, GridGrind uses the empty"
                 + " evaluator environment: externalWorkbooks=[],"
                 + " missingWorkbookPolicy=ERROR, udfToolpacks=[]."
+                + " When supplied, omitted nested fields keep those same defaults."
                 + " missingWorkbookPolicy accepts ERROR or USE_CACHED_VALUE;"
                 + " udfToolpacks[] registers named UDF packs for formula evaluation.",
             "array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as"
@@ -87,6 +94,8 @@ final class GridGrindCliSurfaceRequestSections {
                 "--response <path>",
                 "write the primary command output to one new file; parent directories are"
                     + " created, but existing files are never replaced implicitly."
+                    + " JSON-native payloads stay compact by default; pass --pretty when"
+                    + " you want indented JSON."
                     + " Without --response, CLI argument errors and request-content failure"
                     + " reports stay on stderr, while executed GridGrindResponse payloads"
                     + " stay on stdout even when status=FAILED."
@@ -100,8 +109,9 @@ final class GridGrindCliSurfaceRequestSections {
             new CliSurface.DefinitionEntry(
                 "source.type=EXISTING + source.path", "open an existing workbook from that path."),
             new CliSurface.DefinitionEntry(
-                "persistence SAVE_AS.path",
-                "write a new workbook to that path; parent directories are created."),
+                "persistence SAVE_AS.path + ifExists",
+                "write to that path with explicit REJECT-or-REPLACE collision policy;"
+                    + " parent directories are created."),
             new CliSurface.DefinitionEntry(
                 "persistence OVERWRITE", "write back to source.path; no path field is supplied."),
             new CliSurface.DefinitionEntry(
@@ -142,7 +152,14 @@ final class GridGrindCliSurfaceRequestSections {
                 "--format <text|structured>",
                 "Render CLI-owned prose surfaces as text or structured JSON. Help,"
                     + " version, and license default to text; JSON-native execution,"
-                    + " doctor, and discovery payloads remain JSON in either mode."),
+                    + " doctor, request-template, and discovery payloads do not use"
+                    + " --format."),
+            new CliSurface.DefinitionEntry(
+                "--pretty",
+                "Indent JSON output. Execution responses, doctor reports, request templates,"
+                    + " discovery payloads, and structured help/version/license reports are"
+                    + " compact by default and become multi-line JSON when --pretty is"
+                    + " supplied."),
             new CliSurface.DefinitionEntry(
                 "--doctor-request",
                 "Lint one request, preflight source-backed input resolution plus existing"
@@ -166,14 +183,16 @@ final class GridGrindCliSurfaceRequestSections {
                     + " starter.workspaceMode, and starter.requiredWorkspacePaths."),
             new CliSurface.DefinitionEntry(
                 "--lookup <id>",
-                "With --print-example, --print-task-catalog, --print-task-plan, or"
-                    + " --print-protocol-catalog, print one stable entry by id (SET_CELL,"
-                    + " ENSURE_SHEET, …), one nested/plain type-group descriptor by group"
-                    + " name (cellInputTypes, calculationStrategyTypes, …), or one"
-                    + " top-level category array by name (mutationActionTypes,"
-                    + " assertionTypes, inspectionQueryTypes, sourceTypes,"
-                    + " persistenceTypes, stepTypes). Qualify as <category>:<id>"
-                    + " (e.g. mutationActionTypes:SET_CELL) when ids repeat across groups."),
+                "With --print-example, --print-task-catalog, or --print-task-plan,"
+                    + " print one stable entry by id. With --print-protocol-catalog,"
+                    + " that lookup id may also name one top-level category"
+                    + " (mutationActionTypes, assertionTypes, inspectionQueryTypes,"
+                    + " sourceTypes, persistenceTypes, stepTypes), one nested/plain"
+                    + " support group (cellInputTypes, calculationStrategyTypes,"
+                    + " executionPolicyInputType, ...), one explicit namespace form"
+                    + " (nestedTypes:<group>, plainTypes:<group>), or one qualified"
+                    + " top-level entry <category>:<id> such as"
+                    + " mutationActionTypes:SET_CELL when ids repeat across groups."),
             new CliSurface.DefinitionEntry(
                 "--print-task-plan --lookup <id>",
                 "Print one executable starter scenario for one task id."),
@@ -185,12 +204,9 @@ final class GridGrindCliSurfaceRequestSections {
                     + " one searchable non-stop-word term must remain."),
             new CliSurface.DefinitionEntry(
                 "--print-protocol-catalog",
-                "Print the compact protocol-catalog index with group ids and lookup"
-                    + " namespace forms."),
-            new CliSurface.DefinitionEntry(
-                "--full",
-                "With --print-protocol-catalog, print the complete machine-readable"
-                    + " protocol catalog."),
+                "Print the compact protocol-catalog index with group ids, lookup"
+                    + " namespace forms, and field-metadata legends such as"
+                    + " projectedByFacets and enumValueDocs."),
             new CliSurface.DefinitionEntry(
                 "--search <text>",
                 "With --print-protocol-catalog, perform case-insensitive search across"

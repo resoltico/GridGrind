@@ -11,6 +11,7 @@ import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.query.*;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -50,7 +51,7 @@ final class ExampleRequestFixturesTest {
     for (GridGrindShippedExamples.ShippedExample example :
         GridGrindShippedExamples.repositoryExamples()) {
       Path exampleFile = examplesDirectory().resolve(example.requestFileName());
-      byte[] expectedBytes = GridGrindJson.writeRequestBytes(example.plan());
+      byte[] expectedBytes = GridGrindJsonOutput.writeRequestBytes(example.plan());
       byte[] actualBytes = Files.readAllBytes(exampleFile);
       WorkbookPlan request =
           assertDoesNotThrow(
@@ -68,6 +69,10 @@ final class ExampleRequestFixturesTest {
       assertFalse(
           fixtureText(actualBytes).contains(": null"),
           () -> "Example fixture must omit explicit null properties: " + exampleFile);
+      assertFalse(
+          fixtureText(actualBytes).contains("\"includeBlanks\":false"),
+          () ->
+              "Sparse defaults must omit includeBlanks instead of spelling false: " + exampleFile);
     }
   }
 

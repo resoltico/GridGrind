@@ -55,8 +55,8 @@ final class WorkbookSampleFixtures {
             StandardCharsets.UTF_8.name()),
         new WorkbookReadCommand.GetNamedRanges("ranges", new ExcelNamedRangeSelection.All()),
         new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"),
-        new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1")),
-        new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 1),
+        WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
+        WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 1),
         new WorkbookReadCommand.GetMergedRegions("merged", "Budget"),
         new WorkbookReadCommand.GetHyperlinks(
             "hyperlinks", "Budget", new ExcelCellSelection.AllUsedCells()),

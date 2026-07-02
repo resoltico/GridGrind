@@ -47,17 +47,17 @@ final class XlsxParityFormulaProbeGroup {
             externalFormulaEnvironment(external.attachment("referencedWorkbook")),
             List.of(),
             inspect(
-                "cells",
-                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                new SheetIntrospectionQuery.GetCells()));
+                "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport evaluation =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation());
+    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue evaluation =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            formula.evaluation().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 7.5d && evaluation.numberValue() == poiValue && "7.5".equals(cachedValue)
         ? pass("External-workbook formula bindings evaluate and persist cached results.")
@@ -86,9 +86,7 @@ final class XlsxParityFormulaProbeGroup {
             external.workbookPath(),
             missingWorkbookCachedValueEnvironment(),
             inspect(
-                "cells",
-                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                new SheetIntrospectionQuery.GetCells()));
+                "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport cachedFormula =
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
@@ -96,10 +94,10 @@ final class XlsxParityFormulaProbeGroup {
                     cachedSuccess, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport cachedEvaluation =
+    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue cachedEvaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
-            cachedFormula.evaluation());
+            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            cachedFormula.evaluation().orElseThrow());
     return poiStrictFails
             && poiCachedValue == 7.5d
             && strictFailure.problem().code() == GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK
@@ -130,17 +128,17 @@ final class XlsxParityFormulaProbeGroup {
             udfFormulaEnvironment(),
             List.of(),
             inspect(
-                "cells",
-                new CellSelector.ByAddresses("Ops", List.of("B1")),
-                new SheetIntrospectionQuery.GetCells()));
+                "cells", new CellSelector.ByAddresses("Ops", List.of("B1")), allFacetCellsQuery()));
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport formula =
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class)
                 .cells()
                 .getFirst());
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport evaluation =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation());
+    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue evaluation =
+        cast(
+            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            formula.evaluation().orElseThrow());
     String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
     return poiValue == 42.0d && evaluation.numberValue() == poiValue && "42.0".equals(cachedValue)
         ? pass("Template-backed UDF toolpacks evaluate and persist cached results.")

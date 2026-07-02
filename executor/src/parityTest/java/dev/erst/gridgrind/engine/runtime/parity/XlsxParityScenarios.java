@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
@@ -1129,7 +1130,8 @@ public final class XlsxParityScenarios {
         ParityPlanSupport.request(
             new WorkbookPlan.WorkbookSource.New(),
             new WorkbookPlan.WorkbookPersistence.SaveAs(
-                workbookPath.toAbsolutePath().normalize().toString()),
+                workbookPath.toAbsolutePath().normalize().toString(),
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             executionPolicy(calculateAllAndMarkRecalculateOnOpen()),
             null,
             List.of(
@@ -1351,7 +1353,8 @@ public final class XlsxParityScenarios {
   private static WorkbookPlan drawingAuthoringRequest(Path workbookPath) {
     return ParityPlanSupport.request(
         new WorkbookPlan.WorkbookSource.New(),
-        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
         null,
         List.of(
             mutate(new SheetSelector.ByName("Ops"), new WorkbookMutationAction.EnsureSheet()),
@@ -1441,7 +1444,8 @@ public final class XlsxParityScenarios {
                             Optional.empty())))));
     return ParityPlanSupport.request(
         new WorkbookPlan.WorkbookSource.New(),
-        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
         null,
         List.of(
             mutate(new SheetSelector.ByName("Chart"), new WorkbookMutationAction.EnsureSheet()),
@@ -1500,7 +1504,8 @@ public final class XlsxParityScenarios {
     return roundTripRequest(
         ParityPlanSupport.request(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             null,
             List.of(
                 mutate(new SheetSelector.ByName("Data"), new WorkbookMutationAction.EnsureSheet()),
@@ -1699,7 +1704,7 @@ public final class XlsxParityScenarios {
   private static WorkbookPlan roundTripRequest(WorkbookPlan request) {
     return XlsxParitySupport.call(
         "round-trip parity request through JSON",
-        () -> GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request)));
+        () -> GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(request)));
   }
 
   private static void seedMatrix(XSSFSheet sheet, int rows, int columns) {

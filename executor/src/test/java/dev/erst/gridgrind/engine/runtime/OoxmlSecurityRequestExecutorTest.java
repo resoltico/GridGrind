@@ -6,9 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.contract.action.CellMutationAction;
 import dev.erst.gridgrind.contract.action.WorkbookMutationAction;
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.query.*;
-import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.query.SheetInspectionResult;
 import dev.erst.gridgrind.contract.query.WorkbookInspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
@@ -23,7 +21,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** End-to-end protocol tests for OOXML encryption and signing workflows. */
-class OoxmlSecurityRequestExecutorTest {
+class OoxmlSecurityRequestExecutorTest extends DefaultGridGrindRequestExecutorTestSupport {
   @Test
   void readsEncryptedWorkbookWithPasswordAndReportsPackageSecurity() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
@@ -63,7 +61,8 @@ class OoxmlSecurityRequestExecutorTest {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   @Test
@@ -122,7 +121,9 @@ class OoxmlSecurityRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         signedWorkbook.workbookPath().toString()),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(copiedWorkbook.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        copiedWorkbook.toString(),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     List.of(),
                     List.of())));
 
@@ -144,7 +145,8 @@ class OoxmlSecurityRequestExecutorTest {
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(
                         signedWorkbook.workbookPath().toString()),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(outputPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        outputPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
                             new CellSelector.ByAddress("Signed", "C1"),
@@ -171,6 +173,7 @@ class OoxmlSecurityRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         securedWorkbook.toString(),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                         new OoxmlPersistenceSecurityInput(
                             new OoxmlEncryptionInput(
                                 OoxmlSecurityTestSupport.ENCRYPTION_PASSWORD,
@@ -230,7 +233,8 @@ class OoxmlSecurityRequestExecutorTest {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   @Test
@@ -246,6 +250,7 @@ class OoxmlSecurityRequestExecutorTest {
                     new WorkbookPlan.WorkbookSource.New(),
                     new WorkbookPlan.WorkbookPersistence.SaveAs(
                         outputPath.toString(),
+                        WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                         new OoxmlPersistenceSecurityInput(
                             null,
                             new OoxmlSignatureInput(
@@ -330,29 +335,5 @@ class OoxmlSecurityRequestExecutorTest {
     assertEquals(
         dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.INVALID,
         security.security().signatures().getFirst().state());
-  }
-
-  private static GridGrindResponse.Success success(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Success.class, response);
-  }
-
-  private static GridGrindResponse.Failure failure(GridGrindResponse response) {
-    return assertInstanceOf(GridGrindResponse.Failure.class, response);
-  }
-
-  private static String savedPath(GridGrindResponse.Success success) {
-    return switch (success.persistence()) {
-      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
-          savedAs.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
-          overwritten.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
-          throw new AssertionError("Expected the request to persist a workbook");
-    };
-  }
-
-  private static <T extends InspectionResult> T read(
-      GridGrindResponse.Success success, String stepId, Class<T> type) {
-    return inspection(success, stepId, type);
   }
 }

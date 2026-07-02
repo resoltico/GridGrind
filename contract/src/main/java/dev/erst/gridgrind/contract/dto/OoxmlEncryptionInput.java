@@ -1,10 +1,20 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.util.Objects;
 
 /** OOXML package-encryption settings applied during workbook persistence. */
 public record OoxmlEncryptionInput(String password, ExcelOoxmlEncryptionMode mode) {
+  /** Reads one OOXML encryption block while applying the documented omission default. */
+  @JsonCreator
+  static OoxmlEncryptionInput create(
+      @JsonProperty("password") String password,
+      @JsonProperty("mode") ExcelOoxmlEncryptionMode mode) {
+    return new OoxmlEncryptionInput(password, mode == null ? ExcelOoxmlEncryptionMode.AGILE : mode);
+  }
+
   public OoxmlEncryptionInput {
     password = normalizeRequired(password, "password");
     Objects.requireNonNull(mode, "mode must not be null");

@@ -1,33 +1,39 @@
 package dev.erst.gridgrind.contract.json;
 
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonToken;
 import tools.jackson.databind.exc.InvalidFormatException;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /** Owns non-subtype public wording for JSON value-shape failures. */
 final class GridGrindJsonValueProblemSupport {
-  private static final Pattern MISSING_REQUIRED_FIELD_PATTERN =
-      Pattern.compile("missing required creator property '([^']+)'", Pattern.CASE_INSENSITIVE);
-  private static final Pattern MISSING_TYPE_ID_FIELD_PATTERN =
-      Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
-  private static final Pattern CREATOR_NULL_FIELD_PATTERN =
-      Pattern.compile("([A-Za-z0-9.\\[\\]_]+) must not be null", Pattern.CASE_INSENSITIVE);
-
   private GridGrindJsonValueProblemSupport() {}
 
-  static String mismatchedInputMessage(
-      tools.jackson.databind.exc.MismatchedInputException exception) {
-    String original = exception.getOriginalMessage();
-    if (original != null && original.contains("Floating-point value")) {
+  static String mismatchedInputMessage(MismatchedInputException exception) {
+    if (isFloatingPointIntoInteger(exception)) {
       return floatingPointIntoIntegerMessage(exception);
     }
-    return productOwnedJacksonMessage(
-        GridGrindJsonProblemMessageSupport.cleanJacksonMessage(original));
+    String original = exception.getOriginalMessage();
+    if (original == null || original.isBlank()) {
+      return GridGrindJsonProblemMessageSupport.cleanJacksonMessage(original);
+    }
+    return exception.getCurrentToken() == JsonToken.START_OBJECT
+        ? genericObjectShapeMessage()
+        : genericValueShapeMessage();
+  }
+
+  static boolean isFloatingPointIntoInteger(MismatchedInputException exception) {
+    if (!integralTargetType(exception.getTargetType())) {
+      return false;
+    }
+    if (exception.getCurrentToken() == JsonToken.VALUE_NUMBER_FLOAT) {
+      return true;
+    }
+    String originalMessage = exception.getOriginalMessage();
+    return originalMessage != null && originalMessage.contains("Floating-point value");
   }
 
   static String enumValueMessage(InvalidFormatException exception) {
@@ -57,33 +63,15 @@ final class GridGrindJsonValueProblemSupport {
     return fieldName != null && !fieldName.isBlank();
   }
 
-  static String productOwnedJacksonMessage(@Nullable String cleaned) {
-    String normalized = GridGrindJsonProblemMessageSupport.cleanJacksonMessage(cleaned);
-    Matcher missingRequiredField = MISSING_REQUIRED_FIELD_PATTERN.matcher(normalized);
-    if (missingRequiredField.find()) {
-      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(
-          missingRequiredField.group(1));
-    }
-    Matcher missingTypeIdField = MISSING_TYPE_ID_FIELD_PATTERN.matcher(normalized);
-    if (missingTypeIdField.find()) {
-      return GridGrindRequestProblemSupport.missingRequiredFieldMessage(
-          missingTypeIdField.group(1));
-    }
-    Matcher creatorNullField = CREATOR_NULL_FIELD_PATTERN.matcher(normalized);
-    if (creatorNullField.find()) {
-      return GridGrindRequestProblemSupport.explicitNullFieldMessage(creatorNullField.group(1));
-    }
-    if (normalized.startsWith("Cannot deserialize value")) {
-      return "JSON value has the wrong shape for this field";
-    }
-    if (normalized.startsWith("Cannot construct instance of")) {
-      return "JSON object is missing required fields or has the wrong shape";
-    }
-    return normalized;
+  static String genericObjectShapeMessage() {
+    return "JSON object is missing required fields or has the wrong shape";
   }
 
-  private static String floatingPointIntoIntegerMessage(
-      tools.jackson.databind.exc.MismatchedInputException exception) {
+  static String genericValueShapeMessage() {
+    return "JSON value has the wrong shape for this field";
+  }
+
+  private static String floatingPointIntoIntegerMessage(MismatchedInputException exception) {
     List<JacksonException.Reference> path = exception.getPath();
     if (path.isEmpty()) {
       return "JSON value must be an integer value";
@@ -95,5 +83,17 @@ final class GridGrindJsonValueProblemSupport {
     return "JSON value at '"
         + GridGrindJsonPayloadMetadataSupport.renderPath(path)
         + "' must be an integer value";
+  }
+
+  private static boolean integralTargetType(@Nullable Class<?> targetType) {
+    return targetType == byte.class
+        || targetType == short.class
+        || targetType == int.class
+        || targetType == long.class
+        || targetType == Byte.class
+        || targetType == Short.class
+        || targetType == Integer.class
+        || targetType == Long.class
+        || targetType == java.math.BigInteger.class;
   }
 }

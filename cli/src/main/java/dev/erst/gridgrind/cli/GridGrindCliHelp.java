@@ -101,12 +101,9 @@ public final class GridGrindCliHelp {
                         "--print-protocol-catalog",
                         "Emit the compact authoritative protocol-catalog index."),
                     new CliSurface.DefinitionEntry(
-                        "--print-protocol-catalog --full",
-                        "Emit the complete machine-readable protocol catalog."),
-                    new CliSurface.DefinitionEntry(
-                        "--print-protocol-catalog --lookup <id>|<group>:<id>",
-                        "Emit one authoritative catalog entry or one type group by stable lookup"
-                            + " id."),
+                        "--print-protocol-catalog --lookup <lookup-id>",
+                        "Emit one authoritative catalog entry or one scoped type-group/category"
+                            + " payload by stable lookup id."),
                     new CliSurface.DefinitionEntry(
                         "--print-protocol-catalog --search <text>",
                         "Search authoritative catalog ids and summaries; rerun --lookup for"
@@ -133,7 +130,10 @@ public final class GridGrindCliHelp {
                         + " reports are emitted as structured JSON on stderr, while executed"
                         + " responses stay on stdout.",
                     "Use --format structured when you want JSON help, version, or license"
-                        + " discovery instead of prose."))),
+                        + " discovery instead of prose.",
+                    "Use --pretty when you want indented JSON instead of the compact default"
+                        + " on execution, doctor, request-template, discovery, or structured"
+                        + " help/version/license output."))),
         renderSection(
             new CliSurface.CliSection(
                 "Next Commands",
@@ -157,6 +157,9 @@ public final class GridGrindCliHelp {
                 List.of(
                     "This help surface describes the authoritative CLI and request contract"
                         + " only.",
+                    "Protocol-catalog lookup payloads may annotate conditional fields with"
+                        + " projectedByFacets and enumValueDocs so the machine contract stays"
+                        + " self-describing.",
                     "Workflow playbooks, examples, Docker usage, and catalog walk-throughs live"
                         + " under --help-guidance."))),
         renderSection(cliSurface.execution()),

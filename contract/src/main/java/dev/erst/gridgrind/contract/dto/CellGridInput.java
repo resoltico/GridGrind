@@ -34,25 +34,25 @@ public sealed interface CellGridInput
   /** Returns this authored grid in canonical per-cell form. */
   List<List<CellInput>> toCellInputRows();
 
-  record Typed(List<List<CellInput>> rows) implements CellGridInput {
+  record Typed(List<List<CellInput>> cells) implements CellGridInput {
     public Typed {
-      rows = copyTypedRows(rows);
+      cells = copyTypedRows(cells, "cells");
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows;
+      return cells;
     }
   }
 
-  record TextRows(List<List<String>> rows) implements CellGridInput {
+  record TextRows(List<List<String>> cells) implements CellGridInput {
     public TextRows {
-      rows = copyScalarRows(rows, "rows");
+      cells = copyScalarRows(cells, "cells");
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(
               row ->
                   row.stream()
@@ -64,16 +64,16 @@ public sealed interface CellGridInput
     }
   }
 
-  record NumberRows(List<List<Double>> rows) implements CellGridInput {
+  record NumberRows(List<List<Double>> cells) implements CellGridInput {
     public NumberRows {
-      rows = copyScalarRows(rows, "rows");
-      rows.forEach(
-          row -> row.forEach(value -> CellInput.Validation.requireFinite(value, "rows element")));
+      cells = copyScalarRows(cells, "cells");
+      cells.forEach(
+          row -> row.forEach(value -> CellInput.Validation.requireFinite(value, "cells element")));
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(
               row ->
                   row.stream().map(CellInput.NumberValue::new).map(CellInput.class::cast).toList())
@@ -81,14 +81,14 @@ public sealed interface CellGridInput
     }
   }
 
-  record BooleanRows(List<List<Boolean>> rows) implements CellGridInput {
+  record BooleanRows(List<List<Boolean>> cells) implements CellGridInput {
     public BooleanRows {
-      rows = copyScalarRows(rows, "rows");
+      cells = copyScalarRows(cells, "cells");
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(
               row ->
                   row.stream().map(CellInput.BooleanValue::new).map(CellInput.class::cast).toList())
@@ -96,18 +96,18 @@ public sealed interface CellGridInput
     }
   }
 
-  record ErrorRows(List<List<String>> rows) implements CellGridInput {
+  record ErrorRows(List<List<String>> cells) implements CellGridInput {
     public ErrorRows {
-      rows = copyScalarRows(rows, "rows");
-      rows.forEach(
+      cells = copyScalarRows(cells, "cells");
+      cells.forEach(
           row ->
               row.forEach(
-                  value -> CellInput.Validation.requireErrorLiteral(value, "rows element")));
+                  value -> CellInput.Validation.requireErrorLiteral(value, "cells element")));
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(
               row ->
                   row.stream().map(CellInput.ErrorValue::new).map(CellInput.class::cast).toList())
@@ -115,50 +115,50 @@ public sealed interface CellGridInput
     }
   }
 
-  record DateRows(List<List<LocalDate>> rows) implements CellGridInput {
+  record DateRows(List<List<LocalDate>> cells) implements CellGridInput {
     public DateRows {
-      rows = copyScalarRows(rows, "rows");
+      cells = copyScalarRows(cells, "cells");
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(row -> row.stream().map(CellInput.Date::new).map(CellInput.class::cast).toList())
           .toList();
     }
   }
 
-  record DateTimeRows(List<List<LocalDateTime>> rows) implements CellGridInput {
+  record DateTimeRows(List<List<LocalDateTime>> cells) implements CellGridInput {
     public DateTimeRows {
-      rows = copyScalarRows(rows, "rows");
+      cells = copyScalarRows(cells, "cells");
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(row -> row.stream().map(CellInput.DateTime::new).map(CellInput.class::cast).toList())
           .toList();
     }
   }
 
-  record FormulaRows(List<List<String>> rows) implements CellGridInput {
+  record FormulaRows(List<List<String>> cells) implements CellGridInput {
     public FormulaRows {
-      rows =
-          copyScalarRows(rows, "rows").stream()
+      cells =
+          copyScalarRows(cells, "cells").stream()
               .map(
                   row ->
                       row.stream()
                           .map(
                               value ->
                                   CellInput.Validation.normalizeInlineFormula(
-                                      value, "rows element"))
+                                      value, "cells element"))
                           .toList())
               .toList();
     }
 
     @Override
     public List<List<CellInput>> toCellInputRows() {
-      return rows.stream()
+      return cells.stream()
           .map(
               row ->
                   row.stream()
@@ -170,24 +170,24 @@ public sealed interface CellGridInput
     }
   }
 
-  private static List<List<CellInput>> copyTypedRows(List<List<CellInput>> rows) {
-    Objects.requireNonNull(rows, "rows must not be null");
+  private static List<List<CellInput>> copyTypedRows(List<List<CellInput>> rows, String fieldName) {
+    Objects.requireNonNull(rows, fieldName + " must not be null");
     List<List<CellInput>> copy = new ArrayList<>(rows.size());
     if (rows.isEmpty()) {
-      throw new IllegalArgumentException("rows must not be empty");
+      throw new IllegalArgumentException(fieldName + " must not be empty");
     }
     int expectedWidth = -1;
     for (List<CellInput> row : rows) {
-      Objects.requireNonNull(row, "rows must not contain null rows");
+      Objects.requireNonNull(row, fieldName + " must not contain null rows");
       if (row.isEmpty()) {
-        throw new IllegalArgumentException("rows must not contain empty rows");
+        throw new IllegalArgumentException(fieldName + " must not contain empty rows");
       }
       if (expectedWidth < 0) {
         expectedWidth = row.size();
       } else if (row.size() != expectedWidth) {
-        throw new IllegalArgumentException("rows must describe a rectangular matrix");
+        throw new IllegalArgumentException(fieldName + " must describe a rectangular matrix");
       }
-      copy.add(copyTypedRow(row));
+      copy.add(copyTypedRow(row, fieldName));
     }
     return List.copyOf(copy);
   }
@@ -214,10 +214,10 @@ public sealed interface CellGridInput
     return List.copyOf(copy);
   }
 
-  private static List<CellInput> copyTypedRow(List<CellInput> row) {
+  private static List<CellInput> copyTypedRow(List<CellInput> row, String fieldName) {
     List<CellInput> rowCopy = new ArrayList<>(row.size());
     for (CellInput value : row) {
-      rowCopy.add(Objects.requireNonNull(value, "rows must not contain null cell values"));
+      rowCopy.add(Objects.requireNonNull(value, fieldName + " must not contain null cell values"));
     }
     return List.copyOf(rowCopy);
   }

@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import java.util.List;
 import java.util.Optional;
@@ -40,16 +41,14 @@ final class GridGrindCliSurfaceGuidanceSections {
         "Docker Example",
         List.of(
             "docker run --rm -i \\",
-            "  -v \"$(pwd)\":/workdir \\",
-            "  -w /workdir \\",
+            "  " + GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument() + " \\",
             "  {{CONTAINER_TAG}} \\",
             "  --request request.json \\",
             "  --response response.json"),
         Optional.of(
-            "In Docker, mount the host directory that contains your request and workbook"
-                + " files, then set -w to that mount point so every relative path resolves"
-                + " inside the mounted directory. From a repository checkout, build the"
-                + " same runtime surface with 'docker buildx build --load -t"
+            GridGrindContainerRuntimeText.dockerMountedWorkdirSummary()
+                + " From a repository checkout, build the same runtime surface with"
+                + " 'docker buildx build --load -t"
                 + " gridgrind-local .' and replace {{CONTAINER_TAG}} with"
                 + " 'gridgrind-local'."));
   }
@@ -95,15 +94,21 @@ final class GridGrindCliSurfaceGuidanceSections {
                         + " action, query, value, style, and scope.",
                     "The bare --print-protocol-catalog output is intentionally compact:"
                         + " it lists requestTypeId, group ids, and lookup namespace forms."
-                        + " Add --full when you need every field descriptor in one dump.",
+                        + " Rerun --lookup for one scoped top-level category, nested type"
+                        + " group, plain type group, or exact entry payload.",
                     "Search output is summary-first: it lists ids, summaries, related entry"
                         + " ids, and supporting ids. Rerun --lookup when you need one full"
                         + " entry or type-group definition.",
-                    "Lookup namespaces are explicit:"
-                        + " <topLevelGroup>:<id> resolves one top-level type,"
-                        + " nestedTypes:<group> resolves one nested tagged-union group,"
-                        + " plainTypes:<group> resolves one plain record group,"
-                        + " and bare <id> works only for globally unique top-level ids."))),
+                    "Lookup forms stay stable:"
+                        + " bare <id> resolves one globally unique top-level type,"
+                        + " bare top-level group names such as mutationActionTypes"
+                        + " resolve one category array,"
+                        + " bare support-group names such as cellInputTypes or"
+                        + " executionPolicyInputType resolve one nested/plain group,"
+                        + " nestedTypes:<group> and plainTypes:<group> resolve one"
+                        + " explicit support-group namespace,"
+                        + " and <topLevelGroup>:<id> resolves one qualified top-level"
+                        + " type."))),
         "gridgrind --print-example --lookup "
             + GridGrindShippedExamples.catalog().examples().getFirst().id()
             + " --response example.json");

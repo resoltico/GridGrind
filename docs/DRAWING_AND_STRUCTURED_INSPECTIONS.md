@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
-updated: "2026-05-01"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, inspections, get-drawing-objects, get-charts, get-tables, get-pivot-tables, get-sheet-schema]
   questions: ["how do i inspect drawings in gridgrind", "how do i inspect tables or pivots in gridgrind", "how do i inspect sheet layout or schema in gridgrind"]
@@ -514,12 +514,16 @@ Infers a simple schema from one rectangular sheet window. The first row of the w
 as a header row; `dataRowCount` in the response is `rowCount - 1`. When the header row is
 entirely blank, `dataRowCount` is `0`.
 
-`rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
-with `INVALID_REQUEST`.
+`rowCount * columnCount` must not exceed 250,000. GridGrind keeps this deterministic area cap even
+after sparse window readback because schema inference still examines the full rectangular sample
+and the worst-case response still scales with the requested area. Requests that exceed this limit
+are rejected with `INVALID_REQUEST`.
 
 `dominantType` is omitted per column when all data cells are blank, or when two or more types tie
 for the highest count. Formula cells contribute their evaluated result type (e.g. `NUMBER`,
-`STRING`) to `observedTypes` and `dominantType`, not `FORMULA`.
+`TEXT`) to `observedTypes` and `dominantType`, not `FORMULA`. When the shared
+`projection.facets` includes `TEMPORAL`, numeric date-like cells can instead contribute `DATE`,
+`TIME`, or `DATE_TIME`.
 
 ```json
 {
@@ -532,7 +536,13 @@ for the highest count. Formula cells contribute their evaluated result type (e.g
     "columnCount": 3
   },
   "query": {
-    "type": "GET_SHEET_SCHEMA"
+    "type": "GET_SHEET_SCHEMA",
+    "projection": {
+      "facets": [
+        "VALUE",
+        "TEMPORAL"
+      ]
+    }
   }
 }
 ```

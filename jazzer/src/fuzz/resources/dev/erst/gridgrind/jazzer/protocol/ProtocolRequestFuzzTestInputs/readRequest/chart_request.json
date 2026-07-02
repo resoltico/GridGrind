@@ -6,7 +6,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-chart.xlsx"
+    "path": "generated-workbooks/gridgrind-chart.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

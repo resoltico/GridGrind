@@ -45,7 +45,6 @@ class GridGrindResponseTest {
         GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, success.persistence());
     assertEquals(java.util.Optional.empty(), success.journal().planId());
     assertEquals(java.util.Optional.empty(), success.journal().source().type());
-    assertEquals(java.util.Optional.empty(), success.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
     assertEquals(1, success.warnings().size());
     assertEquals(1, success.inspections().size());
@@ -65,7 +64,8 @@ class GridGrindResponseTest {
 
     assertEquals(java.util.Optional.empty(), failure.journal().planId());
     assertEquals(java.util.Optional.empty(), failure.journal().source().type());
-    assertEquals(java.util.Optional.empty(), failure.journal().persistence().type());
+    assertInstanceOf(
+        GridGrindResponsePersistence.PersistenceOutcome.NotSaved.class, failure.persistence());
     ExecutionJournal.Outcome.Failed outcome =
         assertInstanceOf(ExecutionJournal.Outcome.Failed.class, failure.journal().outcome());
     assertEquals(ExecutionJournal.Status.FAILED, outcome.status());
@@ -188,9 +188,8 @@ class GridGrindResponseTest {
     dev.erst.gridgrind.contract.dto.CellReport.BlankReport blankCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
             "A1",
-            "BLANK",
-            "",
-            minimalStyle(),
+            java.util.Optional.of(""),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.empty(),
             java.util.Optional.empty());
     dev.erst.gridgrind.contract.dto.ProblemContext.ReadRequest readRequest =
@@ -203,7 +202,7 @@ class GridGrindResponseTest {
     assertEquals("BudgetExpr", formulaOnly.name());
     assertEquals("SUM(Budget!A1:A3)", formulaOnly.refersToFormula());
     assertInstanceOf(SheetProtectionReport.Unprotected.class, unprotected);
-    assertEquals("BLANK", blankCell.effectiveType());
+    assertEquals("BLANK", blankCell.type());
     assertEquals(java.util.Optional.empty(), blankCell.hyperlink());
     assertEquals(java.util.Optional.empty(), blankCell.comment());
     assertEquals(Optional.empty(), new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
@@ -245,57 +244,47 @@ class GridGrindResponseTest {
     dev.erst.gridgrind.contract.dto.CellReport textCell =
         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
             "A1",
-            "STRING",
-            "Reviewed",
-            minimalStyle(),
+            java.util.Optional.of("Reviewed"),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            "Reviewed",
+            java.util.Optional.of("Reviewed"),
             java.util.Optional.empty());
     dev.erst.gridgrind.contract.dto.CellReport numberCell =
         new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
             "A2",
-            "NUMERIC",
-            "42",
-            minimalStyle(),
+            java.util.Optional.of("42"),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            42.0d);
+            java.util.Optional.of(42.0d),
+            java.util.Optional.empty());
     dev.erst.gridgrind.contract.dto.CellReport booleanCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
             "A3",
-            "BOOLEAN",
-            "TRUE",
-            minimalStyle(),
+            java.util.Optional.of("TRUE"),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            true);
+            java.util.Optional.of(true));
     dev.erst.gridgrind.contract.dto.CellReport errorCell =
         new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
             "A4",
-            "ERROR",
-            "#REF!",
-            minimalStyle(),
+            java.util.Optional.of("#REF!"),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            "#REF!");
+            java.util.Optional.of("#REF!"));
     dev.erst.gridgrind.contract.dto.CellReport formulaCell =
         new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
             "A5",
-            "FORMULA",
-            "42",
-            minimalStyle(),
+            java.util.Optional.of("42"),
+            java.util.Optional.of(minimalStyle()),
             java.util.Optional.of(hyperlink),
             java.util.Optional.of(comment),
-            "SUM(A2:A4)",
-            new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
-                "A5",
-                "NUMERIC",
-                "42",
-                minimalStyle(),
-                java.util.Optional.empty(),
-                java.util.Optional.empty(),
-                42.0d));
+            java.util.Optional.of("SUM(A2:A4)"),
+            java.util.Optional.of(
+                new CellValueReport.NumberValue(42.0d, java.util.Optional.empty())));
 
     assertEquals(java.util.Optional.of(hyperlink), textCell.hyperlink());
     assertEquals(java.util.Optional.of(comment), textCell.comment());
@@ -328,7 +317,7 @@ class GridGrindResponseTest {
                 IllegalArgumentException.class,
                 () ->
                     new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                        " ", "/tmp/out.xlsx"))
+                        " ", new GridGrindResponsePersistence.WriteResult.Written("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "executionPath must not be blank",
@@ -336,7 +325,7 @@ class GridGrindResponseTest {
                 IllegalArgumentException.class,
                 () ->
                     new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-                        "budget.xlsx", " "))
+                        "budget.xlsx", new GridGrindResponsePersistence.WriteResult.Written(" ")))
             .getMessage());
     assertEquals(
         "sheetCount must be 0 for an empty workbook",
@@ -446,8 +435,6 @@ class GridGrindResponseTest {
             ExecutionJournalLevel.VERBOSE,
             new ExecutionJournal.SourceSummary(
                 java.util.Optional.of("NEW"), java.util.Optional.empty()),
-            new ExecutionJournal.PersistenceSummary(
-                java.util.Optional.of("SAVE_AS"), java.util.Optional.of("/tmp/report.xlsx")),
             successPhase,
             successPhase,
             successPhase,

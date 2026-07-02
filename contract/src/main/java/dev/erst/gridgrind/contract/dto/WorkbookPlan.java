@@ -3,7 +3,10 @@ package dev.erst.gridgrind.contract.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.json.DuplicateStepId;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
+import dev.erst.gridgrind.contract.json.NonXlsxPath;
 import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
@@ -199,52 +202,63 @@ public record WorkbookPlan(
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = WorkbookPersistence.None.class, name = "NONE"),
-    @JsonSubTypes.Type(value = WorkbookPersistence.OverwriteSource.class, name = "OVERWRITE"),
+    @JsonSubTypes.Type(value = WorkbookPersistence.Overwrite.class, name = "OVERWRITE"),
     @JsonSubTypes.Type(value = WorkbookPersistence.SaveAs.class, name = "SAVE_AS")
   })
   public sealed interface WorkbookPersistence {
     /** Leaves the workbook in memory only and does not persist it. */
     record None() implements WorkbookPersistence {}
 
+    /** Explicit collision policy for SAVE_AS persistence. */
+    enum IfExists {
+      REJECT,
+      REPLACE
+    }
+
     /** Saves the workbook back to the exact path it was opened from. */
-    record OverwriteSource(
+    record Overwrite(
         @JsonInclude(JsonInclude.Include.NON_ABSENT)
             Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
-      public OverwriteSource {
+      public Overwrite {
         security = normalizePersistenceSecurity(security);
       }
 
       /** Overwrites the source workbook with no explicit package-security persistence settings. */
-      public OverwriteSource() {
+      public Overwrite() {
         this(Optional.empty());
       }
 
       /** Overwrites the source workbook with explicit package-security persistence settings. */
-      public OverwriteSource(OoxmlPersistenceSecurityInput security) {
+      public Overwrite(OoxmlPersistenceSecurityInput security) {
         this(Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
 
-    /** Saves the workbook to a new `.xlsx` path. */
+    /** Saves the workbook to one `.xlsx` path with an explicit collision policy. */
     record SaveAs(
         String path,
+        IfExists ifExists,
         @JsonInclude(JsonInclude.Include.NON_ABSENT)
             Optional<OoxmlPersistenceSecurityInput> security)
         implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);
+        Objects.requireNonNull(ifExists, "ifExists must not be null");
         security = normalizePersistenceSecurity(security);
       }
 
       /** Saves the workbook to the supplied path with no explicit package-security settings. */
-      public SaveAs(String path) {
-        this(path, Optional.empty());
+      public SaveAs(String path, IfExists ifExists) {
+        this(path, ifExists, Optional.empty());
       }
 
       /** Saves the workbook to the supplied path with explicit package-security settings. */
-      public SaveAs(String path, OoxmlPersistenceSecurityInput security) {
-        this(path, Optional.of(Objects.requireNonNull(security, "security must not be null")));
+      public SaveAs(String path, IfExists ifExists, OoxmlPersistenceSecurityInput security) {
+        this(
+            path,
+            ifExists,
+            Optional.of(Objects.requireNonNull(security, "security must not be null")));
       }
     }
   }
@@ -262,26 +276,35 @@ public record WorkbookPlan(
     Set<String> seen = new HashSet<>();
     for (int index = 0; index < steps.size(); index++) {
       WorkbookStep step = steps.get(index);
+      String stepPath = "steps[" + index + "]";
       if (step == null) {
-        throw new InvalidRequestException(
-            "steps must not contain nulls",
-            Optional.of("steps[" + index + "]"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
+        throw nullStepException(stepPath);
       }
       copy.add(step);
       // LIM-006
       if (!seen.add(step.stepId())) {
-        throw new InvalidRequestException(
-            "steps must not contain duplicate stepId values: " + step.stepId(),
-            Optional.of("steps[" + index + "].stepId"),
-            Optional.empty(),
-            Optional.empty(),
-            null);
+        throw duplicateStepIdException(step.stepId(), stepPath + ".stepId");
       }
     }
     return List.copyOf(copy);
+  }
+
+  private static InvalidRequestException nullStepException(String stepPath) {
+    return new InvalidRequestException(
+        new MessageInvariant("steps must not contain nulls", Optional.of(stepPath)),
+        Optional.of(stepPath),
+        Optional.empty(),
+        Optional.empty(),
+        null);
+  }
+
+  private static InvalidRequestException duplicateStepIdException(String stepId, String jsonPath) {
+    return new InvalidRequestException(
+        new DuplicateStepId(stepId, jsonPath),
+        Optional.of(jsonPath),
+        Optional.empty(),
+        Optional.empty(),
+        null);
   }
 
   static String requireNonBlank(String value, String fieldName) {
@@ -295,9 +318,24 @@ public record WorkbookPlan(
   static void requireXlsxWorkbookPath(String path) { // LIM-002
     requireNonBlank(path, "path");
     if (!path.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
-      throw new IllegalArgumentException(
-          "path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: " + path);
+      // Preserve the local operand path so request decoding can qualify it precisely against
+      // source.path, persistence.path, and nested formula-environment path owners.
+      throw new InvalidRequestException(
+          new NonXlsxPath(actualExtension(path), Optional.of("path")),
+          Optional.empty(),
+          Optional.empty(),
+          Optional.empty(),
+          null);
     }
+  }
+
+  private static String actualExtension(String path) {
+    int lastSeparator = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+    int lastDot = path.lastIndexOf('.');
+    if (lastDot <= lastSeparator || lastDot == path.length() - 1) {
+      return "<none>";
+    }
+    return path.substring(lastDot);
   }
 
   private static Optional<OoxmlOpenSecurityInput> normalizeOpenSecurity(

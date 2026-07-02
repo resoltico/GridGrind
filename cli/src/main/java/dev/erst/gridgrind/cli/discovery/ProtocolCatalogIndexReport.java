@@ -12,6 +12,7 @@ public record ProtocolCatalogIndexReport(
     List<ProtocolCatalogGroupIndex> topLevelGroups,
     List<ProtocolCatalogGroupIndex> nestedTypeGroups,
     List<ProtocolCatalogGroupIndex> plainTypeGroups,
+    List<ProtocolCatalogFieldMetadataKey> fieldMetadataKeys,
     List<ProtocolCatalogLookupNamespace> lookupNamespaces) {
   public ProtocolCatalogIndexReport {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
@@ -21,6 +22,7 @@ public record ProtocolCatalogIndexReport(
     Objects.requireNonNull(topLevelGroups, "topLevelGroups must not be null");
     Objects.requireNonNull(nestedTypeGroups, "nestedTypeGroups must not be null");
     Objects.requireNonNull(plainTypeGroups, "plainTypeGroups must not be null");
+    Objects.requireNonNull(fieldMetadataKeys, "fieldMetadataKeys must not be null");
     Objects.requireNonNull(lookupNamespaces, "lookupNamespaces must not be null");
     topLevelGroups =
         topLevelGroups.stream()
@@ -33,6 +35,13 @@ public record ProtocolCatalogIndexReport(
     plainTypeGroups =
         plainTypeGroups.stream()
             .map(group -> Objects.requireNonNull(group, "plainTypeGroups must not contain nulls"))
+            .toList();
+    fieldMetadataKeys =
+        fieldMetadataKeys.stream()
+            .map(
+                fieldMetadataKey ->
+                    Objects.requireNonNull(
+                        fieldMetadataKey, "fieldMetadataKeys must not contain nulls"))
             .toList();
     lookupNamespaces =
         lookupNamespaces.stream()

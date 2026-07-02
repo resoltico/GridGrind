@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel.foundation;
 
+import java.util.Optional;
+
 /** Shared Excel-facing limits for sheet sizing and sheet-view state. */
 public final class ExcelSheetLayoutLimits {
   public static final double MAX_COLUMN_WIDTH_CHARACTERS = 255.0d; // LIM-004
@@ -12,21 +14,13 @@ public final class ExcelSheetLayoutLimits {
 
   /** Validates one authored column width expressed in Excel character units. */
   public static void requireColumnWidthCharacters(double widthCharacters, String fieldName) {
-    requireFinitePositive(widthCharacters, fieldName);
-    if (widthCharacters > MAX_COLUMN_WIDTH_CHARACTERS) {
-      throw new IllegalArgumentException(
-          fieldName
-              + " must not exceed "
-              + MAX_COLUMN_WIDTH_CHARACTERS
-              + " (Excel column width limit): got "
-              + widthCharacters);
-    }
-    if (Math.round(widthCharacters * 256.0d) <= 0) {
-      throw new IllegalArgumentException(
-          fieldName
-              + " is too small to produce a visible Excel column width: got "
-              + widthCharacters);
-    }
+    columnWidthViolation(widthCharacters)
+        .ifPresent(
+            violation -> {
+              throw new IllegalArgumentException(
+                  ExcelSheetLayoutViolationMessages.columnWidth(
+                      fieldName, violation, widthCharacters));
+            });
   }
 
   /** Validates one authored default sheet column width expressed in whole Excel characters. */
@@ -46,41 +40,62 @@ public final class ExcelSheetLayoutLimits {
 
   /** Validates one authored row height expressed in Excel point units. */
   public static void requireRowHeightPoints(double heightPoints, String fieldName) {
-    requireFinitePositive(heightPoints, fieldName);
-    if (heightPoints > MAX_ROW_HEIGHT_POINTS) {
-      throw new IllegalArgumentException(
-          fieldName
-              + " must not exceed "
-              + MAX_ROW_HEIGHT_POINTS
-              + " (Excel row height limit): got "
-              + heightPoints);
-    }
-    if (Math.round(heightPoints * 20.0d) <= 0L) {
-      throw new IllegalArgumentException(
-          fieldName + " is too small to produce a visible Excel row height: " + heightPoints);
-    }
+    rowHeightViolation(heightPoints)
+        .ifPresent(
+            violation -> {
+              throw new IllegalArgumentException(
+                  ExcelSheetLayoutViolationMessages.rowHeight(fieldName, violation, heightPoints));
+            });
   }
 
   /** Validates one authored worksheet zoom percentage. */
   public static void requireZoomPercent(int zoomPercent, String fieldName) {
-    if (zoomPercent < MIN_ZOOM_PERCENT || zoomPercent > MAX_ZOOM_PERCENT) {
-      throw new IllegalArgumentException(
-          fieldName
-              + " must be between "
-              + MIN_ZOOM_PERCENT
-              + " and "
-              + MAX_ZOOM_PERCENT
-              + " inclusive: "
-              + zoomPercent);
-    }
+    zoomViolation(zoomPercent)
+        .ifPresent(
+            violation -> {
+              throw new IllegalArgumentException(
+                  ExcelSheetLayoutViolationMessages.zoom(fieldName, zoomPercent));
+            });
   }
 
-  private static void requireFinitePositive(double value, String fieldName) {
-    if (!Double.isFinite(value)) {
-      throw new IllegalArgumentException(fieldName + " must be finite");
+  /** Returns the first authored column-width violation, if any. */
+  public static Optional<ExcelColumnWidthViolation> columnWidthViolation(double widthCharacters) {
+    if (!Double.isFinite(widthCharacters)) {
+      return Optional.of(ExcelColumnWidthViolation.NON_FINITE);
     }
-    if (value <= 0.0d) {
-      throw new IllegalArgumentException(fieldName + " must be greater than 0");
+    if (widthCharacters <= 0.0d) {
+      return Optional.of(ExcelColumnWidthViolation.NON_POSITIVE);
     }
+    if (widthCharacters > MAX_COLUMN_WIDTH_CHARACTERS) {
+      return Optional.of(ExcelColumnWidthViolation.TOO_LARGE);
+    }
+    if (Math.round(widthCharacters * 256.0d) <= 0) {
+      return Optional.of(ExcelColumnWidthViolation.NOT_VISIBLE);
+    }
+    return Optional.empty();
+  }
+
+  /** Returns the first authored row-height violation, if any. */
+  public static Optional<ExcelRowHeightViolation> rowHeightViolation(double heightPoints) {
+    if (!Double.isFinite(heightPoints)) {
+      return Optional.of(ExcelRowHeightViolation.NON_FINITE);
+    }
+    if (heightPoints <= 0.0d) {
+      return Optional.of(ExcelRowHeightViolation.NON_POSITIVE);
+    }
+    if (heightPoints > MAX_ROW_HEIGHT_POINTS) {
+      return Optional.of(ExcelRowHeightViolation.TOO_LARGE);
+    }
+    if (Math.round(heightPoints * 20.0d) <= 0L) {
+      return Optional.of(ExcelRowHeightViolation.NOT_VISIBLE);
+    }
+    return Optional.empty();
+  }
+
+  /** Returns the zoom-range violation, if any. */
+  public static Optional<ExcelZoomViolation> zoomViolation(int zoomPercent) {
+    return zoomPercent < MIN_ZOOM_PERCENT || zoomPercent > MAX_ZOOM_PERCENT
+        ? Optional.of(ExcelZoomViolation.OUT_OF_RANGE)
+        : Optional.empty();
   }
 }

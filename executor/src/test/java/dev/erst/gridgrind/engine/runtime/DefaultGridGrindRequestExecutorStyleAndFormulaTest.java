@@ -42,7 +42,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(calculateAll()),
                     null,
                     mutations(
@@ -97,7 +98,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("A1", "A2", "B3", "C1")),
-                        new SheetIntrospectionQuery.GetCells()),
+                        allFacetCellsQuery()),
                     inspect(
                         "window",
                         new RangeSelector.RectangularWindow("Budget", "A1", 3, 3),
@@ -111,14 +112,13 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     assertTrue(Files.exists(workbookPath));
     assertEquals(
         ExcelHorizontalAlignment.CENTER,
-        cells.cells().getFirst().style().alignment().horizontalAlignment());
-    assertTrue(cells.cells().getFirst().style().font().bold());
-    assertTrue(cells.cells().getFirst().style().alignment().wrapText());
-    assertEquals("BLANK", cells.cells().get(1).effectiveType());
-    assertEquals("49", cells.cells().get(2).displayValue());
-    assertTrue(
-        window.rows().getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
-    assertTrue(cells.cells().get(3).style().font().italic());
+        style(cells.cells().getFirst()).alignment().horizontalAlignment());
+    assertTrue(style(cells.cells().getFirst()).font().bold());
+    assertTrue(style(cells.cells().getFirst()).alignment().wrapText());
+    assertEquals("BLANK", cells.cells().get(1).type());
+    assertEquals("49", displayValue(cells.cells().get(2)));
+    assertFalse(windowCells(window).stream().anyMatch(cell -> "C1".equals(cell.address())));
+    assertTrue(style(cells.cells().get(3)).font().italic());
   }
 
   @Test
@@ -132,7 +132,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
                             new SheetSelector.ByName("Budget"),
@@ -180,10 +181,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("A1")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     CellStyleReport style =
-        read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst().style();
+        style(read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst());
 
     assertTrue(Files.exists(workbookPath));
     assertTrue(style.font().bold());
@@ -227,7 +228,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
                             new SheetSelector.ByName("Budget"),
@@ -289,12 +291,12 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("A1", "A2")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
-    CellStyleReport themedStyle = cells.cells().get(0).style();
-    CellStyleReport gradientStyle = cells.cells().get(1).style();
+    CellStyleReport themedStyle = style(cells.cells().get(0));
+    CellStyleReport gradientStyle = style(cells.cells().get(1));
 
     assertTrue(Files.exists(workbookPath));
     assertEquals(CellColorReport.theme(6, -0.35d), themedStyle.font().fontColor());
@@ -321,7 +323,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     mutations(
                         mutate(
                             new SheetSelector.ByName("Budget"),
@@ -377,12 +380,12 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Budget", List.of("A2", "A3")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     SheetInspectionResult.CellsResult cells =
         read(success, "cells", SheetInspectionResult.CellsResult.class);
-    CellStyleReport linearGradientStyle = cells.cells().get(0).style();
-    CellStyleReport pathGradientStyle = cells.cells().get(1).style();
+    CellStyleReport linearGradientStyle = style(cells.cells().get(0));
+    CellStyleReport pathGradientStyle = style(cells.cells().get(1));
 
     CellGradientFillReport.Linear linearGradient =
         assertInstanceOf(
@@ -421,15 +424,15 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     inspect(
                         "cells",
                         new CellSelector.ByAddresses("Data", List.of("A1")),
-                        new SheetIntrospectionQuery.GetCells()))));
+                        allFacetCellsQuery()))));
 
     dev.erst.gridgrind.contract.dto.CellReport cell =
         read(success, "cells", SheetInspectionResult.CellsResult.class).cells().getFirst();
     assertInstanceOf(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell);
-    dev.erst.gridgrind.contract.dto.CellReport evaluation =
-        cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell).evaluation();
-    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellReport.ErrorReport.class, evaluation);
-    assertEquals("ERROR", evaluation.effectiveType());
+    CellValueReport evaluation =
+        evaluation(cast(dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class, cell));
+    assertInstanceOf(dev.erst.gridgrind.contract.dto.CellValueReport.ErrorValue.class, evaluation);
+    assertEquals("ERROR", evaluation.type());
   }
 
   @Test
@@ -453,10 +456,10 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     WorkbookPlan.WorkbookSource existingFile =
         new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/source.xlsx");
     WorkbookPlan.WorkbookPersistence none = new WorkbookPlan.WorkbookPersistence.None();
-    WorkbookPlan.WorkbookPersistence overwrite =
-        new WorkbookPlan.WorkbookPersistence.OverwriteSource();
+    WorkbookPlan.WorkbookPersistence overwrite = new WorkbookPlan.WorkbookPersistence.Overwrite();
     WorkbookPlan.WorkbookPersistence saveAs =
-        new WorkbookPlan.WorkbookPersistence.SaveAs("/tmp/out.xlsx");
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            "/tmp/out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
         Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
@@ -482,7 +485,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                   workbookSupport.persistWorkbook(
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
-                      new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                      new WorkbookPlan.WorkbookPersistence.Overwrite(),
                       workingDirectory));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
@@ -494,7 +497,8 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     Path workingDirectory = Path.of("/tmp/gridgrind-persistence");
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookPersistence saveAs =
-        new WorkbookPlan.WorkbookPersistence.SaveAs("/tmp/subdir/../out.xlsx");
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            "/tmp/subdir/../out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT);
 
     assertEquals(
         "/tmp/out.xlsx",
@@ -513,13 +517,14 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
           workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
-              new WorkbookPlan.WorkbookPersistence.SaveAs(pathWithDotDot),
+              new WorkbookPlan.WorkbookPersistence.SaveAs(
+                  pathWithDotDot, WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
               tempDir);
 
       GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs =
           assertInstanceOf(GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, outcome);
       assertEquals(pathWithDotDot, savedAs.requestedPath());
-      assertEquals(tempDir.resolve("out.xlsx").toString(), savedAs.executionPath());
+      assertEquals(tempDir.resolve("out.xlsx").toString(), writtenExecutionPath(savedAs));
     } finally {
       Files.deleteIfExists(tempDir.resolve("out.xlsx"));
       Files.deleteIfExists(subDir);
@@ -571,7 +576,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                     new RangeSelector.ByRange("Budget", "A1:"),
                     new CellMutationAction.ClearRange()));
 
-    assertEquals("range address must not be blank", failure.getMessage());
+    assertEquals("range must not be blank", failure.getMessage());
   }
 
   @Test
@@ -586,7 +591,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                         new dev.erst.gridgrind.contract.dto.CellGridInput.Typed(
                             List.of(List.of(textCell("x")))))));
 
-    assertEquals("range address must not be blank", failure.getMessage());
+    assertEquals("range must not be blank", failure.getMessage());
   }
 
   @Test
@@ -606,7 +611,7 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
                             null,
                             null))));
 
-    assertEquals("range address must not be blank", failure.getMessage());
+    assertEquals("range must not be blank", failure.getMessage());
   }
 
   @Test

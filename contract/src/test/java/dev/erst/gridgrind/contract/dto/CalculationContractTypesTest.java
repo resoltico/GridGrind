@@ -138,6 +138,47 @@ class CalculationContractTypesTest {
   }
 
   @Test
+  void nestedExecutionFiltersOnlyMatchNullOrDefaultValues() {
+    ExecutionModeInput.DefaultFilter modeFilter = new ExecutionModeInput.DefaultFilter();
+    ExecutionJournalInput.DefaultFilter journalFilter = new ExecutionJournalInput.DefaultFilter();
+    CalculationStrategyInput.DefaultFilter strategyFilter =
+        new CalculationStrategyInput.DefaultFilter();
+    CalculationPolicyInput.DefaultFilter calculationFilter =
+        new CalculationPolicyInput.DefaultFilter();
+
+    assertTrue(defaultFilterMatches(modeFilter, null));
+    assertTrue(defaultFilterMatches(modeFilter, ExecutionModeInput.defaults()));
+    assertFalse(defaultFilterMatches(modeFilter, ExecutionModeInput.eventRead()));
+    assertFalse(defaultFilterMatches(modeFilter, "not-an-execution-mode"));
+    assertEquals(ExecutionModeInput.DefaultFilter.class.hashCode(), modeFilter.hashCode());
+
+    assertTrue(defaultFilterMatches(journalFilter, null));
+    assertTrue(defaultFilterMatches(journalFilter, ExecutionJournalInput.defaults()));
+    assertTrue(defaultFilterMatches(journalFilter, ExecutionJournalLevel.SUMMARY));
+    assertFalse(
+        defaultFilterMatches(
+            journalFilter, new ExecutionJournalInput(ExecutionJournalLevel.VERBOSE)));
+    assertEquals(ExecutionJournalInput.DefaultFilter.class.hashCode(), journalFilter.hashCode());
+
+    assertTrue(defaultFilterMatches(strategyFilter, null));
+    assertTrue(defaultFilterMatches(strategyFilter, new CalculationStrategyInput.DoNotCalculate()));
+    assertFalse(defaultFilterMatches(strategyFilter, new CalculationStrategyInput.EvaluateAll()));
+    assertFalse(defaultFilterMatches(strategyFilter, "not-a-calculation-strategy"));
+    assertEquals(
+        CalculationStrategyInput.DefaultFilter.class.hashCode(), strategyFilter.hashCode());
+
+    assertTrue(defaultFilterMatches(calculationFilter, null));
+    assertTrue(defaultFilterMatches(calculationFilter, CalculationPolicyInput.defaults()));
+    assertFalse(
+        defaultFilterMatches(
+            calculationFilter,
+            new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), true)));
+    assertFalse(defaultFilterMatches(calculationFilter, "not-a-calculation-policy"));
+    assertEquals(
+        CalculationPolicyInput.DefaultFilter.class.hashCode(), calculationFilter.hashCode());
+  }
+
+  @Test
   void validatesCalculationReportsAndJournalCalculationEnvelope() {
     CalculationReport.FormulaCapability evaluable =
         new CalculationReport.FormulaCapability(
@@ -305,6 +346,10 @@ class CalculationContractTypesTest {
 
   private static boolean filterMatches(
       ExecutionPolicyInput.DefaultFilter filter, Object candidate) {
+    return filter.equals(candidate);
+  }
+
+  private static boolean defaultFilterMatches(Object filter, Object candidate) {
     return filter.equals(candidate);
   }
 }

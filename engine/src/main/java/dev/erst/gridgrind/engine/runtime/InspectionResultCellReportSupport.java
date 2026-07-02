@@ -1,32 +1,26 @@
 package dev.erst.gridgrind.engine.runtime;
 
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
-import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
-import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
-import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
+import dev.erst.gridgrind.contract.dto.CellReport;
 import dev.erst.gridgrind.contract.dto.CellStyleReport;
+import dev.erst.gridgrind.contract.dto.CellTemporalKind;
+import dev.erst.gridgrind.contract.dto.CellTemporalReport;
+import dev.erst.gridgrind.contract.dto.CellValueReport;
 import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
 import dev.erst.gridgrind.contract.dto.CommentReport;
-import dev.erst.gridgrind.contract.dto.FontHeightReport;
 import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
 import dev.erst.gridgrind.contract.dto.RichTextRunReport;
-import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellReadFacet;
+import dev.erst.gridgrind.excel.ExcelCellReadProjection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
-import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
+import dev.erst.gridgrind.excel.ExcelTemporalFormatSupport;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.jspecify.annotations.Nullable;
 
 /** Converts cell-local workbook snapshots into protocol report records. */
@@ -72,101 +66,81 @@ final class InspectionResultCellReportSupport {
             commentAnchorReport(comment)));
   }
 
-  static FontHeightReport toFontHeightReport(ExcelFontHeight fontHeight) {
-    return new FontHeightReport(fontHeight.twips(), fontHeight.points());
-  }
-
-  static CellStyleReport toCellStyleReport(ExcelCellStyleSnapshot style) {
-    return new CellStyleReport(
-        style.numberFormat(),
-        new CellAlignmentReport(
-            style.alignment().wrapText(),
-            style.alignment().horizontalAlignment(),
-            style.alignment().verticalAlignment(),
-            style.alignment().textRotation(),
-            style.alignment().indentation()),
-        toCellFontReport(style.font()),
-        toCellFillReport(style.fill()),
-        new CellBorderReport(
-            toCellBorderSideReport(style.border().top()),
-            toCellBorderSideReport(style.border().right()),
-            toCellBorderSideReport(style.border().bottom()),
-            toCellBorderSideReport(style.border().left())),
-        new CellProtectionReport(style.protection().locked(), style.protection().hiddenFormula()));
-  }
-
-  static CellFontReport toCellFontReport(ExcelCellFontSnapshot font) {
-    return new CellFontReport(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        toFontHeightReport(font.fontHeight()),
-        toCellColorReport(font.fontColor()).orElse(null),
-        font.underline(),
-        font.strikeout());
-  }
-
-  static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {
-    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()).orElse(null));
-  }
-
-  static dev.erst.gridgrind.contract.dto.CellReport toCellReport(ExcelCellSnapshot snapshot) {
-    CellStyleReport style = toCellStyleReport(snapshot.style());
-    Optional<HyperlinkTarget> hyperlink =
-        toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
-    Optional<CommentReport> comment = toCommentReport(snapshot.metadata().comment().orElse(null));
+  static CellReport toCellReport(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection, boolean date1904) {
+    Optional<String> displayValue = projectedDisplayValue(snapshot, projection);
+    Optional<CellStyleReport> style = projectedStyle(snapshot, projection);
+    Optional<HyperlinkTarget> hyperlink = projectedHyperlink(snapshot, projection);
+    Optional<CommentReport> comment = projectedComment(snapshot, projection);
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.BlankReport(
-              s.address(), s.declaredType(), s.displayValue(), style, hyperlink, comment);
+          new CellReport.BlankReport(s.address(), displayValue, style, hyperlink, comment);
       case ExcelCellSnapshot.TextSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
+          new CellReport.TextReport(
               s.address(),
-              s.declaredType(),
-              s.displayValue(),
+              displayValue,
               style,
               hyperlink,
               comment,
-              s.stringValue(),
-              toRichTextRunReports(s.richText()));
+              projectedValue(projection, s.textValue()),
+              projectedRuns(projection, s.richText()));
       case ExcelCellSnapshot.NumberSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.NumberReport(
+          new CellReport.NumberReport(
               s.address(),
-              s.declaredType(),
-              s.displayValue(),
+              displayValue,
               style,
               hyperlink,
               comment,
-              s.numberValue());
+              projectedValue(projection, s.numberValue()),
+              projectedTemporal(s, projection, date1904));
       case ExcelCellSnapshot.BooleanSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
+          new CellReport.BooleanReport(
               s.address(),
-              s.declaredType(),
-              s.displayValue(),
+              displayValue,
               style,
               hyperlink,
               comment,
-              s.booleanValue());
+              projectedValue(projection, s.booleanValue()));
       case ExcelCellSnapshot.ErrorSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
+          new CellReport.ErrorReport(
               s.address(),
-              s.declaredType(),
-              s.displayValue(),
+              displayValue,
               style,
               hyperlink,
               comment,
-              s.errorValue());
+              projectedValue(projection, s.errorValue()));
       case ExcelCellSnapshot.FormulaSnapshot s ->
-          new dev.erst.gridgrind.contract.dto.CellReport.FormulaReport(
+          new CellReport.FormulaReport(
               s.address(),
-              s.declaredType(),
-              s.displayValue(),
+              displayValue,
               style,
               hyperlink,
               comment,
-              s.formula(),
-              toCellReport(s.evaluation()));
+              projectedFormula(projection, s.formula()),
+              projectedEvaluation(s.evaluation(), projection, date1904));
+    };
+  }
+
+  static CellValueReport toCellValueReport(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection, boolean date1904) {
+    return switch (snapshot) {
+      case ExcelCellSnapshot.BlankSnapshot _ -> new CellValueReport.BlankValue();
+      case ExcelCellSnapshot.TextSnapshot s ->
+          new CellValueReport.TextValue(
+              s.textValue(),
+              projection.includes(ExcelCellReadFacet.RICH_TEXT_RUNS)
+                  ? toRichTextRunReports(s.richText())
+                  : Optional.empty());
+      case ExcelCellSnapshot.NumberSnapshot s ->
+          new CellValueReport.NumberValue(
+              s.numberValue(), projectedTemporal(s, projection, date1904));
+      case ExcelCellSnapshot.BooleanSnapshot s ->
+          new CellValueReport.BooleanValue(s.booleanValue());
+      case ExcelCellSnapshot.ErrorSnapshot s -> new CellValueReport.ErrorValue(s.errorValue());
+      case ExcelCellSnapshot.FormulaSnapshot _ ->
+          throw new IllegalArgumentException(
+              "Formula evaluations must not recursively remain FORMULA");
     };
   }
 
@@ -177,7 +151,11 @@ final class InspectionResultCellReportSupport {
     }
     return Optional.of(
         richText.orElseThrow().runs().stream()
-            .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
+            .map(
+                run ->
+                    new RichTextRunReport(
+                        run.text(),
+                        InspectionResultCellStyleReportSupport.toCellFontReport(run.font())))
             .toList());
   }
 
@@ -187,68 +165,90 @@ final class InspectionResultCellReportSupport {
   }
 
   static Optional<CellColorReport> toCellColorReport(@Nullable ExcelColorSnapshot color) {
-    return color == null
-        ? Optional.empty()
-        : Optional.of(
-            switch (color) {
-              case ExcelColorSnapshot.Rgb rgb ->
-                  rgb.tint().isPresent()
-                      ? CellColorReport.rgb(rgb.rgb(), rgb.tint().orElseThrow())
-                      : CellColorReport.rgb(rgb.rgb());
-              case ExcelColorSnapshot.Theme theme ->
-                  theme.tint().isPresent()
-                      ? CellColorReport.theme(theme.theme(), theme.tint().orElseThrow())
-                      : CellColorReport.theme(theme.theme());
-              case ExcelColorSnapshot.Indexed indexed ->
-                  indexed.tint().isPresent()
-                      ? CellColorReport.indexed(indexed.indexed(), indexed.tint().orElseThrow())
-                      : CellColorReport.indexed(indexed.indexed());
-            });
+    return InspectionResultCellStyleReportSupport.toCellColorReport(color);
   }
 
-  private static CellFillReport toCellFillReport(ExcelCellFillSnapshot fill) {
-    return switch (fill) {
-      case ExcelCellFillSnapshot.PatternOnly pattern -> CellFillReport.pattern(pattern.pattern());
-      case ExcelCellFillSnapshot.PatternForeground pattern ->
-          CellFillReport.patternForeground(
-              pattern.pattern(), toCellColorReport(pattern.foregroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.PatternBackground pattern ->
-          CellFillReport.patternBackground(
-              pattern.pattern(), toCellColorReport(pattern.backgroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.PatternForegroundBackground pattern ->
-          CellFillReport.patternColors(
-              pattern.pattern(),
-              toCellColorReport(pattern.foregroundColor()).orElseThrow(),
-              toCellColorReport(pattern.backgroundColor()).orElseThrow());
-      case ExcelCellFillSnapshot.Gradient gradient ->
-          CellFillReport.gradient(toCellGradientFillReport(gradient.gradient()));
-    };
+  private static Optional<String> projectedDisplayValue(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+    return projection.includes(ExcelCellReadFacet.FORMAT)
+        ? Optional.of(snapshot.displayValue())
+        : Optional.empty();
   }
 
-  private static CellGradientFillReport toCellGradientFillReport(
-      ExcelGradientFillSnapshot gradient) {
-    return switch (gradient) {
-      case ExcelGradientFillSnapshot.Linear linear ->
-          CellGradientFillReport.linear(
-              linear.degree(),
-              linear.stops().stream()
-                  .map(
-                      stop ->
-                          new CellGradientStopReport(
-                              stop.position(), toCellColorReport(stop.color()).orElseThrow()))
-                  .toList());
-      case ExcelGradientFillSnapshot.Path path ->
-          CellGradientFillReport.path(
-              path.left(),
-              path.right(),
-              path.top(),
-              path.bottom(),
-              path.stops().stream()
-                  .map(
-                      stop ->
-                          new CellGradientStopReport(
-                              stop.position(), toCellColorReport(stop.color()).orElseThrow()))
-                  .toList());
+  private static Optional<CellStyleReport> projectedStyle(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+    return projection.includes(ExcelCellReadFacet.STYLE)
+        ? Optional.of(InspectionResultCellStyleReportSupport.toCellStyleReport(snapshot.style()))
+        : Optional.empty();
+  }
+
+  private static Optional<HyperlinkTarget> projectedHyperlink(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+    return projection.includes(ExcelCellReadFacet.HYPERLINK)
+        ? toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null))
+        : Optional.empty();
+  }
+
+  private static Optional<CommentReport> projectedComment(
+      ExcelCellSnapshot snapshot, ExcelCellReadProjection projection) {
+    return projection.includes(ExcelCellReadFacet.COMMENT)
+        ? toCommentReport(snapshot.metadata().comment().orElse(null))
+        : Optional.empty();
+  }
+
+  private static <T> Optional<T> projectedValue(ExcelCellReadProjection projection, T value) {
+    return projection.includes(ExcelCellReadFacet.VALUE) ? Optional.of(value) : Optional.empty();
+  }
+
+  private static Optional<String> projectedFormula(
+      ExcelCellReadProjection projection, String formula) {
+    return projection.includes(ExcelCellReadFacet.FORMULA)
+        ? Optional.of(formula)
+        : Optional.empty();
+  }
+
+  private static Optional<CellValueReport> projectedEvaluation(
+      ExcelCellSnapshot evaluation, ExcelCellReadProjection projection, boolean date1904) {
+    return projection.includes(ExcelCellReadFacet.VALUE)
+        ? Optional.of(toCellValueReport(evaluation, projection, date1904))
+        : Optional.empty();
+  }
+
+  private static Optional<List<RichTextRunReport>> projectedRuns(
+      ExcelCellReadProjection projection, @Nullable ExcelRichTextSnapshot richText) {
+    return projection.includes(ExcelCellReadFacet.RICH_TEXT_RUNS)
+        ? toRichTextRunReports(richText)
+        : Optional.empty();
+  }
+
+  private static Optional<CellTemporalReport> projectedTemporal(
+      ExcelCellSnapshot.NumberSnapshot snapshot,
+      ExcelCellReadProjection projection,
+      boolean date1904) {
+    if (!projection.includes(ExcelCellReadFacet.TEMPORAL)) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        temporalReport(snapshot.numberValue(), snapshot.style().numberFormat(), date1904));
+  }
+
+  private static CellTemporalReport temporalReport(
+      double numberValue, String numberFormat, boolean date1904) {
+    Optional<ExcelTemporalFormatSupport.ObservedKind> observedKind =
+        ExcelTemporalFormatSupport.observedKind(numberFormat);
+    if (observedKind.isEmpty()) {
+      return CellTemporalReport.notDate();
+    }
+    LocalDateTime localDateTime = DateUtil.getLocalDateTime(numberValue, date1904);
+    return switch (observedKind.orElseThrow()) {
+      case DATE ->
+          CellTemporalReport.temporal(
+              CellTemporalKind.DATE, localDateTime.toLocalDate().toString());
+      case TIME ->
+          CellTemporalReport.temporal(
+              CellTemporalKind.TIME, localDateTime.toLocalTime().toString());
+      case DATE_TIME ->
+          CellTemporalReport.temporal(CellTemporalKind.DATE_TIME, localDateTime.toString());
     };
   }
 

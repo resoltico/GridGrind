@@ -7,14 +7,8 @@ public sealed interface ExcelCellSnapshot {
   /** A1-style address of the cell, such as {@code B4}. */
   String address();
 
-  /** Raw cell type as reported by Excel: STRING, NUMBER, BOOLEAN, FORMULA, BLANK, or ERROR. */
-  String declaredType();
-
-  /**
-   * Resolved value type after formula evaluation: same as {@link #declaredType()} for non-formula
-   * cells; the evaluated result type for formula cells.
-   */
-  String effectiveType();
+  /** Canonical factual cell type: BLANK, TEXT, NUMBER, BOOLEAN, ERROR, or FORMULA. */
+  String type();
 
   /** Formatted display string as Excel would render it in the cell. */
   String displayValue();
@@ -27,97 +21,102 @@ public sealed interface ExcelCellSnapshot {
 
   record BlankSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata)
       implements ExcelCellSnapshot {
     @Override
-    public String effectiveType() {
+    public String type() {
       return "BLANK";
     }
   }
 
   record TextSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
-      String stringValue,
+      String textValue,
       @Nullable ExcelRichTextSnapshot richText)
       implements ExcelCellSnapshot {
     public TextSnapshot {
       java.util.Objects.requireNonNull(address, "address must not be null");
-      java.util.Objects.requireNonNull(declaredType, "declaredType must not be null");
       java.util.Objects.requireNonNull(displayValue, "displayValue must not be null");
       java.util.Objects.requireNonNull(style, "style must not be null");
       java.util.Objects.requireNonNull(metadata, "metadata must not be null");
-      java.util.Objects.requireNonNull(stringValue, "stringValue must not be null");
-      if (richText != null && !stringValue.equals(richText.plainText())) {
-        throw new IllegalArgumentException("richText run text must concatenate to the stringValue");
+      java.util.Objects.requireNonNull(textValue, "textValue must not be null");
+      if (richText != null && !textValue.equals(richText.plainText())) {
+        throw new IllegalArgumentException("richText run text must concatenate to the textValue");
       }
     }
 
     @Override
-    public String effectiveType() {
-      return "STRING";
+    public String type() {
+      return "TEXT";
     }
   }
 
   record NumberSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       Double numberValue)
       implements ExcelCellSnapshot {
     @Override
-    public String effectiveType() {
+    public String type() {
       return "NUMBER";
     }
   }
 
   record BooleanSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       Boolean booleanValue)
       implements ExcelCellSnapshot {
     @Override
-    public String effectiveType() {
+    public String type() {
       return "BOOLEAN";
     }
   }
 
   record ErrorSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       String errorValue)
       implements ExcelCellSnapshot {
     @Override
-    public String effectiveType() {
+    public String type() {
       return "ERROR";
     }
   }
 
   record FormulaSnapshot(
       String address,
-      String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
       String formula,
       ExcelCellSnapshot evaluation)
       implements ExcelCellSnapshot {
+    public FormulaSnapshot {
+      java.util.Objects.requireNonNull(address, "address must not be null");
+      java.util.Objects.requireNonNull(displayValue, "displayValue must not be null");
+      java.util.Objects.requireNonNull(style, "style must not be null");
+      java.util.Objects.requireNonNull(metadata, "metadata must not be null");
+      java.util.Objects.requireNonNull(formula, "formula must not be null");
+      java.util.Objects.requireNonNull(evaluation, "evaluation must not be null");
+      if (evaluation instanceof FormulaSnapshot) {
+        throw new IllegalArgumentException("formula evaluation must not itself be FORMULA");
+      }
+    }
+
     @Override
-    public String effectiveType() {
+    public String type() {
       return "FORMULA";
     }
   }

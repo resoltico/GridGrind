@@ -141,17 +141,17 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             """
             [
               { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-              { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "values": [
+              { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "cells": [
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
               ] } } },
-              { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "values": [
+              { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": { "type": "TYPED", "cells": [
                 { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
                 { "type": "NUMBER", "number": 49.0 }
               ] } } },
               { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
               { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
-              { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
+              { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS", "projection": { "facets": ["VALUE", "FORMULA"] } } }
             ]
             """);
 
@@ -176,11 +176,42 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         (SheetInspectionResult.CellsResult) success.inspections().get(1);
     dev.erst.gridgrind.contract.dto.CellReport.FormulaReport b3Cell =
         (dev.erst.gridgrind.contract.dto.CellReport.FormulaReport) cells.cells().get(1);
-    assertEquals("SUM(B2:B2)", b3Cell.formula());
+    assertEquals("SUM(B2:B2)", b3Cell.formula().orElseThrow());
     assertEquals(
         49.0,
-        ((dev.erst.gridgrind.contract.dto.CellReport.NumberReport) b3Cell.evaluation())
+        assertInstanceOf(CellValueReport.NumberValue.class, b3Cell.evaluation().orElseThrow())
             .numberValue());
+  }
+
+  @Test
+  void executionResponsesAreCompactByDefaultAndIndentedWithPretty() throws IOException {
+    String request = requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]");
+
+    ByteArrayOutputStream compactStdout = new ByteArrayOutputStream();
+    int compactExitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments(),
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                compactStdout);
+
+    ByteArrayOutputStream prettyStdout = new ByteArrayOutputStream();
+    int prettyExitCode =
+        new GridGrindCli()
+            .run(
+                stdinExecutionArguments("--pretty"),
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                prettyStdout);
+
+    assertEquals(0, compactExitCode);
+    assertEquals(0, prettyExitCode);
+    assertInstanceOf(
+        GridGrindResponse.Success.class, GridGrindJson.readResponse(compactStdout.toByteArray()));
+    assertInstanceOf(
+        GridGrindResponse.Success.class, GridGrindJson.readResponse(prettyStdout.toByteArray()));
+    assertEquals(1L, compactStdout.toString(StandardCharsets.UTF_8).lines().count());
+    assertTrue(prettyStdout.toString(StandardCharsets.UTF_8).startsWith("{\n"));
+    assertTrue(prettyStdout.toString(StandardCharsets.UTF_8).contains("\n  \"status\" : "));
   }
 
   @Test
@@ -272,7 +303,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
         assertInstanceOf(
             dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cells.cells().getFirst());
     assertEquals(0, exitCode);
-    assertEquals("Quarterly Budget", a1.stringValue());
+    assertEquals("Quarterly Budget", a1.textValue().orElseThrow());
   }
 
   @Test
@@ -397,7 +428,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
     assertEquals("execute", failure.command());
     assertEquals(
-        java.util.Optional.of("steps[0].target"), failure.location().orElseThrow().jsonPath());
+        java.util.Optional.of("steps[0].target.name"), failure.location().orElseThrow().jsonPath());
     assertTrue(failure.message().contains("invalid Excel character ':'"));
   }
 
@@ -417,7 +448,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                     "type": "SET_RANGE",
                     "rows": {
                       "type": "TYPED",
-                      "rows": [
+                      "cells": [
                         [
                           { "type": "TEXT", "source": { "type": "INLINE", "text": "Owner" } },
                           { "type": "TEXT", "source": { "type": "INLINE", "text": "Task" } }
@@ -568,6 +599,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 "GridGrind wrote the request failure report to " + responsePath.toAbsolutePath()));
     assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST_SHAPE:"));
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
-    assertTrue(failure.message().contains("WORKBOOK"));
+    assertEquals(
+        Optional.of("steps[0].target.type"),
+        failure.location().flatMap(dev.erst.gridgrind.cli.discovery.CliFailureLocation::jsonPath));
   }
 }

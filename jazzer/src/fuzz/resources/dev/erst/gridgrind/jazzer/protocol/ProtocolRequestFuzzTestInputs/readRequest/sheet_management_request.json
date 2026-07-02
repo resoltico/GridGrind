@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated/sheet-management.xlsx"
+    "path": "generated/sheet-management.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

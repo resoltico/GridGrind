@@ -138,9 +138,7 @@ def launcher(command: list[str], cwd: Path) -> list[str]:
         docker_command.extend(
             [
                 "-v",
-                f"{cwd}:/workdir",
-                "-w",
-                "/workdir",
+                f"{cwd}:/work",
                 artifact_target,
                 *command,
             ]

@@ -9,14 +9,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Structured view of one requested or previewed cell. */
+/** Structured factual view of one requested or previewed cell. */
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.EXISTING_PROPERTY,
-    property = "effectiveType")
+    property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellReport.BlankReport.class, name = "BLANK"),
-  @JsonSubTypes.Type(value = CellReport.TextReport.class, name = "STRING"),
+  @JsonSubTypes.Type(value = CellReport.TextReport.class, name = "TEXT"),
   @JsonSubTypes.Type(value = CellReport.NumberReport.class, name = "NUMBER"),
   @JsonSubTypes.Type(value = CellReport.BooleanReport.class, name = "BOOLEAN"),
   @JsonSubTypes.Type(value = CellReport.ErrorReport.class, name = "ERROR"),
@@ -26,186 +26,205 @@ public sealed interface CellReport {
   /** Cell address in A1 notation. */
   String address();
 
-  /** POI cell type as declared before evaluation. */
-  String declaredType();
+  /** Canonical published cell type. */
+  String type();
 
-  /** Effective cell type after formula evaluation. */
-  String effectiveType();
+  /** Formatted display string as shown in Excel when the FORMAT facet is projected. */
+  Optional<String> displayValue();
 
-  /** Formatted display string as shown in Excel. */
-  String displayValue();
+  /** Style snapshot captured for this cell when the STYLE facet is projected. */
+  Optional<CellStyleReport> style();
 
-  /** Style snapshot captured for this cell. */
-  CellStyleReport style();
-
-  /** Hyperlink metadata when the workbook stores a hyperlink for this cell. */
+  /** Hyperlink metadata when the HYPERLINK facet is projected and metadata exists. */
   Optional<HyperlinkTarget> hyperlink();
 
-  /** Comment metadata when the workbook stores a comment for this cell. */
+  /** Comment metadata when the COMMENT facet is projected and metadata exists. */
   Optional<CommentReport> comment();
 
-  /** CellReport for a cell with no value or formula. */
+  /** Cell report for a cell with no value or formula. */
   record BlankReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment)
       implements CellReport {
     public BlankReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
+    public String type() {
       return "BLANK";
     }
   }
 
-  /** CellReport for a cell containing a plain string value. */
+  /** Cell report for a cell containing a plain text value. */
   record TextReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment,
-      String stringValue,
-      Optional<List<RichTextRunReport>> richText)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> textValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<List<RichTextRunReport>> runs)
       implements CellReport {
     public TextReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      Objects.requireNonNull(stringValue, "stringValue must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
-      richText = copyRichTextRuns(richText, "richText");
-      if (richText.isPresent()
-          && !stringValue.equals(concatenateRichTextRuns(richText.orElseThrow()))) {
-        throw new IllegalArgumentException("richText run text must concatenate to the stringValue");
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
+      textValue = normalizeOptional(textValue, "textValue");
+      runs = copyRichTextRuns(runs, "runs");
+      if (runs.isPresent()) {
+        if (textValue.isEmpty()) {
+          throw new IllegalArgumentException("runs require textValue to be present");
+        }
+        if (!textValue.orElseThrow().equals(concatenateRuns(runs.orElseThrow()))) {
+          throw new IllegalArgumentException("runs text must concatenate to the textValue");
+        }
       }
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
-      return "STRING";
+    public String type() {
+      return "TEXT";
     }
   }
 
-  /** CellReport for a cell containing a numeric value. */
+  /** Cell report for a cell containing a numeric value. */
   record NumberReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment,
-      Double numberValue)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Double> numberValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellTemporalReport> temporal)
       implements CellReport {
     public NumberReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
+      numberValue = normalizeOptional(numberValue, "numberValue");
+      temporal = normalizeOptional(temporal, "temporal");
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
+    public String type() {
       return "NUMBER";
     }
   }
 
-  /** CellReport for a cell containing a boolean value. */
+  /** Cell report for a cell containing a boolean value. */
   record BooleanReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment,
-      Boolean booleanValue)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<Boolean> booleanValue)
       implements CellReport {
     public BooleanReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
+      booleanValue = normalizeOptional(booleanValue, "booleanValue");
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
+    public String type() {
       return "BOOLEAN";
     }
   }
 
-  /** CellReport for a cell in an error state (e.g., #DIV/0!, #REF!). */
+  /** Cell report for a cell in an error state (e.g., #DIV/0!, #REF!). */
   record ErrorReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment,
-      String errorValue)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> errorValue)
       implements CellReport {
     public ErrorReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
+      errorValue = normalizeOptional(errorValue, "errorValue");
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
+    public String type() {
       return "ERROR";
     }
   }
 
-  /** CellReport for a cell containing a formula, with its evaluated result nested inside. */
+  /** Cell report for a cell containing a formula. */
   record FormulaReport(
       String address,
-      String declaredType,
-      String displayValue,
-      CellStyleReport style,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellStyleReport> style,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<HyperlinkTarget> hyperlink,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CommentReport> comment,
-      String formula,
-      CellReport evaluation)
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> formula,
+      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<CellValueReport> evaluation)
       implements CellReport {
     public FormulaReport {
       Objects.requireNonNull(address, "address must not be null");
-      Objects.requireNonNull(declaredType, "declaredType must not be null");
-      Objects.requireNonNull(displayValue, "displayValue must not be null");
-      Objects.requireNonNull(style, "style must not be null");
-      Objects.requireNonNull(formula, "formula must not be null");
-      hyperlink = Objects.requireNonNullElseGet(hyperlink, Optional::empty);
-      comment = Objects.requireNonNullElseGet(comment, Optional::empty);
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+      displayValue = normalizeOptional(displayValue, "displayValue");
+      style = normalizeOptional(style, "style");
+      hyperlink = normalizeOptional(hyperlink, "hyperlink");
+      comment = normalizeOptional(comment, "comment");
+      formula = normalizeOptional(formula, "formula");
+      evaluation = normalizeOptional(evaluation, "evaluation");
     }
 
     @Override
     @JsonProperty
-    public String effectiveType() {
+    public String type() {
       return "FORMULA";
     }
+  }
+
+  private static <T> Optional<T> normalizeOptional(Optional<T> value, String fieldName) {
+    Optional<T> normalized = Objects.requireNonNullElseGet(value, Optional::empty);
+    normalized.ifPresent(v -> Objects.requireNonNull(v, fieldName + " must not contain nulls"));
+    return normalized;
   }
 
   private static Optional<List<RichTextRunReport>> copyRichTextRuns(
@@ -222,7 +241,7 @@ public sealed interface CellReport {
     return Optional.of(copy);
   }
 
-  private static String concatenateRichTextRuns(List<RichTextRunReport> runs) {
+  private static String concatenateRuns(List<RichTextRunReport> runs) {
     StringBuilder builder = new StringBuilder();
     for (RichTextRunReport run : runs) {
       builder.append(run.text());

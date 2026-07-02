@@ -3,15 +3,20 @@ package dev.erst.gridgrind.contract.catalog;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.descriptor;
 import static dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalogNestedTypeGroupSupport.nestedTypeGroup;
 
+import dev.erst.gridgrind.contract.dto.CellReport;
 import dev.erst.gridgrind.contract.dto.CellScalarValue;
+import dev.erst.gridgrind.contract.dto.CellValueReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.NamedRangeReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
 import dev.erst.gridgrind.contract.dto.SheetProtectionReport;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.contract.dto.WindowReport;
+import dev.erst.gridgrind.contract.query.CellReadFacet;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import java.util.Arrays;
 import java.util.List;
 
 /** Owns one focused subset of nested-type group descriptors for the protocol catalog. */
@@ -44,6 +49,124 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       CellScalarValue.ErrorValue.class,
                       "ERROR",
                       "Require the effective cell value to be one exact Excel error string."))),
+          nestedTypeGroup(
+              "cellReportTypes",
+              CellReport.class,
+              List.of(
+                  descriptor(
+                      CellReport.BlankReport.class,
+                      "BLANK",
+                      "Factual blank cell report. Only address and type are always present;"
+                          + " FORMAT, STYLE, HYPERLINK, and COMMENT project the remaining fields.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT)),
+                  descriptor(
+                      CellReport.TextReport.class,
+                      "TEXT",
+                      "Factual text cell report. VALUE projects textValue,"
+                          + " RICH_TEXT_RUNS projects runs, and the remaining fields are"
+                          + " facet-gated.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT),
+                      projectedField("textValue", CellReadFacet.VALUE),
+                      projectedField("runs", CellReadFacet.RICH_TEXT_RUNS)),
+                  descriptor(
+                      CellReport.NumberReport.class,
+                      "NUMBER",
+                      "Factual numeric cell report. VALUE projects numberValue; TEMPORAL adds"
+                          + " date, time, or date-time semantics when a numeric Excel value is"
+                          + " format-derived rather than a plain number.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT),
+                      projectedField("numberValue", CellReadFacet.VALUE),
+                      projectedField("temporal", CellReadFacet.TEMPORAL)),
+                  descriptor(
+                      CellReport.BooleanReport.class,
+                      "BOOLEAN",
+                      "Factual boolean cell report. VALUE projects booleanValue and the"
+                          + " remaining fields are facet-gated.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT),
+                      projectedField("booleanValue", CellReadFacet.VALUE)),
+                  descriptor(
+                      CellReport.ErrorReport.class,
+                      "ERROR",
+                      "Factual error cell report. VALUE projects errorValue and the remaining"
+                          + " fields are facet-gated.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT),
+                      projectedField("errorValue", CellReadFacet.VALUE)),
+                  descriptor(
+                      CellReport.FormulaReport.class,
+                      "FORMULA",
+                      "Factual formula cell report with separate projected evaluation."
+                          + " FORMULA projects formula text, VALUE projects evaluation, and the"
+                          + " remaining fields are facet-gated.",
+                      List.of(),
+                      projectedField("displayValue", CellReadFacet.FORMAT),
+                      projectedField("style", CellReadFacet.STYLE),
+                      projectedField("hyperlink", CellReadFacet.HYPERLINK),
+                      projectedField("comment", CellReadFacet.COMMENT),
+                      projectedField("formula", CellReadFacet.FORMULA),
+                      projectedField("evaluation", CellReadFacet.VALUE)))),
+          nestedTypeGroup(
+              "cellValueReportTypes",
+              CellValueReport.class,
+              List.of(
+                  descriptor(
+                      CellValueReport.BlankValue.class,
+                      "BLANK",
+                      "Effective formula evaluation is blank."),
+                  descriptor(
+                      CellValueReport.TextValue.class,
+                      "TEXT",
+                      "Effective formula evaluation is text; RICH_TEXT_RUNS projects optional"
+                          + " runs.",
+                      List.of(),
+                      projectedField("runs", CellReadFacet.RICH_TEXT_RUNS)),
+                  descriptor(
+                      CellValueReport.NumberValue.class,
+                      "NUMBER",
+                      "Effective formula evaluation is numeric; TEMPORAL projects derived"
+                          + " date, time, or date-time semantics when formatting marks the"
+                          + " numeric value as date-like.",
+                      List.of(),
+                      projectedField("temporal", CellReadFacet.TEMPORAL)),
+                  descriptor(
+                      CellValueReport.BooleanValue.class,
+                      "BOOLEAN",
+                      "Effective formula evaluation is boolean."),
+                  descriptor(
+                      CellValueReport.ErrorValue.class,
+                      "ERROR",
+                      "Effective formula evaluation is an Excel error value."))),
+          nestedTypeGroup(
+              "windowReportTypes",
+              WindowReport.class,
+              List.of(
+                  descriptor(
+                      WindowReport.Sparse.class,
+                      "SPARSE",
+                      "Sparse window omitting blank cells and publishing populatedCells only."),
+                  descriptor(
+                      WindowReport.Dense.class,
+                      "DENSE",
+                      "Dense window preserving explicit row structure including blank cells."))),
           nestedTypeGroup(
               "textSourceTypes",
               TextSourceInput.class,
@@ -255,4 +378,21 @@ final class GridGrindProtocolCatalogSourceAndReportNestedTypeGroups {
                       DrawingAnchorReport.Absolute.class,
                       "ABSOLUTE",
                       "Drawing anchor with absolute EMU coordinates and size."))));
+
+  private static CatalogProjectedField projectedField(String name, CellReadFacet firstFacet) {
+    return projectedField(name, firstFacet, new CellReadFacet[0]);
+  }
+
+  private static CatalogProjectedField projectedField(
+      String name, CellReadFacet firstFacet, CellReadFacet... remainingFacets) {
+    return new CatalogProjectedField(name, facetNames(firstFacet, remainingFacets));
+  }
+
+  private static List<String> facetNames(
+      CellReadFacet firstFacet, CellReadFacet... remainingFacets) {
+    return java.util.stream.Stream.concat(
+            java.util.stream.Stream.of(firstFacet), Arrays.stream(remainingFacets))
+        .map(CellReadFacet::name)
+        .toList();
+  }
 }

@@ -97,7 +97,7 @@ class GridGrindRequestDoctorTest {
     WorkbookPlan invalidRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             java.util.List.of());

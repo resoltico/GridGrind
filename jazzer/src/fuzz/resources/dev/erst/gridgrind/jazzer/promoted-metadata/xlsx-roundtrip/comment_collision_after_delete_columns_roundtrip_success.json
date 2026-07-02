@@ -10,10 +10,10 @@
       "inputBytes" : 109,
       "commandCount" : 8,
       "commandKinds" : {
-        "DELETE_COLUMNS" : 2,
-        "AUTO_SIZE_COLUMNS" : 2,
         "CREATE_SHEET" : 2,
-        "SET_COMMENT" : 2
+        "SET_COMMENT" : 2,
+        "DELETE_COLUMNS" : 2,
+        "AUTO_SIZE_COLUMNS" : 2
       },
       "styleKinds" : { }
     }

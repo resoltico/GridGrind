@@ -22,7 +22,7 @@ final class GridGrindTaskKeywordSurfaces {
       Map.of(
           TaskPersistenceMode.NONE, "no save transient non destructive",
           TaskPersistenceMode.SAVE_AS, "save export output",
-          TaskPersistenceMode.OVERWRITE_SOURCE, "overwrite in place");
+          TaskPersistenceMode.OVERWRITE, "overwrite in place");
   private static final Map<TaskMutationMode, String> MUTATION_MODE_SURFACES =
       Map.of(
           TaskMutationMode.READ_ONLY, "read only inspect audit analyze",

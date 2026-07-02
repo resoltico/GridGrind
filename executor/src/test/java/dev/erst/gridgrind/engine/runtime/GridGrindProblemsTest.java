@@ -13,6 +13,8 @@ import dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
+import dev.erst.gridgrind.contract.json.MessageShape;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
@@ -42,21 +44,11 @@ class GridGrindProblemsTest {
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST_SHAPE,
         GridGrindProblems.codeFor(
-            new InvalidRequestShapeException(
-                "bad shape",
-                Optional.of("steps[0]"),
-                Optional.of(4),
-                Optional.of(12),
-                new IllegalArgumentException("bad"))));
+            badShape(Optional.of("steps[0]"), Optional.of(4), Optional.of(12))));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         GridGrindProblems.codeFor(
-            new InvalidRequestException(
-                "bad request",
-                Optional.of("steps[0].target.rowCount"),
-                Optional.of(6),
-                Optional.of(41),
-                new IllegalArgumentException("bad"))));
+            badRequest(Optional.of("steps[0].target.rowCount"), Optional.of(6), Optional.of(41))));
     assertEquals(GridGrindProblemCode.IO_ERROR, GridGrindProblems.codeFor(new IOException("disk")));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
@@ -102,7 +94,7 @@ class GridGrindProblemsTest {
             ProblemContextRequestSurfaces.RequestShape.known("NEW", "NONE"));
     InvalidRequestException exception =
         new InvalidRequestException(
-            "bad request",
+            new MessageInvariant("bad request", Optional.of("steps[0].target.rowCount")),
             Optional.of("steps[0].target.rowCount"),
             Optional.of(6),
             Optional.of(41),
@@ -188,12 +180,7 @@ class GridGrindProblemsTest {
 
     GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.of("steps[0].target.rowCount"),
-                Optional.of(6),
-                Optional.of(41),
-                new IllegalArgumentException("bad")),
+            badRequest(Optional.of("steps[0].target.rowCount"), Optional.of(6), Optional.of(41)),
             readContext);
 
     assertEquals(
@@ -208,31 +195,13 @@ class GridGrindProblemsTest {
 
     GridGrindProblemDetail.Problem lineColumnProblem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.empty(),
-                Optional.of(9),
-                Optional.of(4),
-                new IllegalArgumentException("bad")),
-            readContext);
+            badRequest(Optional.empty(), Optional.of(9), Optional.of(4)), readContext);
     GridGrindProblemDetail.Problem unavailableProblem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.of("steps[0]"),
-                Optional.empty(),
-                Optional.empty(),
-                new IllegalArgumentException("bad")),
-            readContext);
+            badRequest(Optional.of("steps[0]"), Optional.empty(), Optional.empty()), readContext);
     GridGrindProblemDetail.Problem partiallyUnavailableProblem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.of("steps[0]"),
-                Optional.of(11),
-                Optional.empty(),
-                new IllegalArgumentException("bad")),
-            readContext);
+            badRequest(Optional.of("steps[0]"), Optional.of(11), Optional.empty()), readContext);
 
     assertEquals(
         java.util.Optional.empty(),
@@ -365,8 +334,9 @@ class GridGrindProblemsTest {
 
     assertEquals(GridGrindProblemCode.IO_ERROR, problem.code());
     assertEquals(
-        "Could not write workbook to /tmp/output.xlsx: already exists; SAVE_AS requires a new"
-            + " destination path and never replaces an existing workbook implicitly",
+        "Could not write workbook to /tmp/output.xlsx: already exists; SAVE_AS.ifExists=REJECT"
+            + " requires a new destination path. Use ifExists=REPLACE to allow"
+            + " create-or-replace.",
         problem.message());
     assertEquals(problem.message(), problem.causes().getFirst().message());
   }
@@ -376,8 +346,7 @@ class GridGrindProblemsTest {
     ProblemContext.PersistWorkbook context =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE"),
-            ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource(
-                "/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwrite("/tmp/source.xlsx"));
 
     GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
@@ -385,5 +354,25 @@ class GridGrindProblemsTest {
 
     assertEquals("/tmp/source.xlsx", problem.message());
     assertEquals(problem.message(), problem.causes().getFirst().message());
+  }
+
+  private static InvalidRequestShapeException badShape(
+      Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
+    return new InvalidRequestShapeException(
+        new MessageShape("bad shape", jsonPath),
+        jsonPath,
+        jsonLine,
+        jsonColumn,
+        new IllegalArgumentException("bad"));
+  }
+
+  private static InvalidRequestException badRequest(
+      Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
+    return new InvalidRequestException(
+        new MessageInvariant("bad request", jsonPath),
+        jsonPath,
+        jsonLine,
+        jsonColumn,
+        new IllegalArgumentException("bad"));
   }
 }

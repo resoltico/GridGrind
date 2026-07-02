@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-rich-text.xlsx"
+    "path": "generated-workbooks/gridgrind-rich-text.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

@@ -73,49 +73,41 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       ExcelCellSnapshot.TextSnapshot textSnapshot =
           (ExcelCellSnapshot.TextSnapshot) sheet.cells().snapshotCell("A1");
-      assertEquals("STRING", textSnapshot.declaredType());
-      assertEquals("STRING", textSnapshot.effectiveType());
-      assertEquals("Name", textSnapshot.stringValue());
+      assertEquals("TEXT", textSnapshot.type());
+      assertEquals("Name", textSnapshot.textValue());
       assertNull(textSnapshot.richText());
 
       ExcelCellSnapshot.NumberSnapshot numberSnapshot =
           (ExcelCellSnapshot.NumberSnapshot) sheet.cells().snapshotCell("B1");
-      assertEquals("NUMBER", numberSnapshot.declaredType());
-      assertEquals("NUMBER", numberSnapshot.effectiveType());
+      assertEquals("NUMBER", numberSnapshot.type());
       assertEquals(42.5, numberSnapshot.numberValue());
 
       ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
           (ExcelCellSnapshot.BooleanSnapshot) sheet.cells().snapshotCell("C1");
-      assertEquals("BOOLEAN", booleanSnapshot.declaredType());
-      assertEquals("BOOLEAN", booleanSnapshot.effectiveType());
+      assertEquals("BOOLEAN", booleanSnapshot.type());
       assertTrue(booleanSnapshot.booleanValue());
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot) sheet.cells().snapshotCell("A2");
-      assertEquals("BLANK", blankSnapshot.declaredType());
-      assertEquals("BLANK", blankSnapshot.effectiveType());
+      assertEquals("BLANK", blankSnapshot.type());
 
       ExcelCellSnapshot.FormulaSnapshot stringFormulaSnapshot =
           (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("F1");
-      assertEquals("FORMULA", stringFormulaSnapshot.declaredType());
-      assertEquals("FORMULA", stringFormulaSnapshot.effectiveType());
+      assertEquals("FORMULA", stringFormulaSnapshot.type());
       assertEquals("\"Hi\"", stringFormulaSnapshot.formula());
       assertEquals(
-          "Hi",
-          ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation()).stringValue());
+          "Hi", ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation()).textValue());
 
       ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot =
           (ExcelCellSnapshot.FormulaSnapshot) sheet.cells().snapshotCell("D2");
-      assertEquals("FORMULA", errorFormulaSnapshot.declaredType());
-      assertEquals("FORMULA", errorFormulaSnapshot.effectiveType());
+      assertEquals("FORMULA", errorFormulaSnapshot.type());
       assertEquals(
           "#DIV/0!",
           ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation()).errorValue());
 
       ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
           (ExcelCellSnapshot.ErrorSnapshot) sheet.cells().snapshotCell("A4");
-      assertEquals("ERROR", errorSnapshot.declaredType());
-      assertEquals("ERROR", errorSnapshot.effectiveType());
+      assertEquals("ERROR", errorSnapshot.type());
       assertEquals("#DIV/0!", errorSnapshot.errorValue());
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(4, 6);
@@ -411,13 +403,13 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
 
       List<ExcelPreviewRow> preview = sheet.cells().preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
-      assertEquals("BLANK", sheet.cells().snapshotCell("C1").effectiveType());
+      assertEquals("BLANK", sheet.cells().snapshotCell("C1").type());
       assertTrue(sheet.cells().snapshotCell("C1").style().font().italic());
 
       sheet.cells().clearRange("A2:B2");
 
       ExcelCellSnapshot cleared = sheet.cells().snapshotCell("A2");
-      assertEquals("BLANK", cleared.declaredType());
+      assertEquals("BLANK", cleared.type());
       assertEquals("General", cleared.style().numberFormat());
       assertFalse(cleared.style().font().bold());
       assertEquals(
@@ -666,7 +658,7 @@ class ExcelSheetCoreReadWriteCoverageTest extends ExcelSheetTestSupport {
       assertDoesNotThrow(() -> sheet.cells().clearRange("B2:C2"));
       // B2 must now be blank after the clear
       ExcelCellSnapshot b2 = sheet.cells().snapshotCell("B2");
-      assertEquals("BLANK", b2.effectiveType());
+      assertEquals("BLANK", b2.type());
     }
   }
 

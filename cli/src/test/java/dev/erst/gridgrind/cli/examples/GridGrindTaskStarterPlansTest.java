@@ -7,8 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.cli.discovery.ExampleWorkspaceMode;
 import dev.erst.gridgrind.cli.discovery.TaskStarterContract;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.databind.JsonNode;
 
 /** Coverage for starter-contract validation and duplicate-id guards. */
 class GridGrindTaskStarterPlansTest {
@@ -113,11 +115,13 @@ class GridGrindTaskStarterPlansTest {
     assertEquals("Missing task starter plan for NO_SUCH_TASK", missingPlan.getMessage());
     assertEquals(
         "NEW",
-        dev.erst.gridgrind.contract.json.GridGrindJson.requestTree(
+        dev.erst.gridgrind.contract.json.GridGrindJsonOutput.requestTree(
                 GridGrindTaskStarterPlans.planFor("DASHBOARD"))
             .path("source")
             .path("type")
             .stringValue());
+    assertEquals("SAVE_AS", persistenceType(GridGrindTaskStarterPlans.planFor("DASHBOARD")));
+    assertEquals("REPLACE", persistenceIfExists(GridGrindTaskStarterPlans.planFor("DASHBOARD")));
 
     WorkbookPlan plan =
         WorkbookPlan.standard(
@@ -136,5 +140,17 @@ class GridGrindTaskStarterPlansTest {
             IllegalStateException.class,
             () -> GridGrindTaskStarterPlans.toStarterMap(List.of(left, right)));
     assertTrue(duplicate.getMessage().contains("Duplicate task starter plan for DUPLICATE"));
+  }
+
+  private static String persistenceType(WorkbookPlan request) {
+    return textField(GridGrindJsonOutput.requestTree(request).path("persistence"), "type");
+  }
+
+  private static String persistenceIfExists(WorkbookPlan request) {
+    return textField(GridGrindJsonOutput.requestTree(request).path("persistence"), "ifExists");
+  }
+
+  private static String textField(JsonNode node, String fieldName) {
+    return java.util.Objects.requireNonNull(node.path(fieldName).stringValue());
   }
 }

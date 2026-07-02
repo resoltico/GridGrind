@@ -1,11 +1,13 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -58,6 +60,44 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
                 + String.join(System.lineSeparator(), failures));
   }
 
+  @Test
+  void setRangeAndAppendRowTemplatesPreferTypedCellWrappers() {
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    TypeEntry setRange = typeEntry(catalog.mutationActionTypes(), "SET_RANGE");
+    TypeEntry appendRow = typeEntry(catalog.mutationActionTypes(), "APPEND_ROW");
+
+    assertEquals(
+        "TYPED",
+        setRange
+            .stepTemplate()
+            .orElseThrow()
+            .template()
+            .path("action")
+            .path("rows")
+            .path("type")
+            .asText());
+    assertTrue(
+        setRange.stepTemplate().orElseThrow().template().path("action").path("rows").has("cells"));
+    assertEquals(
+        "TYPED",
+        appendRow
+            .stepTemplate()
+            .orElseThrow()
+            .template()
+            .path("action")
+            .path("values")
+            .path("type")
+            .asText());
+    assertTrue(
+        appendRow
+            .stepTemplate()
+            .orElseThrow()
+            .template()
+            .path("action")
+            .path("values")
+            .has("cells"));
+  }
+
   private static Optional<String> roundTripFailure(TypeEntry entry) {
     try {
       GridGrindJson.readRequest(encodeRequest(entry.stepTemplate().orElseThrow()));
@@ -69,7 +109,7 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
 
   private static byte[] encodeRequest(ProtocolStepTemplate template) throws IOException {
     ObjectNode request =
-        GridGrindJson.requestTree(
+        GridGrindJsonOutput.requestTree(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),
@@ -79,7 +119,14 @@ class GridGrindProtocolCatalogStepTemplateContractTest {
     ArrayNode steps = request.putArray("steps");
     steps.add(template.template());
     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-    GridGrindJson.writeCatalogLookupValue(buffer, request);
+    GridGrindJsonOutput.writeCatalogLookupValue(buffer, request);
     return buffer.toByteArray();
+  }
+
+  private static TypeEntry typeEntry(List<TypeEntry> entries, String id) {
+    return entries.stream()
+        .filter(entry -> entry.id().equals(id))
+        .findFirst()
+        .orElseThrow(() -> new IllegalStateException("Catalog is missing type " + id));
   }
 }

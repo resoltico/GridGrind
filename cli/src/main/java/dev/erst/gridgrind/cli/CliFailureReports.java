@@ -5,7 +5,6 @@ import dev.erst.gridgrind.cli.discovery.CliFailureReport;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import java.nio.file.Path;
 import java.util.List;
@@ -133,9 +132,7 @@ final class CliFailureReports {
   private static Optional<String> resolutionForReadRequest(
       GridGrindProblemDetail.Problem problem, String command) {
     GridGrindProblemCode code = problem.code();
-    Optional<String> specificResolution =
-        GridGrindRequestProblemSupport.specificResolution(
-            code, problem.message(), problem.context());
+    Optional<String> specificResolution = specificResolution(problem);
     return switch (code) {
       case INVALID_JSON ->
           Optional.of(
@@ -180,6 +177,16 @@ final class CliFailureReports {
                   + " traverse its parent directories.");
       default -> Optional.of("Correct the request input, then rerun the command.");
     };
+  }
+
+  private static Optional<String> specificResolution(GridGrindProblemDetail.Problem problem) {
+    if (problem.context() instanceof ProblemContext.ReadRequest) {
+      String defaultResolution = problem.code().resolutionFor(problem.message(), problem.context());
+      if (!defaultResolution.equals(problem.resolution())) {
+        return Optional.of(problem.resolution());
+      }
+    }
+    return Optional.empty();
   }
 
   private static Optional<CliFailureLocation> locationForReadRequest(

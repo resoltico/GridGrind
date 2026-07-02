@@ -366,7 +366,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 3, 1)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 3, 1)));
 
       assertNull(schema.surface().columns().getFirst().dominantType());
     }
@@ -384,7 +384,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Empty", "A1", 5, 3)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Empty", "A1", 5, 3)));
 
       assertEquals(
           0,
@@ -409,7 +409,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 2)));
 
       assertEquals(2, schema.surface().dataRowCount(), "dataRowCount must be rowCount - 1");
     }
@@ -429,7 +429,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 1)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 1)));
 
       WorkbookSurfaceResult.SchemaColumn column = schema.surface().columns().getFirst();
       assertEquals(1, column.observedTypes().size());
@@ -469,7 +469,7 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 3, 2)));
 
       WorkbookSurfaceResult.SchemaColumn boolCol = schema.surface().columns().get(0);
       assertEquals("BOOLEAN", boolCol.dominantType());
@@ -494,9 +494,9 @@ class ExcelWorkbookIntrospectorTest {
               new ExcelWorkbookIntrospector()
                   .execute(
                       workbook,
-                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 4, 1)));
+                      WorkbookReadTestSupport.getSheetSchema("schema", "Data", "A1", 4, 1)));
 
-      assertEquals("STRING", schema.surface().columns().getFirst().dominantType());
+      assertEquals("TEXT", schema.surface().columns().getFirst().dominantType());
     }
   }
 
@@ -575,11 +575,11 @@ class ExcelWorkbookIntrospectorTest {
             WorkbookSheetResult.CellsResult.class,
             introspector.execute(
                 workbook,
-                new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1", "B4")))),
+                WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1", "B4")))),
         cast(
             WorkbookSheetResult.WindowResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 2, 2))),
+                workbook, WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 2, 2))),
         cast(
             WorkbookSheetResult.MergedRegionsResult.class,
             introspector.execute(
@@ -613,7 +613,7 @@ class ExcelWorkbookIntrospectorTest {
         cast(
             WorkbookSurfaceResult.SheetSchemaResult.class,
             introspector.execute(
-                workbook, new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 5, 2))),
+                workbook, WorkbookReadTestSupport.getSheetSchema("schema", "Budget", "A1", 5, 2))),
         cast(
             WorkbookSurfaceResult.NamedRangeSurfaceResult.class,
             introspector.execute(

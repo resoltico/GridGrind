@@ -92,7 +92,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
                   .cells()
                   .setCell("A1", ExcelCellValue.text("Quarterly report"))
                   .snapshotCell("A1");
-      assertEquals("Quarterly report", textSnapshot.stringValue());
+      assertEquals("Quarterly report", textSnapshot.textValue());
       assertEquals(rgb("#AABBCC"), fillForegroundColor(textSnapshot.style().fill()));
       assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().border().top().style());
       assertEquals(
@@ -239,7 +239,7 @@ class ExcelSheetFormattingCoverageTest extends ExcelSheetTestSupport {
       ExcelCellSnapshot.TextSnapshot textSnapshot =
           (ExcelCellSnapshot.TextSnapshot) sheet.cells().snapshotCell("A1");
 
-      assertEquals("Quarterly Report", textSnapshot.stringValue());
+      assertEquals("Quarterly Report", textSnapshot.textValue());
       assertNotNull(textSnapshot.richText());
       assertEquals("Quarterly Report", textSnapshot.richText().plainText());
       assertEquals(2, textSnapshot.richText().runs().size());

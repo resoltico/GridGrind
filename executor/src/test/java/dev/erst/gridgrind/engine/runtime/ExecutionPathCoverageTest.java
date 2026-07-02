@@ -60,14 +60,15 @@ class ExecutionPathCoverageTest {
     WorkbookPlan existingSaveAsRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.SaveAs("out.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                "out.xlsx", WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
     WorkbookPlan overwriteRequest =
         WorkbookPlan.standard(
             new WorkbookPlan.WorkbookSource.ExistingFile("input.xlsx"),
-            new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+            new WorkbookPlan.WorkbookPersistence.Overwrite(),
             dev.erst.gridgrind.contract.dto.ExecutionPolicyInput.defaults(),
             dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput.empty(),
             List.of());
@@ -94,7 +95,7 @@ class ExecutionPathCoverageTest {
         ExecutionRequestPaths.persistenceReference(existingSaveAsRequest, workingDirectory));
     assertEquals(
         new dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
-            .OverwriteSource("/tmp/gridgrind/input.xlsx"),
+            .Overwrite("/tmp/gridgrind/input.xlsx"),
         ExecutionRequestPaths.persistenceReference(overwriteRequest, workingDirectory));
     assertEquals(
         "persistence reference requires a saving policy",
@@ -235,7 +236,7 @@ class ExecutionPathCoverageTest {
 
     GridGrindResponse.Failure failure =
         ExecutionResponseSupport.failureResponse(
-            GridGrindProtocolVersion.V1, journal, 3, problem, 1, "step-1");
+            GridGrindProtocolVersion.V1, journal, request, problem, 1, "step-1");
 
     assertEquals(CalculationReport.notRequested(), failure.calculation());
     assertEquals(problem, failure.problem());

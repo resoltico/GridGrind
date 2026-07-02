@@ -28,7 +28,7 @@ class WorkbookReadExecutorTest {
           executor.apply(
               workbook,
               new WorkbookReadCommand.GetWorkbookSummary("workbook"),
-              new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1")),
+              WorkbookReadTestSupport.getCells("cells", "Budget", List.of("A1")),
               new WorkbookReadCommand.GetNamedRangeSurface(
                   "ranges", new ExcelNamedRangeSelection.All()));
       List<WorkbookReadResult> iterableResults =
@@ -41,7 +41,7 @@ class WorkbookReadExecutorTest {
           executor.apply(
               workbook,
               new WorkbookLocation.UnsavedWorkbook(),
-              new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 1));
+              WorkbookReadTestSupport.getWindow("window", "Budget", "A1", 1, 1));
 
       assertEquals(List.of("workbook", "cells", "ranges"), stepIds(varargsResults));
       assertInstanceOf(WorkbookCoreResult.WorkbookSummaryResult.class, varargsResults.get(0));

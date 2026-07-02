@@ -25,7 +25,11 @@ class PayloadExceptionTest {
                 NullPointerException.class,
                 () ->
                     new InvalidRequestException(
-                        "bad request", Optional.empty(), null, Optional.empty(), null))
+                        new MessageInvariant("bad request", Optional.empty()),
+                        Optional.empty(),
+                        null,
+                        Optional.empty(),
+                        null))
             .getMessage());
     assertEquals(
         "jsonColumn must not be null",
@@ -33,7 +37,11 @@ class PayloadExceptionTest {
                 NullPointerException.class,
                 () ->
                     new InvalidRequestShapeException(
-                        "bad shape", Optional.empty(), Optional.empty(), null, null))
+                        new MessageShape("bad shape", Optional.empty()),
+                        Optional.empty(),
+                        Optional.empty(),
+                        null,
+                        null))
             .getMessage());
   }
 
@@ -44,10 +52,18 @@ class PayloadExceptionTest {
             "bad json", Optional.of("steps[0].target"), Optional.of(4), Optional.empty(), null);
     PayloadException lineColumn =
         new InvalidRequestException(
-            "bad request", Optional.empty(), Optional.of(7), Optional.of(3), null);
+            new MessageInvariant("bad request", Optional.empty()),
+            Optional.empty(),
+            Optional.of(7),
+            Optional.of(3),
+            null);
     PayloadException unavailable =
         new InvalidRequestShapeException(
-            "bad shape", Optional.empty(), Optional.empty(), Optional.of(3), null);
+            new MessageShape("bad shape", Optional.empty()),
+            Optional.empty(),
+            Optional.empty(),
+            Optional.of(3),
+            null);
 
     assertInstanceOf(PayloadLocation.PathOnly.class, pathOnly.jsonLocation());
     assertEquals(Optional.of("steps[0].target"), pathOnly.jsonPath());

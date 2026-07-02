@@ -10,6 +10,7 @@
   "persistence": {
     "type": "SAVE_AS",
     "path": "fixtures/secured-copy.xlsx",
+    "ifExists": "REPLACE",
     "security": {
       "encryption": {
         "password": "GridGrind-2026",

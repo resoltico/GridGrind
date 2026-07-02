@@ -63,7 +63,7 @@ final class XlsxParityCoreProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Ops", List.of("A3", "B3", "C3", "D3")),
-                new SheetIntrospectionQuery.GetCells()),
+                allFacetCellsQuery()),
             inspect(
                 "merged",
                 new SheetSelector.ByName("Ops"),
@@ -207,11 +207,11 @@ final class XlsxParityCoreProbeGroup {
       List<String> mismatches) {
     dev.erst.gridgrind.contract.dto.CellReport.TextReport richTextCell =
         cast(dev.erst.gridgrind.contract.dto.CellReport.TextReport.class, cellsByAddress.get("A3"));
-    if (!"Ada Lovelace".equals(richTextCell.stringValue())) {
-      mismatches.add("richTextCell.stringValue=%s".formatted(richTextCell.stringValue()));
+    if (!"Ada Lovelace".equals(richTextCell.textValue().orElse(null))) {
+      mismatches.add("richTextCell.textValue=%s".formatted(richTextCell.textValue()));
     }
-    if (richTextCell.richText().map(List::size).orElse(0) != 2) {
-      mismatches.add("richText runs=%s".formatted(richTextCell.richText()));
+    if (richTextCell.runs().map(List::size).orElse(0) != 2) {
+      mismatches.add("richText runs=%s".formatted(richTextCell.runs()));
     }
   }
 
@@ -226,10 +226,10 @@ final class XlsxParityCoreProbeGroup {
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.BooleanReport.class,
             cellsByAddress.get("C3"));
-    if (numericCell.numberValue() != 12.5d) {
+    if (numericCell.numberValue().orElse(Double.NaN) != 12.5d) {
       mismatches.add("numericCell=%s".formatted(numericCell.numberValue()));
     }
-    if (!Boolean.TRUE.equals(booleanCell.booleanValue())) {
+    if (!Boolean.TRUE.equals(booleanCell.booleanValue().orElse(null))) {
       mismatches.add("booleanCell=%s".formatted(booleanCell.booleanValue()));
     }
   }
@@ -242,11 +242,11 @@ final class XlsxParityCoreProbeGroup {
         cast(
             dev.erst.gridgrind.contract.dto.CellReport.FormulaReport.class,
             cellsByAddress.get("D3"));
-    dev.erst.gridgrind.contract.dto.CellReport.NumberReport formulaEvaluation =
+    dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue formulaEvaluation =
         cast(
-            dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class,
-            formulaCell.evaluation());
-    if (!formulaCell.formula().equals(observation.direct().formulaText())) {
+            dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+            formulaCell.evaluation().orElseThrow());
+    if (!observation.direct().formulaText().equals(formulaCell.formula().orElse(null))) {
       mismatches.add(
           "formulaText=%s direct=%s"
               .formatted(formulaCell.formula(), observation.direct().formulaText()));
@@ -551,7 +551,7 @@ final class XlsxParityCoreProbeGroup {
             inspect(
                 "cells",
                 new CellSelector.ByAddresses("Advanced", List.of("A3", "A4")),
-                new SheetIntrospectionQuery.GetCells()));
+                allFacetCellsQuery()));
     SheetInspectionResult.CellsResult cells =
         XlsxParityGridGrind.read(success, "cells", SheetInspectionResult.CellsResult.class);
     Map<String, dev.erst.gridgrind.contract.dto.CellReport> byAddress = byAddress(cells.cells());
@@ -570,28 +570,28 @@ final class XlsxParityCoreProbeGroup {
                 + " gradientDirect="
                 + gradient
                 + " gradientObserved="
-                + (gradientCell == null ? null : gradientCell.style().fill()));
+                + (gradientCell == null
+                    ? null
+                    : gradientCell.style().map(CellStyleReport::fill).orElse(null)));
   }
 
   private static boolean matchesThemedStyle(
       dev.erst.gridgrind.contract.dto.CellReport themedCell,
       XlsxParityOracle.StyleSnapshot themed) {
-    return themedCell != null
-        && matchesColorDescriptor(
-            themedCell.style().font().fontColor(), themed.fontColorDescriptor())
-        && matchesColorDescriptor(
-            fillForegroundColor(themedCell.style().fill()), themed.fillColorDescriptor())
-        && matchesColorDescriptor(
-            themedCell.style().border().bottom().color(), themed.borderColorDescriptor());
+    CellStyleReport style = themedCell == null ? null : themedCell.style().orElse(null);
+    return style != null
+        && matchesColorDescriptor(style.font().fontColor(), themed.fontColorDescriptor())
+        && matchesColorDescriptor(fillForegroundColor(style.fill()), themed.fillColorDescriptor())
+        && matchesColorDescriptor(style.border().bottom().color(), themed.borderColorDescriptor());
   }
 
   private static boolean matchesGradientStyle(
       dev.erst.gridgrind.contract.dto.CellReport gradientCell,
       XlsxParityOracle.StyleSnapshot gradient) {
-    CellGradientFillReport fillGradient =
-        gradientCell == null ? null : fillGradient(gradientCell.style().fill());
+    CellStyleReport style = gradientCell == null ? null : gradientCell.style().orElse(null);
+    CellGradientFillReport fillGradient = style == null ? null : fillGradient(style.fill());
     return gradient.gradientFill()
-        && gradientCell != null
+        && style != null
         && fillGradient instanceof CellGradientFillReport.Linear linear
         && approximatelyEquals(45.0d, linear.degree())
         && linear.stops().size() == 2
@@ -1419,7 +1419,7 @@ final class XlsxParityCoreProbeGroup {
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
-                    new SheetIntrospectionQuery.GetCells())),
+                    allFacetCellsQuery())),
             "cells",
             SheetInspectionResult.CellsResult.class);
     Map<String, dev.erst.gridgrind.contract.dto.CellReport> styledByAddress =
@@ -1443,7 +1443,7 @@ final class XlsxParityCoreProbeGroup {
                 inspect(
                     "cells",
                     new CellSelector.ByAddresses("Ops", List.of("A5", "A6")),
-                    new SheetIntrospectionQuery.GetCells())),
+                    allFacetCellsQuery())),
             "cells",
             SheetInspectionResult.CellsResult.class);
     boolean clearedOk =

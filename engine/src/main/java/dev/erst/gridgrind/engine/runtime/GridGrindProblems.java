@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.json.PayloadException;
 import dev.erst.gridgrind.contract.json.PayloadLocation;
+import dev.erst.gridgrind.contract.json.RequestProblemSource;
 import java.nio.file.FileAlreadyExistsException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,8 @@ public final class GridGrindProblems {
         publicMessage,
         enrichContext(context, exception),
         Optional.ofNullable(assertionFailureFor(exception)),
-        causesFor(exception, context.stage(), publicMessage));
+        causesFor(exception, context.stage(), publicMessage),
+        exception);
   }
 
   /** Builds a fully populated problem from an explicit code and message. */
@@ -47,7 +49,8 @@ public final class GridGrindProblems {
         message,
         context,
         Optional.ofNullable(assertionFailureFor(cause)),
-        causesFor(cause, context.stage(), cause == null ? message : messageFor(cause, context)));
+        causesFor(cause, context.stage(), cause == null ? message : messageFor(cause, context)),
+        cause);
   }
 
   /**
@@ -58,7 +61,7 @@ public final class GridGrindProblems {
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
       List<GridGrindProblemDetail.ProblemCause> causes) {
-    return problem(code, message, context, Optional.empty(), causes);
+    return problem(code, message, context, Optional.empty(), causes, null);
   }
 
   private static GridGrindProblemDetail.Problem problem(
@@ -66,7 +69,8 @@ public final class GridGrindProblems {
       String message,
       dev.erst.gridgrind.contract.dto.ProblemContext context,
       Optional<AssertionFailure> assertionFailure,
-      List<GridGrindProblemDetail.ProblemCause> causes) {
+      List<GridGrindProblemDetail.ProblemCause> causes,
+      @Nullable Throwable source) {
     Objects.requireNonNull(code, "code must not be null");
     Objects.requireNonNull(context, "context must not be null");
     return new GridGrindProblemDetail.Problem(
@@ -75,11 +79,22 @@ public final class GridGrindProblems {
         code.recovery(),
         code.title(),
         Objects.requireNonNull(message, "message must not be null"),
-        GridGrindRequestProblemSupport.specificResolution(code, message, context)
-            .orElse(code.resolutionFor(message, context)),
+        resolutionFor(code, message, context, source),
         context,
         Objects.requireNonNull(assertionFailure, "assertionFailure must not be null"),
         List.copyOf(Objects.requireNonNull(causes, "causes must not be null")));
+  }
+
+  private static String resolutionFor(
+      GridGrindProblemCode code,
+      String message,
+      dev.erst.gridgrind.contract.dto.ProblemContext context,
+      @Nullable Throwable source) {
+    if (source instanceof RequestProblemSource requestProblemSource) {
+      return GridGrindRequestProblemSupport.resolution(
+          requestProblemSource.requestProblem(), context);
+    }
+    return code.resolutionFor(message, context);
   }
 
   /** Appends an extra structured cause while preserving the primary classified problem. */
@@ -143,8 +158,9 @@ public final class GridGrindProblems {
                 persistencePath ->
                     "Could not write workbook to "
                         + persistencePath
-                        + ": already exists; SAVE_AS requires a new destination path and"
-                        + " never replaces an existing workbook implicitly")
+                        + ": already exists; SAVE_AS.ifExists=REJECT requires a new"
+                        + " destination path. Use ifExists=REPLACE to allow"
+                        + " create-or-replace.")
             .orElseGet(() -> messageFor(exception));
       }
       return messageFor(exception);

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: EXAMPLES
-updated: "2026-06-29"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -33,6 +33,11 @@ GridGrind ships the same example workflows in two forms:
   the same CLI-owned registry, but their relative paths are rooted from the request file's own
   directory so they run in place from a repository checkout.
 
+Cell-reading examples intentionally stay compact unless they are demonstrating a richer surface:
+`GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` omit `projection` for the default `[VALUE]`
+readback, window examples stay sparse unless `includeBlanks` is set to `true`, and every shipped
+cell-reading example stays comfortably inside the shared deterministic 250,000-cell read cap.
+
 ## Path Rules
 
 - Built-in examples are for the packaged `gridgrind` launcher, the release JAR, the Docker image,
@@ -54,7 +59,7 @@ Self-contained built-ins execute from a blank artifact workspace after `--print-
 
 | Built-in ID | Matching fixture | Notes |
 |:------------|:-----------------|:------|
-| `BUDGET` | [`../examples/budget-request.json`](../examples/budget-request.json) | first-run starter |
+| `BUDGET` | [`../examples/budget-request.json`](../examples/budget-request.json) | self-contained budget walkthrough |
 | `WORKBOOK_HEALTH` | [`../examples/workbook-health-request.json`](../examples/workbook-health-request.json) | no-save workbook-health flow |
 | `SHEET_MAINTENANCE` | [`../examples/sheet-maintenance-request.json`](../examples/sheet-maintenance-request.json) | copy-sheet and maintenance flow |
 | `ASSERTION` | [`../examples/assertion-request.json`](../examples/assertion-request.json) | mutate-then-assert walkthrough |
@@ -122,6 +127,8 @@ Refresh the checkout-rooted request fixtures and the generated package-security 
 ```bash
 ./scripts/sync-generated-examples.sh
 ```
+
+Treat the checked-in `examples/*.json` fixtures and the generated package-security workbook as derived artifacts from that script and the built-in example registry; do not hand-edit them in place.
 
 The authoritative verification loop for the shipped examples is:
 

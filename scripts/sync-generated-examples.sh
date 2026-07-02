@@ -35,6 +35,12 @@ readonly task_response_path="${scratch_root}/task-starter-workbook-response.json
 source "${cli_shadow_jar_support}"
 
 mkdir -p "${scratch_root}" "${asset_directory}" "${task_asset_directory}"
+rm -f \
+    "${request_path}" \
+    "${response_path}" \
+    "${verify_response_path}" \
+    "${task_request_path}" \
+    "${task_response_path}"
 
 "${gradlew}" \
     :cli:writeRepositoryExamples \
@@ -53,6 +59,7 @@ cat > "${request_path}" <<EOF
   "persistence": {
     "type": "SAVE_AS",
     "path": "${asset_path}",
+    "ifExists": "REPLACE",
     "security": {
       "encryption": {
         "password": "GridGrind-2026",
@@ -97,7 +104,9 @@ cat > "${request_path}" <<EOF
       },
       "action": {
         "type": "SET_RANGE",
-        "rows": [
+        "rows": {
+          "type": "TYPED",
+          "cells": [
           [
             {
               "type": "TEXT",
@@ -146,7 +155,8 @@ cat > "${request_path}" <<EOF
               }
             }
           ]
-        ]
+          ]
+        }
       }
     }
   ]
@@ -166,7 +176,8 @@ cat > "${task_request_path}" <<EOF
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "${task_asset_path}"
+    "path": "${task_asset_path}",
+    "ifExists": "REPLACE"
   },
   "execution": {
     "mode": {"type": "FULL_XSSF"},
@@ -205,7 +216,9 @@ cat > "${task_request_path}" <<EOF
       },
       "action": {
         "type": "SET_RANGE",
-        "rows": [
+        "rows": {
+          "type": "TYPED",
+          "cells": [
           [
             {
               "type": "TEXT",
@@ -254,7 +267,8 @@ cat > "${task_request_path}" <<EOF
               }
             }
           ]
-        ]
+          ]
+        }
       }
     },
     {

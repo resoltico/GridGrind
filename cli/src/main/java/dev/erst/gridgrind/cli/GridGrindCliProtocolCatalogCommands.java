@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.discovery.ProtocolCatalogCliJson;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -12,25 +12,9 @@ import java.util.Optional;
 final class GridGrindCliProtocolCatalogCommands {
   private GridGrindCliProtocolCatalogCommands() {}
 
-  static int protocolCatalogAll(
-      CliCommand.PrintProtocolCatalogAll command,
-      OutputStream stdout,
-      OutputStream stderr,
-      CliResponseWriter responseWriter)
-      throws IOException {
-    return CliCatalogPayloadSupport.writePayload(
-        responseWriter,
-        "print-protocol-catalog",
-        "protocol catalog",
-        Optional.of("gridgrind --print-protocol-catalog --full"),
-        command.responsePath(),
-        stdout,
-        stderr,
-        GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
-  }
-
   static int protocolCatalogIndex(
       CliCommand.PrintProtocolCatalogIndex command,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
@@ -45,11 +29,13 @@ final class GridGrindCliProtocolCatalogCommands {
         stderr,
         output ->
             ProtocolCatalogCliJson.writeProtocolCatalogIndexReport(
-                output, CliCatalogCommandSupport.protocolCatalogIndexReport()));
+                output, CliCatalogCommandSupport.protocolCatalogIndexReport(), prettyJson),
+        prettyJson);
   }
 
   static int protocolCatalogSearch(
       CliCommand.PrintProtocolCatalogSearch command,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
@@ -65,11 +51,15 @@ final class GridGrindCliProtocolCatalogCommands {
         stderr,
         output ->
             ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
-                output, CliCatalogCommandSupport.summarizedSearchReport(command.searchQuery())));
+                output,
+                CliCatalogCommandSupport.summarizedSearchReport(command.searchQuery()),
+                prettyJson),
+        prettyJson);
   }
 
   static int protocolCatalogLookup(
       CliCommand.PrintProtocolCatalogLookup command,
+      boolean prettyJson,
       OutputStream stdout,
       OutputStream stderr,
       CliResponseWriter responseWriter)
@@ -94,7 +84,8 @@ final class GridGrindCliProtocolCatalogCommands {
               message,
               matches,
               Optional.of(
-                  "Rerun the lookup with one qualified id exactly as listed in suggestions.")));
+                  "Rerun the lookup with one qualified id exactly as listed in suggestions.")),
+          prettyJson);
     }
     var lookupValue = GridGrindProtocolCatalog.lookupValueFor(command.lookupId());
     if (lookupValue.isEmpty()) {
@@ -112,7 +103,8 @@ final class GridGrindCliProtocolCatalogCommands {
               message,
               List.of("gridgrind --print-protocol-catalog --search \"sheet layout\""),
               Optional.of(
-                  "Use --search when you know the concept but not the exact lookup id or group.")));
+                  "Use --search when you know the concept but not the exact lookup id or group.")),
+          prettyJson);
     }
     return CliCatalogPayloadSupport.writeRenderedPayload(
         responseWriter,
@@ -123,7 +115,11 @@ final class GridGrindCliProtocolCatalogCommands {
         stdout,
         stderr,
         output ->
-            GridGrindJson.writeCatalogLookupResult(
-                output, GridGrindProtocolCatalog.catalog().protocolVersion(), lookupValue.get()));
+            GridGrindJsonOutput.writeCatalogLookupResult(
+                output,
+                GridGrindProtocolCatalog.catalog().protocolVersion(),
+                lookupValue.get(),
+                prettyJson),
+        prettyJson);
   }
 }

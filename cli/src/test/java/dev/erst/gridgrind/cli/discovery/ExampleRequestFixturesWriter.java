@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.cli.discovery;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -50,7 +50,7 @@ public final class ExampleRequestFixturesWriter {
 
   private static byte[] requestBytesWithLineSeparator(
       GridGrindShippedExamples.ShippedExample example) throws IOException {
-    byte[] requestBytes = GridGrindJson.writeRequestBytes(example.plan());
+    byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(example.plan());
     byte[] output = Arrays.copyOf(requestBytes, requestBytes.length + LINE_SEPARATOR_BYTES.length);
     System.arraycopy(
         LINE_SEPARATOR_BYTES, 0, output, requestBytes.length, LINE_SEPARATOR_BYTES.length);

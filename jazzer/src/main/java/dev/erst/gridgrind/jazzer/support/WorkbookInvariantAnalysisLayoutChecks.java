@@ -22,22 +22,46 @@ final class WorkbookInvariantAnalysisLayoutChecks {
         window.topLeftAddress() != null, "window topLeftAddress must not be null");
     WorkbookInvariantChecks.require(
         !window.topLeftAddress().isBlank(), "window topLeftAddress must not be blank");
-    WorkbookInvariantChecks.require(window.rows() != null, "window rows must not be null");
     WorkbookInvariantChecks.require(
-        window.rows().size() == window.rowCount(), "window rows size must match rowCount");
-    window
-        .rows()
-        .forEach(
-            row -> {
-              WorkbookInvariantChecks.require(
-                  row.rowIndex() >= 0, "window row index must not be negative");
-              WorkbookInvariantChecks.require(
-                  row.cells() != null, "window row cells must not be null");
-              WorkbookInvariantChecks.require(
-                  row.cells().size() == window.columnCount(),
-                  "window row cells size must match columnCount");
-              row.cells().forEach(WorkbookInvariantCellSurfaceChecks::requireCellReportShape);
-            });
+        window.dimensions() != null, "window dimensions must not be null");
+    WorkbookInvariantChecks.require(
+        window.dimensions().rowCount() > 0, "window rowCount must be greater than 0");
+    WorkbookInvariantChecks.require(
+        window.dimensions().columnCount() > 0, "window columnCount must be greater than 0");
+    switch (window) {
+      case WindowReport.Sparse sparse -> {
+        WorkbookInvariantChecks.require(
+            sparse.populatedCells() != null, "window populatedCells must not be null");
+        sparse
+            .populatedCells()
+            .forEach(
+                cell -> {
+                  WorkbookInvariantCellSurfaceChecks.requireCellReportShape(cell);
+                  WorkbookInvariantChecks.require(
+                      !(cell instanceof dev.erst.gridgrind.contract.dto.CellReport.BlankReport),
+                      "sparse windows must not contain blank cells");
+                });
+      }
+      case WindowReport.Dense dense -> {
+        WorkbookInvariantChecks.require(dense.rows() != null, "window rows must not be null");
+        WorkbookInvariantChecks.require(
+            dense.rows().size() == window.dimensions().rowCount(),
+            "window rows size must match rowCount");
+        dense
+            .rows()
+            .forEach(
+                row -> {
+                  WorkbookInvariantChecks.require(
+                      row.rowIndex() >= 0, "window row index must not be negative");
+                  WorkbookInvariantChecks.require(
+                      row.cells() != null, "window row cells must not be null");
+                  WorkbookInvariantChecks.require(
+                      row.cells().size() == window.dimensions().columnCount(),
+                      "window row cells size must match columnCount");
+                  row.cells().forEach(WorkbookInvariantCellSurfaceChecks::requireCellReportShape);
+                });
+      }
+    }
   }
 
   static void requireHyperlinkEntryShape(CellHyperlinkReport hyperlink) {

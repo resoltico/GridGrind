@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: OPERATIONS
-updated: "2026-06-29"
+updated: "2026-07-01"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -13,7 +13,7 @@ route:
 **Purpose**: Stable public map of the shipped GridGrind `.xlsx` contract.
 **Machine-readable discovery**: `gridgrind --print-protocol-catalog`
 **Summary-first search**: `gridgrind --print-protocol-catalog --search <text>`
-**Full machine-readable dump**: `gridgrind --print-protocol-catalog --full`
+**Scoped machine-readable lookup**: `gridgrind --print-protocol-catalog --lookup <lookup-id>`
 **Copy-paste cheat sheet**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 **Hard ceilings and unsupported boundaries**: [LIMITATIONS.md](./LIMITATIONS.md)
 
@@ -27,7 +27,9 @@ gridgrind --print-request-template --response request.json
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search chart --response chart-search.json
 gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL
-gridgrind --print-protocol-catalog --full --response protocol-catalog.json
+gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
+gridgrind --print-protocol-catalog --lookup nestedTypes:executionModeTypes --response execution-modes.json
+gridgrind --print-protocol-catalog --lookup plainTypes:executionPolicyInputType --response execution-policy.json
 gridgrind --print-example --lookup BUDGET --response budget-request.json
 gridgrind --print-example --lookup ASSERTION --response assertion-request.json
 gridgrind --print-request-template | gridgrind --doctor-request --execution-root .
@@ -36,16 +38,21 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 
 `--print-protocol-catalog` is the authoritative machine-readable shape inventory. The bare command
 returns the compact first-contact index. Use `--search` when you only know part of the name or
-summary, then switch to `--lookup <group>:<id>` for one exact entry once you have the stable
-qualified id. Use `--full` only when you need the entire catalog payload in one response. Search
-returns summary-first matches with `catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one
+summary, then switch to `--lookup` once you have one stable lookup id. Bare `SET_CELL` returns one
+globally unique top-level entry, bare `mutationActionTypes` returns one top-level category, bare
+`cellInputTypes` or `executionPolicyInputType` return one support group, `--lookup
+nestedTypes:executionModeTypes` returns one nested tagged-union group, `--lookup
+plainTypes:executionPolicyInputType` returns one plain record group, and `--lookup
+mutationActionTypes:SET_CELL` returns one qualified exact entry. Search returns summary-first matches with
+`catalogGroup`, `lookupId`, `qualifiedId`, `kind`, and one
 short `summary`; supporting-type context stays lightweight through optional
 `supportingQualifiedIds` or `relatedEntryIds`, and full authoring payloads remain behind the
 follow-up `--lookup` step instead of being dumped inline in the search response. Discovery,
 printed example requests, doctor reports, and normal execution responses omit absent optional
 fields, and request payloads must omit absent fields instead of sending explicit JSON `null`
 placeholders, so the machine-readable surface is easier for agents and shell tooling to consume
-directly.
+directly. Those JSON-native payloads are compact by default; add `--pretty` when you want
+indented JSON instead of the single-line form.
 Task discovery is layered on top of that same catalog surface:
 `--print-task-catalog --response tasks.json`,
 `--print-task-plan --lookup <id> --response task-request.json`,
@@ -65,12 +72,23 @@ execution, doctoring, and discovery, so primary outputs can be written
 directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on
 stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative
 paths and execution scratch space resolve from one explicit directory.
+Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so
+relative CLI paths resolve inside that mounted directory without a separate `-w` override. The
+mounted-directory execution pattern is:
+`docker run --rm -i -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --response response.json`.
 
 ## Canonical Terminology
 
 - **Mutation action**: a `steps[]` entry carrying `action`.
 - **Assertion step**: a `steps[]` entry carrying `assertion`.
 - **Inspection query**: a `steps[]` entry carrying `query`.
+- **Persistence outcome**: the top-level response `persistence` block present on every success and
+  failure response. `SAVE_AS` and `OVERWRITE` echo the request discriminator and then distinguish
+  the intended path from the actual write result through `write.status=WRITTEN|NOT_WRITTEN`.
+  `OVERWRITE` includes `sourcePath` when the request supplied an `EXISTING` source and omits it
+  when validation fails before any source path exists. Persist-workbook problem contexts point at
+  `sourceWorkbookPath` or `persistencePath` directly instead of repeating a second nested
+  `persistence` block.
 - **Source-backed authored input**: request text or binary content loaded from `INLINE`,
   `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` rather than embedded directly in the JSON request body.
 - **Execution policy**: the request-level `execution` block when present. Omit it to use the

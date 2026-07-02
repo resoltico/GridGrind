@@ -11,9 +11,13 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.contract.step.WorkbookStepTargeting;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Builds catalog descriptor payloads without forcing GridGrindProtocolCatalog initialization. */
 final class CatalogTypeEntryFactory {
@@ -39,20 +43,46 @@ final class CatalogTypeEntryFactory {
     return new CatalogTypeDescriptor(recordType, id, summary, List.of(optionalFields));
   }
 
+  static CatalogTypeDescriptor descriptor(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      CatalogProjectedField... projectedFields) {
+    return new CatalogTypeDescriptor(
+        recordType, id, summary, optionalFields, List.of(projectedFields));
+  }
+
   static TypeEntry typeEntry(
       Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
+    return typeEntry(recordType, id, summary, optionalFields, List.of());
+  }
+
+  static TypeEntry typeEntry(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      List<CatalogProjectedField> projectedFields) {
     Optional<WorkbookStepTargeting.TargetSurface> targetSurface =
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(recordType);
     return new TypeEntry(
         canonicalTypeId(recordType, id),
         summary,
-        fieldEntries(recordType, optionalFields),
+        fieldEntries(recordType, optionalFields, projectedFields),
         TypeEntryTargetingSupport.targetSelectorEntries(targetSurface),
         targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule));
   }
 
   static List<String> requiredFields(
       Class<? extends Record> recordType, List<String> optionalFields) {
+    return requiredFields(recordType, optionalFields, List.of());
+  }
+
+  static List<String> requiredFields(
+      Class<? extends Record> recordType,
+      List<String> optionalFields,
+      List<CatalogProjectedField> projectedFields) {
     List<String> recordFields = recordFields(recordType);
     for (String optionalField : optionalFields) {
       if (!recordFields.contains(optionalField)) {
@@ -61,7 +91,18 @@ final class CatalogTypeEntryFactory {
                 .formatted(optionalField, recordType.getName()));
       }
     }
-    return recordFields.stream().filter(field -> !optionalFields.contains(field)).toList();
+    for (CatalogProjectedField projectedField : projectedFields) {
+      if (!recordFields.contains(projectedField.name())) {
+        throw new IllegalStateException(
+            "Catalog projected field '%s' does not exist on %s"
+                .formatted(projectedField.name(), recordType.getName()));
+      }
+    }
+    Set<String> optionalFieldSet =
+        Stream.concat(
+                optionalFields.stream(), projectedFields.stream().map(CatalogProjectedField::name))
+            .collect(Collectors.toUnmodifiableSet());
+    return recordFields.stream().filter(field -> !optionalFieldSet.contains(field)).toList();
   }
 
   static String discriminatorFieldFor(Class<?> sealedType) {
@@ -134,13 +175,23 @@ final class CatalogTypeEntryFactory {
     return canonicalId;
   }
 
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static List<FieldEntry> fieldEntries(
-      Class<? extends Record> recordType, List<String> optionalFields) {
-    requiredFields(recordType, optionalFields);
-    Set<String> optionalFieldSet = Set.copyOf(optionalFields);
+      Class<? extends Record> recordType,
+      List<String> optionalFields,
+      List<CatalogProjectedField> projectedFields) {
+    requiredFields(recordType, optionalFields, projectedFields);
+    Set<String> optionalFieldSet =
+        Stream.concat(
+                optionalFields.stream(), projectedFields.stream().map(CatalogProjectedField::name))
+            .collect(Collectors.toUnmodifiableSet());
+    Map<String, List<String>> projectedFieldsByName = new LinkedHashMap<>();
+    for (CatalogProjectedField projectedField : projectedFields) {
+      projectedFieldsByName.put(projectedField.name(), projectedField.projectedByFacets());
+    }
     return Arrays.stream(recordType.getRecordComponents())
         .filter(CatalogTypeEntryFactory::isCatalogVisible)
-        .gather(CatalogGatherers.expandFieldsWithMetadata(optionalFieldSet))
+        .gather(CatalogGatherers.expandFieldsWithMetadata(optionalFieldSet, projectedFieldsByName))
         .toList();
   }
 

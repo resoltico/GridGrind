@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import dev.erst.gridgrind.excel.foundation.FormulaEnvironmentSupport;
 import java.util.List;
 import java.util.Objects;
@@ -13,6 +15,18 @@ public record FormulaEnvironmentInput(
   /** Returns the default empty formula environment with no external workbooks or UDFs. */
   public static FormulaEnvironmentInput empty() {
     return new FormulaEnvironmentInput(List.of(), FormulaMissingWorkbookPolicy.ERROR, List.of());
+  }
+
+  /** Reads one formula-environment block while applying the documented omission defaults. */
+  @JsonCreator
+  static FormulaEnvironmentInput create(
+      @JsonProperty("externalWorkbooks") List<FormulaExternalWorkbookInput> externalWorkbooks,
+      @JsonProperty("missingWorkbookPolicy") FormulaMissingWorkbookPolicy missingWorkbookPolicy,
+      @JsonProperty("udfToolpacks") List<FormulaUdfToolpackInput> udfToolpacks) {
+    return new FormulaEnvironmentInput(
+        externalWorkbooks == null ? List.of() : externalWorkbooks,
+        missingWorkbookPolicy == null ? FormulaMissingWorkbookPolicy.ERROR : missingWorkbookPolicy,
+        udfToolpacks == null ? List.of() : udfToolpacks);
   }
 
   public FormulaEnvironmentInput {

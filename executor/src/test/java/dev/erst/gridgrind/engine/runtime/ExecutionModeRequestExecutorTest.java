@@ -143,7 +143,8 @@ class ExecutionModeRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     executionPolicy(ExecutionModeInput.streamingWrite(), markRecalculateOnOpen()),
                     null,
                     List.copyOf(operations),
@@ -259,7 +260,8 @@ class ExecutionModeRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.ExistingFile(sourcePath.toString()),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(persistedCopy.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        persistedCopy.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     ExecutionModeInput.eventRead(),
                     null,
                     List.of(),
@@ -278,7 +280,9 @@ class ExecutionModeRequestExecutorTest {
 
     assertEquals(1, workbookSummary.workbook().sheetCount());
     assertTrue(Files.exists(persistedCopy));
-    assertEquals(persistedCopy.toAbsolutePath().toString(), savedAs.executionPath());
+    assertEquals(
+        persistedCopy.toAbsolutePath().toString(),
+        DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(savedAs));
   }
 
   @Test
@@ -446,7 +450,8 @@ class ExecutionModeRequestExecutorTest {
                 new DefaultGridGrindRequestExecutor(),
                 request(
                     new WorkbookPlan.WorkbookSource.New(),
-                    new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    new WorkbookPlan.WorkbookPersistence.SaveAs(
+                        workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                     ExecutionModeInput.streamingWrite(),
                     null,
                     List.of(
@@ -566,13 +571,6 @@ class ExecutionModeRequestExecutorTest {
   }
 
   private static String savedPath(GridGrindResponse.Success success) {
-    return switch (success.persistence()) {
-      case GridGrindResponsePersistence.PersistenceOutcome.SavedAs savedAs ->
-          savedAs.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.Overwritten overwritten ->
-          overwritten.executionPath();
-      case GridGrindResponsePersistence.PersistenceOutcome.NotSaved _ ->
-          throw new AssertionError("expected persisted workbook");
-    };
+    return DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(success.persistence());
   }
 }

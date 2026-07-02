@@ -45,7 +45,8 @@ class GridGrindResponseEdgeCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindResponsePersistence.PersistenceOutcome.SavedAs("budget.xlsx", " "))
+                    new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+                        "budget.xlsx", new GridGrindResponsePersistence.WriteResult.Written(" ")))
             .getMessage());
     assertEquals(
         "sourcePath must not be blank",
@@ -53,7 +54,8 @@ class GridGrindResponseEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
-                        " ", "/tmp/out.xlsx"))
+                        Optional.of(" "),
+                        new GridGrindResponsePersistence.WriteResult.Written("/tmp/out.xlsx")))
             .getMessage());
     assertEquals(
         "sheetCount must not be negative",
@@ -175,45 +177,47 @@ class GridGrindResponseEdgeCoverageTest {
     CommentReport comment = new CommentReport("Owner note", "Alice", true);
 
     assertEquals(
-        "richText must not be empty",
+        "runs must not be empty",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                         "A1",
-                        "STRING",
-                        "Owner",
-                        style(),
+                        Optional.of("Owner"),
+                        Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        "Owner",
+                        Optional.of("Owner"),
                         Optional.of(List.of())))
             .getMessage());
     assertEquals(
-        "richText run text must concatenate to the stringValue",
+        "runs text must concatenate to the textValue",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
                     new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                         "A1",
-                        "STRING",
-                        "Owner",
-                        style(),
+                        Optional.of("Owner"),
+                        Optional.of(style()),
                         Optional.empty(),
                         Optional.empty(),
-                        "Owner",
+                        Optional.of("Owner"),
                         Optional.of(List.of(new RichTextRunReport("Mismatch", style().font())))))
             .getMessage());
     assertEquals(
         "sheetName must not be blank",
         assertThrows(
-                IllegalArgumentException.class, () -> new WindowReport(" ", "A1", 1, 1, List.of()))
+                IllegalArgumentException.class,
+                () ->
+                    new WindowReport.Dense(" ", "A1", new WindowDimensionsReport(1, 1), List.of()))
             .getMessage());
     assertEquals(
         "topLeftAddress must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new WindowReport("Budget", " ", 1, 1, List.of()))
+                () ->
+                    new WindowReport.Dense(
+                        "Budget", " ", new WindowDimensionsReport(1, 1), List.of()))
             .getMessage());
     assertEquals(
         "range must not be blank",
@@ -307,11 +311,7 @@ class GridGrindResponseEdgeCoverageTest {
             .getMessage());
     assertEquals(
         "columnCount must be greater than 0",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new WindowReport(
-                        "Budget", "A1", 1, 0, List.of(new WindowRowReport(0, List.of()))))
+        assertThrows(IllegalArgumentException.class, () -> new WindowDimensionsReport(1, 0))
             .getMessage());
     assertEquals(
         "occurrenceCount must be greater than 0",
@@ -322,6 +322,10 @@ class GridGrindResponseEdgeCoverageTest {
     assertEquals(
         "type must not be blank",
         assertThrows(IllegalArgumentException.class, () -> new TypeCountReport(" ", 1))
+            .getMessage());
+    assertEquals(
+        "type must be one of TEXT, NUMBER, BOOLEAN, ERROR, DATE, TIME, DATE_TIME but was STRING",
+        assertThrows(IllegalArgumentException.class, () -> new TypeCountReport("STRING", 1))
             .getMessage());
     assertEquals(
         "topLeftAddress must not be blank",
@@ -357,25 +361,55 @@ class GridGrindResponseEdgeCoverageTest {
         "columnAddress must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, " ", "Owner", 1, 0, List.of(), "STRING"))
+                () -> new SchemaColumnReport(0, " ", "Owner", 1, 0, List.of(), "TEXT"))
             .getMessage());
     assertEquals(
         "columnIndex must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(-1, "A", "Owner", 1, 0, List.of(), "STRING"))
+                () -> new SchemaColumnReport(-1, "A", "Owner", 1, 0, List.of(), "TEXT"))
             .getMessage());
     assertEquals(
         "populatedCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, "A", "Owner", -1, 0, List.of(), "STRING"))
+                () -> new SchemaColumnReport(0, "A", "Owner", -1, 0, List.of(), "TEXT"))
             .getMessage());
     assertEquals(
         "blankCellCount must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new SchemaColumnReport(0, "A", "Owner", 1, -1, List.of(), "STRING"))
+                () -> new SchemaColumnReport(0, "A", "Owner", 1, -1, List.of(), "TEXT"))
+            .getMessage());
+    assertEquals(
+        "observedTypes counts must sum to populatedCellCount",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new SchemaColumnReport(
+                        0, "A", "Owner", 2, 0, List.of(new TypeCountReport("TEXT", 1)), "TEXT"))
+            .getMessage());
+    assertEquals(
+        "observedTypes must not contain duplicate type TEXT",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new SchemaColumnReport(
+                        0,
+                        "A",
+                        "Owner",
+                        2,
+                        0,
+                        List.of(new TypeCountReport("TEXT", 1), new TypeCountReport("TEXT", 1)),
+                        "TEXT"))
+            .getMessage());
+    assertEquals(
+        "dominantType must be omitted or match one observedTypes entry",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new SchemaColumnReport(
+                        0, "A", "Owner", 1, 0, List.of(new TypeCountReport("TEXT", 1)), "NUMBER"))
             .getMessage());
     assertEquals(
         "workbookScopedCount must not be negative",
@@ -532,26 +566,24 @@ class GridGrindResponseEdgeCoverageTest {
     dev.erst.gridgrind.contract.dto.CellReport.BooleanReport booleanCell =
         new dev.erst.gridgrind.contract.dto.CellReport.BooleanReport(
             "A2",
-            "BOOLEAN",
-            "TRUE",
-            style(),
+            java.util.Optional.of("TRUE"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            true);
+            java.util.Optional.of(true));
     dev.erst.gridgrind.contract.dto.CellReport.ErrorReport errorCell =
         new dev.erst.gridgrind.contract.dto.CellReport.ErrorReport(
             "A3",
-            "ERROR",
-            "#DIV/0!",
-            style(),
+            java.util.Optional.of("#DIV/0!"),
+            java.util.Optional.of(style()),
             java.util.Optional.empty(),
             java.util.Optional.empty(),
-            "#DIV/0!");
+            java.util.Optional.of("#DIV/0!"));
 
     assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
     assertEquals(java.util.Optional.of("--request"), parseArguments.argumentName());
-    assertEquals("BOOLEAN", booleanCell.effectiveType());
-    assertEquals("ERROR", errorCell.effectiveType());
+    assertEquals("BOOLEAN", booleanCell.type());
+    assertEquals("ERROR", errorCell.type());
   }
 
   private static CellStyleReport style() {

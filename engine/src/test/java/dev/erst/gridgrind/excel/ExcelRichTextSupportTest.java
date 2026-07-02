@@ -87,14 +87,13 @@ class ExcelRichTextSupportTest {
     ExcelCellSnapshot.TextSnapshot snapshot =
         new ExcelCellSnapshot.TextSnapshot(
             "A1",
-            "STRING",
             "Quarterly Report",
             defaultStyle(),
             ExcelCellMetadataSnapshot.empty(),
             "Quarterly Report",
             richText);
 
-    assertEquals("STRING", snapshot.effectiveType());
+    assertEquals("TEXT", snapshot.type());
     assertEquals(richText, snapshot.richText());
 
     IllegalArgumentException mismatch =
@@ -103,13 +102,12 @@ class ExcelRichTextSupportTest {
             () ->
                 new ExcelCellSnapshot.TextSnapshot(
                     "A1",
-                    "STRING",
                     "Quarterly Report",
                     defaultStyle(),
                     ExcelCellMetadataSnapshot.empty(),
                     "Different",
                     richText));
-    assertEquals("richText run text must concatenate to the stringValue", mismatch.getMessage());
+    assertEquals("richText run text must concatenate to the textValue", mismatch.getMessage());
   }
 
   @Test

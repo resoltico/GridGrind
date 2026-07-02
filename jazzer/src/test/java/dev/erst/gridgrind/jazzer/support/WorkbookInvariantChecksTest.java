@@ -137,8 +137,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "result.xlsx", workbookPath.toString()),
+            writtenSaveAs("result.xlsx", workbookPath),
             List.of(
                 new RequestWarning(
                     1,
@@ -169,13 +168,12 @@ class WorkbookInvariantChecksTest {
                     List.of(
                         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                             "A1",
-                            "STRING",
-                            "Report",
-                            style,
+                            java.util.Optional.of("Report"),
+                            java.util.Optional.of(style),
                             java.util.Optional.of(
                                 new HyperlinkTarget.Url("https://example.com/report")),
                             java.util.Optional.of(new CommentReport("Review", "GridGrind", true)),
-                            "Report",
+                            java.util.Optional.of("Report"),
                             java.util.Optional.of(
                                 List.of(
                                     new RichTextRunReport(
@@ -190,23 +188,21 @@ class WorkbookInvariantChecksTest {
                                             false))))))),
                 new SheetInspectionResult.WindowResult(
                     "window",
-                    new WindowReport(
+                    new WindowReport.Dense(
                         "Budget",
                         "A1",
-                        1,
-                        1,
+                        new WindowDimensionsReport(1, 1),
                         List.of(
                             new WindowRowReport(
                                 0,
                                 List.of(
                                     new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                                         "A1",
-                                        "STRING",
-                                        "Report",
-                                        style,
+                                        java.util.Optional.empty(),
+                                        java.util.Optional.of(style),
                                         java.util.Optional.empty(),
                                         java.util.Optional.empty(),
-                                        "Report",
+                                        java.util.Optional.of("Report"),
                                         java.util.Optional.empty())))))),
                 new SheetInspectionResult.MergedRegionsResult(
                     "merged", "Budget", List.of(new MergedRegionReport("A1:B1"))),
@@ -283,8 +279,8 @@ class WorkbookInvariantChecksTest {
                                 "Item",
                                 1,
                                 0,
-                                List.of(new TypeCountReport("STRING", 1)),
-                                "STRING")))),
+                                List.of(new TypeCountReport("TEXT", 1)),
+                                "TEXT")))),
                 new WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult(
                     "named-range-surface",
                     new NamedRangeSurfaceReport(
@@ -317,6 +313,27 @@ class WorkbookInvariantChecksTest {
                         1, new AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
+  @Test
+  void acceptsFailureResponsesWithFailureCapablePersistence(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("failed-save.xlsx");
+    WorkbookPlan request = saveAsRequest(workbookPath);
+    GridGrindResponse.Failure response =
+        GridGrindResponses.failure(
+            GridGrindProtocolVersion.V1,
+            notWrittenSaveAs(workbookPath.toString()),
+            GridGrindProblemDetail.Problem.of(
+                GridGrindProblemCode.IO_ERROR,
+                "Could not write workbook to " + workbookPath + ": disk full",
+                new ProblemContext.PersistWorkbook(
+                    ProblemContextRequestSurfaces.RequestShape.known("NEW", "SAVE_AS"),
+                    ProblemContextWorkbookSurfaces.PersistenceReference.saveAs(
+                        workbookPath.toString()))));
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
   }
 
   @Test
@@ -354,8 +371,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -407,8 +423,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -461,8 +476,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "result.xlsx", workbookPath.toString()),
+            writtenSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -488,8 +502,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "result.xlsx", workbookPath.toString()),
+            writtenSaveAs("result.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -549,8 +562,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -590,8 +602,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "pivot.xlsx", workbookPath.toString()),
+            writtenSaveAs("pivot.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -624,8 +635,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -648,7 +658,8 @@ class WorkbookInvariantChecksTest {
     WorkbookPlan request =
         ProtocolStepSupport.request(
             new WorkbookPlan.WorkbookSource.New(),
-            new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(
+                workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
             List.of(),
             List.of(
                 assertThat(
@@ -665,8 +676,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(
                 new AssertionResult(
@@ -741,8 +751,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "advanced.xlsx", workbookPath.toString()),
+            writtenSaveAs("advanced.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -755,12 +764,11 @@ class WorkbookInvariantChecksTest {
                     List.of(
                         new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
                             "A1",
-                            "STRING",
-                            "Review",
-                            advancedStyle,
+                            java.util.Optional.empty(),
+                            java.util.Optional.of(advancedStyle),
                             java.util.Optional.empty(),
                             java.util.Optional.of(anchoredComment),
-                            "Review",
+                            java.util.Optional.of("Review"),
                             java.util.Optional.of(
                                 List.of(
                                     new RichTextRunReport(
@@ -875,8 +883,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "drawing.xlsx", workbookPath.toString()),
+            writtenSaveAs("drawing.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -958,8 +965,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -1001,8 +1007,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                "chart.xlsx", workbookPath.toString()),
+            writtenSaveAs("chart.xlsx", workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -1037,8 +1042,7 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         GridGrindResponses.success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
-                workbookPath.toString(), workbookPath.toString()),
+            writtenSaveAs(workbookPath.toString(), workbookPath),
             List.of(),
             List.of(),
             List.of(
@@ -1337,11 +1341,25 @@ class WorkbookInvariantChecksTest {
             true));
   }
 
+  private static GridGrindResponsePersistence.PersistenceOutcome.SavedAs writtenSaveAs(
+      String requestedPath, Path workbookPath) {
+    return new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+        requestedPath,
+        new GridGrindResponsePersistence.WriteResult.Written(workbookPath.toString()));
+  }
+
+  private static GridGrindResponsePersistence.PersistenceOutcome.SavedAs notWrittenSaveAs(
+      String requestedPath) {
+    return new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+        requestedPath, new GridGrindResponsePersistence.WriteResult.NotWritten());
+  }
+
   @SafeVarargs
   private static WorkbookPlan saveAsRequest(Path workbookPath, InspectionStep... inspections) {
     return ProtocolStepSupport.request(
         new WorkbookPlan.WorkbookSource.New(),
-        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(
+            workbookPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
         List.of(),
         List.of(inspections));
   }
@@ -1398,12 +1416,11 @@ class WorkbookInvariantChecksTest {
       String address, String value) {
     return new dev.erst.gridgrind.contract.dto.CellReport.TextReport(
         address,
-        "STRING",
-        value,
-        defaultStyle(),
+        java.util.Optional.of(value),
+        java.util.Optional.of(defaultStyle()),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
-        value,
+        java.util.Optional.of(value),
         java.util.Optional.empty());
   }
 

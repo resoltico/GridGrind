@@ -1,6 +1,8 @@
 package dev.erst.gridgrind.engine.runtime;
 
+import dev.erst.gridgrind.contract.dto.GridGrindResponsePersistence;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.excel.WorkbookArtifactWriteDisposition;
 import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlPersistenceOptions;
@@ -19,12 +21,21 @@ final class ExecutionRequestPaths {
       WorkbookPlan.WorkbookPersistence persistence, Path workingDirectory) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> ExcelOoxmlPersistenceOptions.none();
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource overwrite ->
+      case WorkbookPlan.WorkbookPersistence.Overwrite overwrite ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
               overwrite.security().orElse(null), workingDirectory);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
               saveAs.security().orElse(null), workingDirectory);
+    };
+  }
+
+  static WorkbookArtifactWriteDisposition writeDisposition(
+      WorkbookPlan.WorkbookPersistence.SaveAs saveAs) {
+    Objects.requireNonNull(saveAs, "saveAs must not be null");
+    return switch (saveAs.ifExists()) {
+      case REJECT -> WorkbookArtifactWriteDisposition.CREATE_NEW;
+      case REPLACE -> WorkbookArtifactWriteDisposition.REPLACE_EXISTING;
     };
   }
 
@@ -78,8 +89,27 @@ final class ExecutionRequestPaths {
   static String reqPersistenceType(WorkbookPlan request) {
     return switch (request.persistence()) {
       case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> "OVERWRITE";
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+    };
+  }
+
+  static GridGrindResponsePersistence.PersistenceOutcome unwrittenPersistenceOutcome(
+      WorkbookPlan request) {
+    return switch (request.persistence()) {
+      case WorkbookPlan.WorkbookPersistence.None _ ->
+          new GridGrindResponsePersistence.PersistenceOutcome.NotSaved();
+      case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
+          new GridGrindResponsePersistence.PersistenceOutcome.SavedAs(
+              saveAs.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ -> {
+        if (!(request.source() instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
+          yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+              Optional.empty(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+        }
+        yield new GridGrindResponsePersistence.PersistenceOutcome.Overwritten(
+            existingFile.path(), new GridGrindResponsePersistence.WriteResult.NotWritten());
+      }
     };
   }
 
@@ -112,9 +142,9 @@ final class ExecutionRequestPaths {
   static dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
       persistenceReference(WorkbookPlan request, Path workingDirectory) {
     return switch (request.persistence()) {
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
           dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
-              .overwriteSource(Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
+              .overwrite(Objects.requireNonNull(reqSourcePath(request, workingDirectory)));
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           dev.erst.gridgrind.contract.dto.ProblemContextWorkbookSurfaces.PersistenceReference
               .saveAs(normalizePath(saveAs.path(), workingDirectory).toString());
@@ -165,7 +195,7 @@ final class ExecutionRequestPaths {
       case WorkbookPlan.WorkbookPersistence.None _ -> null;
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
           normalizePath(saveAs.path(), workingDirectory).toString();
-      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
+      case WorkbookPlan.WorkbookPersistence.Overwrite _ ->
           source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile
               ? normalizePath(existingFile.path(), workingDirectory).toString()
               : null;

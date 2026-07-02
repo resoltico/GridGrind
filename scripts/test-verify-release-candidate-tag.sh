@@ -29,11 +29,11 @@ create_repo() {
     local worktree_dir="${target_dir}/worktree"
 
     (
-        git init "${worktree_dir}" >/dev/null
+        git -c init.defaultBranch=main init "${worktree_dir}" >/dev/null
         cd "${worktree_dir}"
         git config user.name "GridGrind Test"
         git config user.email "gridgrind-test@example.com"
-        git checkout -b main >/dev/null 2>&1
+        git checkout -B main >/dev/null 2>&1
         git remote add origin "${target_dir}/origin.git"
         cat > gradle.properties <<EOF
 version=${version}

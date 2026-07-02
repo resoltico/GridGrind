@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.selector;
 
-import dev.erst.gridgrind.excel.foundation.ExcelAddressLists;
+import dev.erst.gridgrind.contract.json.FieldValidationBasicRule;
+import dev.erst.gridgrind.contract.json.FieldValidationProblem;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,9 +15,6 @@ final class SelectorListValidation {
 
   static List<String> copyDistinctAddresses(List<String> addresses, String fieldName) {
     Objects.requireNonNull(addresses, fieldName + " must not be null");
-    if ("addresses".equals(fieldName)) {
-      return ExcelAddressLists.copyNonEmptyDistinctAddresses(addresses);
-    }
     return copyDistinctStrings(addresses, fieldName, false, true, false);
   }
 
@@ -39,20 +37,17 @@ final class SelectorListValidation {
     Objects.requireNonNull(names, fieldName + " must not be null");
     List<String> copy = new ArrayList<>(names);
     if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
     }
     Set<String> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {
-      String name = copy.get(index);
-      String validated;
-      try {
-        validated = SelectorValueValidation.requirePivotTableName(name, "name");
-      } catch (IllegalArgumentException exception) {
-        throw new IllegalArgumentException(
-            fieldName + "[" + index + "] " + exception.getMessage(), exception);
-      }
+      String validated =
+          SelectorValueValidation.requirePivotTableName(
+              copy.get(index), fieldName + "[" + index + "]");
       if (!unique.add(validated.toUpperCase(Locale.ROOT))) {
-        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
       }
     }
     return List.copyOf(copy);
@@ -62,14 +57,16 @@ final class SelectorListValidation {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<T> copy = new ArrayList<>(values);
     if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
     }
     Set<T> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {
       T value = copy.get(index);
       Objects.requireNonNull(value, fieldName + "[" + index + "] must not be null");
       if (!unique.add(value)) {
-        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
       }
     }
     return List.copyOf(copy);
@@ -80,7 +77,8 @@ final class SelectorListValidation {
     Objects.requireNonNull(selectors, fieldName + " must not be null");
     List<NamedRangeSelector.Ref> copy = new ArrayList<>(selectors);
     if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
     }
     Set<String> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {
@@ -88,7 +86,8 @@ final class SelectorListValidation {
       Objects.requireNonNull(selector, fieldName + "[" + index + "] must not be null");
       String key = namedRangeRefIdentity(selector);
       if (!unique.add(key)) {
-        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
       }
     }
     return List.copyOf(copy);
@@ -116,28 +115,28 @@ final class SelectorListValidation {
       boolean ranges) {
     List<String> copy = new ArrayList<>(values);
     if (copy.isEmpty()) {
-      throw new IllegalArgumentException(fieldName + " must not be empty");
+      throw SelectorTextValidation.invalidField(
+          FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.NON_EMPTY));
+    }
+    if (addresses) {
+      SelectorNumberValidation.requireReadCellCount(copy.size(), fieldName);
     }
     Set<String> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {
-      String value = copy.get(index);
-      String validated;
-      try {
-        validated =
-            sheetNames
-                ? SelectorValueValidation.requireSheetName(value, "sheetName")
-                : addresses
-                    ? SelectorValueValidation.requireAddress(value, "address")
-                    : ranges
-                        ? SelectorValueValidation.requireRange(value, "range")
-                        : SelectorValueValidation.requireDefinedName(value, "name");
-      } catch (IllegalArgumentException exception) {
-        throw new IllegalArgumentException(
-            fieldName + "[" + index + "] " + exception.getMessage(), exception);
-      }
+      String indexedFieldName = fieldName + "[" + index + "]";
+      String validated =
+          sheetNames
+              ? SelectorValueValidation.requireSheetName(copy.get(index), indexedFieldName)
+              : addresses
+                  ? SelectorValueValidation.requireAddress(copy.get(index), indexedFieldName)
+                  : ranges
+                      ? SelectorValueValidation.requireRange(copy.get(index), indexedFieldName)
+                      : SelectorValueValidation.requireDefinedName(
+                          copy.get(index), indexedFieldName);
       String key = validated.toUpperCase(Locale.ROOT);
       if (!unique.add(key)) {
-        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+        throw SelectorTextValidation.invalidField(
+            FieldValidationProblem.atField(fieldName, FieldValidationBasicRule.DUPLICATES));
       }
     }
     return List.copyOf(copy);

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: QUICK_REFERENCE
-updated: "2026-06-29"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -22,7 +22,8 @@ gridgrind --print-request-template --response request.json
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --lookup inspectionQueryTypes:GET_SHEET_LAYOUT
-gridgrind --print-protocol-catalog --full --response protocol-catalog.json
+gridgrind --print-protocol-catalog --lookup mutationActionTypes --response mutation-actions.json
+gridgrind --print-protocol-catalog --lookup nestedTypes:cellInputTypes --response cell-input-types.json
 gridgrind --print-example --lookup BUDGET --response budget-request.json
 gridgrind --print-task-plan --lookup DASHBOARD --response dashboard-request.json
 gridgrind --print-example --lookup SHEET_MAINTENANCE --response sheet-maintenance.json
@@ -34,7 +35,9 @@ gridgrind --doctor-request --request request.json --response doctor-report.json
 
 `--help` is the short synopsis. `--help-protocol` is the authoritative CLI/request contract, `--help-guidance` is the workflow/example playbook, and `--doctor-request` validates request shape, resolves source-backed inputs, preflights existing workbook-source access, and returns every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass. `--response <path>` works across execution, doctoring, and discovery commands, so the primary output can be captured to a file instead of stdout. Built-in example and task catalogs also publish `requestFileName`, `workspaceMode`, and `requiredWorkspacePaths` so you can see whether a printed request is self-contained before executing it.
 
-The bare `--print-protocol-catalog` output is the compact first-contact index. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup <group>:<id>` once you want one exact machine-readable entry, and use `--full` only when you need the entire catalog payload in one response. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it.
+The bare `--print-protocol-catalog` output is the compact first-contact index. `--search` is the fast discovery path when you only know part of an id or summary. Use `--lookup` with one globally unique top-level id, one top-level group name, one nested/plain support-group name, `nestedTypes:<group>`, `plainTypes:<group>`, or `<topLevelGroup>:<id>` once you want one scoped machine-readable payload. Search ranks published top-level operations ahead of support-type groups, returns compact summaries by default, and adds `relatedEntryIds` or `supportingQualifiedIds` only when that lightweight context helps agents climb from a type family to the executable operation that uses it.
+Machine-readable request-template, discovery, doctor, and execution payloads are compact JSON by
+default; add `--pretty` when you want indented JSON instead.
 
 ## Smallest Valid Request
 
@@ -84,8 +87,10 @@ Open an encrypted workbook:
 Save to a new path:
 
 ```json
-{ "persistence": { "type": "SAVE_AS", "path": "out/report.xlsx" } }
+{ "persistence": { "type": "SAVE_AS", "path": "out/report.xlsx", "ifExists": "REPLACE" } }
 ```
+
+`SAVE_AS.ifExists` is required: use `REJECT` to fail on an existing destination or `REPLACE` for create-or-replace output.
 
 Run without saving:
 
@@ -119,22 +124,14 @@ inside the request root or explicit execution root.
 
 ## Execution, Formula, And Mode Rules
 
-Add an execution block when you need non-default mode, journal, or calculation behavior:
+Add an execution block when you need non-default mode, journal, or calculation behavior. You may
+send only the axis you want to change; omitted nested fields keep their defaults:
 
 ```json
 {
   "execution": {
-    "mode": {
-      "type": "FULL_XSSF"
-    },
     "journal": {
       "level": "VERBOSE"
-    },
-    "calculation": {
-      "strategy": {
-        "type": "DO_NOT_CALCULATE"
-      },
-      "markRecalculateOnOpen": true
     }
   }
 }
@@ -221,7 +218,7 @@ Write a row range:
   },
   "action": {
     "type": "SET_RANGE",
-    "rows": { "type": "TYPED", "rows": [
+    "rows": { "type": "TYPED", "cells": [
       [
         {
           "type": "TEXT",
@@ -326,6 +323,22 @@ Read a small cell set:
 }
 ```
 
+Add `query.projection.facets` on `GET_CELLS`, `GET_WINDOW`, or `GET_SHEET_SCHEMA` when you need
+more than the default compact `[VALUE]` readback. Useful opt-ins are `FORMAT`, `STYLE`,
+`FORMULA`, `RICH_TEXT_RUNS`, and `TEMPORAL`. `GET_WINDOW` is sparse by default, so omit
+`includeBlanks` unless you need the dense row grid with `includeBlanks: true`. Date-like numeric
+cells stay `type=NUMBER` on the default projection, so request `TEMPORAL` whenever you need that
+semantic distinction. All three
+cell-returning reads share the same deterministic 250,000-cell cap: `GET_CELLS` counts explicit
+addresses, while `GET_WINDOW` and `GET_SHEET_SCHEMA` count requested rectangular area.
+Lookup payloads for `nestedTypes:cellReportTypes` and `nestedTypes:cellValueReportTypes` publish
+`projectedByFacets` on each conditional field, so the facet request needed for `displayValue`,
+`formula`, `runs`, or `temporal` is derivable from the machine contract alone. The compact
+protocol-catalog index now includes a field-metadata legend for keys such as
+`projectedByFacets` and `enumValueDocs`, and `plainTypes:cellReadProjectionType` publishes
+`enumValueDocs` on `facets` so tokens such as `FORMAT`, `VALUE`, and `TEMPORAL` explain
+themselves without leaving the catalog.
+
 Read sheet layout:
 
 ```json
@@ -350,6 +363,8 @@ Run a no-save workbook-health pass by starting from the smallest valid request a
   `analysis.findings`
 - `ANALYZE_WORKBOOK_FINDINGS`: `analysis.summary` and `analysis.findings`
 - Every response, success or failure: top-level structured `journal`
+- Every response, success or failure: top-level `persistence`; `SAVE_AS` and `OVERWRITE` then
+  distinguish `write.status=WRITTEN|NOT_WRITTEN`
 
 ## Detailed References
 

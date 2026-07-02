@@ -1,30 +1,89 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import java.util.Objects;
 
-/** Rectangular window of cells anchored at one top-left address. */
-public record WindowReport(
-    String sheetName,
-    String topLeftAddress,
-    int rowCount,
-    int columnCount,
-    List<WindowRowReport> rows) {
-  public WindowReport {
-    Objects.requireNonNull(sheetName, "sheetName must not be null");
-    Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
-    if (sheetName.isBlank()) {
-      throw new IllegalArgumentException("sheetName must not be blank");
+/** Rectangular cell window returned in sparse or dense form. */
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    include = JsonTypeInfo.As.EXISTING_PROPERTY,
+    property = "shape")
+@JsonSubTypes({
+  @JsonSubTypes.Type(value = WindowReport.Sparse.class, name = "SPARSE"),
+  @JsonSubTypes.Type(value = WindowReport.Dense.class, name = "DENSE")
+})
+public sealed interface WindowReport permits WindowReport.Sparse, WindowReport.Dense {
+  /** Returns the published window shape discriminator. */
+  String shape();
+
+  /** Returns the sheet owning the returned window. */
+  String sheetName();
+
+  /** Returns the top-left A1 address anchoring this window. */
+  String topLeftAddress();
+
+  /** Returns the requested rectangular dimensions of this window. */
+  WindowDimensionsReport dimensions();
+
+  /** Sparse window shape that omits blank cells entirely. */
+  record Sparse(
+      String sheetName,
+      String topLeftAddress,
+      WindowDimensionsReport dimensions,
+      List<CellReport> populatedCells)
+      implements WindowReport {
+    public Sparse {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
+      Objects.requireNonNull(dimensions, "dimensions must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (topLeftAddress.isBlank()) {
+        throw new IllegalArgumentException("topLeftAddress must not be blank");
+      }
+      populatedCells = GridGrindResponseSupport.copyValues(populatedCells, "populatedCells");
+      for (CellReport cell : populatedCells) {
+        if (cell instanceof CellReport.BlankReport) {
+          throw new IllegalArgumentException("populatedCells must not contain blank cells");
+        }
+      }
     }
-    if (topLeftAddress.isBlank()) {
-      throw new IllegalArgumentException("topLeftAddress must not be blank");
+
+    @Override
+    @JsonProperty
+    public String shape() {
+      return "SPARSE";
     }
-    if (rowCount <= 0) {
-      throw new IllegalArgumentException("rowCount must be greater than 0");
+  }
+
+  /** Dense window shape that retains the explicit row grid, including blanks. */
+  record Dense(
+      String sheetName,
+      String topLeftAddress,
+      WindowDimensionsReport dimensions,
+      List<WindowRowReport> rows)
+      implements WindowReport {
+    public Dense {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
+      Objects.requireNonNull(dimensions, "dimensions must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (topLeftAddress.isBlank()) {
+        throw new IllegalArgumentException("topLeftAddress must not be blank");
+      }
+      rows = GridGrindResponseSupport.copyValues(rows, "rows");
     }
-    if (columnCount <= 0) {
-      throw new IllegalArgumentException("columnCount must be greater than 0");
+
+    @Override
+    @JsonProperty
+    public String shape() {
+      return "DENSE";
     }
-    rows = GridGrindResponseSupport.copyValues(rows, "rows");
   }
 }

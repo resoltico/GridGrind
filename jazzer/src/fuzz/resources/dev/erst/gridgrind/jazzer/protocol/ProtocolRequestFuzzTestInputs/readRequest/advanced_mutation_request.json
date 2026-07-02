@@ -5,7 +5,8 @@
   },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated-workbooks/gridgrind-advanced-mutation.xlsx"
+    "path": "generated-workbooks/gridgrind-advanced-mutation.xlsx",
+    "ifExists": "REPLACE"
   },
   "steps": [
     {

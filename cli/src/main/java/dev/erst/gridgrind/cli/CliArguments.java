@@ -16,8 +16,8 @@ final class CliArguments {
   /** Parses the raw CLI args into one command plus the authored global render options. */
   static CliInvocation parseInvocation(String[] args) {
     Objects.requireNonNull(args, "args must not be null");
-    CliPathArguments.GlobalResponseExtraction extraction =
-        CliPathArguments.extractGlobalResponse(args);
+    CliRenderArguments.GlobalResponseExtraction extraction =
+        CliRenderArguments.extractGlobalResponse(args);
     String[] remainingArgs = extraction.remainingArgsArray();
     Optional<Path> responsePath = extraction.responsePath();
     if (remainingArgs.length > 0) {
@@ -27,10 +27,18 @@ final class CliArguments {
         CliImmediateCommandParser.Result result = immediate.orElseThrow();
         CliTrailingArgumentValidator.requireNoTrailingArguments(
             remainingArgs, result.nextIndex(), result.commandToken());
-        return new CliInvocation(result.command(), extraction.outputFormat());
+        CliInvocation invocation =
+            new CliInvocation(result.command(), extraction.outputFormat(), extraction.prettyJson());
+        CliRenderOptionValidation.validate(invocation.command(), invocation.outputFormat());
+        return invocation;
       }
     }
-    return new CliInvocation(
-        CliExecutionCommandParser.parse(remainingArgs, responsePath), extraction.outputFormat());
+    CliInvocation invocation =
+        new CliInvocation(
+            CliExecutionCommandParser.parse(remainingArgs, responsePath),
+            extraction.outputFormat(),
+            extraction.prettyJson());
+    CliRenderOptionValidation.validate(invocation.command(), invocation.outputFormat());
+    return invocation;
   }
 }

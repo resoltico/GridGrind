@@ -15,6 +15,7 @@ import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
 import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
@@ -185,23 +186,13 @@ class ExecutorCoverageGapsTest {
                     new NamedRangeSelector.SheetScope("OpsTotal", "Ops"))));
     GridGrindProblemDetail.Problem problem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.empty(),
-                Optional.of(11),
-                Optional.empty(),
-                new IllegalArgumentException("bad")),
+            badRequest(Optional.empty(), Optional.of(11), Optional.empty()),
             new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
     GridGrindProblemDetail.Problem unavailableProblem =
         GridGrindProblems.fromException(
-            new InvalidRequestException(
-                "bad request",
-                Optional.empty(),
-                Optional.empty(),
-                Optional.of(9),
-                new IllegalArgumentException("bad")),
+            badRequest(Optional.empty(), Optional.empty(), Optional.of(9)),
             new ProblemContext.ReadRequest(
                 ProblemContextRequestSurfaces.RequestInput.requestFile("/tmp/request.json"),
                 ProblemContextRequestSurfaces.JsonLocation.unavailable()));
@@ -261,5 +252,15 @@ class ExecutorCoverageGapsTest {
         DefaultGridGrindRequestExecutorTestSupport.readRequestContext(unavailableProblem)
             .jsonColumn());
     assertEquals(ExcelBorderStyle.THIN, excelBorder.all().style());
+  }
+
+  private static InvalidRequestException badRequest(
+      Optional<String> jsonPath, Optional<Integer> jsonLine, Optional<Integer> jsonColumn) {
+    return new InvalidRequestException(
+        new MessageInvariant("bad request", jsonPath),
+        jsonPath,
+        jsonLine,
+        jsonColumn,
+        new IllegalArgumentException("bad"));
   }
 }

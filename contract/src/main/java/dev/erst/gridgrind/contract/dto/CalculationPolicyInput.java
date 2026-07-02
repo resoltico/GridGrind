@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 
@@ -10,7 +11,11 @@ import java.util.Objects;
  * recalc.
  */
 public record CalculationPolicyInput(
-    CalculationStrategyInput strategy, boolean markRecalculateOnOpen) {
+    @JsonInclude(
+            value = JsonInclude.Include.CUSTOM,
+            valueFilter = CalculationStrategyInput.DefaultFilter.class)
+        CalculationStrategyInput strategy,
+    @JsonInclude(JsonInclude.Include.NON_DEFAULT) boolean markRecalculateOnOpen) {
   /** Returns the default do-not-calculate policy with no open-time recalculation request. */
   public static CalculationPolicyInput defaults() {
     return new CalculationPolicyInput(new CalculationStrategyInput.DoNotCalculate(), false);
@@ -25,15 +30,14 @@ public record CalculationPolicyInput(
     Objects.requireNonNull(strategy, "strategy must not be null");
   }
 
-  /** Reads one calculation policy while applying the documented request defaults. */
+  /** Reads one calculation-policy block while applying the documented omission defaults. */
   @JsonCreator
-  public CalculationPolicyInput(
+  static CalculationPolicyInput create(
       @JsonProperty("strategy") CalculationStrategyInput strategy,
       @JsonProperty("markRecalculateOnOpen") Boolean markRecalculateOnOpen) {
-    this(
-        strategy,
-        Objects.requireNonNull(markRecalculateOnOpen, "markRecalculateOnOpen must not be null")
-            .booleanValue());
+    return new CalculationPolicyInput(
+        strategy == null ? new CalculationStrategyInput.DoNotCalculate() : strategy,
+        Boolean.TRUE.equals(markRecalculateOnOpen));
   }
 
   /** Returns whether this policy normalizes to the default do-not-calculate behavior. */
@@ -46,5 +50,19 @@ public record CalculationPolicyInput(
   @JsonIgnore
   public CalculationStrategyInput effectiveStrategy() {
     return strategy;
+  }
+
+  /** Custom Jackson inclusion filter that omits the standard do-not-calculate policy. */
+  public static final class DefaultFilter {
+    @Override
+    public boolean equals(Object other) {
+      return other == null
+          || (other instanceof CalculationPolicyInput calculation && calculation.isDefault());
+    }
+
+    @Override
+    public int hashCode() {
+      return DefaultFilter.class.hashCode();
+    }
   }
 }

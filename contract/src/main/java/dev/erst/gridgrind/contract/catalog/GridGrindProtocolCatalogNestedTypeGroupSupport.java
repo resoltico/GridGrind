@@ -18,6 +18,16 @@ final class GridGrindProtocolCatalogNestedTypeGroupSupport {
     return CatalogTypeEntryFactory.descriptor(recordType, id, summary, optionalFields);
   }
 
+  static CatalogTypeDescriptor descriptor(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      CatalogProjectedField... projectedFields) {
+    return CatalogTypeEntryFactory.descriptor(
+        recordType, id, summary, optionalFields, projectedFields);
+  }
+
   static <T extends Record & Selector> CatalogTypeDescriptor selectorDescriptor(
       Class<T> recordType, String summary, String... optionalFields) {
     return descriptor(

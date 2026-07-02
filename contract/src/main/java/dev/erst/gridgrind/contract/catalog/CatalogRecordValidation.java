@@ -52,6 +52,25 @@ final class CatalogRecordValidation {
     return List.copyOf(copy);
   }
 
+  static List<String> copyUniqueStrings(List<String> values, String fieldName) {
+    return copyStrings(values, fieldName).stream()
+        .gather(
+            CatalogGatherers.toOrderedUniqueOrThrow(
+                java.util.function.Function.identity(), fieldName))
+        .toList();
+  }
+
+  static List<EnumValueDocEntry> copyEnumValueDocs(List<EnumValueDocEntry> docs, String fieldName) {
+    Objects.requireNonNull(docs, fieldName + " must not be null");
+    List<EnumValueDocEntry> copy = new java.util.ArrayList<>(docs.size());
+    for (EnumValueDocEntry doc : docs) {
+      copy.add(Objects.requireNonNull(doc, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(EnumValueDocEntry::value, fieldName))
+        .toList();
+  }
+
   static List<FieldEntry> copyFieldEntries(List<FieldEntry> fields, String fieldName) {
     Objects.requireNonNull(fields, fieldName + " must not be null");
     List<FieldEntry> copy = new java.util.ArrayList<>(fields.size());
@@ -60,6 +79,18 @@ final class CatalogRecordValidation {
     }
     return copy.stream()
         .gather(CatalogGatherers.toOrderedUniqueOrThrow(FieldEntry::name, fieldName))
+        .toList();
+  }
+
+  static List<CatalogProjectedField> copyProjectedFields(
+      List<CatalogProjectedField> projectedFields, String fieldName) {
+    Objects.requireNonNull(projectedFields, fieldName + " must not be null");
+    List<CatalogProjectedField> copy = new java.util.ArrayList<>(projectedFields.size());
+    for (CatalogProjectedField projectedField : projectedFields) {
+      copy.add(Objects.requireNonNull(projectedField, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(CatalogProjectedField::name, fieldName))
         .toList();
   }
 

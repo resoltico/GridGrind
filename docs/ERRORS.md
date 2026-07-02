@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: ERRORS
-updated: "2026-06-29"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, unsupported-formula-construct, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -19,18 +19,21 @@ route:
 
 ```json
 {
-  "status": "ERROR",
+  "status": "FAILED",
   "protocolVersion": "V1",
+  "persistence": {
+    "type": "SAVE_AS",
+    "requestedPath": "out/budget-reviewed.xlsx",
+    "write": {
+      "status": "NOT_WRITTEN"
+    }
+  },
   "journal": {
     "planId": "set-total-pass",
     "level": "NORMAL",
     "source": {
       "type": "EXISTING",
       "path": "budget.xlsx"
-    },
-    "persistence": {
-      "type": "SAVE_AS",
-      "path": "out/budget-reviewed.xlsx"
     },
     "validation": {
       "status": "SUCCEEDED",
@@ -147,9 +150,14 @@ route:
 }
 ```
 
-The `journal` block is always present. It records top-level phase timing plus ordered per-step
-outcomes even when the request fails before persistence. Source-backed text and binary loading runs
-first under `journal.inputResolution`, before the workbook is opened.
+The top-level `persistence` block is always present on failed responses too. It preserves the
+requested save mode and intended path even when the run failed before any write happened, in which
+case `write.status=NOT_WRITTEN`. The `journal` block is always present as well. It records
+top-level phase timing plus ordered per-step outcomes even when the request fails before
+persistence. Source-backed text and binary loading runs first under `journal.inputResolution`,
+before the workbook is opened.
+Persist-workbook failures point at `sourceWorkbookPath` or `persistencePath` inside
+`problem.context`; they do not repeat a nested `problem.context.persistence` object.
 
 Pre-pipeline failures — CLI argument errors, help-routing, discovery-lookup failures, and request
 read/parse/validate errors (including `INVALID_JSON`, `INVALID_REQUEST_SHAPE`, and
@@ -181,7 +189,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 ```json
 {
-  "status": "ERROR",
+  "status": "FAILED",
   "protocolVersion": "V1",
   "problem": {
     "code": "ASSERTION_FAILED",
@@ -222,9 +230,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
             {
               "type": "NUMBER",
               "address": "B2",
-              "declaredType": "NUMBER",
-              "value": 900,
-              "displayValue": "900"
+              "numberValue": 900.0
             }
           ]
         }
@@ -250,9 +256,9 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
-| `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. Messages are product-owned and describe unknown fields, unknown type values, missing required fields, or wrong token shapes without leaking Jackson or Java class names. |
+| `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, explicit `null` placeholders, or token shapes do not match the GridGrind protocol schema. Messages are product-owned, classify the failure structurally at intake from the effective creator/discriminator contract, and point `context.jsonPath` at the exact offending field without leaking Jackson or Java class names. |
 | `INPUT_SOURCE_UNAVAILABLE` | A source-backed authored field requested `STANDARD_INPUT`, but no stdin bytes were bound for authored input content. On the CLI this usually means the request itself was also read from stdin instead of `--request <path>`. |
-| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
+| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. These request-owned invariants preserve exact offending-field paths and cause-specific resolutions on the public problem surface. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
@@ -296,7 +302,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | Code | Trigger |
 |:-----|:--------|
 | `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
-| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and existing-file collisions, and `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
+| `IO_ERROR` | File could not be read or written. Resolutions are stage-specific: `OPEN_WORKBOOK` points at the source workbook path, `PERSIST_WORKBOOK` distinguishes overwrite versus `SAVE_AS` destinations and calls out `SAVE_AS.ifExists=REJECT` collisions separately from broader write failures, and `WRITE_RESPONSE` points at the authored `--response` path. Transport-owned write failures preserve the attempted path and, when available, the operating-system reason. |
 
 ### Internal (`INTERNAL` category)
 
@@ -355,7 +361,7 @@ The `context` block provides structured metadata about where the failure occurre
 | `range` | Range, if applicable. |
 | `formula` | Formula text, if applicable. |
 | `namedRangeName` | Named range involved in the failure, if applicable. |
-| `jsonPath` | GridGrind dotted JSON path to the offending request value, such as `steps[0].target.type` (transport errors only). |
+| `jsonPath` | GridGrind dotted JSON path to the offending request value itself, such as `steps[0].action.zoomPercent`, `steps[0].target.type`, or `protocolVersion` (request read and validation errors only). |
 | `jsonLine` | Line number in the request payload (transport errors only). |
 | `jsonColumn` | Column number in the request payload (transport errors only). |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |

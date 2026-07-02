@@ -35,6 +35,7 @@ import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.contract.dto.TableColumnInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
+import dev.erst.gridgrind.contract.query.CellReadProjection;
 import java.util.List;
 
 /**
@@ -107,6 +108,21 @@ final class GridGrindProtocolCatalogWorkbookAuthoringPlainTypeDescriptors {
                   + " text must be non-empty; font is an optional override patch."
                   + " The ordered run texts concatenate to the stored plain string value.",
               List.of("font")),
+          plainTypeDescriptor(
+              "cellReadProjectionType",
+              CellReadProjection.class,
+              "CellReadProjection",
+              "Shared readback projection that selects which factual cell facets are included on"
+                  + " cell-returning inspection surfaces."
+                  + " Facets default to VALUE when omitted by the enclosing query."
+                  + " The facets field publishes enumValueDocs so each facet token explains the"
+                  + " response fields it unlocks."
+                  + " Catalog field descriptors publish facet-gated response fields through"
+                  + " projectedByFacets so agents can derive the required facet directly from the"
+                  + " machine contract."
+                  + " Date-like numeric cells still read back as type=NUMBER until TEMPORAL is"
+                  + " requested.",
+              List.of()),
           plainTypeDescriptor(
               "cellGradientStopInputType",
               CellGradientStopInput.class,

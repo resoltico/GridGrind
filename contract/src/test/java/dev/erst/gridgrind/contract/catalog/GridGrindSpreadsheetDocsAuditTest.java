@@ -216,6 +216,111 @@ class GridGrindSpreadsheetDocsAuditTest {
   }
 
   @Test
+  void dockerDocsFollowThePublishedMountedWorkdirContract() throws IOException {
+    String operations = readDoc("docs/OPERATIONS.md");
+    String quickStart = readDoc("docs/QUICK_START.md");
+    String normalizedOperations = operations.replaceAll("\\s+", " ").replace("`", "");
+    String expectedMountSummary = GridGrindContainerRuntimeText.dockerMountedWorkdirSummary();
+    String expectedVolumeArgument =
+        GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument();
+
+    assertAll(
+        () ->
+            assertTrue(
+                normalizedOperations.contains(expectedMountSummary),
+                "operations doc must use the canonical mounted-workdir Docker wording"),
+        () ->
+            assertTrue(
+                operations.contains(expectedVolumeArgument),
+                "operations doc must mount the host working directory through the canonical /work volume argument"),
+        () ->
+            assertFalse(
+                operations.contains("-w /workdir"),
+                "operations doc must not revive the removed Docker -w override"),
+        () ->
+            assertTrue(
+                quickStart.contains(expectedVolumeArgument),
+                "quick start must use the canonical /work volume argument"),
+        () ->
+            assertFalse(
+                quickStart.contains("-w /workdir"),
+                "quick start must not teach the removed Docker -w override"));
+  }
+
+  @Test
+  void protocolCatalogLookupDocsUseOneUnifiedLookupIdContract() throws IOException {
+    String operations = readDoc("docs/OPERATIONS.md");
+    String quickReference = readDoc("docs/QUICK_REFERENCE.md");
+    String normalizedOperations = operations.replaceAll("\\s+", " ");
+    String normalizedQuickReference = quickReference.replaceAll("\\s+", " ");
+
+    assertAll(
+        () ->
+            assertTrue(
+                operations.contains("`gridgrind --print-protocol-catalog --lookup <lookup-id>`"),
+                "operations doc must advertise the unified lookup-id syntax"),
+        () ->
+            assertFalse(
+                operations.contains(
+                    "`gridgrind --print-protocol-catalog --lookup <group>|<group>:<id>`"),
+                "operations doc must not advertise the incomplete legacy lookup grammar"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains(
+                    "Bare `SET_CELL` returns one globally unique top-level entry"),
+                "operations doc must document bare exact-id lookup"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains(
+                    "bare `mutationActionTypes` returns one top-level category"),
+                "operations doc must document bare top-level group lookup"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains(
+                    "bare `cellInputTypes` or `executionPolicyInputType` return one support group"),
+                "operations doc must document bare support-group lookup"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains("nestedTypes:executionModeTypes")
+                    && normalizedOperations.contains("nested tagged-union group"),
+                "operations doc must document explicit nestedTypes lookup"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains("plainTypes:executionPolicyInputType")
+                    && normalizedOperations.contains("plain record group"),
+                "operations doc must document explicit plainTypes lookup"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains("mutationActionTypes:SET_CELL")
+                    && normalizedOperations.contains("qualified exact entry"),
+                "operations doc must document qualified top-level entry lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("globally unique top-level id"),
+                "quick reference must document bare exact-id lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("top-level group name"),
+                "quick reference must document bare top-level group lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("nested/plain support-group name"),
+                "quick reference must document bare support-group lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("`nestedTypes:<group>`"),
+                "quick reference must document explicit nestedTypes lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("`plainTypes:<group>`"),
+                "quick reference must document explicit plainTypes lookup"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("`<topLevelGroup>:<id>`"),
+                "quick reference must document qualified top-level entry lookup"));
+  }
+
+  @Test
   void examplesGuideDocumentsBuiltInExamplePortabilityTruthfully() throws IOException {
     String examples = readDoc("docs/EXAMPLES.md");
     String normalizedExamples = examples.replaceAll("\\s+", " ");

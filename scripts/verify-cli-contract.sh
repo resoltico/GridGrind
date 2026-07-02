@@ -30,127 +30,6 @@ require_absent() {
     fi
 }
 
-verify_interactive_noarg_failure() {
-    local expected_failure_path=$1
-    shift
-
-    "${cli_contract_python}" - "${expected_failure_path}" "$@" <<'PY'
-import errno
-import json
-import os
-import pty
-import select
-import subprocess
-import sys
-import time
-from pathlib import Path
-
-expected_failure = Path(sys.argv[1]).read_text().replace('\r', '').rstrip('\n')
-expected_failure_json = json.loads(expected_failure)
-command = sys.argv[2:]
-timeout_seconds = 10.0
-
-def first_json_document(text: str):
-    stripped = text.lstrip()
-    if not stripped:
-        raise ValueError('no JSON payload found')
-    decoder = json.JSONDecoder()
-    value, _ = decoder.raw_decode(stripped)
-    return value
-
-master_fd, slave_fd = pty.openpty()
-process = None
-captured = bytearray()
-
-try:
-    process = subprocess.Popen(
-        command,
-        stdin=slave_fd,
-        stdout=slave_fd,
-        stderr=slave_fd,
-        close_fds=True,
-    )
-finally:
-    os.close(slave_fd)
-
-try:
-    deadline = time.monotonic() + timeout_seconds
-    while True:
-        if process.poll() is not None:
-            break
-        if time.monotonic() >= deadline:
-            process.terminate()
-            try:
-                process.wait(timeout=2.0)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=2.0)
-            output = captured.decode('utf-8', 'replace').replace('\r', '').rstrip('\n')
-            print(
-                'error: interactive no-arg invocation did not exit promptly; '
-                + f'partial output: {output[:400]!r}',
-                file=sys.stderr,
-            )
-            raise SystemExit(1)
-        ready, _, _ = select.select([master_fd], [], [], 0.1)
-        if not ready:
-            continue
-        try:
-            chunk = os.read(master_fd, 4096)
-        except OSError as exc:
-            if exc.errno == errno.EIO:
-                break
-            raise
-        if not chunk:
-            break
-        captured.extend(chunk)
-
-    while True:
-        try:
-            chunk = os.read(master_fd, 4096)
-        except OSError as exc:
-            if exc.errno == errno.EIO:
-                break
-            raise
-        if not chunk:
-            break
-        captured.extend(chunk)
-finally:
-    os.close(master_fd)
-
-process.wait(timeout=2.0)
-output = captured.decode('utf-8', 'replace').replace('\r', '').rstrip('\n')
-if process.returncode != 2:
-    print(
-        'error: interactive no-arg invocation exited with the wrong status '
-        + f'({process.returncode}) with output {output[:400]!r}',
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-lines = [line for line in output.split('\n') if line]
-if not lines:
-    print(
-        'error: interactive no-arg invocation emitted no product output',
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-try:
-    actual_failure_json = first_json_document(output)
-except (json.JSONDecodeError, ValueError):
-    print(
-        'error: interactive no-arg invocation did not start with the expected JSON failure report',
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-if actual_failure_json != expected_failure_json:
-    print(
-        'error: interactive no-arg invocation output differed from the expected failure report',
-        file=sys.stderr,
-    )
-    raise SystemExit(1)
-PY
-}
-
 resolve_script_dir() {
     local source_path="${BASH_SOURCE[0]}"
     while [[ -h "${source_path}" ]]; do
@@ -196,9 +75,18 @@ readonly mode="${1:-}"
 readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
+# shellcheck source=/dev/null
+source "${repo_root}/scripts/lib/cli-contract-pty-support.sh"
 readonly cli_contract_python="$(resolve_cli_contract_python)"
 catalog_index_path=''
-catalog_path=''
+source_types_path=''
+persistence_types_path=''
+step_types_path=''
+mutation_action_types_path=''
+assertion_types_path=''
+inspection_query_types_path=''
+execution_mode_types_path=''
+execution_policy_input_type_path=''
 example_catalog_path=''
 task_catalog_path=''
 task_plan_path=''
@@ -271,7 +159,14 @@ help_guidance_stderr_path="${temp_dir}/help-guidance.stderr"
 noargs_stdout_path="${temp_dir}/noargs.stdout"
 noargs_stderr_path="${temp_dir}/noargs.stderr"
 catalog_index_path="${temp_dir}/protocol-catalog-index.json"
-catalog_path="${temp_dir}/protocol-catalog.json"
+source_types_path="${temp_dir}/source-types.json"
+persistence_types_path="${temp_dir}/persistence-types.json"
+step_types_path="${temp_dir}/step-types.json"
+mutation_action_types_path="${temp_dir}/mutation-action-types.json"
+assertion_types_path="${temp_dir}/assertion-types.json"
+inspection_query_types_path="${temp_dir}/inspection-query-types.json"
+execution_mode_types_path="${temp_dir}/execution-mode-types.json"
+execution_policy_input_type_path="${temp_dir}/execution-policy-input-type.json"
 example_catalog_path="${temp_dir}/example-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"
 task_plan_path="${temp_dir}/task-plan.json"
@@ -361,7 +256,14 @@ verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher
 
 "${launcher[@]}" --print-request-template | tr -d '\r' > "${request_template_path}"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_index_path}"
-"${launcher[@]}" --print-protocol-catalog --full | tr -d '\r' > "${catalog_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup sourceTypes | tr -d '\r' > "${source_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup persistenceTypes | tr -d '\r' > "${persistence_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup stepTypes | tr -d '\r' > "${step_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup mutationActionTypes | tr -d '\r' > "${mutation_action_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup assertionTypes | tr -d '\r' > "${assertion_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup inspectionQueryTypes | tr -d '\r' > "${inspection_query_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup nestedTypes:executionModeTypes | tr -d '\r' > "${execution_mode_types_path}"
+"${launcher[@]}" --print-protocol-catalog --lookup plainTypes:executionPolicyInputType | tr -d '\r' > "${execution_policy_input_type_path}"
 "${launcher[@]}" --print-example-catalog | tr -d '\r' > "${example_catalog_path}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"
 "${launcher[@]}" --print-task-plan --lookup DASHBOARD | tr -d '\r' > "${task_plan_path}"
@@ -369,22 +271,29 @@ verify_interactive_noarg_failure "${noargs_stderr_path}" "${interactive_launcher
 cat "${request_template_path}" \
     | "${doctor_launcher[@]}" --doctor-request --execution-root "${doctor_execution_root}" | tr -d '\r' > "${doctor_report_path}"
 
-"${cli_contract_python}" - "${catalog_index_path}" "${catalog_path}" "${example_catalog_path}" "${help_overview_path}" "${help_protocol_path}" "${help_guidance_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
+"${cli_contract_python}" - "${catalog_index_path}" "${source_types_path}" "${persistence_types_path}" "${step_types_path}" "${mutation_action_types_path}" "${assertion_types_path}" "${inspection_query_types_path}" "${execution_mode_types_path}" "${execution_policy_input_type_path}" "${example_catalog_path}" "${help_overview_path}" "${help_protocol_path}" "${help_guidance_path}" "${task_catalog_path}" "${task_plan_path}" "${task_keyword_match_report_path}" "${doctor_report_path}" "${request_template_path}" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 catalog_index = json.loads(Path(sys.argv[1]).read_text())
-catalog = json.loads(Path(sys.argv[2]).read_text())
-example_catalog = json.loads(Path(sys.argv[3]).read_text())
-overview_help_output = Path(sys.argv[4]).read_text()
-protocol_help_output = Path(sys.argv[5]).read_text()
-guidance_help_output = Path(sys.argv[6]).read_text()
-task_catalog = json.loads(Path(sys.argv[7]).read_text())
-task_plan = json.loads(Path(sys.argv[8]).read_text())
-task_keyword_match_report = json.loads(Path(sys.argv[9]).read_text())
-doctor_report = json.loads(Path(sys.argv[10]).read_text())
-request_template = json.loads(Path(sys.argv[11]).read_text())
+source_types_group = json.loads(Path(sys.argv[2]).read_text())
+persistence_types_group = json.loads(Path(sys.argv[3]).read_text())
+step_types_group = json.loads(Path(sys.argv[4]).read_text())
+mutation_action_types_group = json.loads(Path(sys.argv[5]).read_text())
+assertion_types_group = json.loads(Path(sys.argv[6]).read_text())
+inspection_query_types_group = json.loads(Path(sys.argv[7]).read_text())
+execution_mode_types_group = json.loads(Path(sys.argv[8]).read_text())
+execution_policy_input_type_group = json.loads(Path(sys.argv[9]).read_text())
+example_catalog = json.loads(Path(sys.argv[10]).read_text())
+overview_help_output = Path(sys.argv[11]).read_text()
+protocol_help_output = Path(sys.argv[12]).read_text()
+guidance_help_output = Path(sys.argv[13]).read_text()
+task_catalog = json.loads(Path(sys.argv[14]).read_text())
+task_plan = json.loads(Path(sys.argv[15]).read_text())
+task_keyword_match_report = json.loads(Path(sys.argv[16]).read_text())
+doctor_report = json.loads(Path(sys.argv[17]).read_text())
+request_template = json.loads(Path(sys.argv[18]).read_text())
 
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
@@ -397,10 +306,16 @@ top_level_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index
 nested_type_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index["nestedTypeGroups"]}
 plain_type_groups = {entry["group"]: entry["entryIds"] for entry in catalog_index["plainTypeGroups"]}
 lookup_namespaces = {entry["shape"]: entry["usage"] for entry in catalog_index["lookupNamespaces"]}
-plain_types = {entry["group"]: entry["type"] for entry in catalog["plainTypes"]}
-nested_types = {entry["group"]: entry for entry in catalog["nestedTypes"]}
-inspection_query_types = {entry["id"]: entry for entry in catalog["inspectionQueryTypes"]}
-assertion_types = {entry["id"]: entry for entry in catalog["assertionTypes"]}
+source_types = {entry["id"]: entry for entry in source_types_group["types"]}
+persistence_types = {entry["id"]: entry for entry in persistence_types_group["types"]}
+step_types = {entry["id"]: entry for entry in step_types_group["types"]}
+mutation_action_types = {entry["id"]: entry for entry in mutation_action_types_group["types"]}
+assertion_types = {entry["id"]: entry for entry in assertion_types_group["types"]}
+inspection_query_types = {entry["id"]: entry for entry in inspection_query_types_group["types"]}
+execution_mode_types = {
+    entry["id"]: entry for entry in execution_mode_types_group["types"]
+}
+execution_policy_input_type = execution_policy_input_type_group["type"]
 shipped_examples = example_catalog["examples"]
 normalized_overview_help_output = normalized_text(overview_help_output)
 normalized_protocol_help_output = normalized_text(protocol_help_output)
@@ -456,6 +371,8 @@ if normalized_text("--print-task-plan --lookup <id>") not in normalized_overview
     die("overview help no longer advertises task-plan discovery")
 if normalized_text("--print-task-keyword-match --query <text>") not in normalized_overview_help_output:
     die("overview help no longer advertises task-keyword-match discovery")
+if normalized_text("--print-protocol-catalog --lookup <lookup-id>") not in normalized_overview_help_output:
+    die("overview help no longer advertises the unified protocol-catalog lookup grammar")
 if normalized_text("--print-example-catalog") not in normalized_overview_help_output:
     die("overview help no longer advertises example-catalog discovery")
 if (
@@ -463,6 +380,20 @@ if (
     or normalized_text("--help-guidance") not in normalized_overview_help_output
 ):
     die("overview help no longer advertises the split help surfaces")
+if normalized_text("--print-protocol-catalog --lookup <lookup-id>") not in normalized_protocol_help_output:
+    die("protocol help no longer advertises the unified protocol-catalog lookup grammar")
+if normalized_text("--print-protocol-catalog --lookup <id>|<group>:<id>") in normalized_overview_help_output:
+    die("overview help still advertises the incomplete legacy protocol-catalog lookup grammar")
+if normalized_text("--print-protocol-catalog --lookup <id>|<group>:<id>") in normalized_protocol_help_output:
+    die("protocol help still advertises the incomplete legacy protocol-catalog lookup grammar")
+if "--print-protocol-catalog --full" in normalized_overview_help_output:
+    die("overview help still advertises the removed --full catalog surface")
+if "--print-protocol-catalog --full" in normalized_protocol_help_output:
+    die("protocol help still advertises the removed --full catalog surface")
+if "-w /workdir" in guidance_help_output:
+    die("guidance help still teaches the old Docker -w /workdir pattern")
+if '-v "$(pwd)":/work' not in guidance_help_output:
+    die("guidance help no longer teaches the mounted /work Docker pattern")
 
 if catalog_index.get("protocolVersion") != "V1":
     die("protocol catalog index no longer emits protocolVersion=V1")
@@ -535,15 +466,12 @@ for example_id, required_paths in expected_required_paths.items():
     if required_paths_snippet not in normalized_guidance_help_output:
         die(f"guidance help no longer lists requiredWorkspacePaths for {example_id}")
 
-execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
+execution_policy_summary = execution_policy_input_type["summary"]
 if "execution.journal" not in execution_policy_summary:
     die("catalog executionPolicyInputType summary no longer advertises execution.journal")
 if "execution.calculation" not in execution_policy_summary:
     die("catalog executionPolicyInputType summary no longer advertises execution.calculation")
 
-execution_mode_types = {
-    entry["id"]: entry for entry in nested_types["executionModeTypes"]["types"]
-}
 for required_mode in ("FULL_XSSF", "EVENT_READ", "STREAMING_WRITE"):
     if required_mode not in execution_mode_types:
         die(f"catalog executionModeTypes no longer publishes {required_mode}")
@@ -558,6 +486,18 @@ if "FORCE_FORMULA_RECALC_ON_OPEN" in execution_summary:
 for streaming_term in ("ENSURE_SHEET", "APPEND_ROW"):
     if streaming_term not in protocol_help_output:
         die(f"protocol help no longer communicates STREAMING_WRITE constraint '{streaming_term}'")
+
+set_range_template = mutation_action_types["SET_RANGE"]["stepTemplate"]["template"]["action"]["rows"]
+if set_range_template.get("type") != "TYPED":
+    die("catalog SET_RANGE step template no longer defaults to the TYPED cell-grid wrapper")
+if "cells" not in set_range_template:
+    die("catalog SET_RANGE step template no longer uses cells for the typed grid payload")
+
+append_row_template = mutation_action_types["APPEND_ROW"]["stepTemplate"]["template"]["action"]["values"]
+if append_row_template.get("type") != "TYPED":
+    die("catalog APPEND_ROW step template no longer defaults to the TYPED cell-row wrapper")
+if "cells" not in append_row_template:
+    die("catalog APPEND_ROW step template no longer uses cells for the typed row payload")
 
 if request_template.get("protocolVersion") != "V1":
     die("request template no longer emits protocolVersion=V1")
@@ -611,17 +551,18 @@ if assertion_types["EXPECT_ANALYSIS_FINDING_PRESENT"].get("targetSelectorRule") 
         "Matches the nested analysis query's target selectors.":
     die("catalog EXPECT_ANALYSIS_FINDING_PRESENT no longer publishes its derived target-selector rule")
 
-mutation_action_types = {entry["id"]: entry for entry in catalog["mutationActionTypes"]}
 set_table_targets = mutation_action_types["SET_TABLE"].get("targetSelectors")
 if set_table_targets != [{"family": "TableSelector", "typeIds": ["TABLE_BY_NAME_ON_SHEET"]}]:
     die("catalog SET_TABLE no longer publishes the exact allowed target selector family")
 
-catalog_groups = {}
-for key, value in catalog.items():
-    if isinstance(value, list) and value and all(isinstance(entry, dict) for entry in value):
-        ids = {entry["id"] for entry in value if "id" in entry}
-        if ids:
-            catalog_groups[key] = ids
+catalog_groups = {
+    source_types_group["group"]: set(source_types),
+    persistence_types_group["group"]: set(persistence_types),
+    step_types_group["group"]: set(step_types),
+    mutation_action_types_group["group"]: set(mutation_action_types),
+    assertion_types_group["group"]: set(assertion_types),
+    inspection_query_types_group["group"]: set(inspection_query_types),
+}
 
 tasks = task_catalog.get("tasks", [])
 if not tasks:
@@ -655,6 +596,8 @@ if task_plan.get("source", {}).get("type") != "NEW":
     die("task plan no longer defaults DASHBOARD to a NEW source")
 if task_plan.get("persistence", {}).get("type") != "SAVE_AS":
     die("task plan no longer defaults DASHBOARD to SAVE_AS persistence")
+if task_plan.get("persistence", {}).get("ifExists") != "REPLACE":
+    die("task plan no longer defaults DASHBOARD to SAVE_AS.ifExists=REPLACE")
 if not task_plan.get("persistence", {}).get("path", "").endswith(".xlsx"):
     die("task plan no longer emits a syntactically valid SAVE_AS .xlsx path")
 if "dashboard" not in task_plan.get("persistence", {}).get("path", ""):

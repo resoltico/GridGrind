@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
+import dev.erst.gridgrind.contract.query.CellReadFacet;
+import dev.erst.gridgrind.contract.query.CellReadProjection;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
@@ -210,6 +212,54 @@ class CatalogFieldMetadataSupportTest {
                 dev.erst.gridgrind.contract.selector.Selector.class,
                 "selector"),
             dev.erst.gridgrind.contract.selector.SheetSelector.class));
+  }
+
+  @Test
+  void fieldEntryCanPublishProjectedFacetMetadata() throws Exception {
+    FieldEntry projected =
+        CatalogFieldMetadataSupport.fieldEntry(
+            recordComponent(MetadataFixture.class, "name"),
+            Set.of("name"),
+            Map.of("name", List.of("VALUE", "FORMAT")));
+
+    assertEquals(FieldRequirement.OPTIONAL, projected.requirement());
+    assertEquals(List.of("VALUE", "FORMAT"), projected.projectedByFacets());
+  }
+
+  @Test
+  void fieldEntryCanPublishEnumValueDocsForFacetSelectors() throws Exception {
+    FieldEntry facets =
+        CatalogFieldMetadataSupport.fieldEntry(
+            recordComponent(CellReadProjection.class, "facets"), Set.of());
+
+    assertEquals(
+        List.of(
+            "VALUE",
+            "STYLE",
+            "FORMAT",
+            "HYPERLINK",
+            "COMMENT",
+            "FORMULA",
+            "RICH_TEXT_RUNS",
+            "TEMPORAL"),
+        facets.enumValues());
+    assertEquals("FORMAT", facets.enumValueDocs().get(2).value());
+    assertTrue(facets.enumValueDocs().get(2).summary().contains("displayValue"));
+    assertEquals("VALUE", facets.enumValueDocs().getFirst().value());
+  }
+
+  @Test
+  void enumValueDocumentationRequiresCompleteCoverageOfPublishedTokens() {
+    IllegalStateException missingDoc =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                CatalogEnumValueDocumentationSupport.orderedEnumDocs(
+                    CellReadFacet.class, Map.of("VALUE", "Only one token is documented.")));
+
+    assertEquals(
+        "Enum value docs must cover every published token for " + CellReadFacet.class.getName(),
+        missingDoc.getMessage());
   }
 
   private record MetadataFixture(

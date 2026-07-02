@@ -95,11 +95,11 @@ class CompactCellInputCoverageTest {
   @Test
   void compactCellInputsRejectNullsEmptiesAndNonRectangularShapes() {
     assertEquals(
-        "rows must not be empty",
+        "cells must not be empty",
         assertThrows(IllegalArgumentException.class, () -> new CellGridInput.Typed(List.of()))
             .getMessage());
     assertEquals(
-        "rows must describe a rectangular matrix",
+        "cells must describe a rectangular matrix",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -109,32 +109,32 @@ class CompactCellInputCoverageTest {
                             List.of(new CellInput.Blank(), new CellInput.Blank()))))
             .getMessage());
     assertEquals(
-        "rows must not contain empty rows",
+        "cells must not contain empty rows",
         assertThrows(
                 IllegalArgumentException.class, () -> new CellGridInput.Typed(List.of(List.of())))
             .getMessage());
     assertEquals(
-        "rows must not contain null rows",
+        "cells must not contain null rows",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellGridInput.Typed(Arrays.asList((List<CellInput>) null)))
             .getMessage());
     assertEquals(
-        "rows must not be null",
+        "cells must not be null",
         assertThrows(NullPointerException.class, () -> new CellGridInput.TextRows(null))
             .getMessage());
     assertEquals(
-        "rows must not be empty",
+        "cells must not be empty",
         assertThrows(IllegalArgumentException.class, () -> new CellGridInput.TextRows(List.of()))
             .getMessage());
     assertEquals(
-        "rows must not contain null rows",
+        "cells must not contain null rows",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellGridInput.TextRows(Arrays.asList((List<String>) null)))
             .getMessage());
     assertEquals(
-        "rows must describe a rectangular matrix",
+        "cells must describe a rectangular matrix",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new CellGridInput.TextRows(List.of(List.of("Ada"), List.of("Ada", "Bob"))))
@@ -145,44 +145,44 @@ class CompactCellInputCoverageTest {
             List.of(new CellInput.Text(TextSourceInput.inline("Bob")))),
         new CellGridInput.TextRows(List.of(List.of("Ada"), List.of("Bob"))).toCellInputRows());
     assertEquals(
-        "rows must not contain empty rows",
+        "cells must not contain empty rows",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new CellGridInput.TextRows(List.of(List.of())))
             .getMessage());
     assertEquals(
-        "rows must not contain null cell values",
+        "cells must not contain null cell values",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellGridInput.Typed(List.of(Arrays.asList(new CellInput.Blank(), null))))
             .getMessage());
     assertEquals(
-        "rows must not contain null values",
+        "cells must not contain null values",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellGridInput.TextRows(List.of(Arrays.asList("Ada", null))))
             .getMessage());
 
     assertEquals(
-        "values must not be empty",
+        "cells must not be empty",
         assertThrows(IllegalArgumentException.class, () -> new CellRowInput.Typed(List.of()))
             .getMessage());
     assertEquals(
-        "values must not be null",
+        "cells must not be null",
         assertThrows(NullPointerException.class, () -> new CellRowInput.TextValues(null))
             .getMessage());
     assertEquals(
-        "values must not be empty",
+        "cells must not be empty",
         assertThrows(IllegalArgumentException.class, () -> new CellRowInput.TextValues(List.of()))
             .getMessage());
     assertEquals(
-        "values must not contain nulls",
+        "cells must not contain nulls",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellRowInput.Typed(Arrays.asList(new CellInput.Blank(), null)))
             .getMessage());
     assertEquals(
-        "values must not contain nulls",
+        "cells must not contain nulls",
         assertThrows(
                 NullPointerException.class,
                 () -> new CellRowInput.TextValues(Arrays.asList("Ada", null)))

@@ -28,7 +28,6 @@ final class CliProtocolCatalogCommandParser {
   private static final class ProtocolCatalogSelection {
     private Optional<String> lookupFilter = Optional.empty();
     private Optional<String> searchQuery = Optional.empty();
-    private boolean fullCatalog;
 
     private int tryConsume(String[] args, int index) {
       String argument = args[index];
@@ -37,9 +36,6 @@ final class CliProtocolCatalogCommandParser {
       }
       if ("--search".equals(argument)) {
         return consumeSearch(args, index);
-      }
-      if ("--full".equals(argument)) {
-        return consumeFull(index);
       }
       return index;
     }
@@ -67,23 +63,10 @@ final class CliProtocolCatalogCommandParser {
       return valueIndex + 1;
     }
 
-    private int consumeFull(int index) {
-      if (fullCatalog) {
-        throw new CliArgumentsException("--full", "Duplicate argument: --full");
-      }
-      fullCatalog = true;
-      return index + 1;
-    }
-
     private CliImmediateCommandParser.Result command(Optional<Path> responsePath, int nextIndex) {
       if (lookupFilter.isPresent() && searchQuery.isPresent()) {
         throw new CliArgumentsException(
             "--search", "--print-protocol-catalog does not allow both --lookup and --search");
-      }
-      if (fullCatalog && (lookupFilter.isPresent() || searchQuery.isPresent())) {
-        throw new CliArgumentsException(
-            "--full",
-            "--print-protocol-catalog does not allow --full together with --lookup or --search");
       }
       return new CliImmediateCommandParser.Result(
           command(responsePath), nextIndex, "--print-protocol-catalog");
@@ -95,9 +78,6 @@ final class CliProtocolCatalogCommandParser {
       }
       if (lookupFilter.isPresent()) {
         return new CliCommand.PrintProtocolCatalogLookup(lookupFilter.orElseThrow(), responsePath);
-      }
-      if (fullCatalog) {
-        return new CliCommand.PrintProtocolCatalogAll(responsePath);
       }
       return new CliCommand.PrintProtocolCatalogIndex(responsePath);
     }

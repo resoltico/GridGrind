@@ -5,7 +5,7 @@ import dev.erst.gridgrind.contract.assertion.PresenceAssertion;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.query.WorkbookIntrospectionQuery;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
@@ -31,7 +31,7 @@ final class CliDoctorRequestPlaceholderStepFactory {
         placeholderStep(
             stepIdForPlaceholder(authoredStep, stepIndex), authoredStep, executionModeType);
     ObjectNode request =
-        GridGrindJson.requestTree(
+        GridGrindJsonOutput.requestTree(
             WorkbookPlan.standard(
                 new WorkbookPlan.WorkbookSource.New(),
                 new WorkbookPlan.WorkbookPersistence.None(),

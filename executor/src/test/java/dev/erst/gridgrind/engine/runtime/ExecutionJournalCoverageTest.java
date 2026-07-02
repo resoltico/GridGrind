@@ -348,7 +348,6 @@ class ExecutionJournalCoverageTest {
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
     assertEquals(java.util.Optional.empty(), unknownJournal.planId());
     assertEquals(java.util.Optional.empty(), unknownJournal.source().type());
-    assertEquals(java.util.Optional.empty(), unknownJournal.persistence().type());
 
     WorkbookPlan request = verbosePlan();
     ExecutionJournalRecorder verboseRecorder =

@@ -1,9 +1,7 @@
 package dev.erst.gridgrind.contract.json;
 
-import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import tools.jackson.core.JacksonException;
@@ -20,8 +18,7 @@ final class GridGrindJsonCodecSupport {
       Class<T> targetType,
       Function<JacksonException, IllegalArgumentException> failureMapper)
       throws IOException {
-    return decodeValue(
-        readTree(inputStream, mapper, failureMapper), mapper, targetType, failureMapper);
+    return decodeValue(readTree(inputStream, mapper, failureMapper), mapper, targetType);
   }
 
   static <T> T readValue(
@@ -30,7 +27,7 @@ final class GridGrindJsonCodecSupport {
       Class<T> targetType,
       Function<JacksonException, IllegalArgumentException> failureMapper)
       throws IOException {
-    return decodeValue(readTree(bytes, mapper, failureMapper), mapper, targetType, failureMapper);
+    return decodeValue(readTree(bytes, mapper, failureMapper), mapper, targetType);
   }
 
   static JsonNode readTree(
@@ -49,7 +46,7 @@ final class GridGrindJsonCodecSupport {
       JsonMapper mapper,
       Class<T> targetType,
       Function<JacksonException, IllegalArgumentException> failureMapper) {
-    return decodeValue(node, mapper, targetType, failureMapper);
+    return decodeValue(node, mapper, targetType);
   }
 
   static byte[] writeBytes(JsonMapper mapper, Object value) throws IOException {
@@ -80,42 +77,15 @@ final class GridGrindJsonCodecSupport {
     }
   }
 
-  private static <T> T decodeValue(
-      JsonNode node,
-      JsonMapper mapper,
-      Class<T> targetType,
-      Function<JacksonException, IllegalArgumentException> failureMapper) {
+  private static <T> T decodeValue(JsonNode node, JsonMapper mapper, Class<T> targetType) {
     requireNonNullRoot(node);
     try {
       rejectExplicitNullMembers(node, "");
       GridGrindJsonStepPayloadShapeSupport.rejectInvalidStepPayloadShapes(node);
       return mapper.treeToValue(node, targetType);
     } catch (JacksonException exception) {
-      throw normalizeMissingRequiredFailure(node, failureMapper.apply(exception));
+      throw GridGrindJsonProblemMessageSupport.invalidPayload(exception, node, targetType);
     }
-  }
-
-  private static IllegalArgumentException normalizeMissingRequiredFailure(
-      JsonNode node, IllegalArgumentException failure) {
-    if (!(failure instanceof InvalidRequestShapeException shapeFailure)) {
-      return failure;
-    }
-    String message = Objects.requireNonNullElse(shapeFailure.getMessage(), "");
-    if (!GridGrindRequestProblemSupport.isExplicitNullFieldMessage(message)) {
-      return failure;
-    }
-    String messagePath = GridGrindRequestProblemSupport.jsonPathFromMessage(message).orElseThrow();
-    if (GridGrindJsonPathSupport.pathExists(node, messagePath)) {
-      return failure;
-    }
-    String missingRequiredMessage =
-        GridGrindRequestProblemSupport.missingRequiredFieldMessage(messagePath);
-    return new InvalidRequestShapeException(
-        missingRequiredMessage,
-        shapeFailure.jsonPath().or(() -> Optional.of(messagePath)),
-        shapeFailure.jsonLine(),
-        shapeFailure.jsonColumn(),
-        shapeFailure.getCause());
   }
 
   private static void rejectExplicitNullMembers(JsonNode node, String path) {
@@ -123,12 +93,7 @@ final class GridGrindJsonCodecSupport {
       for (var entry : node.properties()) {
         String childPath = path.isEmpty() ? entry.getKey() : path + "." + entry.getKey();
         if (entry.getValue().isNull()) {
-          throw new InvalidRequestShapeException(
-              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
-              Optional.of(childPath),
-              Optional.empty(),
-              Optional.empty(),
-              null);
+          throw explicitNullFieldException(childPath);
         }
         rejectExplicitNullMembers(entry.getValue(), childPath);
       }
@@ -139,22 +104,26 @@ final class GridGrindJsonCodecSupport {
         JsonNode child = node.get(index);
         String childPath = path + "[" + index + "]";
         if (child.isNull()) {
-          throw new InvalidRequestShapeException(
-              GridGrindRequestProblemSupport.explicitNullFieldMessage(childPath),
-              Optional.of(childPath),
-              Optional.empty(),
-              Optional.empty(),
-              null);
+          throw explicitNullFieldException(childPath);
         }
         rejectExplicitNullMembers(child, childPath);
       }
     }
   }
 
+  private static InvalidRequestShapeException explicitNullFieldException(String jsonPath) {
+    return new InvalidRequestShapeException(
+        new ExplicitNullField(jsonPath),
+        Optional.of(jsonPath),
+        Optional.empty(),
+        Optional.empty(),
+        null);
+  }
+
   private static void requireNonNullRoot(JsonNode node) {
     if (node.isNull()) {
       throw new InvalidRequestShapeException(
-          "JSON payload must not be null",
+          new MessageShape("JSON payload must not be null", Optional.empty()),
           Optional.empty(),
           Optional.empty(),
           Optional.empty(),

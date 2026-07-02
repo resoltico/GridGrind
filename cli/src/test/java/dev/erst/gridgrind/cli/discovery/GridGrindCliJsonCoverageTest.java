@@ -184,7 +184,7 @@ class GridGrindCliJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
-                        null, protocolCatalogSearchReport))
+                        null, protocolCatalogSearchReport, false))
             .getMessage());
     assertEquals(
         "value must not be null",
@@ -192,7 +192,7 @@ class GridGrindCliJsonCoverageTest {
                 NullPointerException.class,
                 () ->
                     ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
-                        new ByteArrayOutputStream(), null))
+                        new ByteArrayOutputStream(), null, false))
             .getMessage());
     assertEquals(
         "outputStream must not be null",
@@ -240,7 +240,7 @@ class GridGrindCliJsonCoverageTest {
 
     ByteArrayOutputStream protocolCatalogSearchOutput = new ByteArrayOutputStream();
     ProtocolCatalogCliJson.writeProtocolCatalogSearchReport(
-        protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport());
+        protocolCatalogSearchOutput, sampleProtocolCatalogSearchReport(), false);
     assertFalse(protocolCatalogSearchOutput.toString(StandardCharsets.UTF_8).contains(": null"));
 
     ByteArrayOutputStream cliFailureReportOutput = new ByteArrayOutputStream();

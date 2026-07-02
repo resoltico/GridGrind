@@ -8,7 +8,10 @@ import dev.erst.gridgrind.contract.dto.CellFontReport;
 import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.CellStyleReport;
+import dev.erst.gridgrind.contract.dto.CellTemporalReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
+import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
+import dev.erst.gridgrind.contract.dto.CommentReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
@@ -17,9 +20,12 @@ import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.FontHeightReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.contract.dto.RichTextRunReport;
 import dev.erst.gridgrind.contract.dto.SheetSummaryReport;
 import dev.erst.gridgrind.contract.dto.TableColumnReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
+import dev.erst.gridgrind.contract.dto.WindowDimensionsReport;
+import dev.erst.gridgrind.contract.dto.WindowRowReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import java.util.List;
 
@@ -89,6 +95,44 @@ final class GridGrindProtocolCatalogWorkbookReportPlainTypeDescriptors {
               CellGradientStopReport.class,
               "CellGradientStopReport",
               "Exact gradient stop report.",
+              List.of()),
+          plainTypeDescriptor(
+              "cellTemporalReportType",
+              CellTemporalReport.class,
+              "CellTemporalReport",
+              "Projected temporal facet for one numeric cell value, including whether Excel"
+                  + " formatting marks it as date-like and any derived DATE, TIME, or"
+                  + " DATE_TIME semantic kind.",
+              List.of("kind", "isoValue")),
+          plainTypeDescriptor(
+              "richTextRunReportType",
+              RichTextRunReport.class,
+              "RichTextRunReport",
+              "One factual rich-text run reported from a text cell or comment.",
+              List.of()),
+          plainTypeDescriptor(
+              "commentAnchorReportType",
+              CommentAnchorReport.class,
+              "CommentAnchorReport",
+              "Exact comment-anchor bounds reported from worksheet drawing metadata.",
+              List.of()),
+          plainTypeDescriptor(
+              "commentReportType",
+              CommentReport.class,
+              "CommentReport",
+              "Exact factual comment report including optional rich-text runs and anchor bounds.",
+              List.of("runs", "anchor")),
+          plainTypeDescriptor(
+              "windowDimensionsReportType",
+              WindowDimensionsReport.class,
+              "WindowDimensionsReport",
+              "Published row and column dimensions for one rectangular cell window.",
+              List.of()),
+          plainTypeDescriptor(
+              "windowRowReportType",
+              WindowRowReport.class,
+              "WindowRowReport",
+              "One dense window row preserving row index and ordered cell payloads.",
               List.of()),
           plainTypeDescriptor(
               "tableEntryReportType",

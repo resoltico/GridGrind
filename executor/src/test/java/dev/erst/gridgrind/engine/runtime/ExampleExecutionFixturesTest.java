@@ -13,6 +13,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -170,7 +171,7 @@ class ExampleExecutionFixturesTest {
   private static void assertNullFreeResponse(GridGrindResponse response, String exampleId)
       throws IOException {
     assertTrue(
-        !new String(GridGrindJson.writeResponseBytes(response), StandardCharsets.UTF_8)
+        !new String(GridGrindJsonOutput.writeResponseBytes(response), StandardCharsets.UTF_8)
             .contains(": null"),
         () -> "serialized response must omit explicit null properties: " + exampleId);
   }

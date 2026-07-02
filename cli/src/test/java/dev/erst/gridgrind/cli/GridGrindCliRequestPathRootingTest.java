@@ -33,7 +33,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         requestPath,
         requestJson(
             "{ \"type\": \"NEW\" }",
-            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\" }",
+            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\", \"ifExists\": \"REPLACE\" }",
             """
             [
               {
@@ -60,7 +60,11 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
 
     assertEquals(0, exitCode);
-    assertEquals(requestDirectory.resolve("result.xlsx").toString(), persistence.executionPath());
+    assertEquals(
+        requestDirectory.resolve("result.xlsx").toString(),
+        assertInstanceOf(
+                GridGrindResponsePersistence.WriteResult.Written.class, persistence.write())
+            .executionPath());
     assertTrue(Files.exists(requestDirectory.resolve("result.xlsx")));
   }
 
@@ -106,7 +110,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   @Test
@@ -167,7 +172,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   @Test
@@ -222,7 +228,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
     assertEquals(
         7.5d,
         assertInstanceOf(
-                dev.erst.gridgrind.contract.dto.CellReport.NumberReport.class, formula.evaluation())
+                dev.erst.gridgrind.contract.dto.CellValueReport.NumberValue.class,
+                formula.evaluation().orElseThrow())
             .numberValue());
   }
 
@@ -238,7 +245,7 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
                 new ByteArrayInputStream(
                     requestJson(
                             "{ \"type\": \"NEW\" }",
-                            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\" }",
+                            "{ \"type\": \"SAVE_AS\", \"path\": \"result.xlsx\", \"ifExists\": \"REPLACE\" }",
                             """
                             [
                               {
@@ -259,7 +266,11 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
             GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class, response.persistence());
 
     assertEquals(0, exitCode);
-    assertEquals(workspace.resolve("result.xlsx").toString(), persistence.executionPath());
+    assertEquals(
+        workspace.resolve("result.xlsx").toString(),
+        assertInstanceOf(
+                GridGrindResponsePersistence.WriteResult.Written.class, persistence.write())
+            .executionPath());
     assertTrue(Files.exists(workspace.resolve("result.xlsx")));
   }
 
@@ -318,7 +329,8 @@ class GridGrindCliRequestPathRootingTest extends GridGrindCliTestSupport {
         assertInstanceOf(
                 dev.erst.gridgrind.contract.dto.CellReport.TextReport.class,
                 cells.cells().getFirst())
-            .stringValue());
+            .textValue()
+            .orElseThrow());
   }
 
   private static void writeSingleTextWorkbook(

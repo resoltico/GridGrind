@@ -5,15 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MessageShape;
+import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
 import tools.jackson.core.ObjectReadContext;
 import tools.jackson.core.json.JsonFactory;
 import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ValueDeserializer;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.exc.MismatchedInputException;
@@ -22,7 +27,9 @@ import tools.jackson.databind.json.JsonMapper;
 /** Covers branch-heavy step deserialization helpers that own precise nested path derivation. */
 class WorkbookStepJsonSupportCoverageTest {
   @Test
-  void qualifiedFieldNameHandlesExistingPathsIndexesAndMessageInference() throws IOException {
+  void qualifiedFieldNameHandlesExistingPathsAndStructuredProblemSources() throws IOException {
+    JsonMapper mapper = JsonMapper.builder().build();
+    JsonNode emptyObject = mapper.createObjectNode();
     MismatchedInputException alreadyQualified =
         (MismatchedInputException)
             MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad")
@@ -41,57 +48,77 @@ class WorkbookStepJsonSupportCoverageTest {
             MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad")
                 .prependPath(new Object(), 0)
                 .prependPath(new Object(), "target");
-    MismatchedInputException inferredFromJacksonMessage =
-        MismatchedInputException.from(
-            parser("{}"), WorkbookStep.class, "Missing required creator property 'name'");
+    MismatchedInputException inferredStructurally =
+        MismatchedInputException.from(parser("{}"), NamedRecord.class, "bad");
+    InvalidRequestShapeException typedProblem =
+        new InvalidRequestShapeException(
+            new MissingTypeDiscriminator("type"),
+            java.util.Optional.of("type"),
+            java.util.Optional.empty(),
+            java.util.Optional.empty(),
+            null);
 
     assertEquals(
         "target.name",
-        WorkbookStepJsonFailurePathSupport.qualifiedFieldName("target", alreadyQualified));
-    assertEquals(
-        "target[0]", WorkbookStepJsonFailurePathSupport.qualifiedFieldName("target", indexedPath));
-    assertEquals(
-        "target", WorkbookStepJsonFailurePathSupport.qualifiedFieldName("target", fieldOnlyPath));
+        WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
+            "target", null, Object.class, alreadyQualified));
     assertEquals(
         "target[0]",
-        WorkbookStepJsonFailurePathSupport.qualifiedFieldName("target", qualifiedIndexedPath));
-    assertEquals(
-        "action.zoomPercent",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "action", new IllegalArgumentException("zoomPercent must be between 10 and 400")));
+            "target", null, Object.class, indexedPath));
     assertEquals(
-        "assertion.type",
+        "target",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "assertion", new IllegalArgumentException("Field 'type' must be a string")));
+            "target", null, Object.class, fieldOnlyPath));
     assertEquals(
-        "assertion.type",
+        "target[0]",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "assertion", new IllegalArgumentException("missing required creator property 'type'")));
+            "target", null, Object.class, qualifiedIndexedPath));
     assertEquals(
         "assertion.type",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "assertion", new IllegalArgumentException("missing type id property 'type'")));
+            "assertion", null, Object.class, typedProblem));
     assertEquals(
         "target.name",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "target", inferredFromJacksonMessage));
+            "target", emptyObject, NamedRecord.class, inferredStructurally));
     assertEquals(
         "query",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "query", new IllegalArgumentException(" ")));
+            "query", null, Object.class, new IllegalArgumentException(" ")));
     assertEquals(
         "query",
         WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
-            "query", new IllegalArgumentException("not a field-specific failure")));
+            "query",
+            null,
+            Object.class,
+            new IllegalArgumentException("not a field-specific failure")));
+    assertEquals(
+        "query",
+        WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
+            "query", null, NamedRecord.class, inferredStructurally));
+    assertEquals(
+        "query",
+        WorkbookStepJsonFailurePathSupport.qualifiedFieldName(
+            "query",
+            null,
+            Object.class,
+            new InvalidRequestShapeException(
+                new MessageShape("bad", Optional.empty()),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                null)));
   }
 
   @Test
   void wrapHelpersPreserveCauseMessageFallbackAndQualifiedPaths() throws IOException {
+    JsonMapper mapper = JsonMapper.builder().build();
+    JsonNode emptyObject = mapper.createObjectNode();
     IllegalArgumentException nullMessage = new IllegalArgumentException();
     IllegalArgumentException fieldMessage = new IllegalArgumentException("Field 'type' must exist");
     MismatchedInputException fieldlessJackson =
-        MismatchedInputException.from(
-            parser("{}"), WorkbookStep.class, "Missing required creator property 'name'");
+        MismatchedInputException.from(parser("{}"), NamedRecord.class, "bad");
     MismatchedInputException nestedJackson =
         (MismatchedInputException)
             MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad")
@@ -108,16 +135,18 @@ class WorkbookStepJsonSupportCoverageTest {
             WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(
                 parser("{}"), "target", fieldMessage));
     JacksonException inferredJacksonFailure =
-        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure("target", fieldlessJackson);
+        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+            "target", emptyObject, NamedRecord.class, fieldlessJackson);
     JacksonException nestedJacksonFailure =
-        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure("target", nestedJackson);
+        WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
+            "target", emptyObject, Object.class, nestedJackson);
 
     assertEquals("Invalid request shape", nullMessageFailure.getOriginalMessage());
     assertSame(nullMessage, nullMessageFailure.getCause());
     assertEquals("target", renderPath(nullMessageFailure));
 
     assertEquals("Field 'type' must exist", fieldMessageFailure.getOriginalMessage());
-    assertEquals("target.type", renderPath(fieldMessageFailure));
+    assertEquals("target", renderPath(fieldMessageFailure));
 
     assertEquals("target.name", renderPath(inferredJacksonFailure));
     assertEquals("target.name", renderPath(nestedJacksonFailure));
@@ -151,7 +180,7 @@ class WorkbookStepJsonSupportCoverageTest {
                       node, parser, AlwaysInvalidPayload.class, "action"));
 
       assertEquals("zoomPercent must be between 10 and 400", failure.getOriginalMessage());
-      assertEquals("action.zoomPercent", renderPath(failure));
+      assertEquals("action", renderPath(failure));
       assertEquals("zoomPercent must be between 10 and 400", failure.getCause().getMessage());
     }
   }
@@ -177,6 +206,8 @@ class WorkbookStepJsonSupportCoverageTest {
     }
     return rendered.toString();
   }
+
+  private record NamedRecord(String name) {}
 
   /** Synthetic payload type whose custom deserializer throws a bare IllegalArgumentException. */
   @JsonDeserialize(using = AlwaysInvalidPayloadDeserializer.class)

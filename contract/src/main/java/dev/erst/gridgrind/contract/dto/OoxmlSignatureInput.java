@@ -24,7 +24,12 @@ public record OoxmlSignatureInput(
       @JsonProperty("digestAlgorithm") ExcelOoxmlSignatureDigestAlgorithm digestAlgorithm,
       @JsonProperty("description") Optional<String> description) {
     return new OoxmlSignatureInput(
-        pkcs12Path, keystorePassword, keyPassword, alias, digestAlgorithm, description);
+        pkcs12Path,
+        keystorePassword,
+        keyPassword == null ? keystorePassword : keyPassword,
+        alias == null ? Optional.empty() : alias,
+        digestAlgorithm == null ? ExcelOoxmlSignatureDigestAlgorithm.SHA256 : digestAlgorithm,
+        description == null ? Optional.empty() : description);
   }
 
   public OoxmlSignatureInput {

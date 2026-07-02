@@ -4,5 +4,5 @@ package dev.erst.gridgrind.cli.discovery;
 public enum TaskPersistenceMode {
   NONE,
   SAVE_AS,
-  OVERWRITE_SOURCE
+  OVERWRITE
 }

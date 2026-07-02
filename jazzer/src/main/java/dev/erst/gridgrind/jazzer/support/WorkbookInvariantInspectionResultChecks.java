@@ -89,9 +89,12 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             selector.topLeftAddress().equals(result.window().topLeftAddress()),
             "window topLeftAddress mismatch");
-        require(selector.rowCount() == result.window().rowCount(), "window rowCount mismatch");
         require(
-            selector.columnCount() == result.window().columnCount(), "window columnCount mismatch");
+            selector.rowCount() == result.window().dimensions().rowCount(),
+            "window rowCount mismatch");
+        require(
+            selector.columnCount() == result.window().dimensions().columnCount(),
+            "window columnCount mismatch");
       }
       case SheetIntrospectionQuery.GetMergedRegions _ -> {
         SheetInspectionResult.MergedRegionsResult result =
@@ -210,6 +213,10 @@ final class WorkbookInvariantInspectionResultChecks {
         require(
             selector.topLeftAddress().equals(result.surface().topLeftAddress()),
             "schema topLeftAddress mismatch");
+        require(selector.rowCount() == result.surface().rowCount(), "schema rowCount mismatch");
+        require(
+            selector.columnCount() == result.surface().columnCount(),
+            "schema columnCount mismatch");
       }
       case InspectionSurfaceQuery.GetNamedRangeSurface _ -> {
         WorkbookSurfaceInspectionResult.NamedRangeSurfaceResult result =

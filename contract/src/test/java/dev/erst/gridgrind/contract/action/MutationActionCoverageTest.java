@@ -1,9 +1,15 @@
 package dev.erst.gridgrind.contract.action;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.GridGrindRequestProblemSupport;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces;
+import dev.erst.gridgrind.contract.json.FieldValidationNamingRule;
+import dev.erst.gridgrind.contract.json.FieldValidationProblem;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -81,6 +87,27 @@ class MutationActionCoverageTest {
                             List.of(new CellInput.Blank()),
                             List.of(new CellInput.Blank(), new CellInput.Blank()))))
             .getMessage());
+  }
+
+  @Test
+  void typedNameValidationCarriesCauseSpecificResolution() {
+    var failure =
+        MutationActionNameValidation.invalidField(
+            FieldValidationProblem.atField("name", FieldValidationNamingRule.DEFINED_NAME_SYNTAX));
+    FieldValidationProblem requestProblem =
+        assertInstanceOf(FieldValidationProblem.class, failure.requestProblem());
+
+    assertEquals(
+        "name must start with a letter or underscore and contain only letters, digits, underscore, or period",
+        failure.getMessage());
+    assertEquals(FieldValidationNamingRule.DEFINED_NAME_SYNTAX, requestProblem.rule());
+    assertEquals(
+        "Provide a valid Excel defined name for field 'name'.",
+        GridGrindRequestProblemSupport.resolution(
+            requestProblem,
+            new ProblemContext.ReadRequest(
+                ProblemContextRequestSurfaces.RequestInput.standardInput(),
+                ProblemContextRequestSurfaces.JsonLocation.unavailable())));
   }
 
   private record MissingMetadataActionRecord() {}

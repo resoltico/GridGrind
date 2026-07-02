@@ -42,6 +42,19 @@ public sealed interface ExecutionModeInput {
     return this instanceof FullXssf;
   }
 
+  /** Custom Jackson inclusion filter that omits the standard FULL_XSSF mode selection. */
+  final class DefaultFilter {
+    @Override
+    public boolean equals(Object other) {
+      return other == null || (other instanceof ExecutionModeInput mode && mode.isDefault());
+    }
+
+    @Override
+    public int hashCode() {
+      return DefaultFilter.class.hashCode();
+    }
+  }
+
   /** Standard full-memory read/write execution mode with no special restrictions. */
   record FullXssf() implements ExecutionModeInput {
     @Override

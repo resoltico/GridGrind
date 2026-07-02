@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli.discovery;
 
-import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.ByteArrayOutputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -36,15 +36,24 @@ final class GridGrindCliJsonCodecSupport {
   }
 
   static byte[] writeBytes(Object value) throws IOException {
+    return writeBytes(value, false);
+  }
+
+  static byte[] writeBytes(Object value, boolean pretty) throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    writeValue(outputStream, value);
+    writeValue(outputStream, value, pretty);
     return outputStream.toByteArray();
   }
 
   static void writeValue(OutputStream outputStream, Object value) throws IOException {
+    writeValue(outputStream, value, false);
+  }
+
+  static void writeValue(OutputStream outputStream, Object value, boolean pretty)
+      throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(value, "value must not be null");
-    GridGrindJson.writeCatalogLookupValue(outputStream, value);
+    GridGrindJsonOutput.writeCatalogLookupValue(outputStream, value, pretty);
   }
 
   private static InputStream nonClosing(InputStream inputStream) {

@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-06-14"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -158,6 +158,9 @@ Then verify every item in this checklist. All must be true before any Step 2 com
 - If `CHANGELOG.md` no longer fits the reviewed `release-ledger` budget, move older release
   sections into `docs/CHANGELOG_ARCHIVE.md` instead of broadening the live root ledger just to
   make the release pass.
+- If shrinking the live release window makes the reviewed `release-ledger` exception unnecessary,
+  delete that exception instead of leaving a stale carve-out that no longer widens the default
+  control-plane budget.
 - `CHANGELOG.md` link footer has:
   - `[Unreleased]: .../compare/vX.Y.Z...HEAD`
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`

@@ -12,7 +12,6 @@ public record ExecutionJournal(
     @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> planId,
     ExecutionJournalLevel level,
     SourceSummary source,
-    PersistenceSummary persistence,
     Phase validation,
     Phase inputResolution,
     Phase open,
@@ -29,7 +28,6 @@ public record ExecutionJournal(
     }
     level = Objects.requireNonNullElse(level, ExecutionJournalLevel.SUMMARY);
     Objects.requireNonNull(source, "source must not be null");
-    Objects.requireNonNull(persistence, "persistence must not be null");
     Objects.requireNonNull(validation, "validation must not be null");
     Objects.requireNonNull(inputResolution, "inputResolution must not be null");
     Objects.requireNonNull(open, "open must not be null");
@@ -46,19 +44,6 @@ public record ExecutionJournal(
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> type,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> path) {
     public SourceSummary {
-      type = normalizeOptional(type, "type");
-      path = normalizeOptional(path, "path");
-      if (path.isPresent() && type.isEmpty()) {
-        throw new IllegalArgumentException("type must be present when path is present");
-      }
-    }
-  }
-
-  /** Summary of the authored persistence policy for one execution. */
-  public record PersistenceSummary(
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> type,
-      @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> path) {
-    public PersistenceSummary {
       type = normalizeOptional(type, "type");
       path = normalizeOptional(path, "path");
       if (path.isPresent() && type.isEmpty()) {

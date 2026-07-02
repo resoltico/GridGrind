@@ -286,7 +286,8 @@ final class CatalogStepTemplateSupport {
     return entries.stream()
         .sorted(
             java.util.Comparator.comparingInt(
-                candidate -> CatalogStepTemplateDefaults.entryPreference(candidate.id())))
+                candidate ->
+                    CatalogStepTemplateDefaults.entryPreference(groupName, candidate.id())))
         .filter(candidate -> !recursionGuard.contains(candidate.id()))
         .findFirst()
         .orElseGet(
@@ -295,7 +296,8 @@ final class CatalogStepTemplateSupport {
                     .sorted(
                         java.util.Comparator.comparingInt(
                             candidate ->
-                                CatalogStepTemplateDefaults.entryPreference(candidate.id())))
+                                CatalogStepTemplateDefaults.entryPreference(
+                                    groupName, candidate.id())))
                     .findFirst()
                     .orElseThrow(
                         () ->

@@ -35,7 +35,6 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
                   "planId",
                   "level",
                   "source",
-                  "persistence",
                   "validation",
                   "inputResolution",
                   "open",
@@ -50,12 +49,6 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               ExecutionJournal.SourceSummary.class,
               "ExecutionJournalSourceSummary",
               "Journal summary of the authored workbook source.",
-              List.of("path")),
-          plainTypeDescriptor(
-              "executionJournalPersistenceSummaryType",
-              ExecutionJournal.PersistenceSummary.class,
-              "ExecutionJournalPersistenceSummary",
-              "Journal summary of the authored persistence policy.",
               List.of("path")),
           plainTypeDescriptor(
               "executionJournalStepType",
@@ -118,7 +111,7 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               CalculationPolicyInput.class,
               "CalculationPolicyInput",
               GridGrindContractText.calculationPolicyInputSummary(),
-              List.of("strategy")),
+              List.of("strategy", "markRecalculateOnOpen")),
           plainTypeDescriptor(
               "executionJournalInputType",
               ExecutionJournalInput.class,

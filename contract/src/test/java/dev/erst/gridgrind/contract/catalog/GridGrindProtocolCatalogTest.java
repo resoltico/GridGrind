@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import java.io.IOException;
 import java.util.List;
@@ -24,8 +25,9 @@ class GridGrindProtocolCatalogTest {
   @Test
   void exposesMinimalStepBasedRequestTemplate() throws IOException {
     WorkbookPlan template = GridGrindProtocolCatalog.requestTemplate();
-    WorkbookPlan decoded = GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(template));
-    var templateTree = GridGrindJson.requestTree(template);
+    WorkbookPlan decoded =
+        GridGrindJson.readRequest(GridGrindJsonOutput.writeRequestBytes(template));
+    var templateTree = GridGrindJsonOutput.requestTree(template);
 
     assertEquals(GridGrindProtocolVersion.V1, template.protocolVersion());
     assertTrue(template.execution().isDefault());
@@ -54,7 +56,7 @@ class GridGrindProtocolCatalogTest {
   void exposesStepMutationAssertionAndInspectionTypeGroups() throws IOException {
     Catalog catalog = GridGrindProtocolCatalog.catalog();
     Catalog decoded =
-        GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog));
+        GridGrindJson.readProtocolCatalog(GridGrindJsonOutput.writeProtocolCatalogBytes(catalog));
 
     assertFalse(catalog.stepTypes().isEmpty());
     assertFalse(catalog.mutationActionTypes().isEmpty());
@@ -184,11 +186,146 @@ class GridGrindProtocolCatalogTest {
   @Test
   void requestTemplateAndCatalogEncodeDeterministically() throws IOException {
     assertArrayEquals(
-        GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()),
-        GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
+        GridGrindJsonOutput.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()),
+        GridGrindJsonOutput.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
     assertArrayEquals(
-        GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()),
-        GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
+        GridGrindJsonOutput.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()),
+        GridGrindJsonOutput.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
+  }
+
+  @Test
+  void executionPolicyCatalogEntryPublishesIndependentlyOptionalAxes() {
+    PlainTypeGroup executionPolicy =
+        (PlainTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:executionPolicyInputType")
+                .orElseThrow();
+    TypeEntry entry = executionPolicy.type();
+
+    assertEquals(FieldRequirement.OPTIONAL, entry.field("mode").orElseThrow().requirement());
+    assertEquals(FieldRequirement.OPTIONAL, entry.field("journal").orElseThrow().requirement());
+    assertEquals(FieldRequirement.OPTIONAL, entry.field("calculation").orElseThrow().requirement());
+    assertTrue(entry.summary().contains("omit any nested execution field"));
+  }
+
+  @Test
+  void projectionAwareReadQueriesPublishTheirDefaultedFieldsAsOptional() {
+    TypeEntry getCells = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
+    TypeEntry getWindow = GridGrindProtocolCatalog.entryFor("GET_WINDOW").orElseThrow();
+    TypeEntry getSheetSchema = GridGrindProtocolCatalog.entryFor("GET_SHEET_SCHEMA").orElseThrow();
+
+    assertEquals(
+        FieldRequirement.OPTIONAL, getCells.field("projection").orElseThrow().requirement());
+    assertTrue(getCells.summary().contains("Omit projection"));
+
+    assertEquals(
+        FieldRequirement.OPTIONAL, getWindow.field("projection").orElseThrow().requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL, getWindow.field("includeBlanks").orElseThrow().requirement());
+    assertTrue(getWindow.summary().contains("sparse default"));
+
+    assertEquals(
+        FieldRequirement.OPTIONAL, getSheetSchema.field("projection").orElseThrow().requirement());
+    assertTrue(getSheetSchema.summary().contains("Omit projection"));
+  }
+
+  @Test
+  void cellReadCatalogPublishesFacetGatingAsMachineReadableFieldMetadata() {
+    NestedTypeGroup group =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellReportTypes").orElseThrow();
+    NestedTypeGroup valueGroup =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellValueReportTypes")
+                .orElseThrow();
+    TypeEntry number =
+        group.types().stream().filter(type -> "NUMBER".equals(type.id())).findFirst().orElseThrow();
+    TypeEntry formula =
+        group.types().stream()
+            .filter(type -> "FORMULA".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry text =
+        group.types().stream().filter(type -> "TEXT".equals(type.id())).findFirst().orElseThrow();
+    TypeEntry evaluatedText =
+        valueGroup.types().stream()
+            .filter(type -> "TEXT".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    TypeEntry evaluatedNumber =
+        valueGroup.types().stream()
+            .filter(type -> "NUMBER".equals(type.id()))
+            .findFirst()
+            .orElseThrow();
+    PlainTypeGroup projection =
+        (PlainTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:cellReadProjectionType")
+                .orElseThrow();
+
+    assertEquals(FieldRequirement.REQUIRED, number.field("address").orElseThrow().requirement());
+    assertTrue(number.field("address").orElseThrow().projectedByFacets().isEmpty());
+    assertEquals(
+        FieldRequirement.OPTIONAL, number.field("displayValue").orElseThrow().requirement());
+    assertEquals(List.of("FORMAT"), number.field("displayValue").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, number.field("style").orElseThrow().requirement());
+    assertEquals(List.of("STYLE"), number.field("style").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, number.field("hyperlink").orElseThrow().requirement());
+    assertEquals(List.of("HYPERLINK"), number.field("hyperlink").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, number.field("comment").orElseThrow().requirement());
+    assertEquals(List.of("COMMENT"), number.field("comment").orElseThrow().projectedByFacets());
+    assertEquals(
+        FieldRequirement.OPTIONAL, number.field("numberValue").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), number.field("numberValue").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, number.field("temporal").orElseThrow().requirement());
+    assertEquals(List.of("TEMPORAL"), number.field("temporal").orElseThrow().projectedByFacets());
+    assertTrue(number.summary().contains("TEMPORAL"));
+
+    assertEquals(FieldRequirement.OPTIONAL, text.field("textValue").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), text.field("textValue").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, text.field("runs").orElseThrow().requirement());
+    assertEquals(List.of("RICH_TEXT_RUNS"), text.field("runs").orElseThrow().projectedByFacets());
+    assertEquals(FieldRequirement.OPTIONAL, formula.field("formula").orElseThrow().requirement());
+    assertEquals(List.of("FORMULA"), formula.field("formula").orElseThrow().projectedByFacets());
+    assertEquals(
+        FieldRequirement.OPTIONAL, formula.field("evaluation").orElseThrow().requirement());
+    assertEquals(List.of("VALUE"), formula.field("evaluation").orElseThrow().projectedByFacets());
+
+    assertEquals(
+        FieldRequirement.REQUIRED, evaluatedText.field("textValue").orElseThrow().requirement());
+    assertTrue(evaluatedText.field("textValue").orElseThrow().projectedByFacets().isEmpty());
+    assertEquals(
+        FieldRequirement.OPTIONAL, evaluatedText.field("runs").orElseThrow().requirement());
+    assertEquals(
+        List.of("RICH_TEXT_RUNS"), evaluatedText.field("runs").orElseThrow().projectedByFacets());
+    assertEquals(
+        FieldRequirement.REQUIRED,
+        evaluatedNumber.field("numberValue").orElseThrow().requirement());
+    assertTrue(evaluatedNumber.field("numberValue").orElseThrow().projectedByFacets().isEmpty());
+    assertEquals(
+        FieldRequirement.OPTIONAL, evaluatedNumber.field("temporal").orElseThrow().requirement());
+    assertEquals(
+        List.of("TEMPORAL"), evaluatedNumber.field("temporal").orElseThrow().projectedByFacets());
+    assertEquals(
+        List.of(
+            new EnumValueDocEntry(
+                "VALUE",
+                "Project the factual cell value: textValue, numberValue, booleanValue,"
+                    + " errorValue, or formula evaluation."),
+            new EnumValueDocEntry("STYLE", "Project the style report for each returned cell."),
+            new EnumValueDocEntry(
+                "FORMAT", "Project displayValue using Excel's formatted display text."),
+            new EnumValueDocEntry(
+                "HYPERLINK", "Project hyperlink metadata when the cell carries a hyperlink."),
+            new EnumValueDocEntry(
+                "COMMENT", "Project comment metadata when the cell carries a comment."),
+            new EnumValueDocEntry("FORMULA", "Project authored formula text for formula cells."),
+            new EnumValueDocEntry(
+                "RICH_TEXT_RUNS",
+                "Project rich-text runs for text cells and text-valued formula evaluations."),
+            new EnumValueDocEntry(
+                "TEMPORAL",
+                "Project derived date, time, or date-time semantics for date-like numeric"
+                    + " values.")),
+        projection.type().field("facets").orElseThrow().enumValueDocs());
   }
 
   @Test
@@ -246,6 +383,57 @@ class GridGrindProtocolCatalogTest {
         blankDiscriminatorCoverage.getMessage());
   }
 
+  @Test
+  void validatesProjectedFieldMetadataFailurePaths() {
+    CatalogProjectedField projectedField = new CatalogProjectedField("displayValue", "FORMAT");
+
+    assertEquals("displayValue", projectedField.name());
+    assertEquals(List.of("FORMAT"), projectedField.projectedByFacets());
+    assertEquals(
+        "projectedByFacets must not be empty",
+        assertThrows(
+                IllegalArgumentException.class, () -> new CatalogProjectedField("displayValue"))
+            .getMessage());
+    assertEquals(
+        "projectedByFacets require the field requirement to be OPTIONAL",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new FieldEntry(
+                        "displayValue",
+                        FieldRequirement.REQUIRED,
+                        new FieldShape.Scalar(ScalarType.STRING),
+                        List.of(),
+                        List.of(),
+                        List.of("FORMAT")))
+            .getMessage());
+    assertEquals(
+        "enumValueDocs must document every enumValues entry in published order",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new FieldEntry(
+                        "facets",
+                        FieldRequirement.REQUIRED,
+                        new FieldShape.Scalar(ScalarType.STRING),
+                        List.of("VALUE", "FORMAT"),
+                        List.of(new EnumValueDocEntry("FORMAT", "Only format.")),
+                        List.of()))
+            .getMessage());
+
+    IllegalStateException missingProjectedField =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                CatalogTypeEntryFactory.requiredFields(
+                    MutationStep.class,
+                    List.of(),
+                    List.of(new CatalogProjectedField("missing", "FORMAT"))));
+    assertEquals(
+        "Catalog projected field 'missing' does not exist on " + MutationStep.class.getName(),
+        missingProjectedField.getMessage());
+  }
+
   private record CatalogIgnoredComponentRecord(String visible, @CatalogIgnored String hidden) {}
 
   private record CatalogIgnoredAccessorRecord(String visible, String hidden) {
@@ -282,6 +470,7 @@ class GridGrindProtocolCatalogTest {
                     List.of())));
 
     assertEquals("target", typeEntry.field("target").orElseThrow().name());
+    assertTrue(typeEntry.field("target").orElseThrow().projectedByFacets().isEmpty());
     assertTrue(typeEntry.field("missing").isEmpty());
     assertTrue(typeEntry.targetSelectors().isEmpty());
     assertEquals(Optional.empty(), typeEntry.targetSelectorRule());

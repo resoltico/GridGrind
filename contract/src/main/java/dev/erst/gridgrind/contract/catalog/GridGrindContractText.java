@@ -177,7 +177,7 @@ public final class GridGrindContractText {
     return "Optional request execution policy covering execution.mode, execution.journal,"
         + " and execution.calculation."
         + " Omit execution when the standard FULL_XSSF / SUMMARY / DO_NOT_CALCULATE policy"
-        + " is intended.";
+        + " is intended, and omit any nested execution field that should keep its own default.";
   }
 
   /** One stable catalog summary for `FormulaEnvironmentInput`. */

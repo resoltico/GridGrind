@@ -9,7 +9,11 @@ import dev.erst.gridgrind.contract.dto.ProblemContext;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.JsonLocation;
 import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.RequestInput;
+import dev.erst.gridgrind.contract.json.DuplicateStepId;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MissingRequiredField;
+import dev.erst.gridgrind.engine.api.GridGrindProblems;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -34,20 +38,23 @@ class CliFailureReportsResidualTest {
 
   @Test
   void readRequestFailureUsesDoctorRepairTextForSpecificInvalidRequestResolutions() {
+    InvalidRequestShapeException failureCause =
+        new InvalidRequestShapeException(
+            new MissingRequiredField("protocolVersion"),
+            Optional.of("protocolVersion"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
     CliFailureReport failure =
         CliFailureReports.readRequestFailure(
             1,
             "doctor-request",
             Optional.of("--request"),
-            problem(
-                GridGrindProblemCode.INVALID_REQUEST_SHAPE,
-                "Missing required field 'protocolVersion'"),
-            new InvalidRequestShapeException(
-                "Missing required field 'protocolVersion'",
-                Optional.of("protocolVersion"),
-                Optional.empty(),
-                Optional.empty(),
-                null));
+            GridGrindProblems.fromException(
+                failureCause,
+                new ProblemContext.ReadRequest(
+                    RequestInput.standardInput(), JsonLocation.pathOnly("protocolVersion"))),
+            failureCause);
 
     assertEquals(
         Optional.of(
@@ -59,15 +66,23 @@ class CliFailureReportsResidualTest {
 
   @Test
   void readRequestFailureUsesDoctorRepairTextForSpecificInvalidRequestInvariants() {
+    InvalidRequestException failureCause =
+        new InvalidRequestException(
+            new DuplicateStepId("duplicate", "steps[1].stepId"),
+            Optional.of("steps[1].stepId"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
     CliFailureReport failure =
         CliFailureReports.readRequestFailure(
             1,
             "doctor-request",
             Optional.of("--request"),
-            problem(
-                GridGrindProblemCode.INVALID_REQUEST,
-                "steps must not contain duplicate stepId values: duplicate"),
-            new RuntimeException("duplicate"));
+            GridGrindProblems.fromException(
+                failureCause,
+                new ProblemContext.ReadRequest(
+                    RequestInput.standardInput(), JsonLocation.pathOnly("steps[1].stepId"))),
+            failureCause);
 
     assertEquals(
         Optional.of(

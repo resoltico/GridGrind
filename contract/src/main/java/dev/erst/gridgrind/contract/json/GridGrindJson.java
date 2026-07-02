@@ -1,19 +1,15 @@
 package dev.erst.gridgrind.contract.json;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
-import dev.erst.gridgrind.contract.catalog.TypeEntry;
-import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Objects;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ObjectNode;
 
 /** Shared JSON codec for the GridGrind protocol. */
 public final class GridGrindJson {
@@ -132,95 +128,6 @@ public final class GridGrindJson {
         GridGrindJsonProblemMessageSupport::invalidPayload);
   }
 
-  /** Serializes a request to bytes. */
-  public static byte[] writeRequestBytes(WorkbookPlan request) throws IOException {
-    Objects.requireNonNull(request, "request must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, request);
-  }
-
-  /** Renders one request into its machine-readable object tree form without I/O. */
-  public static ObjectNode requestTree(WorkbookPlan request) {
-    Objects.requireNonNull(request, "request must not be null");
-    return GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(request);
-  }
-
-  /** Serializes a response to bytes. */
-  public static byte[] writeResponseBytes(GridGrindResponse response) throws IOException {
-    Objects.requireNonNull(response, "response must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, response);
-  }
-
-  /** Serializes a protocol catalog to bytes. */
-  public static byte[] writeProtocolCatalogBytes(Catalog catalog) throws IOException {
-    Objects.requireNonNull(catalog, "catalog must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, catalog);
-  }
-
-  /** Serializes a request doctor report to bytes. */
-  public static byte[] writeRequestDoctorReportBytes(RequestDoctorReport report)
-      throws IOException {
-    Objects.requireNonNull(report, "report must not be null");
-    return GridGrindJsonCodecSupport.writeBytes(
-        GridGrindJsonMapperSupport.WIRE_JSON_MAPPER, report);
-  }
-
-  /** Writes a request to an output stream without closing the caller-owned stream. */
-  public static void writeRequest(OutputStream outputStream, WorkbookPlan request)
-      throws IOException {
-    writeValue(outputStream, request);
-  }
-
-  /** Writes a response to an output stream without closing the caller-owned stream. */
-  public static void writeResponse(OutputStream outputStream, GridGrindResponse response)
-      throws IOException {
-    writeValue(outputStream, response);
-  }
-
-  /** Writes a protocol catalog to an output stream without closing the caller-owned stream. */
-  public static void writeProtocolCatalog(OutputStream outputStream, Catalog catalog)
-      throws IOException {
-    writeValue(outputStream, catalog);
-  }
-
-  /** Writes a request doctor report to an output stream without closing the caller-owned stream. */
-  public static void writeRequestDoctorReport(OutputStream outputStream, RequestDoctorReport report)
-      throws IOException {
-    writeValue(outputStream, report);
-  }
-
-  /**
-   * Writes a single catalog type entry to an output stream without closing the caller-owned stream.
-   */
-  public static void writeTypeEntry(OutputStream outputStream, TypeEntry entry) throws IOException {
-    writeValue(outputStream, entry);
-  }
-
-  /** Writes one protocol-catalog lookup value to an output stream without closing it. */
-  public static void writeCatalogLookupValue(OutputStream outputStream, Object value)
-      throws IOException {
-    writeValue(outputStream, value);
-  }
-
-  /**
-   * Writes one catalog lookup result as a JSON object with protocolVersion prepended to the root.
-   */
-  public static void writeCatalogLookupResult(
-      OutputStream outputStream, GridGrindProtocolVersion protocolVersion, Object value)
-      throws IOException {
-    Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
-    Objects.requireNonNull(value, "value must not be null");
-    ObjectNode valueNode = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.valueToTree(value);
-    ObjectNode envelope = GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.createObjectNode();
-    envelope.put("protocolVersion", protocolVersion.name());
-    for (var field : valueNode.properties()) {
-      envelope.set(field.getKey(), field.getValue());
-    }
-    writeValue(outputStream, envelope);
-  }
-
   /** Returns the maximum accepted JSON request document length in bytes. */
   public static long maxRequestDocumentBytes() {
     return GridGrindJsonMapperSupport.maxRequestDocumentBytes();
@@ -254,11 +161,5 @@ public final class GridGrindJson {
 
   static java.util.Optional<Integer> jsonColumn(TokenStreamLocation location) {
     return GridGrindJsonPayloadMetadataSupport.jsonColumn(location);
-  }
-
-  private static void writeValue(OutputStream outputStream, Object value) throws IOException {
-    Objects.requireNonNull(outputStream, "outputStream must not be null");
-    Objects.requireNonNull(value, "value must not be null");
-    GridGrindJsonMapperSupport.WIRE_JSON_MAPPER.writeValue(outputStream, value);
   }
 }

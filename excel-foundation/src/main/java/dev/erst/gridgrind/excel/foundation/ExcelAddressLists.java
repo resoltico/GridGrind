@@ -17,6 +17,13 @@ public final class ExcelAddressLists {
     if (copy.isEmpty()) {
       throw new IllegalArgumentException("addresses must not be empty");
     }
+    if (copy.size() > ExcelReadLimits.MAX_READ_CELLS) { // LIM-001
+      throw new IllegalArgumentException(
+          "addresses must not exceed "
+              + ExcelReadLimits.MAX_READ_CELLS
+              + " but was "
+              + copy.size());
+    }
     Set<String> unique = new LinkedHashSet<>();
     for (int index = 0; index < copy.size(); index++) {
       String validated;
@@ -39,7 +46,7 @@ public final class ExcelAddressLists {
       throw new IllegalArgumentException("addresses must not contain blank values");
     }
     if (!address.matches("(?i)^\\$?[A-Z]{1,3}\\$?[1-9][0-9]*$")) {
-      throw new IllegalArgumentException("address must be a single-cell A1-style address");
+      throw new IllegalArgumentException("must be a single-cell A1-style address");
     }
     String normalized = address.replace("$", "").toUpperCase(Locale.ROOT);
     int splitIndex = 0;
@@ -48,7 +55,7 @@ public final class ExcelAddressLists {
     }
     if (columnNumber(normalized.substring(0, splitIndex)) > 16_384
         || Integer.parseInt(normalized.substring(splitIndex)) > 1_048_576) {
-      throw new IllegalArgumentException("addresses must stay within Excel .xlsx bounds");
+      throw new IllegalArgumentException("must stay within Excel .xlsx bounds");
     }
     return address;
   }

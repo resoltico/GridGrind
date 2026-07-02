@@ -115,7 +115,7 @@ printf '# synthetic agent entry point\n' > "${test_root}/archive-root/AGENTS.md"
 printf '# synthetic codex doc\n' > "${test_root}/archive-root/.codex/AGENTS_EXTRA.md"
 printf '# synthetic nested codex doc\n' > "${test_root}/archive-root/.codex/protocol/guide.md"
 printf 'public file\n' > "${test_root}/archive-root/src/published.txt"
-git -C "${test_root}/archive-root" init >/dev/null
+git -C "${test_root}/archive-root" -c init.defaultBranch=main init >/dev/null
 git -C "${test_root}/archive-root" config user.name "GridGrind Test"
 git -C "${test_root}/archive-root" config user.email "gridgrind-test@example.com"
 git -C "${test_root}/archive-root" add .gitattributes AGENTS.md .codex/AGENTS_EXTRA.md .codex/protocol/guide.md src/published.txt

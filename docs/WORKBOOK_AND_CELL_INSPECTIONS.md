@@ -1,8 +1,8 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: WORKBOOK_CELL_INSPECTIONS
-updated: "2026-05-15"
+updated: "2026-07-02"
 route:
   keywords: [gridgrind, inspections, get-workbook-summary, get-package-security, get-cells, get-window, get-comments]
   questions: ["how do i inspect workbook facts in gridgrind", "how do i read cells in gridgrind", "how do i inspect package security in gridgrind"]
@@ -307,32 +307,83 @@ sheet boundary (row > 1,048,575 or column > 16,383, e.g. `A1048577`, `XFE1`) ret
 `INVALID_CELL_ADDRESS`, not a blank. It fails with `SHEET_NOT_FOUND` when the target sheet does
 not exist.
 
+`addresses` must not be empty, must not contain duplicates, and must not contain more than
+250,000 entries. This uses the same deterministic read-size cap as `GET_WINDOW` and
+`GET_SHEET_SCHEMA`, but for `GET_CELLS` the cap keys off the exact returned cell count rather than
+rectangular area.
+
+`GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` all accept the same optional
+`query.projection.facets` selector. Omit `projection` for the default compact `[VALUE]` readback,
+or add only the extra facets you need:
+
+```json
+{
+  "type": "GET_CELLS",
+  "projection": {
+    "facets": [
+      "VALUE",
+      "FORMAT",
+      "TEMPORAL"
+    ]
+  }
+}
+```
+
+Under that default `[VALUE]` projection, date-like numeric cells still read back as
+`type=NUMBER` plus `numberValue`. Add `TEMPORAL` whenever you need GridGrind to distinguish a
+plain number from a date, time, or date-time value.
+
 #### Cell snapshot shape
 
-Every cell in a `GET_CELLS`, `GET_WINDOW`, or `GET_SHEET_SCHEMA` response has the following
-common fields:
+Every factual cell in a `GET_CELLS` or `GET_WINDOW` response always includes these canonical
+fields:
 
 | Field | Description |
 |:------|:------------|
 | `address` | A1-style cell address. |
-| `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMBER`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
-| `effectiveType` | For non-formula cells: same as `declaredType`. For formula cells: always `FORMULA` — the evaluated result type is in `evaluation.effectiveType`. |
-| `displayValue` | Formatted string as Excel would render it. |
-| `style` | Nested style snapshot with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`. |
-| `hyperlink` | Optional hyperlink metadata attached at snapshot time. |
-| `comment` | Optional comment metadata attached at snapshot time, including plain text, visibility, optional rich-text runs, and optional anchor bounds when present. |
+| `type` | Published readback discriminator: `BLANK`, `TEXT`, `NUMBER`, `BOOLEAN`, `ERROR`, or `FORMULA`. |
 
-Type-specific value fields (present only on matching `effectiveType`):
+There is no separate readback `RICH_TEXT` discriminator. Authored rich text reads back as
+`type=TEXT` with optional `runs` when the `RICH_TEXT_RUNS` facet is projected.
+
+Facet-gated fields:
+
+| Facet | Fields surfaced |
+|:------|:----------------|
+| `VALUE` | `textValue`, `numberValue`, `booleanValue`, `errorValue`, and formula `evaluation` |
+| `FORMAT` | `displayValue` |
+| `STYLE` | `style` |
+| `HYPERLINK` | `hyperlink` |
+| `COMMENT` | `comment` |
+| `FORMULA` | `formula` |
+| `RICH_TEXT_RUNS` | text-cell or evaluated-text `runs` |
+| `TEMPORAL` | numeric `temporal` |
+
+The protocol catalog publishes this same mapping in machine-readable form: field descriptors on
+`nestedTypes:cellReportTypes` and `nestedTypes:cellValueReportTypes` carry `projectedByFacets`,
+so an agent can derive `FORMAT -> displayValue`, `FORMULA -> formula`,
+`RICH_TEXT_RUNS -> runs`, and `TEMPORAL -> temporal` directly from the catalog payload. The
+compact protocol-catalog index also publishes a legend for field-metadata keys such as
+`projectedByFacets` and `enumValueDocs`, while `plainTypes:cellReadProjectionType` uses
+`enumValueDocs` on `facets` so tokens such as `VALUE`, `FORMAT`, and `TEMPORAL` explain their
+own output directly in the machine contract.
+
+Type-specific fields:
 
 | Field | Present when | Description |
 |:------|:-------------|:------------|
-| `stringValue` | `effectiveType=STRING` | The string content. |
-| `richText` | `effectiveType=STRING` | Optional ordered rich-text runs. When present, run text concatenates exactly to `stringValue`, and each run carries factual effective font data. |
-| `numberValue` | `effectiveType=NUMBER` | The numeric value as a double. |
-| `booleanValue` | `effectiveType=BOOLEAN` | `true` or `false`. |
-| `errorValue` | `effectiveType=ERROR` | The error string (e.g. `#DIV/0!`). |
-| `formula` | `declaredType=FORMULA` | The formula text without the leading `=`. |
-| `evaluation` | `declaredType=FORMULA` | Nested cell snapshot of the evaluated result. |
+| `textValue` | `type=TEXT` and `VALUE` projected | The stored plain string content. |
+| `runs` | `type=TEXT` and `RICH_TEXT_RUNS` projected | Optional ordered rich-text runs. When present, run text concatenates exactly to `textValue`. |
+| `numberValue` | `type=NUMBER` and `VALUE` projected | The numeric value as a double. |
+| `temporal` | `type=NUMBER` and `TEMPORAL` projected | Optional temporal facet `{ isDate, kind, isoValue }`. Date-like numeric cells stay `type=NUMBER`; `kind` refines them to `DATE`, `TIME`, or `DATE_TIME`. |
+| `booleanValue` | `type=BOOLEAN` and `VALUE` projected | `true` or `false`. |
+| `errorValue` | `type=ERROR` and `VALUE` projected | The error string (e.g. `#DIV/0!`). |
+| `formula` | `type=FORMULA` and `FORMULA` projected | The stored formula text without the leading `=`. |
+| `evaluation` | `type=FORMULA` and `VALUE` projected | Nested `CellValueReport` carrying the evaluated value kind (`BLANK`, `TEXT`, `NUMBER`, `BOOLEAN`, or `ERROR`). |
+| `displayValue` | `FORMAT` projected | Formatted string exactly as Excel would render it. |
+| `style` | `STYLE` projected | Nested style snapshot with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`. |
+| `hyperlink` | `HYPERLINK` projected and metadata exists | Optional hyperlink metadata attached at snapshot time. |
+| `comment` | `COMMENT` projected and metadata exists | Optional comment metadata including plain text, visibility, optional runs, and optional anchor bounds. |
 
 **fontHeight read-back shape:** `style.font.fontHeight` is a plain object with both `twips` and
 `points` fields: `{"twips": 260, "points": 13}`. This differs from the write-side
@@ -390,12 +441,17 @@ normalized formula text without a leading `=`, and whether the stored group is s
 
 ### GET_WINDOW
 
-Returns a rectangular top-left-anchored window of cell snapshots. The window includes styled blank
-cells so template-like workbooks remain visible.
+Returns a rectangular top-left-anchored window of cell snapshots. `GET_WINDOW` is sparse by
+default: omitted blank cells do not appear in the payload at all, even when Excel still carries
+style on them. Omit `includeBlanks` for that sparse default, or set `query.includeBlanks=true`
+when you need the explicit dense row grid.
 
-`rowCount * columnCount` must not exceed 250,000. The window must not extend beyond the Excel
-2007 sheet boundary (rows 0–1,048,575, columns 0–16,383); requests that overflow are rejected
-with `INVALID_REQUEST`.
+`rowCount * columnCount` must not exceed 250,000. All three cell-returning read surfaces share
+this deterministic limit: `GET_CELLS` counts explicit addresses, while `GET_WINDOW` and
+`GET_SHEET_SCHEMA` count requested rectangular area. Sparse windows collapse blank cells in the
+response, but dense data can still fill the whole rectangle and GridGrind rejects over-large
+windows before workbook IO. The window must not extend beyond the Excel 2007 sheet boundary (rows
+0–1,048,575, columns 0–16,383); requests that overflow are rejected with `INVALID_REQUEST`.
 
 ```json
 {
@@ -413,9 +469,15 @@ with `INVALID_REQUEST`.
 }
 ```
 
-Response shape: `{ "window": { "sheetName": "...", "rows": [ { "cells": [...] } ] } }`. The
-top-level key is `window` and cells are nested under `window.rows[N].cells`. This differs from
-`GET_CELLS` where cells are directly under the top-level `cells` key.
+Response shapes:
+
+- Sparse default:
+  `{ "window": { "shape": "SPARSE", "sheetName": "...", "topLeftAddress": "A1", "dimensions": { "rowCount": 5, "columnCount": 3 }, "populatedCells": [...] } }`
+- Dense with `includeBlanks=true`:
+  `{ "window": { "shape": "DENSE", "sheetName": "...", "topLeftAddress": "A1", "dimensions": { "rowCount": 5, "columnCount": 3 }, "rows": [ { "rowIndex": 0, "cells": [...] } ] } }`
+
+`GET_CELLS` returns its cell list directly under top-level `cells`; `GET_WINDOW` always nests the
+window payload under top-level `window`.
 
 ### GET_MERGED_REGIONS
 

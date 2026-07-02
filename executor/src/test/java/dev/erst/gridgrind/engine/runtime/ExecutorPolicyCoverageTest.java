@@ -375,12 +375,13 @@ class ExecutorPolicyCoverageTest {
         ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "/tmp/out.xlsx",
+                WorkbookPlan.WorkbookPersistence.IfExists.REJECT,
                 new OoxmlPersistenceSecurityInput(
                     new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
             workingDirectory);
     ExcelOoxmlPersistenceOptions overwriteOptions =
         ExecutionRequestPaths.persistenceOptions(
-            new WorkbookPlan.WorkbookPersistence.OverwriteSource(
+            new WorkbookPlan.WorkbookPersistence.Overwrite(
                 new OoxmlPersistenceSecurityInput(
                     new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)),
             workingDirectory);
@@ -429,10 +430,13 @@ class ExecutorPolicyCoverageTest {
             GridGrindResponsePersistence.PersistenceOutcome.SavedAs.class,
             workbookSupport.persistStreamingWorkbook(
                 materialized,
-                new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
+                new WorkbookPlan.WorkbookPersistence.SaveAs(
+                    saveAsPath.toString(), WorkbookPlan.WorkbookPersistence.IfExists.REJECT),
                 new WorkbookPlan.WorkbookSource.New(),
                 workingDirectory));
-    assertEquals(saveAsPath.toAbsolutePath().toString(), savedAs.executionPath());
+    assertEquals(
+        saveAsPath.toAbsolutePath().toString(),
+        DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(savedAs));
     assertTrue(Files.exists(saveAsPath));
 
     Path overwriteMaterialized = createWorkbookFile("gridgrind-streaming-overwrite-materialized-");
@@ -442,10 +446,12 @@ class ExecutorPolicyCoverageTest {
             GridGrindResponsePersistence.PersistenceOutcome.Overwritten.class,
             workbookSupport.persistStreamingWorkbook(
                 overwriteMaterialized,
-                new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                new WorkbookPlan.WorkbookPersistence.Overwrite(),
                 new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString()),
                 workingDirectory));
-    assertEquals(overwriteSourcePath.toAbsolutePath().toString(), overwritten.executionPath());
+    assertEquals(
+        overwriteSourcePath.toAbsolutePath().toString(),
+        DefaultGridGrindRequestExecutorTestSupport.writtenExecutionPath(overwritten));
 
     IllegalArgumentException overwriteFailure =
         assertThrows(
@@ -453,7 +459,7 @@ class ExecutorPolicyCoverageTest {
             () ->
                 workbookSupport.persistStreamingWorkbook(
                     materialized,
-                    new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
+                    new WorkbookPlan.WorkbookPersistence.Overwrite(),
                     new WorkbookPlan.WorkbookSource.New(),
                     workingDirectory));
     assertEquals(

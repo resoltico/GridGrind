@@ -35,10 +35,11 @@ From a repository checkout, the shortest reliable path is:
 
 ```bash
 ./gradlew :cli:installShadowDist
-./cli/build/install/gridgrind/bin/gridgrind --help
-./cli/build/install/gridgrind/bin/gridgrind --print-example --lookup BUDGET --response budget-request.json
-./cli/build/install/gridgrind/bin/gridgrind --doctor-request --request budget-request.json --response doctor-report.json
-./cli/build/install/gridgrind/bin/gridgrind --request budget-request.json --response response.json
+GRIDGRIND=./cli/build/install/gridgrind/bin/gridgrind
+"$GRIDGRIND" --help
+"$GRIDGRIND" --print-example --lookup BUDGET --response budget-request.json
+"$GRIDGRIND" --doctor-request --request budget-request.json --response doctor-report.json
+"$GRIDGRIND" --request budget-request.json --response response.json
 ```
 
 In the snippets below, read `gridgrind` as the entry point you actually have: the packaged repo
@@ -69,6 +70,10 @@ Fast Docker first-contact:
 docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --help
 ```
 
+For file-producing container runs, mount your workspace at `/work` and let the image's prepared
+`WORKDIR` resolve relative request and response paths from there; you do not need a separate `-w`
+override.
+
 ## Find The Right Starting Point
 
 GridGrind can print valid starting material instead of making you invent request shape by hand:
@@ -82,18 +87,20 @@ gridgrind --print-task-keyword-match --query "monthly sales dashboard" --respons
 gridgrind --print-protocol-catalog --response protocol-index.json
 gridgrind --print-protocol-catalog --search pivot --response pivot-search.json
 gridgrind --print-protocol-catalog --lookup mutationActionTypes:SET_CELL --response set-cell.json
-gridgrind --print-protocol-catalog --full --response protocol-catalog.json
+gridgrind --print-protocol-catalog --lookup plainTypes:cellReadProjectionType --response cell-read-projection.json
 ```
 
 The example and task catalogs publish `requestFileName`, `workspaceMode`, and
 `requiredWorkspacePaths`, so you can tell whether a printed request is self-contained before you
-try to run it.
+try to run it. Shipped save-producing examples already use `SAVE_AS.ifExists=REPLACE`, so rerunning
+them does not depend on cleaning the workspace first.
 
 The bare `--print-protocol-catalog` output is the compact first-contact index. Use
 `--print-protocol-catalog --search <text>` when you know the concept but not the exact id, follow
-up with `--print-protocol-catalog --lookup <group>:<id>` when you want one full authoritative
-entry, and use `--print-protocol-catalog --full` only when you need the entire machine-readable
-catalog in one payload.
+up with `--print-protocol-catalog --lookup <group>:<id>` when you want one authoritative payload,
+and keep discovery scoped instead of expecting one monolithic full-catalog dump. Machine-readable
+request-template, discovery, doctor, and execution payloads are compact JSON by default; add
+`--pretty` when you want indented JSON instead.
 
 Use `--help` for the short synopsis, `--help-protocol` for the authoritative CLI and request
 contract, and `--help-guidance` for workflow-oriented help.
@@ -107,7 +114,10 @@ every step succeeds. If an assertion fails or any step errors, no workbook is sa
 The smallest valid top-level envelope is `protocolVersion`, `source`, `persistence`, and ordered
 `steps`. `execution` and `formulaEnvironment` are optional when you want the default
 `FULL_XSSF` / `SUMMARY` / `DO_NOT_CALCULATE` execution path and the empty evaluator environment.
-Steps can mix mutation, assertion, and inspection in the same plan.
+Steps can mix mutation, assertion, and inspection in the same plan. Every response also carries one
+top-level `persistence` outcome so callers can see both the requested save mode and whether a file
+was actually written. `SAVE_AS` requires an explicit `ifExists=REJECT|REPLACE` choice; use
+`REPLACE` when you want rerunnable create-or-replace output.
 
 The safest way to start is to ask GridGrind to emit a valid request for you:
 

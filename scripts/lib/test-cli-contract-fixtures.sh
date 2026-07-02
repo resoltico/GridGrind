@@ -54,8 +54,29 @@ load_test_cli_contract_fixtures() {
     success_catalog_index="$(
         java -jar "${jar_path}" --print-protocol-catalog | tr -d '\r'
     )"
-    success_catalog="$(
-        java -jar "${jar_path}" --print-protocol-catalog --full | tr -d '\r'
+    success_source_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup sourceTypes | tr -d '\r'
+    )"
+    success_persistence_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup persistenceTypes | tr -d '\r'
+    )"
+    success_step_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup stepTypes | tr -d '\r'
+    )"
+    success_mutation_action_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup mutationActionTypes | tr -d '\r'
+    )"
+    success_assertion_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup assertionTypes | tr -d '\r'
+    )"
+    success_inspection_query_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup inspectionQueryTypes | tr -d '\r'
+    )"
+    success_execution_mode_types="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup nestedTypes:executionModeTypes | tr -d '\r'
+    )"
+    success_execution_policy_input_type="$(
+        java -jar "${jar_path}" --print-protocol-catalog --lookup plainTypes:executionPolicyInputType | tr -d '\r'
     )"
     success_example_catalog="$(
         java -jar "${jar_path}" --print-example-catalog | tr -d '\r'

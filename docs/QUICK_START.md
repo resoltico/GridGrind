@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.70.0"
+version: "0.71.0"
 domain: QUICK_START
 updated: "2026-06-29"
 route:
@@ -57,6 +57,8 @@ during repeated local runs if you want.
 
 The published image already includes the font stack required for signature-line preview
 generation, so signature-line requests work in Docker without extra image customization.
+Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so
+relative CLI paths resolve inside that mounted directory without a separate `-w` override.
 
 If you are already in a repository checkout and want the same runtime container without fetching a
 release asset first, build the root Dockerfile directly:
@@ -97,8 +99,7 @@ docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-example
   --response budget-request.json
 
 docker run --pull=always --rm -i \
-  -v "$(pwd)":/workdir \
-  -w /workdir \
+  -v "$(pwd)":/work \
   ghcr.io/resoltico/gridgrind:latest \
   --request budget-request.json \
   --response response.json
@@ -115,8 +116,7 @@ docker run --rm gridgrind-local --print-example --lookup BUDGET \
   --response budget-request.json
 
 docker run --rm -i \
-  -v "$(pwd)":/workdir \
-  -w /workdir \
+  -v "$(pwd)":/work \
   gridgrind-local \
   --request budget-request.json \
   --response response.json

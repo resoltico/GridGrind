@@ -40,8 +40,20 @@ public final class GridGrindResponses {
    * report.
    */
   public static GridGrindResponse.Failure failure(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindResponsePersistence.PersistenceOutcome persistence,
+      GridGrindProblemDetail.Problem problem) {
+    return GridGrindResponseSupport.failure(protocolVersion, persistence, problem);
+  }
+
+  /**
+   * Creates a failure response with a synthetic failure journal and a not-requested calculation
+   * report.
+   */
+  public static GridGrindResponse.Failure failure(
       GridGrindProtocolVersion protocolVersion, GridGrindProblemDetail.Problem problem) {
-    return GridGrindResponseSupport.failure(protocolVersion, problem);
+    return failure(
+        protocolVersion, new GridGrindResponsePersistence.PersistenceOutcome.NotSaved(), problem);
   }
 
   /** Creates one failed response using the current protocol version. */

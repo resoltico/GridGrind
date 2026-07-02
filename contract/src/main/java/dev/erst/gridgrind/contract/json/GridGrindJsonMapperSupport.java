@@ -22,7 +22,8 @@ import tools.jackson.databind.type.LogicalType;
 /** Owns JSON mapper construction and request-size policy for the protocol seam. */
 final class GridGrindJsonMapperSupport {
   static final JsonMapper JSON_MAPPER = buildMapper(unlimitedJsonFactory());
-  static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true);
+  static final JsonMapper WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true, false);
+  static final JsonMapper PRETTY_WIRE_JSON_MAPPER = buildMapper(unlimitedJsonFactory(), true, true);
   static final JsonMapper REQUEST_JSON_MAPPER = buildMapper(requestJsonFactory());
 
   private GridGrindJsonMapperSupport() {}
@@ -40,7 +41,8 @@ final class GridGrindJsonMapperSupport {
 
   static InvalidRequestException requestTooLarge(@Nullable Throwable cause) {
     return new InvalidRequestException(
-        GridGrindContractText.requestDocumentTooLargeMessage(),
+        new MessageInvariant(
+            GridGrindContractText.requestDocumentTooLargeMessage(), java.util.Optional.empty()),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
         java.util.Optional.empty(),
@@ -48,15 +50,15 @@ final class GridGrindJsonMapperSupport {
   }
 
   private static JsonMapper buildMapper(JsonFactory jsonFactory) {
-    return buildMapper(jsonFactory, false);
+    return buildMapper(jsonFactory, false, false);
   }
 
-  private static JsonMapper buildMapper(JsonFactory jsonFactory, boolean omitNullValues) {
+  private static JsonMapper buildMapper(
+      JsonFactory jsonFactory, boolean omitNullValues, boolean prettyPrint) {
     JsonMapper.Builder builder =
         JsonMapper.builder(jsonFactory)
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
-            .enable(SerializationFeature.INDENT_OUTPUT)
             .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(MutationAction.class))
             .registerSubtypes(GridGrindJsonSubtypeSupport.namedLeafSubtypes(Assertion.class))
@@ -65,6 +67,9 @@ final class GridGrindJsonMapperSupport {
             .withCoercionConfig(
                 LogicalType.Integer,
                 config -> config.setCoercion(CoercionInputShape.Float, CoercionAction.Fail));
+    if (prettyPrint) {
+      builder.enable(SerializationFeature.INDENT_OUTPUT);
+    }
     if (omitNullValues) {
       builder.changeDefaultPropertyInclusion(
           value -> value.withValueInclusion(JsonInclude.Include.NON_ABSENT));

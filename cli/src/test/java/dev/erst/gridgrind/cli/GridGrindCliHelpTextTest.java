@@ -11,6 +11,7 @@ import dev.erst.gridgrind.cli.discovery.CliVersionReport;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.cli.discovery.ShippedExampleEntry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -223,6 +224,17 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertFalse(licenseReport.licenseText().isBlank());
   }
 
+  @Test
+  void structuredIdentitySurfacesHonorPrettyFlag() throws IOException {
+    String payload =
+        new String(
+            runStructuredIdentitySurface("--version", "--format", "structured", "--pretty"),
+            StandardCharsets.UTF_8);
+
+    assertTrue(payload.startsWith("{\n"));
+    assertTrue(payload.contains("\n  \"version\" : "));
+  }
+
   private static void assertShortHelpAliasMatchesOverview(String overview) throws IOException {
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
@@ -240,7 +252,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--print-example --lookup <id>"));
     assertTrue(overview.contains("--print-task-plan --lookup <id>"));
     assertTrue(overview.contains("--print-task-keyword-match --query <text>"));
-    assertTrue(overview.contains("--print-protocol-catalog --lookup <id>|<group>:<id>"));
+    assertTrue(overview.contains("--print-protocol-catalog --lookup <lookup-id>"));
+    assertFalse(overview.contains("--print-protocol-catalog --lookup <id>|<group>:<id>"));
     assertTrue(overview.contains("--print-protocol-catalog --search <text>"));
     assertTrue(overview.contains("--execution-root <path>"));
     assertTrue(overview.contains("--temp-root <path>"));
@@ -251,6 +264,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(overview.contains("--help-protocol"));
     assertTrue(overview.contains("--help-guidance"));
     assertTrue(overview.contains("Use --format structured"));
+    assertTrue(overview.contains("Use --pretty"));
+    assertTrue(overview.contains("--pretty"));
     assertTrue(overview.contains("CLI argument errors and request-content failure reports"));
     assertTrue(overview.contains("structured JSON on stderr"));
     assertTrue(overview.contains("executed responses stay on stdout."));
@@ -260,6 +275,7 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   }
 
   private static void assertProtocolHelpSurface(String protocol) {
+    String normalizedProtocol = protocol.replaceAll("\\s+", " ");
     assertTrue(protocol.contains("Authoritative Contract Scope:"));
     assertTrue(protocol.contains("Flags:"));
     assertTrue(protocol.contains("Limits:"));
@@ -270,23 +286,31 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(protocol.contains("--print-example --lookup <id>"));
     assertTrue(protocol.contains("--print-task-plan --lookup <id>"));
     assertTrue(protocol.contains("--print-task-keyword-match --query <text>"));
-    assertTrue(protocol.contains("--print-protocol-catalog --lookup <id>"));
+    assertTrue(protocol.contains("--print-protocol-catalog --lookup <lookup-id>"));
     assertTrue(protocol.contains("--execution-root <path>"));
     assertTrue(protocol.contains("--temp-root <path>"));
+    assertTrue(protocol.contains("--pretty"));
     assertFalse(protocol.contains("--lookup GET_CELLS"));
     assertFalse(protocol.contains("--lookup nestedTypes:cellInputTypes"));
     assertFalse(protocol.contains("summary-first"));
-    assertTrue(protocol.contains("execution.mode is one typed variant"));
+    assertTrue(protocol.contains("execution.mode is a typed discriminator"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "execution may include any subset of execution.mode, execution.journal, and execution.calculation"));
+    assertTrue(protocol.contains("projectedByFacets"));
+    assertTrue(protocol.contains("enumValueDocs"));
     assertTrue(protocol.contains("STREAMING_WRITE"));
     assertTrue(protocol.contains("formulaEnvironment.missingWorkbookPolicy"));
     assertTrue(protocol.contains("USE_CACHED_VALUE"));
     assertTrue(protocol.contains("formulaEnvironment.udfToolpacks[]"));
+    assertTrue(protocol.contains("GET_CELLS addresses"));
     assertTrue(protocol.contains("EVALUATE_TARGETS requires strategy.cells[]"));
     assertTrue(protocol.contains("stepId must be unique within steps[]"));
-    assertTrue(protocol.contains("CLI argument errors and"));
-    assertTrue(protocol.contains("request-content failure reports stay on stderr"));
-    assertTrue(protocol.contains("executed GridGrindResponse payloads stay on"));
-    assertTrue(protocol.contains("stdout even when status=FAILED."));
+    assertTrue(normalizedProtocol.contains("CLI argument errors and request-content failure"));
+    assertTrue(normalizedProtocol.contains("reports stay on stderr"));
+    assertTrue(
+        normalizedProtocol.contains(
+            "executed GridGrindResponse payloads stay on stdout even when status=FAILED."));
     assertFalse(protocol.contains("Workflows:"));
     assertFalse(protocol.contains("Docker Example:"));
   }
@@ -418,7 +442,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
   void guidanceHelpDocumentsDockerWorkdirUsage() {
     String help = GridGrindCliProductInfo.helpText(CliCommand.HelpTopic.GUIDANCE, "1.0.0");
 
-    assertTrue(help.contains("-w /workdir"));
+    assertTrue(help.contains(GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument()));
+    assertFalse(help.contains("-w /workdir"));
     assertTrue(help.contains("--request request.json"));
     assertTrue(help.contains("--response response.json"));
   }

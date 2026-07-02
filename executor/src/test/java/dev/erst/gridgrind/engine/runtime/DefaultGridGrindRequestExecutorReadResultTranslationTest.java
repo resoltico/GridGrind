@@ -32,7 +32,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
   void convertsReadResultsIntoProtocolReadResults() {
     ExcelCellSnapshot.BlankSnapshot blank =
         new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+            "A1", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
 
     InspectionResult workbookSummary =
         InspectionResultConverter.toReadResult(
@@ -62,12 +62,10 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                     3,
                     2)));
     InspectionResult cells =
-        InspectionResultConverter.toReadResult(
-            new dev.erst.gridgrind.excel.WorkbookSheetResult.CellsResult(
-                "cells", "Budget", List.of(blank)));
+        InspectionResultConverter.toReadResult(excelCellsResult("cells", "Budget", List.of(blank)));
     InspectionResult window =
         InspectionResultConverter.toReadResult(
-            new dev.erst.gridgrind.excel.WorkbookSheetResult.WindowResult(
+            excelWindowResult(
                 "window",
                 new dev.erst.gridgrind.excel.WorkbookSheetResult.Window(
                     "Budget",
@@ -176,7 +174,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                                     "SUM(B2:B3)", 1, List.of("B4"))))))));
     InspectionResult schema =
         InspectionResultConverter.toReadResult(
-            new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchemaResult(
+            excelSheetSchemaResult(
                 "schema",
                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.SheetSchema(
                     "Budget",
@@ -193,8 +191,8 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
                             0,
                             List.of(
                                 new dev.erst.gridgrind.excel.WorkbookSurfaceResult.TypeCount(
-                                    "STRING", 2)),
-                            "STRING")))));
+                                    "TEXT", 2)),
+                            "TEXT")))));
     InspectionResult namedRangeSurface =
         InspectionResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookSurfaceResult.NamedRangeSurfaceResult(
@@ -267,11 +265,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
         "A1", cast(SheetInspectionResult.CellsResult.class, cells).cells().getFirst().address());
     assertEquals(
         "A1",
-        cast(SheetInspectionResult.WindowResult.class, window)
-            .window()
-            .rows()
-            .getFirst()
-            .cells()
+        windowCells(cast(SheetInspectionResult.WindowResult.class, window).window())
             .getFirst()
             .address());
     assertEquals(
@@ -314,7 +308,7 @@ class DefaultGridGrindRequestExecutorReadResultTranslationTest
             .surface()
             .totalFormulaCellCount());
     assertEquals(
-        "STRING",
+        "TEXT",
         cast(WorkbookSurfaceInspectionResult.SheetSchemaResult.class, schema)
             .surface()
             .columns()

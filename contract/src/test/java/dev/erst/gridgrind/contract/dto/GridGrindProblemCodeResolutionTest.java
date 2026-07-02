@@ -21,8 +21,7 @@ class GridGrindProblemCodeResolutionTest {
     ProblemContext.PersistWorkbook overwriteSourceContext =
         new ProblemContext.PersistWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "OVERWRITE"),
-            ProblemContextWorkbookSurfaces.PersistenceReference.overwriteSource(
-                "/tmp/source.xlsx"));
+            ProblemContextWorkbookSurfaces.PersistenceReference.overwrite("/tmp/source.xlsx"));
     ProblemContext.OpenWorkbook openWorkbookContext =
         new ProblemContext.OpenWorkbook(
             ProblemContextRequestSurfaces.RequestShape.known("EXISTING", "NONE"),
@@ -42,7 +41,7 @@ class GridGrindProblemCodeResolutionTest {
         "Inspect problem.assertionFailure observations, then adjust the failing assertion or preceding workbook mutations and retry.",
         GridGrindProblemCode.ASSERTION_FAILED.resolutionFor("assertion failed", assertionContext));
     assertEquals(
-        "Choose a new SAVE_AS destination path or remove the conflicting file, then retry.",
+        "Choose a new SAVE_AS destination path, remove the conflicting file, or set SAVE_AS.ifExists=REPLACE before retrying.",
         GridGrindProblemCode.IO_ERROR.resolutionFor(
             "Could not write workbook: already exists", saveAsContext));
     assertEquals(
