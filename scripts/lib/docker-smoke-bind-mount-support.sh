@@ -126,11 +126,13 @@ JSON
             } | tr '\n' ' '
         )"
         require_match "${documented_no_user_output}" '"code"[[:space:]]*:[[:space:]]*"IO_ERROR"' \
-            "docker smoke no-user documented bind-mount run did not report IO_ERROR"
-        require_match \
-            "${documented_no_user_output}" \
-            'permission denied|Operation not permitted|Read-only file system' \
-            "docker smoke no-user documented bind-mount run did not report a write-permission failure"
+            "docker smoke no-user documented bind-mount run did not report IO_ERROR: ${documented_no_user_output}"
+        [[ ! -f "${documented_no_user_legacy_workbook_path}" ]] || die \
+            "docker smoke no-user documented bind-mount run wrote the workbook relative to the shell workdir"
+        if [[ -f "${documented_no_user_response_path}" && -f "${documented_no_user_workbook_path}" ]]; then
+            die \
+                "docker smoke no-user documented bind-mount run completed both mounted writes despite failing: ${documented_no_user_output}"
+        fi
     fi
 
     docker_with_repo_config run --rm -i \

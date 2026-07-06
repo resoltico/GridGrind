@@ -41,9 +41,10 @@ Task discovery is layered on top of that same catalog surface: `--print-recipe-c
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits, source-backed input resolution, and existing workbook-source accessibility; it does not mutate a workbook and returns every independently provable blocking problem it can isolate safely in one report, including multiple malformed steps in one pass. `--response <path>` applies across execution, doctoring, and discovery, so primary outputs can be written directly to files during artifact, shell, or Docker workflows. When the request JSON arrives on stdin instead of `--request <path>`, pass `--execution-root <path>` so request-owned relative paths resolve from one explicit directory. Execution scratch is separate: without `--temp-root`, GridGrind creates one private per-run scratch directory under the OS temporary-file root; with `--temp-root <path>`, it creates that private scratch directory under the supplied parent path, and best-effort cleanup removes it on normal command completion. Encrypted OOXML plaintext temp workbooks always stay in private OS temp rather than the mounted work directory or the `--temp-root` parent.
 Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so relative CLI paths resolve inside that mounted directory without a separate `-w` override. Pass `--user "$(id -u):$(id -g)"` on ordinary bind mounts so response and workbook files stay owned by the calling host user; omit it only when Docker Desktop or a rootless runtime already remaps bind-mount ownership for you. The mounted-directory execution pattern is
 `docker run --rm -i --user "$(id -u):$(id -g)" -v "$(pwd)":/work ghcr.io/resoltico/gridgrind:latest --request request.json --response response.json`.
-This exact command shape is re-verified by the Docker smoke gate: without ownership remap, the
-same bind-mounted run without `--user` must fail with a write-permission error; Docker Desktop or
-rootless runtimes that already remap bind-mount ownership may allow both forms.
+This exact command shape is re-verified by the Docker smoke gate: the same bind-mounted run
+without `--user` must either succeed cleanly on an ownership-remapping runtime or fail cleanly
+with `IO_ERROR` before the mounted write flow completes; Docker Desktop or rootless runtimes that
+already remap bind-mount ownership may allow both forms.
 
 ## Canonical Terminology
 

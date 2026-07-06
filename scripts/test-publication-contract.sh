@@ -184,6 +184,9 @@ grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_roo
 grep -Fq 'docker smoke no-user documented bind-mount run did not report IO_ERROR' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer verifies the no-user failure path on non-remapped bind mounts"
+grep -Fq 'docker smoke no-user documented bind-mount run completed both mounted writes despite failing' \
+    "${docker_smoke_bind_mount_helper}" || die \
+    "bind-mount guidance helper no longer proves the no-user failure path leaves the mounted writes incomplete"
 grep -Fq 'docker smoke documented bind-mount run with --user did not write the workbook file' \
     "${docker_smoke_bind_mount_helper}" || die \
     "bind-mount guidance helper no longer verifies the documented command succeeds with --user"
