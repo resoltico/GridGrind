@@ -4,7 +4,7 @@ import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
@@ -20,7 +20,6 @@ import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
@@ -28,6 +27,7 @@ import dev.erst.gridgrind.excel.validation.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.validation.ExcelDataValidationRule;
+import java.util.List;
 import java.util.Optional;
 
 /** Converts structured contract inputs such as drawings, validations, and tables. */
@@ -99,10 +99,10 @@ final class WorkbookCommandStructuredInputConverter {
   }
 
   static ExcelConditionalFormattingBlockDefinition toExcelConditionalFormattingBlock(
-      ConditionalFormattingBlockInput block) {
+      List<String> ranges, ConditionalFormattingDefinitionInput definition) {
     return new ExcelConditionalFormattingBlockDefinition(
-        block.ranges(),
-        block.rules().stream()
+        ranges,
+        definition.rules().stream()
             .map(WorkbookCommandStructuredInputConverter::toExcelConditionalFormattingRule)
             .toList());
   }
@@ -296,9 +296,9 @@ final class WorkbookCommandStructuredInputConverter {
     };
   }
 
-  private static ExcelConditionalFormattingThreshold toExcelConditionalFormattingThreshold(
-      ConditionalFormattingThresholdInput threshold) {
-    return new ExcelConditionalFormattingThreshold(
+  private static dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold
+      toExcelConditionalFormattingThreshold(ConditionalFormattingThresholdInput threshold) {
+    return new dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold(
         threshold.type(), threshold.formula(), threshold.value());
   }
 

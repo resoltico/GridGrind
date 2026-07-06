@@ -1,14 +1,13 @@
 package dev.erst.gridgrind.contract.step;
 
-import dev.erst.gridgrind.contract.json.GridGrindJsonRequestProblemDetector;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
 import dev.erst.gridgrind.contract.json.RequestProblemDescriptor;
-import dev.erst.gridgrind.contract.json.RequestProblemSource;
 import java.util.Objects;
 import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 import tools.jackson.core.JacksonException;
-import tools.jackson.core.JacksonException.Reference;
 import tools.jackson.core.JsonParser;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.exc.MismatchedInputException;
@@ -34,29 +33,51 @@ final class WorkbookStepJsonFailurePathSupport {
 
   static String qualifiedFieldName(
       String fieldName, @Nullable JsonNode node, Class<?> targetType, Exception failure) {
-    String nestedFieldPath = nestedFieldPath(node, targetType, failure);
-    if (nestedFieldPath.isEmpty()) {
-      return fieldName;
-    }
-    if (nestedFieldPath.equals(fieldName)
-        || nestedFieldPath.startsWith(fieldName + ".")
-        || nestedFieldPath.startsWith(fieldName + "[")) {
-      return nestedFieldPath;
-    }
-    return nestedFieldPath.startsWith("[")
-        ? fieldName + nestedFieldPath
-        : fieldName + "." + nestedFieldPath;
+    return WorkbookStepJsonQualifiedFieldSupport.qualifiedFieldName(
+        fieldName, node, targetType, failure);
   }
 
-  static JacksonException wrapIllegalArgumentFailure(
-      JsonParser parser, String fieldName, IllegalArgumentException exception) {
-    MismatchedInputException failure =
-        MismatchedInputException.from(
-            parser,
-            WorkbookStep.class,
-            Objects.requireNonNullElse(exception.getMessage(), "Invalid request shape"));
-    failure.initCause(exception);
-    return fieldFailure(qualifiedFieldName(fieldName, null, Object.class, exception), failure);
+  static InvalidRequestException wrapIllegalArgumentFailure(
+      String fieldName, IllegalArgumentException exception) {
+    String qualifiedFieldName = qualifiedFieldName(fieldName, null, Object.class, exception);
+    return new InvalidRequestException(
+        new MessageInvariant(
+            Objects.requireNonNullElse(exception.getMessage(), "Invalid request"),
+            Optional.of(qualifiedFieldName)),
+        Optional.of(qualifiedFieldName),
+        Optional.empty(),
+        Optional.empty(),
+        exception);
+  }
+
+  static Optional<InvalidRequestException> wrapValidationJacksonFailure(
+      String fieldName, @Nullable JsonNode node, Class<?> targetType, JacksonException exception) {
+    Throwable validationCause = validationCause(exception);
+    if (validationCause == null) {
+      return Optional.empty();
+    }
+    String qualifiedFieldName = qualifiedFieldName(fieldName, node, targetType, exception);
+    if (validationCause instanceof InvalidRequestException requestException) {
+      String qualifiedRequestProblemPath =
+          qualifiedFieldName(fieldName, null, Object.class, requestException);
+      return Optional.of(
+          new InvalidRequestException(
+              (dev.erst.gridgrind.contract.json.RequestProblemDescriptor.Invariant)
+                  requestException.requestProblem(),
+              Optional.of(qualifiedRequestProblemPath),
+              Optional.empty(),
+              Optional.empty(),
+              exception));
+    }
+    return Optional.of(
+        new InvalidRequestException(
+            new MessageInvariant(
+                Objects.requireNonNullElse(validationCause.getMessage(), "Invalid request"),
+                Optional.of(qualifiedFieldName)),
+            Optional.of(qualifiedFieldName),
+            Optional.empty(),
+            Optional.empty(),
+            exception));
   }
 
   static JacksonException wrapJacksonFailure(
@@ -68,41 +89,19 @@ final class WorkbookStepJsonFailurePathSupport {
             : fieldName);
   }
 
-  private static String nestedFieldPath(
-      @Nullable JsonNode node, Class<?> targetType, Exception failure) {
-    if (failure instanceof JacksonException jacksonException) {
-      String renderedPath = renderPath(jacksonException.getPath());
-      if (!renderedPath.isEmpty()) {
-        return renderedPath;
+  private static @Nullable Throwable validationCause(Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof InvalidRequestShapeException) {
+        return null;
       }
-      if (node != null) {
-        return GridGrindJsonRequestProblemDetector.detect(node, targetType, jacksonException)
-            .flatMap(problem -> problem.jsonPath())
-            .orElse("");
+      if (current instanceof InvalidRequestException
+          || current instanceof IllegalArgumentException
+          || current instanceof java.time.DateTimeException) {
+        return current;
       }
+      current = current.getCause();
     }
-    if (failure instanceof RequestProblemSource requestProblemSource) {
-      Optional<String> jsonPath = requestProblemSource.requestProblem().jsonPath();
-      if (jsonPath.isPresent()) {
-        return jsonPath.orElseThrow();
-      }
-    }
-    return "";
-  }
-
-  private static String renderPath(java.util.List<Reference> path) {
-    StringBuilder rendered = new StringBuilder();
-    for (Reference reference : path) {
-      String propertyName = reference.getPropertyName();
-      if (propertyName != null) {
-        if (!rendered.isEmpty()) {
-          rendered.append('.');
-        }
-        rendered.append(propertyName);
-      } else {
-        rendered.append('[').append(reference.getIndex()).append(']');
-      }
-    }
-    return rendered.toString();
+    return null;
   }
 }

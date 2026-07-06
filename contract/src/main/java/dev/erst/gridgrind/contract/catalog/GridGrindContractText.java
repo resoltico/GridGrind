@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  * protocol catalog summaries, and request-validation messages.
  */
 public final class GridGrindContractText {
-  private static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
   private static final List<Class<? extends MutationAction>>
       STREAMING_WRITE_MUTATION_ACTION_CLASSES =
           List.of(WorkbookMutationAction.EnsureSheet.class, CellMutationAction.AppendRow.class);
@@ -24,42 +23,6 @@ public final class GridGrindContractText {
       List.of(
           WorkbookIntrospectionQuery.GetWorkbookSummary.class,
           SheetIntrospectionQuery.GetSheetSummary.class);
-  private static final List<String> WORKBOOK_ANALYSIS_FAMILIES =
-      List.of(
-          "formula health",
-          "data-validation health",
-          "conditional-formatting health",
-          "autofilter health",
-          "table health",
-          "pivot-table health",
-          "hyperlink health",
-          "named-range health");
-  public static final String FORMULA_SURFACE_READ_SUMMARY =
-      "Return surface.totalFormulaCellCount plus per-sheet formula usage groups."
-          + " surface.sheets[*] includes sheetName, formulaCellCount,"
-          + " distinctFormulaCount, and grouped formulas with occurrenceCount"
-          + " and addresses.";
-  public static final String NAMED_RANGE_SURFACE_READ_SUMMARY =
-      "Return surface.workbookScopedCount, sheetScopedCount,"
-          + " rangeBackedCount, formulaBackedCount, and namedRanges."
-          + " Each namedRanges entry reports name, scope, refersToFormula,"
-          + " and backing kind.";
-  public static final String FORMULA_HEALTH_READ_SUMMARY =
-      "Return analysis.checkedFormulaCellCount, a severity summary,"
-          + " and findings for formula errors, volatile usage,"
-          + " or evaluation failures.";
-  public static final String NAMED_RANGE_HEALTH_READ_SUMMARY =
-      "Return analysis.checkedNamedRangeCount, a severity summary,"
-          + " and named-range findings such as broken references,"
-          + " unresolved targets, or scope shadowing.";
-  public static final String WORKBOOK_FINDINGS_READ_SUMMARY =
-      "Return analysis.summary plus one flat analysis.findings list after running"
-          + " all analysis families (formula health, data-validation health,"
-          + " conditional-formatting health, autofilter health, table health,"
-          + " pivot-table health, hyperlink health, named-range health)"
-          + " across the entire workbook and aggregate findings in a single response."
-          + " This is the primary workbook-health check and pairs naturally with"
-          + " persistence.type=NONE when no save is required.";
 
   private GridGrindContractText() {}
 
@@ -81,60 +44,6 @@ public final class GridGrindContractText {
   /** Human-readable inspection-query id list accepted by `EVENT_READ`. */
   public static String eventReadInspectionQueryTypePhrase() {
     return GridGrindExecutionModeMetadata.eventRead().allowedQueryPhrase();
-  }
-
-  /** Human-readable aggregate analysis-family list used by workbook-health discovery surfaces. */
-  public static String workbookAnalysisFamilyPhrase() {
-    return humanJoin(WORKBOOK_ANALYSIS_FAMILIES);
-  }
-
-  /** One stable description of request-authored formula boundaries. */
-  public static String formulaAuthoringLimitSummary() {
-    return "request-authored formulas are scalar only; array-formula braces such as"
-        + " {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and authored LAMBDA/LET"
-        + " currently surface as UNSUPPORTED_FORMULA_CONSTRUCT because Apache POI cannot"
-        + " parse them on the write path.";
-  }
-
-  /** One stable description of loaded-formula evaluation boundaries. */
-  public static String loadedFormulaSupportSummary() {
-    return "formulas that Apache POI parses but cannot evaluate surface as"
-        + " UNSUPPORTED_FORMULA.";
-  }
-
-  /** One stable catalog summary for `GET_SHEET_LAYOUT`. */
-  public static String sheetLayoutReadSummary() {
-    return "Return one sheet's layout object with pane, zoomPercent, presentation,"
-        + " and per-row or per-column metadata."
-        + " Row and column entries include hidden, outlineLevel, and collapsed"
-        + " state where Excel persists it."
-        + " Readback is factual and does not clamp malformed positive persisted"
-        + " row heights, column widths, or default row height values.";
-  }
-
-  /** One stable catalog summary for `GET_FORMULA_SURFACE`. */
-  public static String formulaSurfaceReadSummary() {
-    return FORMULA_SURFACE_READ_SUMMARY;
-  }
-
-  /** One stable catalog summary for `GET_NAMED_RANGE_SURFACE`. */
-  public static String namedRangeSurfaceReadSummary() {
-    return NAMED_RANGE_SURFACE_READ_SUMMARY;
-  }
-
-  /** One stable catalog summary for `ANALYZE_FORMULA_HEALTH`. */
-  public static String formulaHealthReadSummary() {
-    return FORMULA_HEALTH_READ_SUMMARY;
-  }
-
-  /** One stable catalog summary for `ANALYZE_NAMED_RANGE_HEALTH`. */
-  public static String namedRangeHealthReadSummary() {
-    return NAMED_RANGE_HEALTH_READ_SUMMARY;
-  }
-
-  /** One stable catalog summary for `ANALYZE_WORKBOOK_FINDINGS`. */
-  public static String workbookFindingsReadSummary() {
-    return WORKBOOK_FINDINGS_READ_SUMMARY;
   }
 
   /** One stable catalog summary for `ExecutionModeInput`. */
@@ -213,70 +122,6 @@ public final class GridGrindContractText {
         + " EVALUATE_ALL evaluates every formula cell,"
         + " EVALUATE_TARGETS evaluates one explicit formula-cell set,"
         + " and CLEAR_CACHES_ONLY strips persisted formula caches without evaluating.";
-  }
-
-  /** One stable discovery line for `ANALYZE_WORKBOOK_FINDINGS`. */
-  public static String workbookFindingsDiscoverySummary() {
-    return "ANALYZE_WORKBOOK_FINDINGS aggregates " + workbookAnalysisFamilyPhrase() + ".";
-  }
-
-  /** One stable help and runtime message for stdin-backed authored values. */
-  public static String standardInputRequiresRequestMessage() {
-    return "STANDARD_INPUT-authored values require --request so stdin is available for input"
-        + " content instead of the request JSON";
-  }
-
-  /** One stable help and runtime message for stdin-rooted request execution. */
-  public static String stdinExecutionRootRequiredMessage() {
-    return "Requests read from stdin require --execution-root so request-owned paths and"
-        + " execution temp files resolve from one explicit directory";
-  }
-
-  /** Stable wording for how relative paths inside the request are resolved. */
-  public static String requestOwnedPathResolutionSummary() {
-    return "When the CLI reads a request via --request, relative request-owned paths resolve from"
-        + " the request file directory. When the request JSON arrives on stdin, pass"
-        + " --execution-root <path> and relative request-owned paths resolve from that"
-        + " directory.";
-  }
-
-  /** Stable wording for how CLI file-flag paths are resolved. */
-  public static String cliFlagPathResolutionSummary() {
-    return "--request, --response, --execution-root, and --temp-root resolve from the current"
-        + " working directory.";
-  }
-
-  /** Maximum accepted JSON request document size in bytes. */
-  public static long requestDocumentLimitBytes() {
-    // LIM-021
-    return REQUEST_DOCUMENT_LIMIT_BYTES;
-  }
-
-  /** Human-readable summary of the canonical JSON request document limit. */
-  public static String requestDocumentLimitSummary() {
-    // LIM-021
-    return "request JSON must not exceed 16 MiB ("
-        + REQUEST_DOCUMENT_LIMIT_BYTES
-        + " bytes); use UTF8_FILE, FILE, or STANDARD_INPUT sources for large authored payloads.";
-  }
-
-  /** One stable product-owned message for oversized JSON request payloads. */
-  public static String requestDocumentTooLargeMessage() {
-    // LIM-021
-    return "Request JSON exceeds the maximum size of 16 MiB ("
-        + REQUEST_DOCUMENT_LIMIT_BYTES
-        + " bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT"
-        + " sources.";
-  }
-
-  /** One stable step-kind explanation shared by help and discovery surfaces. */
-  public static String stepKindSummary() {
-    return "Every authored step requires a non-blank caller-defined stepId."
-        + " stepId values must be unique within steps[] and must match [A-Za-z0-9._-]+."
-        + " Use MUTATION steps for workbook changes, ASSERTION steps for first-class"
-        + " verification, and INSPECTION steps for factual or analytical reads."
-        + " Step kind is inferred from exactly one of action, assertion, or query;"
-        + " do not send step.type.";
   }
 
   /** Stable mutation-action discriminator lookup by protocol subtype class. */

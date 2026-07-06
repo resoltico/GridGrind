@@ -6,7 +6,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
+import org.apache.poi.poifs.crypt.CipherAlgorithm;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.crypt.EncryptionMode;
 import org.apache.poi.poifs.crypt.Encryptor;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
@@ -78,8 +80,16 @@ public final class ExcelOoxmlPackageEncryptionSupport {
       WorkbookArtifactWriteDisposition writeDisposition,
       ExcelOoxmlEncryptionOptions encryptionOptions)
       throws IOException {
+    CipherAlgorithm cipherAlgorithm = ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.cipher());
     EncryptionInfo encryptionInfo =
-        new EncryptionInfo(ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.mode()));
+        new EncryptionInfo(
+            EncryptionMode.agile,
+            cipherAlgorithm,
+            ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.hash()),
+            cipherAlgorithm.defaultKeySize,
+            cipherAlgorithm.blockSize,
+            ExcelOoxmlSecurityPoiBridge.toPoi(
+                dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode.CBC));
     Encryptor encryptor = encryptionInfo.getEncryptor();
     encryptor.confirmPassword(encryptionOptions.password());
 

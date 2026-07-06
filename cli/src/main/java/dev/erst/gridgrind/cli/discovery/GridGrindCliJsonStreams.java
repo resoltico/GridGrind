@@ -12,9 +12,13 @@ final class GridGrindCliJsonStreams {
     return GridGrindCliJsonCodecSupport.readStream(inputStream, TaskCatalog.class);
   }
 
-  static TaskKeywordMatchReport readTaskKeywordMatchReport(InputStream inputStream)
+  static RecipeCatalog readRecipeCatalog(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, RecipeCatalog.class);
+  }
+
+  static RecipeKeywordMatchReport readRecipeKeywordMatchReport(InputStream inputStream)
       throws IOException {
-    return GridGrindCliJsonCodecSupport.readStream(inputStream, TaskKeywordMatchReport.class);
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, RecipeKeywordMatchReport.class);
   }
 
   static ShippedExampleCatalog readShippedExampleCatalog(InputStream inputStream)
@@ -27,8 +31,8 @@ final class GridGrindCliJsonStreams {
     return GridGrindCliJsonCodecSupport.readStream(inputStream, ProtocolCatalogSearchReport.class);
   }
 
-  static CliFailureReport readCliFailureReport(InputStream inputStream) throws IOException {
-    return GridGrindCliJsonCodecSupport.readStream(inputStream, CliFailureReport.class);
+  static CliDiagnostic readCliDiagnostic(InputStream inputStream) throws IOException {
+    return GridGrindCliJsonCodecSupport.readStream(inputStream, CliDiagnostic.class);
   }
 
   static JsonNode readTree(byte[] bytes) throws IOException {

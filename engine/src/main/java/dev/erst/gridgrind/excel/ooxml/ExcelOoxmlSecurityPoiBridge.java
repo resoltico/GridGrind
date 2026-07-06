@@ -6,8 +6,11 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.poifs.crypt.ChainingMode;
 import org.apache.poi.poifs.crypt.CipherAlgorithm;
 import org.apache.poi.poifs.crypt.EncryptionMode;
@@ -94,10 +97,27 @@ public final class ExcelOoxmlSecurityPoiBridge {
         FROM_POI_ENCRYPTION_MODE, mode, "OOXML encryption mode");
   }
 
+  public static CipherAlgorithm toPoi(ExcelOoxmlWriteCipher cipher) {
+    Objects.requireNonNull(cipher, "cipher must not be null");
+    return switch (cipher) {
+      case AES_256 -> CipherAlgorithm.aes256;
+      case AES_192 -> CipherAlgorithm.aes192;
+    };
+  }
+
   public static ExcelOoxmlCipherAlgorithm fromPoi(CipherAlgorithm algorithm) {
     Objects.requireNonNull(algorithm, "algorithm must not be null");
     return ExcelEnumMappingSupport.requireMappedValue(
         FROM_POI_CIPHER_ALGORITHM, algorithm, "OOXML cipher algorithm");
+  }
+
+  public static HashAlgorithm toPoi(ExcelOoxmlWriteHash hash) {
+    Objects.requireNonNull(hash, "hash must not be null");
+    return switch (hash) {
+      case SHA_512 -> HashAlgorithm.sha512;
+      case SHA_384 -> HashAlgorithm.sha384;
+      case SHA_256 -> HashAlgorithm.sha256;
+    };
   }
 
   public static ExcelOoxmlHashAlgorithm fromPoi(HashAlgorithm algorithm) {
@@ -106,10 +126,44 @@ public final class ExcelOoxmlSecurityPoiBridge {
         FROM_POI_HASH_ALGORITHM, algorithm, "OOXML hash algorithm");
   }
 
+  public static ChainingMode toPoi(ExcelOoxmlChainingMode chainingMode) {
+    Objects.requireNonNull(chainingMode, "chainingMode must not be null");
+    return switch (chainingMode) {
+      case ECB -> ChainingMode.ecb;
+      case CBC -> ChainingMode.cbc;
+      case CFB -> ChainingMode.cfb;
+    };
+  }
+
   public static ExcelOoxmlChainingMode fromPoi(ChainingMode chainingMode) {
     Objects.requireNonNull(chainingMode, "chainingMode must not be null");
     return ExcelEnumMappingSupport.requireMappedValue(
         FROM_POI_CHAINING_MODE, chainingMode, "OOXML chaining mode");
+  }
+
+  public static Optional<ExcelOoxmlWriteCipher> toWriteCipher(ExcelOoxmlCipherAlgorithm cipher) {
+    Objects.requireNonNull(cipher, "cipher must not be null");
+    if (cipher == ExcelOoxmlCipherAlgorithm.AES_256) {
+      return Optional.of(ExcelOoxmlWriteCipher.AES_256);
+    }
+    if (cipher == ExcelOoxmlCipherAlgorithm.AES_192) {
+      return Optional.of(ExcelOoxmlWriteCipher.AES_192);
+    }
+    return Optional.empty();
+  }
+
+  public static Optional<ExcelOoxmlWriteHash> toWriteHash(ExcelOoxmlHashAlgorithm hash) {
+    Objects.requireNonNull(hash, "hash must not be null");
+    if (hash == ExcelOoxmlHashAlgorithm.SHA_512) {
+      return Optional.of(ExcelOoxmlWriteHash.SHA_512);
+    }
+    if (hash == ExcelOoxmlHashAlgorithm.SHA_384) {
+      return Optional.of(ExcelOoxmlWriteHash.SHA_384);
+    }
+    if (hash == ExcelOoxmlHashAlgorithm.SHA_256) {
+      return Optional.of(ExcelOoxmlWriteHash.SHA_256);
+    }
+    return Optional.empty();
   }
 
   public static HashAlgorithm toPoi(ExcelOoxmlSignatureDigestAlgorithm algorithm) {

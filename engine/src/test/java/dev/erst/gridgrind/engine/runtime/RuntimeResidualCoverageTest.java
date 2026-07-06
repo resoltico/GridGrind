@@ -24,7 +24,7 @@ import dev.erst.gridgrind.contract.dto.ChartSeriesInput;
 import dev.erst.gridgrind.contract.dto.ChartTitleInput;
 import dev.erst.gridgrind.contract.dto.ColorInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
@@ -276,8 +276,7 @@ class RuntimeResidualCoverageTest {
     assertFalse(
         SourceBackedInputRequirements.requiresStandardInput(
             new StructuredMutationAction.SetConditionalFormatting(
-                new ConditionalFormattingBlockInput(
-                    List.of("A1:A5"),
+                new ConditionalFormattingDefinitionInput(
                     List.of(
                         new ConditionalFormattingRuleInput.FormulaRule(
                             "TRUE", false, Optional.empty()))))));
@@ -479,7 +478,7 @@ class RuntimeResidualCoverageTest {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
             Path.of("tmp", "runtime-residual-shape"),
-            Path.of("tmp", "runtime-residual-shape", ".gridgrind", "tmp"),
+            Path.of("tmp", "runtime-residual-shape", "temp-root"),
             "Queue ready".getBytes(StandardCharsets.UTF_8));
 
     ShapeInput resolved = SourceBackedStructuredInputResolver.resolveShape(shape, bindings);

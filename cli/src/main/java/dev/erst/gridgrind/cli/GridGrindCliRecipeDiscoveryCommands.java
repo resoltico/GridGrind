@@ -1,0 +1,146 @@
+package dev.erst.gridgrind.cli;
+
+import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
+import dev.erst.gridgrind.cli.discovery.GridGrindRecipeCatalog;
+import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
+import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+/** Built-in recipe-discovery CLI surfaces. */
+final class GridGrindCliRecipeDiscoveryCommands {
+  private GridGrindCliRecipeDiscoveryCommands() {}
+
+  static int recipe(
+      CliCommand.PrintRecipe command,
+      boolean prettyJson,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    var recipe = GridGrindCliRecipeRegistry.recipeFor(command.lookupId());
+    if (recipe.isEmpty()) {
+      String message = CliCatalogCommandSupport.unknownRecipeMessage(command.lookupId());
+      return CliCatalogPayloadSupport.writeCliDiagnostic(
+          responseWriter,
+          command.responsePath(),
+          stdout,
+          stderr,
+          CliDiagnostics.invalidArguments(
+              2,
+              "print-recipe",
+              Optional.of("--lookup"),
+              message,
+              List.of(
+                  "gridgrind --print-recipe-catalog",
+                  "gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard\"",
+                  "gridgrind --help-guidance")),
+          prettyJson);
+    }
+    CliCatalogCommandSupport.emitRecipePortabilityWarning(recipe.get(), stderr);
+    byte[] requestBytes = GridGrindJsonOutput.writeRequestBytes(recipe.get().plan(), prettyJson);
+    return CliCatalogPayloadSupport.writePayload(
+        responseWriter,
+        "print-recipe",
+        "built-in recipe request",
+        Optional.of("gridgrind --print-recipe --lookup " + command.lookupId()),
+        command.responsePath(),
+        stdout,
+        stderr,
+        requestBytes,
+        prettyJson);
+  }
+
+  static int recipeCatalog(
+      CliCommand.PrintRecipeCatalog command,
+      boolean prettyJson,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    if (command.lookupId().isEmpty()) {
+      return CliCatalogPayloadSupport.writePayload(
+          responseWriter,
+          "print-recipe-catalog",
+          "recipe catalog",
+          Optional.of("gridgrind --print-recipe-catalog"),
+          command.responsePath(),
+          stdout,
+          stderr,
+          GridGrindCliJson.writeBytes(GridGrindRecipeCatalog.catalog(), prettyJson),
+          prettyJson);
+    }
+    String recipeFilter = command.lookupId().orElseThrow();
+    var entry = GridGrindRecipeCatalog.lookupFor(recipeFilter);
+    if (entry.isEmpty()) {
+      String message = CliCatalogCommandSupport.unknownRecipeMessage(recipeFilter);
+      return CliCatalogPayloadSupport.writeCliDiagnostic(
+          responseWriter,
+          command.responsePath(),
+          stdout,
+          stderr,
+          CliDiagnostics.invalidArguments(
+              2,
+              "print-recipe-catalog",
+              Optional.of("--lookup"),
+              message,
+              List.of(
+                  "gridgrind --print-recipe-catalog",
+                  "gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard\"")),
+          prettyJson);
+    }
+    return CliCatalogPayloadSupport.writeRenderedPayload(
+        responseWriter,
+        "print-recipe-catalog",
+        "recipe catalog detail",
+        Optional.of("gridgrind --print-recipe-catalog --lookup " + recipeFilter),
+        command.responsePath(),
+        stdout,
+        stderr,
+        output ->
+            GridGrindJsonOutput.writeCatalogLookupResult(
+                output,
+                GridGrindRecipeCatalog.catalog().protocolVersion(),
+                entry.get(),
+                prettyJson),
+        prettyJson);
+  }
+
+  static int recipeKeywordMatch(
+      CliCommand.PrintRecipeKeywordMatch command,
+      boolean prettyJson,
+      OutputStream stdout,
+      OutputStream stderr,
+      CliResponseWriter responseWriter)
+      throws IOException {
+    try {
+      return CliCatalogPayloadSupport.writePayload(
+          responseWriter,
+          "print-recipe-keyword-match",
+          "recipe keyword match report",
+          Optional.of("gridgrind --print-recipe-keyword-match --query \"" + command.query() + "\""),
+          command.responsePath(),
+          stdout,
+          stderr,
+          GridGrindCliJson.writeBytes(
+              GridGrindRecipeKeywordMatcher.reportFor(command.query()), prettyJson),
+          prettyJson);
+    } catch (IllegalArgumentException exception) {
+      return CliCatalogPayloadSupport.writeCliDiagnostic(
+          responseWriter,
+          command.responsePath(),
+          stdout,
+          stderr,
+          CliDiagnostics.invalidArguments(
+              2,
+              "print-recipe-keyword-match",
+              Optional.of("--query"),
+              Objects.requireNonNullElse(exception.getMessage(), "Invalid keyword query"),
+              List.of("gridgrind --print-recipe-catalog", "gridgrind --help-guidance")),
+          prettyJson);
+    }
+  }
+}

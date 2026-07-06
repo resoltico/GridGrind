@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: JAVA_AUTHORING
 updated: "2026-05-01"
 route:
@@ -54,7 +54,7 @@ adds these types:
 
 | Type | Owns |
 |:-----|:-----|
-| `GridGrindRequestInputs` | Working directory plus optional `STANDARD_INPUT` bytes for explicit in-process execution |
+| `GridGrindRequestInputs` | Working directory, one caller-owned temp root, and optional `STANDARD_INPUT` bytes for explicit in-process execution |
 | `GridGrindRequestExecutor` | Transport-neutral execution port returned by `GridGrindEngine.requestExecutor()` |
 
 Unnamed authored steps receive generated ids such as `mutation-001`, `inspection-001`, and
@@ -133,9 +133,15 @@ GridGrindResponse response =
         .execute(
             plan.toPlan(),
             new GridGrindRequestInputs(
-                workspace, workspace.resolve(".gridgrind").resolve("tmp")),
+                workspace, Files.createTempDirectory("gridgrind-java-")),
             GridGrindJournalSink.NOOP);
 ```
+
+`GridGrindRequestInputs.tempRoot()` is caller-owned scratch. Create one private directory outside
+the request workspace when you can, and remove it when your application is done with execution.
+The compile-verified
+[../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java) example shows
+that cleanup explicitly.
 
 ## Source-Backed Inputs From Java
 

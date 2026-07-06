@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Exercise the CLI discovery execution verifier against fake jar and binary launchers so long-running
-# published-example and task-plan verification keeps emitting operator-visible progress.
+# published-example and recipe verification keeps emitting operator-visible progress.
 
 set -euo pipefail
 
@@ -79,29 +79,17 @@ write_json_file() {
 }
 
 case "${command_name}" in
-    --print-example-catalog)
+    --print-recipe-catalog)
         cat <<'JSON'
-{"examples":[{"id":"BUDGET","requestFileName":"budget-request.json","requiredWorkspacePaths":[]}]}
+{"protocolVersion":"V1","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
 JSON
         ;;
-    --print-task-catalog)
-        cat <<'JSON'
-{"tasks":[{"id":"DASHBOARD","starter":{"requestFileName":"dashboard-request.json","requiredWorkspacePaths":[]}}]}
-JSON
-        ;;
-    --print-example)
+    --print-recipe)
         [[ -n "${response_path}" ]] || {
-            printf 'missing response path for --print-example\n' >&2
+            printf 'missing response path for --print-recipe\n' >&2
             exit 1
         }
-        write_json_file "${response_path}" '{"request":"example"}'
-        ;;
-    --print-task-plan)
-        [[ -n "${response_path}" ]] || {
-            printf 'missing response path for --print-task-plan\n' >&2
-            exit 1
-        }
-        write_json_file "${response_path}" '{"request":"task"}'
+        write_json_file "${response_path}" '{"request":"recipe"}'
         ;;
     --doctor-request)
         [[ -n "${response_path}" ]] || {
@@ -158,29 +146,17 @@ write_json_file() {
 }
 
 case "${command_name}" in
-    --print-example-catalog)
+    --print-recipe-catalog)
         cat <<'JSON'
-{"examples":[{"id":"BUDGET","requestFileName":"budget-request.json","requiredWorkspacePaths":[]}]}
+{"protocolVersion":"V1","recipes":[{"view":"EXAMPLE","id":"BUDGET","requestFileName":"budget-request.json","summary":"Budget example.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]},{"view":"TASK_STARTER","id":"DASHBOARD","requestFileName":"dashboard-request.json","summary":"Dashboard starter.","workspaceMode":"SELF_CONTAINED","requiredWorkspacePaths":[]}]}
 JSON
         ;;
-    --print-task-catalog)
-        cat <<'JSON'
-{"tasks":[{"id":"DASHBOARD","starter":{"requestFileName":"dashboard-request.json","requiredWorkspacePaths":[]}}]}
-JSON
-        ;;
-    --print-example)
+    --print-recipe)
         [[ -n "${response_path}" ]] || {
-            printf 'missing response path for --print-example\n' >&2
+            printf 'missing response path for --print-recipe\n' >&2
             exit 1
         }
-        write_json_file "${response_path}" '{"request":"example"}'
-        ;;
-    --print-task-plan)
-        [[ -n "${response_path}" ]] || {
-            printf 'missing response path for --print-task-plan\n' >&2
-            exit 1
-        }
-        write_json_file "${response_path}" '{"request":"task"}'
+        write_json_file "${response_path}" '{"request":"recipe"}'
         ;;
     --doctor-request)
         [[ -n "${response_path}" ]] || {
@@ -221,18 +197,18 @@ assert_progress_output() {
         "${mode_label}: discovery verifier no longer emits example execution heartbeats during slow runs"
     printf '%s\n' "${output}" | grep -Fq 'Discovery execution examples 1/1: BUDGET succeeded' || die \
         "${mode_label}: discovery verifier no longer reports example success progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD printing request' || die \
-        "${mode_label}: discovery verifier no longer reports task request printing progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD copying required assets' || die \
-        "${mode_label}: discovery verifier no longer reports task asset-copy progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD doctoring request' || die \
-        "${mode_label}: discovery verifier no longer reports task doctor progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD executing request' || die \
-        "${mode_label}: discovery verifier no longer reports task execution progress"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD executing request (still running after ' || die \
-        "${mode_label}: discovery verifier no longer emits task execution heartbeats during slow runs"
-    printf '%s\n' "${output}" | grep -Fq 'Discovery execution tasks 1/1: DASHBOARD succeeded' || die \
-        "${mode_label}: discovery verifier no longer reports task success progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD printing request' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter request printing progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD copying required assets' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter asset-copy progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD doctoring request' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter doctor progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD executing request' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter execution progress"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD executing request (still running after ' || die \
+        "${mode_label}: discovery verifier no longer emits task-starter execution heartbeats during slow runs"
+    printf '%s\n' "${output}" | grep -Fq 'Discovery execution task starters 1/1: DASHBOARD succeeded' || die \
+        "${mode_label}: discovery verifier no longer reports task-starter success progress"
 }
 
 jar_output="$(

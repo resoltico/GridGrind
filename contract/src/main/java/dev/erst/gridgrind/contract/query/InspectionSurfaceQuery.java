@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.query;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
@@ -17,7 +17,7 @@ public sealed interface InspectionSurfaceQuery extends InspectionQuery.Surface
 
   @ProtocolTypeMetadata(
       id = "GET_FORMULA_SURFACE",
-      summary = GridGrindContractText.FORMULA_SURFACE_READ_SUMMARY,
+      summary = GridGrindInspectionContractText.FORMULA_SURFACE_READ_SUMMARY,
       targetSelectors = {SheetSelector.class})
   record GetFormulaSurface() implements InspectionSurfaceQuery {}
 
@@ -48,7 +48,7 @@ public sealed interface InspectionSurfaceQuery extends InspectionQuery.Surface
 
   @ProtocolTypeMetadata(
       id = "GET_NAMED_RANGE_SURFACE",
-      summary = GridGrindContractText.NAMED_RANGE_SURFACE_READ_SUMMARY,
+      summary = GridGrindInspectionContractText.NAMED_RANGE_SURFACE_READ_SUMMARY,
       targetSelectors = {NamedRangeSelector.class})
   record GetNamedRangeSurface() implements InspectionSurfaceQuery {}
 }

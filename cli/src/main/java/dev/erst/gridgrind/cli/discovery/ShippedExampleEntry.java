@@ -9,18 +9,13 @@ public record ShippedExampleEntry(
     java.util.List<String> requiredWorkspacePaths) {
   public ShippedExampleEntry {
     id = CliDiscoveryValidation.requireNonBlank(id, "id");
-    requestFileName = CliDiscoveryValidation.requireNonBlank(requestFileName, "requestFileName");
+    requestFileName = CliRecipeCatalogValidation.requirePortableRequestFileName(requestFileName);
     summary = CliDiscoveryValidation.requireNonBlank(summary, "summary");
     java.util.Objects.requireNonNull(workspaceMode, "workspaceMode must not be null");
     requiredWorkspacePaths =
-        CliDiscoveryValidation.copyStringsAllowEmpty(
+        CliRecipeCatalogValidation.copyWorkspacePaths(
             requiredWorkspacePaths, "requiredWorkspacePaths");
-    if (requestFileName.contains("/") || requestFileName.contains("\\")) {
-      throw new IllegalArgumentException(
-          "requestFileName must be one portable file name, not a repository path");
-    }
-    if (!requestFileName.endsWith(".json")) {
-      throw new IllegalArgumentException("requestFileName must end with .json");
-    }
+    CliRecipeCatalogValidation.validateWorkspaceContract(
+        workspaceMode, requiredWorkspacePaths, "examples");
   }
 }

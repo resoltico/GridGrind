@@ -11,6 +11,7 @@ public final class TaskTestFixtures {
       String id, TaskExecutionProfile executionProfile, List<TaskPhase> phases) {
     return new TaskEntry(
         id,
+        List.of("office"),
         discoveryProfile(id),
         narrative("summary"),
         executionProfile,
@@ -24,7 +25,6 @@ public final class TaskTestFixtures {
     String token = id.toLowerCase(Locale.ROOT).replace('_', ' ');
     return new TaskDiscoveryProfile(
         List.of(token),
-        List.of("office"),
         new TaskIntentProfile(List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK)));
   }
 

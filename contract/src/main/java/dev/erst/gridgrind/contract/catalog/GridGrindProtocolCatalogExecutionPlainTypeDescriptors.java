@@ -174,21 +174,18 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "ooxmlEncryptionInputType",
               OoxmlEncryptionInput.class,
               "OoxmlEncryptionInput",
-              "OOXML package-encryption settings for workbook persistence."
-                  + " mode defaults to AGILE when omitted.",
-              List.of("mode")),
-          plainTypeDescriptor(
+              GridGrindOoxmlWriteEncryptionContractText.inputSummary(),
+              List.of("cipher", "hash")),
+          plainTypeDescriptorWithNotes(
               "ooxmlSignatureInputType",
               OoxmlSignatureInput.class,
               "OoxmlSignatureInput",
               "OOXML package-signing settings for workbook persistence."
-                  + " pkcs12Path follows the request-owned path rule."
-                  + " "
-                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " keyPassword defaults to keystorePassword and digestAlgorithm defaults to"
                   + " SHA256 when omitted."
                   + " alias may be omitted only when the keystore contains exactly one"
                   + " signable private-key entry.",
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
               List.of("keyPassword", "alias", "digestAlgorithm", "description")),
           plainTypeDescriptor(
               "ooxmlPackageSecurityReportType",
@@ -210,14 +207,13 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
               "OoxmlSignatureSignerIdentity",
               "Signer identity material attached to one OOXML package signature report.",
               List.of()),
-          plainTypeDescriptor(
+          plainTypeDescriptorWithNotes(
               "formulaExternalWorkbookInputType",
               FormulaExternalWorkbookInput.class,
               "FormulaExternalWorkbookInput",
               "One external workbook binding keyed by the workbook name used inside formulas."
-                  + " path follows the request-owned path rule."
-                  + " "
-                  + GridGrindContractText.requestOwnedPathResolutionSummary(),
+                  + " Workbook paths resolve through the shared request-owned path rule.",
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
               List.of()),
           plainTypeDescriptor(
               "formulaUdfToolpackInputType",
@@ -242,5 +238,16 @@ final class GridGrindProtocolCatalogExecutionPlainTypeDescriptors {
       List<String> optionalFields) {
     return CatalogTypeEntryFactory.plainTypeDescriptor(
         group, recordType, id, summary, optionalFields);
+  }
+
+  private static CatalogPlainTypeDescriptor plainTypeDescriptorWithNotes(
+      String group,
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> noteRefs,
+      List<String> optionalFields) {
+    return CatalogTypeEntryFactory.plainTypeDescriptorWithNotes(
+        group, recordType, id, summary, optionalFields, noteRefs);
   }
 }

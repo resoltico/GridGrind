@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** Stable machine-readable problem codes returned by the agent protocol. */
 public enum GridGrindProblemCode {
@@ -174,11 +175,89 @@ public enum GridGrindProblemCode {
   public String resolutionFor(String message, ProblemContext context) {
     Objects.requireNonNull(context, "context must not be null");
     return switch (this) {
+      case INVALID_ARGUMENTS -> invalidArgumentsResolution(message, context);
       case ASSERTION_FAILED ->
           "Inspect problem.assertionFailure observations, then adjust the failing assertion or"
               + " preceding workbook mutations and retry.";
       case IO_ERROR -> ioResolution(message, context);
       default -> resolution;
+    };
+  }
+
+  private String invalidArgumentsResolution(String message, ProblemContext context) {
+    String normalized = Objects.requireNonNullElse(message, "").trim();
+    if (!(context instanceof ProblemContext.ParseArguments parseArguments)) {
+      return resolution;
+    }
+    return specificInvalidArgumentsResolution(normalized)
+        .orElseGet(
+            () -> parseArgumentResolution(parseArguments.argumentName().orElse(""), normalized));
+  }
+
+  private static Optional<String> specificInvalidArgumentsResolution(String normalized) {
+    if (normalized.startsWith("Unknown argument: ")) {
+      return Optional.of(
+          "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the"
+              + " grammar, or --help-guidance for workflow-oriented commands.");
+    }
+    if (normalized.startsWith("Ambiguous lookup id: ")) {
+      return Optional.of(
+          "Rerun the lookup with one qualified id exactly as listed in suggestions.");
+    }
+    if (normalized.startsWith("Unknown lookup id: ")) {
+      return Optional.of(
+          "Use --search when you know the concept but not the exact lookup id or group.");
+    }
+    if (normalized.startsWith("Unknown recipe: ")) {
+      return Optional.of(
+          "Use --print-recipe-catalog first when you need the stable recipe ids,"
+              + " requestFileName, workspaceMode, and requiredWorkspacePaths, or"
+              + " use --print-recipe-keyword-match when you know the goal but not the id.");
+    }
+    if (normalized.startsWith("No request JSON was provided.")) {
+      return Optional.of(noRequestJsonResolution(normalized));
+    }
+    return Optional.empty();
+  }
+
+  private static String noRequestJsonResolution(String normalized) {
+    if (normalized.contains("alongside --execution-root <path>")) {
+      return "Use one real request document. Standard-input request mode always requires"
+          + " --execution-root so relative request-owned paths resolve from one explicit"
+          + " directory.";
+    }
+    return "Use --doctor-request only after you have one real request document to inspect.";
+  }
+
+  private static String parseArgumentResolution(String argumentName, String normalized) {
+    return switch (argumentName) {
+      case "--request" -> {
+        if (normalized.contains("STANDARD_INPUT-authored payloads")) {
+          yield "Requests that bind STANDARD_INPUT-authored payloads must arrive by --request so"
+              + " standard input stays available for payload bytes.";
+        }
+        yield "Provide one readable request JSON file path, or omit --request and pipe one"
+            + " request document on standard input.";
+      }
+      case "--execution-root" ->
+          "When the request JSON arrives on stdin, pass one explicit --execution-root so"
+              + " relative request-owned paths and internal temp files resolve from one"
+              + " caller-chosen directory.";
+      case "--response" -> "Provide one writable response file path after --response.";
+      case "--lookup" ->
+          "Use --lookup only with --print-recipe, --print-recipe-catalog, or"
+              + " --print-protocol-catalog.";
+      case "--query" ->
+          normalized.startsWith("Invalid keyword query")
+              ? "Use a natural-language query that leaves at least one searchable non-stop-word"
+                  + " term after normalization."
+              : "Use --query only with --print-recipe-keyword-match and provide one natural-language"
+                  + " query.";
+      case "--search" ->
+          "Use --search only with --print-protocol-catalog and provide one search string.";
+      default ->
+          "Run gridgrind --help for the synopsis, --help-protocol for the authoritative request"
+              + " contract, or --help-guidance for workflows and examples.";
     };
   }
 

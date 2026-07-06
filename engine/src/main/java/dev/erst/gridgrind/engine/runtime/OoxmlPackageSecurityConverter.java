@@ -34,7 +34,9 @@ final class OoxmlPackageSecurityConverter {
 
   private static @Nullable ExcelOoxmlEncryptionOptions toExcelEncryptionOptions(
       @Nullable OoxmlEncryptionInput input) {
-    return input == null ? null : new ExcelOoxmlEncryptionOptions(input.password(), input.mode());
+    return input == null
+        ? null
+        : new ExcelOoxmlEncryptionOptions(input.password(), input.cipher(), input.hash());
   }
 
   private static @Nullable ExcelOoxmlSignatureOptions toExcelSignatureOptions(

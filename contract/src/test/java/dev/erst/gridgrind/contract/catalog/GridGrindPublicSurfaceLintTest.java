@@ -34,13 +34,13 @@ class GridGrindPublicSurfaceLintTest {
     collectUnknown(
         unknownBySurface,
         "Request document limit message",
-        GridGrindContractText.requestDocumentTooLargeMessage(),
+        GridGrindRequestSurfaceContractText.requestDocumentTooLargeMessage(),
         registeredIds,
         candidatePattern);
     collectUnknown(
         unknownBySurface,
         "STANDARD_INPUT message",
-        GridGrindContractText.standardInputRequiresRequestMessage(),
+        GridGrindRequestSurfaceContractText.standardInputRequiresRequestMessage(),
         registeredIds,
         candidatePattern);
     collectUnknown(

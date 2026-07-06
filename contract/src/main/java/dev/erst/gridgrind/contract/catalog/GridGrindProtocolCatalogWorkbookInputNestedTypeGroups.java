@@ -44,7 +44,9 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       CellInput.ErrorValue.class,
                       "ERROR",
-                      "Write one exact Excel error literal such as #REF! or #DIV/0!."),
+                      "Write one exact stored Excel error literal such as #REF!, #DIV/0!, or"
+                          + " #N/A. Evaluation-only states such as #CIRCULAR_REF! are reported"
+                          + " on readback but cannot be authored as stored cell values."),
                   descriptor(
                       CellInput.Date.class,
                       "DATE",
@@ -86,7 +88,8 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       CellRowInput.ErrorValues.class,
                       "ERROR",
-                      "Append one row using a compact homogeneous Excel error list."),
+                      "Append one row using a compact homogeneous stored Excel error literal"
+                          + " list."),
                   descriptor(
                       CellRowInput.DateValues.class,
                       "DATE",
@@ -122,7 +125,8 @@ final class GridGrindProtocolCatalogWorkbookInputNestedTypeGroups {
                   descriptor(
                       CellGridInput.ErrorRows.class,
                       "ERROR",
-                      "Write one rectangular grid using homogeneous Excel error rows."),
+                      "Write one rectangular grid using homogeneous stored Excel error literal"
+                          + " rows."),
                   descriptor(
                       CellGridInput.DateRows.class,
                       "DATE",

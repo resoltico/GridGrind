@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Objects;
 
-/** Canonical scalar cell-value model shared by authored inputs and exact-value assertions. */
+/** Canonical scalar effective cell-value model used by exact-value assertions. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellScalarValue.Blank.class, name = "BLANK"),
@@ -40,11 +40,11 @@ public sealed interface CellScalarValue
   /** Expected exact boolean effective cell value. */
   record BooleanValue(boolean bool) implements CellScalarValue {}
 
-  /** Expected exact Excel error effective cell value. */
+  /** Expected exact GridGrind-owned error literal as the effective cell value. */
   record ErrorValue(String error) implements CellScalarValue {
     public ErrorValue {
-      CellInput.Validation.requireNonBlank(error, "error");
-      CellInput.Validation.requireErrorLiteral(error, "error");
+      error = CellInput.Validation.requireNonBlank(error, "error");
+      error = CellErrorLiteralValidation.requireReportedErrorLiteral(error, "error");
     }
   }
 }

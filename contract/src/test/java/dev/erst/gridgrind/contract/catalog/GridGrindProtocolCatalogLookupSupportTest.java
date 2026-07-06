@@ -208,7 +208,8 @@ class GridGrindProtocolCatalogLookupSupportTest {
         List.of(),
         List.of(),
         List.of(new NestedTypeGroup("legendVariants", "type", List.of(nestedLegend()))),
-        List.of(new PlainTypeGroup("displayCard", displayCard())));
+        List.of(new PlainTypeGroup("displayCard", displayCard())),
+        List.of());
   }
 
   private static TypeEntry nestedLegend() {

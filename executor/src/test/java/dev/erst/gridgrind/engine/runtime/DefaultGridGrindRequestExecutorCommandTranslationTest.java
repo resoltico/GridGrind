@@ -276,7 +276,7 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
         WorkbookFormattingCommand.SetConditionalFormatting.class,
         command(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new RangeSelector.ByRange("Budget", "A1:A3"),
                 new StructuredMutationAction.SetConditionalFormatting(
                     commandTranslationConditionalFormattingBlock()))));
     assertInstanceOf(
@@ -660,9 +660,9 @@ class DefaultGridGrindRequestExecutorCommandTranslationTest
     assertEquals("Budget", clearSheetProtection.sheetName());
   }
 
-  private static ConditionalFormattingBlockInput commandTranslationConditionalFormattingBlock() {
-    return new ConditionalFormattingBlockInput(
-        List.of("A1:A3"),
+  private static ConditionalFormattingDefinitionInput
+      commandTranslationConditionalFormattingBlock() {
+    return new ConditionalFormattingDefinitionInput(
         List.of(
             new ConditionalFormattingRuleInput.FormulaRule(
                 "A1>0",

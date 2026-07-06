@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -20,7 +20,8 @@ final class CliExecutionArgumentValidation {
     }
     if (stdinRequestMissingExecutionRoot(requestPath, executionRootPath)) {
       throw new CliArgumentsException(
-          "--execution-root", GridGrindContractText.stdinExecutionRootRequiredMessage());
+          "--execution-root",
+          GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage());
     }
     if (fileRequestConflictsWithExecutionRoot(requestPath, executionRootPath)) {
       throw new CliArgumentsException(

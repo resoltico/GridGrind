@@ -84,13 +84,10 @@ public sealed interface CellValueReport {
     }
   }
 
-  /** Error effective value. */
+  /** Effective reported error literal, including GridGrind-owned evaluation-only states. */
   record ErrorValue(String errorValue) implements CellValueReport {
     public ErrorValue {
-      Objects.requireNonNull(errorValue, "errorValue must not be null");
-      if (errorValue.isBlank()) {
-        throw new IllegalArgumentException("errorValue must not be blank");
-      }
+      errorValue = CellErrorLiteralValidation.requireReportedErrorLiteral(errorValue, "errorValue");
     }
 
     @Override

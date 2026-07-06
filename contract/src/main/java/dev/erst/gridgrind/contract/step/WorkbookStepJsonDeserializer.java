@@ -46,8 +46,8 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
             + (assertionNode == null ? 0 : 1)
             + (queryNode == null ? 0 : 1);
     if (stepPayloadCount != 1) {
-      throw stepFailure(
-          context,
+      throw WorkbookStepJsonFailurePathSupport.inputMismatch(
+          context.getParser(),
           new ActionableShapeMessage(
               "Each step must contain exactly one of 'action', 'assertion', or 'query'",
               "Add exactly one of action, assertion, or query to each step.",
@@ -123,11 +123,16 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
     try {
       return deserializeNode(node, parser, targetType);
     } catch (JacksonException exception) {
+      Optional<dev.erst.gridgrind.contract.json.InvalidRequestException> validationFailure =
+          WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+              fieldName, node, targetType, exception);
+      if (validationFailure.isPresent()) {
+        throw validationFailure.orElseThrow();
+      }
       throw WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
           fieldName, node, targetType, exception);
     } catch (IllegalArgumentException exception) {
-      throw WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(
-          parser, fieldName, exception);
+      throw WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(fieldName, exception);
     }
   }
 
@@ -140,10 +145,5 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       }
     }
     return null;
-  }
-
-  private static JacksonException stepFailure(
-      DeserializationContext context, ActionableShapeMessage requestProblem) {
-    return WorkbookStepJsonFailurePathSupport.inputMismatch(context.getParser(), requestProblem);
   }
 }

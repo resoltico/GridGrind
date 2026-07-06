@@ -14,13 +14,10 @@ class ExecutionInputBindingsTest {
   void bindingsNormalizeAndExposeTheirExplicitTempRoot() {
     ExecutionInputBindings bindings =
         new ExecutionInputBindings(
-            Path.of("tmp", "..", "tmp", "request-root"),
-            Path.of("tmp", "..", "tmp", "request-root", ".gridgrind", "tmp"));
+            Path.of("tmp", "..", "tmp", "request-root"), Path.of("tmp", "..", "tmp", "temp-root"));
 
     assertTrue(bindings.workingDirectory().isAbsolute());
-    assertEquals(
-        Path.of("tmp", "request-root", ".gridgrind", "tmp").toAbsolutePath().normalize(),
-        bindings.tempRoot());
+    assertEquals(Path.of("tmp", "temp-root").toAbsolutePath().normalize(), bindings.tempRoot());
   }
 
   @Test

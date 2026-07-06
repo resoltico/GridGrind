@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: ERRORS
 updated: "2026-07-02"
 route:
@@ -161,25 +161,44 @@ Persist-workbook failures point at `sourceWorkbookPath` or `persistencePath` ins
 
 Pre-pipeline failures — CLI argument errors, help-routing, discovery-lookup failures, and request
 read/parse/validate errors (including `INVALID_JSON`, `INVALID_REQUEST_SHAPE`, and
-`INVALID_REQUEST` failures caught during validation before workbook open) — use a smaller CLI
-failure report instead of the execution journal envelope:
+`INVALID_REQUEST` failures caught during validation before workbook open) — use one canonical CLI
+diagnostic envelope instead of the execution journal envelope:
 
 ```json
 {
   "protocolVersion": "V1",
   "exitCode": 2,
-  "command": "parse-arguments",
-  "code": "INVALID_ARGUMENTS",
-  "message": "No request JSON was provided. Pass --request <path> or pipe one request document on standard input.",
-  "argument": "--request",
+  "command": "cli",
   "suggestions": [
-    "gridgrind --print-request-template --response request.json",
     "gridgrind --help",
-    "gridgrind --help-protocol"
+    "gridgrind --help-protocol",
+    "gridgrind --help-guidance"
   ],
-  "resolution": "Use explicit --help for documentation; a bare gridgrind invocation now expects a real request document."
+  "problem": {
+    "code": "INVALID_ARGUMENTS",
+    "category": "ARGUMENTS",
+    "recovery": "CHANGE_REQUEST",
+    "title": "Invalid CLI arguments",
+    "message": "Unknown argument: --bogus",
+    "resolution": "Use one exact CLI flag. Start from --help for the synopsis, --help-protocol for the grammar, or --help-guidance for workflow-oriented commands.",
+    "context": {
+      "stage": "PARSE_ARGUMENTS",
+      "argument": {
+        "type": "NAMED",
+        "argument": "--bogus"
+      }
+    },
+    "causes": []
+  }
 }
 ```
+
+When GridGrind writes that diagnostic anywhere other than the default stderr channel, it adds one
+optional transport block such as `{"wroteTo":"FILE","responsePath":"doctor.json"}` or
+`{"wroteTo":"STDOUT"}`. The wrapper intentionally stays transport-only: CLI flag names live in
+`problem.context.argument.argument`, request-cursor details live in
+`problem.context.json.jsonPath` / `jsonLine` / `jsonColumn`, and
+category/title/resolution/causes live in `problem`.
 
 Every entry in `problem.causes` also carries an explicit `stage` token. Cause diagnostics are not
 stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
@@ -258,7 +277,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
 | `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, explicit `null` placeholders, or token shapes do not match the GridGrind protocol schema. Messages are product-owned, classify the failure structurally at intake from the effective creator/discriminator contract, and point `context.jsonPath` at the exact offending field without leaking Jackson or Java class names. |
 | `INPUT_SOURCE_UNAVAILABLE` | A source-backed authored field requested `STANDARD_INPUT`, but no stdin bytes were bound for authored input content. On the CLI this usually means the request itself was also read from stdin instead of `--request <path>`. |
-| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. These request-owned invariants preserve exact offending-field paths and cause-specific resolutions on the public problem surface. |
+| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, encrypted-source persistence that would implicitly carry forward a non-authorable OOXML write envelope, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. These request-owned invariants preserve exact offending-field paths and cause-specific resolutions on the public problem surface. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
@@ -366,11 +385,22 @@ The `context` block provides structured metadata about where the failure occurre
 | `jsonColumn` | Column number in the request payload (transport errors only). |
 | `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |
 
-When a command exits non-zero but successfully writes its JSON response or doctor report to
-`--response <path>`, GridGrind also prints one stderr line naming that file. Treat stderr as the
-pointer and the JSON file as the structured diagnostic payload. When GridGrind cannot write the
-requested `--response <path>`, it prints one stderr line explaining the write failure and then
-streams the structured failure response to stdout instead.
+For the exact machine shape, three context stages carry typed nested helpers rather than flattened
+nullable fields:
+
+- `PARSE_ARGUMENTS` uses `context.argument`, where `type=UNKNOWN|NAMED` and the concrete flag or
+  operand lives at `context.argument.argument` when `type=NAMED`.
+- `READ_REQUEST` uses `context.request` (`STANDARD_INPUT` or `FILE`) plus `context.json`
+  (`UNAVAILABLE`, `PATH_ONLY`, `LINE_COLUMN`, or `LOCATED`).
+- `WRITE_RESPONSE` uses `context.output` (`STANDARD_OUTPUT` or `FILE`).
+
+When a command exits non-zero and also writes a JSON response, doctor report, or persisted CLI
+diagnostic to `--response <path>`, GridGrind mirrors one structured `CliDiagnostic` on stderr.
+That stderr diagnostic reuses the same `problem` core and sets `transport={"wroteTo":"FILE",
+"responsePath":"..."}` so one parser can still learn where the main payload was persisted.
+When GridGrind cannot write the requested `--response <path>`, it streams the structured fallback
+payload to stdout and mirrors one stderr `CliDiagnostic` with `transport={"wroteTo":"STDOUT"}`
+whose `problem` matches the stdout fallback problem.
 
 ## Index-Based Validation Messages
 

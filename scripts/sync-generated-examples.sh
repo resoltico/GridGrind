@@ -63,7 +63,8 @@ cat > "${request_path}" <<EOF
     "security": {
       "encryption": {
         "password": "GridGrind-2026",
-        "mode": "AGILE"
+        "cipher": "AES_256",
+        "hash": "SHA_512"
       }
     }
   },

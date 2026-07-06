@@ -35,6 +35,7 @@ class CatalogEdgeCoverageTest {
             List.of(),
             List.of(),
             List.of(),
+            List.of(),
             List.of());
 
     assertEquals(GridGrindProtocolVersion.current(), catalog.protocolVersion());
@@ -48,6 +49,7 @@ class CatalogEdgeCoverageTest {
                         null,
                         "type",
                         requestType,
+                        List.of(),
                         List.of(),
                         List.of(),
                         List.of(),
@@ -230,6 +232,104 @@ class CatalogEdgeCoverageTest {
   }
 
   @Test
+  void noteAwareCatalogHelpersResolveValidateAndNormalizeSharedRuleMetadata() {
+    TypeEntry directNoted =
+        new TypeEntry(
+            "DIRECT",
+            "summary",
+            List.of(),
+            List.of(),
+            java.util.Optional.empty(),
+            List.of("sharedRule"),
+            java.util.Optional.empty());
+    TypeEntry factoryNoted =
+        CatalogTypeEntryFactory.typeEntry(
+            NoteAwareRecord.class, "NoteAwareRecord", "summary", List.of(), List.of("sharedRule"));
+    CatalogPlainTypeDescriptor plainDescriptor =
+        CatalogTypeEntryFactory.plainTypeDescriptorWithNotes(
+            "noteAwareGroup",
+            NoteAwareRecord.class,
+            "NoteAwareRecord",
+            "summary",
+            List.of(),
+            List.of("sharedRule"));
+    Catalog catalog =
+        new Catalog(
+            GridGrindProtocolVersion.current(),
+            "type",
+            new TypeEntry("REQUEST", "Summary", List.of()),
+            List.of(directNoted),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(),
+            List.of(new PlainTypeGroup("noteAwareGroup", plainDescriptor.typeEntry())),
+            List.of(new CatalogNote("sharedRule", "Shared rule text.")));
+
+    assertEquals(List.of("sharedRule"), directNoted.noteRefs());
+    assertEquals(List.of("sharedRule"), factoryNoted.noteRefs());
+    assertEquals(List.of("sharedRule"), plainDescriptor.typeEntry().noteRefs());
+    assertTrue(
+        new TypeEntry(
+                "EMPTY",
+                "summary",
+                List.of(),
+                List.of(),
+                java.util.Optional.empty(),
+                null,
+                java.util.Optional.empty())
+            .noteRefs()
+            .isEmpty());
+    assertEquals(
+        List.of(new CatalogNote("sharedRule", "Shared rule text.")),
+        CatalogNoteResolutionSupport.referencedNotes(
+            catalog, new TopLevelTypeGroup("sourceTypes", List.of(directNoted))));
+    assertTrue(CatalogNoteResolutionSupport.referencedNotes(catalog, new Object()).isEmpty());
+    assertEquals(
+        "Shared rule text.",
+        CatalogNoteResolutionSupport.referencedNoteText(
+            catalog, List.of("sharedRule", "sharedRule")));
+    assertEquals(
+        "Catalog note id missingRule is not published",
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                    CatalogNoteResolutionSupport.referencedNotes(
+                        catalog,
+                        new TypeEntry(
+                            "BROKEN",
+                            "summary",
+                            List.of(),
+                            List.of(),
+                            java.util.Optional.empty(),
+                            List.of("missingRule"),
+                            java.util.Optional.empty())))
+            .getMessage());
+    assertEquals(
+        "Catalog entry BROKEN references unknown note id missingRule",
+        assertThrows(
+                IllegalStateException.class,
+                () ->
+                    CatalogNoteResolutionSupport.validateCatalogNoteRefs(
+                        List.of(
+                            List.of(
+                                new TypeEntry(
+                                    "BROKEN",
+                                    "summary",
+                                    List.of(),
+                                    List.of(),
+                                    java.util.Optional.empty(),
+                                    List.of("missingRule"),
+                                    java.util.Optional.empty()))),
+                        List.of(),
+                        List.of(),
+                        List.of(new CatalogNote("sharedRule", "Shared rule text."))))
+            .getMessage());
+  }
+
+  @Test
   void descriptorMapAndTopLevelGroupGuardsRejectBrokenInputs() {
     IllegalStateException duplicateFailure =
         assertThrows(
@@ -254,6 +354,9 @@ class CatalogEdgeCoverageTest {
 
   /** Duplicate-id fixture used to cover ordered catalog-map rejection. */
   private record DuplicateFixture(String id, String value) {}
+
+  /** Minimal record used to cover note-aware type-descriptor helpers. */
+  private record NoteAwareRecord(String value) {}
 
   /** Sealed type missing `@JsonSubTypes` to cover annotation validation. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")

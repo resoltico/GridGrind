@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import dev.erst.gridgrind.contract.catalog.ProtocolTypeMetadata;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
-import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingDefinitionInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
@@ -66,12 +66,13 @@ public sealed interface StructuredMutationAction extends MutationAction {
     public ClearDataValidations {}
   }
 
-  /** Creates or replaces one logical conditional-formatting block over the requested ranges. */
+  /** Creates or replaces one logical conditional-formatting block over explicit sheet ranges. */
   @ProtocolTypeMetadata(
       id = "SET_CONDITIONAL_FORMATTING",
-      summary = "Create or replace one logical conditional-formatting block on a sheet.",
-      targetSelectors = {SheetSelector.ByName.class})
-  record SetConditionalFormatting(ConditionalFormattingBlockInput conditionalFormatting)
+      summary =
+          "Create or replace one logical conditional-formatting block over explicit sheet ranges.",
+      targetSelectors = {RangeSelector.ByRange.class, RangeSelector.ByRanges.class})
+  record SetConditionalFormatting(ConditionalFormattingDefinitionInput conditionalFormatting)
       implements StructuredMutationAction {
     public SetConditionalFormatting {
       Objects.requireNonNull(conditionalFormatting, "conditionalFormatting must not be null");

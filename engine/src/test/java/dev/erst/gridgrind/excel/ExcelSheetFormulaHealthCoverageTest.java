@@ -168,6 +168,31 @@ class ExcelSheetFormulaHealthCoverageTest extends ExcelSheetTestSupport {
   }
 
   @Test
+  void formulaHealthFindingsPublishCanonicalCircularReferenceErrorLiteral() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+
+      sheet.cells().setCell("A1", ExcelCellValue.formula("B1+1"));
+      sheet.cells().setCell("B1", ExcelCellValue.formula("A1+1"));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.diagnostics().formulaHealthFindings();
+
+      WorkbookAnalysis.AnalysisFinding circularFinding =
+          findings.stream()
+              .filter(finding -> finding.code() == AnalysisFindingCode.FORMULA_ERROR_RESULT)
+              .findFirst()
+              .orElseThrow();
+      assertTrue(circularFinding.message().contains("#CIRCULAR_REF!"));
+      assertFalse(circularFinding.message().contains("~CIRCULAR~REF~"));
+    }
+  }
+
+  @Test
   void formulaHealthFindingsIgnoreSuccessfulAndNullEvaluations() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet successSheet = poiWorkbook.createSheet("Success");

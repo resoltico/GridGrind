@@ -81,12 +81,11 @@ run_verify_expect_failure() {
     local inspection_query_types_output=${12:-${success_inspection_query_types}}
     local execution_mode_types_output=${13:-${success_execution_mode_types}}
     local execution_policy_input_type_output=${14:-${success_execution_policy_input_type}}
-    local example_catalog_output=${15:-${success_example_catalog}}
-    local task_catalog_output=${16:-${success_task_catalog}}
-    local task_plan_output=${17:-${success_task_plan}}
-    local task_keyword_match_output=${18:-${success_task_keyword_match}}
-    local doctor_report_output=${19:-${success_doctor_report}}
-    local noargs_failure_output=${20:-${success_noargs_failure}}
+    local recipe_catalog_output=${15:-${success_recipe_catalog}}
+    local recipe_request_output=${16:-${success_recipe_request}}
+    local recipe_keyword_match_output=${17:-${success_recipe_keyword_match}}
+    local doctor_report_output=${18:-${success_doctor_report}}
+    local noargs_failure_output=${19:-${success_noargs_failure}}
     if run_fake_docker_verify_with_fixture_texts \
         "${version_output}" \
         "${latest_version_output}" \
@@ -102,10 +101,9 @@ run_verify_expect_failure() {
         "${inspection_query_types_output}" \
         "${execution_mode_types_output}" \
         "${execution_policy_input_type_output}" \
-        "${example_catalog_output}" \
-        "${task_catalog_output}" \
-        "${task_plan_output}" \
-        "${task_keyword_match_output}" \
+        "${recipe_catalog_output}" \
+        "${recipe_request_output}" \
+        "${recipe_keyword_match_output}" \
         "${doctor_report_output}" \
         "${noargs_failure_output}" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
@@ -132,10 +130,9 @@ run_verify_expect_success \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "${success_doctor_report}" \
     "${success_noargs_failure}"
 grep -Fq 'pull ghcr.io/example/gridgrind:9.9.9' "${fake_log}" || die "verifier did not pull the version tag"
@@ -150,14 +147,16 @@ grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --l
     "verifier did not inspect the latest tag nested catalog group surface"
 grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog --lookup plainTypes:executionPolicyInputType' "${fake_log}" || die \
     "verifier did not inspect the latest tag plain catalog group surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-example-catalog' "${fake_log}" || die \
-    "verifier did not inspect the latest tag example-catalog surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-catalog' "${fake_log}" || die \
-    "verifier did not inspect the latest tag task-catalog surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-plan --lookup DASHBOARD' "${fake_log}" || die \
-    "verifier did not inspect the latest tag task-plan surface"
-grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-task-keyword-match --query monthly sales dashboard with charts' "${fake_log}" || die \
-    "verifier did not inspect the latest tag task-keyword-match surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe-catalog' "${fake_log}" || die \
+    "verifier did not inspect the latest tag recipe-catalog surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe-catalog --lookup BUDGET' "${fake_log}" || die \
+    "verifier did not inspect the latest tag example recipe-catalog detail surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe-catalog --lookup TABULAR_REPORT' "${fake_log}" || die \
+    "verifier did not inspect the latest tag task recipe-catalog detail surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe --lookup DASHBOARD' "${fake_log}" || die \
+    "verifier did not inspect the latest tag recipe surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-recipe-keyword-match --query monthly sales dashboard with charts' "${fake_log}" || die \
+    "verifier did not inspect the latest tag recipe-keyword-match surface"
 grep -Fq 'discovery docker-image ghcr.io/example/gridgrind:9.9.9' "${fake_log}" || die \
     "verifier did not run discovery execution against the version tag"
 grep -Fq 'discovery docker-image ghcr.io/example/gridgrind:latest' "${fake_log}" || die \
@@ -182,10 +181,9 @@ FAKE_DISCOVERY_SHOULD_FAIL=1 run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "${success_doctor_report}" \
     "${success_noargs_failure}"
 unset FAKE_DISCOVERY_SHOULD_FAIL
@@ -249,10 +247,9 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
-    "${success_task_keyword_match}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
+    "${success_recipe_keyword_match}" \
     "$(replace_fixture_token \
         "${success_doctor_report}" \
         '"valid":true' \
@@ -290,12 +287,11 @@ run_verify_expect_failure \
     "${success_inspection_query_types}" \
     "${success_execution_mode_types}" \
     "${success_execution_policy_input_type}" \
-    "${success_example_catalog}" \
-    "${success_task_catalog}" \
-    "${success_task_plan}" \
+    "${success_recipe_catalog}" \
+    "${success_recipe_request}" \
     "$(replace_fixture_token \
-        "${success_task_keyword_match}" \
-        '"taskId":"DASHBOARD"' \
-        '"taskId":"TABULAR_REPORT"')"
+        "${success_recipe_keyword_match}" \
+        '"recipeId":"DASHBOARD"' \
+        '"recipeId":"TABULAR_REPORT"')"
 
 printf 'verify-container-publication regression: success\n'

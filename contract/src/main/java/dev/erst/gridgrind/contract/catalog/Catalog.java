@@ -16,7 +16,8 @@ public record Catalog(
     List<TypeEntry> assertionTypes,
     List<TypeEntry> inspectionQueryTypes,
     List<NestedTypeGroup> nestedTypes,
-    List<PlainTypeGroup> plainTypes) {
+    List<PlainTypeGroup> plainTypes,
+    List<CatalogNote> notes) {
   public Catalog {
     Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
     discriminatorField =
@@ -32,6 +33,20 @@ public record Catalog(
         CatalogRecordValidation.copyEntries(inspectionQueryTypes, "inspectionQueryTypes");
     nestedTypes = CatalogRecordValidation.copyGroups(nestedTypes, "nestedTypes");
     plainTypes = CatalogRecordValidation.copyPlainGroups(plainTypes, "plainTypes");
+    notes = Objects.requireNonNullElseGet(notes, List::of);
+    notes = CatalogRecordValidation.copyNotes(notes, "notes");
+    CatalogNoteResolutionSupport.validateCatalogNoteRefs(
+        List.of(
+            List.of(requestType),
+            sourceTypes,
+            persistenceTypes,
+            stepTypes,
+            mutationActionTypes,
+            assertionTypes,
+            inspectionQueryTypes),
+        nestedTypes,
+        plainTypes,
+        notes);
   }
 
   /**
@@ -45,5 +60,11 @@ public record Catalog(
         new TopLevelTypeGroup("mutationActionTypes", mutationActionTypes),
         new TopLevelTypeGroup("assertionTypes", assertionTypes),
         new TopLevelTypeGroup("inspectionQueryTypes", inspectionQueryTypes));
+  }
+
+  /** Returns one published shared note by its stable id, or empty when unknown. */
+  public java.util.Optional<CatalogNote> note(String id) {
+    Objects.requireNonNull(id, "id must not be null");
+    return notes.stream().filter(note -> note.id().equals(id)).findFirst();
   }
 }

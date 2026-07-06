@@ -82,8 +82,9 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
         requestPath.getParent().toAbsolutePath().normalize(),
         doctor.lastInputs().workingDirectory());
     assertEquals(
-        requestPath.getParent().toAbsolutePath().normalize().resolve(".gridgrind").resolve("tmp"),
-        doctor.lastInputs().tempRoot());
+        CliExecutionBindingsFactory.tempRootParent(Optional.empty()),
+        doctor.lastInputs().tempRoot().getParent());
+    assertTrue(Files.notExists(doctor.lastInputs().tempRoot()));
     assertFalse(doctor.lastInputs().hasStandardInput());
     assertEquals("EXISTING", sourceType(doctor.lastRequest()));
     assertEquals("SAVE_AS", persistenceType(doctor.lastRequest()));
@@ -115,8 +116,9 @@ class CliDoctorRequestAnalyzerTest extends GridGrindCliTestSupport {
     assertEquals(1, doctor.boundCalls());
     assertEquals(workspace.toAbsolutePath().normalize(), doctor.lastInputs().workingDirectory());
     assertEquals(
-        workspace.toAbsolutePath().normalize().resolve(".gridgrind").resolve("tmp"),
-        doctor.lastInputs().tempRoot());
+        CliExecutionBindingsFactory.tempRootParent(Optional.empty()),
+        doctor.lastInputs().tempRoot().getParent());
+    assertTrue(Files.notExists(doctor.lastInputs().tempRoot()));
     assertFalse(doctor.lastInputs().hasStandardInput());
   }
 

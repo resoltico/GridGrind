@@ -42,13 +42,12 @@ public final class ExcelOoxmlPackageInspectionSupport {
 
   /** Converts one POI signature part into the public GridGrind signature snapshot. */
   public static ExcelOoxmlSignatureSnapshot signatureSnapshot(SignaturePart signaturePart) {
+    boolean valid = signaturePart.validate();
     X509Certificate signerCertificate = signaturePart.getSigner();
     return new ExcelOoxmlSignatureSnapshot(
         signaturePart.getPackagePart().getPartName().getName(),
         signerIdentity(signerCertificate),
-        signaturePart.validate()
-            ? ExcelOoxmlSignatureState.VALID
-            : ExcelOoxmlSignatureState.INVALID);
+        valid ? ExcelOoxmlSignatureState.VALID : ExcelOoxmlSignatureState.INVALID);
   }
 
   /** Returns the factual signer identity when one certificate is present. */

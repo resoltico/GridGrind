@@ -104,9 +104,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         null);
     assertWriteContext(
         mutate(
-            new SheetSelector.ByName("Budget"),
+            new RangeSelector.ByRange("Budget", "B2:B5"),
             new StructuredMutationAction.SetConditionalFormatting(
-                singleFormulaConditionalFormattingBlock(List.of("B2:B5")))),
+                singleFormulaConditionalFormattingBlock())),
         exception,
         "Budget",
         null,
@@ -240,16 +240,16 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
         "B2:B5",
         rangeFor(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new RangeSelector.ByRange("Budget", "B2:B5"),
                 new StructuredMutationAction.SetConditionalFormatting(
-                    singleFormulaConditionalFormattingBlock(List.of("B2:B5")))),
+                    singleFormulaConditionalFormattingBlock())),
             invalidFormula));
     assertNull(
         rangeFor(
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new RangeSelector.ByRanges("Budget", List.of("B2:B5", "D2:D5")),
                 new StructuredMutationAction.SetConditionalFormatting(
-                    singleFormulaConditionalFormattingBlock(List.of("B2:B5", "D2:D5")))),
+                    singleFormulaConditionalFormattingBlock())),
             invalidFormula));
     assertNull(
         rangeFor(
@@ -402,9 +402,9 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
                 new RangeSelector.AllOnSheet("Budget"),
                 new StructuredMutationAction.ClearDataValidations()),
             mutate(
-                new SheetSelector.ByName("Budget"),
+                new RangeSelector.ByRange("Budget", "B2:B5"),
                 new StructuredMutationAction.SetConditionalFormatting(
-                    singleFormulaConditionalFormattingBlock(List.of("B2:B5")))),
+                    singleFormulaConditionalFormattingBlock())),
             mutate(
                 new RangeSelector.AllOnSheet("Budget"),
                 new StructuredMutationAction.ClearConditionalFormatting()),
@@ -441,10 +441,8 @@ class DefaultGridGrindRequestExecutorAuthoringContextTranslationTest
             missingNamedRange));
   }
 
-  private static ConditionalFormattingBlockInput singleFormulaConditionalFormattingBlock(
-      List<String> ranges) {
-    return new ConditionalFormattingBlockInput(
-        ranges,
+  private static ConditionalFormattingDefinitionInput singleFormulaConditionalFormattingBlock() {
+    return new ConditionalFormattingDefinitionInput(
         List.of(
             new ConditionalFormattingRuleInput.FormulaRule(
                 "B2>0",

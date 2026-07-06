@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
+import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookFormattingCommand;
 import dev.erst.gridgrind.excel.WorkbookMetadataCommand;
@@ -43,11 +44,21 @@ final class WorkbookCommandStructuredMutationConverter {
         yield new WorkbookFormattingCommand.ClearDataValidations(
             selection.sheetName(), selection.selection());
       }
-      case StructuredMutationAction.SetConditionalFormatting setConditionalFormatting ->
-          new WorkbookFormattingCommand.SetConditionalFormatting(
-              WorkbookCommandSelectorSupport.sheetByName(target, action).name(),
-              WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
-                  setConditionalFormatting.conditionalFormatting()));
+      case StructuredMutationAction.SetConditionalFormatting setConditionalFormatting -> {
+        SelectorConverter.SheetLocalRangeSelection selection =
+            SelectorConverter.toSheetLocalRangeSelection((RangeSelector) target);
+        ExcelRangeSelection.Selected selected =
+            switch (selection.selection()) {
+              case ExcelRangeSelection.Selected explicit -> explicit;
+              case ExcelRangeSelection.All _ ->
+                  throw new IllegalArgumentException(
+                      "SET_CONDITIONAL_FORMATTING requires explicit range targets");
+            };
+        yield new WorkbookFormattingCommand.SetConditionalFormatting(
+            selection.sheetName(),
+            WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
+                selected.ranges(), setConditionalFormatting.conditionalFormatting()));
+      }
       case StructuredMutationAction.ClearConditionalFormatting _ -> {
         SelectorConverter.SheetLocalRangeSelection selection =
             SelectorConverter.toSheetLocalRangeSelection((RangeSelector) target);

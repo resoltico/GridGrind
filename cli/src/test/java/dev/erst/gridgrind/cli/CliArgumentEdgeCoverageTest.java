@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindRequestSurfaceContractText;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -20,10 +20,7 @@ class CliArgumentEdgeCoverageTest {
             CliArgumentsException.class,
             () -> CliArguments.parse(new String[] {"--print-protocol-catalog", "--full"}));
     assertEquals("--full", trailingFull.argument());
-    assertEquals(
-        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
-            + " <lookup-id> for one scoped catalog payload",
-        trailingFull.getMessage());
+    assertEquals("Unknown argument: --full", trailingFull.getMessage());
   }
 
   @Test
@@ -33,10 +30,7 @@ class CliArgumentEdgeCoverageTest {
             CliArgumentsException.class, () -> CliArguments.parse(new String[] {"--full"}));
 
     assertEquals("--full", exception.argument());
-    assertEquals(
-        "--full is no longer part of the CLI grammar; use --print-protocol-catalog --lookup"
-            + " <lookup-id> for one scoped catalog payload",
-        exception.getMessage());
+    assertEquals("Unknown argument: --full", exception.getMessage());
   }
 
   @Test
@@ -218,7 +212,7 @@ class CliArgumentEdgeCoverageTest {
                     Optional.of(Path.of("-")), Optional.empty(), Optional.empty()));
     assertEquals("--execution-root", missingExecutionRoot.argument());
     assertEquals(
-        GridGrindContractText.stdinExecutionRootRequiredMessage(),
+        GridGrindRequestSurfaceContractText.stdinExecutionRootRequiredMessage(),
         missingExecutionRoot.getMessage());
 
     CliArgumentsException fileRequestConflict =

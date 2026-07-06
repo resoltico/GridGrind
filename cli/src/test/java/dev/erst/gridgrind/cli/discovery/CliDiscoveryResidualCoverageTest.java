@@ -13,21 +13,19 @@ import org.junit.jupiter.api.Test;
 /** Residual coverage for discovery helper branches and protocol-catalog index codecs. */
 class CliDiscoveryResidualCoverageTest {
   @Test
-  void unavailableLocationsCollapseToEmptyOptionalFacts() {
-    CliFailureLocation unavailable = CliFailureLocation.unavailable();
-    CliFailureLocation cursorOnly =
-        CliFailureLocation.from(Optional.empty(), Optional.of(3), Optional.of(7)).orElseThrow();
+  void optionalTransportFactsRoundTripWithoutNullPadding() {
+    CliTransport stdout = CliTransport.standardOutput();
+    CliTransport file = CliTransport.responseFile("/tmp/diagnostic.json");
 
-    assertFalse(unavailable.isAvailable());
-    assertEquals(Optional.empty(), cursorOnly.jsonPath());
-    assertEquals(Optional.of(3), cursorOnly.jsonLine());
-    assertEquals(Optional.empty(), CliFailureLocation.from(new RuntimeException("boom")));
+    assertEquals(Optional.empty(), stdout.responsePathValue());
+    assertEquals(Optional.of("/tmp/diagnostic.json"), file.responsePathValue());
     assertEquals(
         Optional.empty(),
-        CliDiscoveryValidation.copyOptionalLocation(Optional.empty(), "location"));
+        CliDiscoveryValidation.copyOptionalTransport(Optional.empty(), "transport"));
     assertEquals(
-        Optional.empty(),
-        CliDiscoveryValidation.copyOptionalLocation(Optional.of(unavailable), "location"));
+        Optional.of(stdout),
+        CliDiscoveryValidation.copyOptionalTransport(Optional.of(stdout), "transport"));
+    assertFalse(file.responsePathValue().orElseThrow().isBlank());
   }
 
   @Test
@@ -43,7 +41,9 @@ class CliDiscoveryResidualCoverageTest {
             List.of(
                 new ProtocolCatalogFieldMetadataKey(
                     "projectedByFacets",
-                    "Field is present only when one listed facet is requested.")),
+                    "Field is present only when one listed facet is requested."),
+                new ProtocolCatalogFieldMetadataKey(
+                    "noteRefs", "Entry references stable note ids published once per payload.")),
             List.of(new ProtocolCatalogLookupNamespace("<group>:<id>", "Use stable catalog ids.")));
 
     assertEquals(2, report.topLevelGroups().getFirst().entryCount());

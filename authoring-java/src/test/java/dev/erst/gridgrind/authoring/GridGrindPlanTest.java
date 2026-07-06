@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.authoring;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -218,8 +219,7 @@ class GridGrindPlanTest {
             GridGrindEngine.requestExecutor()
                 .execute(
                     plan.toPlan(),
-                    new GridGrindRequestInputs(
-                        tempDir, tempDir.resolve(".gridgrind").resolve("tmp")),
+                    new GridGrindRequestInputs(tempDir, tempDir.resolve("temp-root")),
                     GridGrindJournalSink.NOOP));
 
     assertTrue(Files.exists(outputPath));
@@ -310,6 +310,7 @@ class GridGrindPlanTest {
       GridGrindResponse.Success response =
           assertInstanceOf(GridGrindResponse.Success.class, runMethod.invoke(null, tempDir));
       assertTrue(Files.exists(tempDir.resolve("budget.xlsx")));
+      assertFalse(Files.exists(tempDir.resolve(".gridgrind")));
       assertEquals(1, response.assertions().size());
       assertEquals(1, response.inspections().size());
     }

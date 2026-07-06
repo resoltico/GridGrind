@@ -38,9 +38,29 @@ final class CatalogTypeEntryFactory {
     return new CatalogPlainTypeDescriptor(group, recordType, id, summary, optionalFields);
   }
 
+  static CatalogPlainTypeDescriptor plainTypeDescriptorWithNotes(
+      String group,
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      List<String> noteRefs) {
+    return new CatalogPlainTypeDescriptor(group, recordType, id, summary, optionalFields, noteRefs);
+  }
+
   static CatalogTypeDescriptor descriptor(
       Class<? extends Record> recordType, String id, String summary, String... optionalFields) {
     return new CatalogTypeDescriptor(recordType, id, summary, List.of(optionalFields));
+  }
+
+  static CatalogTypeDescriptor descriptorWithNotes(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> noteRefs,
+      String... optionalFields) {
+    return new CatalogTypeDescriptor(
+        recordType, id, summary, List.of(optionalFields), noteRefs, List.of());
   }
 
   static CatalogTypeDescriptor descriptor(
@@ -50,12 +70,12 @@ final class CatalogTypeEntryFactory {
       List<String> optionalFields,
       CatalogProjectedField... projectedFields) {
     return new CatalogTypeDescriptor(
-        recordType, id, summary, optionalFields, List.of(projectedFields));
+        recordType, id, summary, optionalFields, List.of(), List.of(projectedFields));
   }
 
   static TypeEntry typeEntry(
       Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
-    return typeEntry(recordType, id, summary, optionalFields, List.of());
+    return typeEntry(recordType, id, summary, optionalFields, List.of(), List.of());
   }
 
   static TypeEntry typeEntry(
@@ -63,6 +83,16 @@ final class CatalogTypeEntryFactory {
       String id,
       String summary,
       List<String> optionalFields,
+      List<String> noteRefs) {
+    return typeEntry(recordType, id, summary, optionalFields, noteRefs, List.of());
+  }
+
+  static TypeEntry typeEntry(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      List<String> noteRefs,
       List<CatalogProjectedField> projectedFields) {
     Optional<WorkbookStepTargeting.TargetSurface> targetSurface =
         TypeEntryTargetingSupport.optionalTargetSurfaceFor(recordType);
@@ -71,7 +101,8 @@ final class CatalogTypeEntryFactory {
         summary,
         fieldEntries(recordType, optionalFields, projectedFields),
         TypeEntryTargetingSupport.targetSelectorEntries(targetSurface),
-        targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule));
+        targetSurface.flatMap(WorkbookStepTargeting.TargetSurface::rule),
+        noteRefs);
   }
 
   static List<String> requiredFields(

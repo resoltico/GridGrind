@@ -63,6 +63,8 @@ abstract sealed class CatalogLookupValue
               ? " " + CatalogShapeTextSupport.referencedShapeText(catalog, entry.fields())
               : "")
           + " "
+          + CatalogNoteResolutionSupport.referencedNoteText(catalog, entry.noteRefs())
+          + " "
           + entry
               .stepTemplate()
               .map(template -> template.bodyField() + " " + String.join(" ", template.notes()))
@@ -108,7 +110,11 @@ abstract sealed class CatalogLookupValue
           .flatMap(
               entry ->
                   Stream.concat(
-                      Stream.of(entry.id(), entry.summary()),
+                      Stream.of(
+                          entry.id(),
+                          entry.summary(),
+                          CatalogNoteResolutionSupport.referencedNoteText(
+                              catalog, entry.noteRefs())),
                       entry.fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens)))
           .collect(java.util.stream.Collectors.joining(" "));
     }
@@ -146,7 +152,11 @@ abstract sealed class CatalogLookupValue
     @Override
     String searchableText(Catalog catalog, boolean includeReferencedShapes) {
       return Stream.concat(
-              Stream.of(group.type().id(), group.type().summary()),
+              Stream.of(
+                  group.type().id(),
+                  group.type().summary(),
+                  CatalogNoteResolutionSupport.referencedNoteText(
+                      catalog, group.type().noteRefs())),
               group.type().fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens))
           .collect(java.util.stream.Collectors.joining(" "));
     }
@@ -189,7 +199,11 @@ abstract sealed class CatalogLookupValue
           .flatMap(
               entry ->
                   Stream.concat(
-                      Stream.of(entry.id(), entry.summary()),
+                      Stream.of(
+                          entry.id(),
+                          entry.summary(),
+                          CatalogNoteResolutionSupport.referencedNoteText(
+                              catalog, entry.noteRefs())),
                       entry.fields().stream().flatMap(CatalogLookupValue::fieldSearchTokens)))
           .collect(java.util.stream.Collectors.joining(" "));
     }

@@ -163,7 +163,7 @@ public sealed interface CellReport {
     }
   }
 
-  /** Cell report for a cell in an error state (e.g., #DIV/0!, #REF!). */
+  /** Cell report for a cell in a reported error state, including evaluation-only states. */
   record ErrorReport(
       String address,
       @JsonInclude(JsonInclude.Include.NON_ABSENT) Optional<String> displayValue,
@@ -181,7 +181,11 @@ public sealed interface CellReport {
       style = normalizeOptional(style, "style");
       hyperlink = normalizeOptional(hyperlink, "hyperlink");
       comment = normalizeOptional(comment, "comment");
-      errorValue = normalizeOptional(errorValue, "errorValue");
+      errorValue =
+          normalizeOptional(errorValue, "errorValue")
+              .map(
+                  value ->
+                      CellErrorLiteralValidation.requireReportedErrorLiteral(value, "errorValue"));
     }
 
     @Override

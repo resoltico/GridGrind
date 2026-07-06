@@ -43,7 +43,7 @@ public interface GridGrindProblemDetail {
           code.recovery(),
           code.title(),
           message,
-          code.resolution(),
+          code.resolutionFor(message, context),
           context,
           Optional.empty(),
           List.of());

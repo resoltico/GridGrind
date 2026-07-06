@@ -4,13 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
 import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.json.MessageInvariant;
 import dev.erst.gridgrind.contract.json.MessageShape;
 import dev.erst.gridgrind.contract.json.MissingTypeDiscriminator;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.DateTimeException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
@@ -124,16 +128,14 @@ class WorkbookStepJsonSupportCoverageTest {
             MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad")
                 .prependPath(new Object(), "name");
 
-    MismatchedInputException nullMessageFailure =
+    InvalidRequestException nullMessageFailure =
         assertInstanceOf(
-            MismatchedInputException.class,
-            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(
-                parser("{}"), "target", nullMessage));
-    MismatchedInputException fieldMessageFailure =
+            InvalidRequestException.class,
+            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure("target", nullMessage));
+    InvalidRequestException fieldMessageFailure =
         assertInstanceOf(
-            MismatchedInputException.class,
-            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure(
-                parser("{}"), "target", fieldMessage));
+            InvalidRequestException.class,
+            WorkbookStepJsonFailurePathSupport.wrapIllegalArgumentFailure("target", fieldMessage));
     JacksonException inferredJacksonFailure =
         WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
             "target", emptyObject, NamedRecord.class, fieldlessJackson);
@@ -141,15 +143,72 @@ class WorkbookStepJsonSupportCoverageTest {
         WorkbookStepJsonFailurePathSupport.wrapJacksonFailure(
             "target", emptyObject, Object.class, nestedJackson);
 
-    assertEquals("Invalid request shape", nullMessageFailure.getOriginalMessage());
+    assertEquals("Invalid request", nullMessageFailure.getMessage());
     assertSame(nullMessage, nullMessageFailure.getCause());
-    assertEquals("target", renderPath(nullMessageFailure));
+    assertEquals(Optional.of("target"), nullMessageFailure.jsonPath());
 
-    assertEquals("Field 'type' must exist", fieldMessageFailure.getOriginalMessage());
-    assertEquals("target", renderPath(fieldMessageFailure));
+    assertEquals("Field 'type' must exist", fieldMessageFailure.getMessage());
+    assertEquals(Optional.of("target"), fieldMessageFailure.jsonPath());
 
     assertEquals("target.name", renderPath(inferredJacksonFailure));
     assertEquals("target.name", renderPath(nestedJacksonFailure));
+  }
+
+  @Test
+  void wrapValidationJacksonFailureHandlesShapeAndDateTimeValidationCauses() throws IOException {
+    JsonMapper mapper = JsonMapper.builder().build();
+    JsonNode emptyObject = mapper.createObjectNode();
+    MismatchedInputException shapeFailure =
+        WorkbookStepJsonFailurePathSupport.inputMismatch(
+            parser("{}"), new MissingTypeDiscriminator("type"));
+    InvalidRequestException invalidRequestCause =
+        new InvalidRequestException(
+            new MessageInvariant("owned failure", Optional.of("name")),
+            Optional.of("name"),
+            Optional.empty(),
+            Optional.empty(),
+            null);
+    MismatchedInputException invalidRequestFailure =
+        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
+    invalidRequestFailure.initCause(new RuntimeException(invalidRequestCause));
+
+    MismatchedInputException illegalArgumentFailure =
+        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
+    illegalArgumentFailure.initCause(
+        new RuntimeException(new IllegalArgumentException("unsupported literal")));
+
+    MismatchedInputException dateTimeFailure =
+        MismatchedInputException.from(parser("{}"), WorkbookStep.class, "bad");
+    dateTimeFailure.initCause(new RuntimeException(new DateTimeException("unsupported date")));
+
+    assertTrue(
+        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+                "action", emptyObject, NamedRecord.class, shapeFailure)
+            .isEmpty());
+
+    InvalidRequestException wrappedInvalidRequestFailure =
+        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+                "action", emptyObject, NamedRecord.class, invalidRequestFailure)
+            .orElseThrow();
+    assertEquals("owned failure", wrappedInvalidRequestFailure.getMessage());
+    assertEquals(Optional.of("action.name"), wrappedInvalidRequestFailure.jsonPath());
+    assertSame(invalidRequestFailure, wrappedInvalidRequestFailure.getCause());
+
+    InvalidRequestException wrappedIllegalArgumentFailure =
+        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+                "action", emptyObject, NamedRecord.class, illegalArgumentFailure)
+            .orElseThrow();
+    assertEquals("unsupported literal", wrappedIllegalArgumentFailure.getMessage());
+    assertEquals(Optional.of("action"), wrappedIllegalArgumentFailure.jsonPath());
+    assertSame(illegalArgumentFailure, wrappedIllegalArgumentFailure.getCause());
+
+    InvalidRequestException wrappedDateTimeFailure =
+        WorkbookStepJsonFailurePathSupport.wrapValidationJacksonFailure(
+                "action", emptyObject, NamedRecord.class, dateTimeFailure)
+            .orElseThrow();
+    assertEquals("unsupported date", wrappedDateTimeFailure.getMessage());
+    assertEquals(Optional.of("action"), wrappedDateTimeFailure.jsonPath());
+    assertSame(dateTimeFailure, wrappedDateTimeFailure.getCause());
   }
 
   @Test
@@ -172,15 +231,15 @@ class WorkbookStepJsonSupportCoverageTest {
     JsonMapper mapper = JsonMapper.builder().build();
     var node = mapper.readTree("{\"anything\":true}");
     try (JsonParser parser = mapper.createParser("{}")) {
-      MismatchedInputException failure =
+      InvalidRequestException failure =
           assertThrows(
-              MismatchedInputException.class,
+              InvalidRequestException.class,
               () ->
                   WorkbookStepJsonDeserializer.deserializeField(
                       node, parser, AlwaysInvalidPayload.class, "action"));
 
-      assertEquals("zoomPercent must be between 10 and 400", failure.getOriginalMessage());
-      assertEquals("action", renderPath(failure));
+      assertEquals("zoomPercent must be between 10 and 400", failure.getMessage());
+      assertEquals(Optional.of("action"), failure.jsonPath());
       assertEquals("zoomPercent must be between 10 and 400", failure.getCause().getMessage());
     }
   }

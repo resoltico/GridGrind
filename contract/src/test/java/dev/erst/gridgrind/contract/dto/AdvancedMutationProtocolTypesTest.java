@@ -20,8 +20,9 @@ import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdTy
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
@@ -34,7 +35,7 @@ class AdvancedMutationProtocolTypesTest {
   @Test
   void ooxmlSecurityInputsNormalizeAndValidate() {
     OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.of("source-pass"));
-    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.agile("persist-pass");
+    OoxmlEncryptionInput encryption = OoxmlEncryptionInput.strong("persist-pass");
     OoxmlSignatureInput signature =
         new OoxmlSignatureInput(
             "tmp/signing-material.p12",
@@ -47,7 +48,8 @@ class AdvancedMutationProtocolTypesTest {
         new OoxmlPersistenceSecurityInput(encryption, signature);
 
     assertEquals(Optional.of("source-pass"), openSecurity.password());
-    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
+    assertEquals(ExcelOoxmlWriteCipher.AES_256, encryption.cipher());
+    assertEquals(ExcelOoxmlWriteHash.SHA_512, encryption.hash());
     assertEquals("keystore-pass", signature.keyPassword());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
     assertTrue(signature.alias().isEmpty());
@@ -57,8 +59,13 @@ class AdvancedMutationProtocolTypesTest {
 
     assertThrows(
         IllegalArgumentException.class, () -> new OoxmlOpenSecurityInput(Optional.of(" ")));
-    assertThrows(IllegalArgumentException.class, () -> OoxmlEncryptionInput.agile(" "));
-    assertThrows(NullPointerException.class, () -> new OoxmlEncryptionInput("persist-pass", null));
+    assertThrows(IllegalArgumentException.class, () -> OoxmlEncryptionInput.strong(" "));
+    assertThrows(
+        NullPointerException.class,
+        () -> new OoxmlEncryptionInput("persist-pass", null, ExcelOoxmlWriteHash.SHA_512));
+    assertThrows(
+        NullPointerException.class,
+        () -> new OoxmlEncryptionInput("persist-pass", ExcelOoxmlWriteCipher.AES_256, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -88,7 +95,9 @@ class AdvancedMutationProtocolTypesTest {
     OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(Optional.empty());
     OoxmlPersistenceSecurityInput encryptionOnly =
         new OoxmlPersistenceSecurityInput(
-            new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.STANDARD), null);
+            new OoxmlEncryptionInput(
+                "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384),
+            null);
     OoxmlPersistenceSecurityInput signatureOnly =
         new OoxmlPersistenceSecurityInput(
             null,

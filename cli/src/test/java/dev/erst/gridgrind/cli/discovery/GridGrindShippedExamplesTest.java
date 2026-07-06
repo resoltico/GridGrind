@@ -185,4 +185,42 @@ class GridGrindShippedExamplesTest {
     assertEquals(
         "requiredWorkspacePaths must not be null", missingRequiredPathsFailure.getMessage());
   }
+
+  @Test
+  void exampleLookupAndWorkspaceModeAccessorsStayBoundToExampleRecipesOnly() {
+    NullPointerException nullLookup =
+        assertThrows(NullPointerException.class, () -> GridGrindShippedExamples.find(null));
+    assertEquals("id must not be null", nullLookup.getMessage());
+    assertTrue(GridGrindShippedExamples.find("WORKBOOK_HEALTH").isPresent());
+    assertTrue(GridGrindShippedExamples.find("DASHBOARD").isEmpty());
+
+    NullPointerException nullId =
+        assertThrows(
+            NullPointerException.class, () -> GridGrindShippedExamples.workspaceModeFor(null));
+    assertEquals("id must not be null", nullId.getMessage());
+
+    assertEquals(
+        java.util.Optional.of(ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS),
+        GridGrindShippedExamples.workspaceModeFor("PACKAGE_SECURITY_INSPECTION"));
+    assertEquals(
+        java.util.Optional.empty(), GridGrindShippedExamples.workspaceModeFor("DASHBOARD"));
+    assertEquals(
+        java.util.Optional.empty(), GridGrindShippedExamples.workspaceModeFor("NO_SUCH_EXAMPLE"));
+  }
+
+  @Test
+  void requirementsLookupRejectsTaskRecipeIdsMasqueradingAsExamples() {
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                GridGrindShippedExamples.requirementsFor(
+                    new GridGrindShippedExamples.ShippedExample(
+                        "DASHBOARD",
+                        "dashboard-request.json",
+                        "summary",
+                        GridGrindProtocolCatalog.requestTemplate())));
+
+    assertEquals("Missing shipped-example requirements for DASHBOARD", failure.getMessage());
+  }
 }

@@ -1,85 +1,83 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.json.GridGrindJsonOutput;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.Objects;
 
 /** Shared stdout-fallback payload rendering and stderr notice formatting. */
 final class CliStdoutFallbackSupport {
   private CliStdoutFallbackSupport() {}
 
-  static StdoutFallback cliFailureReport(String description, CliFailureReport report)
+  static StdoutFallback cliDiagnostic(CliDiagnostic diagnostic) throws IOException {
+    return cliDiagnostic(diagnostic, false);
+  }
+
+  static StdoutFallback cliDiagnostic(CliDiagnostic diagnostic, boolean prettyJson)
       throws IOException {
-    return cliFailureReport(description, report, false);
+    return new StdoutFallback(GridGrindCliJson.writeBytes(diagnostic, prettyJson));
   }
 
-  static StdoutFallback cliFailureReport(
-      String description, CliFailureReport report, boolean prettyJson) throws IOException {
-    return new StdoutFallback(description, GridGrindCliJson.writeBytes(report, prettyJson));
+  static StdoutFallback response(GridGrindResponse response) throws IOException {
+    return response(response, false);
   }
 
-  static StdoutFallback response(String description, GridGrindResponse response)
+  static StdoutFallback response(GridGrindResponse response, boolean prettyJson)
       throws IOException {
-    return response(description, response, false);
+    return new StdoutFallback(GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
   }
 
-  static StdoutFallback response(String description, GridGrindResponse response, boolean prettyJson)
+  static StdoutFallback doctorReport(RequestDoctorReport report) throws IOException {
+    return doctorReport(report, false);
+  }
+
+  static StdoutFallback doctorReport(RequestDoctorReport report, boolean prettyJson)
       throws IOException {
     return new StdoutFallback(
-        description, GridGrindJsonOutput.writeResponseBytes(response, prettyJson));
-  }
-
-  static StdoutFallback doctorReport(String description, RequestDoctorReport report)
-      throws IOException {
-    return doctorReport(description, report, false);
-  }
-
-  static StdoutFallback doctorReport(
-      String description, RequestDoctorReport report, boolean prettyJson) throws IOException {
-    return new StdoutFallback(
-        description, GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
+        GridGrindJsonOutput.writeRequestDoctorReportBytes(report, prettyJson));
   }
 
   static void write(
       OutputStream stderr,
       OutputStream stdout,
-      IOException exception,
-      Path targetPath,
-      StdoutFallback fallback)
+      CliDiagnostic stderrDiagnostic,
+      StdoutFallback fallback,
+      boolean prettyJson)
       throws IOException {
     Objects.requireNonNull(stderr, "stderr must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderrDiagnostic, "stderrDiagnostic must not be null");
     Objects.requireNonNull(fallback, "fallback must not be null");
-    String line =
-        CliResponseWriter.responseWriteMessage(exception, targetPath)
-            + ". Wrote the "
-            + fallback.description()
-            + " to stdout instead."
-            + System.lineSeparator();
-    stderr.write(line.getBytes(StandardCharsets.UTF_8));
-    stderr.flush();
-    CliPayloadOutput.write(stdout, fallback.payload());
+    try {
+      CliPayloadOutput.write(stdout, fallback.payload());
+    } catch (IOException stdoutFailure) {
+      try {
+        CliPayloadOutput.write(stderr, GridGrindCliJson.writeBytes(stderrDiagnostic, prettyJson));
+      } catch (IOException stderrFailure) {
+        stdoutFailure.addSuppressed(stderrFailure);
+      }
+      throw stdoutFailure;
+    }
+    try {
+      CliPayloadOutput.write(stderr, GridGrindCliJson.writeBytes(stderrDiagnostic, prettyJson));
+    } catch (IOException ignored) {
+      // The stdout fallback payload is the primary recovery channel once response-file writing has
+      // already failed. If stderr cannot mirror the transport diagnostic afterwards, keep the
+      // successfully recovered stdout payload rather than re-failing the whole command.
+      return;
+    }
   }
 
-  /** Value object for a stdout fallback payload and its operator-facing description. */
+  /** Value object for a stdout fallback payload. */
   static final class StdoutFallback {
-    private final String description;
     private final byte[] payload;
 
-    private StdoutFallback(String description, byte[] payload) {
-      this.description = Objects.requireNonNull(description, "description must not be null");
+    private StdoutFallback(byte[] payload) {
       this.payload = Objects.requireNonNull(payload, "payload must not be null").clone();
-    }
-
-    String description() {
-      return description;
     }
 
     byte[] payload() {

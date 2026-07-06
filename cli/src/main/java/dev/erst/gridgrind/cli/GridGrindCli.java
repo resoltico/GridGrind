@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.engine.api.GridGrindEngine;
 import dev.erst.gridgrind.engine.api.GridGrindRequestDoctor;
 import dev.erst.gridgrind.engine.api.GridGrindRequestExecutor;
@@ -187,14 +187,14 @@ public final class GridGrindCli {
     try {
       invocation = CliArguments.parseInvocation(args);
     } catch (CliArgumentsException exception) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           responsePathHint,
           stdout,
           stderr,
           CliArgumentFailureSupport.reportFor(args, exception),
           prettyJsonHint);
     } catch (IllegalArgumentException exception) {
-      return responseWriter.writeCliFailureReport(
+      return responseWriter.writeCliDiagnostic(
           responsePathHint,
           stdout,
           stderr,
@@ -218,20 +218,14 @@ public final class GridGrindCli {
       case CliCommand.PrintRequestTemplate cmd ->
           GridGrindCliIdentityCommands.requestTemplate(
               cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliCommand.PrintExample cmd ->
-          GridGrindCliTaskDiscoveryCommands.example(
+      case CliCommand.PrintRecipeCatalog cmd ->
+          GridGrindCliRecipeDiscoveryCommands.recipeCatalog(
               cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliCommand.PrintExampleCatalog cmd ->
-          GridGrindCliTaskDiscoveryCommands.exampleCatalog(
+      case CliCommand.PrintRecipe cmd ->
+          GridGrindCliRecipeDiscoveryCommands.recipe(
               cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskCatalog cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskCatalog(
-              cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskPlan cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskPlan(
-              cmd, prettyJson, stdout, stderr, responseWriter);
-      case CliCommand.PrintTaskKeywordMatch cmd ->
-          GridGrindCliTaskDiscoveryCommands.taskKeywordMatch(
+      case CliCommand.PrintRecipeKeywordMatch cmd ->
+          GridGrindCliRecipeDiscoveryCommands.recipeKeywordMatch(
               cmd, prettyJson, stdout, stderr, responseWriter);
       case CliCommand.DoctorRequest doctor ->
           executionCommands.doctorRequest(doctor, stdin, stdout, stderr, prettyJson);
@@ -257,11 +251,10 @@ public final class GridGrindCli {
       throws IOException {
     Optional<InputStream> requestInput = executionCommands.standardInputIfPresent(execute, stdin);
     if (requestInput.isEmpty()) {
-      CliFailureReport report =
-          CliFailureReports.invalidArguments(
+      CliDiagnostic report =
+          CliDiagnostics.invalidArguments(
               2,
               "execute",
-              "resolve-request",
               Optional.of("--request"),
               "No request JSON was provided. Pass --request <path>, pass --request - together with"
                   + " --execution-root <path>, or pipe one request document on standard input"
@@ -269,12 +262,8 @@ public final class GridGrindCli {
               List.of(
                   "gridgrind --print-request-template --response request.json",
                   "gridgrind --execution-root . < request.json",
-                  "gridgrind --request - --execution-root ."),
-              Optional.of(
-                  "Use one real request document. Standard-input request mode always requires"
-                      + " --execution-root so relative request-owned paths resolve from one"
-                      + " explicit directory."));
-      return responseWriter.writeCliFailureReport(
+                  "gridgrind --request - --execution-root ."));
+      return responseWriter.writeCliDiagnostic(
           execute.responsePath(), stdout, stderr, report, prettyJson);
     }
     return executionCommands.executeCommand(

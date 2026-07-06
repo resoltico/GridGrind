@@ -186,7 +186,7 @@ class CellReadbackCoverageTest {
     CellTemporalReport time = CellTemporalReport.temporal(CellTemporalKind.TIME, "12:00");
     CellValueReport.NumberValue number = new CellValueReport.NumberValue(42.0d, Optional.of(date));
     CellValueReport.BooleanValue bool = new CellValueReport.BooleanValue(true);
-    CellValueReport.ErrorValue error = new CellValueReport.ErrorValue("#DIV/0!");
+    CellValueReport.ErrorValue error = new CellValueReport.ErrorValue("#CIRCULAR_REF!");
     WindowDimensionsReport dimensions = new WindowDimensionsReport(2, 2);
     WindowReport.Sparse sparse =
         new WindowReport.Sparse(
@@ -223,6 +223,7 @@ class CellReadbackCoverageTest {
     assertEquals("NUMBER", number.type());
     assertEquals("BOOLEAN", bool.type());
     assertEquals("ERROR", error.type());
+    assertEquals("#CIRCULAR_REF!", error.errorValue());
     assertFalse(notDate.isDate());
     assertTrue(date.isDate());
     assertEquals(Optional.of(CellTemporalKind.DATE), date.kind());
@@ -234,6 +235,16 @@ class CellReadbackCoverageTest {
         NullPointerException.class, () -> new CellValueReport.NumberValue(null, Optional.empty()));
     assertThrows(NullPointerException.class, () -> new CellValueReport.BooleanValue(null));
     assertThrows(IllegalArgumentException.class, () -> new CellValueReport.ErrorValue(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellReport.ErrorReport(
+                "A1",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                Optional.of("~CIRCULAR~REF~")));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellValueReport.TextValue("Ada", Optional.of(List.of())));

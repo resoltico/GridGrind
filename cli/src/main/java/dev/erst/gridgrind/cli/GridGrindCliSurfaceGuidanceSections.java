@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindContainerRuntimeText;
-import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindInspectionContractText;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +41,7 @@ final class GridGrindCliSurfaceGuidanceSections {
         "Docker Example",
         List.of(
             "docker run --rm -i \\",
+            "  " + GridGrindContainerRuntimeText.dockerMountedWorkdirUserArgument() + " \\",
             "  " + GridGrindContainerRuntimeText.dockerMountedWorkdirVolumeArgument() + " \\",
             "  {{CONTAINER_TAG}} \\",
             "  --request request.json \\",
@@ -59,14 +60,13 @@ final class GridGrindCliSurfaceGuidanceSections {
         List.of(
             "gridgrind --print-request-template --response request.json",
             "gridgrind --doctor-request --request request.json --response doctor.json",
-            "gridgrind --print-example-catalog --response example-catalog.json",
-            "gridgrind --print-task-catalog --response tasks.json",
-            "gridgrind --print-task-plan --lookup <id> --response task-plan.json",
-            "gridgrind --print-task-keyword-match --query \"monthly sales dashboard with charts\""
-                + " --response task-keyword-match.json",
+            "gridgrind --print-recipe-catalog --response recipes.json",
+            "gridgrind --print-recipe --lookup <id> --response recipe.json",
+            "gridgrind --print-recipe-keyword-match --query \"monthly sales dashboard with charts\""
+                + " --response recipe-keyword-match.json",
             "gridgrind --print-protocol-catalog --response protocol-index.json"),
         "Built-in generated examples",
-        "Print one built-in example",
+        "Print one recipe",
         List.of(
             new CliSurface.WorkflowEntry(
                 "Example portability",
@@ -74,17 +74,20 @@ final class GridGrindCliSurfaceGuidanceSections {
                     "SELF_CONTAINED starters execute from a blank working directory.",
                     "REQUIRES_EXAMPLE_ASSETS starters require copied asset paths beside the"
                         + " request file; requiredWorkspacePaths names those paths directly.",
-                    GridGrindContractText.workbookFindingsDiscoverySummary()
+                    GridGrindInspectionContractText.workbookFindingsDiscoverySummary()
                         + " Include it in any diagnostic plan with persistence.type=NONE.")),
             new CliSurface.WorkflowEntry(
                 "Task starters",
                 List.of(
-                    "The CLI task catalog publishes high-level office-work recipes composed"
-                        + " from exact protocol capabilities.",
-                    "Each task entry now publishes starter.requestFileName,"
-                        + " starter.workspaceMode, and starter.requiredWorkspacePaths so"
-                        + " agents can decide whether one task starter is self-contained"
-                        + " before printing it.")),
+                    "The unified recipe catalog includes high-level office-work task"
+                        + " starters composed from exact protocol capabilities.",
+                    "Each task-starter entry publishes requestFileName, workspaceMode, and"
+                        + " requiredWorkspacePaths so agents can decide whether one"
+                        + " recipe is self-contained before printing it with"
+                        + " --print-recipe.",
+                    "Use --print-recipe-catalog --lookup <id> when you need the richer"
+                        + " view-specific detail payload, including the exact runnable"
+                        + " request profile for that recipe.")),
             new CliSurface.WorkflowEntry(
                 "Protocol catalog search",
                 List.of(
@@ -95,7 +98,9 @@ final class GridGrindCliSurfaceGuidanceSections {
                     "The bare --print-protocol-catalog output is intentionally compact:"
                         + " it lists requestTypeId, group ids, and lookup namespace forms."
                         + " Rerun --lookup for one scoped top-level category, nested type"
-                        + " group, plain type group, or exact entry payload.",
+                        + " group, plain type group, or exact entry payload."
+                        + " Shared reusable notes such as request-owned path resolution"
+                        + " live on those scoped lookup payloads, not on the bare index.",
                     "Search output is summary-first: it lists ids, summaries, related entry"
                         + " ids, and supporting ids. Rerun --lookup when you need one full"
                         + " entry or type-group definition.",
@@ -109,8 +114,8 @@ final class GridGrindCliSurfaceGuidanceSections {
                         + " explicit support-group namespace,"
                         + " and <topLevelGroup>:<id> resolves one qualified top-level"
                         + " type."))),
-        "gridgrind --print-example --lookup "
-            + GridGrindShippedExamples.catalog().examples().getFirst().id()
+        "gridgrind --print-recipe --lookup "
+            + GridGrindShippedExamples.find("BUDGET").orElseThrow().id()
             + " --response example.json");
   }
 

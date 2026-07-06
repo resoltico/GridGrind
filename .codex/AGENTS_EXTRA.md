@@ -101,6 +101,13 @@ Requirements for protocol wire types:
   field is genuinely common.
 - External JSON must omit absent properties; it must not serialize explicit `null` placeholders as
   a control protocol for agents or integrations.
+- When a write-side contract is intentionally narrower than the corresponding read/report surface,
+  model the narrower write vocabulary as its own owned type instead of reusing a broader report
+  enum and hoping callers infer the supported subset.
+- When a former authoring variant is deliberately removed rather than narrowed, record the exact
+  reintroduction trigger in the public contract docs and the limits registry. OOXML write
+  encryption is the standing example: STANDARD remains readable and reportable, but write-side
+  STANDARD must stay removed unless a named consumer proves an old-Excel write requirement.
 - Add or update tests when touching these surfaces so request, response, and discovery JSON all
   stay free of `: null` output.
 
@@ -218,7 +225,10 @@ public sealed interface WorkbookOperation { ... }
 The protocol `JsonMapper` must be configured with `FAIL_ON_UNKNOWN_PROPERTIES` enabled. Unknown
 fields in a request payload are a protocol violation and must be rejected with
 `InvalidRequestShapeException`, not silently ignored. This is already configured in
-`GridGrindJson`; do not disable it.
+`GridGrindJson`; do not disable it. When a write contract deliberately removes a former field
+(for example, OOXML write encryption dropping `mode` in favor of a mode-less AGILE-only record
+while leaving STANDARD readable on the report path), that legacy field must fail here rather than
+being aliased or silently tolerated.
 
 ### 4.4 Exception-to-Message Translation: Two-Layer Contract
 

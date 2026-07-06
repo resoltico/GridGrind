@@ -78,10 +78,9 @@ public final class ExcelOoxmlPackageSecuritySupport {
               ExcelOoxmlPackageInspectionSupport.inspectPackageSecurity(
                   absolutePath, ExcelOoxmlEncryptionSnapshot.none()),
               Optional.empty(),
-              false);
+              Optional.empty());
       case OLE2 ->
-          ExcelOoxmlPackageSecurityInternals.decryptWorkbook(
-              absolutePath, effectiveOpenOptions, tempFileFactory);
+          ExcelOoxmlPackageSecurityInternals.decryptWorkbook(absolutePath, effectiveOpenOptions);
       default ->
           throw new IllegalArgumentException(
               "Only .xlsx workbooks are supported; unsupported package magic at " + absolutePath);
@@ -129,10 +128,10 @@ public final class ExcelOoxmlPackageSecuritySupport {
       return;
     }
 
-    Path plainWorkbookPath =
-        ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(
-            tempFileFactory.createTempFile("gridgrind-ooxml-security-", ".xlsx"));
-    try {
+    try (ExcelOoxmlPrivateTempWorkbook privateWorkbook =
+        ExcelOoxmlPrivateTempWorkbook.create("gridgrind-ooxml-security-", ".xlsx")) {
+      Path plainWorkbookPath =
+          ExcelTempFileWriteTargetSupport.prepareCreateNewTarget(privateWorkbook.workbookPath());
       workbook
           .persistence()
           .savePlainWorkbook(plainWorkbookPath, WorkbookArtifactWriteDisposition.CREATE_NEW);
@@ -144,8 +143,6 @@ public final class ExcelOoxmlPackageSecuritySupport {
           workbook.persistence().wasMutatedSinceOpen(),
           writeDisposition,
           effectiveOptions);
-    } finally {
-      ExcelOoxmlPackageFileSupport.deleteIfExists(plainWorkbookPath);
     }
   }
 
@@ -204,20 +201,20 @@ public final class ExcelOoxmlPackageSecuritySupport {
     private final Path workbookPath;
     private final ExcelOoxmlPackageSecuritySnapshot packageSecurity;
     private final Optional<String> sourceEncryptionPassword;
-    private final boolean deleteOnClose;
+    private final Optional<Path> cleanupRoot;
 
     ReadableWorkbook(
         Path workbookPath,
         ExcelOoxmlPackageSecuritySnapshot packageSecurity,
         Optional<String> sourceEncryptionPassword,
-        boolean deleteOnClose) {
+        Optional<Path> cleanupRoot) {
       this.workbookPath = Objects.requireNonNull(workbookPath, "workbookPath must not be null");
       this.packageSecurity =
           Objects.requireNonNull(packageSecurity, "packageSecurity must not be null");
       this.sourceEncryptionPassword =
           Objects.requireNonNull(
               sourceEncryptionPassword, "sourceEncryptionPassword must not be null");
-      this.deleteOnClose = deleteOnClose;
+      this.cleanupRoot = Objects.requireNonNull(cleanupRoot, "cleanupRoot must not be null");
     }
 
     public Path workbookPath() {
@@ -234,8 +231,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
 
     @Override
     public void close() {
-      if (deleteOnClose) {
-        ExcelOoxmlPackageFileSupport.deleteIfExists(workbookPath);
+      if (cleanupRoot.isPresent()) {
+        ExcelOoxmlPackageFileSupport.deleteTreeIfExists(cleanupRoot.orElseThrow());
       }
     }
   }

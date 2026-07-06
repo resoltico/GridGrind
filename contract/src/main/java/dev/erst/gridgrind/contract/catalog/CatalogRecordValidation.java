@@ -25,6 +25,17 @@ final class CatalogRecordValidation {
     return List.copyOf(copy);
   }
 
+  static List<CatalogNote> copyNotes(List<CatalogNote> notes, String fieldName) {
+    Objects.requireNonNull(notes, fieldName + " must not be null");
+    List<CatalogNote> copy = new java.util.ArrayList<>(notes.size());
+    for (CatalogNote note : notes) {
+      copy.add(Objects.requireNonNull(note, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(CatalogNote::id, fieldName))
+        .toList();
+  }
+
   static List<NestedTypeGroup> copyGroups(List<NestedTypeGroup> groups, String fieldName) {
     Objects.requireNonNull(groups, fieldName + " must not be null");
     List<NestedTypeGroup> copy = new java.util.ArrayList<>(groups.size());

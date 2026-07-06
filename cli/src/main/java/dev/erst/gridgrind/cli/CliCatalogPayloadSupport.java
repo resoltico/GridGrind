@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -59,16 +59,15 @@ final class CliCatalogPayloadSupport {
         prettyJson);
   }
 
-  static int writeCliFailure(
+  static int writeCliDiagnostic(
       CliResponseWriter responseWriter,
       Optional<Path> responsePath,
       OutputStream stdout,
       OutputStream stderr,
-      CliFailureReport failureReport,
+      CliDiagnostic diagnostic,
       boolean prettyJson)
       throws IOException {
-    return responseWriter.writeCliFailureReport(
-        responsePath, stdout, stderr, failureReport, prettyJson);
+    return responseWriter.writeCliDiagnostic(responsePath, stdout, stderr, diagnostic, prettyJson);
   }
 
   static CliOutputFormat effectiveTextSurfaceFormat(Optional<CliOutputFormat> outputFormat) {

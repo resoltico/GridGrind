@@ -18,6 +18,8 @@ import dev.erst.gridgrind.excel.foundation.ExcelOoxmlCipherAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlHashAlgorithm;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlEncryptionSnapshot;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import dev.erst.gridgrind.excel.pivot.ExcelPivotTableAnalysisSupport;
@@ -100,6 +102,17 @@ class ResidualUtilityCoverageTest extends ExcelPivotTableCoverageTestSupport {
             ExcelOoxmlSignatureDigestAlgorithm.SHA256, HashAlgorithm.sha256,
             ExcelOoxmlSignatureDigestAlgorithm.SHA384, HashAlgorithm.sha384,
             ExcelOoxmlSignatureDigestAlgorithm.SHA512, HashAlgorithm.sha512),
+        ExcelOoxmlSecurityPoiBridge::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlWriteCipher.AES_256, CipherAlgorithm.aes256,
+            ExcelOoxmlWriteCipher.AES_192, CipherAlgorithm.aes192),
+        ExcelOoxmlSecurityPoiBridge::toPoi);
+    EnumMappingAssertions.assertMappings(
+        Map.of(
+            ExcelOoxmlWriteHash.SHA_512, HashAlgorithm.sha512,
+            ExcelOoxmlWriteHash.SHA_384, HashAlgorithm.sha384,
+            ExcelOoxmlWriteHash.SHA_256, HashAlgorithm.sha256),
         ExcelOoxmlSecurityPoiBridge::toPoi);
 
     EnumMappingAssertions.assertMappings(

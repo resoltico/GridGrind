@@ -148,7 +148,8 @@ final class ExcelFormulaHealthSupport {
                 AnalysisSeverity.ERROR,
                 "Formula evaluates to an error",
                 "Formula currently evaluates to "
-                    + FormulaError.forInt(evaluated.getErrorValue()).getString()
+                    + ExcelCellErrorLiteralSupport.toReportedWireValue(
+                        FormulaError.forInt(evaluated.getErrorValue()))
                     + ".",
                 location,
                 List.of(formula)));

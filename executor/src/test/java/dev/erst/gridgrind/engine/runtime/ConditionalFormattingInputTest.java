@@ -19,10 +19,9 @@ import org.junit.jupiter.api.Test;
 /** Tests for protocol-facing conditional-formatting authoring inputs and conversion. */
 class ConditionalFormattingInputTest {
   @Test
-  void validatesAndConvertsConditionalFormattingBlock() {
-    ConditionalFormattingBlockInput input =
-        new ConditionalFormattingBlockInput(
-            List.of("A1:A3"),
+  void validatesAndConvertsConditionalFormattingDefinition() {
+    ConditionalFormattingDefinitionInput input =
+        new ConditionalFormattingDefinitionInput(
             List.of(
                 new ConditionalFormattingRuleInput.FormulaRule(
                     "A1>0",
@@ -104,57 +103,17 @@ class ConditionalFormattingInputTest {
                             Optional.empty(),
                             Optional.of("#AAEECC"),
                             Optional.empty()))))),
-        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(input));
+        WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingBlock(
+            List.of("A1:A3"), input));
   }
 
   @Test
-  void rejectsInvalidConditionalFormattingInputs() {
+  void rejectsInvalidConditionalFormattingDefinitions() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ConditionalFormattingBlockInput(List.of(), List.of()));
+        IllegalArgumentException.class, () -> new ConditionalFormattingDefinitionInput(List.of()));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new ConditionalFormattingBlockInput(List.of("A1:A3"), List.of()));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingBlockInput(
-                List.of(" "),
-                List.of(
-                    new ConditionalFormattingRuleInput.FormulaRule(
-                        "A1>0",
-                        false,
-                        Optional.of(
-                            new DifferentialStyleInput(
-                                Optional.empty(),
-                                Optional.of(true),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty()))))));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ConditionalFormattingBlockInput(
-                List.of("A1:A3", "A1:A3"),
-                List.of(
-                    new ConditionalFormattingRuleInput.FormulaRule(
-                        "A1>0",
-                        false,
-                        Optional.of(
-                            new DifferentialStyleInput(
-                                Optional.empty(),
-                                Optional.of(true),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty(),
-                                Optional.empty()))))));
+        NullPointerException.class,
+        () -> new ConditionalFormattingDefinitionInput(java.util.Collections.singletonList(null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->

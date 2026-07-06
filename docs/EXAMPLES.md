@@ -1,10 +1,10 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: EXAMPLES
 updated: "2026-07-02"
 route:
-  keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
+  keywords: [gridgrind, examples, print-recipe, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
 ---
 
@@ -12,7 +12,7 @@ route:
 
 **Purpose**: Map the shipped example surfaces, explain how their paths resolve, and show how to
 refresh and verify them.
-**Fastest artifact-native path**: `gridgrind --print-example --lookup <ID> --response request.json`
+**Fastest artifact-native path**: `gridgrind --print-recipe --lookup <ID> --response request.json`
 **Docker `:latest` note**: for first-contact artifact runs, prefer
 `docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...` or refresh once with
 `docker pull ghcr.io/resoltico/gridgrind:latest` before using plain `docker run ...:latest`
@@ -20,7 +20,7 @@ refresh and verify them.
 
 GridGrind ships the same example workflows in two forms:
 
-- **Built-in artifact examples** from `gridgrind --print-example --lookup <ID> --response request.json`.
+- **Built-in artifact examples** from `gridgrind --print-recipe --lookup <ID> --response request.json`.
   These are designed to run from an artifact working directory and use request-relative paths such
   as `generated-workbooks/...`. The machine-readable catalog publishes one portable
   `requestFileName`, while any repo-backed asset requirements are published separately through
@@ -30,7 +30,7 @@ GridGrind ships the same example workflows in two forms:
   They are not all equally portable: most are self-contained in a blank working directory, while a
   few are intentionally repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
-  the same CLI-owned registry, but their relative paths are rooted from the request file's own
+  the same CLI recipe registry, but their relative paths are rooted from the request file's own
   directory so they run in place from a repository checkout.
 
 Cell-reading examples intentionally stay compact unless they are demonstrating a richer surface:
@@ -55,7 +55,7 @@ cell-reading example stays comfortably inside the shared deterministic 250,000-c
 
 ## Built-In Example Portability
 
-Self-contained built-ins execute from a blank artifact workspace after `--print-example --lookup <ID>`:
+Self-contained built-ins execute from a blank artifact workspace after `--print-recipe --lookup <ID>`:
 
 | Built-in ID | Matching fixture | Notes |
 |:------------|:-----------------|:------|
@@ -71,7 +71,7 @@ Self-contained built-ins execute from a blank artifact workspace after `--print-
 | `FILE_HYPERLINK_HEALTH` | [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | file/document hyperlink analysis |
 | `INTROSPECTION_ANALYSIS` | [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | inspection-heavy analysis surface |
 
-Repo-asset-backed built-ins still use `--print-example --lookup <ID>`, but they also require the
+Repo-asset-backed built-ins still use `--print-recipe --lookup <ID>`, but they also require the
 copied asset paths named in `requiredWorkspacePaths`:
 
 | Built-in ID | Matching fixture | Required assets |
@@ -84,13 +84,13 @@ The CLI help now prints each built-in example with its `workspaceMode`, and asse
 also print their exact `requiredWorkspacePaths`, so artifact-only workspaces do not silently assume every
 example is self-contained.
 
-The machine-readable CLI example catalog exposes stable example ids, file names, summaries, a
+The machine-readable CLI recipe catalog exposes stable example ids, file names, summaries, a
 portable `requestFileName` plus `workspaceMode` contract, and exact
 `requiredWorkspacePaths` for asset-backed examples.
 `SELF_CONTAINED` means the printed request runs from a blank artifact workspace;
 `REQUIRES_EXAMPLE_ASSETS` means the request expects copied `examples/` assets beside the request
 file, and `requiredWorkspacePaths` names those files directly.
-Print it directly with `gridgrind --print-example-catalog --response example-catalog.json`.
+Print it directly with `gridgrind --print-recipe-catalog --response recipes.json`.
 
 ## JSON Request Fixtures
 
@@ -128,7 +128,7 @@ Refresh the checkout-rooted request fixtures and the generated package-security 
 ./scripts/sync-generated-examples.sh
 ```
 
-Treat the checked-in `examples/*.json` fixtures and the generated package-security workbook as derived artifacts from that script and the built-in example registry; do not hand-edit them in place.
+Treat the checked-in `examples/*.json` fixtures and the generated package-security workbook as derived artifacts from that script and the CLI recipe registry's example view; do not hand-edit them in place.
 
 The authoritative verification loop for the shipped examples is:
 

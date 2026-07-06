@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -231,19 +231,17 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
 
     RequestDoctorReport report =
         GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
+    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertEquals(
-        "GridGrind wrote the doctor report to "
-            + responsePath.toAbsolutePath()
-            + "; inspect that file for problems [INVALID_REQUEST: OVERWRITE persistence requires an"
-            + " EXISTING source; a NEW workbook has no source file to overwrite]."
-            + System.lineSeparator(),
-        stderr.toString(StandardCharsets.UTF_8));
     assertFalse(report.valid());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, report.primaryProblem().orElseThrow().code());
+    assertEquals(report.primaryProblem().orElseThrow(), stderrDiagnostic.problem());
+    assertEquals(
+        Optional.of(responsePath.toAbsolutePath().toString()),
+        stderrDiagnostic.transport().flatMap(transport -> transport.responsePathValue()));
   }
 
   @Test
@@ -564,6 +562,47 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void doctorRequestRejectsEvaluationOnlyErrorLiteralsAsStoredCellInputs() throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-doctor-error-literal-", ".json");
+    Files.writeString(
+        requestPath,
+        requestJson(
+            "{ \"type\": \"NEW\" }",
+            "{ \"type\": \"NONE\" }",
+            """
+            [
+              {
+                "stepId": "set-error",
+                "target": { "type": "CELL", "sheetName": "Budget", "address": "A1" },
+                "action": {
+                  "type": "SET_CELL",
+                  "value": { "type": "ERROR", "error": "#CIRCULAR_REF!" }
+                }
+              }
+            ]
+            """));
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    RequestDoctorReport report = doctorReport(stdout, stderr);
+    GridGrindProblemDetail.Problem problem = report.primaryProblem().orElseThrow();
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, problem.code());
+    assertEquals(Optional.of("steps[0].action.value"), readRequestContext(report).jsonPath());
+    assertTrue(problem.message().contains("cannot be authored as stored cell values"));
+  }
+
+  @Test
   void doctorRequestReturnsCompactReadFailureWhenTheRequestFileCannotBeOpened() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -578,13 +617,14 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.code());
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("doctor-request", failure.command());
-    assertEquals(java.util.Optional.of("--request"), failure.argument());
-    assertEquals("Request file not found: " + missingRequestPath, failure.message());
+    assertEquals(
+        Optional.of(missingRequestPath.toString()), readRequestContext(failure).requestPath());
+    assertEquals("Request file not found: " + missingRequestPath, failure.problem().message());
   }
 
   @Test
@@ -602,12 +642,13 @@ class GridGrindCliDoctorCatalogCommandTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
 
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals("doctor-request", failure.command());
-    assertEquals(java.util.Optional.of("--execution-root"), failure.argument());
-    assertTrue(failure.message().contains("--execution-root"));
+    assertEquals(
+        java.util.Optional.of("--execution-root"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.problem().message().contains("--execution-root"));
   }
 }

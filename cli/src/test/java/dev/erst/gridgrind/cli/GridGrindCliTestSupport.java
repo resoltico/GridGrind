@@ -3,7 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.cli.discovery.GridGrindCliJson;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.ProblemContext;
@@ -142,6 +142,10 @@ class GridGrindCliTestSupport {
         ProblemContext.ParseArguments.class, report.primaryProblem().orElseThrow().context());
   }
 
+  protected static ProblemContext.ParseArguments parseArgumentsContext(CliDiagnostic diagnostic) {
+    return assertInstanceOf(ProblemContext.ParseArguments.class, diagnostic.problem().context());
+  }
+
   protected static ProblemContext.ReadRequest readRequestContext(
       GridGrindResponse.Failure failure) {
     return assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
@@ -150,6 +154,10 @@ class GridGrindCliTestSupport {
   protected static ProblemContext.ReadRequest readRequestContext(RequestDoctorReport report) {
     return assertInstanceOf(
         ProblemContext.ReadRequest.class, report.primaryProblem().orElseThrow().context());
+  }
+
+  protected static ProblemContext.ReadRequest readRequestContext(CliDiagnostic diagnostic) {
+    return assertInstanceOf(ProblemContext.ReadRequest.class, diagnostic.problem().context());
   }
 
   protected static ProblemContext.ResolveInputs resolveInputsContext(RequestDoctorReport report) {
@@ -177,29 +185,40 @@ class GridGrindCliTestSupport {
         ProblemContext.WriteResponse.class, report.primaryProblem().orElseThrow().context());
   }
 
+  protected static ProblemContext.WriteResponse writeResponseContext(CliDiagnostic diagnostic) {
+    return assertInstanceOf(ProblemContext.WriteResponse.class, diagnostic.problem().context());
+  }
+
   protected static ProblemContext.ExecuteStep executeStepContext(
       GridGrindResponse.Failure failure) {
     return assertInstanceOf(ProblemContext.ExecuteStep.class, failure.problem().context());
   }
 
-  protected static CliFailureReport cliFailure(byte[] bytes) throws IOException {
-    return GridGrindCliJson.readBytes(bytes, CliFailureReport.class);
+  protected static CliDiagnostic cliDiagnostic(byte[] bytes) throws IOException {
+    return GridGrindCliJson.readBytes(bytes, CliDiagnostic.class);
+  }
+
+  /** Reads one {@link CliDiagnostic} from stderr without asserting anything about stdout. */
+  protected static CliDiagnostic cliDiagnosticOnStderr(ByteArrayOutputStream stderr)
+      throws IOException {
+    Objects.requireNonNull(stderr, "stderr must not be null");
+    return GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
   }
 
   /**
-   * Reads a {@link CliFailureReport} from stderr and asserts that stdout stayed empty.
+   * Reads a {@link CliDiagnostic} from stderr and asserts that stdout stayed empty.
    *
-   * <p>Use this helper in every test that expects a CLI failure with no {@code --response} path
+   * <p>Use this helper in every test that expects a CLI diagnostic with no {@code --response} path
    * configured. It encodes the current routing contract — structured JSON on stderr, nothing on
    * stdout — in a single call so individual tests cannot forget either half.
    */
-  protected static CliFailureReport cliFailureOnStderr(
+  protected static CliDiagnostic cliDiagnosticOnStderr(
       ByteArrayOutputStream stdout, ByteArrayOutputStream stderr) throws IOException {
     assertEquals(
         "",
         stdout.toString(StandardCharsets.UTF_8),
-        "stdout must be empty when CLI failure is routed to stderr");
-    return GridGrindCliJson.readBytes(stderr.toByteArray(), CliFailureReport.class);
+        "stdout must be empty when a CLI diagnostic is routed to stderr");
+    return GridGrindCliJson.readBytes(stderr.toByteArray(), CliDiagnostic.class);
   }
 
   protected static GridGrindResponse response(

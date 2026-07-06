@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: DEVELOPER
 updated: "2026-07-01"
 route:
@@ -210,11 +210,11 @@ overlay contract in `.devcontainer/devcontainer.json`.
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
-./gradlew :cli:run --args="--print-example --lookup BUDGET"
-./gradlew :cli:run --args="--print-example-catalog"
-./gradlew :cli:run --args="--print-task-catalog"
-./gradlew :cli:run --args="--print-task-plan --lookup DASHBOARD"
-./gradlew :cli:run --args='--print-task-keyword-match --query "monthly sales dashboard with charts"'
+./gradlew :cli:run --args="--print-recipe --lookup BUDGET"
+./gradlew :cli:run --args="--print-recipe-catalog"
+./gradlew :cli:run --args="--print-recipe-catalog --lookup DASHBOARD"
+./gradlew :cli:run --args="--print-recipe --lookup DASHBOARD"
+./gradlew :cli:run --args='--print-recipe-keyword-match --query "monthly sales dashboard with charts"'
 ./scripts/verify-cli-discovery-execution.sh ./cli/build/libs/gridgrind.jar
 ./scripts/docker-smoke.sh
 ./scripts/validate-devcontainer.sh
@@ -230,14 +230,20 @@ instead of thin downstream string copies. `GridGrindContractText` owns stable wo
 rules plus their validation messages. CLI-specific presentation lives downstream in `cli`:
 `CliSurface` and `GridGrindCliHelp` own the help section labels, key/value entries, flags,
 docs links, and example routing that the transport renders. `cli` owns the high-level task
-descriptors plus typed discovery profiles, while `GridGrindTaskStarterPlans`,
-`GridGrindTaskPlanner`, and `GridGrindTaskKeywordMatcher` own the downstream discovery policy:
-official task ids resolve to curated executable starter requests, the planner keeps only the
-generic fallback for ad hoc task entries, and English keyword query ranking is anchored first in
-typed goal/artifact metadata rather than loose notes or pitfalls. Request linting is also part of
-that authoritative public surface now: `engine` exports a narrow request-doctor API alongside the
-request executor, and the packaged-artifact verifiers exercise the emitted doctor report plus every
-published built-in example and task starter instead of relying only on module-local tests. The build now also includes
+descriptor DTOs plus typed discovery profiles, while `GridGrindCliRecipeRegistry`,
+`GridGrindRecipeDefinition`, `GridGrindRecipeDefinitions`, the concrete
+`GridGrindExampleRecipeDefinition` and `GridGrindTaskRecipeDefinition` variants, and the
+per-task `*TaskRecipe` classes,
+`GridGrindAdHocTaskRequestScaffolds`, and
+`GridGrindRecipeKeywordMatcher` owns the downstream recipe/discovery policy: one shared published
+recipe source feeds the built-in example view plus the executable task-starter view, official
+task ids resolve only through that registry-owned recipe set, the ad hoc scaffolder builds only
+generic unpublished task requests, and English keyword query ranking is anchored first in typed
+goal/artifact metadata rather than loose notes or pitfalls. Request linting is also part of that
+authoritative public surface now: `engine` exports a narrow request-doctor API alongside the
+request executor, and the packaged-artifact verifiers exercise the emitted doctor report plus
+every published built-in example and task starter instead of relying only on module-local tests.
+The build now also includes
 contract-side and CLI-side public-surface
 linters that fail if docs, generated help, catalog summaries, shipped examples, or shared runtime
 diagnostics mention a canonical mutation, assertion, or inspection id that is not registered in
@@ -265,7 +271,7 @@ Release automation is split across three workflows:
 - `Container` first runs the same Docker smoke script against the local Dockerfile build, then
   builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
   config that both the exact version tag and `latest` are publicly pullable and runnable, then
-  black-box verifies the published CLI help, protocol catalog, task catalog, task planner,
+  black-box verifies the published CLI help, protocol catalog, task catalog, recipe,
   task keyword matcher, and doctor surfaces from both tags before pruning older container package
   versions.
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
@@ -443,10 +449,10 @@ boundary: GridGrind does not emit a partially written workbook file.
 The shipped JSON fixtures are generated from the CLI-owned example registry in
 checkout-rooted form. Refresh them with
 [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
-the artifact-native built-in examples directly with `gridgrind --print-example --lookup <id>`. The full
+the artifact-native built-in examples directly with `gridgrind --print-recipe --lookup <id>`. The full
 map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). Do not
 hand-edit the checked-in `examples/*.json` fixtures or the generated package-security workbook;
-regenerate them from the CLI-owned registry so the committed examples, built-in example surface,
+regenerate them from the CLI-owned recipe registry so the committed examples, built-in example surface,
 and verification loop stay on one source of truth. These
 fixtures and authoring examples cover the core surface:
 

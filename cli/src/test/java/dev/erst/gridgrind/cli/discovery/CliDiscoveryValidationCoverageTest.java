@@ -6,11 +6,15 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.cli.examples.GridGrindCliRecipeRegistry;
 import dev.erst.gridgrind.cli.examples.GridGrindShippedExamples;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemDetail;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.ProblemContext;
+import dev.erst.gridgrind.contract.dto.ProblemContextRequestSurfaces.CliArgument;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +47,18 @@ class CliDiscoveryValidationCoverageTest {
     assertEquals(
         List.of(exampleEntry),
         CliDiscoveryValidation.copyExampleEntries(List.of(exampleEntry), "examples"));
+    assertEquals(
+        Optional.of("value"),
+        CliDiscoveryValidation.normalizeOptionalString(Optional.of("value"), "label"));
+    assertEquals(
+        Optional.empty(),
+        CliDiscoveryValidation.normalizeOptionalString(Optional.empty(), "label"));
+    assertEquals(
+        Optional.of("value"),
+        CliDiscoveryValidation.copyOptionalArbitraryString(Optional.of("value"), "query"));
+    assertEquals(
+        Optional.empty(),
+        CliDiscoveryValidation.copyOptionalArbitraryString(Optional.empty(), "query"));
 
     assertEquals(
         "protocolVersion must not be null",
@@ -57,6 +73,24 @@ class CliDiscoveryValidationCoverageTest {
                 () -> CliDiscoveryValidation.copyTypeEntries(null, "entries"))
             .getMessage());
     assertEquals(
+        "label must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> CliDiscoveryValidation.normalizeOptionalString(null, "label"))
+            .getMessage());
+    assertEquals(
+        "label must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> CliDiscoveryValidation.normalizeOptionalString(Optional.of("   "), "label"))
+            .getMessage());
+    assertEquals(
+        "query must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> CliDiscoveryValidation.copyOptionalArbitraryString(null, "query"))
+            .getMessage());
+    assertEquals(
         "entries must not contain nulls",
         assertThrows(
                 NullPointerException.class,
@@ -67,33 +101,34 @@ class CliDiscoveryValidationCoverageTest {
   }
 
   @Test
-  void taskDefinitionsExposeCanonicalEntriesAndRejectInvalidLookupIds() {
-    TaskCatalog catalog = GridGrindTaskDefinitions.catalog();
-    List<TaskEntry> entries = GridGrindTaskDefinitions.entries();
+  void taskCatalogDerivesCanonicalEntriesFromTheSharedRegistryAndRejectsInvalidLookupIds() {
+    TaskCatalog catalog = GridGrindTaskCatalog.catalog();
+    List<TaskEntry> entries = GridGrindCliRecipeRegistry.taskEntries();
 
     assertFalse(entries.isEmpty());
     assertNotSame(entries, catalog.tasks());
     assertEquals(entries, catalog.tasks());
-    assertTrue(GridGrindTaskDefinitions.entryFor("DASHBOARD").isPresent());
-    assertTrue(GridGrindTaskDefinitions.entryFor("WORKBOOK_MAINTENANCE").isPresent());
-    assertTrue(GridGrindTaskDefinitions.entryFor("NO_SUCH_TASK").isEmpty());
-    GridGrindTaskDefinitions.validateCapabilityReferences();
+    assertTrue(GridGrindTaskCatalog.entryFor("DASHBOARD").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("WORKBOOK_MAINTENANCE").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("NO_SUCH_TASK").isEmpty());
+    GridGrindTaskCatalog.validateCapabilityReferences(catalog);
 
     assertEquals(
         "id must not be null",
-        assertThrows(NullPointerException.class, () -> GridGrindTaskDefinitions.entryFor(null))
+        assertThrows(NullPointerException.class, () -> GridGrindTaskCatalog.entryFor(null))
             .getMessage());
     assertEquals(
         "id must not be blank",
-        assertThrows(IllegalArgumentException.class, () -> GridGrindTaskDefinitions.entryFor("   "))
+        assertThrows(IllegalArgumentException.class, () -> GridGrindTaskCatalog.entryFor("   "))
             .getMessage());
   }
 
   @Test
-  void taskDefinitionsRejectDanglingCapabilityReferences() {
+  void taskCatalogRejectsDanglingCapabilityReferences() {
     TaskEntry brokenTask =
         new TaskEntry(
             "BROKEN",
+            List.of("office"),
             TaskTestFixtures.discoveryProfile("broken"),
             TaskTestFixtures.narrative("Broken task for direct validation coverage"),
             profile(),
@@ -114,12 +149,151 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 IllegalStateException.class,
                 () ->
-                    GridGrindTaskDefinitions.validateTaskCapabilityReferences(List.of(brokenTask)))
+                    GridGrindTaskCatalog.validateCapabilityReferences(
+                        new TaskCatalog(GridGrindProtocolVersion.current(), List.of(brokenTask))))
             .getMessage());
   }
 
   @Test
-  void discoveryRecordsRejectInvalidMandatoryShapesAndNormalizeOptionalFailureFields() {
+  void recipeCatalogValidationRejectsDuplicateIdsAndInvalidWorkspaceContracts() {
+    assertTrue(GridGrindRecipeCatalog.entryFor("DASHBOARD").isPresent());
+    assertTrue(GridGrindRecipeCatalog.lookupFor("DASHBOARD").isPresent());
+    assertEquals(
+        "id must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindRecipeCatalog.entryFor(null))
+            .getMessage());
+    assertEquals(
+        "id must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindRecipeCatalog.lookupFor(null))
+            .getMessage());
+    assertEquals(
+        "id must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> GridGrindRecipeCatalog.entryFor("   "))
+            .getMessage());
+    assertEquals(
+        "id must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> GridGrindRecipeCatalog.lookupFor("   "))
+            .getMessage());
+
+    RecipeCatalogEntry assetBackedExample =
+        new RecipeCatalogEntry(
+            RecipeView.EXAMPLE,
+            "ASSET_BACKED",
+            "asset-backed-request.json",
+            "summary",
+            ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+            List.of("assets/example.xlsx"));
+
+    assertEquals(
+        List.of(assetBackedExample),
+        CliRecipeCatalogValidation.copyRecipeCatalogEntries(
+            List.of(assetBackedExample), "recipes"));
+
+    assertEquals(
+        "stepCount must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new RecipeRequestProfile(
+                        "NEW",
+                        "NONE",
+                        "FULL_XSSF",
+                        "SUMMARY",
+                        "DO_NOT_CALCULATE",
+                        false,
+                        -1,
+                        List.of(),
+                        List.of(),
+                        List.of()))
+            .getMessage());
+
+    assertEquals(
+        "view must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    new RecipeCatalogEntry(
+                        null,
+                        "BROKEN_VIEW",
+                        "broken-view.json",
+                        "summary",
+                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        List.of()))
+            .getMessage());
+
+    IllegalArgumentException duplicateRecipes =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new RecipeCatalog(
+                    GridGrindProtocolVersion.current(),
+                    List.of(assetBackedExample, assetBackedExample)));
+    assertEquals("recipes must not contain duplicate ASSET_BACKED", duplicateRecipes.getMessage());
+
+    assertEquals(
+        "SELF_CONTAINED recipes must not publish requiredWorkspacePaths",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new RecipeCatalogEntry(
+                        RecipeView.EXAMPLE,
+                        "BROKEN_SELF_CONTAINED",
+                        "broken-self-contained.json",
+                        "summary",
+                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        List.of("assets/example.xlsx")))
+            .getMessage());
+    assertEquals(
+        "REQUIRES_EXAMPLE_ASSETS recipes must publish requiredWorkspacePaths",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new RecipeCatalogEntry(
+                        RecipeView.EXAMPLE,
+                        "BROKEN_ASSET_BACKED",
+                        "broken-asset-backed.json",
+                        "summary",
+                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        List.of()))
+            .getMessage());
+    assertEquals(
+        "discoveryTerms must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new TaskDiscoveryProfile(
+                        List.of(),
+                        new TaskIntentProfile(
+                            List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK))))
+            .getMessage());
+    assertEquals(
+        "SELF_CONTAINED examples must not publish requiredWorkspacePaths",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ShippedExampleEntry(
+                        "BROKEN_EXAMPLE_SELF_CONTAINED",
+                        "broken-example-self-contained.json",
+                        "summary",
+                        ExampleWorkspaceMode.SELF_CONTAINED,
+                        List.of("assets/example.xlsx")))
+            .getMessage());
+    assertEquals(
+        "REQUIRES_EXAMPLE_ASSETS examples must publish requiredWorkspacePaths",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new ShippedExampleEntry(
+                        "BROKEN_EXAMPLE_ASSET_BACKED",
+                        "broken-example-asset-backed.json",
+                        "summary",
+                        ExampleWorkspaceMode.REQUIRES_EXAMPLE_ASSETS,
+                        List.of()))
+            .getMessage());
+  }
+
+  @Test
+  void discoveryRecordsRejectInvalidMandatoryShapesAndNormalizeOptionalDiagnosticFields() {
     assertEquals(
         "phases must not be empty",
         assertThrows(
@@ -134,9 +308,9 @@ class CliDiscoveryValidationCoverageTest {
                 () ->
                     new TaskEntry(
                         "NO_TERMS",
+                        List.of("office"),
                         new TaskDiscoveryProfile(
                             List.of(),
-                            List.of("office"),
                             new TaskIntentProfile(
                                 List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK))),
                         TaskTestFixtures.narrative("summary"),
@@ -160,7 +334,6 @@ class CliDiscoveryValidationCoverageTest {
                 () ->
                     new TaskDiscoveryProfile(
                         List.of(),
-                        List.of("office"),
                         new TaskIntentProfile(
                             List.of(TaskGoalKind.AUTHOR), List.of(TaskArtifactKind.WORKBOOK))))
             .getMessage());
@@ -180,20 +353,16 @@ class CliDiscoveryValidationCoverageTest {
             .getMessage());
 
     assertEquals(
-        "argument must not be null",
+        "problem must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliFailureReport(
+                    new CliDiagnostic(
                         GridGrindProtocolVersion.current(),
                         2,
-                        "print-task-plan",
-                        "resolve-lookup",
-                        GridGrindProblemCode.INVALID_ARGUMENTS,
-                        "message",
-                        Optional.empty(),
-                        null,
+                        "print-recipe",
                         List.of(),
+                        null,
                         Optional.empty()))
             .getMessage());
     assertEquals(
@@ -201,33 +370,25 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliFailureReport(
+                    new CliDiagnostic(
                         GridGrindProtocolVersion.current(),
                         2,
-                        "print-task-plan",
-                        "resolve-lookup",
-                        GridGrindProblemCode.INVALID_ARGUMENTS,
-                        "message",
-                        Optional.empty(),
-                        Optional.empty(),
+                        "print-recipe",
                         null,
+                        problem(),
                         Optional.empty()))
             .getMessage());
     assertEquals(
-        "resolution must not be null",
+        "transport must not be null",
         assertThrows(
                 NullPointerException.class,
                 () ->
-                    new CliFailureReport(
+                    new CliDiagnostic(
                         GridGrindProtocolVersion.current(),
                         2,
-                        "print-task-plan",
-                        "resolve-lookup",
-                        GridGrindProblemCode.INVALID_ARGUMENTS,
-                        "message",
-                        Optional.empty(),
-                        Optional.empty(),
+                        "print-recipe",
                         List.of(),
+                        problem(),
                         null))
             .getMessage());
     assertEquals(
@@ -235,32 +396,23 @@ class CliDiscoveryValidationCoverageTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new CliFailureReport(
+                    new CliDiagnostic(
                         GridGrindProtocolVersion.current(),
                         0,
-                        "print-task-plan",
-                        "resolve-lookup",
-                        GridGrindProblemCode.INVALID_ARGUMENTS,
-                        "message",
-                        Optional.empty(),
-                        Optional.empty(),
+                        "print-recipe",
                         List.of(),
+                        problem(),
                         Optional.empty()))
             .getMessage());
     assertEquals(
-        "jsonLine and jsonColumn must either both be present or both be absent",
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new CliFailureLocation(
-                        Optional.of("steps[0]"), Optional.of(1), Optional.empty()))
+        "responsePath must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> CliTransport.responseFile("   "))
             .getMessage());
     assertEquals(
-        "jsonColumn must be greater than 0",
+        "transport must not be null",
         assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new CliFailureLocation(Optional.of("steps[0]"), Optional.of(1), Optional.of(0)))
+                NullPointerException.class,
+                () -> CliDiscoveryValidation.copyOptionalTransport(null, "transport"))
             .getMessage());
     assertEquals(
         "requestFileName must be one portable file name, not a repository path",
@@ -278,5 +430,12 @@ class CliDiscoveryValidationCoverageTest {
 
   private static TaskExecutionProfile profile() {
     return TaskTestFixtures.profile();
+  }
+
+  private static GridGrindProblemDetail.Problem problem() {
+    return GridGrindProblemDetail.Problem.of(
+        GridGrindProblemCode.INVALID_ARGUMENTS,
+        "message",
+        new ProblemContext.ParseArguments(CliArgument.named("--lookup")));
   }
 }

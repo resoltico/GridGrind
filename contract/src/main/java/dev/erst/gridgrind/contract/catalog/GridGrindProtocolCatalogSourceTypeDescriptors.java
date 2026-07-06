@@ -12,13 +12,12 @@ final class GridGrindProtocolCatalogSourceTypeDescriptors {
               "NEW",
               "Create a brand-new empty workbook. A new workbook starts with zero sheets;"
                   + " use ENSURE_SHEET to create the first sheet."),
-          CatalogTypeEntryFactory.descriptor(
+          CatalogTypeEntryFactory.descriptorWithNotes(
               WorkbookPlan.WorkbookSource.ExistingFile.class,
               "EXISTING",
               "Open an existing .xlsx workbook from disk."
-                  + " "
-                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " source.security.password unlocks encrypted OOXML packages.",
+              GridGrindProtocolCatalogNotes.requestOwnedPathRuleRef(),
               "security"));
 
   private GridGrindProtocolCatalogSourceTypeDescriptors() {}

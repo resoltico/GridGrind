@@ -13,6 +13,8 @@ import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
+import dev.erst.gridgrind.excel.foundation.ExcelStoredCellErrorLiteral;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -231,6 +233,19 @@ class CatalogFieldMetadataSupportTest {
     FieldEntry facets =
         CatalogFieldMetadataSupport.fieldEntry(
             recordComponent(CellReadProjection.class, "facets"), Set.of());
+    FieldEntry errorValue =
+        CatalogFieldMetadataSupport.fieldEntry(
+            recordComponent(CellInput.ErrorValue.class, "error"), Set.of());
+    FieldEntry errorRowValues =
+        CatalogFieldMetadataSupport.fieldEntry(
+            recordComponent(
+                dev.erst.gridgrind.contract.dto.CellRowInput.ErrorValues.class, "cells"),
+            Set.of());
+    FieldEntry reportedErrorValue =
+        CatalogFieldMetadataSupport.fieldEntry(
+            recordComponent(
+                dev.erst.gridgrind.contract.dto.CellValueReport.ErrorValue.class, "errorValue"),
+            Set.of());
 
     assertEquals(
         List.of(
@@ -246,6 +261,18 @@ class CatalogFieldMetadataSupportTest {
     assertEquals("FORMAT", facets.enumValueDocs().get(2).value());
     assertTrue(facets.enumValueDocs().get(2).summary().contains("displayValue"));
     assertEquals("VALUE", facets.enumValueDocs().getFirst().value());
+    assertEquals(
+        List.of("#NULL!", "#DIV/0!", "#VALUE!", "#REF!", "#NAME?", "#NUM!", "#N/A"),
+        errorValue.enumValues());
+    assertEquals(errorValue.enumValues(), errorRowValues.enumValues());
+    assertEquals("#NULL!", errorValue.enumValueDocs().getFirst().value());
+    assertEquals("#CIRCULAR_REF!", reportedErrorValue.enumValueDocs().get(7).value());
+    assertEquals(
+        ExcelStoredCellErrorLiteral.orderedWireValues(),
+        CatalogFieldMetadataSupport.enumValues(ExcelStoredCellErrorLiteral.class));
+    assertEquals(
+        ExcelReportedCellErrorLiteral.orderedWireValues(),
+        CatalogFieldMetadataSupport.enumValues(ExcelReportedCellErrorLiteral.class));
   }
 
   @Test

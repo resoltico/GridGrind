@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelReportedCellErrorLiteral;
 import org.jspecify.annotations.Nullable;
 
 /** Immutable snapshot of a cell after formatting and, when needed, formula evaluation. */
@@ -89,6 +90,15 @@ public sealed interface ExcelCellSnapshot {
       ExcelCellMetadataSnapshot metadata,
       String errorValue)
       implements ExcelCellSnapshot {
+    public ErrorSnapshot {
+      java.util.Objects.requireNonNull(address, "address must not be null");
+      java.util.Objects.requireNonNull(displayValue, "displayValue must not be null");
+      java.util.Objects.requireNonNull(style, "style must not be null");
+      java.util.Objects.requireNonNull(metadata, "metadata must not be null");
+      java.util.Objects.requireNonNull(errorValue, "errorValue must not be null");
+      errorValue = ExcelReportedCellErrorLiteral.fromWireValue(errorValue).wireValue();
+    }
+
     @Override
     public String type() {
       return "ERROR";

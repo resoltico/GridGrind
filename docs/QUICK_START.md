@@ -1,6 +1,6 @@
 ---
 afad: "4.0"
-version: "0.71.0"
+version: "0.72.0"
 domain: QUICK_START
 updated: "2026-06-29"
 route:
@@ -10,7 +10,7 @@ route:
 
 # Quick Start
 
-Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-example --lookup BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
+Get to a first successful GridGrind run with the least setup and the least guesswork. The fastest path is to generate the built-in `BUDGET` example directly from the artifact: `--print-recipe --lookup BUDGET --response budget-request.json`. If you are already in a repo checkout, the matching JSON also lives at [../examples/budget-request.json](../examples/budget-request.json).
 Generated example JSON already includes the top-level request envelope and omits the default
 `execution` and `formulaEnvironment` blocks, so the first printed request is ready for copy-paste
 edits without hand-authoring boilerplate defaults yourself.
@@ -21,17 +21,20 @@ edits without hand-authoring boilerplate defaults yourself.
 
 - A GridGrind runtime: the packaged `gridgrind` launcher, the Docker image, or the release JAR
 - A working directory where GridGrind can read the request file and write the response file
-- One example request to start from: the built-in `BUDGET` example emitted by `--print-example --lookup BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
+- One example request to start from: the built-in `BUDGET` example emitted by `--print-recipe --lookup BUDGET --response budget-request.json`, or [budget-request.json](../examples/budget-request.json) when you are already in a repo checkout
 
 GridGrind supports `.xlsx` workbooks only.
 
 If you are starting from the release artifact alone, generate the request into your working
-directory first so the later `--request` path already exists: `gridgrind --print-example --lookup BUDGET --response budget-request.json`.
+directory first so the later `--request` path already exists: `gridgrind --print-recipe --lookup BUDGET --response budget-request.json`.
 When you later run `--request budget-request.json`, relative paths inside that JSON request follow
 the request file's directory. If you prefer to pipe request JSON on stdin, pass
 `--execution-root <path>` and those same relative request-owned paths resolve from that explicit
 directory. The separate CLI path flags `--response`, `--execution-root`, and `--temp-root` follow
-the shell working directory.
+the shell working directory. GridGrind's execution scratch is separate: without `--temp-root`, it
+creates one private per-run scratch directory under the OS temporary-file root; with
+`--temp-root <path>`, it creates that private per-run scratch directory under the supplied parent
+path, and best-effort cleanup removes it on normal command completion.
 
 ## Pick One Run Path
 
@@ -58,7 +61,10 @@ during repeated local runs if you want.
 The published image already includes the font stack required for signature-line preview
 generation, so signature-line requests work in Docker without extra image customization.
 Mount the host working directory at `/work` and rely on the image's prepared `WORKDIR` so
-relative CLI paths resolve inside that mounted directory without a separate `-w` override.
+relative CLI paths resolve inside that mounted directory without a separate `-w` override. Pass
+`--user "$(id -u):$(id -g)"` on ordinary bind mounts so response and workbook files stay owned by
+the calling host user; omit it only when Docker Desktop or a rootless runtime already remaps
+bind-mount ownership for you.
 
 If you are already in a repository checkout and want the same runtime container without fetching a
 release asset first, build the root Dockerfile directly:
@@ -87,7 +93,7 @@ checkout, [budget-request.json](../examples/budget-request.json) is the matching
 `BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
 examples are repo-asset-backed and expect the copied asset paths named by
 `requiredWorkspacePaths`; [EXAMPLES.md](./EXAMPLES.md) calls those out explicitly, and
-`--print-example-catalog` exposes that distinction through each example's `requestFileName`,
+`--print-recipe-catalog` exposes that distinction through each example's `requestFileName`,
 `workspaceMode`, and asset-backed `requiredWorkspacePaths`.
 
 ### Docker Example
@@ -95,10 +101,11 @@ examples are repo-asset-backed and expect the copied asset paths named by
 Generate the built-in request once, then run it from the current directory:
 
 ```bash
-docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-example --lookup BUDGET \
+docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest --print-recipe --lookup BUDGET \
   --response budget-request.json
 
 docker run --pull=always --rm -i \
+  --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
   ghcr.io/resoltico/gridgrind:latest \
   --request budget-request.json \
@@ -112,10 +119,11 @@ Build the runtime image locally once, then use that local tag in the same mounte
 ```bash
 docker buildx build --load -t gridgrind-local .
 
-docker run --rm gridgrind-local --print-example --lookup BUDGET \
+docker run --rm gridgrind-local --print-recipe --lookup BUDGET \
   --response budget-request.json
 
 docker run --rm -i \
+  --user "$(id -u):$(id -g)" \
   -v "$(pwd)":/work \
   gridgrind-local \
   --request budget-request.json \
@@ -127,7 +135,7 @@ docker run --rm -i \
 Replace `gridgrind.jar` with the downloaded JAR filename if it differs on your machine.
 
 ```bash
-java -jar gridgrind.jar --print-example --lookup BUDGET --response budget-request.json
+java -jar gridgrind.jar --print-recipe --lookup BUDGET --response budget-request.json
 
 java -jar gridgrind.jar \
   --request budget-request.json \
@@ -146,9 +154,10 @@ After a successful run:
 
 - Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
-  - `--print-task-catalog --response tasks.json` lists the CLI-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
-  - `--print-task-plan --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
-  - `--print-task-keyword-match --query "monthly sales dashboard with charts" --response task-keyword-match.json` ranks likely tasks for one English keyword query.
+  - `--print-recipe-catalog --response recipes.json` lists the compact unified recipe index across built-in examples and CLI-authored task starters.
+  - `--print-recipe-catalog --lookup DASHBOARD --response dashboard-detail.json` returns one view-specific recipe detail payload, including the exact runnable request profile for that recipe.
+  - `--print-recipe --lookup DASHBOARD --response dashboard-request.json` emits one validated executable starter request for one task id.
+  - `--print-recipe-keyword-match --query "monthly sales dashboard with charts" --response recipe-keyword-match.json` ranks likely recipes for one English keyword query and falls back to published intent tags when nothing matches.
   - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report with every independently provable blocking problem it can isolate safely without mutating a workbook, including multiple malformed steps in one pass.
   - `--doctor-request --request request.json --response doctor-report.json` saves that diagnostics report to disk when stdout is not the right transport.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
@@ -164,7 +173,8 @@ After a successful run:
 - Using `.xls`, `.xlsm`, or `.xlsb` instead of `.xlsx`
 - Mixing up path roots: `--response`, `--execution-root`, and `--temp-root` follow the shell
   working directory, while relative paths inside a `--request` file follow that request file's
-  directory, and stdin-driven requests use the explicit `--execution-root`
+  directory, and stdin-driven requests use the explicit `--execution-root`; `--temp-root` chooses
+  the parent for one private per-run scratch directory rather than a request-root `.gridgrind/tmp`
 - Ignoring stderr after a failed `--response` run: GridGrind prints one line naming the written response or doctor-report file so the structured failure payload is easy to find
 - Expecting GridGrind to save a workbook after a failed run
 

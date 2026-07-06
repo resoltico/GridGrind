@@ -317,19 +317,18 @@ def execute_plan(
 
 catalog_workspace = temp_root / "_catalog"
 catalog_workspace.mkdir(parents=True, exist_ok=True)
-example_catalog = run_json(
-    ["--print-example-catalog"],
+recipe_catalog = run_json(
+    ["--print-recipe-catalog"],
     catalog_workspace,
-    "Discovery execution catalog: loading published examples",
+    "Discovery execution catalog: loading recipes",
 )
-task_catalog = run_json(
-    ["--print-task-catalog"],
-    catalog_workspace,
-    "Discovery execution catalog: loading task starters",
-)
-
-example_entries = example_catalog["examples"]
-task_entries = task_catalog["tasks"]
+recipe_entries = recipe_catalog["recipes"]
+example_entries = [
+    recipe for recipe in recipe_entries if recipe.get("view") == "EXAMPLE"
+]
+task_starter_entries = [
+    recipe for recipe in recipe_entries if recipe.get("view") == "TASK_STARTER"
+]
 
 for index, example in enumerate(example_entries, start=1):
     execute_plan(
@@ -337,21 +336,20 @@ for index, example in enumerate(example_entries, start=1):
         example["id"],
         index,
         len(example_entries),
-        ["--print-example", "--lookup", example["id"]],
+        ["--print-recipe", "--lookup", example["id"]],
         example["requestFileName"],
         example["requiredWorkspacePaths"],
     )
 
-for index, task in enumerate(task_entries, start=1):
-    starter = task["starter"]
+for index, task_starter in enumerate(task_starter_entries, start=1):
     execute_plan(
-        "tasks",
-        task["id"],
+        "task starters",
+        task_starter["id"],
         index,
-        len(task_entries),
-        ["--print-task-plan", "--lookup", task["id"]],
-        starter["requestFileName"],
-        starter["requiredWorkspacePaths"],
+        len(task_starter_entries),
+        ["--print-recipe", "--lookup", task_starter["id"]],
+        task_starter["requestFileName"],
+        task_starter["requiredWorkspacePaths"],
     )
 PY
 

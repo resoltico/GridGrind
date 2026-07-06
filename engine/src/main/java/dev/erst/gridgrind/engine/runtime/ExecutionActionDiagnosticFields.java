@@ -62,12 +62,6 @@ final class ExecutionActionDiagnosticFields {
         case dev.erst.gridgrind.contract.dto.NamedRangeTarget.Formula _ -> Optional.empty();
       };
     }
-    if (action
-        instanceof StructuredMutationAction.SetConditionalFormatting setConditionalFormatting) {
-      return setConditionalFormatting.conditionalFormatting().ranges().size() == 1
-          ? Optional.of(setConditionalFormatting.conditionalFormatting().ranges().getFirst())
-          : Optional.empty();
-    }
     return Optional.empty();
   }
 

@@ -1,9 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
+import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlSecurityPoiBridge;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,7 +16,6 @@ import java.security.Security;
 import java.security.cert.X509Certificate;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackageAccess;
 import org.apache.poi.poifs.crypt.Decryptor;
@@ -52,25 +52,49 @@ public final class OoxmlSecurityTestSupport {
 
   /** Creates one deterministic encrypted `.xlsx` fixture plus the password that unlocks it. */
   public static EncryptedWorkbook createEncryptedWorkbook(Path directory) throws IOException {
+    return createEncryptedWorkbook(
+        directory, ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512);
+  }
+
+  /** Creates one deterministic AGILE-encrypted `.xlsx` fixture with one explicit write envelope. */
+  public static EncryptedWorkbook createEncryptedWorkbook(
+      Path directory, ExcelOoxmlWriteCipher cipher, ExcelOoxmlWriteHash hash) throws IOException {
     try {
       Path fixtureDirectory = Files.createDirectories(directory);
       Path workbookPath = fixtureDirectory.resolve("encrypted.xlsx");
       byte[] workbookBytes = plainWorkbookBytes("Encrypted", "A1", "Encrypted workbook");
-
-      EncryptionInfo encryptionInfo = new EncryptionInfo(EncryptionMode.agile);
-      Encryptor encryptor = encryptionInfo.getEncryptor();
-      encryptor.confirmPassword(ENCRYPTION_PASSWORD);
-      try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
-        try (OutputStream encryptedStream = encryptor.getDataStream(fileSystem)) {
-          encryptedStream.write(workbookBytes);
-        }
-        try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
-          fileSystem.writeFilesystem(outputStream);
-        }
-      }
+      var cipherAlgorithm = ExcelOoxmlSecurityPoiBridge.toPoi(cipher);
+      writeEncryptedWorkbook(
+          workbookPath,
+          workbookBytes,
+          new EncryptionInfo(
+              EncryptionMode.agile,
+              cipherAlgorithm,
+              ExcelOoxmlSecurityPoiBridge.toPoi(hash),
+              cipherAlgorithm.defaultKeySize,
+              cipherAlgorithm.blockSize,
+              ExcelOoxmlSecurityPoiBridge.toPoi(
+                  dev.erst.gridgrind.excel.foundation.ExcelOoxmlChainingMode.CBC)));
       return new EncryptedWorkbook(workbookPath, ENCRYPTION_PASSWORD);
     } catch (GeneralSecurityException exception) {
       throw new IOException("Failed to create encrypted workbook fixture", exception);
+    }
+  }
+
+  /** Creates one deterministic legacy STANDARD-encrypted `.xlsx` fixture for readback guards. */
+  public static EncryptedWorkbook createLegacyStandardEncryptedWorkbook(Path directory)
+      throws IOException {
+    try {
+      Path fixtureDirectory = Files.createDirectories(directory);
+      Path workbookPath = fixtureDirectory.resolve("encrypted-standard.xlsx");
+      writeEncryptedWorkbook(
+          workbookPath,
+          plainWorkbookBytes("Encrypted", "A1", "Encrypted workbook"),
+          new EncryptionInfo(EncryptionMode.standard));
+      return new EncryptedWorkbook(workbookPath, ENCRYPTION_PASSWORD);
+    } catch (GeneralSecurityException exception) {
+      throw new IOException(
+          "Failed to create legacy STANDARD encrypted workbook fixture", exception);
     }
   }
 
@@ -109,7 +133,7 @@ public final class OoxmlSecurityTestSupport {
         row = sheet.createRow(reference.getRow());
       }
       row.createCell(reference.getCol()).setCellValue(value);
-      try (OutputStream outputStream = Files.newOutputStream(targetWorkbookPath)) {
+      try (java.io.OutputStream outputStream = Files.newOutputStream(targetWorkbookPath)) {
         workbook.write(outputStream);
       }
       return targetWorkbookPath;
@@ -138,7 +162,7 @@ public final class OoxmlSecurityTestSupport {
         throw new IllegalArgumentException(
             "The supplied password did not decrypt the workbook fixture: " + workbookPath);
       }
-      try (InputStream decryptedStream = decryptor.getDataStream(fileSystem);
+      try (java.io.InputStream decryptedStream = decryptor.getDataStream(fileSystem);
           var workbook = WorkbookFactory.create(decryptedStream)) {
         return workbook
             .getSheet(sheetName)
@@ -160,7 +184,7 @@ public final class OoxmlSecurityTestSupport {
         signingMaterial.keyPair().getPrivate(),
         KEY_PASSWORD.toCharArray(),
         new java.security.cert.Certificate[] {signingMaterial.certificate()});
-    try (OutputStream outputStream = Files.newOutputStream(pkcs12Path)) {
+    try (java.io.OutputStream outputStream = Files.newOutputStream(pkcs12Path)) {
       keyStore.store(outputStream, KEYSTORE_PASSWORD.toCharArray());
     }
   }
@@ -172,7 +196,7 @@ public final class OoxmlSecurityTestSupport {
       SignatureConfig signatureConfig = new SignatureConfig();
       signatureConfig.setExecutionTime(Date.from(CERT_NOT_BEFORE));
       signatureConfig.setKey(signingMaterial.keyPair().getPrivate());
-      signatureConfig.setSigningCertificateChain(List.of(signingMaterial.certificate()));
+      signatureConfig.setSigningCertificateChain(java.util.List.of(signingMaterial.certificate()));
 
       SignatureInfo signatureInfo = WorkbookSignatureSupport.newSignatureInfo();
       signatureInfo.setSignatureConfig(signatureConfig);
@@ -201,6 +225,21 @@ public final class OoxmlSecurityTestSupport {
       row.createCell(reference.getCol()).setCellValue(value);
       workbook.write(outputStream);
       return outputStream.toByteArray();
+    }
+  }
+
+  private static void writeEncryptedWorkbook(
+      Path workbookPath, byte[] workbookBytes, EncryptionInfo encryptionInfo)
+      throws IOException, GeneralSecurityException {
+    Encryptor encryptor = encryptionInfo.getEncryptor();
+    encryptor.confirmPassword(ENCRYPTION_PASSWORD);
+    try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
+      try (java.io.OutputStream encryptedStream = encryptor.getDataStream(fileSystem)) {
+        encryptedStream.write(workbookBytes);
+      }
+      try (java.io.OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        fileSystem.writeFilesystem(outputStream);
+      }
     }
   }
 

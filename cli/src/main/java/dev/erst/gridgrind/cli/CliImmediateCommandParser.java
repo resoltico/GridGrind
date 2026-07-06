@@ -59,12 +59,7 @@ final class CliImmediateCommandParser {
           Map.entry(
               "--print-request-template",
               (index, responsePath, commandToken) ->
-                  parseRequestTemplateCommand(index, responsePath)),
-          Map.entry(
-              "--print-example-catalog",
-              (index, responsePath, commandToken) ->
-                  new Result(
-                      new CliCommand.PrintExampleCatalog(responsePath), index + 1, commandToken)));
+                  parseRequestTemplateCommand(index, responsePath)));
 
   private CliImmediateCommandParser() {}
 
@@ -78,15 +73,14 @@ final class CliImmediateCommandParser {
       return Optional.of(simpleCommandFactory.create(index, responsePath, argument));
     }
     return switch (argument) {
-      case "--print-example" ->
-          Optional.of(CliLookupImmediateCommandParser.parseExample(args, index, responsePath));
-      case "--print-task-catalog" ->
-          Optional.of(CliLookupImmediateCommandParser.parseTaskCatalog(args, index, responsePath));
-      case "--print-task-plan" ->
-          Optional.of(CliLookupImmediateCommandParser.parseTaskPlan(args, index, responsePath));
-      case "--print-task-keyword-match" ->
+      case "--print-recipe" ->
+          Optional.of(CliLookupImmediateCommandParser.parseRecipe(args, index, responsePath));
+      case "--print-recipe-catalog" ->
           Optional.of(
-              CliLookupImmediateCommandParser.parseTaskKeywordMatch(args, index, responsePath));
+              CliLookupImmediateCommandParser.parseRecipeCatalog(args, index, responsePath));
+      case "--print-recipe-keyword-match" ->
+          Optional.of(
+              CliLookupImmediateCommandParser.parseRecipeKeywordMatch(args, index, responsePath));
       case "--print-protocol-catalog" ->
           Optional.of(CliProtocolCatalogCommandParser.parse(args, index, responsePath));
       default -> Optional.empty();

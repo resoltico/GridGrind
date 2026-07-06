@@ -37,6 +37,7 @@ readonly root_plugin="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/g
 readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
+readonly docker_smoke_bind_mount_helper="${repo_root}/scripts/lib/docker-smoke-bind-mount-support.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
@@ -175,6 +176,17 @@ grep -Fq '"${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_ta
 grep -Fq '"${repo_root}/scripts/verify-cli-discovery-execution.sh" docker-image "${image_tag}"' \
     "${docker_smoke_script}" || die \
     "docker smoke no longer executes the published examples and task starters from the local image"
+grep -Fq 'source "${bind_mount_support}"' "${docker_smoke_script}" || die \
+    "docker smoke no longer sources the bind-mount guidance helper"
+grep -Fq 'verify_documented_bind_mount_user_guidance "${image_tag}" "${smoke_root}" "${docker_run_user}"' \
+    "${docker_smoke_script}" || die \
+    "docker smoke no longer calls the documented bind-mount guidance probe"
+grep -Fq 'docker smoke no-user documented bind-mount run did not report IO_ERROR' \
+    "${docker_smoke_bind_mount_helper}" || die \
+    "bind-mount guidance helper no longer verifies the no-user failure path on non-remapped bind mounts"
+grep -Fq 'docker smoke documented bind-mount run with --user did not write the workbook file' \
+    "${docker_smoke_bind_mount_helper}" || die \
+    "bind-mount guidance helper no longer verifies the documented command succeeds with --user"
 grep -Fq "readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'" \
     "${docker_smoke_script}" || die "docker smoke no longer stages a separate streaming readback request"
 grep -Fq -- '--request "${streaming_read_request_rel}"' "${docker_smoke_script}" || die \

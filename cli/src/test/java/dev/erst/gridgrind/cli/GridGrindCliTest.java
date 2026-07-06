@@ -2,7 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.cli.discovery.CliFailureReport;
+import dev.erst.gridgrind.cli.discovery.CliDiagnostic;
 import dev.erst.gridgrind.contract.dto.*;
 import dev.erst.gridgrind.contract.dto.ExecutionJournal;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
@@ -247,12 +247,12 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
     assertEquals(2, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals("execute", failure.command());
-    assertEquals(java.util.Optional.of("--request"), failure.argument());
-    assertTrue(failure.message().contains("STANDARD_INPUT"));
+    assertEquals(java.util.Optional.of("--request"), parseArgumentsContext(failure).argumentName());
+    assertTrue(failure.problem().message().contains("STANDARD_INPUT"));
   }
 
   @Test
@@ -329,7 +329,36 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 new ByteArrayOutputStream());
 
     assertEquals(0, exitCode);
-    assertEquals(customTempRoot.toAbsolutePath().normalize(), observedTempRoot.get());
+    assertEquals(customTempRoot.toAbsolutePath().normalize(), observedTempRoot.get().getParent());
+    assertTrue(Files.notExists(observedTempRoot.get()));
+    assertTrue(Files.notExists(customTempRoot.toAbsolutePath().normalize()));
+  }
+
+  @Test
+  void reportsReadRequestFailureWhenTempRootCannotBePrepared() throws IOException {
+    Path workspace = Files.createTempDirectory("gridgrind-cli-temp-root-failure-");
+    Path requestPath = workspace.resolve("request.json");
+    Path occupiedFile = workspace.resolve("occupied-temp-root");
+    Files.writeString(
+        requestPath, requestJson("{ \"type\": \"NEW\" }", "{ \"type\": \"NONE\" }", "[]"));
+    Files.writeString(occupiedFile, "not a directory");
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "--request", requestPath.toString(), "--temp-root", occupiedFile.toString()
+                },
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
+    assertEquals(1, exitCode);
+    assertEquals("execute", failure.command());
+    assertInstanceOf(ProblemContext.ReadRequest.class, failure.problem().context());
   }
 
   @Test
@@ -422,14 +451,14 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailureOnStderr(stdout, stderr);
+    CliDiagnostic failure = cliDiagnosticOnStderr(stdout, stderr);
 
     assertEquals(1, exitCode);
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.code());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("execute", failure.command());
     assertEquals(
-        java.util.Optional.of("steps[0].target.name"), failure.location().orElseThrow().jsonPath());
-    assertTrue(failure.message().contains("invalid Excel character ':'"));
+        java.util.Optional.of("steps[0].target.name"), readRequestContext(failure).jsonPath());
+    assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
   }
 
   @Test
@@ -556,7 +585,45 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
   }
 
   @Test
-  void writesFailurePointerToStderrWhenExecutionFailsAndResponsePathIsConfigured()
+  void encryptedFileRequestsDoNotLeaveRequestDirectoryScratchResidue() throws IOException {
+    Path repoRoot = locateRepoRoot();
+    Path requestDirectory = Files.createTempDirectory("gridgrind-encrypted-request-");
+    Path assetDirectory =
+        Files.createDirectories(requestDirectory.resolve("package-security-assets"));
+    Files.copy(
+        repoRoot
+            .resolve("examples")
+            .resolve("package-security-assets")
+            .resolve("gridgrind-package-security.xlsx"),
+        assetDirectory.resolve("gridgrind-package-security.xlsx"));
+    Path requestPath = requestDirectory.resolve("package-security-inspect-request.json");
+    Files.writeString(
+        requestPath,
+        Files.readString(
+            repoRoot.resolve("examples").resolve("package-security-inspect-request.json")));
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout,
+                stderr);
+
+    GridGrindResponse.Success response =
+        assertInstanceOf(
+            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+
+    assertEquals(0, exitCode);
+    assertEquals("", stderr.toString(StandardCharsets.UTF_8));
+    assertFalse(response.inspections().isEmpty());
+    assertFalse(Files.exists(requestDirectory.resolve(".gridgrind")));
+  }
+
+  @Test
+  void writesCliDiagnosticToStderrWhenExecutionFailsAndResponsePathIsConfigured()
       throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-invalid-request-", ".json");
     Path responsePath = Files.createTempFile("gridgrind-invalid-response-", ".json");
@@ -588,19 +655,24 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 stdout,
                 stderr);
 
-    CliFailureReport failure = cliFailure(Files.readAllBytes(responsePath));
+    CliDiagnostic failure = cliDiagnostic(Files.readAllBytes(responsePath));
+    CliDiagnostic stderrDiagnostic = cliDiagnosticOnStderr(stderr);
 
     assertEquals(1, exitCode);
     assertEquals("", stdout.toString(StandardCharsets.UTF_8));
-    assertTrue(
-        stderr
-            .toString(StandardCharsets.UTF_8)
-            .contains(
-                "GridGrind wrote the request failure report to " + responsePath.toAbsolutePath()));
-    assertTrue(stderr.toString(StandardCharsets.UTF_8).contains("[INVALID_REQUEST_SHAPE:"));
-    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.code());
-    assertEquals(
-        Optional.of("steps[0].target.type"),
-        failure.location().flatMap(dev.erst.gridgrind.cli.discovery.CliFailureLocation::jsonPath));
+    assertEquals(failure, stderrDiagnostic);
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals(Optional.of("steps[0].target.type"), readRequestContext(failure).jsonPath());
+  }
+
+  private static Path locateRepoRoot() {
+    Path current = Path.of("").toAbsolutePath().normalize();
+    while (current != null && !Files.exists(current.resolve("gradle.properties"))) {
+      current = current.getParent();
+    }
+    if (current == null) {
+      throw new AssertionError("test must run inside the GridGrind repository");
+    }
+    return current;
   }
 }

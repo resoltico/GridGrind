@@ -40,17 +40,29 @@ case "${1:-}" in
     --doctor-request)
         emit_fixture_file "${FAKE_GRIDGRIND_DOCTOR_REPORT_FILE:?}"
         ;;
-    --print-task-keyword-match)
-        emit_fixture_file "${FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE:?}"
+    --print-recipe-keyword-match)
+        emit_fixture_file "${FAKE_GRIDGRIND_RECIPE_KEYWORD_MATCH_FILE:?}"
         ;;
-    --print-task-catalog)
-        emit_fixture_file "${FAKE_GRIDGRIND_TASK_CATALOG_FILE:?}"
+    --print-recipe-catalog)
+        if [[ "${2:-}" == '--lookup' ]]; then
+            case "${3:-}" in
+                BUDGET)
+                    emit_fixture_file "${FAKE_GRIDGRIND_EXAMPLE_RECIPE_CATALOG_DETAIL_FILE:?}"
+                    ;;
+                TABULAR_REPORT)
+                    emit_fixture_file "${FAKE_GRIDGRIND_TASK_RECIPE_CATALOG_DETAIL_FILE:?}"
+                    ;;
+                *)
+                    printf 'unexpected recipe catalog lookup fixture request: %s\n' "${3:-}" >&2
+                    exit 1
+                    ;;
+            esac
+        else
+            emit_fixture_file "${FAKE_GRIDGRIND_RECIPE_CATALOG_FILE:?}"
+        fi
         ;;
-    --print-example-catalog)
-        emit_fixture_file "${FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE:?}"
-        ;;
-    --print-task-plan)
-        emit_fixture_file "${FAKE_GRIDGRIND_TASK_PLAN_FILE:?}"
+    --print-recipe)
+        emit_fixture_file "${FAKE_GRIDGRIND_RECIPE_REQUEST_FILE:?}"
         ;;
     --print-protocol-catalog)
         if [[ "${2:-}" == '--lookup' ]]; then
@@ -110,13 +122,14 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     local inspection_query_types_text=${10}
     local execution_mode_types_text=${11}
     local execution_policy_input_type_text=${12}
-    local example_catalog_text=${13}
-    local task_catalog_text=${14}
-    local task_plan_text=${15}
-    local task_keyword_match_text=${16}
-    local doctor_report_text=${17}
-    local noargs_failure_text=${18}
-    local interactive_noargs_failure_text=${19}
+    local recipe_catalog_text=${13}
+    local recipe_request_text=${14}
+    local recipe_keyword_match_text=${15}
+    local doctor_report_text=${16}
+    local noargs_failure_text=${17}
+    local interactive_noargs_failure_text=${18}
+    local example_recipe_catalog_detail_text=${19:-${success_example_recipe_catalog_detail}}
+    local task_recipe_catalog_detail_text=${20:-${success_task_recipe_catalog_detail}}
     local case_dir
     local help_overview_file
     local help_protocol_file
@@ -130,10 +143,11 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     local inspection_query_types_file
     local execution_mode_types_file
     local execution_policy_input_type_file
-    local example_catalog_file
-    local task_catalog_file
-    local task_plan_file
-    local task_keyword_match_file
+    local recipe_catalog_file
+    local example_recipe_catalog_detail_file
+    local task_recipe_catalog_detail_file
+    local recipe_request_file
+    local recipe_keyword_match_file
     local request_template_file
     local doctor_report_file
     local noargs_failure_file
@@ -152,10 +166,11 @@ run_fake_gridgrind_verify_with_fixture_texts() {
     inspection_query_types_file="$(write_case_fixture "${case_dir}" 'inspection-query-types.json' "${inspection_query_types_text}")"
     execution_mode_types_file="$(write_case_fixture "${case_dir}" 'execution-mode-types.json' "${execution_mode_types_text}")"
     execution_policy_input_type_file="$(write_case_fixture "${case_dir}" 'execution-policy-input-type.json' "${execution_policy_input_type_text}")"
-    example_catalog_file="$(write_case_fixture "${case_dir}" 'example-catalog.json' "${example_catalog_text}")"
-    task_catalog_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_text}")"
-    task_plan_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_text}")"
-    task_keyword_match_file="$(write_case_fixture "${case_dir}" 'task-keyword-match.json' "${task_keyword_match_text}")"
+    recipe_catalog_file="$(write_case_fixture "${case_dir}" 'recipe-catalog.json' "${recipe_catalog_text}")"
+    example_recipe_catalog_detail_file="$(write_case_fixture "${case_dir}" 'recipe-catalog-example-detail.json' "${example_recipe_catalog_detail_text}")"
+    task_recipe_catalog_detail_file="$(write_case_fixture "${case_dir}" 'recipe-catalog-task-detail.json' "${task_recipe_catalog_detail_text}")"
+    recipe_request_file="$(write_case_fixture "${case_dir}" 'recipe-request.json' "${recipe_request_text}")"
+    recipe_keyword_match_file="$(write_case_fixture "${case_dir}" 'recipe-keyword-match.json' "${recipe_keyword_match_text}")"
     request_template_file="$(write_case_fixture "${case_dir}" 'request-template.json' "${success_request_template}")"
     doctor_report_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_text}")"
     noargs_failure_file="$(write_case_fixture "${case_dir}" 'noargs-failure.json' "${noargs_failure_text}")"
@@ -177,10 +192,11 @@ run_fake_gridgrind_verify_with_fixture_texts() {
             FAKE_GRIDGRIND_INSPECTION_QUERY_TYPES_FILE="${inspection_query_types_file}" \
             FAKE_GRIDGRIND_EXECUTION_MODE_TYPES_FILE="${execution_mode_types_file}" \
             FAKE_GRIDGRIND_EXECUTION_POLICY_INPUT_TYPE_FILE="${execution_policy_input_type_file}" \
-            FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
-            FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
-            FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
-            FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
+            FAKE_GRIDGRIND_RECIPE_CATALOG_FILE="${recipe_catalog_file}" \
+            FAKE_GRIDGRIND_EXAMPLE_RECIPE_CATALOG_DETAIL_FILE="${example_recipe_catalog_detail_file}" \
+            FAKE_GRIDGRIND_TASK_RECIPE_CATALOG_DETAIL_FILE="${task_recipe_catalog_detail_file}" \
+            FAKE_GRIDGRIND_RECIPE_REQUEST_FILE="${recipe_request_file}" \
+            FAKE_GRIDGRIND_RECIPE_KEYWORD_MATCH_FILE="${recipe_keyword_match_file}" \
             FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
             FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
             FAKE_GRIDGRIND_NOARGS_FAILURE_FILE="${noargs_failure_file}" \
@@ -201,10 +217,11 @@ run_fake_gridgrind_verify_with_fixture_texts() {
         FAKE_GRIDGRIND_INSPECTION_QUERY_TYPES_FILE="${inspection_query_types_file}" \
         FAKE_GRIDGRIND_EXECUTION_MODE_TYPES_FILE="${execution_mode_types_file}" \
         FAKE_GRIDGRIND_EXECUTION_POLICY_INPUT_TYPE_FILE="${execution_policy_input_type_file}" \
-        FAKE_GRIDGRIND_EXAMPLE_CATALOG_FILE="${example_catalog_file}" \
-        FAKE_GRIDGRIND_TASK_CATALOG_FILE="${task_catalog_file}" \
-        FAKE_GRIDGRIND_TASK_PLAN_FILE="${task_plan_file}" \
-        FAKE_GRIDGRIND_TASK_KEYWORD_MATCH_FILE="${task_keyword_match_file}" \
+        FAKE_GRIDGRIND_RECIPE_CATALOG_FILE="${recipe_catalog_file}" \
+        FAKE_GRIDGRIND_EXAMPLE_RECIPE_CATALOG_DETAIL_FILE="${example_recipe_catalog_detail_file}" \
+        FAKE_GRIDGRIND_TASK_RECIPE_CATALOG_DETAIL_FILE="${task_recipe_catalog_detail_file}" \
+        FAKE_GRIDGRIND_RECIPE_REQUEST_FILE="${recipe_request_file}" \
+        FAKE_GRIDGRIND_RECIPE_KEYWORD_MATCH_FILE="${recipe_keyword_match_file}" \
         FAKE_GRIDGRIND_REQUEST_TEMPLATE_FILE="${request_template_file}" \
         FAKE_GRIDGRIND_DOCTOR_REPORT_FILE="${doctor_report_file}" \
         FAKE_GRIDGRIND_NOARGS_FAILURE_FILE="${noargs_failure_file}" \

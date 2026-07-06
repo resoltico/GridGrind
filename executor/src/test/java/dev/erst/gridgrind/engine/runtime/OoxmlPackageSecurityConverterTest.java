@@ -6,8 +6,9 @@ import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
-import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteCipher;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlWriteHash;
 import dev.erst.gridgrind.excel.ooxml.ExcelOoxmlOpenOptions;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -20,7 +21,8 @@ class OoxmlPackageSecurityConverterTest {
     Path workingDirectory = Path.of("/tmp/gridgrind-ooxml-security");
     OoxmlPersistenceSecurityInput input =
         new OoxmlPersistenceSecurityInput(
-            new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.STANDARD),
+            new OoxmlEncryptionInput(
+                "persist-pass", ExcelOoxmlWriteCipher.AES_192, ExcelOoxmlWriteHash.SHA_384),
             new OoxmlSignatureInput(
                 "/tmp/signing-material.p12",
                 "keystore-pass",
@@ -43,11 +45,17 @@ class OoxmlPackageSecurityConverterTest {
             .orElseThrow()
             .password());
     assertEquals(
-        ExcelOoxmlEncryptionMode.STANDARD,
+        ExcelOoxmlWriteCipher.AES_192,
         OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
             .encryption()
             .orElseThrow()
-            .mode());
+            .cipher());
+    assertEquals(
+        ExcelOoxmlWriteHash.SHA_384,
+        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
+            .encryption()
+            .orElseThrow()
+            .hash());
     assertEquals(
         Path.of("/tmp/signing-material.p12"),
         OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
@@ -79,7 +87,9 @@ class OoxmlPackageSecurityConverterTest {
     Path workingDirectory = Path.of("/tmp/gridgrind-ooxml-security");
     OoxmlPersistenceSecurityInput encryptionOnly =
         new OoxmlPersistenceSecurityInput(
-            new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.AGILE), null);
+            new OoxmlEncryptionInput(
+                "persist-pass", ExcelOoxmlWriteCipher.AES_256, ExcelOoxmlWriteHash.SHA_512),
+            null);
 
     assertInstanceOf(
         ExcelOoxmlOpenOptions.Unencrypted.class,

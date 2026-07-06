@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 /** File-level copy and cleanup helpers shared by OOXML package security flows. */
 public final class ExcelOoxmlPackageFileSupport {
@@ -73,6 +75,18 @@ public final class ExcelOoxmlPackageFileSupport {
     }
     try {
       Files.deleteIfExists(path);
+    } catch (IOException ignored) {
+      // Best-effort cleanup for executor-owned temporary files only.
+    }
+  }
+
+  /** Deletes one file tree if it exists, suppressing cleanup-only failures. */
+  public static void deleteTreeIfExists(Path root) {
+    if (root == null) {
+      return;
+    }
+    try (Stream<Path> paths = Files.walk(root)) {
+      paths.sorted(Comparator.reverseOrder()).forEach(ExcelOoxmlPackageFileSupport::deleteIfExists);
     } catch (IOException ignored) {
       // Best-effort cleanup for executor-owned temporary files only.
     }

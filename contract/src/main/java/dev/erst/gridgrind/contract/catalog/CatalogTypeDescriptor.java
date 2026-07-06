@@ -8,10 +8,11 @@ record CatalogTypeDescriptor(
     String id,
     String summary,
     List<String> optionalFields,
+    List<String> noteRefs,
     List<CatalogProjectedField> projectedFields) {
   CatalogTypeDescriptor(
       Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
-    this(recordType, id, summary, optionalFields, List.of());
+    this(recordType, id, summary, optionalFields, List.of(), List.of());
   }
 
   CatalogTypeDescriptor {
@@ -19,12 +20,13 @@ record CatalogTypeDescriptor(
     id = CatalogRecordValidation.requireNonBlank(id, "id");
     summary = CatalogRecordValidation.requireNonBlank(summary, "summary");
     optionalFields = CatalogRecordValidation.copyStrings(optionalFields, "optionalFields");
+    noteRefs = CatalogRecordValidation.copyUniqueStrings(noteRefs, "noteRefs");
     projectedFields =
         CatalogRecordValidation.copyProjectedFields(projectedFields, "projectedFields");
   }
 
   TypeEntry typeEntry() {
     return CatalogTypeEntryFactory.typeEntry(
-        recordType, id, summary, optionalFields, projectedFields);
+        recordType, id, summary, optionalFields, noteRefs, projectedFields);
   }
 }
